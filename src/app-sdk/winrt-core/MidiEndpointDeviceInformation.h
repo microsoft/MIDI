@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiEndpointDeviceInformation.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiEndpointDeviceInformation : MidiEndpointDeviceInformationT<MidiEndpointDeviceInformation>
     {
@@ -164,7 +164,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiEndpointDeviceInformation : MidiEndpointDeviceInformationT<MidiEndpointDeviceInformation, implementation::MidiEndpointDeviceInformation>
     {

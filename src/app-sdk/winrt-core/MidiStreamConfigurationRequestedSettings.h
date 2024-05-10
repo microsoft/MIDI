@@ -9,7 +9,7 @@
 
 #define MIDI_DEFAULT_MIDI_PROTOCOL midi2::MidiProtocol::Midi2
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiStreamConfigurationRequestedSettings : MidiStreamConfigurationRequestedSettingsT<MidiStreamConfigurationRequestedSettings>
     {
@@ -41,7 +41,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiStreamConfigurationRequestedSettings : MidiStreamConfigurationRequestedSettingsT<MidiStreamConfigurationRequestedSettings, implementation::MidiStreamConfigurationRequestedSettings>
     {

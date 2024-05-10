@@ -10,12 +10,10 @@
 #include "MidiEndpointDeviceWatcher.h"
 #include "MidiEndpointDeviceWatcher.g.cpp"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     void MidiEndpointDeviceWatcher::Start()
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         m_enumeratedEndpointDevices.Clear();
 
         if (m_watcher)
@@ -26,8 +24,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     void MidiEndpointDeviceWatcher::Stop()
     { 
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (m_watcher)
         {
             m_watcher.Stop();
@@ -36,8 +32,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     MidiEndpointDeviceWatcher::~MidiEndpointDeviceWatcher()
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         try
         {
             m_enumeratedEndpointDevices.Clear();
@@ -55,7 +49,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"exception unwiring event handlers");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"exception unwiring event handlers", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
         }
     }
 
@@ -63,8 +67,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation args)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         try
         {
             auto midiEndpointDeviceInformation = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformation>();
@@ -95,13 +97,33 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 else
                 {
                     // duplicate key. This should never happen, but just in case ...
-                    internal::LogGeneralError(__FUNCTION__, L"Duplicate endpoint device id. This is unexpected.");
+
+                    LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Duplicate endpoint device id. This is unexpected", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
+
                 }
             }
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"exception in Added event, likely thrown by the application using this API.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception in Added event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
         }
     }
 
@@ -109,8 +131,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate args)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         try
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
@@ -214,7 +234,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"exception in Updated event, likely thrown by the application using this API.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"exception in Updated event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
         }
     }
 
@@ -222,8 +251,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate args)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         try
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
@@ -244,7 +271,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"exception in Removed event, likely thrown by the application using this API.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"exception in Removed event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
         }
     }
 
@@ -252,15 +289,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Foundation::IInspectable args)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         try
         {
             if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, args);
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"exception in Enumeration Completed event, likely thrown by the application using this API.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception in Enumeration Completed event, likely thrown by the application using this API.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
         }
     }
 
@@ -268,15 +312,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Foundation::IInspectable args)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         try
         {
             if (m_stoppedEvent) m_stoppedEvent(*this, args);
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"exception in Stopped event, likely thrown by the application using this API.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception in Enumeration Stopped event, likely thrown by the application using this API.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
         }
     }
 
@@ -286,8 +337,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         midi2::MidiEndpointDeviceInformationFilters const& endpointFilters, 
         winrt::Windows::Devices::Enumeration::DeviceWatcher const& baseWatcher)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         m_endpointFilter = endpointFilters;
         m_watcher = baseWatcher;
 
@@ -307,8 +356,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher::CreateWatcher(
         midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         try
         {
             // the properties we would filter on are GUID properties, so we can't use
@@ -327,7 +374,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"exception creating MidiEndpointDeviceWatcher.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception creating MidiEndpointDeviceWatcher.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
 
             return nullptr;
         }
@@ -336,8 +392,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     winrt::Windows::Devices::Enumeration::DeviceWatcherStatus MidiEndpointDeviceWatcher::Status()
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (m_watcher)
         {
             return m_watcher.Status();

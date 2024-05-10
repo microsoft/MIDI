@@ -15,7 +15,7 @@
 using namespace winrt::Windows::Data::Json;
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
 #if false
     _Use_decl_annotations_

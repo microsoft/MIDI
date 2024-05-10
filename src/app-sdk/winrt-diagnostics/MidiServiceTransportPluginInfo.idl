@@ -6,14 +6,8 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2.Diagnostics
 {
-    MIDI_API_CONTRACT_v1
     [default_interface]
     runtimeclass MidiServiceTransportPluginInfo
     {
@@ -35,6 +29,6 @@ namespace MIDI_MIDL_NAMESPACE
         Boolean IsSystemManaged{ get; };
         Boolean CanConfigure{ get; };
 
-        String ClientConfigurationAssemblyName{ get; };
+   //     String ClientConfigurationAssemblyName{ get; };
     }
 }

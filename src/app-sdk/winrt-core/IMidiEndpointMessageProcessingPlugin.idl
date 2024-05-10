@@ -16,7 +16,7 @@ import "MidiMessageReceivedEventArgs.idl";
 import "IMidiEndpointConnectionSource.idl";
 
 
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2
 {
     MIDI_API_CONTRACT_v1
     [MIDI_INTERFACE_UUID("198d5ef2-313f-41af-9259-a42997e060f0",1.0)]

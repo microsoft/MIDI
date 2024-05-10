@@ -11,7 +11,7 @@
 #include "MidiEndpointDeviceInformationRemovedEventArgs.g.cpp"
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     void MidiEndpointDeviceInformationRemovedEventArgs::InternalInitialize(

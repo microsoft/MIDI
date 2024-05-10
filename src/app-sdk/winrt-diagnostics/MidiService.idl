@@ -6,52 +6,31 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
 import "MidiServiceTransportPluginInfo.idl";
 import "MidiServiceMessageProcessingPluginInfo.idl";
 import "MidiServicePingResponseSummary.idl";
 
 import "MidiServiceSessionInfo.idl";
 
-import "MidiServiceLoopbackEndpointCreationResult.idl";
-import "MidiServiceLoopbackEndpointDefinition.idl";
-
-import "IMidiServiceTransportPluginConfiguration.idl";
-import "IMidiServiceMessageProcessingPluginConfiguration.idl";
-import "MidiServiceConfigurationResponse.idl";
-
-namespace MIDI_MIDL_NAMESPACE
+namespace foo
 {
-    MIDI_API_CONTRACT_v1
     [default_interface]
-    static runtimeclass MidiService
+    static runtimeclass MidiServiceFoo
     {
-        static MidiServicePingResponseSummary PingService(UInt8 pingCount);
-        static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
-
-        static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
-        static IVector<MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
-
         static Boolean EnsureAvailable();
 
-        static IVector<MidiServiceSessionInfo> GetActiveSessions();
+        //static MidiServiceLoopbackEndpointCreationResult CreateTemporaryLoopbackEndpoints(
+        //    Guid associationId, 
+        //    MidiServiceLoopbackEndpointDefinition endpointDefinitionA, 
+        //    MidiServiceLoopbackEndpointDefinition endpointDefinitionB);
 
-        static MidiServiceLoopbackEndpointCreationResult CreateTemporaryLoopbackEndpoints(
-            Guid associationId, 
-            MidiServiceLoopbackEndpointDefinition endpointDefinitionA, 
-            MidiServiceLoopbackEndpointDefinition endpointDefinitionB);
+        //static Boolean RemoveTemporaryLoopbackEndpoints(Guid associationId);
 
-        static Boolean RemoveTemporaryLoopbackEndpoints(Guid associationId);
+        //static MidiServiceConfigurationResponse UpdateTransportPluginConfiguration(
+        //    IMidiServiceTransportPluginConfiguration configurationUpdate);
 
-        static MidiServiceConfigurationResponse UpdateTransportPluginConfiguration(
-            IMidiServiceTransportPluginConfiguration configurationUpdate);
-
-        static MidiServiceConfigurationResponse UpdateProcessingPluginConfiguration(
-            IMidiServiceMessageProcessingPluginConfiguration configurationUpdate);
+        //static MidiServiceConfigurationResponse UpdateProcessingPluginConfiguration(
+        //    IMidiServiceMessageProcessingPluginConfiguration configurationUpdate);
     }
 }
 

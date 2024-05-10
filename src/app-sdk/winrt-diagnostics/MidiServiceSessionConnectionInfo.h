@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiServiceSessionConnectionInfo.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
 {
     struct MidiServiceSessionConnectionInfo : MidiServiceSessionConnectionInfoT<MidiServiceSessionConnectionInfo>
     {

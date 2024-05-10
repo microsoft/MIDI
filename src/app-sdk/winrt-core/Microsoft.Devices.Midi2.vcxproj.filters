@@ -22,9 +22,6 @@
     <Filter Include="API\Endpoints\Events">
       <UniqueIdentifier>{27ac01b4-53c3-477f-a4c8-ded2d40e69b7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Internal\Trace">
-      <UniqueIdentifier>{870a47af-3bdf-43ad-a1f9-21c144450b0e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\BasicTypes">
       <UniqueIdentifier>{95a0abe7-f4a2-472b-9c2b-f64e534ea12a}</UniqueIdentifier>
     </Filter>
@@ -64,9 +61,6 @@
     <Filter Include="API\Endpoints\Session">
       <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API\Service\Runtime Endpoints">
-      <UniqueIdentifier>{a21f8a09-4e72-422f-9569-e3eeee2ac830}</UniqueIdentifier>
-    </Filter>
     <Filter Include="API\Service\Configuration">
       <UniqueIdentifier>{2a7feacb-d6cd-45d7-a7a1-754e28d34e2d}</UniqueIdentifier>
     </Filter>
@@ -85,9 +79,6 @@
     <ClCompile Include="MidiSession.cpp" />
     <ClCompile Include="MidiClock.cpp">
       <Filter>API\Utility</Filter>
-    </ClCompile>
-    <ClCompile Include="trace_logging.cpp">
-      <Filter>Internal\Trace</Filter>
     </ClCompile>
     <ClCompile Include="MidiChannel.cpp">
       <Filter>API\BasicTypes</Filter>
@@ -183,9 +174,6 @@
     <ClInclude Include="MidiSession.h" />
     <ClInclude Include="MidiClock.h">
       <Filter>API\Utility</Filter>
-    </ClInclude>
-    <ClInclude Include="trace_logging.h">
-      <Filter>Internal\Trace</Filter>
     </ClInclude>
     <ClInclude Include="MidiChannel.h">
       <Filter>API\BasicTypes</Filter>
@@ -371,12 +359,6 @@
     </Midl>
     <Midl Include="IMidiEndpointConnectionSettings.idl">
       <Filter>API\Endpoints\Connections</Filter>
-    </Midl>
-    <Midl Include="MidiServiceLoopbackEndpointDefinition.idl">
-      <Filter>API\Service\Runtime Endpoints</Filter>
-    </Midl>
-    <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl">
-      <Filter>API\Service\Runtime Endpoints</Filter>
     </Midl>
     <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl">
       <Filter>API\Service\Configuration</Filter>

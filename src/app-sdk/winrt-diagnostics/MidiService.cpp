@@ -10,7 +10,7 @@
 
 #include "MidiService.g.cpp"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Mi::implementation
 {
     // returns True if the MIDI Service is available on this PC
     bool MidiService::EnsureAvailable()

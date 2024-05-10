@@ -6,22 +6,19 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-import "MidiServiceSessionConnectionInfo.idl";
+import "MidiServiceTransportPluginInfo.idl";
+import "MidiServiceMessageProcessingPluginInfo.idl";
+import "MidiServiceSessionInfo.idl";
 
 namespace Microsoft.Devices.Midi2.Diagnostics
 {
     [default_interface]
-    runtimeclass MidiServiceSessionInfo
+    runtimeclass MidiDiagnostics
     {
-        Guid SessionId{ get; };
+        static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
+        static IVector<MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
 
-        UInt64 ProcessId{ get; };
-        String ProcessName{ get; };
-        String SessionName{ get; };
-
-        Windows.Foundation.DateTime StartTime{ get; };
-
-
-        IVectorView<MidiServiceSessionConnectionInfo> Connections{ get; };
+        static IVector<MidiServiceSessionInfo> GetActiveSessions();
     }
 }
+

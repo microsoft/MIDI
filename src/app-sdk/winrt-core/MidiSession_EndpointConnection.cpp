@@ -10,7 +10,7 @@
 #include "MidiSession.h"
 #include "MidiEndpointConnection.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::TryCreateEndpointConnection(
@@ -19,8 +19,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         midi2::IMidiEndpointConnectionSettings const& settings
     ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Creating Endpoint Connection");
-
         try
         {
             auto normalizedDeviceId = winrt::to_hstring(internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId.c_str()).c_str());
@@ -28,8 +26,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
-
-            internal::LogInfo(__FUNCTION__, L"Initializing Endpoint Connection");
 
             if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, settings, autoReconnect))
             {
@@ -51,8 +47,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L"WinRT Endpoint connection wouldn't initialize");
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"WinRT Endpoint connection wouldn't initialize", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
                 // TODO: Cleanup
 
                 return nullptr;
@@ -60,13 +64,34 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception connecting to endpoint. Service or endpoint may be unavailable, or endpoint may not be the correct type.", ex);
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception connecting to endpoint. Service or endpoint may be unavailable, or endpoint may not be the correct type.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
 
             return nullptr;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception creating endpoint connection");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception creating endpoint connection", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
 
             return nullptr;
         }
@@ -98,8 +123,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::guid const& endpointConnectionId
     ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Disconnect endpoint connection");
-
         try
         {
             if (m_connections.HasKey(endpointConnectionId))
@@ -135,13 +158,33 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L" hresult exception disconnecting from endpoint.", ex);
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception disconnecting from endpoint.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
 
             return;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L" Unknown exception disconnecting endpoint connection");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unknown exception disconnecting endpoint connection.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
         }
     }
 

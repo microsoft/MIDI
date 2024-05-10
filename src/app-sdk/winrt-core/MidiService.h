@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiService.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiService : MidiServiceT<MidiService>
     {
@@ -34,7 +34,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiService : MidiServiceT<MidiService, implementation::MidiService, winrt::static_lifetime>
     {

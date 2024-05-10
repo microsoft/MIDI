@@ -11,7 +11,7 @@
 
 MIDI_IDL_IMPORT
 
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2
 {
     MIDI_API_CONTRACT_v1
     enum MidiFunctionBlockRepresentsMidi10Connection

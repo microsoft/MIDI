@@ -9,13 +9,11 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
 
     void MidiEndpointConnection::InitializePlugins() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Initializing message processing plugins");
-
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
@@ -24,18 +22,25 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             catch (...)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Exception initializing plugins.");
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Exception initializing plugins.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
+
             }
         }
-
-        internal::LogInfo(__FUNCTION__, L"Initializing complete");
     }
 
 
     void MidiEndpointConnection::CallOnConnectionOpenedOnPlugins() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Notifying message processing plugins that the connection is opened");
-
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
@@ -44,17 +49,23 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             catch (...)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Exception calling Open on plugins.");
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Exception calling Open on plugins.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
             }
         }
-
-        internal::LogInfo(__FUNCTION__, L"Notifying message processing plugins complete");
     }
 
     void MidiEndpointConnection::CleanupPlugins() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Cleaning up plugins");
-
         for (const auto& plugin : m_messageProcessingPlugins)
         {
             try
@@ -63,11 +74,20 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             catch (...)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Exception cleaning up plugins.");
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Exception cleaning up plugins.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
+
             }
         }
-
-        internal::LogInfo(__FUNCTION__, L"Cleaning up plugins - complete");
     }
 
 
@@ -76,8 +96,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     void MidiEndpointConnection::AddMessageProcessingPlugin(midi2::IMidiEndpointMessageProcessingPlugin const& plugin)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         m_messageProcessingPlugins.Append(plugin);
 
         try
@@ -94,18 +112,24 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception initializing or calling OnEndpointConnectionOpened on newly-added plugin");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception initializing or calling OnEndpointConnectionOpened on newly-added plugin.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
         }
-
-        internal::LogInfo(__FUNCTION__, L"Complete");
-
     }
 
     _Use_decl_annotations_
     void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid id)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         for (uint32_t i = 0; i < m_messageProcessingPlugins.Size(); i++)
         {
             if (m_messageProcessingPlugins.GetAt(i).Id() == id)
@@ -114,9 +138,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 break;
             }
         }
-
-        internal::LogInfo(__FUNCTION__, L"Complete");
-
     }
 
 

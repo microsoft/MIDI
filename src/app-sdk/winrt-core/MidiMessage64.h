@@ -12,7 +12,7 @@
 #include "MidiMessage64.g.h"
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiMessage64 : MidiMessage64T<MidiMessage64>
     {
@@ -77,7 +77,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiMessage64 : MidiMessage64T<MidiMessage64, implementation::MidiMessage64>
     {

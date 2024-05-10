@@ -9,6 +9,6 @@
 #include "pch.h"
 #include "MidiServiceMessageProcessingPluginInfo.g.cpp"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
 {
 }

@@ -11,14 +11,11 @@
 
 MIDI_IDL_IMPORT
 
-import "MidiServiceLoopbackEndpointCreationResult.idl";
-import "MidiServiceLoopbackEndpointDefinition.idl";
-
 import "IMidiServiceTransportPluginConfiguration.idl";
 import "IMidiServiceMessageProcessingPluginConfiguration.idl";
 import "MidiServiceConfigurationResponse.idl";
 
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2
 {
     MIDI_API_CONTRACT_v1
     [default_interface]

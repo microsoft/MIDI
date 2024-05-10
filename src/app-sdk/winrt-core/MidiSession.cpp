@@ -14,7 +14,7 @@
 
 //#include <atlcomcli.h>
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
@@ -22,8 +22,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         winrt::hstring const& sessionName
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Session create");
-
         try
         {
             auto session = winrt::make_self<implementation::MidiSession>();
@@ -37,21 +35,38 @@ namespace MIDI_CPP_NAMESPACE::implementation
             else
             {
                 // this can happen is service is not available or running
-
-                internal::LogInfo(__FUNCTION__, L"Session start failed. Returning nullptr");
-
                 return nullptr;
             }
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception initializing creating session. Service may be unavailable.", ex);
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception initializing creating session. Service may be unavailable.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
 
             return nullptr;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception initializing creating session. Service may be unavailable.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception initializing creating session. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
 
             return nullptr;
         }
@@ -62,8 +77,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiSession::InternalStart()
     {
-        internal::LogInfo(__FUNCTION__, L"Start Session ");
-
         try
         {
             // We're talking to the service, so use the MIDI Service abstraction, not a KS or other one
@@ -84,27 +97,66 @@ namespace MIDI_CPP_NAMESPACE::implementation
                     auto initHR = m_sessionTracker->Initialize();
                     if (FAILED(initHR))
                     {
-                        internal::LogHresultError(__FUNCTION__, L"Unable to initialize session tracker", initHR);
+                        LOG_IF_FAILED(initHR);   // this also generates a fallback error with file and line number info
+
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Unable to initialize session tracker?", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingHResult(initHR, MIDI_SDK_TRACE_HRESULT_FIELD)
+                        );
                         return false;
                     }
 
                     auto addHR = m_sessionTracker->AddClientSession(m_id, m_name.c_str());
                     if (FAILED(addHR))
                     {
-                        internal::LogHresultError(__FUNCTION__, L"Unable to add client session to session tracker", addHR);
+                        LOG_IF_FAILED(addHR);   // this also generates a fallback error with file and line number info
+
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Unable to add client session to session tracker", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingHResult(addHR, MIDI_SDK_TRACE_HRESULT_FIELD)
+                        );
+
                         return false;
                     }
                 }
                 else
                 {
-                    internal::LogGeneralError(__FUNCTION__, L"Error activating IMidiSessionTracker.");
+                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Error activating IMidiSessionTracker", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
 
                     return false;
                 }
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L"Error starting session. Service abstraction is nullptr.");
+                LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Error starting session. Service abstraction is nullptr", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
 
                 return false;
             }
@@ -112,13 +164,33 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception starting session. Service may be unavailable.", ex);
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception starting session. Service may be unavailable.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
 
             return false;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception starting session.");
+            LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception starting session", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
 
             return false;
         }
@@ -129,8 +201,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiSession::UpdateName(winrt::hstring const& newName) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         auto cleanName = internal::TrimmedHStringCopy(newName);
 
         // this can be called only if we've already initialized the session tracker
@@ -147,14 +217,33 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             else
             {
-                internal::LogHresultError(__FUNCTION__, L"Unable to update session name", hr);
+                LOG_IF_FAILED(hr);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Unable to update session name", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingHResult(hr, MIDI_SDK_TRACE_HRESULT_FIELD)
+                );
 
                 return false;
             }
         }
         else
         {
-            internal::LogGeneralError(__FUNCTION__, L"Session tracker interface wasn't already initialized.");
+            LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Session tracker interface wasn't already initialized", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
 
             return false;
         }
@@ -165,8 +254,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     void MidiSession::Close() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Closing session");
-
         if (!m_isOpen) return;
 
         try
@@ -203,7 +290,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception on close");
+            LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception on close", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
         }
 
     }

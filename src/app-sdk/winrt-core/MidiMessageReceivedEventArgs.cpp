@@ -12,7 +12,7 @@
 #include "MidiMessageReceivedEventArgs.g.cpp"
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     MidiMessageReceivedEventArgs::MidiMessageReceivedEventArgs(PVOID data, UINT sizeInBytes, internal::MidiTimestamp timestamp)
@@ -31,9 +31,19 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         else
         {
-            // invalid UMP data
+            // invalid UMP data. This should never happen, but just in case
 
-            internal::LogGeneralError(__FUNCTION__, L"Invalid UMP data");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Invalid UMP data", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingUInt32(sizeInBytes, MIDI_SDK_TRACE_MESSAGE_SIZE_BYTES_FIELD)
+            );
 
         }
     }
@@ -75,7 +85,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             // this should never happen
 
-            internal::LogGeneralError(__FUNCTION__, L"Invalid UMP Packet type");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Invalid message packet type", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingUInt8(wordCount, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD)
+            );
+
 
             return nullptr;
         }
@@ -143,13 +164,37 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         if (ump == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"UMP parameter is null");
+            WINRT_ASSERT(false);    // this will cause a break in debug builds
+
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
         if (PacketType() != MidiPacketType::UniversalMidiPacket32)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Incorrect UMP Packet type for Ump32");
+            WINRT_ASSERT(false); // this will cause a break in debug builds
+
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Incorrect UMP Packet type for Ump32", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -172,13 +217,38 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         if (ump == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"UMP parameter is null");
+            WINRT_ASSERT(false);    // this will cause a break in debug builds
+
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+
             return false;
         }
 
         if (PacketType() != MidiPacketType::UniversalMidiPacket64)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Incorrect UMP Packet type for Ump64");
+            WINRT_ASSERT(false); // this will cause a break in debug builds
+
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Incorrect UMP Packet type for Ump64", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -201,13 +271,37 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         if (ump == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"UMP parameter is null");
+            WINRT_ASSERT(false);    // this will cause a break in debug builds
+
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
         if (PacketType() != MidiPacketType::UniversalMidiPacket96)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Incorrect UMP Packet type for Ump96");
+            WINRT_ASSERT(false); // this will cause a break in debug builds
+
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Incorrect UMP Packet type for Ump96", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -230,13 +324,37 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         if (ump == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"UMP parameter is null");
+            WINRT_ASSERT(false);    // this will cause a break in debug builds
+
+            LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"UMP parameter is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
         if (PacketType() != MidiPacketType::UniversalMidiPacket128)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Incorrect UMP Packet type for Ump128");
+            WINRT_ASSERT(false); // this will cause a break in debug builds
+
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Incorrect UMP Packet type for Ump128", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -355,10 +473,37 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                 return numBytes;
             }
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
 
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception filling buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            return 0;
         }
         catch (...)
         {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception filling buffer", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return 0;
         }
     }

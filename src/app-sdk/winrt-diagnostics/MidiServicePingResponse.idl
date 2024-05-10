@@ -6,23 +6,18 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-MIDI_IDL_IMPORT
-
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2.Diagnostics
 {
-    MIDI_API_CONTRACT_v1
     [default_interface]
     runtimeclass MidiServicePingResponse
     {
         UInt32 SourceId { get; };
         UInt32 Index { get; };
 
-        MIDI_TIMESTAMP ClientSendMidiTimestamp{ get; };
-        MIDI_TIMESTAMP ServiceReportedMidiTimestamp{ get; };
-        MIDI_TIMESTAMP ClientReceiveMidiTimestamp{ get; };
+        UInt64 ClientSendMidiTimestamp{ get; };
+        UInt64 ServiceReportedMidiTimestamp{ get; };
+        UInt64 ClientReceiveMidiTimestamp{ get; };
 
-        MIDI_TIMESTAMP ClientDeltaTimestamp{ get; };
+        UInt64 ClientDeltaTimestamp{ get; };
     }
 }

@@ -11,7 +11,7 @@
 
 MIDI_IDL_IMPORT
 
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2
 {
     MIDI_API_CONTRACT_v1
     [MIDI_INTERFACE_UUID("65736736-35f3-421c-a683-3a034ad0dcc2",1.0)]

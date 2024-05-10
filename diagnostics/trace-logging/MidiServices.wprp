@@ -19,7 +19,7 @@
     <EventProvider Id="EventProvider_BluetoothMidiAbstraction" Name="*Microsoft.Windows.Midi2.BluetoothMidiAbstraction"/>
     <EventProvider Id="EventProvider_LoopbackMidiAbstraction" Name="*Microsoft.Windows.Midi2.LoopbackMidiAbstraction"/>
 
-    <EventProvider Id="EventProvider_API" Name="*Microsoft.Windows.Devices.Midi2.Api"/>
+    <EventProvider Id="EventProvider_SDK" Name="*Microsoft.Windows.Midi2.Sdk"/>
 
     <EventProvider Id="EventProvider_BS2UMPTransform" Name="*Microsoft.Windows.Midi2.BS2UMPTransform"/>
     <EventProvider Id="EventProvider_EndpointMetadataListenerTransform" Name="*Microsoft.Windows.Midi2.EndpointMetadataListenerTransform"/>
@@ -48,7 +48,7 @@
             <EventProviderId Value="EventProvider_BluetoothMidiAbstraction"/>
             <EventProviderId Value="EventProvider_LoopbackMidiAbstraction"/>
 
-            <EventProviderId Value="EventProvider_API"/>
+            <EventProviderId Value="EventProvider_SDK"/>
 
             <EventProviderId Value="EventProvider_BS2UMPTransform"/>
             <EventProviderId Value="EventProvider_EndpointMetadataListenerTransform"/>

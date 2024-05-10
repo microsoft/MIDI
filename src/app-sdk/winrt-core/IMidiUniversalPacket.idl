@@ -14,7 +14,7 @@ MIDI_IDL_IMPORT
 import "MidiPacketTypeEnum.idl";
 import "MidiMessageTypeEnum.idl";
 
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2
 {
     MIDI_API_CONTRACT_v1
     [MIDI_INTERFACE_UUID("2eb5df8a-d751-4997-bf96-ba9a531fd5ff",1.0)]

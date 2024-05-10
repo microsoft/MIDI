@@ -259,16 +259,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="memory_buffer.h" />
-    <ClInclude Include="MidiServiceConfigurationResponse.h">
-      <DependentUpon>MidiServiceConfigurationResponse.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServiceLoopbackEndpointCreationResult.h">
-      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
-      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiServiceMessageProcessingPluginInfo.h">
       <DependentUpon>MidiServiceMessageProcessingPluginInfo.idl</DependentUpon>
     </ClInclude>
@@ -290,25 +280,13 @@
     <ClInclude Include="MidiServiceTransportPluginInfo.h">
       <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="midi_function_block_prop_util.h" />
-    <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="midl_defines.h" />
     <ClInclude Include="namespace_defines.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="trace_logging.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiServiceConfigurationResponse.cpp">
-      <DependentUpon>MidiServiceConfigurationResponse.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServiceLoopbackEndpointCreationResult.cpp">
-      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
-      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiServiceMessageProcessingPluginInfo.cpp">
       <DependentUpon>MidiServiceMessageProcessingPluginInfo.idl</DependentUpon>
     </ClCompile>
@@ -330,19 +308,13 @@
     <ClCompile Include="MidiServiceTransportPluginInfo.cpp">
       <DependentUpon>MidiServiceTransportPluginInfo.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2ApiContract.idl" />
     <Midl Include="MidiDiagnostics.idl" />
-    <Midl Include="MidiServiceConfigurationResponse.idl" />
-    <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl" />
-    <Midl Include="MidiServiceLoopbackEndpointDefinition.idl" />
-    <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl" />
+    <Midl Include="MidiReporting.idl" />
     <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
     <Midl Include="MidiService.idl" />
     <Midl Include="MidiServicePingResponse.idl" />

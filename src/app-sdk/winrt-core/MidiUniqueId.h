@@ -18,7 +18,7 @@
 #define MIDI_MUID_MAX_VALUE         (uint32_t)0x0FFFFFFF
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiUniqueId : MidiUniqueIdT<MidiUniqueId>
     {
@@ -71,7 +71,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     };
 }
 
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiUniqueId : MidiUniqueIdT<MidiUniqueId, implementation::MidiUniqueId>
     {

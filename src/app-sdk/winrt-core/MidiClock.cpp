@@ -12,7 +12,7 @@
 
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     uint64_t MidiClock::m_timestampFrequency{ 0 };
 

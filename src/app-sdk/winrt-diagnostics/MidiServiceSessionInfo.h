@@ -10,7 +10,7 @@
 #include "MidiServiceSessionInfo.g.h"
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
 {
     struct MidiServiceSessionInfo : MidiServiceSessionInfoT<MidiServiceSessionInfo>
     {

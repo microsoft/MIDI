@@ -51,7 +51,6 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include "namespace_defines.h"
 
 // internal
-#include "trace_logging.h"
 
 #include "ump_helpers.h"
 #include "memory_buffer.h"
@@ -84,6 +83,8 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "swd_helpers.h"
 #include "resource_util.h"
 #include "ping_ump_types.h"
+
+#include "SdkTraceLogging.h"
 
 //#include "MidiXProc.h"
 #include "resource.h"
@@ -132,8 +133,6 @@ namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
 #include "MidiSession.h"
 
 #include "MidiServiceConfigurationResponse.h"
-#include "MidiServiceLoopbackEndpointDefinition.h"
-#include "MidiServiceLoopbackEndpointCreationResult.h"
 #include "MidiService.h"
 
 #include "MidiEndpointDeviceInformationAddedEventArgs.h"

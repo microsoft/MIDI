@@ -25,7 +25,7 @@ import "MidiEndpointUserSuppliedInfo.idl";
 import "MidiEndpointDeviceInformationSortOrderEnum.idl";
 import "MidiEndpointDeviceInformationFiltersEnum.idl";
 
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2
 {
     MIDI_API_CONTRACT_v1
     [default_interface]

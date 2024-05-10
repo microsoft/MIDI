@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiServiceConfigurationResponse.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiServiceConfigurationResponse : MidiServiceConfigurationResponseT<MidiServiceConfigurationResponse>
     {

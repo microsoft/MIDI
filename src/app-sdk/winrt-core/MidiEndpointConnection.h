@@ -16,7 +16,7 @@
 
 #define MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE 20
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, IMidiCallback> 
     {
@@ -25,12 +25,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         static hstring GetDeviceSelector() noexcept { return MIDI_ENDPOINT_DEVICE_AQS_FILTER; }
 
-
         static bool SendMessageSucceeded(_In_ midi2::MidiSendMessageResults const sendResults) { return (sendResults & midi2::MidiSendMessageResults::Succeeded) == midi2::MidiSendMessageResults::Succeeded; }
         static bool SendMessageFailed(_In_ midi2::MidiSendMessageResults const sendResults) { return (sendResults & midi2::MidiSendMessageResults::Failed) == midi2::MidiSendMessageResults::Failed; }
 
         winrt::guid ConnectionId() const noexcept { return m_connectionId; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+
+
+        bool LogMessageDataValidationErrorDetails() { return m_logUmpDataErrors; }
+        void LogMessageDataValidationErrorDetails(_In_ bool value) { m_logUmpDataErrors = value; }
 
         bool IsOpen() const noexcept { return m_isOpen; }
         bool IsAutoReconnectEnabled() const noexcept { return m_autoReconnect; }
@@ -191,6 +194,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool InternalWasAlreadyOpened() { return m_wasAlreadyOpened; }
 
     private:
+        bool m_logUmpDataErrors{ false };
+
         midi2::IMidiEndpointConnectionSettings m_connectionSettings;
         bool m_autoReconnect{ false };
 
@@ -258,14 +263,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
         
         _Success_(return == true)
         bool DeactivateMidiStream(_In_ bool const force);
-
-
-
-
-
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, implementation::MidiEndpointConnection>
     {

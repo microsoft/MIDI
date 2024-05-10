@@ -9,7 +9,7 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesBuffer(
@@ -19,8 +19,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
         foundation::IMemoryBuffer const& buffer
         ) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
-
+#ifdef _DEBUG
+        // performance-critical function, so only trace when in a debug build
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
+            TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
+            TraceLoggingUInt32(byteOffset, "byte offset"),
+            TraceLoggingUInt32(byteCount, "byte count")
+        );
+#endif
         winrt::Windows::Foundation::IMemoryBufferReference bufferReference = buffer.CreateReference();
 
         auto interop = bufferReference.as<IMemoryBufferByteAccess>();
@@ -32,7 +46,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             if (byteOffset + byteCount > dataSize)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (first check)", m_endpointDeviceId);
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Buffer smaller than provided offset + byteLength (first check)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
@@ -41,14 +65,23 @@ namespace MIDI_CPP_NAMESPACE::implementation
             // make sure we're not going to spin past the end of the buffer
             if (byteOffset + byteCount > bufferReference.Capacity())
             {
-                internal::LogGeneralError(__FUNCTION__, L"Buffer smaller than provided offset + byteLength (second check)", m_endpointDeviceId);
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Buffer smaller than provided offset + byteLength (second check)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
 
 
             // endianness becomes a concern so we need to make sure we treat this as words
-            //uint32_t* wordDataPointer = (uint32_t*)(dataPointer + byteOffset);
             uint8_t* byteDataPointer = dataPointer + byteOffset;
             uint32_t bytesProcessed{ 0 };
 
@@ -62,13 +95,36 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                     if (SendMessageFailed(result))
                     {
-                        internal::LogGeneralError(__FUNCTION__, L"SendMessageRaw failed", m_endpointDeviceId);
+                        LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"SendMessageRaw failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                        );
+
                         return result;
                     }
                 }
                 else
                 {
-                    internal::LogGeneralError(__FUNCTION__, L"Ran out of data when sending multiple messages", m_endpointDeviceId);
+                    LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Ran out of data when sending multiple messages", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                    );
+
+
                     auto returnValue = midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange ;
 
                     if (bytesProcessed > 0)
@@ -90,14 +146,34 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (bytesProcessed != byteCount)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Finished, but bytes processed != supplied count.", m_endpointDeviceId);
-                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Finished, but bytes processed != supplied count", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
+
+                return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
             }
         }
         else
         {
-            internal::LogGeneralError(__FUNCTION__, L"Unable to get buffer", m_endpointDeviceId);
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to get buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
             return midi2::MidiSendMessageResults::Failed;
         }
@@ -112,50 +188,64 @@ namespace MIDI_CPP_NAMESPACE::implementation
         internal::MidiTimestamp const timestamp,
         collections::IIterable<uint32_t> const& words) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
-
+#ifdef _DEBUG
+        // performance-critical function, so only trace when in a debug build
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
+            TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD)
+        );
+#endif
         uint32_t i{ 0 };
 
         uint32_t messageWords[4]{ 0,0,0,0 };   // we reuse this storage
 
-        //collections::IIterable iterable = words.as<collections::IIterable<uint32_t>>();
-
         auto iter = words.First();
-
-        //auto vectorSize = words.Size();
 
         while (iter.HasCurrent())
         {
-            //auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(words.GetAt(i));
             auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iter.Current());
 
-            //if (i + messageWordCount <= vectorSize)
-            //{
-                for (uint32_t j = 0; j < messageWordCount; j++)
-                {
-                    //messageWords[j] = words.GetAt(i + j);
+            for (uint32_t j = 0; j < messageWordCount; j++)
+            {
+                //messageWords[j] = words.GetAt(i + j);
 
-                    messageWords[j] = iter.Current();
-                    iter.MoveNext();
+                messageWords[j] = iter.Current();
+                iter.MoveNext();
+            }
+
+            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)(messageWords), messageWordCount * sizeof(uint32_t), timestamp);
+
+            if (SendMessageFailed(sendMessageResult))
+            {
+                // failed. Log and return. We fail on first problem.
+                LOG_IF_FAILED(E_INVALIDARG);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to send message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
+
+                if (i > 0)
+                {
+                    sendMessageResult |= midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
                 }
 
-                auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)(messageWords), messageWordCount * sizeof(uint32_t), timestamp);
+                return sendMessageResult;
+            }
 
-                if (SendMessageFailed(sendMessageResult))
-                {
-                    // failed. Log and return. We fail on first problem.
-                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
-
-                    if (i > 0)
-                    {
-                        sendMessageResult |= midi2::MidiSendMessageResults::MessageListPartiallyProcessed;
-                    }
-
-                    return sendMessageResult;
-                }
-
-                i += messageWordCount;
-            //}
+            i += messageWordCount;
         }
 
         return midi2::MidiSendMessageResults::Succeeded;
@@ -169,7 +259,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
         uint32_t const wordCount,
         winrt::array_view<uint32_t const> words) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
+#ifdef _DEBUG
+        // performance-critical function, so only trace when in a debug build
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
+            TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
+            TraceLoggingUInt64(startIndex, "start index"),
+            TraceLoggingUInt64(wordCount, "word count")
+        );
+#endif
 
         uint32_t i{ startIndex };
         uint32_t wordsSent{ 0 };
@@ -185,7 +290,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 if (SendMessageFailed(sendMessageResult))
                 {
                     // failed. Log and return. We fail on first problem.
-                    internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
+                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Failed to send message.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                    );
 
                     if (i > 0)
                     {
@@ -201,7 +316,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
             else
             {
                 // failed. Log and return. We fail on first problem.
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message. Index out of bounds", m_endpointDeviceId);
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to send message. Index out of bounds", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
 
@@ -218,8 +343,20 @@ namespace MIDI_CPP_NAMESPACE::implementation
         internal::MidiTimestamp const timestamp,
         collections::IIterable<MidiMessageStruct> const& messages) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
-
+#ifdef _DEBUG
+        // performance-critical function, so only trace when in a debug build
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
+            TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD)
+        );
+#endif
         for (auto const& message : messages)
         {
             auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
@@ -228,7 +365,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
             if (SendMessageFailed(sendMessageResult))
             {
                 // failed. Log and return. We fail on first problem.
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to send message.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
 
                 return sendMessageResult;
             }
@@ -246,8 +393,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
         uint32_t const messageCount,
         winrt::array_view<MidiMessageStruct const> messages) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter", m_endpointDeviceId);
-
+#ifdef _DEBUG
+        // performance-critical function, so only trace when in a debug build
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
+            TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
+            TraceLoggingUInt32(startIndex, "start index"),
+            TraceLoggingUInt32(startIndex, "message count")
+        );
+#endif
 
         auto iterator = messages.begin() + startIndex;
         auto endpoint = iterator + messageCount;
@@ -260,7 +421,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
             if (SendMessageFailed(sendMessageResult))
             {
                 // failed. Log and return. We fail on first problem.
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to send message.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
+
 
                 return sendMessageResult;
             }
@@ -277,15 +449,36 @@ namespace MIDI_CPP_NAMESPACE::implementation
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMultipleMessagesPacketList(
         collections::IIterable<IMidiUniversalPacket> const& messages) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Sending multiple message packet list", m_endpointDeviceId);
-
+#ifdef _DEBUG
+        // performance-critical function, so only trace when in a debug build
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+        );
+#endif
         for (auto const& ump : messages)
         {
             auto result = SendUmpInternal(m_endpointAbstraction, ump);
 
             if (!MidiEndpointConnection::SendMessageSucceeded(result))
             {
-                internal::LogGeneralError(__FUNCTION__, L"Failed to send message", m_endpointDeviceId);
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to send message.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
 
                 // if any fail, we return immediately.
 

@@ -14,7 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Client.unittests", "t
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Client.benchmarks", "tests\Midi2.Client.benchmarks\Midi2.Client.benchmarks.vcxproj", "{4DABE157-7DD5-422A-8C77-B83EAC9987D0}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mididmp", "mididmp\mididmp.vcxproj", "{5EC6D5EB-53D4-4731-891E-F746F0201429}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mididiag", "mididmp\mididmp.vcxproj", "{5EC6D5EB-53D4-4731-891E-F746F0201429}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9EAA3AF3-7328-4F67-A011-E2DD8FBAA4C4} = {9EAA3AF3-7328-4F67-A011-E2DD8FBAA4C4}
 	EndProjectSection
@@ -27,13 +27,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Dia
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Plugins", "winrt-client-plugins\Microsoft.Devices.Midi2.Plugins.vcxproj", "{3D2BC934-CDC7-4DC7-B7FC-F34B755BF726}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Helpers", "winrt-helpers\Microsoft.Devices.Midi2.Helpers.vcxproj", "{001601DE-B7AB-41D1-81B7-40286B139841}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Messages", "winrt-helpers\Microsoft.Devices.Midi2.Helpers.vcxproj", "{001601DE-B7AB-41D1-81B7-40286B139841}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SDK Projections", "SDK Projections", "{C85B8544-3E6C-4721-B186-04C3520D055B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Endpoints.Loopback", "winrt-endpoint-loopback\Microsoft.Devices.Midi2.Endpoints.Loopback.vcxproj", "{D3B84D5D-8BED-4CB7-B430-B0BF1E46F3A1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Endpoints.Virtual", "winrt-endpoint-virtual\Microsoft.Devices.Midi2.Endpoints.Virtual.vcxproj", "{9B93146C-4D9D-4915-BECB-5227DF2667E2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sdk-shared", "sdk-shared", "{78B3E981-FFD4-4C8D-9575-B288DED97905}"
+	ProjectSection(SolutionItems) = preProject
+		sdk-shared\SdkTraceLogging.h = sdk-shared\SdkTraceLogging.h
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

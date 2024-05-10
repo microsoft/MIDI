@@ -10,7 +10,7 @@
 #include "MidiSession.h"
 #include "MidiEndpointConnection.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     
     // This monitors all endpoints that are in-scope for Windows MIDI Services
@@ -18,8 +18,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiSession::StartEndpointWatcher() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         try
         {
             winrt::hstring deviceSelector = midi2::MidiEndpointConnection::GetDeviceSelector();
@@ -28,14 +26,10 @@ namespace MIDI_CPP_NAMESPACE::implementation
             //winrt::hstring deviceSelector(
             //    L"System.Devices.DeviceInstanceId:=\"" + m_endpointDeviceId + L"\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-            internal::LogInfo(__FUNCTION__, deviceSelector.c_str());
-
             m_autoReconnectDeviceWatcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector);
 
             if (m_autoReconnectDeviceWatcher != nullptr)
             {
-                internal::LogInfo(__FUNCTION__, L"Device watcher created");
-
                 auto deviceAddedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformation>(this, &MidiSession::DeviceAddedHandler);
                 auto deviceUpdatedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &MidiSession::DeviceUpdatedHandler);
                 auto deviceRemovedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(this, &MidiSession::DeviceRemovedHandler);
@@ -44,11 +38,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 m_autoReconnectDeviceWatcherUpdatedRevoker = m_autoReconnectDeviceWatcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
                 m_autoReconnectDeviceWatcherRemovedRevoker = m_autoReconnectDeviceWatcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
 
-                internal::LogInfo(__FUNCTION__, L"About to start device watcher");
-
                 m_autoReconnectDeviceWatcher.Start();
-
-                internal::LogInfo(__FUNCTION__, L"Device watcher started");
 
                 return true;
             }
@@ -57,15 +47,35 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 return false;
             }
         }
-        catch (winrt::hresult_error hr)
+        catch (winrt::hresult_error ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"HRESULT Exception starting device watcher", hr);
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception starting device watcher", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
 
             return false;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception starting device watcher");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception starting device watcher", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
 
             return false;
         }
@@ -74,8 +84,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiSession::StopEndpointWatcher() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (m_autoReconnectDeviceWatcher != nullptr)
         {
             m_autoReconnectDeviceWatcher.Stop();
@@ -101,8 +109,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     {
         UNREFERENCED_PARAMETER(source);
 
-        internal::LogInfo(__FUNCTION__, args.Id().c_str());
-
         auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
         for (auto const& conn : m_connectionsForAutoReconnect)
@@ -122,10 +128,9 @@ namespace MIDI_CPP_NAMESPACE::implementation
     )
     {
         UNREFERENCED_PARAMETER(source);
+        UNREFERENCED_PARAMETER(args);
 
-        internal::LogInfo(__FUNCTION__, args.Id().c_str(), args.Id());
-
-        // may have nothing to do here. TBD
+        // may have nothing to do here. TBD. But we have to sink this event or else the others don't fire
     }
 
 
@@ -136,8 +141,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     )
     {
         UNREFERENCED_PARAMETER(source);
-
-        internal::LogInfo(__FUNCTION__, args.Id().c_str(), args.Id());
 
         // Search all connections to see if we're tracking this one.
         // If we are, and it is not in the auto-reconnect map, then

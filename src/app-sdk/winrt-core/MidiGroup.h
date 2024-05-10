@@ -10,7 +10,7 @@
 #pragma once
 #include "MidiGroup.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     struct MidiGroup : MidiGroupT<MidiGroup>
     {
@@ -35,7 +35,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     };
 }
 
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::factory_implementation
 {
     struct MidiGroup : MidiGroupT<MidiGroup, implementation::MidiGroup>
     {

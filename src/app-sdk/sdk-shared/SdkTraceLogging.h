@@ -18,10 +18,25 @@ class Midi2SdkTelemetryProvider : public wil::TraceLoggingProvider
 };
 
 
-#define MIDI_TRACE_LOGGING_LOCATION_FIELD               "location"
-#define MIDI_TRACE_LOGGING_MESSAGE_FIELD                "message"
-#define MIDI_TRACE_LOGGING_ENDPOINT_DEVICE_ID_FIELD     "endpoint id"
-#define MIDI_TRACE_LOGGING_HRESULT_FIELD                "hresult"
-#define MIDI_TRACE_LOGGING_ERROR_FIELD                  "error"
-#define MIDI_TRACE_LOGGING_MESSAGE_TIMESTAMP_FIELD      "message timestamp"
-#define MIDI_TRACE_LOGGING_MESSAGE_WORD0_FIELD          "ump word0"
+#define MIDI_SDK_TRACE_EVENT_ERROR                      "MidiSdk.Error"
+#define MIDI_SDK_TRACE_EVENT_WARNING                    "MidiSdk.Warning"
+#define MIDI_SDK_TRACE_EVENT_INFO                       "MidiSdk.Info"
+
+
+#define MIDI_SDK_TRACE_LOCATION_FIELD                   "location"
+#define MIDI_SDK_TRACE_THIS_FIELD                       "this"
+#define MIDI_SDK_TRACE_MESSAGE_FIELD                    "message"
+#define MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD         "endpoint id"
+#define MIDI_SDK_TRACE_HRESULT_FIELD                    "hresult"
+#define MIDI_SDK_TRACE_ERROR_FIELD                      "error"
+#define MIDI_SDK_TRACE_CONNECTION_ID_FIELD              "connection id"
+#define MIDI_SDK_TRACE_SESSION_ID_FIELD                 "session id"
+#define MIDI_SDK_TRACE_MESSAGE_SIZE_BYTES_FIELD         "message size bytes"
+#define MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD         "message size words"
+#define MIDI_SDK_TRACE_UMP_TYPE_FIELD                   "packet type"
+#define MIDI_SDK_TRACE_PROPERTY_KEY_FIELD               "property key"
+
+#define MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE    L"(static)"
+
+#define MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD          "message timestamp"
+#define MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD              "ump word0"

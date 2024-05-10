@@ -6,27 +6,10 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
+import "MidiServicePingResponseSummary.idl";
 
-MIDI_IDL_IMPORT
-
-import "MidiGroupTerminalBlock.idl";
-import "MidiProtocolEnum.idl";
-import "MidiEndpointNativeDataFormatEnum.idl";
-import "MidiEndpointDevicePurposeEnum.idl";
-import "MidiFunctionBlock.idl";
-import "MidiDeclaredDeviceIdentity.idl";
-import "MidiDeclaredEndpointInfo.idl";
-import "MidiEndpointTransportSuppliedInfo.idl";
-import "MidiEndpointUserSuppliedInfo.idl";
-
-import "MidiEndpointDeviceInformationSortOrderEnum.idl";
-import "MidiEndpointDeviceInformationFiltersEnum.idl";
-
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2.Diagnostics
 {
-    MIDI_API_CONTRACT_v1
     [default_interface]
     runtimeclass MidiDiagnostics
     {
@@ -35,10 +18,11 @@ namespace MIDI_MIDL_NAMESPACE
         //static winrt::hstring DiagnosticsLoopbackBEndpointDeviceId() noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_B).c_str(); }
         //static winrt::hstring DiagnosticsInternalPingEndpointDeviceId() noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDI_DIAGNOSTICS_PING_BIDI_ID).c_str(); }
 
-
         static String DiagnosticsLoopbackAEndpointDeviceId{ get; };
         static String DiagnosticsLoopbackBEndpointDeviceId{ get; };
 
+        static MidiServicePingResponseSummary PingService(UInt8 pingCount);
+        static MidiServicePingResponseSummary PingService(UInt8 pingCount, UInt32 timeoutMilliseconds);
     }
 }
 

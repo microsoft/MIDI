@@ -10,7 +10,7 @@
 #include "MidiEndpointConnection.h"
 #include "MidiEndpointConnection.g.cpp"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
@@ -22,11 +22,19 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool autoReconnect
     )
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (serviceAbstraction == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Error initializing endpoint. Service abstraction is null", endpointDeviceId);
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Error initializing endpoint. Service abstraction is null", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
             return false;
         }
@@ -46,7 +54,35 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception initializing endpoint.", ex, endpointDeviceId);
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception initializing endpoint.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            return false;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception initializing endpoint interface. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
             return false;
         }
@@ -56,11 +92,29 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalOpen()
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+        );
         if (m_endpointAbstraction == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Failed to open connection. endpoint abstraction is null", m_endpointDeviceId);
+            LOG_IF_FAILED(E_FAIL);  // force reporting of file/line number
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to open connection. endpoint abstraction is null", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
             return false;
         }
@@ -70,8 +124,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (m_connectionSettings != nullptr)
         {
-            internal::LogInfo(__FUNCTION__, L"Connection settings were specified. Including JSON in service call.", m_endpointDeviceId);
-
             connectionSettingsJsonString = static_cast<LPCWSTR>(m_connectionSettings.SettingsJson().c_str());
         }
 
@@ -90,17 +142,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (SUCCEEDED(result))
         {
-            internal::LogInfo(__FUNCTION__, L"Endpoint abstraction successfully initialized", m_endpointDeviceId);
-
             m_isOpen = true;
             m_closeHasBeenCalled = false;
         }
         else
         {
-            internal::LogHresultError(__FUNCTION__, L"Failed to initialize endpoint abstraction", result, m_endpointDeviceId);
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to initialize endpoint abstraction", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(result, MIDI_SDK_TRACE_HRESULT_FIELD)
+            );
         }
-
-        internal::LogInfo(__FUNCTION__, L"Connection Opened", m_endpointDeviceId);
 
         return true;
     }
@@ -110,7 +167,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::Open()
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+        );
 
         if (!IsOpen())
         {
@@ -132,14 +198,36 @@ namespace MIDI_CPP_NAMESPACE::implementation
                     }
                     else
                     {
-                        internal::LogGeneralError(__FUNCTION__, L"InternalOpen() returned false.", m_endpointDeviceId);
+                        LOG_IF_FAILED(E_FAIL);  // force reporting of file/line number
+
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"InternalOpen() returned false.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                        );
 
                         return false;
                     }
                 }
                 catch (winrt::hresult_error const& ex)
                 {
-                    internal::LogHresultError(__FUNCTION__, L"hresult exception initializing endpoint interface. Service may be unavailable.", ex, m_endpointDeviceId);
+                    LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"hresult exception initializing endpoint interface. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                        TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                        TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+                    );
 
                     m_endpointAbstraction = nullptr;
 
@@ -147,7 +235,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 }
                 catch (...)
                 {
-                    internal::LogGeneralError(__FUNCTION__, L"Exception initializing endpoint interface. Service may be unavailable.", m_endpointDeviceId);
+                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Exception initializing endpoint interface. Service may be unavailable.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                    );
 
                     m_endpointAbstraction = nullptr;
 
@@ -156,15 +254,23 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
             else
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint abstraction interface is nullptr", m_endpointDeviceId);
+                LOG_IF_FAILED(E_FAIL);  // force reporting of file/line number
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Endpoint abstraction interface is nullptr.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
 
                 return false;
             }
         }
         else
         {
-            internal::LogInfo(__FUNCTION__, L"Connection already open", m_endpointDeviceId);
-
             // already open. Just return true here. Not fatal in any way, so no error
             return true;
         }
@@ -174,8 +280,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     void MidiEndpointConnection::InternalClose()
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (m_closeHasBeenCalled) return;
 
         try
@@ -191,10 +295,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception on close", m_endpointDeviceId);
-        }
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
-        internal::LogInfo(__FUNCTION__, L"Complete");
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception on close.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+        }
     }
 
     MidiEndpointConnection::~MidiEndpointConnection()
@@ -208,8 +320,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::DeactivateMidiStream(bool const force)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (m_endpointAbstraction != nullptr)
         {
             // todo: some error / hresult handling here
@@ -218,7 +328,18 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (FAILED(hr))
             {
-                internal::LogHresultError(__FUNCTION__, L"Failed HRESULT cleaning up endpoint abstraction", hr, m_endpointDeviceId);
+                LOG_IF_FAILED(hr);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed HRESULT cleaning up endpoint abstraction", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                    TraceLoggingHResult(hr, MIDI_SDK_TRACE_HRESULT_FIELD)
+                );
 
                 // if we're just forcing our way through this, we ignore the error
                 // this happens when the device disconnects or another service-side issue
@@ -232,8 +353,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
             m_endpointAbstraction == nullptr;
         }
 
-        internal::LogInfo(__FUNCTION__, L"Stream deactivated");
-
         return true;
     }
 
@@ -241,11 +360,19 @@ namespace MIDI_CPP_NAMESPACE::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::ActivateMidiStream() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (m_serviceAbstraction == nullptr)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Service abstraction is null.", m_endpointDeviceId);
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Service abstraction is null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
             return false;
         }
@@ -256,24 +383,54 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             if (m_endpointAbstraction == nullptr)
             {
-                internal::LogGeneralError(__FUNCTION__, L"Endpoint Abstraction failed to Activate and returned null.", m_endpointDeviceId);
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Endpoint Abstraction failed to Activate and returned null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                );
 
                 return false;
             }
-
-            internal::LogInfo(__FUNCTION__, L"Activated IMidiBiDi", m_endpointDeviceId);
 
             return true;
         }
         catch (winrt::hresult_error const& ex)
         {
-            internal::LogHresultError(__FUNCTION__, L"hresult exception activating stream. Service may be unavailable", ex, m_endpointDeviceId);
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"hresult exception activating stream. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
 
             return false;
         }
         catch (...)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Exception activating stream. Service may be unavailable", m_endpointDeviceId);
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception activating stream. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
 
             return false;
         }
