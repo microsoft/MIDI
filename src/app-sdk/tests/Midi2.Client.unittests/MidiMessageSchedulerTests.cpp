@@ -35,10 +35,10 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 
     allMessagesReceived.create();
 
-    auto session = MidiSession::CreateSession(L"Test Session Name");
+    auto session = MidiSession::TryCreate(L"Test Session Name");
 
-    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     uint32_t receivedMessageCount{};
 
@@ -151,10 +151,10 @@ void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
 
     allMessagesReceived.create();
 
-    auto session = MidiSession::CreateSession(L"Test Session Name");
+    auto session = MidiSession::TryCreate(L"Test Session Name");
 
-    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     uint32_t receivedMessageCount{};
 

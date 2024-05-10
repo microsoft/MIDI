@@ -403,7 +403,7 @@ bool DoSectionServiceStatus(_In_ bool verbose)
 
     OutputSectionHeader(MIDIDMP_SECTION_LABEL_SERVICE_STATUS);
 
-    OutputBooleanField(MIDIDMP_FIELD_LABEL_SERVICE_AVAILABLE, midi2::MidiService::IsAvailable());
+    OutputBooleanField(MIDIDMP_FIELD_LABEL_SERVICE_AVAILABLE, midi2::MidiService::EnsureAvailable());
 
     return true;
 }
@@ -521,6 +521,8 @@ int __cdecl main()
     bool midiClock = true;
 
     OutputHeader(MIDIDMP_PRODUCT_NAME);
+    OutputHeader(L"This application Copyright (c) 2024- Microsoft Corporation");
+    OutputHeader(L"Information, license, and source available at https://aka.ms/midi");
 
     OutputSectionHeader(MIDIDMP_SECTION_LABEL_HEADER);
 

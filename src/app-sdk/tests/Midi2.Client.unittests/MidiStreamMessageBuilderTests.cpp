@@ -47,23 +47,23 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationLong()
         std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).PeekFirstWord() << std::endl;
 
         // verify status    
-        VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
+        VERIFY_ARE_EQUAL(MidiMessageHelper::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
 
         // verify form is correct
         if (i == 0)
         {
             // first message
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x01);
+            VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x01);
         }
         else if (i == messages.Size() - 1)
         {
             // last message
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x03);
+            VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x03);
         }
         else
         {
             // interim messages
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x02);
+            VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), 0x02);
         }
     }
 
@@ -106,11 +106,11 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationMedium()
 
 
     // verify status is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x01);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x01);
 
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), 0x03);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), 0x03);
 
     // verify form is correct
 
@@ -156,10 +156,10 @@ void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationShort()
 
 
     // verify status is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION);
 
     // verify form is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x00);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x00);
 
     // reverse it back into a string and verify
     auto s = MidiStreamMessageBuilder::ParseEndpointNameNotificationMessages(messages);
@@ -201,10 +201,10 @@ void MidiStreamMessageBuilderTests::TestBuildProductInstanceIdNotificationShort(
 
 
     // verify status is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION);
 
     // verify form is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x00);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x00);
 
     // reverse it back into a string and verify
 

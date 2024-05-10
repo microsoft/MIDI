@@ -54,23 +54,23 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
         std::cout << "Stream word0 0x" << std::hex << messages.GetAt(i).PeekFirstWord() << std::endl;
 
         // verify status    
-        VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
+        VERIFY_ARE_EQUAL(MidiMessageHelper::GetStatusFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
 
         // verify form is correct
         if (i == 0)
         {
             // first message
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x01);
+            VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x01);
         }
         else if (i == messages.Size() - 1)
         {
             // last message
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x03);
+            VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x03);
         }
         else
         {
             // interim messages
-            VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x02);
+            VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(i).PeekFirstWord()), (uint8_t)0x02);
         }
 
 
@@ -123,11 +123,11 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificatio
 
 
     // verify status is correct
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x01);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetStatusFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(0).PeekFirstWord()), 0x01);
 
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
-    VERIFY_ARE_EQUAL(MidiMessageUtility::GetFormFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), 0x03);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetStatusFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION);
+    VERIFY_ARE_EQUAL(MidiMessageHelper::GetFormFromStreamMessageFirstWord(messages.GetAt(1).PeekFirstWord()), 0x03);
 
 
     // verify form is correct
@@ -149,7 +149,7 @@ void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockInfoNotificatio
     bool active{ true };
     uint8_t functionBlockNumber{ 5 };
     MidiFunctionBlockUIHint uiHint{ MidiFunctionBlockUIHint::Receiver };                // 1
-    MidiFunctionBlockMidi10 midi10{ MidiFunctionBlockMidi10::YesBandwidthRestricted };  // 2
+    MidiFunctionBlockRepresentsMidi10Connection midi10{ MidiFunctionBlockRepresentsMidi10Connection::YesBandwidthRestricted };  // 2
     MidiFunctionBlockDirection direction{ MidiFunctionBlockDirection::Bidirectional };  // 3
 
     uint8_t firstGroup{ 6 };

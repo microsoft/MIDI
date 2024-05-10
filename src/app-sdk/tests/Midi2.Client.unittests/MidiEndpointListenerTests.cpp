@@ -22,15 +22,15 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
 
 
 
-    auto session = MidiSession::CreateSession(L"Listener Session Test");
+    auto session = MidiSession::TryCreate(L"Listener Session Test");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
     LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
-    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -128,15 +128,15 @@ void MidiEndpointListenerTests::TestGroupListener()
 
 
 
-    auto session = MidiSession::CreateSession(L"Listener Session Test");
+    auto session = MidiSession::TryCreate(L"Listener Session Test");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
     LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
-    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -163,9 +163,9 @@ void MidiEndpointListenerTests::TestGroupListener()
             std::cout << " - MessageType:       0x" << std::hex << (int)(args.MessageType()) << std::endl;
             std::cout << " - Word0:             0x" << std::hex << (word0) << std::endl;
 
-            if (MidiMessageUtility::MessageTypeHasGroupField(args.MessageType()))
+            if (MidiMessageHelper::MessageTypeHasGroupField(args.MessageType()))
             {
-                auto messageGroup = MidiMessageUtility::GetGroupFromMessageFirstWord(word0);
+                auto messageGroup = MidiMessageHelper::GetGroupFromMessageFirstWord(word0);
 
                 for (auto const& group : endpointListener.IncludeGroups())
                 {
@@ -245,15 +245,15 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
 
 
 
-    auto session = MidiSession::CreateSession(L"Listener Session Test");
+    auto session = MidiSession::TryCreate(L"Listener Session Test");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
     LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
-    auto connSend = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.CreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -281,10 +281,10 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
             std::cout << " - MessageType:       0x" << std::hex << (int)(args.MessageType()) << std::endl;
             std::cout << " - Word0:             0x" << std::hex << (word0) << std::endl;
 
-            if (MidiMessageUtility::MessageTypeHasChannelField(args.MessageType()))
+            if (MidiMessageHelper::MessageTypeHasChannelField(args.MessageType()))
             {
-                auto messageGroup = MidiMessageUtility::GetGroupFromMessageFirstWord(word0);
-                auto messageChannel = MidiMessageUtility::GetChannelFromMessageFirstWord(word0);
+                auto messageGroup = MidiMessageHelper::GetGroupFromMessageFirstWord(word0);
+                auto messageChannel = MidiMessageHelper::GetChannelFromMessageFirstWord(word0);
 
                 if (endpointListener.IncludeGroup().Index() == messageGroup.Index())
                 {

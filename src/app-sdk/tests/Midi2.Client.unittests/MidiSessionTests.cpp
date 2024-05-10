@@ -15,7 +15,7 @@ void MidiSessionTests::TestCreateNewSession()
 {
     winrt::hstring sessionName = L"Test Session Name";
 
-    auto session = MidiSession::CreateSession(sessionName);
+    auto session = MidiSession::TryCreate(sessionName);
 
     VERIFY_IS_NOT_NULL(session);
 
@@ -33,8 +33,8 @@ void MidiSessionTests::TestSessionList()
     winrt::hstring session1Name = L"Session 1 Name";
     winrt::hstring session2Name = L"Session 2 Name";
 
-    auto session1 = MidiSession::CreateSession(session1Name);
-    auto session2 = MidiSession::CreateSession(session2Name);
+    auto session1 = MidiSession::TryCreate(session1Name);
+    auto session2 = MidiSession::TryCreate(session2Name);
 
     VERIFY_IS_NOT_NULL(session1);
     VERIFY_IS_NOT_NULL(session2);
@@ -67,7 +67,7 @@ void MidiSessionTests::TestUpdateSessionName()
     winrt::hstring oldSessionName = L"Test Session Name";
     winrt::hstring newSessionName = L"New Session Name";
 
-    auto session = MidiSession::CreateSession(oldSessionName);
+    auto session = MidiSession::TryCreate(oldSessionName);
 
     VERIFY_IS_NOT_NULL(session);
 
