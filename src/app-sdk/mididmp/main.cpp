@@ -14,7 +14,7 @@
 using namespace winrt;
 using namespace winrt::Windows::Foundation;
 
-const std::wstring fieldSeparator = MIDIDMP_FIELD_SEPARATOR;
+const std::wstring fieldSeparator = MIDIDIAG_FIELD_SEPARATOR;
 
 void OutputBlankLine()
 {
@@ -24,7 +24,7 @@ void OutputBlankLine()
 
 void OutputSectionHeader(_In_ std::wstring headerText)
 {
-    const std::wstring sectionHeaderSeparator = std::wstring(MIDIDMP_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDMP_SECTION_HEADER_SEPARATOR_CHAR);
+    const std::wstring sectionHeaderSeparator = std::wstring(MIDIDIAG_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDIAG_SECTION_HEADER_SEPARATOR_CHAR);
 
     std::wcout
         << std::endl
@@ -39,7 +39,7 @@ void OutputSectionHeader(_In_ std::wstring headerText)
 
 void OutputItemSeparator()
 {
-    const std::wstring itemSeparator = std::wstring(MIDIDMP_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDMP_ITEM_SEPARATOR_CHAR);
+    const std::wstring itemSeparator = std::wstring(MIDIDIAG_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDIAG_ITEM_SEPARATOR_CHAR);
 
     std::wcout
         << itemSeparator
@@ -56,7 +56,7 @@ void OutputHeader(_In_ std::wstring headerText)
 void OutputFieldLabel(_In_ std::wstring fieldName)
 {
     std::wcout
-        << std::setw(MIDIDMP_MAX_FIELD_LABEL_WIDTH)
+        << std::setw(MIDIDIAG_MAX_FIELD_LABEL_WIDTH)
         << std::left
         << fieldName;
 }
@@ -103,7 +103,7 @@ void OutputCurrentTime()
 {
     auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
 
-    OutputStringField(MIDIDMP_FIELD_LABEL_CURRENT_TIME, std::format(L"{:%Y-%m-%d %X}", time));
+    OutputStringField(MIDIDIAG_FIELD_LABEL_CURRENT_TIME, std::format(L"{:%Y-%m-%d %X}", time));
 
 }
 
@@ -165,7 +165,7 @@ bool DoSectionTransports(_In_ bool verbose)
 
     try
     {
-        OutputSectionHeader(MIDIDMP_SECTION_LABEL_ENUM_TRANSPORTS);
+        OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_TRANSPORTS);
 
         auto transports = midi2::MidiService::GetInstalledTransportPlugins();
 
@@ -173,12 +173,12 @@ bool DoSectionTransports(_In_ bool verbose)
         {
             for (auto const& transport : transports)
             {
-                OutputGuidField(MIDIDMP_FIELD_LABEL_TRANSPORT_ID, transport.Id());
-                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_NAME, transport.Name());
-                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Mnemonic());
-                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_VERSION, transport.Version());
-                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author());
-                OutputStringField(MIDIDMP_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description());
+                OutputGuidField(MIDIDIAG_FIELD_LABEL_TRANSPORT_ID, transport.Id());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME, transport.Name());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Mnemonic());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_VERSION, transport.Version());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description());
                 OutputItemSeparator();
             }
         }
@@ -199,7 +199,7 @@ bool DoSectionTransports(_In_ bool verbose)
 
 bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
 {
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_MIDI2_API_ENDPOINTS);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI2_API_ENDPOINTS);
 
     // list devices
 
@@ -231,25 +231,25 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
 
             // These names should not be localized because customers may parse these output fields
 
-            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.Id());
-            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_NAME, device.Name());
-            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, device.TransportMnemonic());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.Id());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_NAME, device.Name());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, device.TransportMnemonic());
 
             if (verbose)
             {
-                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, device.UserSuppliedName());
-                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, device.EndpointSuppliedName());
-                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, device.TransportSuppliedName());
-                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, device.TransportSuppliedDescription());
-                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, device.UserSuppliedDescription());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, device.UserSuppliedName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, device.EndpointSuppliedName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, device.TransportSuppliedName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, device.TransportSuppliedDescription());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, device.UserSuppliedDescription());
             }
 
             auto parent = device.GetParentDeviceInformation();
 
             if (parent != nullptr)
             {
-                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ID, parent.Id());
-                OutputStringField(MIDIDMP_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_NAME, parent.Name());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ID, parent.Id());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_NAME, parent.Name());
             }
             else
             {
@@ -275,7 +275,7 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS);
 
     try
     {
@@ -287,8 +287,8 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
         {
             auto device = midi1Inputs.GetAt(i);
 
-            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI1_ENDPOINT_ID, device.Id());
-            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI1_ENDPOINT_NAME, device.Name());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_ID, device.Id());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_NAME, device.Name());
 
             if (i != midi1Inputs.Size() - 1)
             {
@@ -303,7 +303,7 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
         return false;
     }
 
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_MIDI1_API_OUTPUT_ENDPOINTS);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI1_API_OUTPUT_ENDPOINTS);
 
     try
     {// outputs
@@ -314,8 +314,8 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
         {
             auto device = midi1Outputs.GetAt(i);
 
-            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI1_ENDPOINT_ID, device.Id());
-            OutputStringField(MIDIDMP_FIELD_LABEL_MIDI1_ENDPOINT_NAME, device.Name());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_ID, device.Id());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_NAME, device.Name());
 
             if (i != midi1Outputs.Size() - 1)
             {
@@ -337,9 +337,9 @@ bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
 
     try
     {
-        OutputSectionHeader(MIDIDMP_SECTION_LABEL_PING_TEST);
+        OutputSectionHeader(MIDIDIAG_SECTION_LABEL_PING_TEST);
 
-        OutputNumericField(MIDIDMP_FIELD_LABEL_PING_ATTEMPT_COUNT, (uint32_t)pingCount);
+        OutputNumericField(MIDIDIAG_FIELD_LABEL_PING_ATTEMPT_COUNT, (uint32_t)pingCount);
 
         auto pingResult = midi2::MidiService::PingService(pingCount);
 
@@ -349,21 +349,21 @@ bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
         {
             //std::cout << "DEBUG: pingresult != nullptr" << std::endl;
 
-            OutputNumericField(MIDIDMP_FIELD_LABEL_PING_RETURN_COUNT, pingResult.Responses().Size());
+            OutputNumericField(MIDIDIAG_FIELD_LABEL_PING_RETURN_COUNT, pingResult.Responses().Size());
 
             if (pingResult.Success())
             {
                 //std::cout << "DEBUG: pingresult.Success()" << std::endl;
 
-                OutputTimestampField(MIDIDMP_FIELD_LABEL_PING_ROUND_TRIP_TOTAL_TICKS, pingResult.TotalPingRoundTripMidiClock());
-                OutputTimestampField(MIDIDMP_FIELD_LABEL_PING_ROUND_TRIP_AVERAGE_TICKS, pingResult.AveragePingRoundTripMidiClock());
+                OutputTimestampField(MIDIDIAG_FIELD_LABEL_PING_ROUND_TRIP_TOTAL_TICKS, pingResult.TotalPingRoundTripMidiClock());
+                OutputTimestampField(MIDIDIAG_FIELD_LABEL_PING_ROUND_TRIP_AVERAGE_TICKS, pingResult.AveragePingRoundTripMidiClock());
 
                 return true;
             }
             else
             {
                 OutputError(L"Ping test failed");
-                OutputStringField(MIDIDMP_FIELD_LABEL_PING_FAILURE_REASON, pingResult.FailureReason());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_PING_FAILURE_REASON, pingResult.FailureReason());
 
                 return false;
             }
@@ -389,10 +389,10 @@ bool DoSectionClock(_In_ bool verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_MIDI_CLOCK);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI_CLOCK);
 
-    OutputTimestampField(MIDIDMP_FIELD_LABEL_CLOCK_FREQUENCY, midi2::MidiClock::TimestampFrequency());
-    OutputTimestampField(MIDIDMP_FIELD_LABEL_CLOCK_NOW, midi2::MidiClock::Now());
+    OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_FREQUENCY, midi2::MidiClock::TimestampFrequency());
+    OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_NOW, midi2::MidiClock::Now());
 
     return true;
 }
@@ -401,9 +401,9 @@ bool DoSectionServiceStatus(_In_ bool verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_SERVICE_STATUS);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS);
 
-    OutputBooleanField(MIDIDMP_FIELD_LABEL_SERVICE_AVAILABLE, midi2::MidiService::EnsureAvailable());
+    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, midi2::MidiService::EnsureAvailable());
 
     return true;
 }
@@ -483,26 +483,26 @@ void OutputSystemInfo(_In_ SYSTEM_INFO& sysinfo)
 //    OutputNumericField(L"num_processors", sysinfo.dwNumberOfProcessors);
     std::wstring processorArchitecture = GetProcessorArchitectureString(sysinfo.wProcessorArchitecture);
 
-    OutputStringField(MIDIDMP_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_ARCH, processorArchitecture);
-    OutputNumericField(MIDIDMP_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_LEVEL, sysinfo.wProcessorLevel);
-    OutputHexNumericField(MIDIDMP_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_REVISION, sysinfo.wProcessorRevision);
+    OutputStringField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_ARCH, processorArchitecture);
+    OutputNumericField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_LEVEL, sysinfo.wProcessorLevel);
+    OutputHexNumericField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_REVISION, sysinfo.wProcessorRevision);
 }
 
 bool DoSectionSystemInfo(_In_ bool verbose)
 {
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_OS);
-    OutputStringField(MIDIDMP_FIELD_LABEL_OS_VERSION, GetOSVersion());
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_OS);
+    OutputStringField(MIDIDIAG_FIELD_LABEL_OS_VERSION, GetOSVersion());
 
 
     // if running under emulation on Arm64, this is going to return the emulated sys info
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_APPARENT_SYSTEM_INFO);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_APPARENT_SYSTEM_INFO);
 
     SYSTEM_INFO sysinfo;
     ::GetNativeSystemInfo(&sysinfo);
     OutputSystemInfo(sysinfo);
 
     // if running under emulation on Arm64, this is going to return the Arm info
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_NATIVE_SYSTEM_INFO);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_NATIVE_SYSTEM_INFO);
 
     SYSTEM_INFO sysinfoNative;
     ::GetNativeSystemInfo(&sysinfoNative);
@@ -520,11 +520,11 @@ int __cdecl main()
     bool pingTest = true;
     bool midiClock = true;
 
-    OutputHeader(MIDIDMP_PRODUCT_NAME);
+    OutputHeader(MIDIDIAG_PRODUCT_NAME);
     OutputHeader(L"This application Copyright (c) 2024- Microsoft Corporation");
     OutputHeader(L"Information, license, and source available at https://aka.ms/midi");
 
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_HEADER);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_HEADER);
 
     OutputCurrentTime();
 
@@ -566,7 +566,7 @@ int __cdecl main()
         RETURN_FAIL;
     }
 
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_END_OF_FILE);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
     RETURN_SUCCESS;
 }

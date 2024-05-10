@@ -23,6 +23,7 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Devices.Midi.h>
+
 #include <winrt/Microsoft.Devices.Midi2.h>
 
 
@@ -36,4 +37,4 @@ namespace collections = winrt::Windows::Foundation::Collections;
 
 namespace internal = ::WindowsMidiServicesInternal;
 
-#include "mididmp_field_defs.h"
+#include "mididiag_field_defs.h"
