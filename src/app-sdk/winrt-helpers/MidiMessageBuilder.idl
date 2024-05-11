@@ -6,54 +6,39 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
-import "IMidiUniversalPacket.idl";
-import "MidiMessage32.idl";
-import "MidiMessage64.idl";
-import "MidiMessage96.idl";
-import "MidiMessage128.idl";
-
-import "MidiGroup.idl";
-import "MidiChannel.idl";
-
 import "MidiSystemExclusive8StatusEnum.idl";
 
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2.Messages
 {
-    MIDI_API_CONTRACT_v1
     static runtimeclass MidiMessageBuilder
     {
-        static MidiMessage32 BuildUtilityMessage(
-            MIDI_TIMESTAMP timestamp, 
+        static Microsoft.Devices.Midi2.MidiMessage32 BuildUtilityMessage(
+            UInt64 timestamp, 
             UInt8 status, 
             UInt32 dataOrReserved);
 
-        static MidiMessage32 BuildSystemMessage(
-            MIDI_TIMESTAMP timestamp,
-            MidiGroup group,
+        static Microsoft.Devices.Midi2.MidiMessage32 BuildSystemMessage(
+            UInt64 timestamp,
+            Microsoft.Devices.Midi2.MidiGroup group,
             UInt8 status, 
             UInt8 midi1Byte2, 
             UInt8 midi1Byte3);
 
-        static MidiMessage32 BuildMidi1ChannelVoiceMessage(
-            MIDI_TIMESTAMP timestamp,
-            MidiGroup group,
+        static Microsoft.Devices.Midi2.MidiMessage32 BuildMidi1ChannelVoiceMessage(
+            UInt64 timestamp,
+            Microsoft.Devices.Midi2.MidiGroup group,
             Midi1ChannelVoiceMessageStatus status,
-            MidiChannel channel, 
+            Microsoft.Devices.Midi2.MidiChannel channel,
             UInt8 byte3, 
             UInt8 byte4);
 
         [default_overload]
-        static MidiMessage64 BuildSystemExclusive7Message(
-            MIDI_TIMESTAMP timestamp,
-            MidiGroup group,
+        static Microsoft.Devices.Midi2.MidiMessage64 BuildSystemExclusive7Message(
+            UInt64 timestamp,
+            Microsoft.Devices.Midi2.MidiGroup group,
             UInt8 status,
             UInt8 numberOfBytes, 
             UInt8 dataByte0, 
@@ -63,17 +48,17 @@ namespace MIDI_MIDL_NAMESPACE
             UInt8 dataByte4, 
             UInt8 dataByte5);
 
-        static MidiMessage64 BuildMidi2ChannelVoiceMessage(
-            MIDI_TIMESTAMP timestamp,
-            MidiGroup group,
+        static Microsoft.Devices.Midi2.MidiMessage64 BuildMidi2ChannelVoiceMessage(
+            UInt64 timestamp,
+            Microsoft.Devices.Midi2.MidiGroup group,
             Midi2ChannelVoiceMessageStatus status,
-            MidiChannel channel,
+            Microsoft.Devices.Midi2.MidiChannel channel,
             UInt16 index,
             UInt32 data);
 
-        static MidiMessage128 BuildSystemExclusive8Message(
-            MIDI_TIMESTAMP timestamp,
-            MidiGroup group,
+        static Microsoft.Devices.Midi2.MidiMessage128 BuildSystemExclusive8Message(
+            UInt64 timestamp,
+            Microsoft.Devices.Midi2.MidiGroup group,
             MidiSystemExclusive8Status status,
             UInt8 numberOfValidDataBytesThisMessage, 
             UInt8 streamId, 
@@ -91,9 +76,9 @@ namespace MIDI_MIDL_NAMESPACE
             UInt8 dataByte11, 
             UInt8 dataByte12);
 
-        static MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
-            MIDI_TIMESTAMP timestamp,
-            MidiGroup group,
+        static Microsoft.Devices.Midi2.MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
+            UInt64 timestamp,
+            Microsoft.Devices.Midi2.MidiGroup group,
             UInt8 mdsId,
             UInt16 numberValidDataBytesInThisChunk, 
             UInt16 numberChunksInMixedDataSet, 
@@ -103,9 +88,9 @@ namespace MIDI_MIDL_NAMESPACE
             UInt16 subId1, 
             UInt16 subId2);
 
-        static MidiMessage128 BuildMixedDataSetChunkDataMessage(
-            MIDI_TIMESTAMP timestamp,
-            MidiGroup group,
+        static Microsoft.Devices.Midi2.MidiMessage128 BuildMixedDataSetChunkDataMessage(
+            UInt64 timestamp,
+            Microsoft.Devices.Midi2.MidiGroup group,
             UInt8 mdsId,
             UInt8 dataByte00, 
             UInt8 dataByte01, 
@@ -122,20 +107,20 @@ namespace MIDI_MIDL_NAMESPACE
             UInt8 dataByte12, 
             UInt8 dataByte13);
 
-        static MidiMessage128 BuildFlexDataMessage(
-            MIDI_TIMESTAMP timestamp,
-            MidiGroup group,
+        static Microsoft.Devices.Midi2.MidiMessage128 BuildFlexDataMessage(
+            UInt64 timestamp,
+            Microsoft.Devices.Midi2.MidiGroup group,
             UInt8 form,
             UInt8 address, 
-            MidiChannel channel, 
+            Microsoft.Devices.Midi2.MidiChannel channel,
             UInt8 statusBank, 
             UInt8 status, 
             UInt32 word1Data, 
             UInt32 word2Data, 
             UInt32 word3Data);
 
-        static MidiMessage128 BuildStreamMessage(
-            MIDI_TIMESTAMP timestamp,
+        static Microsoft.Devices.Midi2.MidiMessage128 BuildStreamMessage(
+            UInt64 timestamp,
             UInt8 form,
             UInt16 status, 
             UInt16 word0RemainingData, 

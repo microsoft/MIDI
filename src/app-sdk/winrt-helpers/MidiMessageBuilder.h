@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiMessageBuilder.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 {
     struct MidiMessageBuilder
     {
@@ -34,7 +34,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage32 BuildMidi1ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ midi2::Midi1ChannelVoiceMessageStatus const& status,
+            _In_ msgs::Midi1ChannelVoiceMessageStatus const& status,
             _In_ midi2::MidiChannel const& channel,
             _In_ uint8_t const byte3,
             _In_ uint8_t const byte4) noexcept;
@@ -56,7 +56,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage64 BuildMidi2ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ midi2::Midi2ChannelVoiceMessageStatus const& status,
+            _In_ msgs::Midi2ChannelVoiceMessageStatus const& status,
             _In_ midi2::MidiChannel const& channel,
             _In_ uint16_t const index,
             _In_ uint32_t const data) noexcept;
@@ -65,7 +65,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         static midi2::MidiMessage128 BuildSystemExclusive8Message(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
-            _In_ midi2::MidiSystemExclusive8Status const& status,
+            _In_ msgs::MidiSystemExclusive8Status const& status,
             _In_ uint8_t const numberOfValidDataBytesThisMessage,
             _In_ uint8_t const streamId, 
             _In_ uint8_t const dataByte00,
@@ -139,7 +139,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             _In_ uint32_t const word3Data) noexcept;
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::factory_implementation
 {
     struct MidiMessageBuilder : MidiMessageBuilderT<MidiMessageBuilder, implementation::MidiMessageBuilder, winrt::static_lifetime>
     {

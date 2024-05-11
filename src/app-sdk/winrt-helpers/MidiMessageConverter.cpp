@@ -10,7 +10,7 @@
 #include "MidiMessageConverter.h"
 #include "MidiMessageConverter.g.cpp"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1Message(

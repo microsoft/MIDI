@@ -14,7 +14,7 @@
 
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(
@@ -184,7 +184,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
             }
 
             midi2::MidiMessage128 umpProjected =
-                midi2::MidiMessageBuilder::BuildStreamMessage(
+                msgs::MidiMessageBuilder::BuildStreamMessage(
                     timestamp,
                     form,
                     status,
@@ -194,7 +194,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
                     (uint32_t)0
                 );
 
-            auto ump = winrt::get_self<implementation::MidiMessage128>(umpProjected);
+            //auto ump = winrt::get_self<implementation::MidiMessage128>(umpProjected);
             
             // allocate for the most we ever see
             uint8_t packetBytes[14]{ 0 };
@@ -218,7 +218,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
             uint8_t currentIndex = 0;
 
-            uint32_t word0 = ump->Word0();
+            uint32_t word0 = umpProjected.Word0();
 
             if (characterCountFirstWord == 2)
             {
@@ -230,23 +230,23 @@ namespace MIDI_CPP_NAMESPACE::implementation
                 word0 |= packetBytes[currentIndex++];
             }
 
-            ump->Word0(word0);
+            umpProjected.Word0(word0);
 
             // remaining packets are filled with the data we have
 
-            ump->Word1(
+            umpProjected.Word1(
                 packetBytes[currentIndex++] << 24 |
                 packetBytes[currentIndex++] << 16 |
                 packetBytes[currentIndex++] << 8 |
                 packetBytes[currentIndex++]);
 
-            ump->Word2(
+            umpProjected.Word2(
                 packetBytes[currentIndex++] << 24 |
                 packetBytes[currentIndex++] << 16 |
                 packetBytes[currentIndex++] << 8 |
                 packetBytes[currentIndex++]);
 
-            ump->Word3(
+            umpProjected.Word3(
                 packetBytes[currentIndex++] << 24 |
                 packetBytes[currentIndex++] << 16 |
                 packetBytes[currentIndex++] << 8 |

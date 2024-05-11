@@ -86,23 +86,11 @@
     <ClCompile Include="MidiGroup.cpp">
       <Filter>API\BasicTypes</Filter>
     </ClCompile>
-    <ClCompile Include="MidiChannelEndpointListener.cpp">
-      <Filter>API\Endpoints\Listeners</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiGroupEndpointListener.cpp">
-      <Filter>API\Endpoints\Listeners</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
-      <Filter>API\Endpoints\Listeners</Filter>
-    </ClCompile>
     <ClCompile Include="MidiFunctionBlock.cpp">
       <Filter>API\Endpoints\Metadata\Functions</Filter>
     </ClCompile>
     <ClCompile Include="MidiUniqueId.cpp">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiMessageBuilder.cpp">
-      <Filter>API\Messages</Filter>
     </ClCompile>
     <ClCompile Include="MidiGroupTerminalBlock.cpp">
       <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
@@ -111,37 +99,16 @@
     <ClCompile Include="MidiService.cpp">
       <Filter>API\Service</Filter>
     </ClCompile>
-    <ClCompile Include="MidiServicePingResponse.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiServicePingResponseSummary.cpp">
-      <Filter>API\Service</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiStreamMessageBuilder.cpp">
-      <Filter>API\Messages\Utility</Filter>
-    </ClCompile>
     <ClCompile Include="MidiEndpointDeviceInformation.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessageConverter.cpp">
-      <Filter>API\Messages\Utility</Filter>
-    </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
       <Filter>API\Enumeration</Filter>
     </ClCompile>
-    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
-      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
-    </ClCompile>
     <ClCompile Include="MidiServiceConfigurationResponse.cpp">
-      <Filter>API\Service\Configuration</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiServiceLoopbackEndpointCreationResult.cpp">
-      <Filter>API\Service\Configuration</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
       <Filter>API\Service\Configuration</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
@@ -165,9 +132,6 @@
     <ClCompile Include="midi_function_block_prop_util.cpp">
       <Filter>API\Enumeration\DeviceInformation</Filter>
     </ClCompile>
-    <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp">
-      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -181,17 +145,8 @@
     <ClInclude Include="MidiGroup.h">
       <Filter>API\BasicTypes</Filter>
     </ClInclude>
-    <ClInclude Include="MidiChannelEndpointListener.h">
-      <Filter>API\Endpoints\Listeners</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiGroupEndpointListener.h">
-      <Filter>API\Endpoints\Listeners</Filter>
-    </ClInclude>
     <ClInclude Include="memory_buffer.h">
       <Filter>Internal</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessageTypeEndpointListener.h">
-      <Filter>API\Endpoints\Listeners</Filter>
     </ClInclude>
     <ClInclude Include="MidiFunctionBlock.h">
       <Filter>API\Endpoints\Metadata\Functions</Filter>
@@ -200,23 +155,11 @@
     <ClInclude Include="MidiUniqueId.h">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </ClInclude>
-    <ClInclude Include="MidiMessageBuilder.h">
-      <Filter>API\Messages</Filter>
-    </ClInclude>
     <ClInclude Include="MidiGroupTerminalBlock.h">
       <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
     </ClInclude>
     <ClInclude Include="MidiService.h">
       <Filter>API\Service</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiServicePingResponse.h">
-      <Filter>API\Service</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiServicePingResponseSummary.h">
-      <Filter>API\Service</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiStreamMessageBuilder.h">
-      <Filter>API\Messages\Utility</Filter>
     </ClInclude>
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="MidiEndpointDeviceInformation.h">
@@ -225,25 +168,13 @@
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <Filter>API\Enumeration</Filter>
     </ClInclude>
-    <ClInclude Include="MidiMessageConverter.h">
-      <Filter>API\Messages\Utility</Filter>
-    </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcher.h">
       <Filter>API\Enumeration</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Internal\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
-      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
-    </ClInclude>
     <ClInclude Include="MidiServiceConfigurationResponse.h">
-      <Filter>API\Service\Configuration</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiServiceLoopbackEndpointCreationResult.h">
-      <Filter>API\Service\Configuration</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
       <Filter>API\Service\Configuration</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceInformationAddedEventArgs.h">
@@ -254,9 +185,6 @@
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h">
       <Filter>API\Enumeration\DeviceInformation</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
-      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
     </ClInclude>
     <ClInclude Include="namespace_defines.h" />
   </ItemGroup>
@@ -315,19 +243,10 @@
     <Midl Include="MidiMessageStruct.idl">
       <Filter>API\Messages\Types</Filter>
     </Midl>
-    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
-      <Filter>API\Messages\Enum</Filter>
-    </Midl>
-    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
-      <Filter>API\Messages\Enum</Filter>
-    </Midl>
     <Midl Include="MidiMessageTypeEnum.idl">
       <Filter>API\Messages\Enum</Filter>
     </Midl>
     <Midl Include="MidiPacketTypeEnum.idl">
-      <Filter>API\Messages\Enum</Filter>
-    </Midl>
-    <Midl Include="MidiSystemExclusive8StatusEnum.idl">
       <Filter>API\Messages\Enum</Filter>
     </Midl>
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl">

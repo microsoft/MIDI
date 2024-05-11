@@ -13,7 +13,7 @@
 #include "ump_helpers.h"
 #include "midi_ump.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageBuilder::BuildUtilityMessage(
@@ -54,7 +54,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     midi2::MidiMessage32 MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         internal::MidiTimestamp const timestamp,
         midi2::MidiGroup const& group,
-        midi2::Midi1ChannelVoiceMessageStatus const& status,
+        msgs::Midi1ChannelVoiceMessageStatus const& status,
         midi2::MidiChannel const& channel,
         uint8_t const byte3,
         uint8_t const byte4) noexcept
@@ -110,7 +110,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     midi2::MidiMessage64 MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
         internal::MidiTimestamp const timestamp,
         midi2::MidiGroup const& group,
-        midi2::Midi2ChannelVoiceMessageStatus const& status,
+        msgs::Midi2ChannelVoiceMessageStatus const& status,
         midi2::MidiChannel const& channel,
         uint16_t const index,
         uint32_t const data) noexcept
@@ -130,7 +130,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     midi2::MidiMessage128 MidiMessageBuilder::BuildSystemExclusive8Message(
         internal::MidiTimestamp const timestamp,
         midi2::MidiGroup const& group,
-        midi2::MidiSystemExclusive8Status const& status,
+        msgs::MidiSystemExclusive8Status const& status,
         uint8_t const numberOfValidDataBytesThisMessage,
         uint8_t const streamId,
         uint8_t const dataByte00,

@@ -439,8 +439,6 @@
     <Midl Include="MidiEndpointUserSuppliedInfo.idl" />
     <Midl Include="MidiServiceConfigurationResponse.idl" />
     <Midl Include="IMidiServiceTransportPluginConfiguration.idl" />
-    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
-    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl" />
     <Midl Include="MidiEndpointConnection.idl" />
     <Midl Include="MidiChannel.idl" />
@@ -471,7 +469,6 @@
     <Midl Include="MidiSession.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
-    <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
     <Midl Include="MidiMessage128.idl" />
     <Midl Include="MidiMessage32.idl" />
     <Midl Include="MidiMessage64.idl" />

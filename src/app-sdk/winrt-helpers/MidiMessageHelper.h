@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiMessageHelper.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 {
     struct MidiMessageHelper
     {
@@ -68,7 +68,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::factory_implementation
 {
     struct MidiMessageHelper : MidiMessageHelperT<MidiMessageHelper, implementation::MidiMessageHelper, winrt::static_lifetime>
     {

@@ -5,25 +5,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
-    <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
-    <ClInclude Include="midl_defines.h" />
-    <ClInclude Include="namespace_defines.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="trace_logging.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
+    <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2ApiContract.idl" />
     <Midl Include="MidiMessageBuilder.idl">
       <Filter>SDK</Filter>
     </Midl>
@@ -39,9 +32,15 @@
     <Midl Include="MidiSystemExclusive8StatusEnum.idl">
       <Filter>SDK</Filter>
     </Midl>
+    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
-    <None Include="midi-app-api.def" />
+    <None Include="midi-app-sdk.def" />
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
   </ItemGroup>

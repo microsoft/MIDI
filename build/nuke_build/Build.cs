@@ -63,7 +63,7 @@ class Build : NukeBuild
 
 
 
-    Target BuildSDK => _ => _
+    Target BuildCoreSDK => _ => _
         .DependsOn(Restore)
         .Executes(() =>
         {
@@ -72,16 +72,27 @@ class Build : NukeBuild
 
         });
 
+    Target BuildDiagnosticsSDK => _ => _
+        .DependsOn(BuildCoreSDK)
+        .Executes(() =>
+        {
+
+
+
+        });
+
 
     Target BuildSettingsApp => _ => _
-        .DependsOn(BuildSDK)
+        .DependsOn(BuildCoreSDK)
+        .DependsOn(BuildDiagnosticsSDK)
         .Executes(() =>
         {
 
         });
 
     Target BuildConsoleApp => _ => _
-        .DependsOn(BuildSDK)
+        .DependsOn(BuildCoreSDK)
+        .DependsOn(BuildDiagnosticsSDK)
         .Executes(() =>
         {
 
@@ -94,7 +105,8 @@ class Build : NukeBuild
 
 
     Target BuildSamples => _ => _
-        .DependsOn(BuildSDK)
+        .DependsOn(BuildCoreSDK)
+        .DependsOn(BuildDiagnosticsSDK)
         .Executes(() =>
         {
 
@@ -103,7 +115,8 @@ class Build : NukeBuild
 
 
     Target BuildAndPublishAll => _ => _
-        .DependsOn(BuildSDK)
+        .DependsOn(BuildCoreSDK)
+        .DependsOn(BuildDiagnosticsSDK)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSamples)

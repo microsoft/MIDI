@@ -10,7 +10,7 @@
 #include "MidiStreamMessageBuilder.g.h"
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 {
     struct MidiStreamMessageBuilder
     {
@@ -147,7 +147,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
     };
 }
 
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::Messages::factory_implementation
 {
     struct MidiStreamMessageBuilder : MidiStreamMessageBuilderT<MidiStreamMessageBuilder, implementation::MidiStreamMessageBuilder, winrt::static_lifetime>
     {

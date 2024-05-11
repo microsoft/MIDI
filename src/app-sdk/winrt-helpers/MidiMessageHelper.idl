@@ -6,24 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
-import "MidiMessageTypeEnum.idl";
-import "MidiPacketTypeEnum.idl";
-import "MidiGroup.idl";
-import "MidiChannel.idl";
-
-import "IMidiUniversalPacket.idl";
 
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Devices.Midi2.Messages
 {
-    MIDI_API_CONTRACT_v1
     static runtimeclass MidiMessageHelper
     {
         static Boolean ValidateMessage32MessageType(UInt32 word0);
@@ -31,12 +19,12 @@ namespace MIDI_MIDL_NAMESPACE
         static Boolean ValidateMessage96MessageType(UInt32 word0);
         static Boolean ValidateMessage128MessageType(UInt32 word0);
 
-        static MidiMessageType GetMessageTypeFromMessageFirstWord(UInt32 word0);
-        static MidiPacketType GetPacketTypeFromMessageFirstWord(UInt32 word0);
+        static Microsoft.Devices.Midi2.MidiMessageType GetMessageTypeFromMessageFirstWord(UInt32 word0);
+        static Microsoft.Devices.Midi2.MidiPacketType GetPacketTypeFromMessageFirstWord(UInt32 word0);
 
-        static Boolean MessageTypeHasGroupField(MidiMessageType messageType);
-        static UInt32 ReplaceGroupInMessageFirstWord(UInt32 word0, MidiGroup newGroup);
-        static MidiGroup GetGroupFromMessageFirstWord(UInt32 word0);
+        static Boolean MessageTypeHasGroupField(Microsoft.Devices.Midi2.MidiMessageType messageType);
+        static UInt32 ReplaceGroupInMessageFirstWord(UInt32 word0, Microsoft.Devices.Midi2.MidiGroup newGroup);
+        static Microsoft.Devices.Midi2.MidiGroup GetGroupFromMessageFirstWord(UInt32 word0);
 
         static UInt8 GetStatusFromUtilityMessage(UInt32 word0);
         static Midi1ChannelVoiceMessageStatus GetStatusFromMidi1ChannelVoiceMessage(UInt32 word0);
@@ -55,9 +43,9 @@ namespace MIDI_MIDL_NAMESPACE
         static UInt8 GetNumberOfBytesFromDataMessage128FirstWord(UInt32 word0);
 
 
-        static Boolean MessageTypeHasChannelField(MidiMessageType messageType);
-        static UInt32 ReplaceChannelInMessageFirstWord(UInt32 word0, MidiChannel newChannel);
-        static MidiChannel GetChannelFromMessageFirstWord(UInt32 word0);
+        static Boolean MessageTypeHasChannelField(Microsoft.Devices.Midi2.MidiMessageType messageType);
+        static UInt32 ReplaceChannelInMessageFirstWord(UInt32 word0, Microsoft.Devices.Midi2.MidiChannel newChannel);
+        static Microsoft.Devices.Midi2.MidiChannel GetChannelFromMessageFirstWord(UInt32 word0);
 
         static UInt8 GetFormFromStreamMessageFirstWord(UInt32 word0);
         static UInt16 GetStatusFromStreamMessageFirstWord(UInt32 word0);
@@ -66,7 +54,7 @@ namespace MIDI_MIDL_NAMESPACE
         static String GetMessageDisplayNameFromFirstWord(UInt32 word0);
 
 
-        static IVector<IMidiUniversalPacket> GetPacketListFromWordList(MIDI_TIMESTAMP timestamp, IIterable<UInt32> words);
-        static IVector<UInt32> GetWordListFromPacketList(IIterable<IMidiUniversalPacket> words);
+        static IVector<Microsoft.Devices.Midi2.IMidiUniversalPacket> GetPacketListFromWordList(UInt64 timestamp, IIterable<UInt32> words);
+        static IVector<UInt32> GetWordListFromPacketList(IIterable<Microsoft.Devices.Midi2.IMidiUniversalPacket> words);
     };
 }
