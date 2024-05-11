@@ -23,7 +23,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Dia
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Plugins", "winrt-client-plugins\Microsoft.Devices.Midi2.Plugins.vcxproj", "{3D2BC934-CDC7-4DC7-B7FC-F34B755BF726}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Messages", "winrt-helpers\Microsoft.Devices.Midi2.Helpers.vcxproj", "{001601DE-B7AB-41D1-81B7-40286B139841}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Messages", "winrt-messages\Microsoft.Devices.Midi2.Messages.vcxproj", "{001601DE-B7AB-41D1-81B7-40286B139841}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Devices.Midi2.Endpoints.Loopback", "winrt-endpoint-loopback\Microsoft.Devices.Midi2.Endpoints.Loopback.vcxproj", "{D3B84D5D-8BED-4CB7-B430-B0BF1E46F3A1}"
 EndProject

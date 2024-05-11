@@ -54,13 +54,11 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include "ump_helpers.h"
 #include "memory_buffer.h"
 #include "wstring_util.h"
-#include "midi_group_terminal_blocks.h"
 
 // AbstractionUtilities
 
 // shared
 #include "midi_ump.h"   // general shared
-#include "loopback_ids.h"
 #include <midi_timestamp.h>
 
 //#include <wil/resource.h>
