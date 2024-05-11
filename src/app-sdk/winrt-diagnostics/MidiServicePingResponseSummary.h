@@ -22,7 +22,7 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
         internal::MidiTimestamp TotalPingRoundTripMidiClock() const noexcept { return m_totalPingMidiClockTicks; }
         internal::MidiTimestamp AveragePingRoundTripMidiClock() const noexcept { return m_averagePingMidiClockTicks; }
 
-        foundation::Collections::IVectorView<midi2::MidiServicePingResponse> Responses() const noexcept { return m_responses.GetView(); }
+        foundation::Collections::IVectorView<diag::MidiServicePingResponse> Responses() const noexcept { return m_responses.GetView(); }
 
 
         void InternalSetFailed(_In_ winrt::hstring failureReason) { m_success = false; m_failureReason = failureReason; }
@@ -38,7 +38,7 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
         }
 
         void InternalAddResponse(
-            _In_ midi2::MidiServicePingResponse response
+            _In_ diag::MidiServicePingResponse response
             )
         {
             m_responses.Append(response);
@@ -51,8 +51,8 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
         internal::MidiTimestamp m_totalPingMidiClockTicks{ 0 };
         internal::MidiTimestamp m_averagePingMidiClockTicks{ 0 };
 
-        foundation::Collections::IVector<midi2::MidiServicePingResponse>
-            m_responses { winrt::single_threaded_vector<midi2::MidiServicePingResponse>() };
+        foundation::Collections::IVector<diag::MidiServicePingResponse>
+            m_responses { winrt::single_threaded_vector<diag::MidiServicePingResponse>() };
 
     };
 }

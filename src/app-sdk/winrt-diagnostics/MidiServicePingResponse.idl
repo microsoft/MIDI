@@ -8,16 +8,15 @@
 
 namespace Microsoft.Devices.Midi2.Diagnostics
 {
-    [default_interface]
-    runtimeclass MidiServicePingResponse
+    struct MidiServicePingResponse
     {
-        UInt32 SourceId { get; };
-        UInt32 Index { get; };
+        UInt32 SourceId;
+        UInt32 Index;
 
-        UInt64 ClientSendMidiTimestamp{ get; };
-        UInt64 ServiceReportedMidiTimestamp{ get; };
-        UInt64 ClientReceiveMidiTimestamp{ get; };
+        UInt64 ClientSendMidiTimestamp;
+        UInt64 ServiceReportedMidiTimestamp;
+        UInt64 ClientReceiveMidiTimestamp;
 
-        UInt64 ClientDeltaTimestamp{ get; };
-    }
+        UInt64 ClientDeltaTimestamp;
+    };
 }

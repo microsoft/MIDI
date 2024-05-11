@@ -47,12 +47,6 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include <format>
 #include <filesystem>
 
-// include this before any project includes
-#include "namespace_defines.h"
-
-// internal
-#include "trace_logging.h"
-
 #include "ump_helpers.h"
 #include "wstring_util.h"
 #include "midi_group_terminal_blocks.h"
@@ -87,24 +81,22 @@ namespace internal = ::WindowsMidiServicesInternal;
 //#include "MidiXProc.h"
 #include "resource.h"
 
+namespace winrt::Microsoft::Devices::Midi2::Diagnostics {};
+namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation {};
 
 namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
 namespace diag = ::winrt::Microsoft::Devices::Midi2::Diagnostics;
 namespace implementation = ::winrt::Microsoft::Devices::Midi2::Diagnostics::implementation;
 
-
-#include "midi_ump_message_defs.h"
-
 #include <Devpropdef.h>
 #include "MidiDefs.h"
 
+#include "SdkTraceLogging.h"
 
-#include "MidiServicePingResponse.h"
+#include "MidiDiagnostics.h"
+#include "MidiReporting.h"
+
+
 #include "MidiServicePingResponseSummary.h"
-#include "MidiServiceTransportPluginInfo.h"
-#include "MidiServiceMessageProcessingPluginInfo.h"
-
-#include "MidiServiceSessionConnectionInfo.h"
 #include "MidiServiceSessionInfo.h"
-#include "MidiService.h"
 

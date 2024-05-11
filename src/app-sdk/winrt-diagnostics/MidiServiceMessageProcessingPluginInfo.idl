@@ -8,25 +8,24 @@
 
 namespace Microsoft.Devices.Midi2.Diagnostics
 {
-    [default_interface]
-    runtimeclass MidiServiceMessageProcessingPluginInfo
+    struct MidiServiceMessageProcessingPluginInfo
     {
-        Guid Id{ get; };
+        Guid Id;
 
-        String Name { get; };
-        String Description{ get; };
-        String Author{ get; };
+        String Name;
+        String Description;
+        String Author;
 
-        String SmallImagePath{ get; };
+        String SmallImagePath;
 
-        String Version{ get; };
+        String Version;
 
-        Boolean SupportsMultipleInstancesPerDevice{ get; };
+        Boolean SupportsMultipleInstancesPerDevice;
 
-        Boolean IsSystemManaged{ get; };
-        Boolean IsClientConfigurable{ get; };
+        Boolean IsSystemManaged;
+        Boolean IsClientConfigurable;
 
-        String ClientConfigurationAssemblyName { get; };
+        //String ClientConfigurationAssemblyName;
 
-    }
+    };
 }

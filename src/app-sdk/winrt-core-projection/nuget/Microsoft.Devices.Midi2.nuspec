@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Devices.Midi2</id>
-		<version>1.0.0-preview.6-0205</version>
+		<version>1.0.0-preview.6-0206</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>
@@ -54,15 +54,6 @@
               target="lib\uap10.0\Microsoft.Devices.Midi2.winmd" />
         <file src="..\..\vsfiles\Microsoft.Devices.Midi2\x64\Release\Microsoft.Devices.Midi2.winmd"
               target="lib\native\Microsoft.Devices.Midi2.winmd" />
-
-
-        <!-- TEMP! Utilities ================================================ -->
-
-        <file src="..\..\vsfiles\mididmp\x64\Release\mididmp.exe"
-              target="content\x64\mididmp.exe" />
-
-        <file src="..\..\vsfiles\mididmp\Arm64\Release\mididmp.exe"
-              target="content\Arm64\mididmp.exe" />
 
         <!-- Intel x64 Native Binaries ================================================ -->
 

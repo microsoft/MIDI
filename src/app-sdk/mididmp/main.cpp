@@ -167,18 +167,18 @@ bool DoSectionTransports(_In_ bool verbose)
     {
         OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_TRANSPORTS);
 
-        auto transports = midi2::MidiService::GetInstalledTransportPlugins();
+        auto transports = diag::MidiReporting::GetInstalledTransportPlugins();
 
         if (transports != nullptr && transports.Size() > 0)
         {
             for (auto const& transport : transports)
             {
-                OutputGuidField(MIDIDIAG_FIELD_LABEL_TRANSPORT_ID, transport.Id());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME, transport.Name());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Mnemonic());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_VERSION, transport.Version());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description());
+                OutputGuidField(MIDIDIAG_FIELD_LABEL_TRANSPORT_ID, transport.Id);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME, transport.Name);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Mnemonic);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_VERSION, transport.Version);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description);
                 OutputItemSeparator();
             }
         }
@@ -229,19 +229,23 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
         {
             auto device = devices.GetAt(i);
 
+            auto transportInfo = device.GetTransportSuppliedInfo();
+            auto userInfo = device.GetUserSuppliedInfo();
+            auto endpointInfo = device.GetDeclaredEndpointInfo();
+
             // These names should not be localized because customers may parse these output fields
 
-            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.Id());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.EndpointDeviceId());
             OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_NAME, device.Name());
-            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, device.TransportMnemonic());
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, transportInfo.TransportMnemonic);
 
             if (verbose)
             {
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, device.UserSuppliedName());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, device.EndpointSuppliedName());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, device.TransportSuppliedName());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, device.TransportSuppliedDescription());
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, device.UserSuppliedDescription());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_NAME, userInfo.Name);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ENDPOINT_SUPPLIED_NAME, endpointInfo.Name);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_NAME, transportInfo.Name);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, transportInfo.Description);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, userInfo.Description);
             }
 
             auto parent = device.GetParentDeviceInformation();
@@ -341,7 +345,7 @@ bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
 
         OutputNumericField(MIDIDIAG_FIELD_LABEL_PING_ATTEMPT_COUNT, (uint32_t)pingCount);
 
-        auto pingResult = midi2::MidiService::PingService(pingCount);
+        auto pingResult = diag::MidiDiagnostics::PingService(pingCount);
 
         //std::cout << "DEBUG: PingService returned" << std::endl;
 
@@ -403,6 +407,7 @@ bool DoSectionServiceStatus(_In_ bool verbose)
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS);
 
+    // this needs to be done before any other service calls
     OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, midi2::MidiService::EnsureAvailable());
 
     return true;

@@ -22,7 +22,7 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
         winrt::hstring SessionName() { return m_sessionName; }
         foundation::DateTime StartTime() { return m_startTime; }
 
-        collections::IVectorView<midi2::MidiServiceSessionConnectionInfo> Connections() { return m_connections.GetView(); }
+        collections::IVectorView<diag::MidiServiceSessionConnectionInfo> Connections() { return m_connections.GetView(); }
 
 
         void InternalInitialize(
@@ -34,7 +34,7 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
         );
 
         void InternalAddConnection(
-            _In_ midi2::MidiServiceSessionConnectionInfo const& info
+            _In_ diag::MidiServiceSessionConnectionInfo const& info
         );
 
     private:
@@ -44,8 +44,8 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
         winrt::hstring m_sessionName{};
         foundation::DateTime m_startTime{};
 
-        foundation::Collections::IVector<midi2::MidiServiceSessionConnectionInfo>
-            m_connections{ winrt::single_threaded_vector<midi2::MidiServiceSessionConnectionInfo>() };
+        foundation::Collections::IVector<diag::MidiServiceSessionConnectionInfo>
+            m_connections{ winrt::single_threaded_vector<diag::MidiServiceSessionConnectionInfo>() };
 
 
     };

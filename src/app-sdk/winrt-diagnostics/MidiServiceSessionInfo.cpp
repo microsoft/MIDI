@@ -29,7 +29,7 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
 
     _Use_decl_annotations_
     void MidiServiceSessionInfo::InternalAddConnection(
-        midi2::MidiServiceSessionConnectionInfo const& info
+        diag::MidiServiceSessionConnectionInfo const& info
     )
     {
         m_connections.Append(info);

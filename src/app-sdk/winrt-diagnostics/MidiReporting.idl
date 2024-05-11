@@ -12,8 +12,7 @@ import "MidiServiceSessionInfo.idl";
 
 namespace Microsoft.Devices.Midi2.Diagnostics
 {
-    [default_interface]
-    runtimeclass MidiDiagnostics
+    runtimeclass MidiReporting
     {
         static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
         static IVector<MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();

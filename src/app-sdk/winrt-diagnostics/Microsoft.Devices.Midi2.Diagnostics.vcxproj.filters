@@ -6,18 +6,27 @@
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiDiagnostics.cpp">
+      <Filter>SDK\Diagnostics</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiReporting.cpp">
+      <Filter>SDK\Diagnostics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="midl_defines.h" />
-    <ClInclude Include="namespace_defines.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiDiagnostics.h">
+      <Filter>SDK\Diagnostics</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiReporting.h">
+      <Filter>SDK\Diagnostics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiService.idl" />
     <Midl Include="MidiDiagnostics.idl">
       <Filter>SDK\Diagnostics</Filter>
     </Midl>
@@ -44,7 +53,7 @@
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <None Include="midi-app-api.def" />
+    <None Include="midi-app-sdk.def" />
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
   </ItemGroup>
