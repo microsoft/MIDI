@@ -289,7 +289,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
         json::JsonObject jsonUpdate{ nullptr }; 
             
-        if (!json::JsonObject::TryParse(configurationUpdate.SettingsJson(), jsonUpdate))
+        if (!json::JsonObject::TryParse(configurationUpdate.GetConfigurationJson(), jsonUpdate))
         {
             response->InternalSetStatus(midi2::MidiServiceConfigurationResponseStatus::ErrorProcessingJson);
             return *response;

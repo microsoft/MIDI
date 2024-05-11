@@ -11,27 +11,21 @@
 #include "MidiChannelEndpointListener.g.cpp"
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
 {
     _Use_decl_annotations_
     void MidiChannelEndpointListener::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
     }
 
     void MidiChannelEndpointListener::OnEndpointConnectionOpened()
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         // Nothing special to do when connection is opened, so all good
     }
 
     void MidiChannelEndpointListener::Cleanup()
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
  //       m_endpointConnection = nullptr;
     }
 
@@ -41,8 +35,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool& skipFurtherListeners, 
         bool& skipMainMessageReceivedEvent)
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         skipFurtherListeners = m_preventCallingFurtherListeners;
         skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 

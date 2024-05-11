@@ -35,6 +35,9 @@ namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace midi1 = ::winrt::Windows::Devices::Midi;
 
+#include <winrt/Microsoft.Devices.Midi2.h>
+namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
+
 
 #include <stdint.h>
 #include <sstream>
@@ -88,14 +91,11 @@ namespace internal = ::WindowsMidiServicesInternal;
 //#include "MidiXProc.h"
 #include "resource.h"
 
-// include these here first to declare the namespaces
-#include "MidiGroup.h"
-#include "MidiChannel.h"
+namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual {};
+namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation {};
 
-namespace midi2 = ::MIDI_CPP_NAMESPACE;
+namespace virt = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtual;
 namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
-
-#include "MidiUniqueId.h"
 
 #include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"
@@ -106,42 +106,9 @@ namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
 
 
 
-
-#include "MidiClock.h"
-
-#include "MidiMessage32.h"
-#include "MidiMessage64.h"
-#include "MidiMessage96.h"
-#include "MidiMessage128.h"
-
-#include "MidiFunctionBlock.h"
-#include "MidiGroupTerminalBlock.h"
-
-#include "MidiEndpointConnection.h"
-
-#include "MidiMessageReceivedEventArgs.h"
-
-#include "MidiEndpointDeviceInformation.h"
-#include "MidiEndpointDeviceInformationAddedEventArgs.h"
-#include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
-#include "MidiEndpointDeviceInformationRemovedEventArgs.h"
-#include "MidiEndpointDeviceWatcher.h"
-
 #include "MidiStreamConfigurationRequestedSettings.h"
 #include "MidiStreamConfigurationRequestReceivedEventArgs.h"
 #include "MidiVirtualEndpointDevice.h"
 #include "MidiVirtualEndpointDeviceDefinition.h"
 
 #include "MidiSession.h"
-
-#include "MidiServiceConfigurationResponse.h"
-#include "MidiServiceLoopbackEndpointDefinition.h"
-#include "MidiServiceLoopbackEndpointCreationResult.h"
-#include "MidiService.h"
-
-#include "MidiEndpointDeviceInformationAddedEventArgs.h"
-#include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
-#include "MidiEndpointDeviceInformationRemovedEventArgs.h"
-#include "MidiEndpointDeviceInformation.h"
-#include "MidiEndpointDeviceWatcher.h"
-

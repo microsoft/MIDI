@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiMessageTypeEndpointListener.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
 {
     struct MidiMessageTypeEndpointListener : MidiMessageTypeEndpointListenerT<MidiMessageTypeEndpointListener>
     {
@@ -26,11 +26,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
-        //midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
-        //void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
 
-
-        collections::IVector<midi2::MidiMessageType> IncludeMessageTypes() { return m_includedMessageTypes; }
+        collections::IVector<midi2::MidiMessageType> IncludedMessageTypes() { return m_includedMessageTypes; }
 
         winrt::event_token MessageReceived(
             _In_ foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource,
@@ -71,7 +68,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool m_preventCallingFurtherListeners{ false };
         bool m_preventFiringMainMessageReceivedEvent{ false };
 
-        foundation::Collections::IVector<midi2::MidiMessageType>
+        collections::IVector<midi2::MidiMessageType>
             m_includedMessageTypes{ winrt::multi_threaded_vector<midi2::MidiMessageType>() };
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
@@ -79,7 +76,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::factory_implementation
 {
     struct MidiMessageTypeEndpointListener : MidiMessageTypeEndpointListenerT<MidiMessageTypeEndpointListener, implementation::MidiMessageTypeEndpointListener>
     {

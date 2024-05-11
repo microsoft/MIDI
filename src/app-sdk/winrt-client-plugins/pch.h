@@ -35,6 +35,8 @@ namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace midi1 = ::winrt::Windows::Devices::Midi;
 
+#include <winrt/Microsoft.Devices.Midi2.h>
+
 
 #include <stdint.h>
 #include <sstream>
@@ -47,16 +49,10 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include <format>
 #include <filesystem>
 
-// include this before any project includes
-#include "namespace_defines.h"
-
-// internal
-#include "trace_logging.h"
+#include "SdkTraceLogging.h"
 
 #include "ump_helpers.h"
-#include "memory_buffer.h"
 #include "wstring_util.h"
-#include "midi_group_terminal_blocks.h"
 
 // AbstractionUtilities
 
@@ -88,77 +84,18 @@ namespace internal = ::WindowsMidiServicesInternal;
 //#include "MidiXProc.h"
 #include "resource.h"
 
-// include these here first to declare the namespaces
-#include "MidiGroup.h"
-#include "MidiChannel.h"
+namespace winrt::Microsoft::Devices::Midi2::ClientPlugins {};
+namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation {};
 
-namespace midi2 = ::MIDI_CPP_NAMESPACE;
-namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
+namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
+namespace implementation = ::winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation;
 
-#include "MidiUniqueId.h"
-
-#include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"
 
 #include <Devpropdef.h>
 #include "MidiDefs.h"
-#include "midi_function_block_prop_util.h"
-
-
-
-
-#include "MidiClock.h"
-
-#include "MidiMessage32.h"
-#include "MidiMessage64.h"
-#include "MidiMessage96.h"
-#include "MidiMessage128.h"
-
-#include "MidiFunctionBlock.h"
-#include "MidiGroupTerminalBlock.h"
-
-#include "MidiEndpointConnection.h"
-
-#include "MidiMessageReceivedEventArgs.h"
-
-#include "MidiEndpointDeviceInformation.h"
-#include "MidiEndpointDeviceInformationAddedEventArgs.h"
-#include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
-#include "MidiEndpointDeviceInformationRemovedEventArgs.h"
-#include "MidiEndpointDeviceWatcher.h"
-
-#include "MidiStreamConfigurationRequestedSettings.h"
-#include "MidiStreamConfigurationRequestReceivedEventArgs.h"
-#include "MidiVirtualEndpointDevice.h"
-#include "MidiVirtualEndpointDeviceDefinition.h"
 
 #include "MidiChannelEndpointListener.h"
 #include "MidiGroupEndpointListener.h"
 #include "MidiMessageTypeEndpointListener.h"
-
-
-#include "MidiSession.h"
-
-#include "MidiServicePingResponse.h"
-#include "MidiServicePingResponseSummary.h"
-#include "MidiServiceTransportPluginInfo.h"
-#include "MidiServiceMessageProcessingPluginInfo.h"
-
-#include "MidiServiceConfigurationResponse.h"
-#include "MidiServiceLoopbackEndpointDefinition.h"
-#include "MidiServiceLoopbackEndpointCreationResult.h"
-#include "MidiServiceSessionConnectionInfo.h"
-#include "MidiServiceSessionInfo.h"
-#include "MidiService.h"
-
-#include "MidiEndpointDeviceInformationAddedEventArgs.h"
-#include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
-#include "MidiEndpointDeviceInformationRemovedEventArgs.h"
-#include "MidiEndpointDeviceInformation.h"
-#include "MidiEndpointDeviceWatcher.h"
-
-#include "MidiMessageBuilder.h"
-#include "MidiMessageConverter.h"
-#include "MidiMessageHelper.h"
-#include "MidiStreamMessageBuilder.h"
 

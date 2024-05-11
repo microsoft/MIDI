@@ -159,7 +159,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <ModuleDefinitionFile>midi-app-api.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>midi-app-sdk.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -170,9 +170,9 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
@@ -216,9 +216,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir);$(GeneratedFilesDir);$(IntDir);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
@@ -259,65 +259,42 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="memory_buffer.h" />
-    <ClInclude Include="MidiServiceLoopbackEndpointCreationResult.h">
-      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
-      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="MidiService.h">
-      <DependentUpon>MidiService.idl</DependentUpon>
-    </ClInclude>
-    <ClInclude Include="midi_function_block_prop_util.h" />
-    <ClInclude Include="midi_stream_message_defs.h" />
-    <ClInclude Include="midl_defines.h" />
-    <ClInclude Include="namespace_defines.h" />
+      <ClInclude Include="MidiLoopbackEndpointDeletionConfiguration.h">
+          <DependentUpon>MidiLoopbackEndpointDeletionConfiguration.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiLoopbackEndpointManager.h">
+          <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiLoopbackEndpointCreationConfiguration.h">
+          <DependentUpon>MidiLoopbackEndpointCreationConfiguration.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="trace_logging.h" />
-    <ClInclude Include="MidiSession.h">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiServiceLoopbackEndpointCreationResult.cpp">
-      <DependentUpon>MidiServiceLoopbackEndpointCreationResult.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
-      <DependentUpon>MidiServiceLoopbackEndpointDefinition.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiService.cpp">
-      <DependentUpon>MidiService.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSession.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSession_EndpointConnection.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSession_VirtualEndpoint.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSession_Watcher.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="midi_function_block_prop_util.cpp" />
+      <ClCompile Include="MidiLoopbackEndpointDeletionConfiguration.cpp">
+          <DependentUpon>MidiLoopbackEndpointDeletionConfiguration.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiLoopbackEndpointManager.cpp">
+          <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiLoopbackEndpointCreationConfiguration.cpp">
+          <DependentUpon>MidiLoopbackEndpointCreationConfiguration.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2ApiContract.idl" />
-    <Midl Include="MidiServiceLoopbackEndpointDefinition.idl" />
-    <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl" />
-    <Midl Include="MidiService.idl" />
-    <Midl Include="MidiSession.idl" />
+    <Midl Include="MidiLoopbackEndpointDeletionConfiguration.idl" />
+    <Midl Include="MidiLoopbackEndpointManager.idl" />
+    <Midl Include="MidiLoopbackEndpointDefinition.idl" />
+    <Midl Include="MidiLoopbackEndpointCreationResult.idl" />
+    <Midl Include="MidiLoopbackEndpointCreationConfiguration.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="midi-app-api.def" />
+    <None Include="midi-app-sdk.def" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

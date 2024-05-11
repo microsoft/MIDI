@@ -272,7 +272,6 @@
     <ClInclude Include="MidiMessageHelper.h">
       <DependentUpon>MidiMessageHelper.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

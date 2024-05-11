@@ -6,7 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-namespace Microsoft.Devices.Midi2
+import "MidiLoopbackEndpointDefinition.idl";
+
+namespace Microsoft.Devices.Midi2.Endpoints.Loopback
 {
-    [contractversion(1)] apicontract Microsoft.Devices.Midi2ApiContract{};
+    [default_interface]
+    runtimeclass MidiLoopbackEndpointDeletionConfiguration : Microsoft.Devices.Midi2.IMidiServiceTransportPluginConfiguration
+    {
+        MidiLoopbackEndpointDeletionConfiguration(Guid associationId);
+
+        Guid AssociationId;
+    }
 }

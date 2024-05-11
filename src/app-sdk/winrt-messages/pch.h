@@ -92,7 +92,6 @@ namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
 namespace msgs = ::winrt::Microsoft::Devices::Midi2::Messages;
 namespace implementation = ::winrt::Microsoft::Devices::Midi2::Messages::implementation;
 
-#include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"
 
 #include <Devpropdef.h>

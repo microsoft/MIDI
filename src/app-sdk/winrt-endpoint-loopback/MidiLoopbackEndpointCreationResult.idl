@@ -6,7 +6,15 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Devices.Midi2.Endpoints.Loopback
 {
-    [contractversion(1)] apicontract Microsoft.Devices.Midi2ApiContract{};
+    struct MidiLoopbackEndpointCreationResult
+    {
+        Boolean Success;
+
+        Guid AssociationId;
+
+        String EndpointDeviceIdA;
+        String EndpointDeviceIdB;
+    };
 }

@@ -10,7 +10,7 @@
 #include "MidiChannelEndpointListener.g.h"
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
 {
     struct MidiChannelEndpointListener : MidiChannelEndpointListenerT<MidiChannelEndpointListener>
     {
@@ -18,25 +18,25 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         winrt::guid Id() const noexcept { return m_id; }
 
-        hstring Name() const noexcept { return m_name; }
-        void Name(_In_ hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
+        winrt::hstring Name() const noexcept { return m_name; }
+        void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
 
         bool IsEnabled() const noexcept { return m_enabled; }
         void IsEnabled(_In_ bool const& value) noexcept { m_enabled = value; }
 
 
-        winrt::Windows::Foundation::IInspectable Tag() const noexcept { return m_tag; }
-        void Tag(_In_ winrt::Windows::Foundation::IInspectable const& value) { m_tag = value; }
+        foundation::IInspectable Tag() const noexcept { return m_tag; }
+        void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
         //midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
         //void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }
 
 
-        MIDI_CPP_NAMESPACE::MidiGroup IncludedGroup() const noexcept { return m_includedGroup; }
+        midi2::MidiGroup IncludedGroup() const noexcept { return m_includedGroup; }
         void IncludedGroup(
-            _In_ MIDI_CPP_NAMESPACE::MidiGroup const& value) noexcept { m_includedGroup = value; }
+            _In_ midi2::MidiGroup const& value) noexcept { m_includedGroup = value; }
 
-        winrt::Windows::Foundation::Collections::IVector<MIDI_CPP_NAMESPACE::MidiChannel> IncludedChannels() { return m_includedChannels; }
+        collections::IVector<midi2::MidiChannel> IncludedChannels() { return m_includedChannels; }
 
 
         void PreventFiringMainMessageReceivedEvent(_In_ bool const value) noexcept { m_preventFiringMainMessageReceivedEvent = value; }
@@ -64,7 +64,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         void Cleanup();
 
         void ProcessIncomingMessage(
-            _In_ MIDI_CPP_NAMESPACE::MidiMessageReceivedEventArgs const& args, 
+            _In_ midi2::MidiMessageReceivedEventArgs const& args,
             _Out_ bool& skipFurtherListeners, 
             _Out_ bool& skipMainMessageReceivedEvent);
 
@@ -80,15 +80,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool m_preventFiringMainMessageReceivedEvent{ false };
 
 
-        MIDI_CPP_NAMESPACE::MidiGroup m_includedGroup{ nullptr };
+        midi2::MidiGroup m_includedGroup{ nullptr };
 
-        foundation::Collections::IVector<midi2::MidiChannel>
+        collections::IVector<midi2::MidiChannel>
             m_includedChannels{ winrt::multi_threaded_vector<midi2::MidiChannel>() };
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
     };
 }
-namespace MIDI_CPP_NAMESPACE::factory_implementation
+namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::factory_implementation
 {
     struct MidiChannelEndpointListener : MidiChannelEndpointListenerT<MidiChannelEndpointListener, implementation::MidiChannelEndpointListener>
     {
