@@ -1,8 +1,7 @@
 ---
 layout: api_page
 title: MidiUniqueId
-parent: Simple Types
-grand_parent: Windows.Devices.Midi2 API
+parent: Microsoft.Devices.Midi2.CapabilityInquiry
 has_children: false
 ---
 
@@ -32,8 +31,8 @@ In the specification, Byte1 is the LSB and Byte4 is the MSB. We follow that conv
 
 ## Static Properties
 
-| `LabelShort` | Returns the localized abbreviation for use in UI. |
-| `LabelFull` | Returns the localized full name for use in UI. |
+| `ShortLabel` | Returns the localized abbreviation for use in UI. |
+| `LongLabel` | Returns the localized full name for use in UI. |
 
 ## Static Methods
 

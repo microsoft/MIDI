@@ -1,7 +1,7 @@
 ---
 layout: api_group_page
 title: Messages
-parent: Windows.Devices.Midi2 API
+parent: Microsoft.Devices.Midi2
 has_children: true
 ---
 

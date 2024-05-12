@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiClock
-parent: Windows.Devices.Midi2 API
+parent: Microsoft.Devices.Midi2
 has_children: false
 ---
 

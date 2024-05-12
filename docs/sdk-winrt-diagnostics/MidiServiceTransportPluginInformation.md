@@ -1,8 +1,7 @@
 ---
 layout: api_page
 title: MidiServiceTransportPluginInformation
-parent: Service
-grand_parent: Windows.Devices.Midi2 API
+parent: Microsoft.Devices.Midi2.Diagnostics
 has_children: false
 ---
 

@@ -1,8 +1,7 @@
 ---
 layout: api_page
 title: MidiVirtualEndpointDevice
-parent: Virtual Devices
-grand_parent: Windows.Devices.Midi2 API
+parent: Microsoft.Devices.Midi2.Endpoints.Virtual
 has_children: false
 ---
 

@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiSession
 parent: Session
-grand_parent: Windows.Devices.Midi2 API
+grand_parent: Microsoft.Devices.Midi2
 has_children: false
 ---
 
@@ -34,7 +34,6 @@ The two static functions are factory-pattern methods for creating a new session.
 | `CreateEndpointConnection(String)` | Create a new connection to the specified endpoint device Id |
 | `CreateEndpointConnection(String, Boolean)` | Create a new connection to the specified endpoint device Id, with an option to reconnect if a device is disconnected and then reconnected while the connection object is alive |
 | `CreateEndpointConnection(String, Boolean, IMidiEndpointConnectionSettings)` | Create a new connection to the specified endpoint device Id, using the provided reconnect value and endpoint-specific settings |
-| `CreateVirtualDeviceAndConnection(deviceDefinition)` | Create the device-side of an app-to-app virtual endpoint. The calling application will perform as a MIDI device, responding to discovery and other MIDI 2.0 protocol messages. |
 | `DisconnectEndpointConnection(endpointConnectionId)` | Cleanly disconnect an endpoint connection and remove it from the connection map |
 | `UpdateName(newName)` | Update the name of this session locally and in the MIDI Service |
 

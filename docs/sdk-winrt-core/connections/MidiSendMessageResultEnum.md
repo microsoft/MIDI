@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiSendMessageResult
 parent: Connections
-grand_parent: Windows.Devices.Midi2 API
+grand_parent: Microsoft.Devices.Midi2
 has_children: false
 ---
 

@@ -2,7 +2,6 @@
 layout: api_page
 title: MidiMessageUtility
 parent: Microsoft.Devices.Midi2.Messages
-grand_parent: Windows.Devices.Midi2 API
 has_children: false
 ---
 

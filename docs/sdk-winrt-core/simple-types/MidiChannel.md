@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiChannel
 parent: Simple Types
-grand_parent: Windows.Devices.Midi2 API
+grand_parent: Microsoft.Devices.Midi2
 has_children: false
 ---
 
@@ -24,8 +24,8 @@ The `MidiChannel` class is used to provide formatting and data validation for MI
 
 ## Static Properties
 
-| `LabelShort` | Returns the localized abbreviation. For example, "Ch" in English. |
-| `LabelFull` | Returns the localized full name. For example, "Channel" in English. |
+| `ShortLabel` | Returns the localized abbreviation. For example, "Ch" in English. |
+| `LongLabel` | Returns the localized full name. For example, "Channel" in English. |
 
 ## Static Methods
 

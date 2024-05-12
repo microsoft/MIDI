@@ -1,6 +1,7 @@
 ---
 layout: api_page
 title: MidiMessageTypeEndpointListener
+parent: Microsoft.Devices.Midi2.ClientPlugins
 has_children: false
 ---
 
