@@ -272,7 +272,9 @@
     <ClInclude Include="MidiVirtualDeviceCreationConfiguration.h">
       <DependentUpon>MidiVirtualDeviceCreationConfiguration.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiVirtualDeviceManager.h" />
+      <ClInclude Include="MidiVirtualDeviceManager.h">
+          <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="pch.h" />
@@ -291,7 +293,9 @@
     <ClCompile Include="MidiVirtualDeviceCreationConfiguration.cpp">
       <DependentUpon>MidiVirtualDeviceCreationConfiguration.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiVirtualDeviceManager.cpp" />
+      <ClCompile Include="MidiVirtualDeviceManager.cpp">
+          <DependentUpon>MidiVirtualDeviceManager.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

@@ -265,7 +265,9 @@
     <ClInclude Include="MidiGroupEndpointListener.h">
       <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiMessageTypeEndpointListener.h" />
+      <ClInclude Include="MidiMessageTypeEndpointListener.h">
+          <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -276,7 +278,9 @@
     <ClCompile Include="MidiGroupEndpointListener.cpp">
       <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiMessageTypeEndpointListener.cpp" />
+      <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+          <DependentUpon>MidiMessageTypeEndpointListener.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
