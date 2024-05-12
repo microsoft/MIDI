@@ -1,0 +1,120 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+//import "MidiFunctionBlockUIHintEnum.idl";
+//import "MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl";
+//import "MidiFunctionBlockDirectionEnum.idl";
+//import "MidiEndpointDiscoveryRequestsEnum.idl";
+//import "MidiFunctionBlockDiscoveryRequestsEnum.idl";
+
+namespace Microsoft.Devices.Midi2.Messages
+{
+    static runtimeclass MidiStreamMessageBuilder
+    {
+        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildEndpointDiscoveryMessage(
+            UInt64 timestamp,
+            UInt8 umpVersionMajor,
+            UInt8 umpVersionMinor,
+            Microsoft.Devices.Midi2.MidiEndpointDiscoveryRequests request
+            );
+
+        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
+            UInt64 timestamp,
+            UInt8 umpVersionMajor,
+            UInt8 umpVersionMinor,
+            Boolean hasStaticFunctionBlocks,
+            UInt8 numberOfFunctionBlocks,
+            Boolean supportsMidi20Protocol,
+            Boolean supportsMidi10Protocol,
+            Boolean supportsReceivingJitterReductionTimestamps,
+            Boolean supportsSendingJitterReductionTimestamps
+            );
+
+        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildDeviceIdentityNotificationMessage(
+            UInt64 timestamp,
+            UInt8 deviceManufacturerSysExIdByte1,
+            UInt8 deviceManufacturerSysExIdByte2,
+            UInt8 deviceManufacturerSysExIdByte3,
+            UInt8 deviceFamilyLsb,
+            UInt8 deviceFamilyMsb,
+            UInt8 deviceFamilyModelNumberLsb,
+            UInt8 deviceFamilyModelNumberMsb,
+            UInt8 softwareRevisionLevelByte1,
+            UInt8 softwareRevisionLevelByte2,
+            UInt8 softwareRevisionLevelByte3,
+            UInt8 softwareRevisionLevelByte4
+            );
+
+        static IVector<Microsoft.Devices.Midi2.IMidiUniversalPacket> BuildEndpointNameNotificationMessages(
+            UInt64 timestamp,
+            String name
+            );
+
+        static IVector<Microsoft.Devices.Midi2.IMidiUniversalPacket> BuildProductInstanceIdNotificationMessages(
+            UInt64 timestamp,
+            String productInstanceId
+            );
+
+
+
+        static String ParseEndpointNameNotificationMessages(
+            IIterable<Microsoft.Devices.Midi2.IMidiUniversalPacket> messages
+        );
+
+        static String ParseProductInstanceIdNotificationMessages(
+            IIterable<Microsoft.Devices.Midi2.IMidiUniversalPacket> messages
+        );
+
+
+
+
+        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildStreamConfigurationRequestMessage(
+            UInt64 timestamp,
+            UInt8 protocol,
+            Boolean expectToReceiveJRTimestamps,
+            Boolean requestToSendJRTimestamps
+            );
+
+        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildStreamConfigurationNotificationMessage(
+            UInt64 timestamp,
+            UInt8 protocol,
+            Boolean confirmationWillReceiveJRTimestamps,
+            Boolean confirmationSendJRTimestamps
+            );
+
+        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
+            UInt64 timestamp,
+            UInt8 functionBlockNumber,
+            Microsoft.Devices.Midi2.MidiFunctionBlockDiscoveryRequests requestFlags
+            );
+
+        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
+            UInt64 timestamp,
+            Boolean active,
+            UInt8 functionBlockNumber,
+            Microsoft.Devices.Midi2.MidiFunctionBlockUIHint uiHint,
+            Microsoft.Devices.Midi2.MidiFunctionBlockRepresentsMidi10Connection midi10,
+            Microsoft.Devices.Midi2.MidiFunctionBlockDirection direction,
+            UInt8 firstGroup,
+            UInt8 numberOfGroups,
+            UInt8 midiCIVersionFormat,
+            UInt8 maxNumberSysEx8Streams
+            );
+
+        static IVector<Microsoft.Devices.Midi2.IMidiUniversalPacket> BuildFunctionBlockNameNotificationMessages(
+            UInt64 timestamp,
+            UInt8 functionBlockNumber,
+            String name
+            );
+
+        static String ParseFunctionBlockNameNotificationMessages(
+            IIterable<Microsoft.Devices.Midi2.IMidiUniversalPacket> messages
+            );
+
+    };
+}

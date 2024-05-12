@@ -1,0 +1,43 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+
+MIDI_IDL_IMPORT
+
+
+import "MidiMessageReceivedEventArgs.idl";
+import "IMidiEndpointConnectionSource.idl";
+
+
+namespace Microsoft.Devices.Midi2
+{
+    MIDI_API_CONTRACT_v1
+    [MIDI_INTERFACE_UUID("198d5ef2-313f-41af-9259-a42997e060f0",1.0)]
+    interface IMidiEndpointMessageProcessingPlugin
+    {
+        Guid Id { get; };            
+
+        String Name;
+        IInspectable Tag;
+
+        Boolean IsEnabled;
+
+        void Initialize(IMidiEndpointConnectionSource endpointConnection);
+
+        void OnEndpointConnectionOpened();
+
+        void ProcessIncomingMessage(
+            MidiMessageReceivedEventArgs args,
+            out Boolean skipFurtherListeners,
+            out Boolean skipMainMessageReceivedEvent);
+
+        void Cleanup();
+    }
+}

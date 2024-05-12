@@ -25,6 +25,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         ErrorMalformedUmp = 300,
 
+        ErrorServiceNotAvailable = 800,
 
         ErrorNotImplemented = 998,
         ErrorGeneralFailure = 999

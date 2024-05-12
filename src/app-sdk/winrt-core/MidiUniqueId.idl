@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+
+MIDI_IDL_IMPORT
+
+namespace Microsoft.Devices.Midi2
+{
+    MIDI_API_CONTRACT_v1
+    runtimeclass MidiUniqueId
+    {
+        MidiUniqueId();
+        MidiUniqueId(UInt32 combined28BitValue);
+        MidiUniqueId(UInt8 sevenBitByte1, UInt8 sevenBitByte2, UInt8 sevenBitByte3, UInt8 sevenBitByte4);
+
+        static String LabelShort{ get; };
+        static String LabelFull{ get; };
+
+        static MidiUniqueId CreateBroadcast();
+        static MidiUniqueId CreateRandom();
+
+        UInt8 Byte1;
+        UInt8 Byte2;
+        UInt8 Byte3;
+        UInt8 Byte4;
+
+        UInt32 AsCombined28BitValue{ get; };
+
+        Boolean IsBroadcast{ get; };
+        Boolean IsReserved{ get; };
+    };
+
+
+
+}

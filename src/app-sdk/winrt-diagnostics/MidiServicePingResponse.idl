@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace Microsoft.Devices.Midi2.Diagnostics
+{
+    struct MidiServicePingResponse
+    {
+        UInt32 SourceId;
+        UInt32 Index;
+
+        UInt64 ClientSendMidiTimestamp;
+        UInt64 ServiceReportedMidiTimestamp;
+        UInt64 ClientReceiveMidiTimestamp;
+
+        UInt64 ClientDeltaTimestamp;
+    };
+}

@@ -25,9 +25,9 @@ namespace Microsoft.Midi.ConsoleApp
         const string STRING_DEVINTERFACE_BYTESTREAM_OUTPUT = "{6dc23320-ab33-4ce4-80d4-bbb3ebbf2814}";
 
 
-        public static EndpointDirection GetUmpEndpointTypeFromInstanceId(string instanceId)
+        public static EndpointDirection GetUmpEndpointTypeFromEndpointInterfaceId(string id)
         {
-            var id = instanceId.ToLower().Trim();
+            id = id.ToLower().Trim();
 
             if (id.EndsWith(STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT))
                 return EndpointDirection.In;
@@ -42,9 +42,9 @@ namespace Microsoft.Midi.ConsoleApp
                 throw new ArgumentException("Invalid instanceId. Does not contain a UMP device interface GUID");
         }
 
-        public static LegacyEndpointDirection GetLegacyEndpointTypeFromInstanceId(string instanceId)
+        public static LegacyEndpointDirection GetLegacyEndpointTypeFromEndpointInterfaceId(string id)
         {
-            var id = instanceId.ToLower().Trim();
+            id = id.ToLower().Trim();
 
             if (id.EndsWith(STRING_DEVINTERFACE_BYTESTREAM_INPUT))
                 return LegacyEndpointDirection.In;
@@ -56,6 +56,19 @@ namespace Microsoft.Midi.ConsoleApp
                 throw new ArgumentException("Invalid instanceId. Does not contain the byte stream (MIDI 1.0) device interface GUID");
         }
 
+        public static string GetEndpointNameFromEndpointInterfaceId(string id)
+        {
+            var device = MidiEndpointDeviceInformation.CreateFromId(id);
+
+            if (device != null)
+            {
+                return device.Name;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
 
     }
 }

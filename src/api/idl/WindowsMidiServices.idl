@@ -1,0 +1,597 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "unknwn.idl";
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+
+typedef enum
+{
+    MidiDataFormat_Invalid = 0,
+    MidiDataFormat_ByteStream = 0x1,
+    MidiDataFormat_UMP = 0x2,
+    MidiDataFormat_Any = 0x3
+} MidiDataFormat;
+
+typedef enum
+{
+    MidiFlowIn = 0,
+    MidiFlowOut,
+    MidiFlowBidirectional
+} MidiFlow;
+
+
+typedef struct
+{
+    MidiDataFormat DataFormat;
+    LPCWSTR InstanceConfigurationJsonData;
+} ABSTRACTIONCREATIONPARAMS, * PABSTRACTIONCREATIONPARAMS;
+
+typedef struct
+{
+    MidiDataFormat DataFormatIn;
+    MidiDataFormat DataFormatOut;
+    LPCWSTR InstanceConfigurationJsonData;
+} TRANSFORMCREATIONPARAMS, * PTRANSFORMCREATIONPARAMS;
+
+
+[
+    object,
+        local,
+        uuid(4D6A29E5-DF4F-4A2D-A923-9B23B3F2D6F6),
+        pointer_default(unique)
+]
+interface IMidiCallback : IUnknown
+{
+    HRESULT Callback(
+        [in] PVOID message,
+        [in] UINT size,
+        [in] LONGLONG position,
+        [in] LONGLONG context
+    );
+};
+
+[
+    object,
+    local,
+    uuid(EA264200-3328-49E5-8815-73649A8748BE),
+    pointer_default(unique)
+]
+interface IMidiAbstraction : IUnknown
+{
+    HRESULT Activate(
+        [in, annotation("_In_")] REFIID Iid,
+        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
+    );
+};
+
+[
+    object,
+        local,
+        uuid(6C4B8BF9-8133-4B41-8303-1FDE78E20ACA),
+        pointer_default(unique)
+]
+interface IMidiIn : IUnknown
+{
+    HRESULT Initialize(
+        [in] LPCWSTR deviceId,
+        [in] PABSTRACTIONCREATIONPARAMS creationParams,
+        [in] DWORD* mmcssTaskId,
+        [in] IMidiCallback* callback,
+        [in] LONGLONG context,
+        [in] GUID SessionId
+
+    );
+
+    HRESULT Cleanup();
+};
+
+[
+    object,
+    local,
+    uuid(F328D645-7D6D-4924-A7E3-9DEE245189F9),
+    pointer_default(unique)
+]
+interface IMidiOut : IUnknown
+{
+    HRESULT Initialize(
+        [in] LPCWSTR deviceId,
+        [in] PABSTRACTIONCREATIONPARAMS creationParams,
+        [in] DWORD* mmcssTaskId,
+        [in] GUID SessionId
+    );
+
+    HRESULT Cleanup();
+
+    HRESULT SendMidiMessage(
+        [in] PVOID message,
+        [in] UINT size,
+        [in] LONGLONG position
+
+    );
+};
+
+[
+    object,
+    local,
+    uuid(B89BBB45-7001-4BEA-BBD8-C7CC26E7836C),
+    pointer_default(unique)
+]
+interface IMidiBiDi : IUnknown
+{
+    HRESULT Initialize(
+        [in] LPCWSTR deviceId,
+        [in] PABSTRACTIONCREATIONPARAMS creationParams,
+        [in] DWORD* mmcssTaskId,
+        [in] IMidiCallback* callback,
+        [in] LONGLONG context,
+        [in] GUID SessionId
+    );
+
+    HRESULT Cleanup();
+
+    HRESULT SendMidiMessage(
+        [in] PVOID message,
+        [in] UINT size,
+        [in] LONGLONG position
+    );
+};
+
+[
+    object,
+    local,
+    uuid(badff6d2-0e3c-4009-a473-6ba82c008662),
+    pointer_default(unique)
+]
+interface IMidiEndpointManager : IUnknown
+{
+    HRESULT Initialize(
+        [in] IUnknown* midiDeviceManager,
+        [in] IUnknown* midiEndpointProtocolManager //,
+        /*[in] LPCWSTR configurationJson */
+    );
+
+    HRESULT Cleanup();
+};
+
+[
+    object,
+    local,
+    uuid(65FA86A4-0433-4DCD-88E4-E565051CAB2D),
+    pointer_default(unique)
+]
+interface IMidiTransform : IUnknown
+{
+    HRESULT Activate(
+        [in, annotation("_In_")] REFIID Iid,
+        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
+    );
+};
+
+[
+    object,
+    local,
+    uuid(5D2400F0-F2EE-4A51-A3BE-0AC9A19C09C4),
+    pointer_default(unique)
+]
+interface IMidiDataTransform : IUnknown
+{
+    HRESULT Initialize(
+        [in] LPCWSTR deviceId,
+        [in] PTRANSFORMCREATIONPARAMS creationParams,
+        [in] DWORD* mmcssTaskId,
+        [in] IMidiCallback* callback,
+        [in] LONGLONG context,
+        [in] IUnknown* midiDeviceManager
+    );
+
+    HRESULT Cleanup();
+
+    HRESULT SendMidiMessage(
+        [in] PVOID message,
+        [in] UINT size,
+        [in] LONGLONG position
+    );
+};
+
+
+// If you change these, you should also update
+// the WinRT MidiEndpointDevicePurpose enum, which is projected through the API
+typedef enum
+{
+    NormalMessageEndpoint = 0,
+    VirtualDeviceResponder = 100,
+    InBoxGeneralMidiSynth = 400,
+    DiagnosticLoopback = 500,
+    DiagnosticPing = 510,
+} MidiEndpointDevicePurposePropertyValue;
+
+
+// This is used when creating a device endpoint from an abstraction
+typedef struct
+{
+    GUID AbstractionLayerGuid;
+    MidiEndpointDevicePurposePropertyValue EndpointPurpose;
+
+    LPCWSTR FriendlyName;
+
+    LPCWSTR TransportMnemonic;
+    LPCWSTR TransportSuppliedEndpointName;
+    LPCWSTR TransportSuppliedEndpointDescription;
+
+    LPCWSTR UserSuppliedEndpointName;
+    LPCWSTR UserSuppliedEndpointDescription;
+
+    LPCWSTR UniqueIdentifier;
+    LPCWSTR ManufacturerName;
+
+    MidiDataFormat SupportedDataFormats;
+    BYTE NativeDataFormat;
+
+    BOOL SupportsMidi1ProtocolDefaultValue;
+    BOOL SupportsMidi2ProtocolDefaultValue;
+
+    BOOL SupportsMultiClient;
+    BOOL RequiresMetadataHandler;
+    BOOL GenerateIncomingTimestamps;
+} MIDIENDPOINTCOMMONPROPERTIES, * PMIDIENDPOINTCOMMONPROPERTIES;
+
+
+[
+    object,
+        local,
+        uuid(A04374D3-4514-44E1-A2F9-7D8B907AEF1F),
+        pointer_default(unique)
+]
+interface IMidiDeviceManagerInterface : IUnknown
+{
+
+    HRESULT ActivateVirtualParentDevice(
+        [in] ULONG DevPropertyCount,
+        [in, annotation("_In_opt_")] PVOID DevProperties,
+        [in, annotation("_In_")] PVOID CreateInfo,
+        [out, annotation("_Out_writes_opt_z_(CreatedSwDeviceIdCharCount)")] LPWSTR CreatedSwDeviceId,
+        [in] ULONG CreatedSwDeviceIdCharCount
+    );
+
+
+    HRESULT ActivateEndpoint(
+        [in] LPCWSTR ParentInstanceId,
+        [in] BOOL UMPOnly,
+        [in] MidiFlow MidiFlow,
+        [in] PMIDIENDPOINTCOMMONPROPERTIES CommonProperties,
+        [in] ULONG IntPropertyCount,
+        [in] ULONG DevPropertyCount,
+        [in, annotation("_In_opt_")] PVOID InterfaceDevProperties,
+        [in, annotation("_In_opt_")] PVOID DeviceDevProperties,
+        [in, annotation("_In_opt_")] PVOID CreateInfo,
+        [out, annotation("_Out_writes_opt_z_(CreatedSwDeviceInterfaceIdWCharCount)")] LPWSTR CreatedSwDeviceInterfaceId,
+        [in] ULONG CreatedSwDeviceInterfaceIdWCharCount
+    );
+
+    HRESULT UpdateEndpointProperties(
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] ULONG IntPropertyCount,
+        [in, annotation("_In_")] PVOID InterfaceDevProperties
+    );
+
+    HRESULT DeleteEndpointProperties(
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] ULONG IntPropertyCount,
+        [in, annotation("_In_")] PVOID DevPropKeys
+    );
+
+    //HRESULT DeleteAllEndpointInProtocolDiscoveredProperties(
+    //    [in] LPCWSTR DeviceInterfaceId
+    //);
+
+    HRESULT DeactivateEndpoint(
+        [in] LPCWSTR InstanceId
+    );
+
+    HRESULT RemoveEndpoint(
+        [in] LPCWSTR InstanceId
+    );
+
+
+    // Update the configuration for an abstraction or endpoints managed by that abstraction
+    HRESULT UpdateAbstractionConfiguration(
+        [in] GUID AbstractionId,
+        [in] LPCWSTR ConfigurationJson,
+        [in] BOOL IsFromConfigurationFile,
+        [out] BSTR* Response
+    );
+
+
+};
+
+
+[
+    object,
+    local,
+    uuid(6c21fcda-051b-4f06-8d40-f5bced5957c0),
+    pointer_default(unique)
+]
+interface IMidiServiceConfigurationManagerInterface : IUnknown
+{
+    // these parse provided json
+
+    HRESULT GetAbstractionCreateActionJsonObject(
+        [in] LPCWSTR sourceAbstractionJson,
+        [out] BSTR* responseJson
+    );
+
+    HRESULT GetAbstractionUpdateActionJsonObject(
+        [in] LPCWSTR sourceAbstractionJson,
+        [out] BSTR* responseJson
+    );
+
+    HRESULT GetAbstractionRemoveActionJsonObject(
+        [in] LPCWSTR sourceAbstractionJson,
+        [out] BSTR* responseJson
+    );
+
+    HRESULT GetAbstractionMatchingEndpointJsonObject(
+        [in] LPCWSTR sourceActionObjectJson,
+        [in] LPCWSTR searchKeyValuePairsJson,
+        [out] BSTR* responseJson
+    );
+
+
+    // these get cached entries from the config file. This is
+    // needed for cases when the configuration happens before
+    // the abstraction has actually created the device interface
+
+    HRESULT GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject(
+        [in] GUID abstractionId,
+        [in] LPCWSTR searchKeyValuePairsJson,
+        [out] BSTR* responseJson
+    );
+
+};
+
+// we're going to want one of these for transforms, but it needs to have
+// enough context to be able to target a specific instance of a transform
+// for a specific device
+[
+    object,
+    local,
+    uuid(f19dd642-1809-4497-9eee-f230b11bd6fb),
+    pointer_default(unique)
+]
+interface IMidiAbstractionConfigurationManager : IUnknown
+{
+    HRESULT Initialize(
+        [in] GUID abstractionId,
+        [in] IUnknown* midiDeviceManager,
+        [in] IUnknown* midiServiceConfigurationManager
+    );
+
+    HRESULT UpdateConfiguration(
+        [in] LPCWSTR configurationJsonSection,
+        [in] BOOL IsFromConfigurationFile,
+        [out] BSTR* response
+    );
+
+    HRESULT Cleanup();
+};
+
+
+
+typedef struct
+{
+    GUID Id;            // class Id
+    LPCWSTR Mnemonic;   // this comes from a constant, not resources
+
+    BSTR Name;
+    BSTR Description;
+    BSTR Author;
+
+    BSTR SmallImagePath;
+
+    BSTR Version;
+
+    BOOL IsRuntimeCreatableByApps;
+    BOOL IsRuntimeCreatableBySettings;
+
+    BOOL IsSystemManaged;
+    BOOL IsClientConfigurable;
+
+    BSTR ClientConfigurationAssemblyName;
+} ABSTRACTIONMETADATA, * PABSTRACTIONMETADATA;
+
+
+
+typedef struct
+{
+    GUID Id;           // class Id
+
+    BSTR Name;
+    BSTR Description;
+    BSTR Author;
+
+    BSTR SmallImagePath;
+
+    BSTR Version;
+
+    BOOL IsRuntimeCreatableByApps;
+    BOOL IsRuntimeCreatableBySettings;
+
+    BOOL IsSystemManaged;
+    BOOL IsClientConfigurable;
+
+    BSTR ClientConfigurationAssemblyName;
+} TRANSFORMMETADATA, * PTRANSFORMMETADATA;
+
+
+[
+    object,
+    local,
+    uuid(8d542740-83f8-4a9a-8627-cd6324b6c1f4),
+    pointer_default(unique)
+]
+interface IMidiServiceAbstractionPluginMetadataProvider : IUnknown
+{
+    HRESULT Initialize();
+
+    HRESULT GetMetadata(
+        [out] PABSTRACTIONMETADATA metadata
+    );
+
+    HRESULT Cleanup();
+};
+
+[
+    object,
+    local,
+    uuid(76c65f88-061f-4e4f-bb9d-3ac1981f12f2),
+    pointer_default(unique)
+]
+interface IMidiServiceTransformPluginMetadataProvider : IUnknown
+{
+    HRESULT Initialize();
+
+    HRESULT GetMetadata(
+        [out] PTRANSFORMMETADATA metadata
+    );
+
+    HRESULT Cleanup();
+};
+
+
+[
+    object,
+    local,
+    uuid(469c7722-f779-40c3-b648-52620f75dcee),
+    pointer_default(unique)
+]
+interface IMidiServicePluginMetadataReporterInterface : IUnknown
+{
+    HRESULT GetAbstractionList(
+        [out] BSTR* AbstractionListJson);
+
+    HRESULT GetTransformList(
+        [out] BSTR* TransformListJson);
+
+};
+
+
+typedef struct
+{
+    GUID SessionId;
+    DWORD ProcessId;
+    BSTR ProcessName;
+    BSTR SessionName;
+} MIDI_SESSION_DETAIL, * PMIDI_SESSION_DETAIL;
+
+
+
+// this is a bookkeeping class. It tracks only. It does
+// not own the lifetime of any of the items it tracks.
+[
+    object,
+    local,
+    uuid(194c2746-3ae5-419a-94d9-20416c7dbefe),
+    pointer_default(unique)
+]
+interface IMidiSessionTracker : IUnknown
+{
+    HRESULT Initialize();
+
+    HRESULT AddClientSession(
+        [in] GUID SessionId,
+        [in] LPCWSTR SessionName
+    );
+
+    HRESULT UpdateClientSessionName(
+        [in] GUID SessionId,
+        [in] LPCWSTR SessionName,
+        [in] DWORD ClientProcessId
+    );
+
+    HRESULT RemoveClientSession(
+        [in] GUID SessionId
+    );
+
+    HRESULT GetSessionList(
+        [in, out] LPSAFEARRAY* SessionDetailsList
+    );
+
+
+
+    // TODO: May want to move this to an interface that deals with client and service disconnects
+    // and general connection health/tracking
+    HRESULT VerifyConnectivity();
+
+    HRESULT Cleanup();
+};
+
+
+
+typedef struct
+{
+    BYTE FirstGroup;
+    BYTE NumberOfGroupsSpanned;
+    BOOL IsActive;
+    BOOL IsMIDIMessageDestination;  // if clients can send messages TO this block. We should create a MIDI 1.0 output port
+    BOOL IsMIDIMessageSource;       // if clients can receive messages FROM this block. We should create a MIDI 1.0 input port
+    BSTR Name;
+
+} DISCOVEREDFUNCTIONBLOCK, * PDISCOVEREDFUNCTIONBLOCK;
+
+
+// this only contains key info required by the endpoint managers
+// so they can create compatible MIDI 1.0 ports from the results
+// from MIDI 2.0 protocol negotiation
+typedef struct
+{
+    BOOL EndpointInformationReceived;
+
+    BSTR EndpointSuppliedName;
+    BSTR EndpointSuppliedProductInstanceId;
+
+    BYTE NumberOfFunctionBlocksDeclared;
+    BYTE NumberOfFunctionBlocksReceived;
+    BOOL FunctionBlocksAreStatic;
+
+    BOOL EndpointSupportsMIDI2Protocol;
+    BOOL EndpointSupportsMIDI1Protocol;
+
+    SAFEARRAY(DISCOVEREDFUNCTIONBLOCK) DiscoveredFunctionBlocks;
+
+}  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, * PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
+
+
+[
+    object,
+    local,
+    uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482),
+    pointer_default(unique)
+]
+interface IMidiEndpointProtocolManagerInterface : IUnknown
+{
+    HRESULT NegotiateAndRequestMetadata(
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] BOOL PreferToSendJRTimestampsToEndpoint,
+        [in] BOOL PreferToReceiveJRTimestampsFromEndpoint,
+        [in] BYTE PreferredMidiProtocol,
+        [in] WORD TimeoutMS,
+        [out, retval] PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
+    );
+
+
+};
+
+
+
+
+
+
+

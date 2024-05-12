@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "stdafx.h"
@@ -70,7 +70,8 @@ HRESULT MidiSrvVerifyConnectivity(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
 
@@ -89,12 +90,14 @@ HRESULT MidiSrvCreateClient(
     /* [string][in] */ __RPC__in_string LPCWSTR MidiDevice,
     /* [in] */ __RPC__in PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     /* [in] */ __RPC__in GUID SessionId,
+    /* [in] */ __RPC__in DWORD ClientProcessId,
     /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *Client
     )
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
 
@@ -116,9 +119,11 @@ HRESULT MidiSrvCreateClient(
 
     ZeroMemory(createdClient, sizeof(MIDISRV_CLIENT));
 
+    
+
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, CreationParams, createdClient, false));
+    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, ClientProcessId, CreationParams, createdClient, false));
 
     // Success, transfer the MIDISRV_CLIENT data to the caller.
     *Client = createdClient;
@@ -133,7 +138,8 @@ HRESULT MidiSrvDestroyClient(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
 
@@ -165,7 +171,8 @@ MidiSrvUpdateConfiguration(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Enter")
     );
@@ -175,7 +182,8 @@ MidiSrvUpdateConfiguration(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(ConfigurationJson, "JSON")
     );
@@ -196,7 +204,8 @@ MidiSrvUpdateConfiguration(
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingWideString(L"No config entries in JSON string")
         );
@@ -227,7 +236,8 @@ MidiSrvUpdateConfiguration(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Exit success")
     );
@@ -242,14 +252,16 @@ MidiSrvRegisterSession(
     __RPC__in GUID SessionId,
     __RPC__in_string LPCWSTR SessionName,
     __RPC__in DWORD ProcessId,
-    __RPC__in_string LPCWSTR ProcessName
+    __RPC__in_string LPCWSTR ProcessName,
+    __RPC__deref_out_opt PMIDISRV_CONTEXT_HANDLE* ContextHandle
 )
 {
     UNREFERENCED_PARAMETER(BindingHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Enter")
     );
@@ -260,11 +272,51 @@ MidiSrvRegisterSession(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(sessionTracker->AddClientSession(SessionId, SessionName, ProcessId, ProcessName));
+    RETURN_IF_FAILED(sessionTracker->AddClientSessionInternal(SessionId, SessionName, ProcessId, ProcessName, ContextHandle));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Exit success")
+    );
+
+    return S_OK;
+}
+
+HRESULT
+MidiSrvUpdateSessionName(
+    /* [in] */ handle_t BindingHandle,
+    __RPC__in PMIDISRV_CONTEXT_HANDLE ContextHandle,
+    __RPC__in GUID SessionId,
+    __RPC__in_string LPCWSTR SessionName,
+    __RPC__in DWORD ProcessId
+)
+{
+    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(ContextHandle);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter")
+    );
+
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+
+    RETURN_IF_FAILED(sessionTracker->UpdateClientSessionName(SessionId, SessionName, ProcessId));
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Exit success")
     );
@@ -275,14 +327,17 @@ MidiSrvRegisterSession(
 HRESULT
 MidiSrvDeregisterSession(
     /* [in] */ handle_t BindingHandle,
+    __RPC__in PMIDISRV_CONTEXT_HANDLE ContextHandle,
     __RPC__in GUID SessionId
 )
 {
     UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(ContextHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Enter")
     );
@@ -297,13 +352,50 @@ MidiSrvDeregisterSession(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Exit success")
     );
 
     return S_OK;
 }
+
+
+// Server context run-down routing. This is responsible for cleaning
+// up connections when the client doesn't close them correctly (like
+// if it crashes out)
+void 
+__RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
+    __RPC__in PMIDISRV_CONTEXT_HANDLE phContext
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Enter context handle rundown")
+    );
+
+    std::shared_ptr<CMidiSessionTracker> sessionTracker;
+
+    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+    auto trHR = g_MidiService->GetSessionTracker(sessionTracker);
+
+    if (SUCCEEDED(trHR))
+    {
+        //UNREFERENCED_PARAMETER(phContext);
+        LOG_IF_FAILED(sessionTracker->RemoveClientSessionInternal(phContext));
+    }
+
+}
+
+
+
+
+
 
 HRESULT
 MidiSrvGetSessionList(
@@ -315,7 +407,8 @@ MidiSrvGetSessionList(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Enter")
     );
@@ -335,7 +428,8 @@ MidiSrvGetSessionList(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Exit success")
     );
@@ -356,7 +450,8 @@ MidiSrvGetAbstractionList(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Enter")
     );
@@ -411,7 +506,8 @@ MidiSrvGetAbstractionList(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Exit success")
     );
@@ -430,12 +526,19 @@ MidiSrvGetTransformList(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Enter")
     );
 
+
+
+
     // TODO
+
+
+
 
     return S_OK;
 }

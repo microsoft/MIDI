@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -11,9 +11,7 @@ import "oaidl.idl";
 import "ocidl.idl";
 import "unknwn.idl";
 
-import "MidiAbstraction.idl";
-import "MidiDeviceManagerInterface.idl";    // for MidiFlow
-
+import "WindowsMidiServices.idl";
 
 [
     uuid(42af54fc-9aba-4fe8-8ea2-d32d2a333a0c),

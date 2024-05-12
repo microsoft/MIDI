@@ -80,6 +80,13 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.IsAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -94,11 +101,14 @@ namespace Microsoft.Midi.ConsoleApp
             if (!string.IsNullOrEmpty(endpointId))
             {
                 // TODO: Update loc strings
-                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+                string endpointName = EndpointUtility.GetEndpointNameFromEndpointInterfaceId(endpointId);
+
+                AnsiConsole.Markup(Strings.SendMessageSendingThroughEndpointLabel);
+                AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
                 AnsiConsole.WriteLine();
-
-                AnsiConsole.MarkupLine("Temporary UI change: Only error lines will be displayed when sending messages.");
-
+                AnsiConsole.MarkupLine("Only error lines will be displayed when sending messages.");
+                AnsiConsole.WriteLine();
 
 
                 using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");

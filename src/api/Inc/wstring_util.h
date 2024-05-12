@@ -4,7 +4,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -77,6 +77,20 @@ namespace WindowsMidiServicesInternal
     {
         return ToLowerWStringCopy(TrimmedWStringCopy(s));
     }
+
+
+    inline bool WStringEndsWidth(_In_ std::wstring source, _In_ std::wstring ending)
+    {
+        if (ending.size() > source.size())
+        {
+            return false;
+        }
+        else
+        {
+            return std::equal(ending.rbegin(), ending.rend(), source.rbegin());
+        }
+    }
+
 
 
     // This is just to convert all GUIDs to the same case. It does

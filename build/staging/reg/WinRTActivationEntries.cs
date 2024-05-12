@@ -10,7 +10,6 @@ class RegistryEntries
     {
         new RegEntry{ ClassName="Microsoft.Devices.Midi2.MidiSession", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Microsoft.Devices.Midi2.IMidiSessionStatics", ActivationType=0, Threading=0, TrustLevel=0  },
-        new RegEntry{ ClassName="Microsoft.Devices.Midi2.MidiSessionSettings", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Microsoft.Devices.Midi2.MidiEndpointDeviceInformation", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Microsoft.Devices.Midi2.IMidiEndpointDeviceInformationStatics", ActivationType=0, Threading=0, TrustLevel=0  },
         new RegEntry{ ClassName="Microsoft.Devices.Midi2.MidiEndpointDeviceWatcher", ActivationType=0, Threading=0, TrustLevel=0  },

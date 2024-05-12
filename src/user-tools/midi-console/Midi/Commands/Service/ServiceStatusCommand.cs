@@ -41,26 +41,24 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Service reported as NOT available by API."));
             }
 
-            string serviceName = "MidiSrv";
-
             ServiceController controller;
 
             try
             {
-                controller = new System.ServiceProcess.ServiceController(serviceName);
+                controller = new System.ServiceProcess.ServiceController(MidiServiceHelper.GetServiceName());
 
                 if (controller.Status == System.ServiceProcess.ServiceControllerStatus.Running)
                 {
-                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess($"Service {serviceName} is running."));
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess($"Service {MidiServiceHelper.GetServiceName()} is running."));
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Service '{serviceName}' status is {controller.Status.ToString()}. You may want to restart the service or reboot."));
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Service '{MidiServiceHelper.GetServiceName()}' status is {controller.Status.ToString()}. You may want to restart the service or reboot."));
                 }
             }
             catch (InvalidOperationException)
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{serviceName}'. Is Windows MIDI Services installed?\n"));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{MidiServiceHelper.GetServiceName()}'. Is Windows MIDI Services installed?\n"));
                 return (int)MidiConsoleReturnCode.ErrorMidiServicesNotInstalled;
             }
 
@@ -79,7 +77,7 @@ namespace Microsoft.Midi.ConsoleApp
                 table.Rows.Add(new[] { new Markup("Name"), new Markup(controller.ServiceName) });
                 table.Rows.Add(new[] { new Markup("Display Name"), new Markup(controller.DisplayName) });
 
-                using (var serviceObject = new ManagementObject(new ManagementPath(string.Format("Win32_Service.Name='{0}'", serviceName))))
+                using (var serviceObject = new ManagementObject(new ManagementPath(string.Format("Win32_Service.Name='{0}'", controller.ServiceName))))
                 {
                     if (serviceObject != null) 
                     {

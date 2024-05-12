@@ -40,19 +40,20 @@ using namespace winrt;
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
-#include "Midi2MidiSrvAbstraction_i.c"
-#include "Midi2MidiSrvAbstraction.h"
+#include <filesystem>
 
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
-
-#include "dllmain.h"
 
 #include <Devpkey.h>
 #include "MidiDefs.h"
-#include "MidiDataFormat.h"
-#include "MidiFlow.h"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
+
+#include "Midi2MidiSrvAbstraction.h"
+#include "Midi2MidiSrvAbstraction_i.c"
+
+#include "dllmain.h"
+
+class MidiSrvManager;
 
 #include "MidiSrvRpc.h"
 #include "MidiXProc.h"
@@ -63,4 +64,6 @@ using namespace winrt;
 #include "Midi2.MidiSrvBiDi.h"
 #include "Midi2.MidiSrvConfigurationManager.h"
 #include "Midi2.MidiSrvSessionTracker.h"
+
+#include "MidiSrvManager.h"
 

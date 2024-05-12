@@ -5,7 +5,7 @@
 #include <initguid.h>
 #include <mmdeviceapi.h>
 #include "MidiTestCommon.h"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
 
 #include <initguid.h>
 #include "MidiDefs.h"
@@ -187,10 +187,13 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
 
     GUID DummySessionId{};
 
+    // Get process id 
+    DWORD clientProcessId = GetCurrentProcessId();
+
     VERIFY_SUCCEEDED([&]() {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParams, DummySessionId, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParams, DummySessionId, clientProcessId, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;

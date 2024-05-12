@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiServiceSessionConnectionInfo.idl";
+
+namespace Microsoft.Devices.Midi2.Diagnostics
+{
+    [default_interface]
+    runtimeclass MidiServiceSessionInfo
+    {
+        Guid SessionId{ get; };
+
+        UInt64 ProcessId{ get; };
+        String ProcessName{ get; };
+        String SessionName{ get; };
+
+        Windows.Foundation.DateTime StartTime{ get; };
+
+
+        IVectorView<MidiServiceSessionConnectionInfo> Connections{ get; };
+    }
+}

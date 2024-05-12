@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -22,10 +22,11 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi in",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiIn", MIDI_TRACE_EVENT_INTERFACE_FIELD)
             );
 
         wil::com_ptr_nothrow<IMidiIn> midiIn;
@@ -36,10 +37,11 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Out",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiOut", MIDI_TRACE_EVENT_INTERFACE_FIELD)
             );
 
         wil::com_ptr_nothrow<IMidiOut> midiOut;
@@ -50,10 +52,11 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi BiDi",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiBiDi", MIDI_TRACE_EVENT_INTERFACE_FIELD)
             );
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
@@ -64,10 +67,11 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> config;
@@ -79,10 +83,11 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiAbstractionConfigurationManager",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiServicePluginMetadataReporterInterface", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         wil::com_ptr_nothrow<IMidiServicePluginMetadataReporterInterface> metadataReporter;
@@ -95,10 +100,11 @@ CMidi2MidiSrvAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiSessionTracker",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiSessionTracker", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         wil::com_ptr_nothrow<IMidiSessionTracker> config;
@@ -107,7 +113,15 @@ CMidi2MidiSrvAbstraction::Activate(
     }
     else
     {
-        return E_NOINTERFACE;
+        TraceLoggingWrite(
+            MidiSrvAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unknown interface requested", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+            return E_NOINTERFACE;
     }
 
     return S_OK;

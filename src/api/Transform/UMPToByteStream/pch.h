@@ -40,8 +40,10 @@
 
 #include "mididefs.h"
 
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
+#include <libmidi2/umpToBytestream.h>
+
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include "Midi2UMP2BSTransform_i.c"
 #include "Midi2UMP2BSTransform.h"

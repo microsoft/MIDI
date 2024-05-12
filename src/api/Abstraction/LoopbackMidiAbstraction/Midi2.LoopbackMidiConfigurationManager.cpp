@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "pch.h"
@@ -22,7 +22,8 @@ CMidi2LoopbackMidiConfigurationManager::Initialize(
 
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -45,7 +46,8 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 {
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(ConfigurationJsonSection, "json")
@@ -67,10 +69,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         {
             TraceLoggingWrite(
                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Failed to parse Configuration JSON", "message"),
+                TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(ConfigurationJsonSection, "json")
             );
 
@@ -131,10 +134,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         {
                             TraceLoggingWrite(
                                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Endpoint name missing or empty", "message")
+                                TraceLoggingWideString(L"Endpoint name missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
                             internal::JsonStringifyObjectToOutParam(responseObject, &Response);
@@ -147,10 +151,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         {
                             TraceLoggingWrite(
                                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unique identifier missing or empty", "message")
+                                TraceLoggingWideString(L"Unique identifier missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
                             internal::JsonStringifyObjectToOutParam(responseObject, &Response);
@@ -163,10 +168,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         {
                             TraceLoggingWrite(
                                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Loopback endpoint pair created", "message")
+                                TraceLoggingWideString(L"Loopback endpoint pair created", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
                             // all good
@@ -193,10 +199,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                             // we failed to create the endpoints. Exit and return a fail.
                             TraceLoggingWrite(
                                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Failed to create endpoints", "message")
+                                TraceLoggingWideString(L"Failed to create endpoints", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
                             internal::JsonStringifyObjectToOutParam(responseObject, &Response);
@@ -210,11 +217,12 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                         TraceLoggingWrite(
                             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                            __FUNCTION__,
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
                             TraceLoggingWideString(associationKey.c_str(), "association key"),
-                            TraceLoggingWideString(L"Failed to get one or both endpoints from the JSON", "message")
+                            TraceLoggingWideString(L"Failed to get one or both endpoints from the JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                         );
 
                         internal::JsonStringifyObjectToOutParam(responseObject, &Response);
@@ -227,11 +235,12 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                 {
                     TraceLoggingWrite(
                         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                        __FUNCTION__,
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
                         TraceLoggingWideString(associationKey.c_str(), "association key"),
-                        TraceLoggingWideString(L"Unable to convert association id property to a JsonObject", "message")
+                        TraceLoggingWideString(L"Unable to convert association id property to a JsonObject", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     );
 
                     internal::JsonStringifyObjectToOutParam(responseObject, &Response);
@@ -292,10 +301,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             TraceLoggingWrite(
                                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Failed to remove device", "message"),
+                                TraceLoggingWideString(L"Failed to remove device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingWideString(ConfigurationJsonSection, "json")
                             );
                         }
@@ -331,10 +341,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"std exception processing json", "message"),
+            TraceLoggingWideString(L"std exception processing json", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingString(e.what(), "exception"),
             TraceLoggingWideString(ConfigurationJsonSection, "json")
         );
@@ -343,10 +354,11 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Other exception processing json", "message"),
+            TraceLoggingWideString(L"Other exception processing json", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(ConfigurationJsonSection, "json")
         );
     }
@@ -363,7 +375,8 @@ CMidi2LoopbackMidiConfigurationManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

@@ -17,7 +17,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
 {
     TraceLoggingWrite(
         MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -38,7 +39,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
 {
     TraceLoggingWrite(
         MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -46,11 +48,26 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
     return S_OK;
 }
 
+// #define USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
+
+#ifndef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
+
 #define SCALE_DOWN_FROM_16_BIT_VALUE    16
 #define SCALE_DOWN_FROM_32_BIT_VALUE    32
 #define SCALE_TO_7_BIT_VALUE            7
 #define SCALE_TO_14_BIT_VALUE           14
 
+#endif
+
+// TEMP due to missing libmidi2 function impl
+void umpToMIDI1Protocol::increaseWrite()
+{
+    bufferLength++;
+    writeIndex++;
+    if (writeIndex == UMPTOPROTO1_BUFFER) {
+        writeIndex = 0;
+    }
+}
 
 _Use_decl_annotations_
 HRESULT
@@ -60,19 +77,46 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     LONGLONG Timestamp
 )
 {
-    //TraceLoggingWrite(
-    //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-    //    __FUNCTION__,
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this")
-    //);
+    TraceLoggingWrite(
+        MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
 
 
     if (Length >= sizeof(uint32_t))
     {
-        byte* bytes = (byte*)Data;
+#ifdef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
+        // using libmidi2. It has a bug it it at the moment.
+        // 
+        // Send the UMP(s) to the parser
+        uint32_t* data = (uint32_t*)Data;
+        for (UINT i = 0; i < (Length / sizeof(uint32_t)); i++)
+        {
+            m_umpToMidi1.UMPStreamParse(data[i]);
+        }
 
-        auto originalWord0 = internal::MidiWordFromBytes(bytes[3], bytes[2], bytes[1], bytes[0]);
+        // retrieve the message from the parser
+        // and send it on
+        while (m_umpToMidi1.availableUMP())
+        {
+            uint32_t words[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
+            UINT wordCount{ 0 };
+
+            for (wordCount = 0; wordCount < _countof(words) && m_umpToMidi1.availableUMP(); wordCount++)
+            {
+                words[wordCount] = m_umpToMidi1.readUMP();
+            }
+
+            if (wordCount > 0)
+            {
+                RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), Timestamp, m_Context));
+            }
+        }
+#else
+        auto originalWord0 = internal::MidiWord0FromVoidMessageDataPointer(Data);
 
         // only translate MT4 to MT2 (MIDI 2.0 protocol to MIDI 1.0 protocol)
         if (internal::GetUmpMessageTypeFromFirstWord(originalWord0) == MIDI_UMP_MESSAGE_TYPE_MIDI2_CHANNEL_VOICE_64)
@@ -85,7 +129,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
             //uint8_t* incomingDataPointer = (uint8_t*)Data;
 
-            auto originalWord1 = internal::MidiWordFromBytes(bytes[7], bytes[6], bytes[5], bytes[4]);
+            auto originalWord1 = internal::MidiWord1FromVoidMessageDataPointer(((uint8_t*)Data) + sizeof(uint32_t));
 
             uint8_t groupIndex = internal::GetGroupIndexFromFirstWord(originalWord0);
             uint8_t channelIndex = internal::GetChannelIndexFromFirstWord(originalWord0);
@@ -183,7 +227,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     //    __FUNCTION__,
                     //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     //    TraceLoggingPointer(this, "this"),
-                    //    TraceLoggingWideString(L"Downscaling Note Off", "message")
+                    //    TraceLoggingWideString(L"Downscaling Note Off", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     //);
 
                     // note number / index is third byte
@@ -193,6 +237,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_NOTE_ON)
                 {
                     //TraceLoggingWrite(
@@ -200,16 +245,23 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     //    __FUNCTION__,
                     //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     //    TraceLoggingPointer(this, "this"),
-                    //    TraceLoggingWideString(L"Downscaling Note On", "message")
+                    //    TraceLoggingWideString(L"Downscaling Note On", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     //);
 
                     uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
                     uint8_t newVelocity = (uint8_t)(M2Utils::scaleDown(MIDIWORDSHORT1(originalWord1), SCALE_DOWN_FROM_16_BIT_VALUE, SCALE_TO_7_BIT_VALUE));
-                    //if (newVelocity == 0) newVelocity = 1;
+
+                    if (newVelocity == 0)
+                    {
+                        // MIDI 2.0 to MIDI 1.0 conversion rules
+                        newVelocity = 1;
+                    }
+
                     newWord0 = UMPMessage::mt2NoteOn(groupIndex, channelIndex, noteNumber, newVelocity);
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_POLY_PRESSURE)
                 {
                     uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
@@ -220,6 +272,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_CONTROL_CHANGE)
                 {
                     uint8_t controlIndex = MIDIWORDBYTE3(originalWord0);
@@ -230,6 +283,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_CHANNEL_PRESSURE)
                 {
                     // the pressure data value is the entire second word
@@ -240,6 +294,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PITCH_BEND)
                 {
                     // the bend value is the entire second word
@@ -250,6 +305,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                     newData = &newWord0;
                     newLength = sizeof(uint32_t);
                 }
+
                 else
                 {
                     // just pass it through without any processing. We don't have a specific conversion for this CV message
@@ -262,7 +318,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                 //    __FUNCTION__,
                 //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 //    TraceLoggingPointer(this, "this"),
-                //    TraceLoggingWideString(L"Sending single new message", "message")
+                //    TraceLoggingWideString(L"Sending single new message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 //);
 
                 if (m_Callback != nullptr && newLength > 0 && newData != nullptr)
@@ -281,7 +337,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
             //    __FUNCTION__,
             //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Not a message type we recognize. No downscaling applied", "message"),
+            //    TraceLoggingWideString(L"Not a message type we recognize. No downscaling applied", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             //    TraceLoggingUInt32(originalWord0, "Word 0")
             //);
 
@@ -292,18 +348,22 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
             }
         }
 
+
+#endif
+
     }
     else
     {
         // not a valid UMP
 
         TraceLoggingWrite(
-                MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"invalid UMP", "message"),
-                TraceLoggingUInt32(Length, "Length in Bytes")
+            MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"invalid UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(Length, "Length in Bytes")
             );
     }
 

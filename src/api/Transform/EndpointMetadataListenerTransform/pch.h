@@ -61,11 +61,8 @@
 
 namespace internal = ::WindowsMidiServicesInternal;
 
-#include "mididevicemanagerinterface_i.c"
-#include "mididevicemanagerinterface.h"
-
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include "Midi2EndpointMetadataListenerTransform_i.c"
 #include "Midi2EndpointMetadataListenerTransform.h"

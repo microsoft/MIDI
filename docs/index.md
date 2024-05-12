@@ -5,6 +5,8 @@ has_children: false
 ---
 # Windows MIDI Services
 
+**NOTE: These docs are currently a work-in-progress**
+
 Windows MIDI Services is an open source project, which has been developed with input and feedback from the community. 
 
 > [Source repo and developer releases on GitHub](https://aka.ms/midirepo)

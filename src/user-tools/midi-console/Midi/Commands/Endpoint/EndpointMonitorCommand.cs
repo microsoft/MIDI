@@ -157,6 +157,13 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.IsAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             using AutoResetEvent m_displayMessageThreadWakeup = new AutoResetEvent(false);
             using AutoResetEvent m_fileMessageThreadWakeup = new AutoResetEvent(false);
             using AutoResetEvent m_messageDispatcherThreadWakeup = new AutoResetEvent(false);
@@ -181,8 +188,24 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (!string.IsNullOrEmpty(endpointId))
             {
+                string endpointName = EndpointUtility.GetEndpointNameFromEndpointInterfaceId(endpointId);
 
-                AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+
+                AnsiConsole.Markup(Strings.MonitorMonitoringOnEndpointLabel);
+                AnsiConsole.Markup(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
+
+                if (settings.AutoReconnect)
+                {
+                    AnsiConsole.MarkupLine(" with auto-reconnect");
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine(" without auto-reconnect");
+                }
+
+
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+
 
                 //var table = new Table();
 
@@ -235,15 +258,11 @@ namespace Microsoft.Midi.ConsoleApp
 
                 if (settings.AutoReconnect)
                 {
-                    AnsiConsole.MarkupLine("Auto-reconnect is enabled");
-
                     connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
                     connection.EndpointDeviceReconnected += Connection_EndpointDeviceReconnected;
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine("Auto-reconnect is not enabled");
-
                     MonitorEndpointConnectionStatusInTheBackground(endpointId);
                 }
 

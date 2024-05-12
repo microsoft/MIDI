@@ -47,6 +47,13 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.IsAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Interactive Endpoint not yet implemented."));
 
             return (int)MidiConsoleReturnCode.ErrorNotImplemented;

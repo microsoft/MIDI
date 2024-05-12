@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiDiagnostics.cpp">
+      <Filter>SDK\Diagnostics</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiReporting.cpp">
+      <Filter>SDK\Diagnostics</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiDiagnostics.h">
+      <Filter>SDK\Diagnostics</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiReporting.h">
+      <Filter>SDK\Diagnostics</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiDiagnostics.idl">
+      <Filter>SDK\Diagnostics</Filter>
+    </Midl>
+    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiReporting.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponse.idl">
+      <Filter>SDK\Diagnostics</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponseSummary.idl">
+      <Filter>SDK\Diagnostics</Filter>
+    </Midl>
+    <Midl Include="MidiServiceSessionConnectionInfo.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceSessionInfo.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportPluginInfo.idl">
+      <Filter>SDK\Reporting</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="WinRTActivationEntries.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{25ebfe5d-4aaa-49c6-a12e-9d5caebb9fc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Diagnostics">
+      <UniqueIdentifier>{ef38351e-9416-4adc-8232-0397f235c023}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Reporting">
+      <UniqueIdentifier>{68f7a7ec-e703-447b-a8ea-037ee9757a20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{b8ce7a13-3e94-4d35-9323-a6ee0829d61c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

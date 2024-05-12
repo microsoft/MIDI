@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiStreamConfigurationRequestReceivedEventArgs.idl";
+//import "MidiVirtualDeviceCreationConfiguration.idl";
+
+namespace Microsoft.Devices.Midi2.Endpoints.Virtual
+{
+    [default_interface]
+    runtimeclass MidiVirtualDevice : Microsoft.Devices.Midi2.IMidiEndpointMessageProcessingPlugin
+    {
+        String DeviceEndpointDeviceId{ get; };
+        String ClientEndpointDeviceId{ get; };
+
+        IMapView<UInt8, Microsoft.Devices.Midi2.MidiFunctionBlock> FunctionBlocks{ get; };
+        
+        Boolean UpdateFunctionBlock(Microsoft.Devices.Midi2.MidiFunctionBlock block);
+        Boolean UpdateEndpointName(String name);
+
+        Boolean SuppressHandledMessages;
+
+        event Windows.Foundation.TypedEventHandler<MidiVirtualDevice, MidiStreamConfigurationRequestReceivedEventArgs> StreamConfigurationRequestReceived;
+    }
+}

@@ -1,0 +1,24 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiServicePingResponse.idl";
+
+namespace Microsoft.Devices.Midi2.Diagnostics
+{
+    [default_interface]
+    runtimeclass MidiServicePingResponseSummary
+    {
+        Boolean Success { get; };
+        String FailureReason{ get; };
+
+        UInt64 TotalPingRoundTripMidiClock { get; };
+        UInt64 AveragePingRoundTripMidiClock{ get; };
+
+        IVectorView<MidiServicePingResponse> Responses { get; };
+    }
+}

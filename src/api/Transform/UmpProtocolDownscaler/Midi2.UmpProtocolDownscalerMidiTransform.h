@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #pragma once
 
-//#include <libmidi2/bytestreamToUMP.h>
 
 class CMidi2UmpProtocolDownscalerMidiTransform :
     public Microsoft::WRL::RuntimeClass<
@@ -15,6 +14,7 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+    umpToMIDI1Protocol m_umpToMidi1{};
 
     std::wstring m_Device;
     wil::com_ptr_nothrow<IMidiCallback> m_Callback;

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "stdafx.h"
 
-#include "MidiAbstraction_i.c"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices_i.c"
+#include "WindowsMidiServices.h"
 
 #include <Devpkey.h>
 #include "MidiDefs.h"

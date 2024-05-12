@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+
+import "MidiEndpointNativeDataFormatEnum.idl";
+
+MIDI_IDL_IMPORT
+
+namespace Microsoft.Devices.Midi2
+{
+    MIDI_API_CONTRACT_v1
+    struct MidiEndpointTransportSuppliedInfo
+    {
+        String Name;
+        String Description;
+
+        String SerialNumber;
+
+        UInt16 VendorId;
+        UInt16 ProductId;
+
+        String ManufacturerName;
+
+        Boolean SupportsMultiClient;
+
+        MidiEndpointNativeDataFormat NativeDataFormat;
+
+        Guid TransportId;
+        String TransportMnemonic;
+    };
+}

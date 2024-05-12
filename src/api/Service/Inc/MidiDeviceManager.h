@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -61,7 +61,7 @@ typedef struct _MIDIPARENTDEVICE
     unique_hswdevice SwDevice{};                                // Handle to the SWD created for the MIDI parent device
     unique_swd_string DeviceId{};                               // SWD device ID for this MIDI parent device
     std::wstring InstanceId{};                                  // created instance id
-    //std::wstring Name{};                                        // friendly name for this device
+    //std::wstring Name{};                                      // friendly name for this device
     HRESULT hr{ S_OK };
 
 } MIDIPARENTDEVICE, * PMIDIPARENTDEVICE;

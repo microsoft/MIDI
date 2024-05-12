@@ -42,13 +42,14 @@
 
 #include <libmidi2/utils.h>              // AM_MIDI2
 #include <libmidi2/umpMessageCreate.h>   // AM_MIDI2
+#include <libmidi2/umpToMIDI1Protocol.h>
+
 #include "ump_helpers.h"        // internal helpers
 
 namespace internal = ::WindowsMidiServicesInternal;
 
-
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include "Midi2UmpProtocolDownscalerTransform_i.c"
 #include "Midi2UmpProtocolDownscalerTransform.h"

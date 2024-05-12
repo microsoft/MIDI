@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "pch.h"
@@ -69,7 +69,8 @@ CMidi2EndpointMetadataListenerMidiTransform::Initialize(
 
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -106,7 +107,8 @@ CMidi2EndpointMetadataListenerMidiTransform::Cleanup()
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -131,10 +133,11 @@ void CMidi2EndpointMetadataListenerMidiTransform::QueueWorker()
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Entering Worker", "message")
+        TraceLoggingWideString(L"Entering Worker", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     while (m_continueProcessing)
@@ -169,10 +172,11 @@ void CMidi2EndpointMetadataListenerMidiTransform::QueueWorker()
 
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exiting Worker", "message")
+        TraceLoggingWideString(L"Exiting Worker", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 }
 
@@ -244,7 +248,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointNameProperty()
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -276,7 +281,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointProductInstanceIdProp
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -310,7 +316,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockNameProperty(uin
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -343,7 +350,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateStreamConfigurationProperties
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -374,8 +382,6 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateStreamConfigurationProperties
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
-    //OutputDebugString(L"" __FUNCTION__ " Properties Updated");
-
     return S_OK;
 }
 
@@ -390,7 +396,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateDeviceIdentityProperty(intern
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -430,9 +437,6 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateDeviceIdentityProperty(intern
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
-    //OutputDebugString(L"" __FUNCTION__ " Property Updated");
-
-
     return S_OK;
 }
 
@@ -443,7 +447,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointInfoProperties(intern
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -497,9 +502,6 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateEndpointInfoProperties(intern
 
     RETURN_IF_FAILED(m_MidiDeviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
-    //OutputDebugString(L"" __FUNCTION__ " Properties Updated");
-
-
     return S_OK;
 }
 
@@ -510,7 +512,8 @@ CMidi2EndpointMetadataListenerMidiTransform::UpdateFunctionBlockProperty(interna
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -559,7 +562,8 @@ CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(internal::Pack
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -569,35 +573,27 @@ CMidi2EndpointMetadataListenerMidiTransform::ProcessStreamMessage(internal::Pack
     switch (messageStatus)
     {
     case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION\n");
         UpdateEndpointInfoProperties(ump);
         break;
     case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION\n");
         UpdateDeviceIdentityProperty(ump);
         break;
     case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION\n");
         UpdateStreamConfigurationProperties(ump);
         break;
     case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION\n");
         UpdateFunctionBlockProperty(ump);
         break;
     case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION\n");
         HandleFunctionBlockNameMessage(ump);
         break;
     case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION\n");
         HandleProductInstanceIdMessage(ump);
         break;
     case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION\n");
         HandleEndpointNameMessage(ump);
         break;
     default:
-        OutputDebugString(L" Message is unidentified stream message\n");
         break;
     }
 
@@ -608,7 +604,8 @@ std::wstring ParseStreamTextMessage(_In_ internal::PackedUmp128& message)
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
 
@@ -672,7 +669,8 @@ CMidi2EndpointMetadataListenerMidiTransform::HandleFunctionBlockNameMessage(inte
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -737,7 +735,8 @@ CMidi2EndpointMetadataListenerMidiTransform::HandleEndpointNameMessage(internal:
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -793,7 +792,8 @@ CMidi2EndpointMetadataListenerMidiTransform::HandleProductInstanceIdMessage(inte
 {
     TraceLoggingWrite(
         MidiEndpointMetadataListenerTransformTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -801,20 +801,17 @@ CMidi2EndpointMetadataListenerMidiTransform::HandleProductInstanceIdMessage(inte
     switch (internal::GetFormFromStreamMessageFirstWord(productInstanceIdMessage.word0))
     {
     case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE\n" );
         m_productInstanceId = ParseStreamTextMessage(productInstanceIdMessage);
         RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
         break;
 
     case MIDI_STREAM_MESSAGE_MULTI_FORM_START: // start of multi-part name message. Overwrite any other name in the map
     {
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_MULTI_FORM_START\n");
         m_productInstanceId = ParseStreamTextMessage(productInstanceIdMessage);
     }
     break;
 
     case MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE: //continuation of multi-part name message. Append to name in map
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE\n");
         if (!m_productInstanceId.empty())
         {
             m_productInstanceId += ParseStreamTextMessage(productInstanceIdMessage);
@@ -826,7 +823,6 @@ CMidi2EndpointMetadataListenerMidiTransform::HandleProductInstanceIdMessage(inte
         break;
 
     case MIDI_STREAM_MESSAGE_MULTI_FORM_END: // end of multi-part name message. Finish name and update property
-        OutputDebugString(L" MIDI_STREAM_MESSAGE_MULTI_FORM_END\n");
         if (!m_productInstanceId.empty())
         {
             m_productInstanceId += ParseStreamTextMessage(productInstanceIdMessage);

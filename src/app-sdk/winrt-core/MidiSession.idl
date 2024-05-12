@@ -1,0 +1,51 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "namespace_defines.h"
+#include "midl_defines.h"
+
+MIDI_IDL_IMPORT
+
+import "MidiEndpointConnection.idl";
+import "IMidiEndpointConnectionSettings.idl";
+
+namespace Microsoft.Devices.Midi2
+{
+    MIDI_API_CONTRACT_v1
+    [default_interface]
+    runtimeclass MidiSession : Windows.Foundation.IClosable
+    {
+        Guid SessionId { get; };
+        String Name{ get; };
+
+        static MidiSession TryCreate(String sessionName);
+
+        Boolean IsOpen { get; };
+
+        IMapView<Guid, MidiEndpointConnection> Connections{ get; };
+
+        MidiEndpointConnection TryCreateEndpointConnection(
+            String endpointDeviceId
+        );
+
+        MidiEndpointConnection TryCreateEndpointConnection(
+            String endpointDeviceId,
+            Boolean autoReconnect
+        );
+
+        MidiEndpointConnection TryCreateEndpointConnection(
+            String endpointDeviceId,
+            Boolean autoReconnect,
+            IMidiEndpointConnectionSettings settings
+        );
+
+        void DisconnectEndpointConnection(Guid endpointConnectionId);
+
+        Boolean UpdateName(String newName);
+    }
+}

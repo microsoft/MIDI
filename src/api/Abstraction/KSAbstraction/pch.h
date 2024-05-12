@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -44,6 +44,9 @@
 #include <atlcoll.h>
 #include <atlsync.h>
 
+#include <atlconv.h>
+#include <string>
+
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
@@ -56,9 +59,8 @@
 namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
-#include "MidiDataFormat.h"
-#include "MidiFlow.h"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 
 #undef GetObject
@@ -69,28 +71,19 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "json_helpers.h"
 #include "swd_helpers.h"
 #include "resource_util.h"
+#include "ump_helpers.h"
 
 #include "MidiXProc.h"
 
+#include <libmidi2/umpToBytestream.h>
+#include <libmidi2/bytestreamToUMP.h>
 
 #include "strsafe.h"
 
 #include "abstraction_defs.h"
 
-#include "midiabstraction_i.c"
-#include "midiabstraction.h"
-
 #include "Midi2KSAbstraction_i.c"
 #include "Midi2KSAbstraction.h"
-
-#include "mididevicemanagerinterface_i.c"
-#include "mididevicemanagerinterface.h"
-
-#include "midiendpointprotocolmanagerinterface_i.c"
-#include "midiendpointprotocolmanagerinterface.h"
-
-#include "MidiServicePlugin_i.c"
-#include "MidiServicePlugin.h"
 
 #include "dllmain.h"
 

@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -25,8 +25,8 @@
 #define MIDIWORDBYTE3(x) ((uint8_t)((x & 0x0000FF00) >> 8))
 #define MIDIWORDBYTE4(x) ((uint8_t)((x & 0x000000FF)))
 
-#define MIDIWORDSHORT1(x) ((uint8_t)((x & 0xFFFF0000) >> 16))
-#define MIDIWORDSHORT2(x) ((uint8_t)((x & 0x0000FFFF)))
+#define MIDIWORDSHORT1(x) ((uint16_t)((x & 0xFFFF0000) >> 16))
+#define MIDIWORDSHORT2(x) ((uint16_t)((x & 0x0000FFFF)))
 
 #define MIDIWORDHIGHBIT(x) (bool)((x & 0x80000000) != 0)
 
@@ -256,12 +256,16 @@ namespace WindowsMidiServicesInternal
         case 0xF: // MidiUmpMessageType::UmpStream128      // type F
             return false;
 
-
             // all other message types are undefined, so return false until those are defined
         default:
             return false;
 
         }
+    }
+
+    inline bool MessageHasGroupField(_In_ uint32_t messageWord0) noexcept
+    {
+        return MessageTypeHasGroupField(GetUmpMessageTypeFromFirstWord(messageWord0));
     }
 
     inline std::uint8_t GetChannelIndexFromFirstWord(_In_ const std::uint32_t firstWord) noexcept
@@ -367,6 +371,35 @@ namespace WindowsMidiServicesInternal
     {
         return (uint32_t)(byte0 << 24 | byte1 << 16 | byte2 << 8 | byte3);
     }
+
+    // this function assumes you've already done the required range checking
+    // use this for any of the callbacks of SendMidMessage functions
+    inline uint32_t MidiWord0FromVoidMessageDataPointer(
+        _In_ PVOID data)
+    {
+        return *(uint32_t*)data;
+    }
+
+    inline uint32_t MidiWord1FromVoidMessageDataPointer(
+        _In_ PVOID data)
+    {
+        return *(((uint8_t*)data) + sizeof(uint32_t));
+    }
+
+    inline uint32_t MidiWord2FromVoidMessageDataPointer(
+        _In_ PVOID data)
+    {
+        return *(((uint8_t*)data) + (sizeof(uint32_t) * 2));
+    }
+
+    inline uint32_t MidiWord3FromVoidMessageDataPointer(
+        _In_ PVOID data)
+    {
+        return *(((uint8_t*)data) + (sizeof(uint32_t) * 3));
+    }
+
+    
+
 
     inline uint16_t Combine7BitMsbLsbTo14BitValue(_In_ uint8_t msb, _In_ uint8_t lsb)
     {

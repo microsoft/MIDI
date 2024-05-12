@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "stdafx.h"
@@ -21,7 +21,8 @@ CMidiClientManager::Initialize(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -42,7 +43,8 @@ CMidiClientManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -180,7 +182,8 @@ GetDeviceSupportedDataFormat(_In_ std::wstring MidiDevice, _Inout_ MidiDataForma
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(MidiDevice.c_str(), "Device Id")
     );
@@ -208,7 +211,8 @@ GetDeviceSupportedDataFormat(_In_ std::wstring MidiDevice, _Inout_ MidiDataForma
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(MidiDevice.c_str(), "Device Id"),
         TraceLoggingBool(DataFormat, "MIDI Data Format")
@@ -222,7 +226,8 @@ GetEndpointGenerateIncomingTimestamp(_In_ std::wstring MidiDevice, _Inout_ bool&
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(MidiDevice.c_str(), "Device Id")
     );
@@ -254,7 +259,8 @@ GetEndpointGenerateIncomingTimestamp(_In_ std::wstring MidiDevice, _Inout_ bool&
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(MidiDevice.c_str(), "Device Id"),
         TraceLoggingBool(GenerateIncomingTimestamp, "Generate Incoming Timestamp")
@@ -324,7 +330,8 @@ CMidiClientManager::GetMidiClient(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(MidiDevice, "Device Id"),
@@ -359,7 +366,8 @@ CMidiClientManager::GetMidiDevice(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(MidiDevice, "Device Id")
@@ -413,7 +421,8 @@ CMidiClientManager::GetMidiProtocolDownscalerTransform(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), "Device Id")
@@ -488,7 +497,8 @@ CMidiClientManager::GetMidiTransform(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), "Device Id")
@@ -528,7 +538,8 @@ CMidiClientManager::GetMidiTransform(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Adding Midi2UMP2BSTransform (UMP to Bytestream)")
@@ -541,7 +552,8 @@ CMidiClientManager::GetMidiTransform(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Adding Midi2BS2UMPTransform (Bytestream to UMP)")
@@ -553,7 +565,8 @@ CMidiClientManager::GetMidiTransform(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Unsupported translation type requested. This is probably an error in specifying data format.")
@@ -606,7 +619,8 @@ CMidiClientManager::GetMidiScheduler(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), "Device Id")
@@ -645,11 +659,12 @@ CMidiClientManager::GetMidiScheduler(
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), "Device Id"),
-            TraceLoggingWideString(L"Creating new scheduler", "message")
+            TraceLoggingWideString(L"Creating new scheduler", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
@@ -701,7 +716,8 @@ CMidiClientManager::GetMidiEndpointMetadataHandler(
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), "Device Id")
@@ -771,6 +787,7 @@ CMidiClientManager::CreateMidiClient(
     handle_t BindingHandle,
     LPCWSTR MidiDevice,
     GUID SessionId,
+    DWORD ClientProcessId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     BOOL InternalProtocolNegotiationUseOnly
@@ -778,23 +795,29 @@ CMidiClientManager::CreateMidiClient(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(MidiDevice),
         TraceLoggingGuid(SessionId)
     );
 
+    // TODO: Need to pass in the client process id
+    RETURN_IF_FAILED(m_SessionTracker->IsValidSession(SessionId, ClientProcessId));
+
+
     if (InternalProtocolNegotiationUseOnly && Client->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(MidiDevice),
             TraceLoggingGuid(SessionId),
-            TraceLoggingWideString(L"Called for internal protocol negotiation, but client dataformat is not UMP", "message")
+            TraceLoggingWideString(L"Called for internal protocol negotiation, but client dataformat is not UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
             
         return E_UNEXPECTED;
@@ -804,12 +827,13 @@ CMidiClientManager::CreateMidiClient(
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(MidiDevice),
             TraceLoggingGuid(SessionId),
-            TraceLoggingWideString(L"Called for internal protocol negotiation, but creation params dataformat is not UMP", "message")
+            TraceLoggingWideString(L"Called for internal protocol negotiation, but creation params dataformat is not UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return E_UNEXPECTED;
@@ -819,12 +843,13 @@ CMidiClientManager::CreateMidiClient(
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(MidiDevice),
             TraceLoggingGuid(SessionId),
-            TraceLoggingWideString(L"Called for internal protocol negotiation, but creation params data flow is not Bidirectional", "message")
+            TraceLoggingWideString(L"Called for internal protocol negotiation, but creation params data flow is not Bidirectional", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return E_UNEXPECTED;
@@ -1058,7 +1083,11 @@ CMidiClientManager::CreateMidiClient(
         newClientConnectionPipe.reset();
     }
 
-    m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice);
+    // TODO: We need to verify the valid session before allowing client creation
+    // This will keep apps from bypassing this feature, which is an important
+    // requested feature from users.
+
+    m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice, Client->ClientHandle);
 
     cleanupOnFailure.release();
 
@@ -1074,7 +1103,8 @@ CMidiClientManager::DestroyMidiClient(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -1093,7 +1123,7 @@ CMidiClientManager::DestroyMidiClient(
 
         midiClientPipe->Cleanup();
 
-        m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), client->second->MidiDevice().c_str());
+        m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), client->second->MidiDevice().c_str(), ClientHandle);
 
         for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
         {

@@ -39,6 +39,13 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.IsAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -217,7 +224,7 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderFunctionBlocks), "");
                     table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionFunctionBlocks), "");
                     table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksStatic, di.HasStaticFunctionBlocks.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksDeclaredCount, di.FunctionBlockCount.ToString());
+                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksDeclaredCount, di.DeclaredFunctionBlockCount.ToString());
                     table.AddEmptyRow();
 
                     if (di.FunctionBlocks.Count > 0)
@@ -315,7 +322,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 // Show group terminal blocks only if verbose or if there are no function blocks
 
-                if ((settings.Verbose || di.FunctionBlockCount == 0) && di.GroupTerminalBlocks.Count > 0)
+                if ((settings.Verbose || di.DeclaredFunctionBlockCount == 0) && di.GroupTerminalBlocks.Count > 0)
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderGroupTerminalBlocks), "");

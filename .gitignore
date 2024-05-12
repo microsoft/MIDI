@@ -201,7 +201,7 @@ PublishScripts/
 *.nuget.targets
 
 #Vcpkg directories
-vcpkg_installed
+vcpkg_installed/
 
 # Microsoft Azure Build Output
 csx/

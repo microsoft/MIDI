@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+	<metadata>
+		<id>Microsoft.Devices.Midi2.Diagnostics</id>
+		<version>1.0.0-preview.6-0205</version>
+		<authors>Microsoft</authors>
+		<description>Windows MIDI Services Diagnostics SDK. Supports reporting and diagnostics scenarios for Windows MIDI Services.</description>
+		<license type="expression">MIT</license>
+		<projectUrl>https://aka.ms/midi</projectUrl>
+		<readme>README.md</readme>
+		<repository type="git" url="https://aka.ms/midi" />
+		<requireLicenseAcceptance>false</requireLicenseAcceptance>
+		<tags>midi midi2 windows music audio native</tags>
+		<dependencies>
+            <group targetFramework="net6.0-windows10.0.20348.0" />
+            <group targetFramework="uap10.0" />
+            <group targetFramework="native" />
+        </dependencies>
+
+        <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
+        <references>
+            <group targetFramework="net6.0-windows10.0.20348.0">
+                <reference file="Microsoft.Devices.Midi2.Diagnostics.NET.dll" />
+            </group>
+            <group targetFramework="uap10.0">
+                <reference file="Microsoft.Devices.Midi2.Diagnostics.winmd" />
+            </group>
+            <group targetFramework="native">
+                <reference file="Microsoft.Devices.Midi2.Diagnostics.winmd" />
+            </group>
+        </references>
+    </metadata>
+    
+    <files>
+
+        <!-- Compile-time References  ================================================ -->
+		
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.NET\Release\net6.0-windows10.0.20348.0\Microsoft.Devices.Midi2.Diagnostics.NET.dll"
+			  target="ref\net6.0-windows10.0.20348.0\Microsoft.Devices.Midi2.Diagnostics.NET.dll" />
+
+
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Devices.Midi2.Diagnostics.winmd"
+              target="ref\uap10.0\Microsoft.Devices.Midi2.Diagnostics.winmd" />
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Devices.Midi2.Diagnostics.winmd"
+              target="ref\native\Microsoft.Devices.Midi2.Diagnostics.winmd" />
+
+        <!-- Runtime Libs ================================================ -->
+		
+        <file src="..\..\vsfiles\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Devices.Midi2.Diagnostics.NET.dll"
+              target="lib\net8.0-windows10.0.20348.0\" />
+
+        <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Devices.Midi2.Diagnostics.winmd"
+              target="lib\uap10.0\Microsoft.Devices.Midi2.Diagnostics.winmd" />
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Devices.Midi2.Diagnostics.winmd"
+              target="lib\native\Microsoft.Devices.Midi2.Diagnostics.winmd" />
+
+
+        <!-- TEMP! Utilities ================================================ -->
+
+        <file src="..\..\vsfiles\mididmp\x64\Release\mididiag.exe"
+              target="content\x64\mididiag.exe" />
+
+        <file src="..\..\vsfiles\mididmp\Arm64\Release\mididiag.exe"
+              target="content\Arm64\mididiag.exe" />
+
+        <!-- Intel x64 Native Binaries ================================================ -->
+
+        <!-- TEMP! Ship impl with the nuget package -->
+
+
+        <!-- Arm64 Native Binaries ================================================ -->
+        <!-- Arm64EC Native Binaries ================================================ -->
+
+        
+        <!-- Build-time files ================================================ -->
+
+		<file src="Microsoft.Devices.Midi2.Diagnostics.targets" target="build\native\" />
+		<file src="Microsoft.Devices.Midi2.Diagnostics.props" target="build\native\" />
+
+		<file src="README.md" target="\" />
+	</files>
+
+
+</package>
