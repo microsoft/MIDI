@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="InstallSupport">
+      <UniqueIdentifier>{f99f0bd4-c968-4322-a806-90aca0f9e73e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{4f6a2ac4-8b62-49bf-a42b-79a9e2584abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{3360af9e-3363-4faf-861f-7d778c66bf70}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiSession.cpp" />
+    <ClCompile Include="MidiClock.cpp">
+      <Filter>API\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiChannel.cpp">
+      <Filter>API\BasicTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroup.cpp">
+      <Filter>API\BasicTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlock.cpp">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUniqueId.cpp">
+      <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroupTerminalBlock.cpp">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+    </ClCompile>
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="MidiService.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformation.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigurationResponse.cpp">
+      <Filter>API\Service\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendMultipleMessages.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendInfrastructure.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationAddedEventArgs.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationRemovedEventArgs.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiSession.h" />
+    <ClInclude Include="MidiClock.h">
+      <Filter>API\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiChannel.h">
+      <Filter>API\BasicTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroup.h">
+      <Filter>API\BasicTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlock.h">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUniqueId.h">
+      <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroupTerminalBlock.h">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiService.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformation.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcher.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcher.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceConfigurationResponse.h">
+      <Filter>API\Service\Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationAddedEventArgs.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationRemovedEventArgs.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiUniqueId.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-sdk.def" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="WinRTActivationEntries.txt">
+      <Filter>InstallSupport</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Microsoft.Devices.Midi2.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
