@@ -6,9 +6,9 @@
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services Diagnostics SDK. Supports reporting and diagnostics scenarios for Windows MIDI Services.</description>
 		<license type="expression">MIT</license>
-		<projectUrl>https://github.com/microsoft/midi/</projectUrl>
+		<projectUrl>https://aka.ms/midi</projectUrl>
 		<readme>README.md</readme>
-		<repository type="git" url="https://github.com/microsoft/midi/" />
+		<repository type="git" url="https://aka.ms/midi" />
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<tags>midi midi2 windows music audio native</tags>
 		<dependencies>

@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "pch.h"
@@ -58,10 +58,10 @@ CMidi2MidiSrv::Initialize(
     creationParams.DataFormat = CreationParams->DataFormat;
 
     // Todo: client side buffering requests to come from some service setting?
-    // - See https://github.com/microsoft/MIDI/issues/219 for details
+    // - See https://aka.ms/midiissues/219 for details
     
     //creationParams.BufferSize = PAGE_SIZE;  // original
-    //creationParams.BufferSize = 512;    // Set this for debugging see https://github.com/microsoft/MIDI/issues/182 for all the drama :)
+    //creationParams.BufferSize = 512;    // Set this for debugging see https://aka.ms/midiissues/182 for all the drama :)
     creationParams.BufferSize = PAGE_SIZE * 2;
 
 

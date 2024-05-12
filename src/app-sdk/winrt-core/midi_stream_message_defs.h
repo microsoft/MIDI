@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #define MIDI_CACHE_PROPERTY_ENDPOINT_PRODUCT_INSTANCE_ID L"Endpoint.ProductInstanceId"
