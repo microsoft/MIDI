@@ -1,0 +1,55 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+
+namespace Microsoft.Devices.Midi2.Endpoints.Virtual
+{
+    [default_interface]
+    runtimeclass MidiVirtualDeviceCreationConfiguration : Microsoft.Devices.Midi2.IMidiServiceTransportPluginConfiguration
+    {
+        MidiVirtualDeviceCreationConfiguration(
+            String name,
+            String description,
+            String manufacturer,
+            Microsoft.Devices.Midi2.MidiDeclaredEndpointInfo declaredEndpointInfo
+        );
+
+        MidiVirtualDeviceCreationConfiguration(
+            String name,
+            String description, 
+            String manufacturer,
+            Microsoft.Devices.Midi2.MidiDeclaredEndpointInfo declaredEndpointInfo,
+            Microsoft.Devices.Midi2.MidiDeclaredDeviceIdentity declaredDeviceIdentity
+        );
+
+        MidiVirtualDeviceCreationConfiguration(
+            String name,
+            String description,
+            String manufacturer,
+            Microsoft.Devices.Midi2.MidiDeclaredEndpointInfo declaredEndpointInfo,
+            Microsoft.Devices.Midi2.MidiDeclaredDeviceIdentity declaredDeviceIdentity,
+            Microsoft.Devices.Midi2.MidiEndpointUserSuppliedInfo userSuppliedInfo
+        );
+
+
+        // maps to transport-supplied values. We don't make the rest of the
+        // MidiEndpointTransportSuppliedInfo settings available because some, like 
+        // transport id and data format, need to be set service-side. Also, all 
+        // app-to-app MIDI devices are multi-client
+        String Name;
+        String Description;
+        String Manufacturer;
+
+
+        Microsoft.Devices.Midi2.MidiDeclaredDeviceIdentity DeclaredDeviceIdentity;
+        Microsoft.Devices.Midi2.MidiDeclaredEndpointInfo DeclaredEndpointInfo;
+        Microsoft.Devices.Midi2.MidiEndpointUserSuppliedInfo UserSuppliedInfo;
+
+        IVector<Microsoft.Devices.Midi2.MidiFunctionBlock> FunctionBlocks{ get; };
+    }
+}

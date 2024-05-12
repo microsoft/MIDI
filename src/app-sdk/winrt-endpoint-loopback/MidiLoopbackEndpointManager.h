@@ -15,9 +15,9 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
     {
         MidiLoopbackEndpointManager() = default;
 
-        static bool IsTransportAvailable();
+        static bool IsTransportAvailable() noexcept;
 
-        static winrt::guid AbstractionId() { return internal::StringToGuid(L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}"); }
+        static const winrt::guid AbstractionId() noexcept { return internal::StringToGuid(L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}"); }
 
         static loop::MidiLoopbackEndpointCreationResult CreateTransientLoopbackEndpoints(
             _In_ loop::MidiLoopbackEndpointCreationConfiguration creationConfiguration);

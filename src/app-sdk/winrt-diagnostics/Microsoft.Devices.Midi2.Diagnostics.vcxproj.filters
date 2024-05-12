@@ -14,7 +14,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="MidiDiagnostics.h">
       <Filter>SDK\Diagnostics</Filter>
@@ -22,9 +21,9 @@
     <ClInclude Include="MidiReporting.h">
       <Filter>SDK\Diagnostics</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiDiagnostics.idl">
@@ -70,5 +69,13 @@
     <Filter Include="SDK\Reporting">
       <UniqueIdentifier>{68f7a7ec-e703-447b-a8ea-037ee9757a20}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{b8ce7a13-3e94-4d35-9323-a6ee0829d61c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -39,17 +39,17 @@ void MidiSessionTests::TestSessionList()
     VERIFY_IS_NOT_NULL(session1);
     VERIFY_IS_NOT_NULL(session2);
 
-    auto sessionList = MidiService::GetActiveSessions();
+    auto sessionList = MidiReporting::GetActiveSessions();
 
     bool found1 = false;
     bool found2 = false;
     for (auto const& detail : sessionList)
     {
-        if (detail.SessionId() == session1.Id())
+        if (detail.SessionId() == session1.SessionId())
         {
             found1 = true;
         }
-        else if (detail.SessionId() == session2.Id())
+        else if (detail.SessionId() == session2.SessionId())
         {
             found2 = true;
         }
@@ -81,12 +81,12 @@ void MidiSessionTests::TestUpdateSessionName()
 
     // To be thorough, we call the service to get a list of sessions and verify the name is updated there
 
-    auto sessionList = MidiService::GetActiveSessions();
+    auto sessionList = MidiReporting::GetActiveSessions();
 
     bool found = false;
     for (auto const& detail : sessionList)
     {
-        if (detail.SessionId() == session.Id())
+        if (detail.SessionId() == session.SessionId())
         {
             VERIFY_IS_TRUE(detail.SessionName() == newSessionName);
             found = true;

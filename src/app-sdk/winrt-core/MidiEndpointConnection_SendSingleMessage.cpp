@@ -535,7 +535,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
             TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
-            TraceLoggingUInt32(word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
+            TraceLoggingUInt32(word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD),
             TraceLoggingUInt8(3, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD)
         );
 #endif
@@ -637,7 +637,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
             TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
-            TraceLoggingUInt32(word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
+            TraceLoggingUInt32(word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD),
             TraceLoggingUInt8(4, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD)
         );
 #endif
@@ -735,8 +735,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
             TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
-            TraceLoggingUInt64(ump.Timestamp(), MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
-            TraceLoggingUInt32(ump.MessageType(), MIDI_SDK_TRACE_UMP_TYPE)
+            TraceLoggingUInt64(message.Timestamp(), MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(message.MessageType()), MIDI_SDK_TRACE_UMP_TYPE_FIELD)
         );
 #endif
 

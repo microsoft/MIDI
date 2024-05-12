@@ -33,7 +33,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MidiKSCommon", "Libs\MidiKs
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{A4512DDC-CB43-4774-80AA-3B5D13B50D75}"
 	ProjectSection(SolutionItems) = preProject
+		Inc\hstring_util.h = Inc\hstring_util.h
+		Inc\json_defs.h = Inc\json_defs.h
+		Inc\json_helpers.h = Inc\json_helpers.h
+		Inc\loopback_ids.h = Inc\loopback_ids.h
 		Inc\MidiDefs.h = Inc\MidiDefs.h
+		Inc\midi_group_terminal_blocks.h = Inc\midi_group_terminal_blocks.h
+		Inc\midi_timestamp.h = Inc\midi_timestamp.h
+		Inc\midi_ump.h = Inc\midi_ump.h
+		Inc\midi_ump_message_defs.h = Inc\midi_ump_message_defs.h
+		Inc\ping_ump_types.h = Inc\ping_ump_types.h
+		Inc\resource_util.h = Inc\resource_util.h
+		Inc\swd_helpers.h = Inc\swd_helpers.h
+		Inc\ump_helpers.h = Inc\ump_helpers.h
+		Inc\wstring_util.h = Inc\wstring_util.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Abstraction.unittests", "Test\Midi2.Abstraction.unittests\Midi2.Abstraction.unittests.vcxproj", "{A08D50A1-F83A-4B36-BC65-5E3E36C93050}"

@@ -29,8 +29,8 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
 
     LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -38,8 +38,8 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
     // add our listener
 
     MidiMessageTypeEndpointListener endpointListener;
-    endpointListener.IncludeMessageTypes().Append(MidiMessageType::Midi1ChannelVoice32);
-    endpointListener.IncludeMessageTypes().Append(MidiMessageType::Midi2ChannelVoice64);
+    endpointListener.IncludedMessageTypes().Append(MidiMessageType::Midi1ChannelVoice32);
+    endpointListener.IncludedMessageTypes().Append(MidiMessageType::Midi2ChannelVoice64);
 
     connReceive.AddMessageProcessingPlugin(endpointListener);
 
@@ -58,7 +58,7 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
             std::cout << " - Word0:             0x" << std::hex << (word0) << std::endl;
 
             uint32_t index;
-            if (endpointListener.IncludeMessageTypes().IndexOf(receivedUmp.MessageType(), index))
+            if (endpointListener.IncludedMessageTypes().IndexOf(receivedUmp.MessageType(), index))
             {
                 std::cout << " - Message type MATCHES filter" << std::endl;
 
@@ -135,8 +135,8 @@ void MidiEndpointListenerTests::TestGroupListener()
 
     LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -144,8 +144,8 @@ void MidiEndpointListenerTests::TestGroupListener()
     // add our listener
 
     MidiGroupEndpointListener endpointListener;
-    endpointListener.IncludeGroups().Append(MidiGroup{ 0x3 });
-    endpointListener.IncludeGroups().Append(MidiGroup{ 0xB });
+    endpointListener.IncludedGroups().Append(MidiGroup{ 0x3 });
+    endpointListener.IncludedGroups().Append(MidiGroup{ 0xB });
 
     connReceive.AddMessageProcessingPlugin(endpointListener);
 
@@ -167,7 +167,7 @@ void MidiEndpointListenerTests::TestGroupListener()
             {
                 auto messageGroup = MidiMessageHelper::GetGroupFromMessageFirstWord(word0);
 
-                for (auto const& group : endpointListener.IncludeGroups())
+                for (auto const& group : endpointListener.IncludedGroups())
                 {
                     if (group.Index() == messageGroup.Index())
                     {
@@ -252,8 +252,8 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
 
     LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -261,9 +261,9 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
     // add our listener
 
     MidiChannelEndpointListener endpointListener;
-    endpointListener.IncludeGroup(MidiGroup(5));
-    endpointListener.IncludeChannels().Append(MidiChannel{ 0x3 });
-    endpointListener.IncludeChannels().Append(MidiChannel{ 0xB });
+    endpointListener.IncludedGroup(MidiGroup(5));
+    endpointListener.IncludedChannels().Append(MidiChannel{ 0x3 });
+    endpointListener.IncludedChannels().Append(MidiChannel{ 0xB });
 
     connReceive.AddMessageProcessingPlugin(endpointListener);
 
@@ -286,9 +286,9 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
                 auto messageGroup = MidiMessageHelper::GetGroupFromMessageFirstWord(word0);
                 auto messageChannel = MidiMessageHelper::GetChannelFromMessageFirstWord(word0);
 
-                if (endpointListener.IncludeGroup().Index() == messageGroup.Index())
+                if (endpointListener.IncludedGroup().Index() == messageGroup.Index())
                 {
-                    for (auto const& channel : endpointListener.IncludeChannels())
+                    for (auto const& channel : endpointListener.IncludedChannels())
                     {
                         if (channel.Index() == messageChannel.Index())
                         {

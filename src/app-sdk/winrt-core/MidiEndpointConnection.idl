@@ -30,7 +30,8 @@ namespace Microsoft.Devices.Midi2
         static Boolean SendMessageFailed(MidiSendMessageResults sendResult);
 
         Guid ConnectionId{ get; };
-        String EndpointDeviceId{ get; };
+
+        String ConnectedEndpointDeviceId{ get; };
 
         IInspectable Tag;
         Boolean LogMessageDataValidationErrorDetails;

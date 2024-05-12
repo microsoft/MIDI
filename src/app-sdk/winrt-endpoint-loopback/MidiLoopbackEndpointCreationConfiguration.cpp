@@ -53,6 +53,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
         json::JsonObject endpointAssociationObject;
         json::JsonObject endpointDeviceAObject;
         json::JsonObject endpointDeviceBObject;
+
         json::JsonObject endpointCreationObject;
         json::JsonObject abstractionObject;
         json::JsonObject topLevelTransportPluginSettingsObject;
@@ -112,7 +113,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
 
         topLevelTransportPluginSettingsObject.SetNamedValue(
             internal::GuidToString(loop::MidiLoopbackEndpointManager::AbstractionId()),
-            endpointCreationObject);
+            abstractionObject);
 
         // wrap it all up so the json is valid
 

@@ -266,7 +266,6 @@
       <DependentUpon>MidiGroupEndpointListener.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiMessageTypeEndpointListener.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

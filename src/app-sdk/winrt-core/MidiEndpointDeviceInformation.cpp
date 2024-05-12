@@ -896,14 +896,14 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
                 di.DeviceFamilyModelNumberLsb = identity.DeviceFamilyModelNumberLsb;
                 di.DeviceFamilyModelNumberMsb = identity.DeviceFamilyModelNumberMsb;
 
-                di.SoftwareRevisionLevelLsb = identity.SoftwareRevisionLevelLsb;
-                di.SoftwareRevisionLevelSecondLsb = identity.SoftwareRevisionLevelSecondLsb;
-                di.SoftwareRevisionLevelSecondMsb = identity.SoftwareRevisionLevelSecondMsb;
-                di.SoftwareRevisionLevelMsb = identity.SoftwareRevisionLevelMsb;
+                di.SoftwareRevisionLevelByte1 = identity.SoftwareRevisionLevelByte1;
+                di.SoftwareRevisionLevelByte2 = identity.SoftwareRevisionLevelByte2;
+                di.SoftwareRevisionLevelByte3 = identity.SoftwareRevisionLevelByte3;
+                di.SoftwareRevisionLevelByte4 = identity.SoftwareRevisionLevelByte4;
 
-                di.SystemExclusiveIdLsb = identity.ManufacturerSysExIdLsb;
-                di.SystemExclusiveIdSecondMsb = identity.ManufacturerSysExIdSecondMsb;
-                di.SystemExclusiveIdMsb = identity.ManufacturerSysExIdMsb;
+                di.SystemExclusiveIdByte1 = identity.ManufacturerSysExIdByte1;
+                di.SystemExclusiveIdByte2 = identity.ManufacturerSysExIdByte2;
+                di.SystemExclusiveIdByte3 = identity.ManufacturerSysExIdByte3;
 
                 return di;
             }

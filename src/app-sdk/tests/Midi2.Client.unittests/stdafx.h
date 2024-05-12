@@ -11,6 +11,14 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 
 #include <winrt/Microsoft.Devices.Midi2.h>
+#include <winrt/Microsoft.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Devices.Midi2.Messages.h>
+#include <winrt/Microsoft.Devices.Midi2.ClientPlugins.h>
+
+using namespace winrt::Microsoft::Devices::Midi2;
+using namespace winrt::Microsoft::Devices::Midi2::Diagnostics;
+using namespace winrt::Microsoft::Devices::Midi2::Messages;
+using namespace winrt::Microsoft::Devices::Midi2::ClientPlugins;
 
 #include <iostream>
 

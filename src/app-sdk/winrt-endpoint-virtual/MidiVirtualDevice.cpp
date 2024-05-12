@@ -8,21 +8,29 @@
 
 
 #include "pch.h"
-#include "MidiVirtualEndpointDevice.h"
-#include "MidiVirtualEndpointDevice.g.cpp"
+#include "MidiVirtualDevice.h"
+#include "MidiVirtualDevice.g.cpp"
 
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 {
     _Use_decl_annotations_
-    bool MidiVirtualEndpointDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept
+    bool MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         // If blocks are static, return false. By spec, they are not allowed to be updated.
-        if (m_virtualEndpointDeviceDefinition.AreFunctionBlocksStatic())
+        if (m_areFunctionBlocksStatic)
         {
-            internal::LogGeneralError(__FUNCTION__, L"Attempt to update static function blocks in a virtual device.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Attempt to update static function blocks in a virtual device", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -30,7 +38,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
         // not allowed to change the number of function blocks they have, per the MIDI 2 spec
         if (!m_functionBlocks.HasKey(block.Number()))
         {
-            internal::LogGeneralError(__FUNCTION__, L"Attempt to update a function block which wasn't declared up-front.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Attempt to update a function block which wasn't declared in advance.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -42,7 +60,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
         }
         else
         {
-            internal::LogGeneralError(__FUNCTION__, L"Error sending function block info notification message.");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Error sending function block info notification message.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -54,7 +82,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             if (!SendFunctionBlockNameNotificationMessages(block))
             {
-                internal::LogGeneralError(__FUNCTION__, L"Error sending function block name notification messages.");
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Error sending function block name notification messages.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
                 return false;
             }
         }
@@ -63,10 +101,8 @@ namespace MIDI_CPP_NAMESPACE::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiVirtualEndpointDevice::UpdateEndpointName(winrt::hstring const& name) noexcept
+    bool MidiVirtualDevice::UpdateEndpointName(winrt::hstring const& name) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         auto cleanedName = internal::TrimmedHStringCopy(name);
 
         // TODO: update the name and send the notification message
@@ -75,7 +111,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
         {
             if (!SendEndpointNameNotificationMessages(cleanedName))
             {
-                internal::LogGeneralError(__FUNCTION__, L"Error sending endpoint name notification messages.");
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Error sending endpoint name notification messages.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
                 return false;
             }
         }
@@ -85,33 +131,25 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
     _Use_decl_annotations_
-    void MidiVirtualEndpointDevice::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept
+    void MidiVirtualDevice::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
     }
 
-    void MidiVirtualEndpointDevice::OnEndpointConnectionOpened() noexcept
+    void MidiVirtualDevice::OnEndpointConnectionOpened() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         // nothing to do here
     }
 
-    void MidiVirtualEndpointDevice::Cleanup() noexcept
+    void MidiVirtualDevice::Cleanup() noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         // nothing to do here
     }
 
     _Use_decl_annotations_
-    bool MidiVirtualEndpointDevice::SendFunctionBlockInfoNotificationMessage(midi2::MidiFunctionBlock const& fb) noexcept
+    bool MidiVirtualDevice::SendFunctionBlockInfoNotificationMessage(midi2::MidiFunctionBlock const& fb) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
-        auto functionBlockNotification = midi2::MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
+        auto functionBlockNotification = msgs::MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
             MidiClock::TimestampConstantSendImmediately(),
             true,
             fb.Number(),
@@ -126,7 +164,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(functionBlockNotification)))
         {
-            internal::LogGeneralError(__FUNCTION__, L"SendMessagePacket failed");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"SendSingleMessagePacket failed.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -134,13 +182,11 @@ namespace MIDI_CPP_NAMESPACE::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiVirtualEndpointDevice::SendFunctionBlockNameNotificationMessages(midi2::MidiFunctionBlock const& fb) noexcept
+    bool MidiVirtualDevice::SendFunctionBlockNameNotificationMessages(midi2::MidiFunctionBlock const& fb) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (fb.Name().empty()) return false;
 
-        auto nameMessages = midi2::MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
+        auto nameMessages = msgs::MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
             MidiClock::TimestampConstantSendImmediately(),
             fb.Number(),
             fb.Name()
@@ -148,7 +194,17 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(nameMessages.GetView())))
         {
-            internal::LogGeneralError(__FUNCTION__, L"SendMultipleMessagesPacketList failed");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"SendMultipleMessagesPacketList failed.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -156,20 +212,28 @@ namespace MIDI_CPP_NAMESPACE::implementation
     }
 
     _Use_decl_annotations_
-    bool MidiVirtualEndpointDevice::SendEndpointNameNotificationMessages(winrt::hstring const& name) noexcept
+    bool MidiVirtualDevice::SendEndpointNameNotificationMessages(winrt::hstring const& name) noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         if (name.empty()) return false;
 
-        auto nameMessages = midi2::MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
+        auto nameMessages = msgs::MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
             MidiClock::TimestampConstantSendImmediately(),
             name
         );
 
         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(nameMessages.GetView())))
         {
-            internal::LogGeneralError(__FUNCTION__, L"SendMultipleMessagesPacketList failed");
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"SendMultipleMessagesPacketList failed.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return false;
         }
 
@@ -178,14 +242,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
     _Use_decl_annotations_
-    void MidiVirtualEndpointDevice::ProcessIncomingMessage(
+    void MidiVirtualDevice::ProcessIncomingMessage(
         midi2::MidiMessageReceivedEventArgs const& args,
         bool& skipFurtherListeners,
         bool& skipMainMessageReceivedEvent)  noexcept
     {
-        internal::LogInfo(__FUNCTION__, L"Enter");
-
         bool handled = false;
+
+        UNREFERENCED_PARAMETER(args);
+        UNREFERENCED_PARAMETER(skipFurtherListeners);
+        UNREFERENCED_PARAMETER(skipMainMessageReceivedEvent);
 
 
 #if 0   // TEMPORARY
@@ -203,8 +269,6 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                     if (internal::EndpointDiscoveryFilterRequestsEndpointInfoNotification(filterFlags))
                     {
-                        internal::LogInfo(__FUNCTION__, L"Building/Sending Endpoint Info Notification");
-
                         // send endpoint info notification
 
                         auto notification = midi2::MidiStreamMessageBuilder::BuildEndpointInfoNotificationMessage(
@@ -221,7 +285,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(notification)))
                         {
-                            internal::LogGeneralError(__FUNCTION__, L"SendSingleMessagePacket failed - sending endpoint info notification");
+                            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                            TraceLoggingWrite(
+                                Midi2SdkTelemetryProvider::Provider(),
+                                MIDI_SDK_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                                TraceLoggingWideString(L"SendSingleMessagePacket failed - sending endpoint info notification.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                            );
                         }
                     }
 
@@ -250,15 +323,23 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(identityNotification)))
                         {
-                            internal::LogGeneralError(__FUNCTION__, L"SendSingleMessagePacket failed - sending device identity notification");
+                            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                            TraceLoggingWrite(
+                                Midi2SdkTelemetryProvider::Provider(),
+                                MIDI_SDK_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                                TraceLoggingWideString(L"SendSingleMessagePacket failed - sending device identity notification.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                            );
+
                         }
 
                     }
 
                     if (internal::EndpointDiscoveryFilterRequestsEndpointNameNotification(filterFlags))
                     {
-                        internal::LogInfo(__FUNCTION__, L"Building/Sending Endpoint Name Notification");
-
                         // send endpoint name notification messages
 
                         if (!m_endpointName.empty())
@@ -270,15 +351,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                             if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(nameMessages.GetView())))
                             {
-                                internal::LogGeneralError(__FUNCTION__, L"SendMultipleMessagesPacketList failed - sending endpoint name notification list");
+                                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                                TraceLoggingWrite(
+                                    Midi2SdkTelemetryProvider::Provider(),
+                                    MIDI_SDK_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                                    TraceLoggingWideString(L"SendMultipleMessagesPacketList failed - sending endpoint name notification list.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                                );
                             }
                         }
                     }
 
                     if (internal::EndpointDiscoveryFilterRequestsProductInstanceIdNotification(filterFlags))
                     {
-                        internal::LogInfo(__FUNCTION__, L"Building/Sending Endpoint Product Instance Id Notification");
-
                         // send product instance id notification messages
 
                         if (!m_endpointProductInstanceId.empty())
@@ -290,15 +378,22 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                             if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(instanceIdMessages.GetView())))
                             {
-                                internal::LogGeneralError(__FUNCTION__, L"SendMultipleMessagesPacketList failed - sending product instance id messages");
+                                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                                TraceLoggingWrite(
+                                    Midi2SdkTelemetryProvider::Provider(),
+                                    MIDI_SDK_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                                    TraceLoggingWideString(L"SendMultipleMessagesPacketList failed - sending product instance id messages.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                                );
                             }
                         }
                     }
 
                     if (internal::EndpointDiscoveryFilterRequestsStreamConfigurationNotification(filterFlags))
                     {
-                        internal::LogInfo(__FUNCTION__, L"Building/Sending Stream Configuration Notification");
-
                         uint8_t protocol{ (uint8_t)midi2::MidiProtocol::Midi1 };
 
                         if (m_virtualEndpointDeviceDefinition.SupportsMidi2ProtocolMessages())
@@ -315,7 +410,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(streamConfigurationNotification)))
                         {
-                            internal::LogGeneralError(__FUNCTION__, L"SendSingleMessagePacket failed - sending device identity notification");
+                            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                            TraceLoggingWrite(
+                                Midi2SdkTelemetryProvider::Provider(),
+                                MIDI_SDK_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                                TraceLoggingWideString(L"SendSingleMessagePacket failed - sending device identity notification.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                            );
                         }
 
                     }
@@ -331,32 +435,24 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
                     if (fbNumber == MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_ALL_FUNCTION_BLOCKS)
                     {
-                        internal::LogInfo(__FUNCTION__, L"Sending All function blocks, as requested");
-
                         // send all function blocks
 
                         for (uint8_t i = 0; i < (uint8_t)m_functionBlocks.Size(); i++)
                         {
-                            internal::LogInfo(__FUNCTION__, L"Sending function block info message");
                             if (requestInfo) SendFunctionBlockInfoNotificationMessage(m_functionBlocks.Lookup(i));
 
-                            internal::LogInfo(__FUNCTION__, L"Sending function block name messages");
                             if (requestName) SendFunctionBlockNameNotificationMessages(m_functionBlocks.Lookup(i));
                         }
                     }
                     else
                     {
                         // send single requested function block
-                        internal::LogInfo(__FUNCTION__, L"Sending only a single function block, as requested");
-
                         if (m_functionBlocks.HasKey(fbNumber))
                         {
                             auto fb = m_functionBlocks.Lookup(fbNumber);
 
-                            internal::LogInfo(__FUNCTION__, L"Sending function block info message");
                             if (requestInfo) SendFunctionBlockInfoNotificationMessage(fb);
 
-                            internal::LogInfo(__FUNCTION__, L"Sending function block name messages");
                             if (requestName) SendFunctionBlockNameNotificationMessages(fb);
                         }
                         else
@@ -391,7 +487,16 @@ namespace MIDI_CPP_NAMESPACE::implementation
             else
             {
                 // something went wrong filling this message type
-                internal::LogGeneralError(__FUNCTION__, L"Error filling message type");
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Error filling message type.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
             }
             
 
@@ -422,51 +527,51 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
 
 
-    _Use_decl_annotations_
-    void MidiVirtualEndpointDevice::InternalSetDeviceDefinition(
-        _In_ midi2::MidiVirtualEndpointDeviceDefinition definition)
-    {
-        internal::LogInfo(__FUNCTION__, L"Enter");
+    //_Use_decl_annotations_
+    //void MidiVirtualDevice::InternalSetDeviceDefinition(
+    //    _In_ midi2::MidiVirtualDeviceDefinition definition)
+    //{
+    //    internal::LogInfo(__FUNCTION__, L"Enter");
 
-        try
-        {
-            // populate all the views, properties, blocks, etc.
+    //    try
+    //    {
+    //        // populate all the views, properties, blocks, etc.
 
-            m_areFunctionBlocksStatic = definition.AreFunctionBlocksStatic();
+    //        m_areFunctionBlocksStatic = definition.AreFunctionBlocksStatic();
 
-            for (uint8_t i = 0; i < definition.FunctionBlocks().Size(); i++)
-            {
-                auto fb = definition.FunctionBlocks().GetAt(i);
+    //        for (uint8_t i = 0; i < definition.FunctionBlocks().Size(); i++)
+    //        {
+    //            auto fb = definition.FunctionBlocks().GetAt(i);
 
-                // this is required, so we enforce it here
-                fb.Number(i);
+    //            // this is required, so we enforce it here
+    //            fb.Number(i);
 
-                // TODO: Set the fb as read-only
-                
+    //            // TODO: Set the fb as read-only
+    //            
 
-                 
-                // add the block
-                m_functionBlocks.Insert(i, fb);
-            }
+    //             
+    //            // add the block
+    //            m_functionBlocks.Insert(i, fb);
+    //        }
 
-            m_endpointName = definition.EndpointName();
-            m_endpointProductInstanceId = definition.EndpointProductInstanceId();
-
-
-            // TODO: All the other stuff we'll want to report on
+    //        m_endpointName = definition.EndpointName();
+    //        m_endpointProductInstanceId = definition.EndpointProductInstanceId();
 
 
+    //        // TODO: All the other stuff we'll want to report on
 
-            m_virtualEndpointDeviceDefinition = definition;
 
-        }
-        catch (...)
-        {
-            // todo log
-            internal::LogGeneralError(__FUNCTION__, L"Exception attempting to set device definition");
 
-        }
+    //        m_virtualEndpointDeviceDefinition = definition;
 
-    }
+    //    }
+    //    catch (...)
+    //    {
+    //        // todo log
+    //        internal::LogGeneralError(__FUNCTION__, L"Exception attempting to set device definition");
+
+    //    }
+
+    //}
 
 }

@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiStreamConfigurationRequestReceivedEventArgs.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 {
     struct MidiStreamConfigurationRequestReceivedEventArgs : MidiStreamConfigurationRequestReceivedEventArgsT<MidiStreamConfigurationRequestReceivedEventArgs>
     {

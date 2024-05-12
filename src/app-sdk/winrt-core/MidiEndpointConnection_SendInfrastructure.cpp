@@ -218,7 +218,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
             TraceLoggingUInt64(ump.Timestamp(), MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
-            TraceLoggingUInt32(ump.PacketType(), MIDI_SDK_TRACE_UMP_TYPE)
+            TraceLoggingUInt32(static_cast<uint32_t>(ump.PacketType()), MIDI_SDK_TRACE_UMP_TYPE_FIELD)
         );
 #endif
 

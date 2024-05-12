@@ -259,29 +259,28 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-      <ClInclude Include="MidiLoopbackEndpointDeletionConfiguration.h">
-          <DependentUpon>MidiLoopbackEndpointDeletionConfiguration.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiLoopbackEndpointManager.h">
-          <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiLoopbackEndpointCreationConfiguration.h">
-          <DependentUpon>MidiLoopbackEndpointCreationConfiguration.idl</DependentUpon>
-      </ClInclude>
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="MidiLoopbackEndpointDeletionConfiguration.h">
+      <DependentUpon>MidiLoopbackEndpointDeletionConfiguration.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointManager.h">
+      <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointCreationConfiguration.h">
+      <DependentUpon>MidiLoopbackEndpointCreationConfiguration.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-      <ClCompile Include="MidiLoopbackEndpointDeletionConfiguration.cpp">
-          <DependentUpon>MidiLoopbackEndpointDeletionConfiguration.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiLoopbackEndpointManager.cpp">
-          <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiLoopbackEndpointCreationConfiguration.cpp">
-          <DependentUpon>MidiLoopbackEndpointCreationConfiguration.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointDeletionConfiguration.cpp">
+      <DependentUpon>MidiLoopbackEndpointDeletionConfiguration.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointManager.cpp">
+      <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointCreationConfiguration.cpp">
+      <DependentUpon>MidiLoopbackEndpointCreationConfiguration.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -302,9 +301,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="WinRTActivationEntries.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\winrt-core\Microsoft.Devices.Midi2.vcxproj">

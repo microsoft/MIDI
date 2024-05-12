@@ -21,7 +21,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         ) noexcept;
 
 
-        winrt::guid Id() const noexcept { return m_id; }
+        winrt::guid SessionId() const noexcept { return m_id; }
         winrt::hstring Name() const noexcept { return m_name; }
         bool IsOpen() const noexcept { return m_isOpen; }
 

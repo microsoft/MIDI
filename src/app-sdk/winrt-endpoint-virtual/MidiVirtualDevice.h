@@ -8,13 +8,13 @@
 
 
 #pragma once
-#include "MidiVirtualEndpointDevice.g.h"
+#include "MidiVirtualDevice.g.h"
 
-namespace MIDI_CPP_NAMESPACE::implementation
+namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 {
-    struct MidiVirtualEndpointDevice : MidiVirtualEndpointDeviceT<MidiVirtualEndpointDevice>
+    struct MidiVirtualDevice : MidiVirtualDeviceT<MidiVirtualDevice>
     {
-        MidiVirtualEndpointDevice() = default;
+        MidiVirtualDevice() = default;
 
         // plugin Id
         winrt::guid Id() const noexcept { return m_id; }
@@ -31,7 +31,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
-        winrt::event_token StreamConfigurationRequestReceived(_In_ foundation::TypedEventHandler<midi2::MidiVirtualEndpointDevice, midi2::MidiStreamConfigurationRequestReceivedEventArgs> const& handler)
+        winrt::event_token StreamConfigurationRequestReceived(_In_ foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigurationRequestReceivedEventArgs> const& handler)
         {
             return m_streamConfigurationRequestReceivedEvent.add(handler);
         }
@@ -55,15 +55,13 @@ namespace MIDI_CPP_NAMESPACE::implementation
         bool UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
 
 
-        midi2::MidiVirtualEndpointDeviceDefinition DeviceDefinition() { return m_virtualEndpointDeviceDefinition; }
-
+        winrt::hstring DeviceEndpointDeviceId() const noexcept{ return m_deviceEndpointDeviceId; }
+        winrt::hstring ClientEndpointDeviceId() const noexcept{ return m_clientEndpointDeviceId; }
 
 
         void Initialize(_In_ midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept;
         void OnEndpointConnectionOpened()  noexcept;
         void Cleanup()  noexcept;
-
-        void InternalSetDeviceDefinition(_In_ midi2::MidiVirtualEndpointDeviceDefinition definition);
 
         void ProcessIncomingMessage(
             _In_ midi2::MidiMessageReceivedEventArgs const& args,
@@ -87,14 +85,15 @@ namespace MIDI_CPP_NAMESPACE::implementation
         //std::thread m_queueWorkerThread;
 
 
-        midi2::MidiVirtualEndpointDeviceDefinition m_virtualEndpointDeviceDefinition{ nullptr };
-
         winrt::guid m_id{ foundation::GuidHelper::CreateNewGuid() };                         // plugin id
         winrt::hstring m_name{};                    // plugin name, not the endpointdevice name
         bool m_enabled{ true };                     // plugin enabled, not the endpointdevice enabled
         foundation::IInspectable m_tag{ nullptr };  // plugin tag, not the endpointdevice tag
 
         midi2::MidiEndpointConnection m_endpointConnection{ nullptr };
+
+        winrt::hstring m_deviceEndpointDeviceId{};
+        winrt::hstring m_clientEndpointDeviceId{};
 
         bool m_isMidiCIDevice{ false };
         winrt::hstring m_endpointName{};
@@ -106,7 +105,7 @@ namespace MIDI_CPP_NAMESPACE::implementation
 
         collections::IMap<uint8_t, midi2::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2::MidiFunctionBlock>() };
 
-        winrt::event<foundation::TypedEventHandler<midi2::MidiVirtualEndpointDevice, midi2::MidiStreamConfigurationRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
+        winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigurationRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
     };
 }
 

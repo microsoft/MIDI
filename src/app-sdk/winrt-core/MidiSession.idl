@@ -20,7 +20,7 @@ namespace Microsoft.Devices.Midi2
     [default_interface]
     runtimeclass MidiSession : Windows.Foundation.IClosable
     {
-        Guid Id { get; };
+        Guid SessionId { get; };
         String Name{ get; };
 
         static MidiSession TryCreate(String sessionName);

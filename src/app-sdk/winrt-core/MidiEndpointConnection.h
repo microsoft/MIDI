@@ -29,7 +29,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         static bool SendMessageFailed(_In_ midi2::MidiSendMessageResults const sendResults) { return (sendResults & midi2::MidiSendMessageResults::Failed) == midi2::MidiSendMessageResults::Failed; }
 
         winrt::guid ConnectionId() const noexcept { return m_connectionId; }
-        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+        winrt::hstring ConnectedEndpointDeviceId() const noexcept { return m_endpointDeviceId; }
 
 
         bool LogMessageDataValidationErrorDetails() { return m_logUmpDataErrors; }

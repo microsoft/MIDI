@@ -305,7 +305,7 @@
     <Text Include="WinRTActivationEntries.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
+    <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\winrt-core\Microsoft.Devices.Midi2.vcxproj">

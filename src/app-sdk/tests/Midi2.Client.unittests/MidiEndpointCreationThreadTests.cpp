@@ -100,7 +100,7 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
     auto session = MidiSession::TryCreate(L"Multi-threaded Test");
 
     // create loopback A on thread A
-    std::thread workerThreadA(&MidiEndpointCreationThreadTests::ReceiveThreadWorker, this, session, MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
+    std::thread workerThreadA(&MidiEndpointCreationThreadTests::ReceiveThreadWorker, this, session, MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
     workerThreadA.detach();
 
     if (!m_receiverReady.wait(10000))
@@ -115,7 +115,7 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
     }
 
     // create loopback B on thread B
-    std::thread workerThreadB(&MidiEndpointCreationThreadTests::SendThreadWorker, this, session, MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    std::thread workerThreadB(&MidiEndpointCreationThreadTests::SendThreadWorker, this, session, MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
     workerThreadB.detach();
 
     if (!m_receiveComplete.wait(20000))

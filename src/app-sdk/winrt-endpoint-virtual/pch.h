@@ -38,6 +38,9 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include <winrt/Microsoft.Devices.Midi2.h>
 namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
 
+#include <winrt/Microsoft.Devices.Midi2.Messages.h>
+namespace msgs = ::winrt::Microsoft::Devices::Midi2::Messages;
+
 
 #include <stdint.h>
 #include <sstream>
@@ -50,11 +53,8 @@ namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
 #include <format>
 #include <filesystem>
 
-// include this before any project includes
-#include "namespace_defines.h"
-
 // internal
-#include "trace_logging.h"
+#include "SdkTraceLogging.h"
 
 #include "ump_helpers.h"
 #include "memory_buffer.h"
@@ -88,14 +88,11 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "resource_util.h"
 #include "ping_ump_types.h"
 
-//#include "MidiXProc.h"
-#include "resource.h"
-
 namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual {};
 namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation {};
 
 namespace virt = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtual;
-namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
+namespace implementation = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation;
 
 #include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"
@@ -108,7 +105,7 @@ namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
 
 #include "MidiStreamConfigurationRequestedSettings.h"
 #include "MidiStreamConfigurationRequestReceivedEventArgs.h"
-#include "MidiVirtualEndpointDevice.h"
-#include "MidiVirtualEndpointDeviceDefinition.h"
+#include "MidiVirtualDevice.h"
+#include "MidiVirtualDeviceCreationConfiguration.h"
 
-#include "MidiSession.h"
+#include "MidiVirtualDeviceManager.h"

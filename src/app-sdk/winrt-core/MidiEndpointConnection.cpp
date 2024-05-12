@@ -132,7 +132,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         abstractionCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
 
         auto result = m_endpointAbstraction->Initialize(
-            (LPCWSTR)(EndpointDeviceId().c_str()),
+            (LPCWSTR)(ConnectedEndpointDeviceId().c_str()),
             &abstractionCreationParams,
             &mmcssTaskId,
             (IMidiCallback*)(this),

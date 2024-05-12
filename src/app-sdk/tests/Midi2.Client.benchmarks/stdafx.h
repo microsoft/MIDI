@@ -13,8 +13,10 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 
 #include <winrt/Microsoft.Devices.Midi2.h>
+#include <winrt/Microsoft.Devices.Midi2.Diagnostics.h>
 
 using namespace winrt::Microsoft::Devices::Midi2;
+using namespace winrt::Microsoft::Devices::Midi2::Diagnostics;
 
 #include <iostream>
 #include <iomanip>

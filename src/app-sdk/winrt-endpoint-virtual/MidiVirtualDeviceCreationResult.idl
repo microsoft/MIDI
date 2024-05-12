@@ -6,10 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
+namespace Microsoft.Devices.Midi2.Endpoints.Virtual
+{
+    struct MidiVirtualDeviceCreationResult
+    {
+        Boolean Success;
 
-// Note: These are for convenience. If you change the namespace, you still
-// need to change project settings, projection references, etc.
-
-#define MIDI_MIDL_NAMESPACE     Microsoft.Devices.Midi2
-#define MIDI_CPP_NAMESPACE      winrt::Microsoft::Devices::Midi2
+        String DeviceSideEndpointDeviceId;
+    };
+}

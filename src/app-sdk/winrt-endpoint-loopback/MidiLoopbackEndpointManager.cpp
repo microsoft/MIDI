@@ -12,13 +12,14 @@
 
 namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    bool MidiLoopbackEndpointManager::IsTransportAvailable()
+    bool MidiLoopbackEndpointManager::IsTransportAvailable() noexcept
     {
-        throw hresult_not_implemented();
-
-
         // TODO: Check to see if service abstraction is installed and running. May require a new service call
+        return false;
     }
+
+
+
 
     _Use_decl_annotations_
     loop::MidiLoopbackEndpointCreationResult MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(

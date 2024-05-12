@@ -591,9 +591,9 @@ struct MidiDeviceIdentityProperty
     uint16_t Reserved0{ 0 };
     uint8_t Reserved1{ 0 };
 
-    uint8_t ManufacturerSysExIdLsb{ 0 };
-    uint8_t ManufacturerSysExIdSecondMsb{ 0 };
-    uint8_t ManufacturerSysExIdMsb{ 0 };
+    uint8_t ManufacturerSysExIdByte1{ 0 };
+    uint8_t ManufacturerSysExIdByte2{ 0 };
+    uint8_t ManufacturerSysExIdByte3{ 0 };
 
     uint8_t DeviceFamilyLsb{ 0 };
     uint8_t DeviceFamilyMsb{ 0 };
@@ -601,10 +601,10 @@ struct MidiDeviceIdentityProperty
     uint8_t DeviceFamilyModelNumberLsb{ 0 };
     uint8_t DeviceFamilyModelNumberMsb{ 0 };
 
-    uint8_t SoftwareRevisionLevelLsb{ 0 };
-    uint8_t SoftwareRevisionLevelSecondLsb{ 0 };
-    uint8_t SoftwareRevisionLevelSecondMsb{ 0 };
-    uint8_t SoftwareRevisionLevelMsb{ 0 };
+    uint8_t SoftwareRevisionLevelByte1{ 0 };
+    uint8_t SoftwareRevisionLevelByte2{ 0 };
+    uint8_t SoftwareRevisionLevelByte3{ 0 };
+    uint8_t SoftwareRevisionLevelByte4{ 0 };
 };
 
 // TODO: double check this number

@@ -260,75 +260,50 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
-    <ClInclude Include="MidiService.h">
-      <DependentUpon>MidiService.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="MidiStreamConfigurationRequestedSettings.h">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
       <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiVirtualEndpointDevice.h">
-      <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
+    <ClInclude Include="MidiVirtualDevice.h">
+      <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
-      <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+    <ClInclude Include="MidiVirtualDeviceCreationConfiguration.h">
+      <DependentUpon>MidiVirtualDeviceCreationConfiguration.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiVirtualDeviceManager.h" />
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
-    <ClInclude Include="midl_defines.h" />
-    <ClInclude Include="namespace_defines.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="trace_logging.h" />
-    <ClInclude Include="MidiSession.h">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiService.cpp">
-      <DependentUpon>MidiService.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSession.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSession_EndpointConnection.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSession_VirtualEndpoint.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
-    <ClCompile Include="MidiSession_Watcher.cpp">
-      <DependentUpon>MidiSession.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="MidiStreamConfigurationRequestedSettings.cpp">
       <DependentUpon>MidiStreamConfigurationRequestedSettings.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp">
       <DependentUpon>MidiStreamConfigurationRequestReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiVirtualEndpointDevice.cpp">
-      <DependentUpon>MidiVirtualEndpointDevice.idl</DependentUpon>
+    <ClCompile Include="MidiVirtualDevice.cpp">
+      <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
-      <DependentUpon>MidiVirtualEndpointDeviceDefinition.idl</DependentUpon>
+    <ClCompile Include="MidiVirtualDeviceCreationConfiguration.cpp">
+      <DependentUpon>MidiVirtualDeviceCreationConfiguration.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceManager.cpp" />
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="trace_logging.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiService.idl" />
-    <Midl Include="MidiSession.idl" />
     <Midl Include="MidiStreamConfigurationRequestedSettings.idl" />
     <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl" />
-    <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
-    <Midl Include="MidiVirtualEndpointDevice.idl" />
-    <Midl Include="MidiVirtualEndpointDeviceDefinition.idl" />
+    <Midl Include="MidiVirtualDeviceCreationResult.idl" />
+    <Midl Include="MidiVirtualDevice.idl" />
+    <Midl Include="MidiVirtualDeviceCreationConfiguration.idl" />
+    <Midl Include="MidiVirtualDeviceManager.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-sdk.def" />
@@ -341,11 +316,11 @@
     <Text Include="WinRTActivationEntries.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\winrt-core\Microsoft.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\winrt-messages\Microsoft.Devices.Midi2.Messages.vcxproj">
+      <Project>{001601de-b7ab-41d1-81b7-40286b139841}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

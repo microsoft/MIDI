@@ -11,7 +11,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="MidiMessageTypeEndpointListener.h">
       <Filter>SDK</Filter>

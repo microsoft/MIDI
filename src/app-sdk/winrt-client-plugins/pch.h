@@ -81,9 +81,6 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "resource_util.h"
 #include "ping_ump_types.h"
 
-//#include "MidiXProc.h"
-#include "resource.h"
-
 namespace winrt::Microsoft::Devices::Midi2::ClientPlugins {};
 namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation {};
 

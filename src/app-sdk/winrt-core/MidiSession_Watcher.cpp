@@ -113,7 +113,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
         for (auto const& conn : m_connectionsForAutoReconnect)
         {
-            if (id == conn->EndpointDeviceId() && conn->InternalWasAlreadyOpened())
+            if (id == conn->ConnectedEndpointDeviceId() && conn->InternalWasAlreadyOpened())
             {
                 conn->InternalOnDeviceReconnect();
             }
@@ -152,7 +152,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         {
             // there can be more than one match, so we don't
             // break after the first one is found
-            if (id == conn->EndpointDeviceId())
+            if (id == conn->ConnectedEndpointDeviceId())
             {
                 conn->InternalOnDeviceDisconnect();
             }

@@ -37,8 +37,8 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 
     auto session = MidiSession::TryCreate(L"Test Session Name");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     uint32_t receivedMessageCount{};
 
@@ -153,8 +153,8 @@ void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
 
     auto session = MidiSession::TryCreate(L"Test Session Name");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId());
+    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     uint32_t receivedMessageCount{};
 

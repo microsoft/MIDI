@@ -9,11 +9,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Resources.rc" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSystemExclusive8StatusEnum.idl">
@@ -53,5 +52,13 @@
     <Filter Include="SDK\Helpers">
       <UniqueIdentifier>{72347259-dff3-4dfd-bd66-8007a8fe65e5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{4bb3b62b-39e3-40a6-8370-664fe193b1be}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
