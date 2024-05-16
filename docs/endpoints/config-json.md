@@ -1,6 +1,8 @@
 ---
 layout: page
-title: Config JSON
+title: Config JSON for Transports
+parent: Transport Types
+grandparent: Windows MIDI Services
 ---
 
 # JSON Config File
@@ -105,16 +107,4 @@ Valid properties you can set across all supported endpoints
 
 ## Plugin-specific settings
 
-This is not an exhaustive list, because the transport and processing plugins may be created by anyone.
-
-### Loopback MIDI 
-
-TODO: Provide examples for this
-
-For the persistent configuration file, typically "add" is all that is specified, as it doesn't make sense to update or remove endpoints or routing on service start.
-
-> NOTE: This document is not yet complete. We'll add more details as the schemas are finalized
-
-### KS (USB etc) MIDI
-
-TODO: Show how to update endpoint names and provide other properties here
+Appropriate configuration information may be found in the individual transport pages.
