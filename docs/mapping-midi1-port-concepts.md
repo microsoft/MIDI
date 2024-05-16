@@ -24,7 +24,7 @@ With Windows MIDI Services, we made the decision early on, validated by hardware
 
 The way the messages themselves map over is super clean. It's documented in the MIDI 2.0 UMP spec, but in a nut shell, it looks like this (in the case of a MIDI 1.0 Channel Voice message):
 
-| UMP Message Type | **Group** | Status | Channel Index | Channel and Status | ... |
+| UMP Message Type | **Group** | Status | Channel Index | ... |
 | 2 | **0-15** | 8 | 2 | rest of data |
 
 ### Cables to Groups
