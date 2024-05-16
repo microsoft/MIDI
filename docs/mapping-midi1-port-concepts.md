@@ -1,7 +1,6 @@
 ---
 layout: page
 title: Mapping MIDI 1.0 Ports
-parent: Windows MIDI Services
 has_children: false
 ---
 
@@ -22,6 +21,9 @@ Additionally, some MIDI 2.0 UMP messages have no group information because they 
 With Windows MIDI Services, we made the decision early on, validated by hardware and software partners, to provide a single unified view of an endpoint, whether it represents a MIDI 2.0 native endpoint or a collection of MIDI 1.0 cables on an endpoint. We also decided, because UMP was designed with this in mind and includes 1:1 mappings between MIDI 1.0 byte-format messages and their MIDI 1.0 Protocol in UMP equivalents, to present all MIDI 1.0 and MIDI 2.0 messages using a single format: UMP.
 
 > That means that Windows MIDI Services has no "ports". (We do map back to ports for our older MIDI 1.0 APIs, but that is for backwards compatibility with those APIs)
+
+| UMP Message Type | Group Index | Channel and Status | ... |
+| 2 | 0-15 | | rest of message data |
 
 ### Cables to Groups
 
