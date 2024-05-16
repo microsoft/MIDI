@@ -15,13 +15,9 @@ has_children: false
 
 ## Overview
 
-Kernel Streaming is the mechanism through which most USB and other MIDI 1.0 drivers are used in Windows MIDI Services. In addition to USB MIDI 1.0, this provides access to many third-party drivers including BLE MIDI 1.0 and more.
+Kernel Streaming is the mechanism through which MIDI 1.0 and MIDI 2.0 devices using the new UMP-based class driver are enumerated and communicated with.
 
-In addition to MIDI 1.0 drivers, the Kernel Streaming transport is also the interface to the MIDI 2.0 class driver.
-
-## Suggested Uses
-
-Although this transport is primarily recommended for USB devices, it may be used for access to most other existing MIDI 1.0 devices on Windows.
+In addition, any third-party UMP drivers will also route through this service.
 
 ## Configuration
 
