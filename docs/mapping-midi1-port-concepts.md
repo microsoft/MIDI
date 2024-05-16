@@ -1,8 +1,7 @@
 ---
 layout: page
 title: Mapping MIDI 1.0 Ports
-parent: Transport Types
-grandparent: Windows MIDI Services
+parent: Windows MIDI Services
 has_children: false
 ---
 
@@ -69,4 +68,4 @@ Of course, how you present this to your users is up to you and the unique needs 
 
 > Note that Groups, like Channels, are 0-15 for the index, but 1-16 for the display value. The `MidiGroup` and `MidiChannel` types handle this for you automatically, if you use them. They also include the abbrviations for Group and Channel.
 
-It may take a little getting used to to work with the new endpoint approach, but this is designed for the future, so as more MIDI 2.0 native devices arrive on market, the approach will seem more natural.
+It may take a little getting used to to work with the new endpoint approach, but this is designed for the future, so as more MIDI 2.0 native devices arrive on market, the approach will seem more natural. And most importantly, no functionality is lost compared to the old approach.
