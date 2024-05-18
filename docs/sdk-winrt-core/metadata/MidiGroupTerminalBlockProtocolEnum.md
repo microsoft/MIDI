@@ -26,4 +26,4 @@ Indicates the protocol specifics for the Group Terminal Block. Group terminal bl
 
 ## IDL
 
-[MidiGroupTerminalBlockProtocolEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiGroupTerminalBlockProtocolEnum.idl)
+[MidiGroupTerminalBlockProtocolEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroupTerminalBlockProtocolEnum.idl)

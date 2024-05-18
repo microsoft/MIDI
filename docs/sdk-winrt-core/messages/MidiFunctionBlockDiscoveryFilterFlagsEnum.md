@@ -20,4 +20,4 @@ Used to indicate which function block messages you want to receive when you requ
 
 ## IDL
 
-[MidiFunctionBlockDiscoveryFilterFlagsEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlockDiscoveryFilterFlagsEnum.idl)
+[MidiFunctionBlockDiscoveryFilterFlagsEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlockDiscoveryFilterFlagsEnum.idl)

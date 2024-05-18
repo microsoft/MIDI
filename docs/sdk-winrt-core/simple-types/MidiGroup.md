@@ -10,17 +10,16 @@ has_children: false
 
 ## Remarks
 
-The `MidiGroup` class is used to provide formatting and data validation for MIDI 2.0 groups. For clarity, the 0-15 value used in all messages is the `Index` and the 1-16 value those are mapped to for user display, is the `NumberForDisplay`.
+The `MidiGroup` class is used to provide formatting and data validation for MIDI 2.0 groups. For clarity, the 0-15 value used in all messages is the `Index` and the 1-16 value those are mapped to for user display, is the `DisplayValue`.
 
 ## Constructors
 
-| `MidiGroup` | Create an empty MidiGroup object (Index 0) |
 | `MidiChannel(UInt8)` | Create a MidiChannel with the specified channel Index (0-15) |
 
 ## Properties
 
 | `Index` | The data value, or channel Index (0-15) |
-| `NumberForDisplay` | The number that should be displayed in any UI. (1-16) |
+| `DisplayValue` | The number that should be displayed in any UI. (1-16) |
 
 ## Static Properties
 
@@ -29,7 +28,7 @@ The `MidiGroup` class is used to provide formatting and data validation for MIDI
 
 ## Static Methods
 
-| `IsValidGroupIndex(UInt8)` | Verifies that the provided index is valid (between 0 and 15) |
+| `IsValidIndex(UInt8)` | Verifies that the provided index is valid (between 0 and 15) |
 
 ## See also
 

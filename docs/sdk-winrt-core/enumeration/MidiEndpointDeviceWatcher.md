@@ -75,4 +75,4 @@ When an endpoint is disconnected due to the parent device going away, all client
 
 ## IDL
 
-[MidiEndpointDeviceWatcher IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDeviceWatcher.idl)
+[MidiEndpointDeviceWatcher IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceWatcher.idl)

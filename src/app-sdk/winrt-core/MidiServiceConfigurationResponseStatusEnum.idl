@@ -6,25 +6,19 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
 namespace Microsoft.Devices.Midi2
 {
-    MIDI_API_CONTRACT_v1
     enum MidiServiceConfigurationResponseStatus
     {
-        Success = 0,
+        Success =                   0,
 
-        ErrorTargetNotFound = 404,
+        ErrorTargetNotFound =       404,
 
-        ErrorJsonNullOrEmpty = 600,
-        ErrorProcessingJson = 601,
+        ErrorJsonNullOrEmpty =      600,
+        ErrorProcessingJson =       601,
 
-        ErrorNotImplemented = 2600,
+        ErrorNotImplemented =       2600,
 
-        ErrorOther = 9999,
+        ErrorOther =                9999,
     };
 }

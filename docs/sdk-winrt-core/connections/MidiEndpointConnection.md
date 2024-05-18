@@ -97,7 +97,7 @@ When processing the `MessageReceived` event, do so quickly. This event is synchr
 
 ## IDL
 
-[MidiEndpointConnection IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointConnection.idl)
+[MidiEndpointConnection IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointConnection.idl)
 
 ## Sample
 

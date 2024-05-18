@@ -46,4 +46,4 @@ When scheduling messages, you may want to use a more convenient time units. Thes
 
 ## IDL
 
-[MidiClock IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiClock.idl)
+[MidiClock IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiClock.idl)

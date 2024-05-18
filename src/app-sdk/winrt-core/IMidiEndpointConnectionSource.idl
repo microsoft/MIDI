@@ -6,15 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
 namespace Microsoft.Devices.Midi2
 {
-    MIDI_API_CONTRACT_v1
-    [MIDI_INTERFACE_UUID("44385cdd-b64c-4195-8faa-8a61fc952a23",1.0)]
+    [uuid("44385cdd-b64c-4195-8faa-8a61fc952a23"), version(1.0)]
     interface IMidiEndpointConnectionSource
     {
         event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceDisconnected;

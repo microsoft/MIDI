@@ -93,7 +93,7 @@ When a device is first enumerated by the MIDI Service, if it is a UMP-native dev
 
 ## IDL
 
-[MidiEndpointDeviceInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDeviceInformation.idl)
+[MidiEndpointDeviceInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceInformation.idl)
 
 ## Sample
 

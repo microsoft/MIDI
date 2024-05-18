@@ -28,5 +28,5 @@ If none of the `UpdatedXX` properties are true, then other properties have been 
 
 ## IDL
 
-[MidiEndpointDeviceInformationUpdateEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDeviceInformationUpdateEventArgs.idl)
+[MidiEndpointDeviceInformationUpdateEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceInformationUpdateEventArgs.idl)
 

@@ -34,4 +34,4 @@ The main part of message processing is the `ProcessIncomingMessage` callback.
 
 ## IDL
 
-[IMidiEndpointMessageProcessingPlugin IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/IMidiEndpointMessageProcessingPlugin.idl)
+[IMidiEndpointMessageProcessingPlugin IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiEndpointMessageProcessingPlugin.idl)

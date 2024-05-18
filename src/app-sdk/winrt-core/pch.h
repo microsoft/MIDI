@@ -47,9 +47,6 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include <format>
 #include <filesystem>
 
-// include this before any project includes
-#include "namespace_defines.h"
-
 // internal
 
 #include "ump_helpers.h"
@@ -93,10 +90,8 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "MidiGroup.h"
 #include "MidiChannel.h"
 
-namespace midi2 = ::MIDI_CPP_NAMESPACE;
-namespace implementation = ::MIDI_CPP_NAMESPACE::implementation;
-
-#include "MidiUniqueId.h"
+namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
+namespace implementation = ::winrt::Microsoft::Devices::Midi2::implementation;
 
 #include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"

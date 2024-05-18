@@ -17,7 +17,7 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 
 | Property | Description |
 | ---- | ---- |
-| `IncludeGroups` | The list of `MidiGroup` numbers that this listener will listen to. |
+| `IncludedGroups` | The list of `MidiGroup` numbers that this listener will listen to. |
 | `PreventCallingFurtherListeners` | True if this plugin should prevent further listeners from processing a message that is in-scope for this processor. |
 | `PreventFiringMainMessageReceivedEvent` | True if this plugin should prevent the endpoint's `MessageReceived` event from firing if the message was in-scope for this plugin. |
 
@@ -35,8 +35,8 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 // event on the connection.
 
 midi2::MidiGroupEndpointListener groupsListener;
-groupsListener.IncludeGroups().Append(midi2::MidiGroup(5));
-groupsListener.IncludeGroups().Append(midi2::MidiGroup(6));
+groupsListener.IncludedGroups().Append(midi2::MidiGroup(5));
+groupsListener.IncludedGroups().Append(midi2::MidiGroup(6));
 
 // set this if you don't want the main message received event on the
 // connection to fire for any messages this plugin handles.
@@ -54,4 +54,4 @@ myConnection.Open();
 
 ## IDL
 
-[MidiGroupEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiGroupEndpointListener.idl)
+[MidiGroupEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-client-plugins/MidiGroupEndpointListener.idl)

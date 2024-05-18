@@ -317,12 +317,8 @@
     <ClInclude Include="MidiMessage96.h">
       <DependentUpon>MidiMessage96.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUniqueId.h">
-      <DependentUpon>MidiUniqueId.idl</DependentUpon>
-    </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
-    <ClInclude Include="midl_defines.h" />
     <ClInclude Include="namespace_defines.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="MidiSession.h">
@@ -416,9 +412,6 @@
     <ClCompile Include="MidiMessage96.cpp">
       <DependentUpon>MidiMessage96.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUniqueId.cpp">
-      <DependentUpon>MidiUniqueId.idl</DependentUpon>
-    </ClCompile>
     <ClCompile Include="midi_function_block_prop_util.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -429,7 +422,6 @@
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
-    <Midl Include="Midi2ApiContract.idl" />
     <Midl Include="MidiDeclaredEndpointInfo.idl" />
     <Midl Include="MidiDeclaredDeviceIdentity.idl" />
     <Midl Include="MidiDeclaredStreamConfiguration.idl" />
@@ -475,7 +467,6 @@
     <Midl Include="MidiMessage96.idl" />
     <Midl Include="MidiMessageTypeEnum.idl" />
     <Midl Include="MidiPacketTypeEnum.idl" />
-    <Midl Include="MidiUniqueId.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

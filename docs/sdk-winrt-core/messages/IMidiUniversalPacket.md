@@ -29,5 +29,5 @@ This interface is implemented by the rich MidiMessageXX runtime class types. It 
 
 ## IDL
 
-[IMidiUniversalPacket IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/IMidiUniversalPacket.idl)
+[IMidiUniversalPacket IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiUniversalPacket.idl)
 

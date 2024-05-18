@@ -41,7 +41,7 @@ The two static functions are factory-pattern methods for creating a new session.
 
 ## See also
 
-[MidiSession IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiSession.idl)
+[MidiSession IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiSession.idl)
 
 ### Sample
 

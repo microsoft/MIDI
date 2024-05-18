@@ -12,5 +12,5 @@ Marker interface which is used to prevent circular references in the API, specif
 
 ## IDL
 
-[IMidiEndpointConnectionSource IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/IMidiEndpointConnectionSource.idl)
+[IMidiEndpointConnectionSource IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiEndpointConnectionSource.idl)
 

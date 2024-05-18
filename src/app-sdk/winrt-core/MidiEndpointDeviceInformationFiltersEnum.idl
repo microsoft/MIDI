@@ -6,24 +6,18 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
 namespace Microsoft.Devices.Midi2
 {
-    MIDI_API_CONTRACT_v1
     [flags]
     enum MidiEndpointDeviceInformationFilters
     {
-        IncludeClientUmpNative = 0x00000001,
-        IncludeClientByteStreamNative = 0x00000002,
+        IncludeClientUmpNative =            0x00000001,
+        IncludeClientByteStreamNative =     0x00000002,
 
-        IncludeVirtualDeviceResponder = 0x00000100,
+        IncludeVirtualDeviceResponder =     0x00000100,
 
-        IncludeDiagnosticLoopback = 0x00010000,
-        IncludeDiagnosticPing = 0x00020000,
+        IncludeDiagnosticLoopback =         0x00010000,
+        IncludeDiagnosticPing =             0x00020000,
 
 
         AllTypicalEndpoints = IncludeClientUmpNative | IncludeClientByteStreamNative,

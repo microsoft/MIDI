@@ -15,7 +15,7 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 
 | Property | Description |
 | ---- | ---- |
-| `IncludeMessageTypes` | The list of `MidiMessageType` values that this listener will listen to. |
+| `IncludedMessageTypes` | The list of `MidiMessageType` values that this listener will listen to. |
 | `PreventCallingFurtherListeners` | True if this plugin should prevent further listeners from processing a message that is in-scope for this processor. |
 | `PreventFiringMainMessageReceivedEvent` | True if this plugin should prevent the endpoint's `MessageReceived` event from firing if the message was in-scope for this plugin. |
 
@@ -23,10 +23,10 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 
 | Property | Description |
 | ---- | ---- |
-| `MidiGroupEndpointListener()` | Construct a new instance of this type |
+| `MidiMessageTypeEndpointListener()` | Construct a new instance of this type |
 
 
 
 ## IDL
 
-[MidiMessageTypeEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageTypeEndpointListener.idl)
+[MidiMessageTypeEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-client-plugins/MidiMessageTypeEndpointListener.idl)

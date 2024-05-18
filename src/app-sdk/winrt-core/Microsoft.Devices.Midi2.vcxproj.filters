@@ -151,7 +151,6 @@
     <ClInclude Include="MidiFunctionBlock.h">
       <Filter>API\Endpoints\Metadata\Functions</Filter>
     </ClInclude>
-    <ClInclude Include="midl_defines.h" />
     <ClInclude Include="MidiUniqueId.h">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </ClInclude>
@@ -267,9 +266,6 @@
     <Midl Include="MidiFunctionBlockDirectionEnum.idl">
       <Filter>API\Endpoints\Metadata\Blocks</Filter>
     </Midl>
-    <Midl Include="MidiUniqueId.idl">
-      <Filter>API\BasicTypes</Filter>
-    </Midl>
     <Midl Include="MidiEndpointConnection.idl">
       <Filter>API\Endpoints\Connections</Filter>
     </Midl>
@@ -321,7 +317,6 @@
     <Midl Include="MidiEndpointDeviceInformation.idl">
       <Filter>API\Enumeration\DeviceInformation</Filter>
     </Midl>
-    <Midl Include="Midi2ApiContract.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
       <Filter>API\Endpoints\Message Processing Plugins</Filter>
     </Midl>
@@ -349,7 +344,6 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

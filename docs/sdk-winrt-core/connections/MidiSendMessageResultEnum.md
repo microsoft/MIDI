@@ -39,9 +39,8 @@ else
 | `DataIndexOutOfRange` | `0x00400000` | Reading a full message would result in overrunning the provided array, collection, or buffer. |
 | `TimestampOutOfRange` | `0x00800000` | The provided timestamp is too far in the future to be scheduled. |
 | `MessageListPartiallyProcessed` | `0x00A00000` | The message list was only partially processed. Not all messages were sent. |
-| `Other` | `0x01000000` | Other reason that cannot be determined. |
 
 ## IDL
 
-[MidiSendMessageResult IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiSendMessageResult.idl)
+[MidiSendMessageResult IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiSendMessageResult.idl)
 

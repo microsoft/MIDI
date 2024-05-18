@@ -27,5 +27,5 @@ Specifies the sort order to use when enumerating a static list of devices.
 
 ## IDL
 
-[MidiEndpointDeviceInformationSortOrderEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDeviceInformationSortOrderEnum.idl)
+[MidiEndpointDeviceInformationSortOrderEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceInformationSortOrderEnum.idl)
 

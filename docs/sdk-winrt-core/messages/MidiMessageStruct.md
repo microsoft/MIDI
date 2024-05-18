@@ -19,4 +19,4 @@ has_children: false
 
 ## IDL
 
-[MidiMessageStruct IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageStruct.idl)
+[MidiMessageStruct IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessageStruct.idl)

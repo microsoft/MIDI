@@ -41,4 +41,4 @@ In the specification, Byte1 is the LSB and Byte4 is the MSB. We follow that conv
 
 ## See also
 
-[MidiUniqueId IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiUniqueId.idl)
+[MidiUniqueId IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-ci/MidiUniqueId.idl)

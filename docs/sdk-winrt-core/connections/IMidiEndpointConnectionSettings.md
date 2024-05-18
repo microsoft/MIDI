@@ -18,5 +18,5 @@ Settings which are optionally provided when connecting to an endpoint. Typically
 
 ## IDL
 
-[IMidiEndpointConnectionSettings IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/IMidiEndpointConnectionSettings.idl)
+[IMidiEndpointConnectionSettings IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiEndpointConnectionSettings.idl)
 

@@ -55,4 +55,4 @@ Most properties are 1:1 with the MIDI 2.0 UMP specification section on function 
 
 ## IDL
 
-[MidiFunctionBlock IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlock.idl)
+[MidiFunctionBlock IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlock.idl)

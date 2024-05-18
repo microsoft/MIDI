@@ -6,15 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
 namespace Microsoft.Devices.Midi2
 {
-    MIDI_API_CONTRACT_v1
-    [MIDI_INTERFACE_UUID("2ebcfa13-585a-4376-8fe1-635784fa7fd4",1.0)]
+    [uuid("2ebcfa13-585a-4376-8fe1-635784fa7fd4"), version(1.0)]
     interface IMidiServiceMessageProcessingPluginConfiguration
     {
         String EndpointDeviceId { get; };

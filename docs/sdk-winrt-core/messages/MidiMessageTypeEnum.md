@@ -31,4 +31,4 @@ The values correspond directly to the "mt" field in the MIDI UMP packet and may 
 
 ## IDL
 
-[MidiMessageType IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageTypeEnum.idl)
+[MidiMessageType IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessageTypeEnum.idl)

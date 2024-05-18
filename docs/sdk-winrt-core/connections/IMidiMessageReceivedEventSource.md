@@ -18,5 +18,5 @@ Interface which contains the event definition used by any class which raises the
 
 ## IDL
 
-[IMidiMessageReceivedEventSource IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/IMidiMessageReceivedEventSource.idl)
+[IMidiMessageReceivedEventSource IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiMessageReceivedEventSource.idl)
 

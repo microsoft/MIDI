@@ -24,5 +24,5 @@ Includes all functions and properties in `IMidiUniversalPacket`, as well as:
 
 ## IDL
 
-[MidiMessage64 IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessage64.idl)
+[MidiMessage64 IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessage64.idl)
 

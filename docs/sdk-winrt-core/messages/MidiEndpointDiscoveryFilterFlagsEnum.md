@@ -24,4 +24,4 @@ Used to indicate which endpoint discovery messages you want to receive when you 
 
 ## IDL
 
-[MidiEndpointDiscoveryFilterFlagsEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDiscoveryFilterFlagsEnum.idl)
+[MidiEndpointDiscoveryFilterFlagsEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDiscoveryFilterFlagsEnum.idl)

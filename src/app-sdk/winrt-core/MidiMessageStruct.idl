@@ -6,14 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
-
 namespace Microsoft.Devices.Midi2
 {
-    MIDI_API_CONTRACT_v1
     struct MidiMessageStruct
     {
         UInt32 Word0;

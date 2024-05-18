@@ -39,4 +39,4 @@ This is the main class to use when receving MIDI data from a message source such
 
 ## IDL
 
-[MidiMessageReceivedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageReceivedEventArgs.idl)
+[MidiMessageReceivedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessageReceivedEventArgs.idl)
