@@ -10,12 +10,12 @@ namespace Microsoft.Devices.Midi2.Messages
 {
     enum Midi1ChannelVoiceMessageStatus
     {
-        NoteOff = 0x8,
-        NoteOn = 0x9,
-        PolyPressure = 0xA,
-        ControlChange = 0xB,
-        ProgramChange = 0xC,
-        ChannelPressure = 0xD,
-        PitchBend = 0xE,
+        NoteOff =           0x8,
+        NoteOn =            0x9,
+        PolyPressure =      0xA,
+        ControlChange =     0xB,
+        ProgramChange =     0xC,
+        ChannelPressure =   0xD,
+        PitchBend =         0xE,
     };
 }

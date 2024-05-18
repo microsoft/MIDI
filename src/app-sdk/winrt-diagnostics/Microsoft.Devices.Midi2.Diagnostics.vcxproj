@@ -259,8 +259,12 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiDiagnostics.h" />
-    <ClInclude Include="MidiReporting.h" />
+      <ClInclude Include="MidiDiagnostics.h">
+          <DependentUpon>MidiDiagnostics.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiReporting.h">
+          <DependentUpon>MidiReporting.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiServicePingResponseSummary.h">
       <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
     </ClInclude>
@@ -272,8 +276,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiDiagnostics.cpp" />
-    <ClCompile Include="MidiReporting.cpp" />
+      <ClCompile Include="MidiDiagnostics.cpp">
+          <DependentUpon>MidiDiagnostics.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiReporting.cpp">
+          <DependentUpon>MidiReporting.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiServicePingResponseSummary.cpp">
       <DependentUpon>MidiServicePingResponseSummary.idl</DependentUpon>
     </ClCompile>
