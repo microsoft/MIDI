@@ -70,6 +70,11 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
 
     private:
+        //virt::IMidiVirtualDeviceCreationConfiguration m_virtualDeviceConfiguration{ nullptr };
+
+        midi2::MidiDeclaredEndpointInfo m_declaredEndpointInfo{};
+        midi2::MidiDeclaredDeviceIdentity m_declaredDeviceIdentity{};
+
         bool SendFunctionBlockInfoNotificationMessage(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
         bool SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
         bool SendEndpointNameNotificationMessages(_In_ winrt::hstring const& name) noexcept;

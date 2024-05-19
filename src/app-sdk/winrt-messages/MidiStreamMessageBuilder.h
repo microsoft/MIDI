@@ -16,7 +16,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         MidiStreamMessageBuilder() = default;
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildEndpointDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
@@ -24,7 +23,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ midi2::MidiEndpointDiscoveryRequests const requestFlags
             ) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
@@ -37,7 +35,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ bool const supportsSendingJitterReductionTimestamps
             ) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildDeviceIdentityNotificationMessage(
             _In_ internal::MidiTimestamp timestamp,
             _In_ uint8_t const deviceManufacturerSysExIdByte1,
@@ -63,7 +60,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ winrt::hstring const& productInstanceId
             );
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildStreamConfigurationRequestMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const protocol,
@@ -71,7 +67,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ bool const requestToSendJRTimestamps
             );
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildStreamConfigurationNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const protocol,
@@ -91,14 +86,12 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 
         // function blocks
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const functionBlockNumber,
             _In_ midi2::MidiFunctionBlockDiscoveryRequests requestFlags
             );
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ bool const active,

@@ -22,7 +22,7 @@ msvc_deps_prefix = Note: including file:
 
 rule CXX_COMPILER__libmidi2_unscanned_Debug
   deps = msvc
-  command = ${LAUNCHER}${CODE_CHECK}C:\PROGRA~1\MIB055~1\2022\Preview\VC\Tools\MSVC\1440~1.337\bin\Hostx64\x64\cl.exe   /TP $DEFINES $INCLUDES $FLAGS /showIncludes /Fo$out /Fd$TARGET_COMPILE_PDB /FS -c $in
+  command = ${LAUNCHER}${CODE_CHECK}C:\PROGRA~1\MICROS~2\2022\Preview\VC\Tools\MSVC\1440~1.338\bin\Hostx64\x64\cl.exe   /TP $DEFINES $INCLUDES $FLAGS /showIncludes /Fo$out /Fd$TARGET_COMPILE_PDB /FS -c $in
   description = Building CXX object $out
 
 
@@ -30,7 +30,7 @@ rule CXX_COMPILER__libmidi2_unscanned_Debug
 # Rule for linking CXX static library.
 
 rule CXX_STATIC_LIBRARY_LINKER__libmidi2_Debug
-  command = C:\WINDOWS\system32\cmd.exe /C "$PRE_LINK && C:\PROGRA~1\MIB055~1\2022\Preview\VC\Tools\MSVC\1440~1.337\bin\Hostx64\x64\lib.exe  $LINK_FLAGS /out:$TARGET_FILE $in  && $POST_BUILD"
+  command = C:\WINDOWS\system32\cmd.exe /C "$PRE_LINK && C:\PROGRA~1\MICROS~2\2022\Preview\VC\Tools\MSVC\1440~1.338\bin\Hostx64\x64\lib.exe  $LINK_FLAGS /out:$TARGET_FILE $in  && $POST_BUILD"
   description = Linking CXX static library $TARGET_FILE
   restat = $RESTAT
 
@@ -47,7 +47,7 @@ rule CUSTOM_COMMAND
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = "C:\Program Files\Microsoft Visual Studio\2022\Preview\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -SG:\GitHub\microsoft\midi\src\api\Transform\ByteStreamToUMP\vcpkg_installed\vcpkg\blds\libmidi2\src\v0.7-9d11c5604d.clean -BG:\GitHub\microsoft\midi\src\api\Transform\ByteStreamToUMP\vcpkg_installed\vcpkg\blds\libmidi2\x64-windows-dbg
+  command = "C:\Program Files\Microsoft Visual Studio\2022\Preview\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" --regenerate-during-build -SC:\GitHub\Microsoft\midi\src\api\Abstraction\KSAggregateAbstraction\vcpkg_installed\vcpkg\blds\libmidi2\src\v0.10-041d1ac4e6.clean -BC:\GitHub\Microsoft\midi\src\api\Abstraction\KSAggregateAbstraction\vcpkg_installed\vcpkg\blds\libmidi2\x64-windows-dbg
   description = Re-running CMake...
   generator = 1
 

@@ -1,2 +1,0 @@
-G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/arm64-windows-rel/CMakeFiles/edit_cache.dir
-G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/ARM64-windows/vcpkg/blds/detect_compiler/arm64-windows-rel/CMakeFiles/rebuild_cache.dir

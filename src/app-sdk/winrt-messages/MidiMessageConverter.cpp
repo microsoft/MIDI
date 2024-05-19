@@ -175,4 +175,271 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
         return midiWord;
     }
 
+
+
+
+    // System Common and System Real-time
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1TimeCodeMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiTimeCodeMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1SongPositionPointerMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiSongPositionPointerMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1SongSelectMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiSongSelectMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1TuneRequestMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiTuneRequestMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1TimingClockMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiTimingClockMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1StartMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiStartMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1ContinueMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiContinueMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1StopMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiStopMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1ActiveSensingMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiActiveSensingMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1SystemResetMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiSystemResetMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+
+    // Channel Voice
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1ChannelPressureMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiChannelPressureMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1NoteOffMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiNoteOffMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1NoteOnMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiNoteOnMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1PitchBendChangeMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiPitchBendChangeMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1PolyphonicKeyPressureMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiPolyphonicKeyPressureMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1ProgramChangeMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiProgramChangeMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
 }

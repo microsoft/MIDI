@@ -7,8 +7,8 @@ events:
       - "C:/Program Files/Microsoft Visual Studio/2022/Preview/Common7/IDE/CommonExtensions/Microsoft/CMake/CMake/share/cmake-3.28/Modules/CMakeDetermineSystem.cmake:228 (message)"
       - "CMakeLists.txt:3 (project)"
     message: |
-      The target system is: Windows - 10.0.26100 - AMD64
-      The host system is: Windows - 10.0.26100 - AMD64
+      The target system is: Windows - 10.0.26217 - AMD64
+      The host system is: Windows - 10.0.26217 - AMD64
   -
     kind: "message-v1"
     backtrace:
@@ -18,7 +18,7 @@ events:
       - "CMakeLists.txt:3 (project)"
     message: |
       Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
-      Compiler: C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.40.33721/bin/Hostx64/x64/cl.exe 
+      Compiler: C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.40.33807/bin/Hostx64/x64/cl.exe 
       Build flags: /nologo;/DWIN32;/D_WINDOWS;/W3;/utf-8;/MP
       Id flags:  
       
@@ -32,7 +32,7 @@ events:
       Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.obj"
       
       The C compiler identification is MSVC, found in:
-        G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/3.28.3-msvc11/CompilerIdC/CMakeCCompilerId.exe
+        C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/3.28.3-msvc11/CompilerIdC/CMakeCCompilerId.exe
       
   -
     kind: "message-v1"
@@ -44,7 +44,7 @@ events:
     message: |
       Detecting C compiler /showIncludes prefix:
         main.c
-        Note: including file: G:\\GitHub\\microsoft\\midi\\src\\api\\Transform\\ByteStreamToUMP\\vcpkg_installed\\vcpkg\\blds\\libmidi2\\x64-windows-dbg\\CMakeFiles\\ShowIncludes\\foo.h
+        Note: including file: C:\\GitHub\\Microsoft\\midi\\src\\api\\Abstraction\\KSAggregateAbstraction\\vcpkg_installed\\vcpkg\\blds\\libmidi2\\x64-windows-dbg\\CMakeFiles\\ShowIncludes\\foo.h
         
       Found prefix "Note: including file: "
   -
@@ -56,7 +56,7 @@ events:
       - "CMakeLists.txt:3 (project)"
     message: |
       Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
-      Compiler: C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.40.33721/bin/Hostx64/x64/cl.exe 
+      Compiler: C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.40.33807/bin/Hostx64/x64/cl.exe 
       Build flags: /nologo;/DWIN32;/D_WINDOWS;/W3;/utf-8;/GR;/EHsc;/MP
       Id flags:  
       
@@ -70,7 +70,7 @@ events:
       Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "CMakeCXXCompilerId.obj"
       
       The CXX compiler identification is MSVC, found in:
-        G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/3.28.3-msvc11/CompilerIdCXX/CMakeCXXCompilerId.exe
+        C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/3.28.3-msvc11/CompilerIdCXX/CMakeCXXCompilerId.exe
       
   -
     kind: "message-v1"
@@ -82,7 +82,7 @@ events:
     message: |
       Detecting CXX compiler /showIncludes prefix:
         main.c
-        Note: including file: G:\\GitHub\\microsoft\\midi\\src\\api\\Transform\\ByteStreamToUMP\\vcpkg_installed\\vcpkg\\blds\\libmidi2\\x64-windows-dbg\\CMakeFiles\\ShowIncludes\\foo.h
+        Note: including file: C:\\GitHub\\Microsoft\\midi\\src\\api\\Abstraction\\KSAggregateAbstraction\\vcpkg_installed\\vcpkg\\blds\\libmidi2\\x64-windows-dbg\\CMakeFiles\\ShowIncludes\\foo.h
         
       Found prefix "Note: including file: "
   -
@@ -94,8 +94,8 @@ events:
     checks:
       - "Detecting C compiler ABI info"
     directories:
-      source: "G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-pmqf1k"
-      binary: "G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-pmqf1k"
+      source: "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-s541c2"
+      binary: "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-s541c2"
     cmakeVariables:
       CMAKE_C_FLAGS: " /nologo /DWIN32 /D_WINDOWS /W3 /utf-8 /MP "
       CMAKE_C_FLAGS_DEBUG: "/D_DEBUG /MDd /Z7 /Ob0 /Od /RTC1 "
@@ -111,11 +111,11 @@ events:
       variable: "CMAKE_C_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-pmqf1k'
+        Change Dir: 'C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-s541c2'
         
-        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Preview/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe" -v cmTC_b59eb
-        [1/2] C:\\PROGRA~1\\MIB055~1\\2022\\Preview\\VC\\Tools\\MSVC\\1440~1.337\\bin\\Hostx64\\x64\\cl.exe  /nologo   /nologo /DWIN32 /D_WINDOWS /W3 /utf-8 /MP   /D_DEBUG /MDd /Z7 /Ob0 /Od /RTC1 /showIncludes /FoCMakeFiles\\cmTC_b59eb.dir\\CMakeCCompilerABI.c.obj /FdCMakeFiles\\cmTC_b59eb.dir\\ /FS -c "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCCompilerABI.c"
-        [2/2] C:\\WINDOWS\\system32\\cmd.exe /C "cd . && "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_b59eb.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\mt.exe --manifests  -- C:\\PROGRA~1\\MIB055~1\\2022\\Preview\\VC\\Tools\\MSVC\\1440~1.337\\bin\\Hostx64\\x64\\link.exe /nologo CMakeFiles\\cmTC_b59eb.dir\\CMakeCCompilerABI.c.obj  /out:cmTC_b59eb.exe /implib:cmTC_b59eb.lib /pdb:cmTC_b59eb.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Preview/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe" -v cmTC_835dd
+        [1/2] C:\\PROGRA~1\\MICROS~2\\2022\\Preview\\VC\\Tools\\MSVC\\1440~1.338\\bin\\Hostx64\\x64\\cl.exe  /nologo   /nologo /DWIN32 /D_WINDOWS /W3 /utf-8 /MP   /D_DEBUG /MDd /Z7 /Ob0 /Od /RTC1 /showIncludes /FoCMakeFiles\\cmTC_835dd.dir\\CMakeCCompilerABI.c.obj /FdCMakeFiles\\cmTC_835dd.dir\\ /FS -c "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCCompilerABI.c"
+        [2/2] C:\\WINDOWS\\system32\\cmd.exe /C "cd . && "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_835dd.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\mt.exe --manifests  -- C:\\PROGRA~1\\MICROS~2\\2022\\Preview\\VC\\Tools\\MSVC\\1440~1.338\\bin\\Hostx64\\x64\\link.exe /nologo CMakeFiles\\cmTC_835dd.dir\\CMakeCCompilerABI.c.obj  /out:cmTC_835dd.exe /implib:cmTC_835dd.lib /pdb:cmTC_835dd.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
         
       exitCode: 0
   -
@@ -127,8 +127,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-8wlabt"
-      binary: "G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-8wlabt"
+      source: "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-wwviaz"
+      binary: "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-wwviaz"
     cmakeVariables:
       CMAKE_CXX_FLAGS: " /nologo /DWIN32 /D_WINDOWS /W3 /utf-8 /GR /EHsc /MP "
       CMAKE_CXX_FLAGS_DEBUG: "/D_DEBUG /MDd /Z7 /Ob0 /Od /RTC1 "
@@ -144,11 +144,11 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: 'G:/GitHub/microsoft/midi/src/api/Transform/ByteStreamToUMP/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-8wlabt'
+        Change Dir: 'C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/CMakeScratch/TryCompile-wwviaz'
         
-        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Preview/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe" -v cmTC_ab151
-        [1/2] C:\\PROGRA~1\\MIB055~1\\2022\\Preview\\VC\\Tools\\MSVC\\1440~1.337\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP   /nologo /DWIN32 /D_WINDOWS /W3 /utf-8 /GR /EHsc /MP   /D_DEBUG /MDd /Z7 /Ob0 /Od /RTC1 /showIncludes /FoCMakeFiles\\cmTC_ab151.dir\\CMakeCXXCompilerABI.cpp.obj /FdCMakeFiles\\cmTC_ab151.dir\\ /FS -c "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCXXCompilerABI.cpp"
-        [2/2] C:\\WINDOWS\\system32\\cmd.exe /C "cd . && "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_ab151.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\mt.exe --manifests  -- C:\\PROGRA~1\\MIB055~1\\2022\\Preview\\VC\\Tools\\MSVC\\1440~1.337\\bin\\Hostx64\\x64\\link.exe /nologo CMakeFiles\\cmTC_ab151.dir\\CMakeCXXCompilerABI.cpp.obj  /out:cmTC_ab151.exe /implib:cmTC_ab151.lib /pdb:cmTC_ab151.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
+        Run Build Command(s): "C:/Program Files/Microsoft Visual Studio/2022/Preview/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe" -v cmTC_ee544
+        [1/2] C:\\PROGRA~1\\MICROS~2\\2022\\Preview\\VC\\Tools\\MSVC\\1440~1.338\\bin\\Hostx64\\x64\\cl.exe  /nologo /TP   /nologo /DWIN32 /D_WINDOWS /W3 /utf-8 /GR /EHsc /MP   /D_DEBUG /MDd /Z7 /Ob0 /Od /RTC1 /showIncludes /FoCMakeFiles\\cmTC_ee544.dir\\CMakeCXXCompilerABI.cpp.obj /FdCMakeFiles\\cmTC_ee544.dir\\ /FS -c "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\share\\cmake-3.28\\Modules\\CMakeCXXCompilerABI.cpp"
+        [2/2] C:\\WINDOWS\\system32\\cmd.exe /C "cd . && "C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\cmake.exe" -E vs_link_exe --intdir=CMakeFiles\\cmTC_ee544.dir --rc=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\rc.exe --mt=C:\\PROGRA~2\\WI3CF2~1\\10\\bin\\100226~1.0\\x64\\mt.exe --manifests  -- C:\\PROGRA~1\\MICROS~2\\2022\\Preview\\VC\\Tools\\MSVC\\1440~1.338\\bin\\Hostx64\\x64\\link.exe /nologo CMakeFiles\\cmTC_ee544.dir\\CMakeCXXCompilerABI.cpp.obj  /out:cmTC_ee544.exe /implib:cmTC_ee544.lib /pdb:cmTC_ee544.pdb /version:0.0 /machine:x64  /debug /INCREMENTAL /subsystem:console  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib && cd ."
         
       exitCode: 0
 ...
