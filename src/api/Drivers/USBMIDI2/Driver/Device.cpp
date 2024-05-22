@@ -188,8 +188,6 @@ Return Value:
     for (int count = 0; count < MAX_NUM_GROUPS_CABLES; count++)
     {
         devCtx->midi1IsInSysex[count] = false;
-        devCtx->midi1OutSysex[count].head = 0;
-        devCtx->midi1OutSysex[count].tail = 0;
         devCtx->midi1OutSysex[count].inSysex = false;
     }
 
@@ -1942,7 +1940,8 @@ VOID
 USBMIDI2DriverIoWrite(
     WDFDEVICE  Device,
     PVOID      BufferStart,
-    size_t     numBytes
+    size_t     numBytes,
+    BOOLEAN    isMoreData
 )
 /*++
 
@@ -2080,6 +2079,9 @@ Return Value:Amy
                 case UMP_SYSTEM_STOP:
                 case UMP_SYSTEM_ACTIVE_SENSE:
                 case UMP_SYSTEM_RESET:
+                case UMP_SYSTEM_UNDEFINED_F4:
+                case UMP_SYSTEM_UNDEFINED_F5:
+                case UMP_SYSTEM_UNDEFINED_F9:
                     umpWritePacket.umpData.umpBytes[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_1BYTE;
                     break;
 
@@ -2129,21 +2131,42 @@ Return Value:Amy
 
                 case UMP_SYSEX7_START:
                     bEnterSysex = true;
-
                 default:
                     bEndSysex = false;
                     break;
                 }
 
-                // If starting sysex and not already started
+                if (bEnterSysex)
+                {
+                    // Determine if believed already in Sysex and if so, reset converter
+                    if (pDeviceContext->midi1OutSysex[cbl_num].inSysex)
+                    {
+                        // Need to flush any available bytes from converter
+                        while (pDeviceContext->midi1OutSysex[cbl_num].umpToBS.availableBS())
+                        {
+                            pDeviceContext->midi1OutSysex[cbl_num].umpToBS.readBS();
+                        }
+                        pDeviceContext->midi1OutSysex[cbl_num].inSysex = false;
+                    }
+                }
                 if (bEnterSysex && !pDeviceContext->midi1OutSysex[cbl_num].inSysex)
                 {
-                    // We are responsible to start the Sysex flag for USB MIDI 1.0
-                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].head++] = 0xf0;
-                    pDeviceContext->midi1OutSysex[cbl_num].head %= MIDI_STREAM_BUF_SIZE;
+                    pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Pos = 1; // first byte position to stream into
                     pDeviceContext->midi1OutSysex[cbl_num].inSysex = true;
                 }
 
+                // Use AM Lib to convert current UMP SYSEX7 into MIDIByte Stream
+                for (int count = 0; count < umpPacket.wordCount; count++)
+                {
+                    pDeviceContext->midi1OutSysex[cbl_num].umpToBS.UMPStreamParse(umpPacket.umpData.umpWords[count]);
+                }
+
+                // Capture byte stream into outgoing data
+                umpWritePacket.wordCount = 0;   // For now we have no data to transfer to USB MIDI 1.0
+                // move BS to umpWritePacket
+
+                
+#if 0
                 // determine the size and move the data in
                 UINT8 sysexSize = umpPacket.umpData.umpBytes[1] & UMP_SYSEX7_SIZE_MASK;
                 UINT8 umpDataByteCount = 0;
@@ -2164,9 +2187,11 @@ Return Value:Amy
                 }
 
                 // determine the number of USB MIDI 1 packets to be created
-                sysexSize = 
-                UINT8 numWordsNeeded = (sysexSize + pDeviceContext->midi1OutSysex[cbl_num].index - 1) / 3;
-                UINT8 numBytesRemain = (sysexSize + pDeviceContext->midi1OutSysex[cbl_num].index - 1) % 3;
+                sysexSize = (pDeviceContext->midi1OutSysex[cbl_num].head >= pDeviceContext->midi1OutSysex[cbl_num].tail)
+                    ? (pDeviceContext->midi1OutSysex[cbl_num].head - pDeviceContect->midiOutSystex[cbl_num].tail)
+                    : ((MIDI_STREAM_BUF_SIZE - pDeviceContext->midi1OutSysex[cbl_num].tail) + pDeviceContext->midi1OutSysex[cbl_num].head);
+                UINT8 numWordsNeeded = sysexSize / 3;
+                UINT8 numBytesRemain = sysexSize % 3;
                 if (bEndSysex && numBytesRemain)
                 {
                     numWordsNeeded++; // add word for any remaining sysex data
@@ -2177,7 +2202,13 @@ Return Value:Amy
                 UINT8 sysexWordCount = 0;
                 while (sysexCount < sysexSize && sysexWordCount < numWordsNeeded)
                 {
-                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].index++] = umpPacket.umpData.umpBytes[2 + sysexCount++];
+                    UINT8 currentWord;
+                    while (sysexCount < sysexSize)
+                    {
+
+                    }
+                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].index++]
+                        = umpPacket.umpData.umpBytes[2 + sysexCount++];
 
                     // is current packet build full
                     if (pDeviceContext->midi1OutSysex[cbl_num].index == 4)
@@ -2232,6 +2263,7 @@ Return Value:Amy
                     umpWritePacket.umpData.umpWords[sysexWordCount++] = *(PUINT32)&pDeviceContext->midi1OutSysex[cbl_num].buffer;
                     pDeviceContext->midi1OutSysex[cbl_num].index = 1;
                 }
+#endif
                 break;
             }
 
@@ -2312,7 +2344,7 @@ Return Value:Amy
         }
 
         // Check if anything leftover to write to USB
-        if (writeBufferIndex)
+        if (writeBufferIndex && !isMoreData) // and there is not more data coming
         {
             // NEED TO FILL REST OF BUFFER WITH NULL
             // 
@@ -2684,6 +2716,9 @@ Return Value:
         case UMP_SYSTEM_STOP:
         case UMP_SYSTEM_ACTIVE_SENSE:
         case UMP_SYSTEM_RESET:
+        case UMP_SYSTEM_UNDEFINED_F4:
+        case UMP_SYSTEM_UNDEFINED_F5:
+        case UMP_SYSTEM_UNDEFINED_F9:
             code_index = MIDI_CIN_SYSEX_END_1BYTE;
             break;
 

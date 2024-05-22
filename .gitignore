@@ -356,3 +356,4 @@ build/dependencies/winui/WindowsAppRuntimeInstall-x64.exe
 build/dependencies/winui/WindowsAppRuntimeInstall-arm64.exe
 *.zip
 *.debugtarget
+/src/api/Drivers/USBMIDI2/vcpkg_installed

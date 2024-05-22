@@ -49,6 +49,7 @@ Environment:
 #include "Public.h"
 #include "Common.h"
 #include "StreamEngine.h"
+#include <libmidi2/umpToBytestream.h>
 
 /* make prototypes usable from C++ */
 #ifdef __cplusplus
@@ -59,16 +60,15 @@ extern "C" {
 #define MAX_NUM_GROUPS_CABLES 16
 
 //
-// Structures to aid in conversion between USB MIDI 1.0 and UMP
+// Structure to aid in UMP SYSEX to USB MIDI 1.0
 //
-#define MIDI_STREAM_BUF_SIZE 14 // size of two UMP Sysex 7 plus start and end
-typedef struct MIDI_STREAM_t
+typedef struct UMP_TO_MIDI1_SYSEX_t
 {
-    UINT8       buffer[MIDI_STREAM_BUF_SIZE];
-    UINT8       head;
-    UINT8       tail;
-    bool        inSysex;
-} MIDI_STREAM_TYPE;
+    bool                inSysex;
+    umpToBytestream     umpToBS;
+    UINT8               usbMIDI1Pkt[4];
+    UINT8               usbMIDI1Pos;
+} UMP_TO_MIDI1_SYSEX;
 
 typedef struct
 {
@@ -98,7 +98,7 @@ typedef struct _DEVICE_CONTEXT {
 
     // Buffers and information for USB MIDI 1.0 and UMP translations
     bool                        midi1IsInSysex[MAX_NUM_GROUPS_CABLES];
-    MIDI_STREAM_TYPE            midi1OutSysex[MAX_NUM_GROUPS_CABLES];
+    UMP_TO_MIDI1_SYSEX          midi1OutSysex[MAX_NUM_GROUPS_CABLES];
 
     // Pipes
     // Currently setup for single endpoint pair - need to consider for multiple endpoint pairs
@@ -244,7 +244,8 @@ VOID
 USBMIDI2DriverIoWrite(
     _In_ WDFDEVICE  Device,
     _In_ PVOID      BufferStart,
-    _In_ size_t     numBytes
+    _In_ size_t     numBytes,
+    _In_ BOOLEAN    isMoreData
 );
 
 _Must_inspect_result_
