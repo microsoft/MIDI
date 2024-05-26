@@ -6,6 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+import "MidiEndpointDiscoveryRequestsEnum.idl";
+import "MidiFunctionBlockDiscoveryRequestsEnum.idl";
+
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     static runtimeclass MidiStreamMessageBuilder
@@ -14,7 +17,7 @@ namespace Microsoft.Windows.Devices.Midi2.Messages
             UInt64 timestamp,
             UInt8 umpVersionMajor,
             UInt8 umpVersionMinor,
-            Microsoft.Windows.Devices.Midi2.MidiEndpointDiscoveryRequests request
+            MidiEndpointDiscoveryRequests request
             );
 
         static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
@@ -84,7 +87,7 @@ namespace Microsoft.Windows.Devices.Midi2.Messages
         static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             UInt64 timestamp,
             UInt8 functionBlockNumber,
-            Microsoft.Windows.Devices.Midi2.MidiFunctionBlockDiscoveryRequests requestFlags
+            MidiFunctionBlockDiscoveryRequests requestFlags
             );
 
         static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(

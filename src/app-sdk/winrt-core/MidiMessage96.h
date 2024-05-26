@@ -24,14 +24,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ uint32_t const word1, 
             _In_ uint32_t const word2);
 
-        // TODO: This doesn't do any bounds checking, and it should
         MidiMessage96(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ array_view<uint32_t const> words)
         {
-            if (words.size() == 3) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
+            if (words.size() >= 3) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
         }
 
+        static midi2::MidiMessage96 CreateFromStruct(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ MidiMessageStruct const& message)
+        {
+            return midi2::MidiMessage96(timestamp, message.Word0, message.Word1, message.Word2);
+        }
 
         // internal
         void InternalInitializeFromPointer(

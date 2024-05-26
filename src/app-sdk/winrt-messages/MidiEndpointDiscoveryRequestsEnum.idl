@@ -1,0 +1,21 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace Microsoft.Windows.Devices.Midi2.Messages
+{
+    [flags]
+    enum MidiEndpointDiscoveryRequests
+    {
+        None =                          0x00000000,
+        RequestEndpointInfo =           0x00000001,
+        RequestDeviceIdentity =         0x00000002,
+        RequestEndpointName =           0x00000004,
+        RequestProductInstanceId =      0x00000008,
+        RequestStreamConfiguration =    0x00000010,
+    };
+}

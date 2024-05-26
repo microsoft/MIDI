@@ -13,7 +13,7 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    midi2::MidiEndpointConnection MidiSession::TryCreateEndpointConnection(
+    midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId,
         bool const autoReconnect,
         midi2::IMidiEndpointConnectionSettings const& settings
@@ -98,20 +98,20 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    midi2::MidiEndpointConnection MidiSession::TryCreateEndpointConnection(
+    midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId,
         bool autoReconnect
     ) noexcept
     {
-        return TryCreateEndpointConnection(endpointDeviceId, autoReconnect, nullptr);
+        return CreateEndpointConnection(endpointDeviceId, autoReconnect, nullptr);
     }
 
     _Use_decl_annotations_
-    midi2::MidiEndpointConnection MidiSession::TryCreateEndpointConnection(
+    midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId
     ) noexcept
     {
-        return TryCreateEndpointConnection(endpointDeviceId, false, nullptr);
+        return CreateEndpointConnection(endpointDeviceId, false, nullptr);
     }
 
 

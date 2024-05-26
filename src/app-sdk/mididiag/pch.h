@@ -24,16 +24,17 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Devices.Midi.h>
 
-#include <winrt/Microsoft.Devices.Midi2.h>
-#include <winrt/Microsoft.Devices.Midi2.Diagnostics.h>
-
-
-
-namespace midi2 = winrt::Microsoft::Devices::Midi2;
-namespace diag = winrt::Microsoft::Devices::Midi2::Diagnostics;
-
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
+
+
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
+
+namespace midi2 = winrt::Microsoft::Windows::Devices::Midi2;
+namespace diag = winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
+namespace svc = winrt::Microsoft::Windows::Devices::Midi2::Service;
 
 #include "combaseapi.h"
 #include "wstring_util.h"

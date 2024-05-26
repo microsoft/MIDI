@@ -17,22 +17,22 @@ namespace Microsoft.Windows.Devices.Midi2
         Guid SessionId { get; };
         String Name{ get; };
 
-        static MidiSession TryCreate(String sessionName);
+        static MidiSession Create(String sessionName);
 
         Boolean IsOpen { get; };
 
         IMapView<Guid, MidiEndpointConnection> Connections{ get; };
 
-        MidiEndpointConnection TryCreateEndpointConnection(
+        MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId
         );
 
-        MidiEndpointConnection TryCreateEndpointConnection(
+        MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
             Boolean autoReconnect
         );
 
-        MidiEndpointConnection TryCreateEndpointConnection(
+        MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
             Boolean autoReconnect,
             IMidiEndpointConnectionSettings settings

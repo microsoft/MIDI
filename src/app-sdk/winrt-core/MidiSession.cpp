@@ -18,7 +18,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
 
     _Use_decl_annotations_
-    midi2::MidiSession MidiSession::TryCreate(
+    midi2::MidiSession MidiSession::Create(
         winrt::hstring const& sessionName
         ) noexcept
     {

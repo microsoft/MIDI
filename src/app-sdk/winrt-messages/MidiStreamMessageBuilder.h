@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
             _In_ uint8_t const umpVersionMinor,
-            _In_ midi2::MidiEndpointDiscoveryRequests const requestFlags
+            _In_ msgs::MidiEndpointDiscoveryRequests const requestFlags
             ) noexcept;
 
         static midi2::IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
@@ -89,7 +89,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         static midi2::IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const functionBlockNumber,
-            _In_ midi2::MidiFunctionBlockDiscoveryRequests requestFlags
+            _In_ msgs::MidiFunctionBlockDiscoveryRequests requestFlags
             );
 
         static midi2::IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
@@ -127,6 +127,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
             _In_ uint8_t const maxCharacters,
             _In_ uint8_t const maxCharactersPerPacket,
             _In_ winrt::hstring const& text);
+
+
 
         inline static void AppendCharToString(
             _In_ std::string& s, 

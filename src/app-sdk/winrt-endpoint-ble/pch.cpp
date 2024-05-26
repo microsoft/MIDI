@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
@@ -6,13 +6,4 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-namespace Microsoft.Windows.Devices.Midi2
-{
-    [flags]
-    enum MidiFunctionBlockDiscoveryRequests
-    {
-        None =                      0x00000000,
-        RequestFunctionBlockInfo =  0x00000001,
-        RequestFunctionBlockName =  0x00000002,
-    };
-}
+#include "pch.h"

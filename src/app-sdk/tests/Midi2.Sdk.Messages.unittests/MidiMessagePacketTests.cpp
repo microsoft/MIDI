@@ -10,8 +10,6 @@
 #include "stdafx.h"
 
 
-using namespace winrt::Microsoft::Devices::Midi2;
-
 void MidiMessagePacketTests::TestUmp32()
 {
     auto mt = MidiMessageType::Midi1ChannelVoice32;

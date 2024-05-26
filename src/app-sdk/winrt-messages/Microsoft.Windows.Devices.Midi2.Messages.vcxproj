@@ -296,6 +296,8 @@
   <ItemGroup>
     <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl" />
     <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl" />
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl" />
     <Midl Include="MidiMessageConverter.idl" />
     <Midl Include="MidiMessageBuilder.idl" />
     <Midl Include="MidiStreamMessageBuilder.idl" />

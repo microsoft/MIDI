@@ -27,16 +27,7 @@
     <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessageBuilderTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiMessagePacketTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiSessionTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiStreamMessageBuilderTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp">
@@ -65,16 +56,7 @@
     <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiMessageBuilderTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessagePacketTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiSessionTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiStreamMessageBuilderTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h">

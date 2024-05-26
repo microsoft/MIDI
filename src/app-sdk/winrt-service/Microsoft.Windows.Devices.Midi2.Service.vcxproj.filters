@@ -30,6 +30,9 @@
     <Midl Include="MidiServiceConfigResponseStatusEnum.idl">
       <Filter>SDK</Filter>
     </Midl>
+    <Midl Include="MidiServicesSdkRuntimeVersion.idl">
+      <Filter>SDK</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

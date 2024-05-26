@@ -9,8 +9,6 @@
 
 #pragma once
 
-using namespace winrt::Microsoft::Devices::Midi2;
-
 class MidiEndpointDeviceWatcherTests
     : public WEX::TestClass<MidiEndpointDeviceWatcherTests>
 {
@@ -18,7 +16,7 @@ public:
 
     BEGIN_TEST_CLASS(MidiEndpointDeviceWatcherTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Devices.Midi2.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.dll")
         END_TEST_CLASS()
 
         //TEST_CLASS_SETUP(ClassSetup);

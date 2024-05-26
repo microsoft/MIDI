@@ -155,11 +155,8 @@
     <ClCompile Include="MidiEndpointCreationThreadTests.cpp" />
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp" />
     <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp" />
-    <ClCompile Include="MidiMessageBuilderTests.cpp" />
-    <ClCompile Include="MidiMessagePacketTests.cpp" />
     <ClCompile Include="MidiMessageSchedulerTests.cpp" />
     <ClCompile Include="MidiSessionTests.cpp" />
-    <ClCompile Include="MidiStreamMessageBuilderTests.cpp" />
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -169,11 +166,8 @@
     <ClInclude Include="MidiEndpointCreationThreadTests.h" />
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h" />
     <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h" />
-    <ClInclude Include="MidiMessageBuilderTests.h" />
-    <ClInclude Include="MidiMessagePacketTests.h" />
     <ClInclude Include="MidiMessageSchedulerTests.h" />
     <ClInclude Include="MidiSessionTests.h" />
-    <ClInclude Include="MidiStreamMessageBuilderTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>

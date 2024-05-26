@@ -280,6 +280,7 @@
     <Midl Include="IMidiServiceTransportPluginConfig.idl" />
     <Midl Include="MidiServiceConfigResponseStatusEnum.idl" />
     <Midl Include="MidiService.idl" />
+    <Midl Include="MidiServicesSdkRuntimeVersion.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

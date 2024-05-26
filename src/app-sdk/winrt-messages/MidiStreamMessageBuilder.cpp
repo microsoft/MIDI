@@ -21,7 +21,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
          internal::MidiTimestamp const timestamp,
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
-         midi2::MidiEndpointDiscoveryRequests const requestFlags
+         msgs::MidiEndpointDiscoveryRequests const requestFlags
         ) noexcept
     {
         return MidiMessageBuilder::BuildStreamMessage(
@@ -362,7 +362,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
     midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
         internal::MidiTimestamp const timestamp,
         uint8_t const functionBlockNumber,
-        midi2::MidiFunctionBlockDiscoveryRequests const requestFlags
+        msgs::MidiFunctionBlockDiscoveryRequests const requestFlags
         )
     {
         uint16_t word0Remaining{ 0 };

@@ -9,8 +9,6 @@
 
 #include "stdafx.h"
 
-using namespace winrt::Microsoft::Devices::Midi2;
-
 void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationLong()
 {
     winrt::hstring name = L"This is an endpoint name that is longer than the supported 98 characters for an endpoint name in MIDI 2";

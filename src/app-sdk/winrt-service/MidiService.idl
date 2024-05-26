@@ -9,13 +9,21 @@
 import "IMidiServiceTransportPluginConfig.idl";
 import "IMidiServiceMessageProcessingPluginConfig.idl";
 import "MidiServiceConfigResponse.idl";
+import "MidiServicesSdkRuntimeVersion.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Service
 {
     [default_interface]
     static runtimeclass MidiService
     {
-        static Boolean EnsureAvailable();
+        static Boolean EnsureServiceAvailable();
+
+        //static Boolean IsCompatibleRuntimeInstalled();
+        //static MidiServicesSdkRuntimeVersion GetInstalledRuntimeVersion();
+
+        //static Windows.Foundation.Uri GetLatestRuntimeReleaseInstallerUri();
+        static Windows.Foundation.Uri GetLatestSettingsAppReleaseInstallerUri();
+        static Windows.Foundation.Uri GetLatestConsoleAppReleaseInstallerUri();
 
         static MidiServiceConfigResponse UpdateTransportPluginConfig(
             IMidiServiceTransportPluginConfig configUpdate);

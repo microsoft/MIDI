@@ -15,7 +15,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Service::implementation
     {
         MidiService() = default;
 
-        static bool EnsureAvailable();
+        static bool EnsureServiceAvailable();
+
+
+        static bool IsCompatibleRuntimeInstalled();
+        static svc::MidiServicesSdkRuntimeVersion GetInstalledRuntimeVersion();
+
+        static foundation::Uri GetLatestRuntimeReleaseInstallerUri();
+        static foundation::Uri GetLatestSettingsAppReleaseInstallerUri();
+        static foundation::Uri GetLatestConsoleAppReleaseInstallerUri();
+
 
         static svc::MidiServiceConfigResponse UpdateTransportPluginConfig(
             _In_ svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept;

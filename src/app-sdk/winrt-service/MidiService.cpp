@@ -12,8 +12,57 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Service::implementation
 {
+
+    bool MidiService::IsCompatibleRuntimeInstalled()
+    {
+
+        // TODO
+
+        return false;
+    }
+
+    svc::MidiServicesSdkRuntimeVersion MidiService::GetInstalledRuntimeVersion()
+    {
+        svc::MidiServicesSdkRuntimeVersion installedVersion{ };
+
+        installedVersion.Major = 1;
+        installedVersion.Minor = 0;
+        installedVersion.Experimental = false;
+        installedVersion.PreRelease = true;
+
+        // TODO
+
+        return installedVersion;
+    }
+
+    foundation::Uri MidiService::GetLatestRuntimeReleaseInstallerUri()
+    {
+        foundation::Uri installerUri(L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller");
+
+        return installerUri;
+    }
+
+    foundation::Uri MidiService::GetLatestSettingsAppReleaseInstallerUri()
+    {
+        foundation::Uri installerUri(L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller");
+
+        return installerUri;
+    }
+
+    foundation::Uri MidiService::GetLatestConsoleAppReleaseInstallerUri()
+    {
+        foundation::Uri installerUri(L"https://aka.ms/MidiServicesLatestConsoleInstaller");
+
+        return installerUri;
+    }
+
+
+
+
+
+
     // returns True if the MIDI Service is available on this PC
-    bool MidiService::EnsureAvailable()
+    bool MidiService::EnsureServiceAvailable()
     {
         try
         {

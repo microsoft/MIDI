@@ -21,10 +21,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         MidiMessage32(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ uint32_t const word0);
+        
+        static midi2::MidiMessage32 CreateFromStruct(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ MidiMessageStruct const& message)
+        {
+            return midi2::MidiMessage32(timestamp, message.Word0);
+        }
+        
         // internal
         void InternalInitializeFromPointer(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ PVOID data);
+
 
         uint32_t Word0() const noexcept { return m_ump.word0; }
         void Word0(_In_ uint32_t value) noexcept { m_ump.word0 = value; }

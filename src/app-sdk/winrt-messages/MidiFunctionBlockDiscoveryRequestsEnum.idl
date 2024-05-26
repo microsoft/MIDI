@@ -6,16 +6,13 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-namespace Microsoft.Windows.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [flags]
-    enum MidiEndpointDiscoveryRequests
+    enum MidiFunctionBlockDiscoveryRequests
     {
-        None =                          0x00000000,
-        RequestEndpointInfo =           0x00000001,
-        RequestDeviceIdentity =         0x00000002,
-        RequestEndpointName =           0x00000004,
-        RequestProductInstanceId =      0x00000008,
-        RequestStreamConfiguration =    0x00000010,
+        None =                      0x00000000,
+        RequestFunctionBlockInfo =  0x00000001,
+        RequestFunctionBlockName =  0x00000002,
     };
 }

@@ -27,8 +27,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ internal::MidiTimestamp const timestamp,
             _In_ array_view<uint32_t const> words)
         {
-            if (words.size() == 2) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
+            if (words.size() >= 2) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
         }
+
+        static midi2::MidiMessage64 CreateFromStruct(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ MidiMessageStruct const& message)
+        {
+            return midi2::MidiMessage64(timestamp, message.Word0, message.Word1);
+        }
+
 
         // internal
         void InternalInitializeFromPointer(

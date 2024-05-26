@@ -418,10 +418,8 @@
     <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl" />
     <Midl Include="MidiEndpointDevicePurposeEnum.idl" />
     <Midl Include="MidiEndpointDeviceWatcher.idl" />
-    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl" />
     <Midl Include="MidiEndpointNativeDataFormatEnum.idl" />
     <Midl Include="MidiFunctionBlockDirectionEnum.idl" />
-    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl" />
     <Midl Include="MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl" />
     <Midl Include="MidiFunctionBlock.idl" />
     <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl" />

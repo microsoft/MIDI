@@ -36,6 +36,12 @@
     <Midl Include="MidiStreamMessageBuilder.idl">
       <Filter>SDK\Helpers</Filter>
     </Midl>
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-sdk.def" />
