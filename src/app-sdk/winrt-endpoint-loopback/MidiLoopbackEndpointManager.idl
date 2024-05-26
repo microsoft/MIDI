@@ -7,10 +7,10 @@
 // ============================================================================
 
 import "MidiLoopbackEndpointCreationResult.idl";
-import "MidiLoopbackEndpointCreationConfiguration.idl";
-import "MidiLoopbackEndpointDeletionConfiguration.idl";
+import "MidiLoopbackEndpointCreationConfig.idl";
+import "MidiLoopbackEndpointDeletionConfig.idl";
 
-namespace Microsoft.Devices.Midi2.Endpoints.Loopback
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [default_interface]
     static runtimeclass MidiLoopbackEndpointManager
@@ -20,10 +20,10 @@ namespace Microsoft.Devices.Midi2.Endpoints.Loopback
         static Guid AbstractionId{ get; };
 
         static MidiLoopbackEndpointCreationResult CreateTransientLoopbackEndpoints(
-            MidiLoopbackEndpointCreationConfiguration creationConfiguration);
+            MidiLoopbackEndpointCreationConfig creationConfig);
 
         static Boolean RemoveTransientLoopbackEndpoints(
-            MidiLoopbackEndpointDeletionConfiguration deletionConfiguration);
+            MidiLoopbackEndpointDeletionConfig deletionConfig);
     }
 }
 

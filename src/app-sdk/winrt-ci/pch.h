@@ -36,8 +36,8 @@ namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace midi1 = ::winrt::Windows::Devices::Midi;
 
 
-#include <winrt/Microsoft.Devices.Midi2.h>
-namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
 
 
@@ -82,11 +82,11 @@ namespace internal = ::WindowsMidiServicesInternal;
 //#include "MidiXProc.h"
 #include "resource.h"
 
-namespace winrt::Microsoft::Devices::Midi2::CapabilityInquiry {};
-namespace winrt::Microsoft::Devices::Midi2::CapabilityInquiry::implementation {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry::implementation {};
 
-namespace ci = ::winrt::Microsoft::Devices::Midi2::CapabilityInquiry;
-namespace implementation = ::winrt::Microsoft::Devices::Midi2::CapabilityInquiry::implementation;
+namespace ci = ::winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry::implementation;
 
 #include "MidiUniqueId.h"
 

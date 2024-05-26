@@ -12,10 +12,7 @@
 #include "MidiFunctionBlock.g.cpp"
 
 
-using namespace winrt::Windows::Data::Json;
-
-
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
 #if false
     _Use_decl_annotations_
@@ -132,9 +129,9 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         // TODO: Need to catch any exceptions in here
 
-        JsonObject jsonObject{};
+        json::JsonObject jsonObject{};
 
-        if (JsonObject::TryParse(json, jsonObject))
+        if (json::JsonObject::TryParse(json, jsonObject))
         {
             return UpdateFromJson(jsonObject);
         }
@@ -146,17 +143,17 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
     winrt::hstring MidiFunctionBlock::GetJsonString() noexcept
     {
-        JsonObject jsonObject;
+        json::JsonObject jsonObject;
 
-        jsonObject.SetNamedValue(JSON_KEY_FB_NUMBER, JsonValue::CreateNumberValue(Number()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_NAME, JsonValue::CreateStringValue(Name()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_ACTIVE, JsonValue::CreateBooleanValue(IsActive()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_UIHINT, JsonValue::CreateNumberValue((int)UIHint()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_MIDI10, JsonValue::CreateNumberValue((int)RepresentsMidi10Connection()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_DIRECTION, JsonValue::CreateNumberValue((int)Direction()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_FIRSTGROUP, JsonValue::CreateNumberValue(FirstGroupIndex()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_NUMGROUPSSPANNED, JsonValue::CreateNumberValue(GroupCount()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_MIDICIFORMAT, JsonValue::CreateNumberValue(MidiCIMessageVersionFormat()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_NUMBER, json::JsonValue::CreateNumberValue(Number()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_NAME, json::JsonValue::CreateStringValue(Name()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_ACTIVE, json::JsonValue::CreateBooleanValue(IsActive()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_UIHINT, json::JsonValue::CreateNumberValue((int)UIHint()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_MIDI10, json::JsonValue::CreateNumberValue((int)RepresentsMidi10Connection()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_DIRECTION, json::JsonValue::CreateNumberValue((int)Direction()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_FIRSTGROUP, json::JsonValue::CreateNumberValue(FirstGroupIndex()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_NUMGROUPSSPANNED, json::JsonValue::CreateNumberValue(GroupCount()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_MIDICIFORMAT, json::JsonValue::CreateNumberValue(MidiCIMessageVersionFormat()));
         
         return jsonObject.Stringify();
     }

@@ -6,7 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     [uuid("44385cdd-b64c-4195-8faa-8a61fc952a23"), version(1.0)]
     interface IMidiEndpointConnectionSource

@@ -15,7 +15,7 @@
 // https://learn.microsoft.com/en-us/windows/uwp/cpp-and-winrt-apis/author-events
 
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     // Getxxx methods return something new
     // Fill methods put data into existing data structures

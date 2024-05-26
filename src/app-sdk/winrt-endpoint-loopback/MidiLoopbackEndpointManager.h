@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiLoopbackEndpointManager.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
     struct MidiLoopbackEndpointManager : MidiLoopbackEndpointManagerT<MidiLoopbackEndpointManager>
     {
@@ -20,13 +20,13 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
         static const winrt::guid AbstractionId() noexcept { return internal::StringToGuid(L"{942BF02D-93C0-4EA8-B03E-D51156CA75E1}"); }
 
         static loop::MidiLoopbackEndpointCreationResult CreateTransientLoopbackEndpoints(
-            _In_ loop::MidiLoopbackEndpointCreationConfiguration creationConfiguration);
+            _In_ loop::MidiLoopbackEndpointCreationConfig creationConfig);
 
         static bool RemoveTransientLoopbackEndpoints(
-            _In_ loop::MidiLoopbackEndpointDeletionConfiguration deletionConfiguration);
+            _In_ loop::MidiLoopbackEndpointDeletionConfig deletionConfig);
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::factory_implementation
 {
     struct MidiLoopbackEndpointManager : MidiLoopbackEndpointManagerT<MidiLoopbackEndpointManager, implementation::MidiLoopbackEndpointManager, winrt::static_lifetime>
     {

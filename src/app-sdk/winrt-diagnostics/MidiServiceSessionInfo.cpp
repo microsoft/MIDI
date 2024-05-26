@@ -10,7 +10,7 @@
 #include "MidiServiceSessionInfo.h"
 #include "MidiServiceSessionInfo.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation
 {
     _Use_decl_annotations_
     void MidiServiceSessionInfo::InternalInitialize(

@@ -9,7 +9,7 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     // Called by the Session class when a device disconnect notification comes through
     void MidiEndpointConnection::InternalOnDeviceDisconnect()

@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiMessageConverter.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiMessageConverter
     {
@@ -148,7 +148,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::factory_implementation
 {
     struct MidiMessageConverter : MidiMessageConverterT<MidiMessageConverter, implementation::MidiMessageConverter, winrt::static_lifetime>
     {

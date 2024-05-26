@@ -190,6 +190,9 @@
     <ProjectReference Include="..\..\winrt-core\Microsoft.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\winrt-diagnostics\Microsoft.Devices.Midi2.Diagnostics.vcxproj">
       <Project>{05796b3c-25ff-4ac2-999b-edefb773393c}</Project>
     </ProjectReference>

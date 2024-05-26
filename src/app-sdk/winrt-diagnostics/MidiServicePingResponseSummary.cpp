@@ -10,7 +10,7 @@
 #include "MidiServicePingResponseSummary.h"
 #include "MidiServicePingResponseSummary.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation
 {
 
 }

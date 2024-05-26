@@ -9,7 +9,7 @@
 #include "pch.h"
 #include "MidiEndpointConnection.h"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG)

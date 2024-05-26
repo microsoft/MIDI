@@ -10,7 +10,7 @@ import "MidiServiceTransportPluginInfo.idl";
 import "MidiServiceMessageProcessingPluginInfo.idl";
 import "MidiServiceSessionInfo.idl";
 
-namespace Microsoft.Devices.Midi2.Diagnostics
+namespace Microsoft.Windows.Devices.Midi2.Diagnostics
 {
     runtimeclass MidiReporting
     {

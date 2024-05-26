@@ -20,7 +20,7 @@ import "MidiEndpointUserSuppliedInfo.idl";
 import "MidiEndpointDeviceInformationSortOrderEnum.idl";
 import "MidiEndpointDeviceInformationFiltersEnum.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiEndpointDeviceInformation

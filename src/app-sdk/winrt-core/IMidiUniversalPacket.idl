@@ -9,7 +9,7 @@
 import "MidiPacketTypeEnum.idl";
 import "MidiMessageTypeEnum.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     [uuid("2eb5df8a-d751-4997-bf96-ba9a531fd5ff"), version(1.0)]
     interface IMidiUniversalPacket

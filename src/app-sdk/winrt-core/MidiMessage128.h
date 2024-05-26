@@ -13,7 +13,7 @@
 #include "MidiMessage128.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiMessage128 : MidiMessage128T<MidiMessage128>
     {
@@ -91,7 +91,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiMessage128 : MidiMessage128T<MidiMessage128, implementation::MidiMessage128>
     {

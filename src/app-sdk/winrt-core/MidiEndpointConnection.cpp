@@ -10,7 +10,7 @@
 #include "MidiEndpointConnection.h"
 #include "MidiEndpointConnection.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(

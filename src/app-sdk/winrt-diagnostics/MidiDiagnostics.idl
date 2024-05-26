@@ -8,7 +8,7 @@
 
 import "MidiServicePingResponseSummary.idl";
 
-namespace Microsoft.Devices.Midi2.Diagnostics
+namespace Microsoft.Windows.Devices.Midi2.Diagnostics
 {
     runtimeclass MidiDiagnostics
     {

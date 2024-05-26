@@ -10,7 +10,7 @@
 #include "MidiGroupEndpointListener.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation
 {
     struct MidiGroupEndpointListener : MidiGroupEndpointListenerT<MidiGroupEndpointListener>
     {
@@ -80,7 +80,7 @@ namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::factory_implementation
 {
     struct MidiGroupEndpointListener : MidiGroupEndpointListenerT<MidiGroupEndpointListener, implementation::MidiGroupEndpointListener>
     {

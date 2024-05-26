@@ -10,7 +10,7 @@
 #include "MidiUniqueId.h"
 #include "MidiUniqueId.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::CapabilityInquiry::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry::implementation
 {
     ci::MidiUniqueId MidiUniqueId::CreateBroadcast()
     {

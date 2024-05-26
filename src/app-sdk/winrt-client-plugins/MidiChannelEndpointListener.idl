@@ -7,17 +7,17 @@
 // ============================================================================
 
 
-namespace Microsoft.Devices.Midi2.ClientPlugins
+namespace Microsoft.Windows.Devices.Midi2.ClientPlugins
 {
     [default_interface]
-    runtimeclass MidiChannelEndpointListener : Microsoft.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, 
-                                               Microsoft.Devices.Midi2.IMidiMessageReceivedEventSource
+    runtimeclass MidiChannelEndpointListener : Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, 
+                                               Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
     {
         MidiChannelEndpointListener();
 
-        Microsoft.Devices.Midi2.MidiGroup IncludedGroup;
+        Microsoft.Windows.Devices.Midi2.MidiGroup IncludedGroup;
 
-        IVector<Microsoft.Devices.Midi2.MidiChannel> IncludedChannels{ get; };
+        IVector<Microsoft.Windows.Devices.Midi2.MidiChannel> IncludedChannels{ get; };
 
         Boolean PreventCallingFurtherListeners;
         Boolean PreventFiringMainMessageReceivedEvent;

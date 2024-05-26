@@ -167,7 +167,13 @@
     <ProjectReference Include="..\..\winrt-client-plugins\Microsoft.Devices.Midi2.Plugins.vcxproj">
       <Project>{3d2bc934-cdc7-4dc7-b7fc-f34b755bf726}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\winrt-client-plugins\Microsoft.Windows.Devices.Midi2.Plugins.vcxproj">
+      <Project>{3d2bc934-cdc7-4dc7-b7fc-f34b755bf726}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\winrt-core\Microsoft.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-diagnostics\Microsoft.Devices.Midi2.Diagnostics.vcxproj">

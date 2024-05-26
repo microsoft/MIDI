@@ -31,7 +31,7 @@
 #include <winrt/Windows.Devices.Midi.h>
 #include <winrt/Windows.Data.Json.h>
 
-#include <winrt/Microsoft.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
 
 
 namespace json = ::winrt::Windows::Data::Json;
@@ -86,11 +86,11 @@ namespace internal = ::WindowsMidiServicesInternal;
 //#include "MidiXProc.h"
 #include "resource.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation {};
 
-namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
-namespace msgs = ::winrt::Microsoft::Devices::Midi2::Messages;
-namespace implementation = ::winrt::Microsoft::Devices::Midi2::Messages::implementation;
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
+namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::Messages;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation;
 
 #include "midi_ump_message_defs.h"
 

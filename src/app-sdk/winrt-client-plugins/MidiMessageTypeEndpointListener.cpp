@@ -10,7 +10,7 @@
 #include "MidiMessageTypeEndpointListener.h"
 #include "MidiMessageTypeEndpointListener.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation
 {
 
     _Use_decl_annotations_

@@ -10,7 +10,7 @@
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
-namespace Microsoft.Devices.Midi2.Messages
+namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     static runtimeclass MidiMessageHelper
     {
@@ -19,12 +19,12 @@ namespace Microsoft.Devices.Midi2.Messages
         static Boolean ValidateMessage96MessageType(UInt32 word0);
         static Boolean ValidateMessage128MessageType(UInt32 word0);
 
-        static Microsoft.Devices.Midi2.MidiMessageType GetMessageTypeFromMessageFirstWord(UInt32 word0);
-        static Microsoft.Devices.Midi2.MidiPacketType GetPacketTypeFromMessageFirstWord(UInt32 word0);
+        static Microsoft.Windows.Devices.Midi2.MidiMessageType GetMessageTypeFromMessageFirstWord(UInt32 word0);
+        static Microsoft.Windows.Devices.Midi2.MidiPacketType GetPacketTypeFromMessageFirstWord(UInt32 word0);
 
-        static Boolean MessageTypeHasGroupField(Microsoft.Devices.Midi2.MidiMessageType messageType);
-        static UInt32 ReplaceGroupInMessageFirstWord(UInt32 word0, Microsoft.Devices.Midi2.MidiGroup newGroup);
-        static Microsoft.Devices.Midi2.MidiGroup GetGroupFromMessageFirstWord(UInt32 word0);
+        static Boolean MessageTypeHasGroupField(Microsoft.Windows.Devices.Midi2.MidiMessageType messageType);
+        static UInt32 ReplaceGroupInMessageFirstWord(UInt32 word0, Microsoft.Windows.Devices.Midi2.MidiGroup newGroup);
+        static Microsoft.Windows.Devices.Midi2.MidiGroup GetGroupFromMessageFirstWord(UInt32 word0);
 
         static UInt8 GetStatusFromUtilityMessage(UInt32 word0);
         static Midi1ChannelVoiceMessageStatus GetStatusFromMidi1ChannelVoiceMessage(UInt32 word0);
@@ -43,9 +43,9 @@ namespace Microsoft.Devices.Midi2.Messages
         static UInt8 GetNumberOfBytesFromDataMessage128FirstWord(UInt32 word0);
 
 
-        static Boolean MessageTypeHasChannelField(Microsoft.Devices.Midi2.MidiMessageType messageType);
-        static UInt32 ReplaceChannelInMessageFirstWord(UInt32 word0, Microsoft.Devices.Midi2.MidiChannel newChannel);
-        static Microsoft.Devices.Midi2.MidiChannel GetChannelFromMessageFirstWord(UInt32 word0);
+        static Boolean MessageTypeHasChannelField(Microsoft.Windows.Devices.Midi2.MidiMessageType messageType);
+        static UInt32 ReplaceChannelInMessageFirstWord(UInt32 word0, Microsoft.Windows.Devices.Midi2.MidiChannel newChannel);
+        static Microsoft.Windows.Devices.Midi2.MidiChannel GetChannelFromMessageFirstWord(UInt32 word0);
 
         static UInt8 GetFormFromStreamMessageFirstWord(UInt32 word0);
         static UInt16 GetStatusFromStreamMessageFirstWord(UInt32 word0);
@@ -54,7 +54,7 @@ namespace Microsoft.Devices.Midi2.Messages
         static String GetMessageDisplayNameFromFirstWord(UInt32 word0);
 
 
-        static IVector<Microsoft.Devices.Midi2.IMidiUniversalPacket> GetPacketListFromWordList(UInt64 timestamp, IIterable<UInt32> words);
-        static IVector<UInt32> GetWordListFromPacketList(IIterable<Microsoft.Devices.Midi2.IMidiUniversalPacket> words);
+        static IVector<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> GetPacketListFromWordList(UInt64 timestamp, IIterable<UInt32> words);
+        static IVector<UInt32> GetWordListFromPacketList(IIterable<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> words);
     };
 }

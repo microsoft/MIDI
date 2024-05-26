@@ -10,7 +10,7 @@
 #include "MidiMessageConverter.h"
 #include "MidiMessageConverter.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1Message(
@@ -37,7 +37,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
         // TODO: this is an assumption. We need to check the message type for system etc.
 
 
-        internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
 
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
@@ -72,7 +72,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
         // TODO: this is an assumption. We need to check the message type for system etc.
 
 
-        internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
         // set the group
@@ -108,7 +108,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff)
 
-        internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
 
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, group.Index());
@@ -166,7 +166,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
         }
 
         // TODO: this is an assumption. We really should check the message type
-        internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
         // set the group
@@ -189,7 +189,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -205,7 +205,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -221,7 +221,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -237,7 +237,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -253,7 +253,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -269,7 +269,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -285,7 +285,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -302,7 +302,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -318,7 +318,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -334,7 +334,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::SystemCommon32);
 
@@ -353,7 +353,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
@@ -370,7 +370,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
@@ -387,7 +387,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
@@ -403,7 +403,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
@@ -419,7 +419,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 
@@ -435,7 +435,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         midi2::MidiMessage32 message;
         message.Timestamp(timestamp);
-        message.Word0(InternalConvertBytes(group.Index(), (Windows::Devices::Midi::IMidiMessage)originalMessage));
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
 
         message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
 

@@ -12,7 +12,7 @@ import "MidiGroup.idl";
 
 import "MidiFunctionBlock.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiGroupTerminalBlock

@@ -10,7 +10,7 @@
 #include "MidiStreamMessageBuilder.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiStreamMessageBuilder
     {
@@ -140,7 +140,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     };
 }
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::factory_implementation
 {
     struct MidiStreamMessageBuilder : MidiStreamMessageBuilderT<MidiStreamMessageBuilder, implementation::MidiStreamMessageBuilder, winrt::static_lifetime>
     {

@@ -10,7 +10,7 @@
 #include "MidiSession.h"
 #include "MidiEndpointConnection.h"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::TryCreateEndpointConnection(

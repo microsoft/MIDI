@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiMessageTypeEndpointListener.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation
 {
     struct MidiMessageTypeEndpointListener : MidiMessageTypeEndpointListenerT<MidiMessageTypeEndpointListener>
     {
@@ -76,7 +76,7 @@ namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::factory_implementation
 {
     struct MidiMessageTypeEndpointListener : MidiMessageTypeEndpointListenerT<MidiMessageTypeEndpointListener, implementation::MidiMessageTypeEndpointListener>
     {

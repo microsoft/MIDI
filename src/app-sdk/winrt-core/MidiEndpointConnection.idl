@@ -12,7 +12,7 @@ import "MidiSendMessageResultsEnum.idl";
 import "IMidiEndpointConnectionSettings.idl";
 import "IMidiEndpointConnectionSource.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiEndpointConnection : IMidiMessageReceivedEventSource,

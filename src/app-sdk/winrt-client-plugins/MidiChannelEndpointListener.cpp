@@ -11,7 +11,7 @@
 #include "MidiChannelEndpointListener.g.cpp"
 
 
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation
 {
     _Use_decl_annotations_
     void MidiChannelEndpointListener::Initialize(midi2::IMidiEndpointConnectionSource const& endpointConnection)

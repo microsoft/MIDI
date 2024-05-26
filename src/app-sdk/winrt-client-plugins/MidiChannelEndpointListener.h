@@ -10,7 +10,7 @@
 #include "MidiChannelEndpointListener.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation
 {
     struct MidiChannelEndpointListener : MidiChannelEndpointListenerT<MidiChannelEndpointListener>
     {
@@ -88,7 +88,7 @@ namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::factory_implementation
 {
     struct MidiChannelEndpointListener : MidiChannelEndpointListenerT<MidiChannelEndpointListener, implementation::MidiChannelEndpointListener>
     {

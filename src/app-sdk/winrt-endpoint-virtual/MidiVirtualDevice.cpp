@@ -12,7 +12,7 @@
 #include "MidiVirtualDevice.g.cpp"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
     _Use_decl_annotations_
     bool MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept
@@ -459,7 +459,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
                 else if (internal::MessageIsStreamConfigurationRequest(message.Word0()))
                 {
                     // raise stream configuration request message
-                    auto reqArgs = winrt::make_self<implementation::MidiStreamConfigurationRequestReceivedEventArgs>();
+                    auto reqArgs = winrt::make_self<implementation::MidiStreamConfigRequestReceivedEventArgs>();
 
                     auto protocol = (midi2::MidiProtocol)MIDIWORDBYTE3(message.Word0());
                     bool rxjr = (bool)((message.Word0() & 0x00000002) == 0x00000002);

@@ -11,7 +11,7 @@
 #include "MidiChannel.g.cpp"
 
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
 
 }

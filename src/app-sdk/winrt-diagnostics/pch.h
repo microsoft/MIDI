@@ -81,12 +81,12 @@ namespace internal = ::WindowsMidiServicesInternal;
 //#include "MidiXProc.h"
 #include "resource.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Diagnostics {};
-namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation {};
 
-namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
-namespace diag = ::winrt::Microsoft::Devices::Midi2::Diagnostics;
-namespace implementation = ::winrt::Microsoft::Devices::Midi2::Diagnostics::implementation;
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
+namespace diag = ::winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation;
 
 #include <Devpropdef.h>
 #include "MidiDefs.h"

@@ -90,8 +90,8 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "MidiGroup.h"
 #include "MidiChannel.h"
 
-namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
-namespace implementation = ::winrt::Microsoft::Devices::Midi2::implementation;
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::implementation;
 
 #include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"
@@ -123,12 +123,7 @@ namespace implementation = ::winrt::Microsoft::Devices::Midi2::implementation;
 #include "MidiEndpointDeviceInformationRemovedEventArgs.h"
 #include "MidiEndpointDeviceWatcher.h"
 
-#include "MidiStreamConfigurationRequestedSettings.h"
-
 #include "MidiSession.h"
-
-#include "MidiServiceConfigurationResponse.h"
-#include "MidiService.h"
 
 #include "MidiEndpointDeviceInformationAddedEventArgs.h"
 #include "MidiEndpointDeviceInformationUpdatedEventArgs.h"

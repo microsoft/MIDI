@@ -35,7 +35,7 @@ namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace midi1 = ::winrt::Windows::Devices::Midi;
 
-#include <winrt/Microsoft.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
 
 
 #include <stdint.h>
@@ -81,11 +81,11 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "resource_util.h"
 #include "ping_ump_types.h"
 
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins {};
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation {};
 
-namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
-namespace implementation = ::winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation;
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation;
 
 #include "midi_ump_message_defs.h"
 

@@ -1,0 +1,19 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiServiceConfigResponseStatusEnum.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Service
+{
+    struct MidiServiceConfigResponse
+    {
+        MidiServiceConfigResponseStatus Status;
+
+        String ResponseJson;
+    };
+}

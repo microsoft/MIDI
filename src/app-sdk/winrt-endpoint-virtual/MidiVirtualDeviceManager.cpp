@@ -3,7 +3,7 @@
 #include "MidiVirtualDeviceManager.g.cpp"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
     bool MidiVirtualDeviceManager::IsTransportAvailable() noexcept
     {
@@ -14,7 +14,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
     _Use_decl_annotations_
     virt::MidiVirtualDeviceCreationResult MidiVirtualDeviceManager::CreateVirtualDevice(
-        _In_ virt::MidiVirtualDeviceCreationConfiguration creationConfig
+        _In_ virt::MidiVirtualDeviceCreationConfig creationConfig
     ) noexcept
     {
         UNREFERENCED_PARAMETER(creationConfig);
@@ -23,13 +23,13 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
         winrt::hstring endpointDeviceId{};
 
-        auto createResponse = midi2::MidiService::UpdateTransportPluginConfiguration(creationConfig);
+        auto createResponse = svc::MidiService::UpdateTransportPluginConfig(creationConfig);
 
-        if (createResponse.Status() == midi2::MidiServiceConfigurationResponseStatus::Success)
+        if (createResponse.Status == svc::MidiServiceConfigResponseStatus::Success)
         {
             json::JsonObject responseObject{};
 
-            if (json::JsonObject::TryParse(createResponse.ResponseJson(), responseObject))
+            if (json::JsonObject::TryParse(createResponse.ResponseJson, responseObject))
             {
                 auto responseArray = responseObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY, nullptr);
 

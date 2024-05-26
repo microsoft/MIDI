@@ -10,7 +10,7 @@
 #include "MidiSession.h"
 #include "MidiEndpointConnection.h"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     
     // This monitors all endpoints that are in-scope for Windows MIDI Services

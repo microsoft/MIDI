@@ -12,7 +12,7 @@
 
 
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     uint64_t MidiClock::m_timestampFrequency{ 0 };
 

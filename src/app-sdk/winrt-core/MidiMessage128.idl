@@ -8,7 +8,7 @@
 
 import "IMidiUniversalPacket.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
     unsealed runtimeclass MidiMessage128 : IMidiUniversalPacket,

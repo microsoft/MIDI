@@ -10,7 +10,7 @@
 #include "MidiEndpointDeviceInformation.h"
 #include "MidiEndpointDeviceInformation.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
 
     winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerDeviceInformation() const noexcept
@@ -308,7 +308,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
         try
         {
-            auto devices = Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+            auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
                 MidiEndpointConnection::GetDeviceSelector(),
                 GetAdditionalPropertiesList(),
                 winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface
@@ -472,7 +472,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
     {
         try
         {
-            auto di = Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+            auto di = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
                 endpointDeviceId, GetAdditionalPropertiesList()).get();
 
             if (di != nullptr)

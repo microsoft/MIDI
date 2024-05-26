@@ -6,24 +6,18 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-//import "MidiFunctionBlockUIHintEnum.idl";
-//import "MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl";
-//import "MidiFunctionBlockDirectionEnum.idl";
-//import "MidiEndpointDiscoveryRequestsEnum.idl";
-//import "MidiFunctionBlockDiscoveryRequestsEnum.idl";
-
-namespace Microsoft.Devices.Midi2.Messages
+namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     static runtimeclass MidiStreamMessageBuilder
     {
-        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildEndpointDiscoveryMessage(
+        static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildEndpointDiscoveryMessage(
             UInt64 timestamp,
             UInt8 umpVersionMajor,
             UInt8 umpVersionMinor,
-            Microsoft.Devices.Midi2.MidiEndpointDiscoveryRequests request
+            Microsoft.Windows.Devices.Midi2.MidiEndpointDiscoveryRequests request
             );
 
-        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
+        static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
             UInt64 timestamp,
             UInt8 umpVersionMajor,
             UInt8 umpVersionMinor,
@@ -35,7 +29,7 @@ namespace Microsoft.Devices.Midi2.Messages
             Boolean supportsSendingJitterReductionTimestamps
             );
 
-        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildDeviceIdentityNotificationMessage(
+        static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildDeviceIdentityNotificationMessage(
             UInt64 timestamp,
             UInt8 deviceManufacturerSysExIdByte1,
             UInt8 deviceManufacturerSysExIdByte2,
@@ -50,12 +44,12 @@ namespace Microsoft.Devices.Midi2.Messages
             UInt8 softwareRevisionLevelByte4
             );
 
-        static IVector<Microsoft.Devices.Midi2.IMidiUniversalPacket> BuildEndpointNameNotificationMessages(
+        static IVector<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> BuildEndpointNameNotificationMessages(
             UInt64 timestamp,
             String name
             );
 
-        static IVector<Microsoft.Devices.Midi2.IMidiUniversalPacket> BuildProductInstanceIdNotificationMessages(
+        static IVector<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> BuildProductInstanceIdNotificationMessages(
             UInt64 timestamp,
             String productInstanceId
             );
@@ -63,57 +57,57 @@ namespace Microsoft.Devices.Midi2.Messages
 
 
         static String ParseEndpointNameNotificationMessages(
-            IIterable<Microsoft.Devices.Midi2.IMidiUniversalPacket> messages
+            IIterable<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> messages
         );
 
         static String ParseProductInstanceIdNotificationMessages(
-            IIterable<Microsoft.Devices.Midi2.IMidiUniversalPacket> messages
+            IIterable<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> messages
         );
 
 
 
 
-        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildStreamConfigurationRequestMessage(
+        static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildStreamConfigurationRequestMessage(
             UInt64 timestamp,
             UInt8 protocol,
             Boolean expectToReceiveJRTimestamps,
             Boolean requestToSendJRTimestamps
             );
 
-        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildStreamConfigurationNotificationMessage(
+        static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildStreamConfigurationNotificationMessage(
             UInt64 timestamp,
             UInt8 protocol,
             Boolean confirmationWillReceiveJRTimestamps,
             Boolean confirmationSendJRTimestamps
             );
 
-        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
+        static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             UInt64 timestamp,
             UInt8 functionBlockNumber,
-            Microsoft.Devices.Midi2.MidiFunctionBlockDiscoveryRequests requestFlags
+            Microsoft.Windows.Devices.Midi2.MidiFunctionBlockDiscoveryRequests requestFlags
             );
 
-        static Microsoft.Devices.Midi2.IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
+        static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
             UInt64 timestamp,
             Boolean active,
             UInt8 functionBlockNumber,
-            Microsoft.Devices.Midi2.MidiFunctionBlockUIHint uiHint,
-            Microsoft.Devices.Midi2.MidiFunctionBlockRepresentsMidi10Connection midi10,
-            Microsoft.Devices.Midi2.MidiFunctionBlockDirection direction,
+            Microsoft.Windows.Devices.Midi2.MidiFunctionBlockUIHint uiHint,
+            Microsoft.Windows.Devices.Midi2.MidiFunctionBlockRepresentsMidi10Connection midi10,
+            Microsoft.Windows.Devices.Midi2.MidiFunctionBlockDirection direction,
             UInt8 firstGroup,
             UInt8 numberOfGroups,
             UInt8 midiCIVersionFormat,
             UInt8 maxNumberSysEx8Streams
             );
 
-        static IVector<Microsoft.Devices.Midi2.IMidiUniversalPacket> BuildFunctionBlockNameNotificationMessages(
+        static IVector<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> BuildFunctionBlockNameNotificationMessages(
             UInt64 timestamp,
             UInt8 functionBlockNumber,
             String name
             );
 
         static String ParseFunctionBlockNameNotificationMessages(
-            IIterable<Microsoft.Devices.Midi2.IMidiUniversalPacket> messages
+            IIterable<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> messages
             );
 
     };

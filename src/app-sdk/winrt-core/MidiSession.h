@@ -9,7 +9,7 @@
 #pragma once
 #include "MidiSession.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiSession : MidiSessionT<MidiSession>
     {
@@ -103,7 +103,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiSession : MidiSessionT<MidiSession, implementation::MidiSession>
     {

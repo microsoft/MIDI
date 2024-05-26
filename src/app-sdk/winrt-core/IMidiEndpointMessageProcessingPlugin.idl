@@ -10,7 +10,7 @@ import "MidiMessageReceivedEventArgs.idl";
 import "IMidiEndpointConnectionSource.idl";
 
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     [uuid("198d5ef2-313f-41af-9259-a42997e060f0"), version(1.0)]
     interface IMidiEndpointMessageProcessingPlugin

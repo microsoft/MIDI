@@ -13,7 +13,7 @@ import "MidiEndpointDeviceInformationUpdatedEventArgs.idl";
 import "MidiEndpointDeviceInformationRemovedEventArgs.idl";
 import "MidiEndpointDeviceInformationAddedEventArgs.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiEndpointDeviceWatcher

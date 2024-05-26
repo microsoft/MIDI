@@ -10,7 +10,7 @@
 #pragma once
 #include "MidiVirtualDevice.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
     struct MidiVirtualDevice : MidiVirtualDeviceT<MidiVirtualDevice>
     {
@@ -31,12 +31,12 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
-        winrt::event_token StreamConfigurationRequestReceived(_In_ foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigurationRequestReceivedEventArgs> const& handler)
+        winrt::event_token StreamConfigRequestReceived(_In_ foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigRequestReceivedEventArgs> const& handler)
         {
             return m_streamConfigurationRequestReceivedEvent.add(handler);
         }
 
-        void StreamConfigurationRequestReceived(winrt::event_token const& token) noexcept
+        void StreamConfigRequestReceived(winrt::event_token const& token) noexcept
         {
             if (m_streamConfigurationRequestReceivedEvent) m_streamConfigurationRequestReceivedEvent.remove(token);
         }
@@ -110,7 +110,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
         collections::IMap<uint8_t, midi2::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2::MidiFunctionBlock>() };
 
-        winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigurationRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
+        winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
     };
 }
 

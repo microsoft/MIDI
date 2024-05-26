@@ -6,7 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-namespace Microsoft.Devices.Midi2.Messages
+namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     enum Midi2ChannelVoiceMessageStatus
     {

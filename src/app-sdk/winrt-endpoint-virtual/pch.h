@@ -35,11 +35,14 @@ namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace midi1 = ::winrt::Windows::Devices::Midi;
 
-#include <winrt/Microsoft.Devices.Midi2.h>
-namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
-#include <winrt/Microsoft.Devices.Midi2.Messages.h>
-namespace msgs = ::winrt::Microsoft::Devices::Midi2::Messages;
+#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
+namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::Service;
+
+#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::Messages;
 
 
 #include <stdint.h>
@@ -88,11 +91,11 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "resource_util.h"
 #include "ping_ump_types.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual {};
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation {};
 
-namespace virt = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtual;
-namespace implementation = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation;
+namespace virt = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation;
 
 #include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"
@@ -103,9 +106,8 @@ namespace implementation = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtua
 
 
 
-#include "MidiStreamConfigurationRequestedSettings.h"
-#include "MidiStreamConfigurationRequestReceivedEventArgs.h"
+#include "MidiStreamConfigRequestReceivedEventArgs.h"
 #include "MidiVirtualDevice.h"
-#include "MidiVirtualDeviceCreationConfiguration.h"
+#include "MidiVirtualDeviceCreationConfig.h"
 
 #include "MidiVirtualDeviceManager.h"

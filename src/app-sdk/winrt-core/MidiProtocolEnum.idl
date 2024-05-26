@@ -6,12 +6,12 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
     enum MidiProtocol
     {
-        Default = 0,
-        Midi1 = 1,
-        Midi2 = 2,
+        Default =   0,
+        Midi1 =     1,
+        Midi2 =     2,
     };
 }

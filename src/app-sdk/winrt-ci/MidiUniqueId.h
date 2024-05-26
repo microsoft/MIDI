@@ -18,7 +18,7 @@
 #define MIDI_MUID_MAX_VALUE         (uint32_t)0x0FFFFFFF
 
 
-namespace winrt::Microsoft::Devices::Midi2::CapabilityInquiry::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry::implementation
 {
     struct MidiUniqueId : MidiUniqueIdT<MidiUniqueId>
     {
@@ -71,7 +71,7 @@ namespace winrt::Microsoft::Devices::Midi2::CapabilityInquiry::implementation
     };
 }
 
-namespace winrt::Microsoft::Devices::Midi2::CapabilityInquiry::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry::factory_implementation
 {
     struct MidiUniqueId : MidiUniqueIdT<MidiUniqueId, implementation::MidiUniqueId>
     {

@@ -10,7 +10,7 @@
 #include "MidiServiceSessionInfo.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation
 {
     struct MidiServiceSessionInfo : MidiServiceSessionInfoT<MidiServiceSessionInfo>
     {
