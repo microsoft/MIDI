@@ -17,17 +17,11 @@
       <Filter>API\Endpoints\Metadata\MUID</Filter>
     </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
-      <Filter>API\Enumeration</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="MidiUniqueId.h">
       <Filter>API\Endpoints\Metadata\MUID</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointDeviceWatcher.h">
-      <Filter>API\Enumeration</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>

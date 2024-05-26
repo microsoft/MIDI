@@ -21,28 +21,22 @@
     <ClCompile Include="MidiClockTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointConnectionTests.cpp">
+    <ClCompile Include="MidiGroupTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp">
+    <ClCompile Include="MidiChannelTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiSessionTests.cpp">
+    <ClCompile Include="MidiMessage32Tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp">
+    <ClCompile Include="MidiMessage64Tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiMessageSchedulerTests.cpp">
+    <ClCompile Include="MidiMessage96Tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointConnectionBufferTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointCreationThreadTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiMessagePacketTests.cpp">
+    <ClCompile Include="MidiMessage128Tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,28 +47,22 @@
     <ClInclude Include="MidiClockTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointConnectionTests.h">
+    <ClInclude Include="MidiGroupTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h">
+    <ClInclude Include="MidiChannelTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiSessionTests.h">
+    <ClInclude Include="MidiMessage32Tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointDeviceWatcherTests.h">
+    <ClInclude Include="MidiMessage64Tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiMessageSchedulerTests.h">
+    <ClInclude Include="MidiMessage96Tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointConnectionBufferTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiEndpointCreationThreadTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessagePacketTests.h">
+    <ClInclude Include="MidiMessage128Tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,5 +77,8 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="te.exe.manifest" />
   </ItemGroup>
 </Project>

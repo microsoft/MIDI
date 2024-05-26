@@ -11,10 +11,8 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
 
 using namespace winrt::Microsoft::Windows::Devices::Midi2;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;
 
 #include <iostream>
 
@@ -28,9 +26,15 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;
 #include "MidiDefs.h"
 
 
-#include "MidiFunctionBlockMessageBuilderTests.h"
-#include "MidiMessageBuilderTests.h"
-#include "MidiStreamMessageBuilderTests.h"
+#include "MidiClockTests.h"
+#include "MidiGroupTests.h"
+#include "MidiChannelTests.h"
+#include "MidiMessage32Tests.h"
+#include "MidiMessage64Tests.h"
+#include "MidiMessage96Tests.h"
+#include "MidiMessage128Tests.h"
+
+
 
 #ifndef LOG_OUTPUT
 #define LOG_OUTPUT(fmt, ...)  WEX::Logging::Log::Comment(WEX::Common::String().Format(fmt, __VA_ARGS__))

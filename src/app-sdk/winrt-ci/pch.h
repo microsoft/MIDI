@@ -25,15 +25,11 @@
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
-#include <winrt/Windows.Devices.Enumeration.h>
-#include <winrt/Windows.Storage.Streams.h>
-#include <winrt/Windows.Storage.h>
-#include <winrt/Windows.Devices.Midi.h>
-
 #include <winrt/Windows.Data.Json.h>
+
 namespace json = ::winrt::Windows::Data::Json;
-namespace enumeration = ::winrt::Windows::Devices::Enumeration;
-namespace midi1 = ::winrt::Windows::Devices::Midi;
+namespace foundation = ::winrt::Windows::Foundation;
+namespace collections = ::winrt::Windows::Foundation::Collections;
 
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
@@ -55,27 +51,19 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 // internal
 
 #include "ump_helpers.h"
-#include "wstring_util.h"
-
-//#include <wil/resource.h>
-
-namespace foundation = ::winrt::Windows::Foundation;
-namespace collections = ::winrt::Windows::Foundation::Collections;
-
 #include "hstring_util.h"
 #include "wstring_util.h"
 namespace internal = ::WindowsMidiServicesInternal;
 
-#include "MidiDefs.h"
-#include "WindowsMidiServices.h"
-#include "WindowsMidiServices_i.c"
-#include "Midi2MidiSrvAbstraction.h"
+//#include "MidiDefs.h"
+//#include "WindowsMidiServices.h"
+//#include "WindowsMidiServices_i.c"
+//#include "Midi2MidiSrvAbstraction.h"
 
 #include "json_defs.h"
 #include "json_helpers.h"
-#include "swd_helpers.h"
+//#include "swd_helpers.h"
 #include "resource_util.h"
-#include "ping_ump_types.h"
 
 #include "SdkTraceLogging.h"
 

@@ -10,15 +10,15 @@
 #pragma once
 
 
-class MidiMessagePacketTests
-    : public WEX::TestClass<MidiMessagePacketTests>
+class MidiMessage32Tests
+    : public WEX::TestClass<MidiMessage32Tests>
 {
 public:
 
-    BEGIN_TEST_CLASS(MidiMessagePacketTests)
+    BEGIN_TEST_CLASS(MidiMessage32Tests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.Messages.dll")
-    END_TEST_CLASS()
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.dll")
+        END_TEST_CLASS()
 
         //TEST_CLASS_SETUP(ClassSetup);
         //TEST_CLASS_CLEANUP(ClassCleanup);
@@ -26,15 +26,15 @@ public:
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
 
-        TEST_METHOD(TestUmp32);
-        TEST_METHOD(TestUmp64);
-        TEST_METHOD(TestUmp96);
-        TEST_METHOD(TestUmp128);
-        TEST_METHOD(TestUmpInterfaceCasting);
+    TEST_METHOD(TestCreateEmpty);
+    TEST_METHOD(TestMessageAndPacketType);
+    TEST_METHOD(TestCreateFromWords);
+    //TEST_METHOD(TestCreateFromArray);
+    TEST_METHOD(TestCreateFromStruct);
+    TEST_METHOD(TestInterfaceCasting);
 
 
 private:
 
 
 };
-

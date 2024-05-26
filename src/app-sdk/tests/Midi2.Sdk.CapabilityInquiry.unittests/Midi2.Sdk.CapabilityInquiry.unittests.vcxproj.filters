@@ -36,10 +36,12 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="testmd.definition" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="te.exe.manifest" />
   </ItemGroup>
 </Project>
