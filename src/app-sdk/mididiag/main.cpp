@@ -405,7 +405,7 @@ bool DoSectionServiceStatus(_In_ bool verbose)
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS);
 
     // this needs to be done before any other service calls
-    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, svc::MidiService::EnsureAvailable());
+    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, svc::MidiService::EnsureServiceAvailable());
 
     return true;
 }

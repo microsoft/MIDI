@@ -10,10 +10,6 @@
 #include "stdafx.h"
 
 
-using namespace winrt::Microsoft::Devices::Midi2;
-
-
-
 _Use_decl_annotations_
 void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceInformationFilters filter, uint32_t numEndpointsExpected)
 {

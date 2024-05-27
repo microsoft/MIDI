@@ -12,7 +12,5 @@
 void MidiServiceTests::TestEnsureServiceAvailable()
 {
 
-    // TEMP
-
-    VERIFY_IS_TRUE(false);
+    VERIFY_FAIL();      // TEMP
 }

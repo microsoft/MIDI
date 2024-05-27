@@ -9,8 +9,6 @@
 
 #pragma once
 
-using namespace winrt::Microsoft::Devices::Midi2;
-
 class MidiMessageSchedulerTests
     : public WEX::TestClass<MidiMessageSchedulerTests>
 {
