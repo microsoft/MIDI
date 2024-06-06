@@ -20,29 +20,33 @@
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
         <references>
             <group targetFramework="net6.0-windows10.0.20348.0">
-                <reference file="Microsoft.Devices.Midi2.Diagnostics.NET.dll" />
+                <reference file="Microsoft.Windows.Devices.Midi2.Diagnostics.Net.dll" />
             </group>
             <group targetFramework="uap10.0">
-                <reference file="Microsoft.Devices.Midi2.Diagnostics.winmd" />
+                <reference file="Microsoft.Windows.Devices.Midi2.Diagnostics.winmd" />
             </group>
             <group targetFramework="native">
-                <reference file="Microsoft.Devices.Midi2.Diagnostics.winmd" />
+                <reference file="Microsoft.Windows.Devices.Midi2.Diagnostics.winmd" />
             </group>
         </references>
     </metadata>
     
     <files>
 
+        
         <!-- Compile-time References  ================================================ -->
 		
         <file src="..\..\vsfiles\Microsoft.Devices.Midi2.NET\Release\net6.0-windows10.0.20348.0\Microsoft.Devices.Midi2.Diagnostics.NET.dll"
 			  target="ref\net6.0-windows10.0.20348.0\Microsoft.Devices.Midi2.Diagnostics.NET.dll" />
 
 
-        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Devices.Midi2.Diagnostics.winmd"
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd"
               target="ref\uap10.0\Microsoft.Devices.Midi2.Diagnostics.winmd" />
-        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Devices.Midi2.Diagnostics.winmd"
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd"
               target="ref\native\Microsoft.Devices.Midi2.Diagnostics.winmd" />
+
+
+
 
         <!-- Runtime Libs ================================================ -->
 		
@@ -50,9 +54,9 @@
               target="lib\net8.0-windows10.0.20348.0\" />
 
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
-        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Devices.Midi2.Diagnostics.winmd"
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd"
               target="lib\uap10.0\Microsoft.Devices.Midi2.Diagnostics.winmd" />
-        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Devices.Midi2.Diagnostics.winmd"
+        <file src="..\..\vsfiles\Microsoft.Devices.Midi2.Diagnostics\x64\Release\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd"
               target="lib\native\Microsoft.Devices.Midi2.Diagnostics.winmd" />
 
 

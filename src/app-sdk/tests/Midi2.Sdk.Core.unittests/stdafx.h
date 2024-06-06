@@ -13,12 +13,12 @@
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
-//#include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
 
 using namespace winrt::Microsoft::Windows::Devices::Midi2;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;
-//using namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Service;
 
 #include <iostream>
 

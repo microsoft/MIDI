@@ -422,7 +422,7 @@ MidiSrvGetSessionList(
     CComBSTR sessionList;
     sessionList.Empty();
 
-    RETURN_IF_FAILED(sessionTracker->GetSessionListJson(&sessionList));
+    RETURN_IF_FAILED(sessionTracker->GetSessionList(&sessionList));
 
     RETURN_IF_FAILED(sessionList.CopyTo(SessionListJson));
 

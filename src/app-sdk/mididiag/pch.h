@@ -11,7 +11,10 @@
 
 #include <windows.h>
 #include <winternl.h>
-#include <ntstatus.h>
+
+//#pragma warning (disable: 4005)
+//#include <ntstatus.h>
+//#pragma warning (pop)
 
 
 #include <iostream>

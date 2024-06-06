@@ -174,9 +174,6 @@
     <None Include="testmd.definition" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\winrt-core\Microsoft.Devices.Midi2.vcxproj">
-      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
       <Private>true</Private>
@@ -191,6 +188,9 @@
       <Project>{001601de-b7ab-41d1-81b7-40286b139841}</Project>
       <Private>true</Private>
       <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <ProjectReference Include="..\..\winrt-service\Microsoft.Windows.Devices.Midi2.Service.vcxproj">
+      <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
