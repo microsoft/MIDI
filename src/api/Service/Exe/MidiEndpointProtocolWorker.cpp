@@ -181,6 +181,7 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
             // provide the negotiation results
 
             results->AllEndpointInformationReceived = true;
+
         }
         else
         {
@@ -188,6 +189,19 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
 
             results->AllEndpointInformationReceived = false;
         }
+
+        // TODO: Fill the rest of the results fields
+
+        results->EndpointSuppliedName = m_endpointName.c_str();
+        results->EndpointSuppliedProductInstanceId = m_productInstanceId.c_str();
+
+        //results->FunctionBlocksAreStatic =
+        results->NumberOfFunctionBlocksReceived = m_countFunctionBlocksReceived;
+        results->NumberOfFunctionBlocksDeclared = m_declaredFunctionBlockCount;
+
+
+
+
 
         *NegotiationResults = results.get();
 

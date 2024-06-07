@@ -563,6 +563,9 @@ typedef struct
 {
     BOOL AllEndpointInformationReceived;
 
+    BOOL EndpointSupportsMIDI2Protocol;
+    BOOL EndpointSupportsMIDI1Protocol;
+
     LPCWSTR EndpointSuppliedName;
     LPCWSTR EndpointSuppliedProductInstanceId;
 
@@ -570,10 +573,6 @@ typedef struct
     BYTE NumberOfFunctionBlocksReceived;
     BOOL FunctionBlocksAreStatic;
 
-    BOOL EndpointSupportsMIDI2Protocol;
-    BOOL EndpointSupportsMIDI1Protocol;
-
-    BYTE DiscoveredFunctionBlockCount;
     PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;  // pointer to an array of discovered function blocks. 
 
 }  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
