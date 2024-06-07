@@ -18,14 +18,19 @@
 		<NuspecFile>$(GeneratedNugetDir)Microsoft.Windows.Devices.Midi2.CapabilityInquiry.nuspec</NuspecFile>
 		<OutputPath>..\vsfiles\$(AssemblyName)\$(Platform)\$(Configuration)</OutputPath>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<AssemblyName>Microsoft.Windows.Devices.Midi2.CapabilityInquiry.Net</AssemblyName>
+		<AssemblyName>Microsoft.Windows.Devices.Midi2.CapabilityInquiry.NetProjection</AssemblyName>
 		<PackageOutputPath>..\vsfiles\PublishedNuGet\</PackageOutputPath>
 		<BaseIntermediateOutputPath>$(SolutionDir)vsfiles\intermediate\$(AssemblyName)\</BaseIntermediateOutputPath>
 		<SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
 		<BaseOutputPath>$(SolutionDir)vsfiles\NetProjections\</BaseOutputPath>
 	</PropertyGroup>
 
-  <ItemGroup>
+    <PropertyGroup>
+        <!-- Workaround for MSB3271 error on processor architecture mismatch -->
+        <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+    </PropertyGroup>
+
+    <ItemGroup>
     <None Include="nuget\README.md" />
   </ItemGroup>
 

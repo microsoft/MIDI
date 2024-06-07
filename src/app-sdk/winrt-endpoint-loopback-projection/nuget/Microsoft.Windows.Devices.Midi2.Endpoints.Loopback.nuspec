@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
-		<id>Microsoft.Windows.Devices.Midi2.Core</id>
+		<id>Microsoft.Windows.Devices.Midi2.Endpoints.Loopback</id>
 		<version>1.0.0-preview.6-0206</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
@@ -20,13 +20,13 @@
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
         <references>
             <group targetFramework="net6.0-windows10.0.20348.0">
-                <reference file="Microsoft.Windows.Devices.Midi2.NET.dll" />
+                <reference file="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.NetProjection.dll" />
             </group>
             <group targetFramework="uap10.0">
-                <reference file="Microsoft.Windows.Devices.Midi2.winmd" />
+                <reference file="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
             </group>
             <group targetFramework="native">
-                <reference file="Microsoft.Windows.Devices.Midi2.winmd" />
+                <reference file="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
             </group>
         </references>
     </metadata>
@@ -35,25 +35,25 @@
 
         <!-- Compile-time References  ================================================ -->
 		
-        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2.NET\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NET.dll"
-			  target="ref\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NET.dll" />
+        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.NetProjection\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.NetProjection.dll"
+			  target="ref\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.NetProjection.dll" />
 
 
-        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.winmd"
-              target="ref\uap10.0\Microsoft.Windows.Devices.Midi2.winmd" />
-        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.winmd"
-              target="ref\native\Microsoft.Windows.Devices.Midi2.winmd" />
+        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback\x64\Release\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd"
+              target="ref\uap10.0\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
+        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd"
+              target="ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
 
         <!-- Runtime Libs ================================================ -->
 		
-        <file src="..\..\vsfiles\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NET.dll"
+        <file src="..\..\vsfiles\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.NetProjection.dll"
               target="lib\net8.0-windows10.0.20348.0\" />
 
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
-        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.winmd"
-              target="lib\uap10.0\Microsoft.Windows.Devices.Midi2.winmd" />
-        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.winmd"
-              target="lib\native\Microsoft.Windows.Devices.Midi2.winmd" />
+        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback\x64\Release\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd"
+              target="lib\uap10.0\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
+        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback\x64\Release\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd"
+              target="lib\native\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
 
         <!-- Intel x64 Native Binaries ================================================ -->
 
@@ -66,8 +66,8 @@
         
         <!-- Build-time files ================================================ -->
 
-		<file src="Microsoft.Windows.Devices.Midi2.targets" target="build\native\" />
-		<file src="Microsoft.Windows.Devices.Midi2.props" target="build\native\" />
+		<file src="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.targets" target="build\native\" />
+		<file src="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.props" target="build\native\" />
 
 		<file src="README.md" target="\" />
 	</files>

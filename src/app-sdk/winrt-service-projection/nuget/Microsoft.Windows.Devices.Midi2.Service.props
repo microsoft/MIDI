@@ -10,7 +10,7 @@
 			-->	   
 
 		<Reference Include="Microsoft.Devices.Midi2">
-			<HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.winmd</HintPath>
+			<HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Service.winmd</HintPath>
 		</Reference>
 	</ItemGroup>
 </Project>

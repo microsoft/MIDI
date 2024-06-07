@@ -30,15 +30,6 @@
 			</None>
 		</ItemGroup>
 
-        <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-            <ItemGroup>
-                <None Include="$(MSBuildThisFileDirectory)mididmp.exe">
-                    <Link>mididmp.exe</Link>
-                    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-                </None>
-            </ItemGroup>
-        </Project>
-
 	</Target>
 
 	<!--

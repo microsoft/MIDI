@@ -18,7 +18,7 @@
 			BeforeTargets="BeforeBuild;BeforeResolveReferences">
 
 		<ItemGroup Label="CopyMidiServicesSDKReferenceFiles">
-			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\native\Microsoft.Windows.Devices.Midi2.winmd">
+			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\native\Microsoft.Windows.Devices.Midi2.Service.winmd">
 				<!-- <Implementation>Microsoft.Devices.Midi2.dll</Implementation> --> <!-- Impl must already be installed on PC -->
 			</Reference>
 		</ItemGroup>
@@ -29,15 +29,6 @@
 				<Link>%(Filename)%(Extension)</Link>
 			</None>
 		</ItemGroup>
-
-        <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-            <ItemGroup>
-                <None Include="$(MSBuildThisFileDirectory)mididmp.exe">
-                    <Link>mididmp.exe</Link>
-                    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-                </None>
-            </ItemGroup>
-        </Project>
 
 	</Target>
 

@@ -18,13 +18,18 @@
 		<NuspecFile>$(GeneratedNugetDir)Microsoft.Windows.Devices.Midi2.ClientPlugins.nuspec</NuspecFile>
 		<OutputPath>..\vsfiles\$(AssemblyName)\$(Platform)\$(Configuration)</OutputPath>
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-		<AssemblyName>Microsoft.Windows.Devices.Midi2.ClientPlugins.Net</AssemblyName>
+		<AssemblyName>Microsoft.Windows.Devices.Midi2.ClientPlugins.NetProjection</AssemblyName>
 		<PackageOutputPath>..\vsfiles\PublishedNuGet\</PackageOutputPath>
 		<BaseIntermediateOutputPath>$(SolutionDir)vsfiles\intermediate\$(AssemblyName)\</BaseIntermediateOutputPath>
 		<SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
 		<BaseOutputPath>$(SolutionDir)vsfiles\NetProjections\</BaseOutputPath>
 	</PropertyGroup>
 
+    <PropertyGroup>
+        <!-- Workaround for MSB3271 error on processor architecture mismatch -->
+        <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+    </PropertyGroup>
+    
   <ItemGroup>
     <None Include="nuget\README.md" />
   </ItemGroup>
@@ -34,7 +39,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\winrt-client-plugins\Microsoft.Windows.Devices.Midi2.Plugins.vcxproj" />
+      <ProjectReference Include="..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj" />
+      <ProjectReference Include="..\winrt-client-plugins\Microsoft.Windows.Devices.Midi2.Plugins.vcxproj" />
   </ItemGroup>
 
 </Project>

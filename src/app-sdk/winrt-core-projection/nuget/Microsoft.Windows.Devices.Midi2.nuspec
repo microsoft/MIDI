@@ -20,7 +20,7 @@
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
         <references>
             <group targetFramework="net6.0-windows10.0.20348.0">
-                <reference file="Microsoft.Windows.Devices.Midi2.Net.dll" />
+                <reference file="Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
             </group>
             <group targetFramework="uap10.0">
                 <reference file="Microsoft.Windows.Devices.Midi2.winmd" />
@@ -44,7 +44,7 @@
         
         <!-- Compile-time References  ================================================ -->
 		
-        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2.NET\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NET.dll"
+        <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2.NetProjection\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
 			  target="ref\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NET.dll" />
 
 
@@ -55,7 +55,7 @@
 
         <!-- Runtime Libs ================================================ -->
 		
-        <file src="..\..\vsfiles\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NET.dll"
+        <file src="..\..\vsfiles\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
               target="lib\net8.0-windows10.0.20348.0\" />
 
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
