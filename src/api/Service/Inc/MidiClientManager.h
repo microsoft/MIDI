@@ -22,7 +22,7 @@ public:
         _In_ std::shared_ptr<CMidiSessionTracker>& sessionTracker);
 
     HRESULT CreateMidiClient(
-        _In_ handle_t,
+        _In_opt_ handle_t,
         _In_ LPCWSTR,
         _In_ GUID,
         _In_ DWORD,
@@ -83,13 +83,13 @@ private:
         _In_ wil::com_ptr_nothrow<CMidiPipe>&,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
-    HRESULT
-    GetMidiEndpointMetadataHandler(
-        _In_ handle_t,
-        _In_ MidiFlow,
-        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-        _In_ wil::com_ptr_nothrow<CMidiPipe>&,
-        _In_ wil::com_ptr_nothrow<CMidiPipe>&);
+    //HRESULT
+    //GetMidiEndpointMetadataHandler(
+    //    _In_ handle_t,
+    //    _In_ MidiFlow,
+    //    _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+    //    _In_ wil::com_ptr_nothrow<CMidiPipe>&,
+    //    _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
 
     wil::critical_section m_ClientManagerLock;

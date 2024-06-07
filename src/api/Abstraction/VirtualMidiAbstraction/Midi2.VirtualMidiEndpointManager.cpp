@@ -213,6 +213,7 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
     PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
 
     RETURN_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+        AbstractionLayerGUID,
         endpointId.c_str(),
         preferToSendJRToEndpoint,
         preferToReceiveJRFromEndpoint,

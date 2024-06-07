@@ -552,18 +552,19 @@ typedef struct
     BOOL IsMIDIMessageDestination;  // if clients can send messages TO this block. We should create a MIDI 1.0 output port
     BOOL IsMIDIMessageSource;       // if clients can receive messages FROM this block. We should create a MIDI 1.0 input port
     LPCWSTR Name;                   // this type is only used within the service process, so string pointers are fine
-} DISCOVEREDFUNCTIONBLOCK, * PDISCOVEREDFUNCTIONBLOCK;
+} DISCOVEREDFUNCTIONBLOCK, *PDISCOVEREDFUNCTIONBLOCK;
 
 
 // this only contains key info required by the endpoint managers
 // so they can create compatible MIDI 1.0 ports from the results
-// from MIDI 2.0 protocol negotiation. This is not sent over RPC.
+// from MIDI 2.0 protocol negotiation. This is not sent over RPC
+// or otherwise used cross-process. In-service only.
 typedef struct
 {
-    BOOL EndpointInformationReceived;
+    BOOL AllEndpointInformationReceived;
 
-    BSTR EndpointSuppliedName;
-    BSTR EndpointSuppliedProductInstanceId;
+    LPCWSTR EndpointSuppliedName;
+    LPCWSTR EndpointSuppliedProductInstanceId;
 
     BYTE NumberOfFunctionBlocksDeclared;
     BYTE NumberOfFunctionBlocksReceived;
@@ -573,7 +574,7 @@ typedef struct
     BOOL EndpointSupportsMIDI1Protocol;
 
     BYTE DiscoveredFunctionBlockCount;
-    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;
+    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;  // pointer to an array of discovered function blocks. 
 
 }  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
 
@@ -587,20 +588,15 @@ typedef struct
 interface IMidiEndpointProtocolManagerInterface : IUnknown
 {
     HRESULT NegotiateAndRequestMetadata(
+        [in] GUID AbstractionGuid,
         [in] LPCWSTR DeviceInterfaceId,
         [in] BOOL PreferToSendJRTimestampsToEndpoint,
         [in] BOOL PreferToReceiveJRTimestampsFromEndpoint,
         [in] BYTE PreferredMidiProtocol,
-        [in] WORD TimeoutMS,
+        [in] WORD TimeoutMilliseconds,
         [out, retval] PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
     );
 
 
 };
-
-
-
-
-
-
 
