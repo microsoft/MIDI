@@ -199,8 +199,13 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
         results->NumberOfFunctionBlocksReceived = m_countFunctionBlocksReceived;
         results->NumberOfFunctionBlocksDeclared = m_declaredFunctionBlockCount;
 
+        // caller is responsible for cleaning up here.
+        auto functionBlocks = std::make_shared<std::vector<DISCOVEREDFUNCTIONBLOCK>>();
+
+        // TODO: Loop through function blocks
 
 
+        // TODO: add the results pointer for the function blocks
 
 
         *NegotiationResults = results.get();
