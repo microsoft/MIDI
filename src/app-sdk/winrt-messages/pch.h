@@ -16,9 +16,6 @@
 
 #include <Windows.h>
 
-//#include <wil/cppwinrt.h> // must be before the first C++ WinRT header
-//#include <wil/result.h>
-
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
@@ -29,14 +26,13 @@
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Devices.Midi.h>
+
 #include <winrt/Windows.Data.Json.h>
-
-#include <winrt/Microsoft.Windows.Devices.Midi2.h>
-
-
 namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace midi1 = ::winrt::Windows::Devices::Midi;
+namespace foundation = ::winrt::Windows::Foundation;
+namespace collections = ::winrt::Windows::Foundation::Collections;
 
 
 #include <stdint.h>
@@ -51,51 +47,50 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include <filesystem>
 
 
-#include "ump_helpers.h"
-#include "memory_buffer.h"
-#include "wstring_util.h"
+// pre-declare namespaces
 
-// AbstractionUtilities
+namespace WindowsMidiServicesInternal {};
+namespace winrt::Microsoft::Windows::Devices::Midi2 {};
+
+namespace internal = ::WindowsMidiServicesInternal;
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
+
+
+#include <Devpropdef.h>
+#include <MidiDefs.h>
+#include <midi_group_terminal_blocks.h>
 
 // shared
-#include "midi_ump.h"   // general shared
+#include <midi_ump.h>   // general shared
+#include <loopback_ids.h>
 #include <midi_timestamp.h>
+#include <json_defs.h>
+#include <ping_ump_types.h>
+#include <ump_helpers.h>
+#include <hstring_util.h>
+#include <wstring_util.h>
+#include <json_helpers.h>
+#include <resource_util.h>
+#include <swd_helpers.h>
+#include <midi_ump_message_defs.h>
 
-//#include <wil/resource.h>
 
-namespace foundation = ::winrt::Windows::Foundation;
-namespace collections = ::winrt::Windows::Foundation::Collections;
+// service interface
+#include <WindowsMidiServices.h>
+#include <WindowsMidiServices_i.c>
+#include <Midi2MidiSrvAbstraction.h>
 
-#include "hstring_util.h"
-#include "wstring_util.h"
-namespace internal = ::WindowsMidiServicesInternal;
+// SDK shared
+#include <SdkTraceLogging.h>
 
-#include "SdkTraceLogging.h"
+// Project-local ------------------------------------------------
 
-#include "MidiDefs.h"
-#include "WindowsMidiServices.h"
-#include "WindowsMidiServices_i.c"
-#include "Midi2MidiSrvAbstraction.h"
-
-#include "json_defs.h"
-#include "json_helpers.h"
-#include "swd_helpers.h"
-#include "resource_util.h"
-#include "ping_ump_types.h"
-
-//#include "MidiXProc.h"
-#include "resource.h"
-
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages {};
 namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation {};
-
-namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::Messages;
 namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation;
 
-#include "midi_ump_message_defs.h"
-
-#include <Devpropdef.h>
-#include "MidiDefs.h"
+#include "resource.h"
 
 #include "MidiMessageBuilder.h"
 #include "MidiMessageConverter.h"

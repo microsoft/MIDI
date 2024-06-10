@@ -169,8 +169,6 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
 
         // The lifetime of this object (CMidiEndpointProtocolWorker instance for the SWD) is controlled by the CMidiEndpointProtocolManager.
 
-        auto results = std::make_shared<ENDPOINTPROTOCOLNEGOTIATIONRESULTS>();
-
         // start initial negotiation. Return when timed out or when we have all the info.
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
@@ -178,37 +176,44 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
         
         if (m_allNegotiationMessagesReceived.is_signaled())
         {
-            // provide the negotiation results
+            // provide all the negotiation results
 
-            results->AllEndpointInformationReceived = true;
+            m_mostRecentResults.AllEndpointInformationReceived = true;
 
         }
         else
         {
-            // partial results
+            // we only received partial results
 
-            results->AllEndpointInformationReceived = false;
+            m_mostRecentResults.AllEndpointInformationReceived = false;
         }
 
         // TODO: Fill the rest of the results fields
 
-        results->EndpointSuppliedName = m_endpointName.c_str();
-        results->EndpointSuppliedProductInstanceId = m_productInstanceId.c_str();
+        m_mostRecentResults.EndpointSuppliedName = m_endpointName.c_str();
+        m_mostRecentResults.EndpointSuppliedProductInstanceId = m_productInstanceId.c_str();
 
         //results->FunctionBlocksAreStatic =
-        results->NumberOfFunctionBlocksReceived = m_countFunctionBlocksReceived;
-        results->NumberOfFunctionBlocksDeclared = m_declaredFunctionBlockCount;
+        m_mostRecentResults.NumberOfFunctionBlocksReceived = m_countFunctionBlocksReceived;
+        m_mostRecentResults.NumberOfFunctionBlocksDeclared = m_declaredFunctionBlockCount;
 
-        // caller is responsible for cleaning up here.
-        auto functionBlocks = std::make_shared<std::vector<DISCOVEREDFUNCTIONBLOCK>>();
+        m_discoveredFunctionBlocks.clear();
+        m_discoveredFunctionBlocks.reserve(m_countFunctionBlocksReceived);
 
-        // TODO: Loop through function blocks
+        // add the function blocks
+
+
+
+        // TODO: Loop through function blocks and copy the name pointers over 
+        // into the structure before returning it. Seems extra, but we need a friendly
+        // place to work on names before they are finished, and the structure only
+        // knows about the LPCWSTR, not std::wstring
 
 
         // TODO: add the results pointer for the function blocks
 
 
-        *NegotiationResults = results.get();
+        *NegotiationResults = &m_mostRecentResults;
 
         return S_OK;
     }

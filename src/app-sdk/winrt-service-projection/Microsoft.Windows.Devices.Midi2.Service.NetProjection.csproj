@@ -20,7 +20,6 @@
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<AssemblyName>Microsoft.Windows.Devices.Midi2.Service.NetProjection</AssemblyName>
 		<PackageOutputPath>..\vsfiles\PublishedNuGet\</PackageOutputPath>
-		<BaseIntermediateOutputPath>$(SolutionDir)vsfiles\intermediate\$(AssemblyName)\</BaseIntermediateOutputPath>
 		<SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
 		<BaseOutputPath>$(SolutionDir)vsfiles\NetProjections\</BaseOutputPath>
 	</PropertyGroup>

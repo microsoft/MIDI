@@ -9,22 +9,10 @@
     <ClCompile Include="MidiLoopbackEndpointManager.cpp">
       <Filter>SDK</Filter>
     </ClCompile>
-    <ClCompile Include="MidiLoopbackEndpointCreationConfiguration.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiLoopbackEndpointDeletionConfiguration.cpp">
-      <Filter>SDK</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="MidiLoopbackEndpointManager.h">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointCreationConfiguration.h">
-      <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiLoopbackEndpointDeletionConfiguration.h">
       <Filter>SDK</Filter>
     </ClInclude>
   </ItemGroup>

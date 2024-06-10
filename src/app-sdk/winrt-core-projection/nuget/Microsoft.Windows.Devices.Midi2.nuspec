@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Windows.Devices.Midi2.Core</id>
-		<version>1.0.0-preview.6-0206</version>
+		<version>$version$</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>
@@ -45,13 +45,13 @@
         <!-- Compile-time References  ================================================ -->
 		
         <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2.NetProjection\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
-			  target="ref\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NET.dll" />
+			  target="ref\net6.0-windows10.0.20348.0\" />
 
 
         <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.winmd"
-              target="ref\uap10.0\Microsoft.Windows.Devices.Midi2.winmd" />
+              target="ref\uap10.0\" />
         <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.winmd"
-              target="ref\native\Microsoft.Windows.Devices.Midi2.winmd" />
+              target="ref\native\" />
 
         <!-- Runtime Libs ================================================ -->
 		
@@ -60,9 +60,9 @@
 
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
         <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.winmd"
-              target="lib\uap10.0\Microsoft.Windows.Devices.Midi2.winmd" />
+              target="lib\uap10.0\" />
         <file src="..\..\vsfiles\Microsoft.Windows.Devices.Midi2\x64\Release\Microsoft.Windows.Devices.Midi2.winmd"
-              target="lib\native\Microsoft.Windows.Devices.Midi2.winmd" />
+              target="lib\native\" />
 
         <!-- Intel x64 Native Binaries ================================================ -->
 

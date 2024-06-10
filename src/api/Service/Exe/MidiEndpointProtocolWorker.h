@@ -90,6 +90,11 @@ private:
     uint8_t m_countFunctionBlockNamesReceived{ 0 };
 
 
+    //we keep these here so the pointer stays valid
+    ENDPOINTPROTOCOLNEGOTIATIONRESULTS m_mostRecentResults{ };
+    std::vector<DISCOVEREDFUNCTIONBLOCK> m_discoveredFunctionBlocks{ };
+
+
     HRESULT RequestAllFunctionBlocks();
     HRESULT RequestAllEndpointDiscoveryInformation();
 
