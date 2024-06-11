@@ -165,11 +165,31 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
     try
     {
         // TODO: For now, we're keeping the initial negotiation all in-line, in the same thread.
-        // will evaluate a background thread after the implementation is tested and working.
+        // will evaluate a separate worker thread after the implementation is tested and working.
 
         // The lifetime of this object (CMidiEndpointProtocolWorker instance for the SWD) is controlled by the CMidiEndpointProtocolManager.
 
-        // start initial negotiation. Return when timed out or when we have all the info.
+
+        // reset all the data collection fields in case negotiation was
+        // called more than once (an allowed scenario)
+        m_countFunctionBlocksReceived = 0;
+        m_countFunctionBlockNamesReceived = 0;
+        m_declaredFunctionBlockCount = 0;
+        m_discoveredFunctionBlocks.clear();
+        m_functionBlockNames.clear();
+        m_endpointName.clear();
+        m_productInstanceId.clear();
+
+        m_allNegotiationMessagesReceived.reset();
+        m_alreadyTriedToNegotiationOnce = false;
+
+        m_taskDeviceIdentityReceived = false;
+        m_taskEndpointInfoReceived = false;
+        m_taskEndpointNameReceived = false;
+        m_taskEndpointProductInstanceIdReceived = false;
+        m_taskFinalStreamNegotiationResponseReceived = false;
+
+        // start initial negotiation. Return when timed out or when we have all the requested info.
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
         m_allNegotiationMessagesReceived.wait(TimeoutMilliseconds);
@@ -179,7 +199,6 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
             // provide all the negotiation results
 
             m_mostRecentResults.AllEndpointInformationReceived = true;
-
         }
         else
         {
@@ -188,7 +207,10 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
             m_mostRecentResults.AllEndpointInformationReceived = false;
         }
 
-        // TODO: Fill the rest of the results fields
+        // copy the data over into the results structure. We do this because the endpoint
+        // deals only with the manager. It doesn't work with this worker at all. Important
+        // because in the future, this worker may be on another thread etc. It's an internal
+        // implementation detail, not a public contract.
 
         m_mostRecentResults.EndpointSuppliedName = m_endpointName.c_str();
         m_mostRecentResults.EndpointSuppliedProductInstanceId = m_productInstanceId.c_str();
@@ -197,22 +219,18 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
         m_mostRecentResults.NumberOfFunctionBlocksReceived = m_countFunctionBlocksReceived;
         m_mostRecentResults.NumberOfFunctionBlocksDeclared = m_declaredFunctionBlockCount;
 
-        m_discoveredFunctionBlocks.clear();
-        m_discoveredFunctionBlocks.reserve(m_countFunctionBlocksReceived);
-
-        // add the function blocks
-
-
-
         // TODO: Loop through function blocks and copy the name pointers over 
         // into the structure before returning it. Seems extra, but we need a friendly
         // place to work on names before they are finished, and the structure only
         // knows about the LPCWSTR, not std::wstring
+        
+        // MISSING NAME FUNCTIONALITY
 
 
-        // TODO: add the results pointer for the function blocks
+        // add the function blocks now they are fully valid
+        m_mostRecentResults.DiscoveredFunctionBlocks = m_discoveredFunctionBlocks.data();
 
-
+       
         *NegotiationResults = &m_mostRecentResults;
 
         return S_OK;
