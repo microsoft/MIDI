@@ -278,6 +278,8 @@ class Build : NukeBuild
         .DependsOn(BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
+            // update nuget packages
+
             // build x64 and Arm64
         });
 
@@ -285,6 +287,7 @@ class Build : NukeBuild
         .DependsOn(BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
+            // update nuget packages
 
             // build x64 and Arm64
 
@@ -294,6 +297,9 @@ class Build : NukeBuild
         .DependsOn(BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
+            // update nuget packages
+
+            // make sure they compile
 
         });
 
