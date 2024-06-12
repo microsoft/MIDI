@@ -3,19 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34004.107
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "sdk-redist-package", "api-package\sdk-redist-package.wixproj", "{E18CC5FC-F028-48A7-9343-E32A85CDF7B3}"
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "sdk-redist-package", "sdk-package\sdk-redist-package.wixproj", "{E18CC5FC-F028-48A7-9343-E32A85CDF7B3}"
 EndProject
 Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "main-bundle", "main-bundle\main-bundle.wixproj", "{182F17E6-CF91-4D65-B767-6469D523F5AC}"
-EndProject
-Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "console-package", "console-package\console-package.wixproj", "{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}"
-	ProjectSection(ProjectDependencies) = postProject
-		{E18CC5FC-F028-48A7-9343-E32A85CDF7B3} = {E18CC5FC-F028-48A7-9343-E32A85CDF7B3}
-	EndProjectSection
-EndProject
-Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "settings-package", "settings-package\settings-package.wixproj", "{0C3D23A8-A238-4551-BEB4-2912EFA3245C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{E18CC5FC-F028-48A7-9343-E32A85CDF7B3} = {E18CC5FC-F028-48A7-9343-E32A85CDF7B3}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,22 +31,6 @@ Global
 		{182F17E6-CF91-4D65-B767-6469D523F5AC}.Release|ARM64.Build.0 = Release|ARM64
 		{182F17E6-CF91-4D65-B767-6469D523F5AC}.Release|x64.ActiveCfg = Release|x64
 		{182F17E6-CF91-4D65-B767-6469D523F5AC}.Release|x64.Build.0 = Release|x64
-		{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}.Debug|ARM64.Build.0 = Debug|ARM64
-		{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}.Debug|x64.ActiveCfg = Debug|x64
-		{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}.Debug|x64.Build.0 = Debug|x64
-		{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}.Release|ARM64.ActiveCfg = Release|ARM64
-		{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}.Release|ARM64.Build.0 = Release|ARM64
-		{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}.Release|x64.ActiveCfg = Release|x64
-		{6894F024-2ADF-4A9B-87FC-70C8209C6CDE}.Release|x64.Build.0 = Release|x64
-		{0C3D23A8-A238-4551-BEB4-2912EFA3245C}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{0C3D23A8-A238-4551-BEB4-2912EFA3245C}.Debug|ARM64.Build.0 = Debug|ARM64
-		{0C3D23A8-A238-4551-BEB4-2912EFA3245C}.Debug|x64.ActiveCfg = Debug|x64
-		{0C3D23A8-A238-4551-BEB4-2912EFA3245C}.Debug|x64.Build.0 = Debug|x64
-		{0C3D23A8-A238-4551-BEB4-2912EFA3245C}.Release|ARM64.ActiveCfg = Release|ARM64
-		{0C3D23A8-A238-4551-BEB4-2912EFA3245C}.Release|ARM64.Build.0 = Release|ARM64
-		{0C3D23A8-A238-4551-BEB4-2912EFA3245C}.Release|x64.ActiveCfg = Release|x64
-		{0C3D23A8-A238-4551-BEB4-2912EFA3245C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

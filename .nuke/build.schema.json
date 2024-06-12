@@ -66,9 +66,11 @@
             "enum": [
               "BuildAndPackAllAppSDKs",
               "BuildAndPublishAll",
+              "BuildAppSdkRuntimeInstaller",
               "BuildConsoleApp",
               "BuildSamples",
               "BuildServiceAndPlugins",
+              "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
               "Clean",
               "Restore"
@@ -83,9 +85,11 @@
             "enum": [
               "BuildAndPackAllAppSDKs",
               "BuildAndPublishAll",
+              "BuildAppSdkRuntimeInstaller",
               "BuildConsoleApp",
               "BuildSamples",
               "BuildServiceAndPlugins",
+              "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
               "Clean",
               "Restore"

@@ -119,23 +119,22 @@ class Build : NukeBuild
 
 
 
-    Target Clean => _ => _
-        .Before(Restore)
-        .Executes(() =>
-        {
-        });
+    //Target Clean => _ => _
+    //    .Before(Restore)
+    //    .Executes(() =>
+    //    {
+    //    });
 
-    Target Restore => _ => _
-        .Executes(() =>
-        {
-        });
+    //Target Restore => _ => _
+    //    .Executes(() =>
+    //    {
+    //    });
 
 
 
 
 
     Target BuildServiceAndPlugins => _ => _
-        .DependsOn(Restore)
         .Executes(() =>
     {
         foreach (var platform in ServicePlatforms)
@@ -210,12 +209,13 @@ class Build : NukeBuild
                 var msbuildProperties = new Dictionary<string, object>();
                 msbuildProperties.Add("Platform", platform);
                 msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+                msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
 
                 Console.Out.WriteLine($"----------------------------------------------------------------------");
                 Console.Out.WriteLine($"SolutionDir: {solutionDir}");
                 Console.Out.WriteLine($"Platform:    {platform}");
 
-
+                
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk.sln")
                     .SetMaxCpuCount(14)
@@ -279,7 +279,32 @@ class Build : NukeBuild
         .DependsOn(BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
+            // we build for Arm64 and x64. No EC required here
+            foreach (var platform in ServicePlatforms)
+            {
+                string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
 
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                Console.Out.WriteLine($"Platform:    {platform}");
+
+
+                MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(AppSdkSolutionFolder / "sdk-runtime-installer" / "midi-services-app-sdk-runtime-setup.sln")
+                    .SetMaxCpuCount(14)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    .EnableNodeReuse()
+                );
+
+            }
 
         });
 

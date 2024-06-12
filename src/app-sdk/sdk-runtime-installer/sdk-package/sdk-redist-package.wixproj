@@ -1,6 +1,6 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
-    <OutputName>MidiConsoleAppStandAloneSetup</OutputName>
+    <OutputName>WindowsMIDIServicesSdkRedist</OutputName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
@@ -10,5 +10,4 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
-
 </Project>

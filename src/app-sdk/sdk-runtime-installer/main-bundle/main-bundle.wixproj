@@ -1,7 +1,7 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
-    <OutputName>WindowsMidiServicesCompleteSetup</OutputName>
+    <OutputName>WindowsMidiServicesSdkRuntimeSetup</OutputName>
     <BuildDate>$([System.DateTime]::Now.ToString("yyyyMMddhhmm"))</BuildDate>
     <DefineConstants>BuildDate=$(BuildDate)</DefineConstants>
   </PropertyGroup>
@@ -20,8 +20,6 @@
     <PackageReference Include="WixToolset.Util.wixext" Version="4.0.5" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\api-package\sdk-redist-package.wixproj" />
-    <ProjectReference Include="..\console-package\console-package.wixproj" />
-    <ProjectReference Include="..\settings-package\settings-package.wixproj" />
+    <ProjectReference Include="..\sdk-package\sdk-redist-package.wixproj" />
   </ItemGroup>
 </Project>
