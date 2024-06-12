@@ -22,7 +22,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -107,7 +107,7 @@ namespace Microsoft.Midi.ConsoleApp
         private void OnWatcherDeviceRemoved(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationRemovedEventArgs args)
         {
             AnsiConsole.MarkupLine("[indianred1]Endpoint Removed:[/]");
-            AnsiConsole.MarkupLine(" - " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
+            AnsiConsole.MarkupLine(" - " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.EndpointDeviceId));
             AnsiConsole.MarkupLine("");
 
         }
@@ -119,41 +119,41 @@ namespace Microsoft.Midi.ConsoleApp
         private void OnWatcherDeviceUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
         {
             AnsiConsole.MarkupLine("[steelblue1]Endpoint Updated:[/]");
-            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.Id));
+            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.EndpointDeviceId));
 
             
 
-            if (args.UpdatedName)
+            if (args.IsNameUpdated)
             {
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]Name Updated[/]");
             }
 
-            if (args.UpdatedEndpointInformation)
+            if (args.IsEndpointInformationUpdated)
             {
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]Endpoint Information Updated[/]");
             }
 
-            if (args.UpdatedStreamConfiguration)
+            if (args.IsStreamConfigurationUpdated)
             {
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]Stream Configuration Updated[/]");
             }
 
-            if (args.UpdatedFunctionBlocks)
+            if (args.AreFunctionBlocksUpdated)
             {
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]Function Blocks Updated[/]");
             }
 
-            if (args.UpdatedDeviceIdentity)
+            if (args.IsDeviceIdentityUpdated)
             {
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]Device Identity Updated[/]");
             }
 
-            if (args.UpdatedUserMetadata)
+            if (args.IsUserMetadataUpdated)
             {
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]User Metadata Updated[/]");
             }
 
-            if (args.UpdatedAdditionalCapabilities)
+            if (args.AreAdditionalCapabilitiesUpdated)
             {
                 AnsiConsole.MarkupLine(_bullet + "[gold3_1]Additional Capabilities Updated[/]");
             }
@@ -164,7 +164,7 @@ namespace Microsoft.Midi.ConsoleApp
         private void OnWatcherDeviceAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationAddedEventArgs args)
         {
             AnsiConsole.MarkupLine("Endpoint Added: ");
-            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.AddedDevice.Id));
+            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(args.AddedDevice.EndpointDeviceId));
             AnsiConsole.MarkupLine(_emptyBullet + AnsiMarkupFormatter.FormatEndpointName(args.AddedDevice.Name));
             AnsiConsole.MarkupLine(_emptyBullet + args.AddedDevice.EndpointPurpose.ToString());
             AnsiConsole.MarkupLine("");

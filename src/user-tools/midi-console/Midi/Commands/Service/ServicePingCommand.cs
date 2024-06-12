@@ -59,7 +59,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -75,7 +75,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 //UInt32 timeout = settings.Timeout.HasValue ? settings.Timeout.Value : 0;
 
-                var pingResult = MidiService.PingService((byte)settings.Count, (UInt32)settings.Timeout);
+                var pingResult = MidiDiagnostics.PingService((byte)settings.Count, (UInt32)settings.Timeout);
 
                 // TODO: Display results in a table
 

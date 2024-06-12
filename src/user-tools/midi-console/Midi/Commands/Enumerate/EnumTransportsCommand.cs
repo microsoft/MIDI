@@ -23,7 +23,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -42,7 +42,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Transport Plugins"));
 
-                var transportList = MidiService.GetInstalledTransportPlugins();
+                var transportList = MidiReporting.GetInstalledTransportPlugins();
 
                 if (transportList.Count > 0)
                 {
@@ -82,13 +82,13 @@ namespace Microsoft.Midi.ConsoleApp
                             $"Is System Managed:             [mediumturquoise]{transport.IsSystemManaged}[/]"
                             );
 
-                            table.AddRow(
-                            $"Is Client Configurable:        [mediumturquoise]{transport.IsClientConfigurable}[/]"
-                            );
+                            //table.AddRow(
+                            //$"Is Client Configurable:        [mediumturquoise]{transport.IsClientConfigurable}[/]"
+                            //);
 
-                            table.AddRow(
-                            $"Client Configuration Assembly: [mediumturquoise]{transport.ClientConfigurationAssemblyName}[/]"
-                            );
+                            //table.AddRow(
+                            //$"Client Configuration Assembly: [mediumturquoise]{transport.ClientConfigurationAssemblyName}[/]"
+                            //);
 
                         }
 

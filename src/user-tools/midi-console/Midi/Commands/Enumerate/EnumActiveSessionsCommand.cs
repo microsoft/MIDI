@@ -16,7 +16,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -37,7 +37,7 @@ namespace Microsoft.Midi.ConsoleApp
                 table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Sessions"));
 
 
-                var sessionList = MidiService.GetActiveSessions();
+                var sessionList = MidiReporting.GetActiveSessions();
 
 
                 if (sessionList.Count > 0)
@@ -79,7 +79,7 @@ namespace Microsoft.Midi.ConsoleApp
                                     connectionInfoString += $" [paleturquoise1]x{connection.InstanceCount}[/] ";
                                 }
 
-                                var di = MidiEndpointDeviceInformation.CreateFromId(connection.EndpointDeviceId);
+                                var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(connection.EndpointDeviceId);
 
                                 string epName;
                                 string icon;

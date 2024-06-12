@@ -40,7 +40,7 @@ namespace Microsoft.Midi.ConsoleApp
                 //var table = new Table();
 
                 // when this goes out of scope, it will dispose of the session, which closes the connections
-                using var session = MidiSession.CreateSession($"{Strings.AppShortName}");
+                using var session = MidiSession.Create($"{Strings.AppShortName}");
                 if (session == null)
                 {
                     AnsiConsole.WriteLine(Strings.ErrorUnableToCreateSession);

@@ -31,11 +31,11 @@ class Build : NukeBuild
 
     AbsolutePath StagingRootFolder => BuildRootFolder / "staging";
     AbsolutePath AppSdkStagingFolder => StagingRootFolder / "app-sdk";
-    
-    
+
+
 
     AbsolutePath ReleaseRootFolder => BuildRootFolder / "release";
-    AbsolutePath AppSdkNugetReleaseFolder => BuildRootFolder / "app-sdk-nuget";
+    AbsolutePath AppSdkNugetOutputFolder => ReleaseRootFolder / "nuget";
 
     AbsolutePath AppSdkImplementationInstallerReleaseFolder => BuildRootFolder / "app-sdk-impl";
 
@@ -173,8 +173,6 @@ class Build : NukeBuild
         // copy x64 files to Arm64EC folder as well. No reason for the full
         // service and plugins to be Arm64EC just to provide a few headers
 
-
-
         var intermediateFolder = ApiSolutionFolder / "vsfiles" / "intermediate";
 
         foreach (var platform in AllPlatforms)
@@ -212,7 +210,6 @@ class Build : NukeBuild
                 var msbuildProperties = new Dictionary<string, object>();
                 msbuildProperties.Add("Platform", platform);
                 msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
-                //msbuildProperties.Add("NoWarn", "MIDL2111");            // IDL identifier length warning
 
                 Console.Out.WriteLine($"----------------------------------------------------------------------");
                 Console.Out.WriteLine($"SolutionDir: {solutionDir}");
@@ -233,7 +230,7 @@ class Build : NukeBuild
 
             }
 
-            var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles";
+            var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
 
             foreach (var platform in AllPlatforms)
             {
@@ -250,15 +247,19 @@ class Build : NukeBuild
                     "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual"
                 })
                 {
-                    sdkBinaries.Add(sdkOutputRootFolder / ns / platform / Configuration.Release / $"{ns}.winmd");
-                    sdkBinaries.Add(sdkOutputRootFolder / ns / platform / Configuration.Release / $"{ns}.dll");
-                    sdkBinaries.Add(sdkOutputRootFolder / ns / platform / Configuration.Release / $"{ns}.pri");
+                    sdkBinaries.Add(sdkOutputRootFolder / "sdk" / platform / Configuration.Release / $"{ns}.winmd");
+                    sdkBinaries.Add(sdkOutputRootFolder / "sdk" / platform / Configuration.Release / $"{ns}.dll");
+                    sdkBinaries.Add(sdkOutputRootFolder / "sdk" / platform / Configuration.Release / $"{ns}.pri");
 
                     // todo: CS projection dll
                 }
 
-                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry" / platform / Configuration.Release / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd");
-                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry" / platform / Configuration.Release / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll");
+                // create the nuget package
+
+                NuGetTasks.NuGetPack(_ => _
+                    .SetTargetPath(AppSdkSolutionFolder / "projections" / "dotnet-and-cpp" / "nuget" / "Microsoft.Windows.Devices.Midi2.nuspec")
+                    .SetOutputDirectory(AppSdkNugetOutputFolder)
+                );
 
                 // copy the files over to the reference location
                 foreach (var file in sdkBinaries)
@@ -266,11 +267,28 @@ class Build : NukeBuild
                     FileSystemTasks.CopyFileToDirectory(file, AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
                 }
 
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / platform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
 
-                // build mididiag
 
-                // copy over mididiag
             }
+        });
+
+
+
+    Target BuildAppSdkRuntimeInstaller => _ => _
+        .DependsOn(BuildAndPackAllAppSDKs)
+        .Executes(() =>
+        {
+
+
+        });
+
+    Target BuildServiceAndPluginsInstaller => _ => _
+        .DependsOn(BuildServiceAndPlugins)
+        .Executes(() =>
+        {
+
+
         });
 
 
@@ -306,7 +324,10 @@ class Build : NukeBuild
 
 
     Target BuildAndPublishAll => _ => _
+        .DependsOn(BuildServiceAndPlugins)
+        .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildAndPackAllAppSDKs)
+        .DependsOn(BuildAppSdkRuntimeInstaller)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSamples)

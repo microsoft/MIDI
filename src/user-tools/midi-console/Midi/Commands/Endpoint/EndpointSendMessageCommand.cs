@@ -7,6 +7,8 @@
 // ============================================================================
 
 
+using Microsoft.Windows.Devices.Midi2.Messages;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointSendMessageCommand : Command<EndpointSendMessageCommand.Settings>
@@ -82,7 +84,7 @@ namespace Microsoft.Midi.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiMessageUtility.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageHelper.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
             }
             else
             {
@@ -92,7 +94,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -122,7 +124,7 @@ namespace Microsoft.Midi.ConsoleApp
                 bool openSuccess = false;
 
                 // when this goes out of scope, it will dispose of the session, which closes the connections
-                using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+                using var session = MidiSession.Create($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
                 if (session == null)
                 {

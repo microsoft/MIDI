@@ -58,7 +58,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public static string GetEndpointNameFromEndpointInterfaceId(string id)
         {
-            var device = MidiEndpointDeviceInformation.CreateFromId(id);
+            var device = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(id);
 
             if (device != null)
             {
