@@ -15,7 +15,7 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
     <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
-    <Bundle Name="Microsoft Windows MIDI Services SDK Runtime $(SetupVersionName) $(SetupVersionNumber)" 
+    <Bundle Name="Windows MIDI Services (App SDK Runtime) $(SetupVersionName) $(SetupVersionNumber)" 
           Manufacturer="Microsoft Corporation" 
           Version="$(SetupVersionNumber)" 
           UpgradeCode="0b3e44a1-278f-4a6a-8be3-7dc71af4d2b3">
@@ -52,7 +52,7 @@
         <PackageGroup Id="Prerequisites">
 
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
-            
+
             <ExePackage
                 DisplayName="Microsoft Visual C++ Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
@@ -63,7 +63,7 @@
                 Permanent="true"
                 >
             </ExePackage>
-
+            
         </PackageGroup>
         
         <PackageGroup Id="MidiServicesPackages">

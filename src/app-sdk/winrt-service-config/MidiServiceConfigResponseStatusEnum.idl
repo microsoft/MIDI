@@ -6,19 +6,20 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-namespace Microsoft.Windows.Devices.Midi2.Service
+namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
-    [uuid("2ebcfa13-585a-4376-8fe1-635784fa7fd4"), version(1.0)]
-    interface IMidiServiceMessageProcessingPluginConfig
+    enum MidiServiceConfigResponseStatus
     {
-        String EndpointDeviceId { get; };
+        Success =                       0,
 
-        Guid MessageProcessingPluginId { get; };
+        ErrorTargetNotFound =           404,
 
-        Guid PluginInstanceId{ get; };
+        ErrorConfigJsonNullOrEmpty =    600,
+        ErrorProcessingConfigJson =     601,
+        ErrorProcessingResponseJson =   605,
 
-        Boolean IsFromCurrentConfigFile{ get; };
+        ErrorNotImplemented =           2600,
 
-        String GetConfigJson();
-    }
+        //ErrorOther =                9999,
+    };
 }

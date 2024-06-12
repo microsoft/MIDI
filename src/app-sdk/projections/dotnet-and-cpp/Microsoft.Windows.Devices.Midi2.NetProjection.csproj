@@ -17,7 +17,8 @@
             Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
             Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
             Microsoft.Windows.Devices.Midi2.Messages
-            Microsoft.Windows.Devices.Midi2.Service
+            Microsoft.Windows.Devices.Midi2.ServiceConfig
+            Microsoft.Windows.Devices.Midi2.Initializer
         </CsWinRTIncludes>
 		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
 	</PropertyGroup>
@@ -54,7 +55,8 @@
     <ProjectReference Include="..\..\winrt-endpoint-loopback\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.vcxproj" />
     <ProjectReference Include="..\..\winrt-endpoint-virtual\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.vcxproj" />
     <ProjectReference Include="..\..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj" />
-    <ProjectReference Include="..\..\winrt-service\Microsoft.Windows.Devices.Midi2.Service.vcxproj" />
+    <ProjectReference Include="..\..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj" />
+    <ProjectReference Include="..\..\winrt-windows-midi-services\Microsoft.Windows.Devices.Midi2.Initializer.vcxproj" />
   </ItemGroup>
 
 </Project>

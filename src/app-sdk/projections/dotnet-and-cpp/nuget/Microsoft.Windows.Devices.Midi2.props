@@ -9,8 +9,33 @@
 		</Reference>
 			-->	   
 
-		<Reference Include="Microsoft.Devices.Midi2">
+		<Reference Include="Microsoft.Windows.Devices.Midi2">
 			<HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.winmd</HintPath>
 		</Reference>
-	</ItemGroup>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.Messages">
+            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Messages.winmd</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.ServiceConfig">
+            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual">
+            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback">
+            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.Diagnostics">
+            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.ClientPlugins">
+            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.CapabilityInquiry">
+            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd</HintPath>
+        </Reference>
+        
+        <Reference Include="Microsoft.Windows.Devices.Midi2.Initializer">
+            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Initializer.winmd</HintPath>
+        </Reference>
+    </ItemGroup>
 </Project>

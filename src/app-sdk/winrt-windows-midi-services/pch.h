@@ -58,21 +58,13 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
 #include <Devpropdef.h>
 #include <MidiDefs.h>
-#include <midi_group_terminal_blocks.h>
 
 // shared
-#include <midi_ump.h>   // general shared
-#include <loopback_ids.h>
-#include <midi_timestamp.h>
 #include <json_defs.h>
-#include <ping_ump_types.h>
-#include <ump_helpers.h>
 #include <hstring_util.h>
 #include <wstring_util.h>
 #include <json_helpers.h>
 #include <resource_util.h>
-#include <swd_helpers.h>
-#include <midi_ump_message_defs.h>
 
 
 // service interface
@@ -85,11 +77,11 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
 // Project-local ------------------------------------------------
 
-namespace winrt::Microsoft::Windows::Devices::Midi2::Service {};
-namespace winrt::Microsoft::Windows::Devices::Midi2::Service::implementation {};
-namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::Service;
-namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Service::implementation;
+namespace winrt::Microsoft::Windows::Devices::Midi2::Initializer {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Initializer::implementation {};
+namespace init = ::winrt::Microsoft::Windows::Devices::Midi2::Initializer;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Initializer::implementation;
 
 #include "resource.h"
 
-#include "MidiService.h"
+#include "MidiServicesInitializer.h"

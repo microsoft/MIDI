@@ -17,20 +17,20 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiLoopbackEndpointCreationResult.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiLoopbackEndpointDefinition.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiLoopbackEndpointManager.idl">
-      <Filter>SDK</Filter>
-    </Midl>
     <Midl Include="MidiLoopbackEndpointCreationConfig.idl">
-      <Filter>SDK</Filter>
+      <Filter>SDK\Configuration</Filter>
     </Midl>
     <Midl Include="MidiLoopbackEndpointDeletionConfig.idl">
-      <Filter>SDK</Filter>
+      <Filter>SDK\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointManager.idl">
+      <Filter>SDK\Management</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointDefinition.idl">
+      <Filter>SDK\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiLoopbackEndpointCreationResult.idl">
+      <Filter>SDK\Management</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -41,6 +41,12 @@
   <ItemGroup>
     <Filter Include="SDK">
       <UniqueIdentifier>{be86096a-366a-491b-825e-1722b96c678d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Configuration">
+      <UniqueIdentifier>{7bedd7f9-3966-4a85-b089-916e72f4211d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Management">
+      <UniqueIdentifier>{656ea1ee-7afd-4546-89aa-1e2ed9d80f83}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

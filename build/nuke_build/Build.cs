@@ -9,6 +9,7 @@ using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
+using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Tools.NuGet;
@@ -43,6 +44,7 @@ class Build : NukeBuild
 
 
     string NugetFullVersionString => SetupBuildMajorMinor + "." + SetupBuildDateNumber + "." + SetupBuildTimeNumber + "-" + NuGetVersionName;
+    string NugetFullPackageId => "Microsoft.Windows.Devices.Midi2";
 
 
     // ===========================================================
@@ -244,13 +246,14 @@ class Build : NukeBuild
 
                 foreach (var ns in new string[] {
                     "Microsoft.Windows.Devices.Midi2",
-                    "Microsoft.Windows.Devices.Midi2.Service",
+                    "Microsoft.Windows.Devices.Midi2.ServiceConfig",
                     "Microsoft.Windows.Devices.Midi2.CapabilityInquiry",
                     "Microsoft.Windows.Devices.Midi2.ClientPlugins",
                     "Microsoft.Windows.Devices.Midi2.Diagnostics",
                     "Microsoft.Windows.Devices.Midi2.Messages",
                     "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback",
-                    "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual"
+                    "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual",
+                    "Microsoft.Windows.Devices.Midi2.Initializer"           // this last one gets packed 100% in the nuget, including the impl
                 })
                 {
                     sdkBinaries.Add(sdkOutputRootFolder / "sdk" / platform / Configuration.Release / $"{ns}.winmd");
@@ -261,10 +264,14 @@ class Build : NukeBuild
                 }
 
                 // create the nuget package
+                // todo: it would be better to see if any of the generated winmds have changed and only
+                // do this step if those have changed. Maybe do a before/after date/time check?
+
 
                 NuGetTasks.NuGetPack(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "projections" / "dotnet-and-cpp" / "nuget" / "Microsoft.Windows.Devices.Midi2.nuspec")
                     .AddProperty("version", NugetFullVersionString)
+                    .AddProperty("id", NugetFullPackageId)
                     .SetOutputDirectory(AppSdkNugetOutputFolder)
                 );
 
@@ -275,9 +282,8 @@ class Build : NukeBuild
                 }
 
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / platform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
-
-
             }
+
         });
 
 
@@ -317,10 +323,12 @@ class Build : NukeBuild
                     .EnableNodeReuse()
                 );
 
+                // todo: it would be better to see if any of the sdk files have changed and only
+                // do this copy if a new setup file was created. Maybe do a before/after date/time check?
 
                 FileSystemTasks.CopyFile(
                     setupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
-                    ReleaseRootFolder / $"Windows MIDI Services SDK Runtime - {fullSetupVersionString}-{platform.ToLower()}.exe");
+                    ReleaseRootFolder / $"Windows MIDI Services (App SDK Runtime) - {fullSetupVersionString}-{platform.ToLower()}.exe");
 
             }
 
@@ -338,7 +346,6 @@ class Build : NukeBuild
             writer.WriteLine("</Include>");
         }
     }
-
 
     Target BuildServiceAndPluginsInstaller => _ => _
         .DependsOn(Prerequisites)
@@ -362,7 +369,7 @@ class Build : NukeBuild
                 Console.Out.WriteLine($"SolutionDir: {solutionDir}");
                 Console.Out.WriteLine($"Platform:    {platform}");
 
-                MSBuildTasks.MSBuild(_ => _
+                var output = MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(InBoxComponentsSetupSolutionFolder / "midi-services-in-box-setup.sln")
                     .SetMaxCpuCount(14)
                     /*.SetOutDir(outputFolder) */
@@ -373,10 +380,12 @@ class Build : NukeBuild
                     .EnableNodeReuse()
                 );
 
+
+                // todo: it would be better to see if any of the sdk files have changed and only
+                // do this copy if a new setup file was created. Maybe do a before/after date/time check?
                 FileSystemTasks.CopyFile(
                     InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
-                    ReleaseRootFolder / $"Windows MIDI Services (In-Box Components) - {fullSetupVersionString}-{platform.ToLower()}.exe");
-
+                    ReleaseRootFolder / $"Windows MIDI Services (In-Box Service) - {fullSetupVersionString}-{platform.ToLower()}.exe");
             }
 
         });

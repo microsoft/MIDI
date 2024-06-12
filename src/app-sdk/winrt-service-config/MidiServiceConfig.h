@@ -7,24 +7,13 @@
 // ============================================================================
 
 #pragma once
-#include "MidiService.g.h"
+#include "MidiServiceConfig.g.h"
 
-namespace winrt::Microsoft::Windows::Devices::Midi2::Service::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementation
 {
-    struct MidiService : MidiServiceT<MidiService>
+    struct MidiServiceConfig : MidiServiceConfigT<MidiServiceConfig>
     {
-        MidiService() = default;
-
-        static bool EnsureServiceAvailable();
-
-
-        static bool IsCompatibleRuntimeInstalled();
-        static svc::MidiServicesSdkRuntimeVersion GetInstalledRuntimeVersion();
-
-        static foundation::Uri GetLatestRuntimeReleaseInstallerUri();
-        static foundation::Uri GetLatestSettingsAppReleaseInstallerUri();
-        static foundation::Uri GetLatestConsoleAppReleaseInstallerUri();
-
+        MidiServiceConfig() = default;
 
         static svc::MidiServiceConfigResponse UpdateTransportPluginConfig(
             _In_ svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept;
@@ -43,9 +32,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Service::implementation
 
     };
 }
-namespace winrt::Microsoft::Windows::Devices::Midi2::Service::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::factory_implementation
 {
-    struct MidiService : MidiServiceT<MidiService, implementation::MidiService, winrt::static_lifetime>
+    struct MidiServiceConfig : MidiServiceConfigT<MidiServiceConfig, implementation::MidiServiceConfig, winrt::static_lifetime>
     {
     };
 }

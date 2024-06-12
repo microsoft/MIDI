@@ -304,7 +304,7 @@
     <ProjectReference Include="..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\winrt-service\Microsoft.Windows.Devices.Midi2.Service.vcxproj">
+    <ProjectReference Include="..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj">
       <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
     </ProjectReference>
   </ItemGroup>

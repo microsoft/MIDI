@@ -16,10 +16,10 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
     <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
-    <Bundle Name="Microsoft Windows MIDI Services (In-Box Components) $(SetupVersionName) $(SetupVersionNumber)" 
-          Manufacturer="Microsoft Corporation" 
-          Version="$(SetupVersionNumber)" 
-          UpgradeCode="0ccb5d12-44a6-4dd8-8d07-0d130589c0a2">
+    <Bundle Name="Windows MIDI Services (In-Box) $(SetupVersionName) $(SetupVersionNumber)" 
+            Manufacturer="Microsoft Corporation" 
+            Version="$(SetupVersionNumber)" 
+            UpgradeCode="0ccb5d12-44a6-4dd8-8d07-0d130589c0a2">
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
@@ -74,7 +74,7 @@
         
         <PackageGroup Id="MidiServicesPackages">
             <MsiPackage
-                Id="MidiServicesCoreSetup"
+                Id="WindowsMIDIServicesCoreSetup"
                 Vital="yes"
                 Permanent="no"
                 Compressed="yes"

@@ -38,8 +38,8 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
-namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::Service;
+#include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
+namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
 namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::Messages;
@@ -109,8 +109,8 @@ namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoint
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
-namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::Service;
+#include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
+namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
 namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::Messages;

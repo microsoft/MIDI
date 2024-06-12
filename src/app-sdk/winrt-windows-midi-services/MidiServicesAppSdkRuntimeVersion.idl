@@ -6,14 +6,15 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-namespace Microsoft.Windows.Devices.Midi2.Service
+namespace Microsoft.Windows.Devices.Midi2.Initializer
 {
-    [uuid("b2417dde-ef35-499b-a89b-0a4c32cc699a"), version(1.0)]
-    interface IMidiServiceTransportPluginConfig
+    struct MidiServicesAppSdkRuntimeVersion
     {
-        Guid TransportId { get; };
-        Boolean IsFromCurrentConfigFile{ get; };
+        UInt16 Major;
+        UInt32 Minor;
+        UInt32 Build;
 
-        String GetConfigJson();
-    }
+        Boolean PreRelease;
+        Boolean Experimental;
+    };
 }

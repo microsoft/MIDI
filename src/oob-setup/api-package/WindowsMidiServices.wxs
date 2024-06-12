@@ -7,6 +7,9 @@
           Manufacturer="Microsoft Corporation"
           Version="1.0.0.0"
           UpgradeCode="c552e144-54d0-4e18-8e16-ff0f0a2eb34f"
+          Scope="perMachine"
+          Compressed="true"
+          
           >
        
         <MediaTemplate EmbedCab="yes" />
@@ -123,9 +126,18 @@
         </Component>
 
 
-        <CustomAction Id="SelfInstallService" FileRef="WINDOWS_SERVICE" ExeCommand="install" />
-
-        <CustomAction Id="SelfUninstallService" FileRef="WINDOWS_SERVICE" ExeCommand="uninstall" />
+        <!-- Elevated permissions are required for these steps -->
+        <CustomAction Id="SelfInstallService"
+                      Impersonate="no"
+                      Execute="deferred"
+                      Directory="SERVICE_INSTALLFOLDER"
+                      ExeCommand="[SERVICE_INSTALLFOLDER]midisrv install" />
+        
+        <CustomAction Id="SelfUninstallService" 
+                      Impersonate="no"
+                      Execute="deferred"
+                      Directory="SERVICE_INSTALLFOLDER" 
+                      ExeCommand="[SERVICE_INSTALLFOLDER]midisrv uninstall" />
 
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceAbstractions"/>
@@ -137,11 +149,12 @@
 
         </Feature>
 
-
+        
         <InstallExecuteSequence>
-            <Custom Action="SelfInstallService" After="InstallFiles" Condition="(NOT Installed)" />
-            <Custom Action="SelfUninstallService" Before="InstallFiles" Condition='(REMOVE="ALL")'/>
+            <Custom Action="SelfInstallService" Before="InstallFinalize" Condition="(NOT Installed)" />
+            <Custom Action="SelfUninstallService" Before="RemoveFiles" Condition='(REMOVE="ALL")'/>
         </InstallExecuteSequence>
-
+        
+        
     </Package>
 </Wix>

@@ -35,7 +35,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         {
             // send it up
 
-            auto serviceResponse = svc::MidiService::UpdateTransportPluginConfig(creationConfig);
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
 
             // parse the results
@@ -87,7 +87,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         {
             // send it up
 
-            auto serviceResponse = svc::MidiService::UpdateTransportPluginConfig(deletionConfig);
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(deletionConfig);
 
             result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
         }

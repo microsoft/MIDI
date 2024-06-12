@@ -6,20 +6,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-namespace Microsoft.Windows.Devices.Midi2.Service
+import "MidiServiceConfigResponseStatusEnum.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
-    enum MidiServiceConfigResponseStatus
+    struct MidiServiceConfigResponse
     {
-        Success =                       0,
+        MidiServiceConfigResponseStatus Status;
 
-        ErrorTargetNotFound =           404,
-
-        ErrorConfigJsonNullOrEmpty =    600,
-        ErrorProcessingConfigJson =     601,
-        ErrorProcessingResponseJson =   605,
-
-        ErrorNotImplemented =           2600,
-
-        //ErrorOther =                9999,
+        String ResponseJson;
     };
 }

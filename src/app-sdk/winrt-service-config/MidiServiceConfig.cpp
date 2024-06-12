@@ -8,163 +8,15 @@
 
 #include "pch.h"
 
-#include "MidiService.g.cpp"
+#include "MidiServiceConfig.g.cpp"
 
-namespace winrt::Microsoft::Windows::Devices::Midi2::Service::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementation
 {
-
-    bool MidiService::IsCompatibleRuntimeInstalled()
-    {
-
-        // TODO
-
-        return false;
-    }
-
-    svc::MidiServicesSdkRuntimeVersion MidiService::GetInstalledRuntimeVersion()
-    {
-        svc::MidiServicesSdkRuntimeVersion installedVersion{ };
-
-        installedVersion.Major = 1;
-        installedVersion.Minor = 0;
-        installedVersion.Experimental = false;
-        installedVersion.PreRelease = true;
-
-        // TODO
-
-        return installedVersion;
-    }
-
-    foundation::Uri MidiService::GetLatestRuntimeReleaseInstallerUri()
-    {
-        foundation::Uri installerUri(L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller");
-
-        return installerUri;
-    }
-
-    foundation::Uri MidiService::GetLatestSettingsAppReleaseInstallerUri()
-    {
-        foundation::Uri installerUri(L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller");
-
-        return installerUri;
-    }
-
-    foundation::Uri MidiService::GetLatestConsoleAppReleaseInstallerUri()
-    {
-        foundation::Uri installerUri(L"https://aka.ms/MidiServicesLatestConsoleInstaller");
-
-        return installerUri;
-    }
-
-
-
-
-
-
     // returns True if the MIDI Service is available on this PC
-    bool MidiService::EnsureServiceAvailable()
-    {
-        try
-        {
-            auto serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
-            // winrt::try_create_instance indicates failure by returning an empty com ptr
-            // winrt::create_instance indicates failure with an exception
-            if (serviceAbstraction == nullptr)
-            {
-                LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Error contacting service. Service abstraction is nullptr", MIDI_SDK_TRACE_MESSAGE_FIELD)
-                );                
-                
-                return false;
-            }
-
-            winrt::com_ptr<IMidiSessionTracker> tracker;
-
-            auto sessionTrackerResult = serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&tracker);
-            if (FAILED(sessionTrackerResult))
-            {
-                LOG_IF_FAILED(sessionTrackerResult);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failure hresult received activating interface", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingHResult(sessionTrackerResult, MIDI_SDK_TRACE_HRESULT_FIELD)
-                );
-
-                return false;
-            }
-
-            auto verifyConnectivityResult = tracker->VerifyConnectivity();
-            if (FAILED(verifyConnectivityResult))
-            {
-                LOG_IF_FAILED(verifyConnectivityResult);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failure hresult received verifying connectivity", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingHResult(verifyConnectivityResult, MIDI_SDK_TRACE_HRESULT_FIELD)
-                );
-
-                return false;
-            }
-
-            return true;
-        }
-        catch (winrt::hresult_error ex)
-        {
-            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Error contacting service. It may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
-                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
-            );
-
-
-            // winrt::create_instance fails by throwing an exception
-            return false;
-        }
-        catch (...)
-        {
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Error contacting service. It may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
-
-            // winrt::create_instance fails by throwing an exception
-            return false;
-        }
-    }
 
     _Use_decl_annotations_
-    json::JsonObject MidiService::InternalSendConfigJsonAndGetResponse(
+    json::JsonObject MidiServiceConfig::InternalSendConfigJsonAndGetResponse(
         winrt::guid const& abstractionId, 
         json::JsonObject const& configObject,
         bool const isFromCurrentConfigFile
@@ -311,7 +163,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Service::implementation
 
 
     _Use_decl_annotations_
-    svc::MidiServiceConfigResponse MidiService::UpdateTransportPluginConfig(
+    svc::MidiServiceConfigResponse MidiServiceConfig::UpdateTransportPluginConfig(
         svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept
     {
         // this initializes to a failure state, so we can just return it when we have a fail
@@ -393,7 +245,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Service::implementation
     }
 
     _Use_decl_annotations_
-    svc::MidiServiceConfigResponse MidiService::UpdateProcessingPluginConfig(
+    svc::MidiServiceConfigResponse MidiServiceConfig::UpdateProcessingPluginConfig(
         svc::IMidiServiceMessageProcessingPluginConfig const& configurationUpdate) noexcept
     {
         UNREFERENCED_PARAMETER(configurationUpdate);

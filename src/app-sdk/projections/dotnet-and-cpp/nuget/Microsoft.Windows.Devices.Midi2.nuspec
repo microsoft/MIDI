@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
-		<id>Microsoft.Windows.Devices.Midi2</id>
+		<id>$id$</id>
 		<version>$version$</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
@@ -30,7 +30,8 @@
                 <reference file="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.Messages.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd" />
-                <reference file="Microsoft.Windows.Devices.Midi2.Service.winmd" />
+                <reference file="Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd" />
+                <!-- Initializer wouldn't be allowed for UWP apps -->
             </group>
             <group targetFramework="native">
                 <reference file="Microsoft.Windows.Devices.Midi2.winmd" />
@@ -40,7 +41,8 @@
                 <reference file="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.Messages.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd" />
-                <reference file="Microsoft.Windows.Devices.Midi2.Service.winmd" />
+                <reference file="Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd" />
+                <reference file="Microsoft.Windows.Devices.Midi2.Initializer.winmd" />
             </group>
         </references>
     </metadata>
@@ -62,14 +64,10 @@
         <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
 			  target="ref\net6.0-windows10.0.20348.0\" />
 
-        <file target="ref\uap10.0\x64" src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="ref\native\x64" src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-
-        <file target="ref\uap10.0\Arm64" src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="ref\native\Arm64" src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-
-        <file target="ref\uap10.0\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="ref\native\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <!-- Reference winmds -->
+        
+        <file target="ref\uap10.0\" src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="ref\native\" src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
         <!-- Runtime Libs ================================================ -->
 		
@@ -87,6 +85,13 @@
         <file target="lib\uap10.0\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
         <file target="lib\native\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
+        <!-- Other than projections, this is the only implementation file included in the nuget package -->
+        <file target="lib\native\x64"       src =" ..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2.Initializer.dll" />
+        <file target="lib\native\Arm64"     src =" ..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2.Initializer.dll" />
+        <file target="lib\native\Arm64EC"   src =" ..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initializer.dll" />
+
+
+
 
         <!-- Build-time files ================================================ -->
 
@@ -98,6 +103,8 @@
         <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\gen-headers\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.1.h" />
         <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\gen-headers\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.2.h" />
 
+        <!-- Standard Windows SDK headers should come from the Windows SDK. But we may want to include them for other compilers? -->
+        
         <file src="README.md" target="\" />
 	</files>
 

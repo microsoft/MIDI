@@ -23,7 +23,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         winrt::hstring endpointDeviceId{};
 
-        auto createResponse = svc::MidiService::UpdateTransportPluginConfig(creationConfig);
+        auto createResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
         if (createResponse.Status == svc::MidiServiceConfigResponseStatus::Success)
         {

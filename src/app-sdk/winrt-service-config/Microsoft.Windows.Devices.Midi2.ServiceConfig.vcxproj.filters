@@ -21,16 +21,13 @@
     <Midl Include="IMidiServiceTransportPluginConfig.idl">
       <Filter>SDK</Filter>
     </Midl>
-    <Midl Include="MidiService.idl">
+    <Midl Include="MidiServiceConfig.idl">
       <Filter>SDK</Filter>
     </Midl>
     <Midl Include="MidiServiceConfigResponse.idl">
       <Filter>SDK</Filter>
     </Midl>
     <Midl Include="MidiServiceConfigResponseStatusEnum.idl">
-      <Filter>SDK</Filter>
-    </Midl>
-    <Midl Include="MidiServicesSdkRuntimeVersion.idl">
       <Filter>SDK</Filter>
     </Midl>
   </ItemGroup>

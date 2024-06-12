@@ -409,9 +409,12 @@ bool DoSectionServiceStatus(_In_ bool const verbose)
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS);
 
     // this needs to be done before any other service calls
-    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, svc::MidiService::EnsureServiceAvailable());
 
-    return true;
+    bool available = init::MidiServicesInitializer::EnsureServiceAvailable();
+
+    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, available);
+
+    return available;
 }
 
 
@@ -540,7 +543,7 @@ int __cdecl main()
     {
         DoSectionSystemInfo(verbose);
 
-        DoSectionServiceStatus(verbose);
+        if (!DoSectionServiceStatus(verbose)) RETURN_FAIL;
 
         auto transportsWorked = DoSectionTransports(verbose);
 

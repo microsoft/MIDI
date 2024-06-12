@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 // Windows MIDI Services sample code
@@ -8,7 +8,11 @@
 #include "pch.h"
 #include <iostream>
 
-using namespace winrt::Microsoft::Devices::Midi2;        // API
+using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For loopback endpoints
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;        // For message utilities and strong types
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Service;         // for code to check if the service is installed/running
+
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
@@ -19,12 +23,16 @@ int main()
     winrt::init_apartment();
 
     // Check to see if Windows MIDI Services is installed and running on this PC
-    if (!MidiService::IsAvailable())
+    if (!MidiService::EnsureServiceAvailable())
     {
         // you may wish to fallback to an older MIDI API if it suits your application's workflow
         std::cout << std::endl << "Windows MIDI Services is not running on this PC" << std::endl;
 
         return 1;
+    }
+    else
+    {
+        std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
     }
 
 
@@ -34,10 +42,10 @@ int main()
 
     std::cout << std::endl << "Creating session..." << std::endl;
 
-    auto session = MidiSession::CreateSession(L"Sample Session");
+    auto session = MidiSession::Create(L"Sample Session");
 
-    auto endpointAId = MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId();
-    auto endpointBId = MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId();
+    auto endpointAId = MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId();
+    auto endpointBId = MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId();
 
     auto sendEndpoint = session.CreateEndpointConnection(endpointAId);
     std::cout << "Connected to sending endpoint: " << winrt::to_string(endpointAId) << std::endl;
@@ -65,7 +73,7 @@ int main()
             std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
             std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
             std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
-            std::cout << "- Message:           " << winrt::to_string(MidiMessageUtility::GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord())) << std::endl;
+            std::cout << "- Message:           " << winrt::to_string(MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())) << std::endl;
 
             // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
 

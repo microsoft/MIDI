@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
-    <ProjectName>Microsoft.Windows.Devices.Midi2.Service</ProjectName>
+    <ProjectName>Microsoft.Windows.Devices.Midi2.ServiceConfig</ProjectName>
     <RootNamespace>$(ProjectName)</RootNamespace>
     <ProjectGuid>{72D1A831-0492-41CC-AA58-BDD05C1099F7}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
@@ -260,16 +260,16 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiService.h">
-      <DependentUpon>MidiService.idl</DependentUpon>
+    <ClInclude Include="MidiServiceConfig.h">
+      <DependentUpon>MidiServiceConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiService.cpp">
-      <DependentUpon>MidiService.idl</DependentUpon>
+    <ClCompile Include="MidiServiceConfig.cpp">
+      <DependentUpon>MidiServiceConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -280,8 +280,7 @@
     <Midl Include="MidiServiceConfigResponse.idl" />
     <Midl Include="IMidiServiceTransportPluginConfig.idl" />
     <Midl Include="MidiServiceConfigResponseStatusEnum.idl" />
-    <Midl Include="MidiService.idl" />
-    <Midl Include="MidiServicesSdkRuntimeVersion.idl" />
+    <Midl Include="MidiServiceConfig.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

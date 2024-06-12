@@ -10,7 +10,7 @@
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
     [default_interface]
-    runtimeclass MidiVirtualDeviceCreationConfig : Microsoft.Windows.Devices.Midi2.Service.IMidiServiceTransportPluginConfig
+    runtimeclass MidiVirtualDeviceCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiVirtualDeviceCreationConfig(
             String name,

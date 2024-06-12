@@ -318,7 +318,7 @@
     <ProjectReference Include="..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj">
       <Project>{001601de-b7ab-41d1-81b7-40286b139841}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\winrt-service\Microsoft.Windows.Devices.Midi2.Service.vcxproj">
+    <ProjectReference Include="..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj">
       <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
     </ProjectReference>
   </ItemGroup>
