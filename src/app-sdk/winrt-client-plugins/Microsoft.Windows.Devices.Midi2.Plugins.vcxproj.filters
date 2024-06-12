@@ -33,9 +33,6 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="WinRTActivationEntries.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="SDK">
       <UniqueIdentifier>{98471f30-a243-4062-9434-3cb12380c493}</UniqueIdentifier>
     </Filter>

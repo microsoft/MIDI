@@ -18,7 +18,7 @@
 			BeforeTargets="BeforeBuild;BeforeResolveReferences">
 
 		<ItemGroup Label="CopyMidiServicesSDKReferenceFiles">
-			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd">
+			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\native\Microsoft.Windows.Devices.Midi2*.winmd">
 				<!-- <Implementation>Microsoft.Devices.Midi2.dll</Implementation> --> <!-- Impl must already be installed on PC -->
 			</Reference>
 		</ItemGroup>

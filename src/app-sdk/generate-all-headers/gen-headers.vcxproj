@@ -4,15 +4,15 @@
   <PropertyGroup Label="Globals">
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
-    <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
+    <CppWinRTGenerateWindowsMetadata>false</CppWinRTGenerateWindowsMetadata>
     <MinimalCoreWin>true</MinimalCoreWin>
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{5ec6d5eb-53d4-4731-891e-f746f0201429}</ProjectGuid>
+    <ProjectGuid>{B58C37D4-4E28-424F-93FA-5504C4A3B7A0}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>mididmp</RootNamespace>
+    <RootNamespace>genheaders</RootNamespace>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
-    <ProjectName>mididiag</ProjectName>
+    <ProjectName>gen-headers</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">
@@ -168,7 +168,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="mididiag_field_defs.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -180,25 +179,32 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
-    <Text Include="readme.txt">
-      <DeploymentContent>false</DeploymentContent>
-    </Text>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\winrt-ci\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.vcxproj">
+      <Project>{38e2cbfd-6c7a-45fb-b162-6bcc1734a0a1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\winrt-client-plugins\Microsoft.Windows.Devices.Midi2.Plugins.vcxproj">
+      <Project>{3d2bc934-cdc7-4dc7-b7fc-f34b755bf726}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
     <ProjectReference Include="..\winrt-diagnostics\Microsoft.Windows.Devices.Midi2.Diagnostics.vcxproj">
       <Project>{05796b3c-25ff-4ac2-999b-edefb773393c}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\winrt-endpoint-loopback\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.vcxproj">
+      <Project>{d3b84d5d-8bed-4cb7-b430-b0bf1e46f3a1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\winrt-endpoint-virtual\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.vcxproj">
+      <Project>{9b93146c-4d9d-4915-becb-5227df2667e2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj">
+      <Project>{001601de-b7ab-41d1-81b7-40286b139841}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\winrt-service\Microsoft.Windows.Devices.Midi2.Service.vcxproj">
       <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="mididiag.exe.manifest">
-      <DeploymentContent>true</DeploymentContent>
-    </Manifest>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

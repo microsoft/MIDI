@@ -46,9 +46,6 @@
     <None Include="PropertySheet.props" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="WinRTActivationEntries.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Filter Include="SDK">
       <UniqueIdentifier>{a886dff3-ea41-416f-8193-3ae9e215ec71}</UniqueIdentifier>
     </Filter>
