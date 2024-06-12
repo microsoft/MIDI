@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
 	<metadata>
 		<id>Microsoft.Windows.Devices.Midi2</id>
-		<version>1.0.0-preview.6-0210</version>
+		<version>$version$</version>
 		<authors>Microsoft</authors>
 		<description>Windows MIDI Services SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>
@@ -81,11 +81,11 @@
         <file target="lib\uap10.0\x64" src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
         <file target="lib\native\x64" src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
-        <file target="lib\uap10.0\Arm64" src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2.winmd" />
-        <file target="lib\native\Arm64" src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2.winmd" />
+        <file target="lib\uap10.0\Arm64" src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="lib\native\Arm64" src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
-        <file target="lib\uap10.0\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.winmd" />
-        <file target="lib\native\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.winmd" />
+        <file target="lib\uap10.0\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="lib\native\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
 
         <!-- Build-time files ================================================ -->

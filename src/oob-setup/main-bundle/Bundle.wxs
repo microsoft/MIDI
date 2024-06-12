@@ -16,16 +16,15 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
     <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
-    <Bundle Name="Microsoft Windows MIDI Services $(SetupVersionName) $(SetupVersionNumber)" 
+    <Bundle Name="Microsoft Windows MIDI Services (In-Box Components) $(SetupVersionName) $(SetupVersionNumber)" 
           Manufacturer="Microsoft Corporation" 
           Version="$(SetupVersionNumber)" 
-          UpgradeCode="ecfae6e7-7186-4f41-b9d2-df17ba86c69f">
+          UpgradeCode="0ccb5d12-44a6-4dd8-8d07-0d130589c0a2">
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
         <!-- These references are required so the searches aren't optimized out of the bundle -->
         <util:RegistrySearchRef Id="SearchForVCRuntime" />
-        <netfx:DotNetCoreSearchRef Id="SearchForDotNet8" />
 
         <BootstrapperApplication>
             <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
@@ -53,22 +52,10 @@
             Value="Installed"
             Result="exists"/>
 
-        <!-- Apps use .NET Core 8 -->
-        <netfx:DotNetCoreSearch
-            Id="SearchForDotNet8"
-            RuntimeType="desktop"
-            Platform="x64"
-            MajorVersion="8"
-            Variable="DotNetDesktopRuntimeVersion"
-            />
-
         <!--<bal:Condition Message="VC Runtime not found." Condition="VCRuntimeInstalled" /> -->
         <!-- <bal:Condition Message=".NET 8 Version not found." Condition="DotNetDesktopRuntimeVersion" /> -->
 
         <PackageGroup Id="Prerequisites">
-            <!-- Installer custom action uses .NET 4.8. WiX doesn't support .NET non-fx -->
-            <PackageGroupRef Id="NetFx48RedistAsPrereq" />
-
 
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
             
@@ -83,28 +70,6 @@
                 >
             </ExePackage>
 
-            <!-- .NET 8, latest as used by this installer and the projects -->
-            <ExePackage 
-                DisplayName="Microsoft .NET 8 Desktop Runtime"
-                SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\dotnet8-desktop-runtime-latest.exe"
-                Compressed="yes"
-                DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.4"
-                InstallArguments="/install /passive /norestart /log midi_dotnet8_install_log.txt"
-                UninstallArguments="/uninstall /passive /norestart /quiet"
-                />
-
-            <!-- WinUI / Windows App SDK. This is required for the settings app, but also has no uninstall option -->
-            <!-- NOTE: The Instal Argument needs to be dash dash quiet, but that's illegal inside a comment -->
-            
-            <ExePackage
-                DisplayName="Microsoft Windows App Runtime"
-                SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\WindowsAppRuntimeInstall-latest.exe"
-                Compressed="yes"
-                Permanent="true"
-                InstallArguments="--force"
-                >
-            </ExePackage>
-
         </PackageGroup>
         
         <PackageGroup Id="MidiServicesPackages">
@@ -114,22 +79,6 @@
                 Permanent="no"
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesCoreSetup.msi">
-            </MsiPackage>
-
-            <MsiPackage
-                Id="MidiServicesConsoleSetup"
-                Vital="yes"
-                Permanent="no"
-                Compressed="yes"
-                SourceFile="MidiConsoleAppStandAloneSetup.msi">
-            </MsiPackage>
-
-            <MsiPackage
-                Id="MidiServicesSettingsAppSetup"
-                Vital="yes"
-                Permanent="no"
-                Compressed="yes"
-                SourceFile="MidiSettingsAppStandAloneSetup.msi">
             </MsiPackage>
 
         </PackageGroup>

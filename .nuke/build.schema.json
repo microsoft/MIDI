@@ -72,8 +72,7 @@
               "BuildServiceAndPlugins",
               "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
-              "Clean",
-              "Restore"
+              "Prerequisites"
             ]
           }
         },
@@ -91,8 +90,7 @@
               "BuildServiceAndPlugins",
               "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
-              "Clean",
-              "Restore"
+              "Prerequisites"
             ]
           }
         },

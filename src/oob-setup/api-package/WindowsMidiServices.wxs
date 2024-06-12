@@ -6,7 +6,7 @@
           Name="Windows MIDI Services $(var.Platform)"
           Manufacturer="Microsoft Corporation"
           Version="1.0.0.0"
-          UpgradeCode="5f3a293b-09fb-4129-99b1-1a4d67cfd57c"
+          UpgradeCode="c552e144-54d0-4e18-8e16-ff0f0a2eb34f"
           >
        
         <MediaTemplate EmbedCab="yes" />
@@ -36,8 +36,6 @@
         </StandardDirectory>
 
 
-        <Binary Id ="RegistryCustomActionsLib" 
-                SourceFile="$(env.MIDI_REPO_ROOT)src\oob-setup\RegistryCustomActions\bin\$(var.Platform)\Release\net48\RegistryCustomActions.CA.dll" />
         <!-- Install Windows Service -->
      
         <!-- Transport and other Service Plugins -->
@@ -46,7 +44,7 @@
         <Component Id="WindowsServiceAbstractions"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
-                   Guid="{6a2300f5-ccae-4f61-b849-d41aefb8a999}"  >
+                   Guid="76dbd487-7646-4c4b-a5c7-fde28a2102c7"  >
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.MidiSrvAbstraction.dll"                  SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsAbstraction.dll"              SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAbstraction.dll"                       SelfRegCost="1" Vital="true" />
@@ -54,47 +52,21 @@
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.LoopbackMidiAbstraction.dll"             SelfRegCost="1" Vital="true" />
 
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BluetoothMidiAbstraction.dll"            SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" />
-
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BS2UMPTransform.dll"                     SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UmpProtocolDownscalerTransform.dll"      SelfRegCost="1" Vital="true" />
 
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.EndpointMetadataListenerTransform.dll"   SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />
-           
-           <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionGeneratorTransform.dll"   SelfRegCost="1" Vital="true" /> -->
-           <!--<File Source="$(StagingSourceRootFolder)\api\x64\Midi2.JitterReductionListenerTransform.dll"    SelfRegCost="1" Vital="true" /> -->
-
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />          
        </Component>
 
         <Component Id="WindowsService"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
-                   Guid="6a2300f5-ccae-4f61-b849-d41aefb8a2f7" >
+                   Guid="d2557869-303c-4985-a6be-67feb11a11d9" >
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
 
-            <ServiceInstall
-                Id="MidiServiceInstaller"
-                Type="ownProcess"
-                Name="MidiSrv"
-                DisplayName="Microsoft MIDI Service"
-                Description="!(bind.Property.ProductName) core service for MIDI 1.0 and MIDI 2.0 message routing and device enumeration."
-                Start="auto"
-                Account="LocalSystem"
-                ErrorControl="normal"
-                Vital="true" />
-            <ServiceControl Id="MidiServiceStart" 
-                            Start="install" 
-                            Stop="both" 
-                            Remove="uninstall" 
-                            Name="MidiSrv" 
-                            Wait="no" />
         </Component>     
         
-
         <Component Id="ConfigurationRegistryEntries"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
@@ -136,20 +108,7 @@
 
 
                     
-                    <RegistryKey Key="Midi2NetworkMidiAbstraction">
-                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
-                    </RegistryKey>
-                    
-                    <RegistryKey Key="Midi2VirtualPatchBayAbstraction">
-                        <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
-                    </RegistryKey>
 
-                    <RegistryKey Key="Midi2BluetoothMidiAbstraction">
-                        <RegistryValue Type="string" Name="CLSID" Value="{ABD5E0B9-C38C-48B7-AA56-19D9E26BAF1B}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="0" />
-                    </RegistryKey>
                 </RegistryKey>
             </RegistryKey>
         </Component>
@@ -157,79 +116,31 @@
         <Component Id="ConfigurationFile"
                    Bitness="always64"
                    Directory="CONFIGURATION_FOLDER"
-                   Guid="{3700BE95-FBC9-4876-B497-C328084FE7B4}"
+                   Guid="a9ded084-7d5c-407e-adc4-0e48ad440e12"
                    NeverOverwrite="true" 
                    >
             <File Source="$(StagingSourceRootFolder)\configuration\Default.midiconfig.json" />
         </Component>
 
-        <!-- Install API -->
 
-        <Component Id="WindowsAPI"
-                   Bitness="always64"
-                   Directory="API_INSTALLFOLDER"
-                   Guid="dc48ab14-dd46-4ff2-8d59-10b9a8215c7e">
-            <!--<File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />-->
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Microsoft.Devices.Midi2.dll" Vital="true" />
+        <CustomAction Id="SelfInstallService" FileRef="WINDOWS_SERVICE" ExeCommand="install" />
 
-            <!--<File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Windows.Devices.Midi2.pri" />-->
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Microsoft.Devices.Midi2.pri" />
-        </Component>
+        <CustomAction Id="SelfUninstallService" FileRef="WINDOWS_SERVICE" ExeCommand="uninstall" />
 
-        <Component Id="WindowsAPIRegistration"
-                   Bitness="always64"
-                   Directory="API_INSTALLFOLDER"
-                   Guid="fa0230b9-824a-4c5f-b4e4-396433baa962"
-                   >
-        </Component>
-        
-        <!-- Install MIDI Dump Utility -->
-       <Component Id="MidiDumpUtility"
-                   Bitness="always64"
-                   Directory="ROOTINSTALLFOLDER"
-                   Guid="{fa0bd870-3468-4c10-bb2e-6fea6c225d42}"  >
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\mididmp.exe"          Vital="true" />
-       
-            <!-- Add folder to path -->
-            <Environment Id="AddMidiDumpUtilityToSystemPath"
-                            Name="PATH" Action="set" Part="last" System="yes" 
-                            Value="[ROOTINSTALLFOLDER]" Permanent="no"/>        
-       </Component>            
-            
-        
-        <CustomAction
-            Id="WriteActivatableClassIdKeysAction"
-            Return="check"
-            Execute="immediate"
-            BinaryRef="RegistryCustomActionsLib"
-            DllEntry="WriteActivatableClassIdKeys"
-            Impersonate="yes"/>
-
-        <CustomAction
-            Id="EraseActivatableClassIdKeysAction"
-            Return="check"
-            Execute="immediate"
-            BinaryRef="RegistryCustomActionsLib"
-            DllEntry="EraseActivatableClassIdKeys"
-            Impersonate="yes"/>
-        
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceAbstractions"/>
             <ComponentRef Id="WindowsService"/>
-            <ComponentRef Id="WindowsAPI"/>
-            <ComponentRef Id="WindowsAPIRegistration"/>
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>
             <ComponentRef Id="ConfigurationFile"/>
             <ComponentRef Id="ConfigurationRegistryEntries"/>
 
-            <ComponentRef Id="MidiDumpUtility"/>
         </Feature>
 
 
         <InstallExecuteSequence>
-            <Custom Action="WriteActivatableClassIdKeysAction" After="InstallFiles" Condition="(NOT Installed)" />
-            <Custom Action="EraseActivatableClassIdKeysAction" After="InstallFiles" Condition='(REMOVE="ALL")'/>
+            <Custom Action="SelfInstallService" After="InstallFiles" Condition="(NOT Installed)" />
+            <Custom Action="SelfUninstallService" Before="InstallFiles" Condition='(REMOVE="ALL")'/>
         </InstallExecuteSequence>
 
     </Package>

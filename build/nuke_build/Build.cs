@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.ApplicationInsights.Extensibility;
 using Nuke.Common;
@@ -8,6 +9,7 @@ using Nuke.Common.Execution;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
+using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Tools.MSBuild;
 using Nuke.Common.Tools.NuGet;
 using Nuke.Common.Utilities.Collections;
@@ -24,6 +26,27 @@ class Build : NukeBuild
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
 
+    // ===========================================================
+
+    //[GitVersion]
+    //readonly GitVersion MasterBuildVersion;
+
+    string SetupVersionName => "Developer Preview 6";
+    string NuGetVersionName => "preview.6";
+
+    // we set these here, especially the time, so it's the same for all platforms in the single build
+    string SetupBuildMajorMinor => "1.0";
+
+
+    string SetupBuildDateNumber => DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
+    string SetupBuildTimeNumber => DateTime.Now.ToString("HHmm");       // HHmm
+
+
+    string NugetFullVersionString => SetupBuildMajorMinor + "." + SetupBuildDateNumber + "." + SetupBuildTimeNumber + "-" + NuGetVersionName;
+
+
+    // ===========================================================
+
     // directories
 
     AbsolutePath BuildRootFolder => NukeBuild.RootDirectory / "build";
@@ -31,7 +54,7 @@ class Build : NukeBuild
 
     AbsolutePath StagingRootFolder => BuildRootFolder / "staging";
     AbsolutePath AppSdkStagingFolder => StagingRootFolder / "app-sdk";
-
+    AbsolutePath ApiStagingFolder => StagingRootFolder / "api";
 
 
     AbsolutePath ReleaseRootFolder => BuildRootFolder / "release";
@@ -43,7 +66,7 @@ class Build : NukeBuild
     AbsolutePath AppSdkSolutionFolder => SourceRootFolder / "app-sdk";
     AbsolutePath ApiSolutionFolder => SourceRootFolder / "api";
 
-
+    AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
 
 
@@ -64,77 +87,34 @@ class Build : NukeBuild
     //    AbsolutePath ElectronJSSamplesRootFolder => SamplesRootFolder / "electron-js";
 
 
+    AbsolutePath SetupBundleInfoIncludeFile => StagingRootFolder / "version" / "BundleInfo.wxi";
+
+
+
     string[] AllPlatforms => new string[] { "Arm64", "Arm64EC", "x64" };
     string[] ServicePlatforms => new string[] { "Arm64", "x64" };
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
 
+    Target Prerequisites => _ => _
+        .Executes(() =>
+        {
+            // Need to verify that %MIDI_REPO_ROOT% is set (it's used by setup). If not, set it to the root \midi folder
+            var rootVariableExists = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("MIDI_REPO_ROOT"));
 
-    //[Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
-    //readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
-
-    //void BuildSdkProject(AbsolutePath projectRoot, string projectFileName, string platform, string config)
-    //{
-    //    var stagingFolder = AppSdkStagingFolder / platform / config;
-
-    //    var msbuildProperties = new Dictionary<string, object>();
-    //    msbuildProperties.Add("Platform", platform);
-    //    msbuildProperties.Add("SolutionDir", AppSdkSolutionFolder.ToString() + @"\");  // to include trailing slash;
-
-    //    MSBuildTasks.MSBuild(_ => _
-    //        .SetTargetPath(projectRoot / projectFileName)
-    //        /*.SetOutDir(AppSdkSolutionFolder) */
-    //        /*.SetProcessWorkingDirectory(projectRoot) */
-    //        /*.SetTargets("Build") */
-    //        .SetProperties(msbuildProperties)
-    //        .SetConfiguration(config)
-    //        .SetVerbosity(MSBuildVerbosity.Minimal)
-    //        .EnableNodeReuse()
-    //    );
-
-    //    AbsolutePath buildArtifactsFolder = projectRoot / "bin" / platform / config;
-
-    //    var buildArtifacts = buildArtifactsFolder.GlobFiles("*.winmd", "*.dll", "*.pri");
-
-    //    foreach (var file in buildArtifacts)
-    //    {
-    //        FileSystemTasks.CopyFileToDirectory(file, stagingFolder, FileExistsPolicy.Overwrite, true);
-    //    }
-    //}
+            if (!rootVariableExists)
+            {
+                Environment.SetEnvironmentVariable("MIDI_REPO_ROOT", NukeBuild.RootDirectory);
+            }
 
 
 
-    //void BuildSdkProjectAllPlatforms(AbsolutePath projectRoot, string projectFileName)
-    //{
-    //    foreach (var platform in AllPlatforms)
-    //    {
-    //        BuildSdkProject(projectRoot, projectFileName, platform, Configuration.Release);
-    //    }
-    //}
-
-
-
-
-
-
-
-    //Target Clean => _ => _
-    //    .Before(Restore)
-    //    .Executes(() =>
-    //    {
-    //    });
-
-    //Target Restore => _ => _
-    //    .Executes(() =>
-    //    {
-    //    });
-
-
-
+        });
 
 
     Target BuildServiceAndPlugins => _ => _
+        .DependsOn(Prerequisites)
         .Executes(() =>
     {
         foreach (var platform in ServicePlatforms)
@@ -162,6 +142,31 @@ class Build : NukeBuild
                 .SetVerbosity(MSBuildVerbosity.Minimal)
                 .EnableNodeReuse()
             );
+
+
+            // copy binaries to staging folder
+            var stagingFiles = new List<AbsolutePath>();
+
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midisrv.exe");
+
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.MidiSrvAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.DiagnosticsAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.KSAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.KSAggregateAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.VirtualMidiAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.LoopbackMidiAbstraction.dll");
+
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.BS2UMPTransform.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.UMP2BSTransform.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.UmpProtocolDownscalerTransform.dll");
+
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.SchedulerTransform.dll");
+
+            foreach (var file in stagingFiles)
+            {
+                FileSystemTasks.CopyFileToDirectory(file, ApiStagingFolder / platform, FileExistsPolicy.Overwrite, true);
+            }
+
 
         }
 
@@ -199,6 +204,7 @@ class Build : NukeBuild
 
 
     Target BuildAndPackAllAppSDKs => _ => _
+        .DependsOn(Prerequisites)
         .DependsOn(BuildServiceAndPlugins)
         .Executes(() =>
         {
@@ -258,6 +264,7 @@ class Build : NukeBuild
 
                 NuGetTasks.NuGetPack(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "projections" / "dotnet-and-cpp" / "nuget" / "Microsoft.Windows.Devices.Midi2.nuspec")
+                    .AddProperty("version", NugetFullVersionString)
                     .SetOutputDirectory(AppSdkNugetOutputFolder)
                 );
 
@@ -276,12 +283,17 @@ class Build : NukeBuild
 
 
     Target BuildAppSdkRuntimeInstaller => _ => _
+        .DependsOn(Prerequisites)
         .DependsOn(BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
             foreach (var platform in ServicePlatforms)
             {
+                UpdateSetupBundleInfoIncludeFile(platform);
+
+                string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
 
                 var msbuildProperties = new Dictionary<string, object>();
@@ -292,9 +304,10 @@ class Build : NukeBuild
                 Console.Out.WriteLine($"SolutionDir: {solutionDir}");
                 Console.Out.WriteLine($"Platform:    {platform}");
 
+                var setupSolutionFolder = AppSdkSolutionFolder / "sdk-runtime-installer";
 
                 MSBuildTasks.MSBuild(_ => _
-                    .SetTargetPath(AppSdkSolutionFolder / "sdk-runtime-installer" / "midi-services-app-sdk-runtime-setup.sln")
+                    .SetTargetPath(setupSolutionFolder / "midi-services-app-sdk-runtime-setup.sln")
                     .SetMaxCpuCount(14)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
@@ -304,20 +317,73 @@ class Build : NukeBuild
                     .EnableNodeReuse()
                 );
 
+
+                FileSystemTasks.CopyFile(
+                    setupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
+                    ReleaseRootFolder / $"Windows MIDI Services SDK Runtime - {fullSetupVersionString}-{platform.ToLower()}.exe");
+
             }
 
         });
 
+    void UpdateSetupBundleInfoIncludeFile(string platform)
+    {
+        string versionString = $"{SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+
+        using (StreamWriter writer = System.IO.File.CreateText(SetupBundleInfoIncludeFile))
+        {
+            writer.WriteLine("<Include>");
+            writer.WriteLine($"  <?define SetupVersionName=\"{SetupVersionName} {platform}\" ?>");
+            writer.WriteLine($"  <?define SetupVersionNumber=\"{versionString}\" ?>");
+            writer.WriteLine("</Include>");
+        }
+    }
+
+
     Target BuildServiceAndPluginsInstaller => _ => _
+        .DependsOn(Prerequisites)
         .DependsOn(BuildServiceAndPlugins)
         .Executes(() =>
         {
+            // we build for Arm64 and x64. No EC required here
+            foreach (var platform in ServicePlatforms)
+            {
+                UpdateSetupBundleInfoIncludeFile(platform);
 
+                string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+
+                string solutionDir = InBoxComponentsSetupSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                Console.Out.WriteLine($"Platform:    {platform}");
+
+                MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(InBoxComponentsSetupSolutionFolder / "midi-services-in-box-setup.sln")
+                    .SetMaxCpuCount(14)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    .EnableNodeReuse()
+                );
+
+                FileSystemTasks.CopyFile(
+                    InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
+                    ReleaseRootFolder / $"Windows MIDI Services (In-Box Components) - {fullSetupVersionString}-{platform.ToLower()}.exe");
+
+            }
 
         });
 
 
     Target BuildSettingsApp => _ => _
+        .DependsOn(Prerequisites)
         .DependsOn(BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
@@ -327,6 +393,7 @@ class Build : NukeBuild
         });
 
     Target BuildConsoleApp => _ => _
+        .DependsOn(Prerequisites)
         .DependsOn(BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
@@ -349,6 +416,7 @@ class Build : NukeBuild
 
 
     Target BuildAndPublishAll => _ => _
+        .DependsOn(Prerequisites)
         .DependsOn(BuildServiceAndPlugins)
         .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildAndPackAllAppSDKs)
@@ -358,7 +426,6 @@ class Build : NukeBuild
         .DependsOn(BuildSamples)
         .Executes(() =>
         {
-
         });
 
 

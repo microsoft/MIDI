@@ -1,7 +1,7 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
-    <OutputName>WindowsMidiServicesCompleteSetup</OutputName>
+    <OutputName>WindowsMidiServicesInBoxComponentsSetup</OutputName>
     <BuildDate>$([System.DateTime]::Now.ToString("yyyyMMddhhmm"))</BuildDate>
     <DefineConstants>BuildDate=$(BuildDate)</DefineConstants>
   </PropertyGroup>
@@ -21,8 +21,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\api-package\api-package.wixproj" />
-    <ProjectReference Include="..\console-package\console-package.wixproj" />
-    <ProjectReference Include="..\RegistryCustomActions\RegistryCustomActions.csproj" />
-    <ProjectReference Include="..\settings-package\settings-package.wixproj" />
   </ItemGroup>
 </Project>
