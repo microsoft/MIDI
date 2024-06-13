@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #include "pch.h"
 
@@ -46,6 +47,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementat
         return false;
     }
 
+    bool MidiServicesInitializer::IsOperatingSystemSupported()
+    {
+        // get location of runtime. If the reg key isn't present, return failure
+
+        // TODO
+
+        return false;
+    }
+
 
     bool MidiServicesInitializer::InitializeSdkRuntime()
     {
@@ -55,6 +65,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementat
         }
 
         // TODO: set up the type resolver, detours, etc.
+        // Note: May need to change something about detours to support Arm64EC. TBD.
+
+
 
 
 
