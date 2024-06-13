@@ -9,14 +9,19 @@
 #pragma once
 #include "MidiServicesInitializer.g.h"
 
-namespace winrt::Microsoft::Windows::Devices::Midi2::Initializer::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementation
 {
     struct MidiServicesInitializer : MidiServicesInitializerT<MidiServicesInitializer>
     {
         MidiServicesInitializer() = default;
 
-        static bool EnsureServiceAvailable();
         static bool IsCompatibleDesktopAppSdkRuntimeInstalled();
+
+        static bool IsOperatingSystemSupported();
+
+        static bool InitializeSdkRuntime();
+        static bool EnsureServiceAvailable();
+
 
         static foundation::Uri GetLatestRuntimeReleaseInstallerUri();
         static foundation::Uri GetLatestSettingsAppReleaseInstallerUri();
@@ -27,7 +32,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initializer::implementation
 
     };
 }
-namespace winrt::Microsoft::Windows::Devices::Midi2::Initializer::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::factory_implementation
 {
     struct MidiServicesInitializer : MidiServicesInitializerT<MidiServicesInitializer, implementation::MidiServicesInitializer, winrt::static_lifetime>
     {

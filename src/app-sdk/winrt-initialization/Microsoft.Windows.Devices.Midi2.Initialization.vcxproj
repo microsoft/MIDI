@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
-    <ProjectName>Microsoft.Windows.Devices.Midi2.Initializer</ProjectName>
+    <ProjectName>Microsoft.Windows.Devices.Midi2.Initialization</ProjectName>
     <RootNamespace>$(ProjectName)</RootNamespace>
     <ProjectGuid>{0CA9273A-0BAE-4AC4-8290-A72A985DD264}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>

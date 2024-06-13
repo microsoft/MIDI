@@ -10,16 +10,9 @@
 
 #include "MidiServicesInitializer.g.cpp"
 
-namespace winrt::Microsoft::Windows::Devices::Midi2::Initializer::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementation
 {
 
-    bool MidiServicesInitializer::IsCompatibleDesktopAppSdkRuntimeInstalled()
-    {
-
-        // TODO
-
-        return false;
-    }
 
     foundation::Uri MidiServicesInitializer::GetLatestRuntimeReleaseInstallerUri()
     {
@@ -44,8 +37,29 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initializer::implementation
 
 
 
+    bool MidiServicesInitializer::IsCompatibleDesktopAppSdkRuntimeInstalled()
+    {
+        // get location of runtime. If the reg key isn't present, return failure
+
+        // TODO
+
+        return false;
+    }
 
 
+    bool MidiServicesInitializer::InitializeSdkRuntime()
+    {
+        if (!IsCompatibleDesktopAppSdkRuntimeInstalled())
+        {
+            return false;
+        }
+
+        // TODO: set up the type resolver, detours, etc.
+
+
+
+        return false;
+    }
 
     // returns True if the MIDI Service is available on this PC
     bool MidiServicesInitializer::EnsureServiceAvailable()

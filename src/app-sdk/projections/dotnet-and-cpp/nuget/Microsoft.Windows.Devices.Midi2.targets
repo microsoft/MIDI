@@ -14,24 +14,37 @@
 	</ItemGroup>
 	-->
 
-	<Target Name="Setup MIDI Services SDK Reference"
+    <Target Name="SetupMIDIServicesSDKReference"
 			BeforeTargets="BeforeBuild;BeforeResolveReferences">
+        <Message Text="Copying Windows MIDI Services references .winmd files" />
 
-		<ItemGroup Label="CopyMidiServicesSDKReferenceFiles">
-			<Reference Include="$(MSBuildThisFileDirectory)..\..\ref\native\Microsoft.Windows.Devices.Midi2*.winmd">
-				<!-- <Implementation>Microsoft.Devices.Midi2.dll</Implementation> --> <!-- Impl must already be installed on PC -->
-			</Reference>
-		</ItemGroup>
+        <ItemGroup>
+            <Reference Include="$(NugetRoot)ref\native\Microsoft.Windows.Devices.Midi2*.winmd" />
+        </ItemGroup>
+    </Target>
 
-		<ItemGroup>
-			<None Include="@(MidiNativeLibs)">
-				<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-				<Link>%(Filename)%(Extension)</Link>
-			</None>
-		</ItemGroup>
+    <Target Name="CopyMidi2InitializationLibrary"
+            AfterTargets="AfterBuild;AfterRebuild">
 
-	</Target>
+        <ItemGroup>
+            <MidiInitializationLibFiles Include="$(NugetRoot)lib\native\$(Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
+            <MidiInitializationLibFiles Include="$(NugetRoot)lib\native\$(Platform)\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
+        </ItemGroup>
 
+        <Message Text="Copying Windows MIDI Services SDK initialization dll" Importance="high"/>
+        <Message Text="NuGet root:  $(NugetRoot)" Importance="high"/>
+        <Message Text="Platform:    $(Platform)" Importance="high"/>
+        <Message Text="Target Dir:  $(TargetDir)" Importance="high"/>
+        <!--<Message Text="To copy:     @(MidiInitializationLibFiles)" Importance="high"/>-->
+
+        <Copy SourceFiles="@(MidiInitializationLibFiles)"
+                DestinationFolder="$(TargetDir)\"
+                OverwriteReadOnlyFiles="true"
+                ContinueOnError="false"
+                />
+    </Target>
+            
+    
 	<!--
 	<Target Name="Copy MIDI WinRT Implementation Files" 
 			AfterTargets="AfterBuild">

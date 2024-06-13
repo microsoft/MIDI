@@ -31,13 +31,13 @@ namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
 
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.Initializer.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
 
 namespace midi2 = winrt::Microsoft::Windows::Devices::Midi2;
-namespace init = winrt::Microsoft::Windows::Devices::Midi2::Initializer;
+namespace init = winrt::Microsoft::Windows::Devices::Midi2::Initialization;
 namespace diag = winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
 namespace svc = winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 

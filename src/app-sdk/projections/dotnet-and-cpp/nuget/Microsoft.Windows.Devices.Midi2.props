@@ -3,39 +3,46 @@
 	<ImportGroup Label ="PropertySheets" />
 	<PropertyGroup Label="UserMacros" />
 
-	<ItemGroup>
+
+    <PropertyGroup>
+        <NugetRoot>$(MSBuildThisFileDirectory)..\..\</NugetRoot>
+    </PropertyGroup>
+
+    <ItemGroup>
 		<!--<Reference Include="$(SolutionDir)">
 			<IsWinMDFile>true</IsWinMDFile>
 		</Reference>
 			-->	   
 
 		<Reference Include="Microsoft.Windows.Devices.Midi2">
-			<HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.winmd</HintPath>
+			<HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.winmd</HintPath>
 		</Reference>
         <Reference Include="Microsoft.Windows.Devices.Midi2.Messages">
-            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Messages.winmd</HintPath>
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Messages.winmd</HintPath>
         </Reference>
         <Reference Include="Microsoft.Windows.Devices.Midi2.ServiceConfig">
-            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd</HintPath>
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd</HintPath>
         </Reference>
         <Reference Include="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual">
-            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd</HintPath>
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd</HintPath>
         </Reference>
         <Reference Include="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback">
-            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd</HintPath>
+            <HintPath>$$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd</HintPath>
         </Reference>
         <Reference Include="Microsoft.Windows.Devices.Midi2.Diagnostics">
-            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd</HintPath>
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd</HintPath>
         </Reference>
         <Reference Include="Microsoft.Windows.Devices.Midi2.ClientPlugins">
-            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd</HintPath>
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd</HintPath>
         </Reference>
         <Reference Include="Microsoft.Windows.Devices.Midi2.CapabilityInquiry">
-            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd</HintPath>
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd</HintPath>
         </Reference>
         
-        <Reference Include="Microsoft.Windows.Devices.Midi2.Initializer">
-            <HintPath>$(MSBuildThisFileDirectory)\..\ref\native\Microsoft.Windows.Devices.Midi2.Initializer.winmd</HintPath>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.Initialization">
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Initialization.winmd</HintPath>
         </Reference>
+        
+        
     </ItemGroup>
 </Project>

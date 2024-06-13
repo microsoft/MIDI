@@ -11,6 +11,6 @@
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 

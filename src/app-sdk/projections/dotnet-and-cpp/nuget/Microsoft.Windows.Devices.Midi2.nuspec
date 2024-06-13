@@ -42,7 +42,7 @@
                 <reference file="Microsoft.Windows.Devices.Midi2.Messages.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd" />
-                <reference file="Microsoft.Windows.Devices.Midi2.Initializer.winmd" />
+                <reference file="Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
             </group>
         </references>
     </metadata>
@@ -76,19 +76,26 @@
               target="lib\net6.0-windows10.0.20348.0\" />
 
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
-        <file target="lib\uap10.0\x64" src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="lib\native\x64" src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="lib\uap10.0\x64"      src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="lib\native\x64"       src="..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
-        <file target="lib\uap10.0\Arm64" src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="lib\native\Arm64" src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="lib\uap10.0\Arm64"    src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="lib\native\Arm64"     src="..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
-        <file target="lib\uap10.0\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="lib\native\Arm64EC" src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="lib\uap10.0\Arm64EC"  src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="lib\native\Arm64EC"   src="..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
+        
+        
         <!-- Other than projections, this is the only implementation file included in the nuget package -->
-        <file target="lib\native\x64"       src =" ..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2.Initializer.dll" />
-        <file target="lib\native\Arm64"     src =" ..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2.Initializer.dll" />
-        <file target="lib\native\Arm64EC"   src =" ..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initializer.dll" />
+        <file target="lib\native\x64"       src =" ..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
+        <file target="lib\native\x64"       src =" ..\..\..\vsfiles\out\sdk\x64\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
+
+        <file target="lib\native\Arm64"     src =" ..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
+        <file target="lib\native\Arm64"     src =" ..\..\..\vsfiles\out\sdk\Arm64\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
+
+        <file target="lib\native\Arm64EC"   src =" ..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
+        <file target="lib\native\Arm64EC"   src =" ..\..\..\vsfiles\out\sdk\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
 
 
 

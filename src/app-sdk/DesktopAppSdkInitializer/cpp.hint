@@ -1,2 +1,0 @@
-#define DESKTOPAPPSDKINITIALIZER_API __declspec(dllexport)
-#define DESKTOPAPPSDKINITIALIZER_API __declspec(dllimport)

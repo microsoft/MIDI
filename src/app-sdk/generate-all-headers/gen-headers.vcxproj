@@ -199,14 +199,14 @@
     <ProjectReference Include="..\winrt-endpoint-virtual\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.vcxproj">
       <Project>{9b93146c-4d9d-4915-becb-5227df2667e2}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj">
+      <Project>{0ca9273a-0bae-4ac4-8290-a72a985dd264}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj">
       <Project>{001601de-b7ab-41d1-81b7-40286b139841}</Project>
     </ProjectReference>
     <ProjectReference Include="..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj">
       <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\winrt-windows-midi-services\Microsoft.Windows.Devices.Midi2.Initializer.vcxproj">
-      <Project>{0ca9273a-0bae-4ac4-8290-a72a985dd264}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

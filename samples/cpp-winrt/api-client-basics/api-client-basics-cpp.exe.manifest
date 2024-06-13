@@ -5,9 +5,9 @@
 
     <!-- This is the only manifest entry needed for desktop apps -->
     <!-- This specific DLL is shipped with the app itself -->
-    <file name="Microsoft.Windows.Devices.Midi2.Initializer.dll">
+    <file name="Microsoft.Windows.Devices.Midi2.Initialization.dll">
         <activatableClass
-            name="Microsoft.Windows.Devices.Midi2.Initializer.MidiServicesInitializer"
+            name="Microsoft.Windows.Devices.Midi2.Initialization.IMidiServicesInitializerStatics"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
     </file>

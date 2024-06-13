@@ -11,7 +11,7 @@
 using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For loopback endpoints
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;        // For message utilities and strong types
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Service;         // for code to check if the service is installed/running
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;  // for code to check if the service is installed/running
 
 
 // where you find types like IAsyncOperation, IInspectable, etc.
@@ -23,16 +23,20 @@ int main()
     winrt::init_apartment();
 
     // Check to see if Windows MIDI Services is installed and running on this PC
-    if (!MidiService::EnsureServiceAvailable())
+    if (!MidiServicesInitializer::EnsureServiceAvailable())
     {
         // you may wish to fallback to an older MIDI API if it suits your application's workflow
-        std::cout << std::endl << "Windows MIDI Services is not running on this PC" << std::endl;
+        std::cout << std::endl << "** Windows MIDI Services is not running on this PC **" << std::endl;
 
         return 1;
     }
     else
     {
         std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
+
+        // bootstrap the SDK runtime
+        MidiServicesInitializer::InitializeSdkRuntime();
+
     }
 
 
@@ -57,7 +61,7 @@ int main()
     // MidiMessageReceivedEventArgs class provides the different ways to access the data
     // Your event handlers should return quickly as they are called synchronously.
 
-    auto MessageReceivedHandler = [&](foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+    auto MessageReceivedHandler = [&](foundation::IInspectable const& /*sender*/, MidiMessageReceivedEventArgs const& args)
         {
             // there are several ways to get the message data from the arguments. If you want to use
             // strongly-typed UMP classes, then you may start with the GetUmp() method. The GetXXX calls 
@@ -121,7 +125,14 @@ int main()
     auto ump = ump32.as<IMidiUniversalPacket>();
     auto sendResult = sendEndpoint.SendSingleMessagePacket(ump);          // could also use the SendWords methods, etc.
 
-    std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
+    if (MidiEndpointConnection::SendMessageSucceeded(sendResult))
+    {
+        std::cout << std::endl << " ** Wait for the sent UMP to arrive, and then press enter to cleanup. **" << std::endl;
+    }
+    else
+    {
+        std::cout << std::endl << "Message sending failed." << std::endl;
+    }
 
     system("pause");
 
