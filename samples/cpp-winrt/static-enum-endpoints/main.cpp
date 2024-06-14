@@ -5,11 +5,17 @@
 
 // Windows MIDI Services sample code
 
-#include "pch.h"
 #include <iostream>
 
-using namespace winrt::Windows::Devices::Midi2;        // API
+#include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
 
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
+
+using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK Core
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;  // for code to check if the service is installed/running
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
@@ -25,6 +31,22 @@ std::string BooleanToString(bool value)
 int main()
 {
     winrt::init_apartment();
+
+    // Check to see if Windows MIDI Services is installed and running on this PC
+    if (!MidiServicesInitializer::EnsureServiceAvailable())
+    {
+        // you may wish to fallback to an older MIDI API if it suits your application's workflow
+        std::cout << std::endl << "** Windows MIDI Services is not running on this PC **" << std::endl;
+
+        return 1;
+    }
+    else
+    {
+        std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
+
+        // bootstrap the SDK runtime
+        MidiServicesInitializer::InitializeSdkRuntime();
+    }
 
     bool includeDiagnosticsEndpoints = true;
 
@@ -44,7 +66,7 @@ int main()
     {
         std::cout << "Identification" << std::endl;
         std::cout << "- Name:    " << winrt::to_string(endpoint.Name()) << std::endl;
-        std::cout << "- Id:      " << winrt::to_string(endpoint.Id()) << std::endl;
+        std::cout << "- Id:      " << winrt::to_string(endpoint.EndpointDeviceId()) << std::endl;
 
         auto parent = endpoint.GetParentDeviceInformation();
 
@@ -78,39 +100,71 @@ int main()
             std::cout << "- Purpose: Unknown" << std::endl;
         }
 
-        std::cout << std::endl << "Endpoint Metadata" << std::endl;
-        std::cout << "- Product Instance Id:    " << winrt::to_string(endpoint.ProductInstanceId()) << std::endl;
-        std::cout << "- Endpoint-supplied Name: " << winrt::to_string(endpoint.EndpointSuppliedName()) << std::endl;
-    
-        // todo: Sysex etc.
 
+        // info gathered through endpoint discovery
+        auto declaredEndpointInfo = endpoint.GetDeclaredEndpointInfo();
+
+        std::cout << std::endl << "Endpoint Metadata" << std::endl;
+        std::cout << "- Product Instance Id:    " << winrt::to_string(declaredEndpointInfo.ProductInstanceId) << std::endl;
+        std::cout << "- Endpoint-supplied Name: " << winrt::to_string(declaredEndpointInfo.Name) << std::endl;
+    
+        // Device Identity
+        auto declaredDeviceIdentity = endpoint.GetDeclaredDeviceIdentity();
+        std::cout << std::endl << "Device Identity" << std::endl;
+        std::cout << "- System Exclusive Id:    "
+            << declaredDeviceIdentity.SystemExclusiveIdByte1 << L" " 
+            << declaredDeviceIdentity.SystemExclusiveIdByte2 << L" "
+            << declaredDeviceIdentity.SystemExclusiveIdByte3
+            << std::endl;
+
+        std::cout << "- Device Family:          "
+            << declaredDeviceIdentity.DeviceFamilyMsb << L" "
+            << declaredDeviceIdentity.DeviceFamilyLsb
+            << std::endl;
+
+        std::cout << "- Device Family Model:    "
+            << declaredDeviceIdentity.DeviceFamilyModelNumberMsb << L" "
+            << declaredDeviceIdentity.DeviceFamilyModelNumberLsb
+            << std::endl;
+
+        std::cout << "- Software Revision Lvel: "
+            << declaredDeviceIdentity.SoftwareRevisionLevelByte1 << L" "
+            << declaredDeviceIdentity.SoftwareRevisionLevelByte2 << L" "
+            << declaredDeviceIdentity.SoftwareRevisionLevelByte3 << L" "
+            << declaredDeviceIdentity.SoftwareRevisionLevelByte4
+            << std::endl;
+
+
+        // user-supplied info
+        auto userInfo = endpoint.GetUserSuppliedInfo();
         std::cout << std::endl << "User-supplied Metadata" << std::endl;
-        std::cout << "- User-supplied Name: " << winrt::to_string(endpoint.UserSuppliedName()) << std::endl;
-        std::cout << "- Description:        " << winrt::to_string(endpoint.TransportSuppliedDescription()) << std::endl;
-        std::cout << "- User Description:   " << winrt::to_string(endpoint.UserSuppliedDescription()) << std::endl;
-        std::cout << "- Small Image Path:   " << winrt::to_string(endpoint.UserSuppliedSmallImagePath()) << std::endl;
-        std::cout << "- Large Image Path:   " << winrt::to_string(endpoint.UserSuppliedLargeImagePath()) << std::endl;
+        std::cout << "- User-supplied Name: " << winrt::to_string(userInfo.Name) << std::endl;
+        std::cout << "- User Description:   " << winrt::to_string(userInfo.Description) << std::endl;
+        std::cout << "- Small Image Path:   " << winrt::to_string(userInfo.SmallImagePath) << std::endl;
+        std::cout << "- Large Image Path:   " << winrt::to_string(userInfo.LargeImagePath) << std::endl;
 
         std::cout << std::endl << "Endpoint Supported Capabilities" << std::endl;
-        std::cout << "- UMP Major.Minor:   " << endpoint.SpecificationVersionMajor() << "." << endpoint.SpecificationVersionMinor() << std::endl;
-        std::cout << "- MIDI 1.0 Protocol: " << BooleanToString(endpoint.SupportsMidi10Protocol()) << std::endl;
-        std::cout << "- MIDI 2.0 Protocol: " << BooleanToString(endpoint.SupportsMidi20Protocol()) << std::endl;
-        std::cout << "- Sending JR Time:   " << BooleanToString(endpoint.SupportsSendingJRTimestamps()) << std::endl;
-        std::cout << "- Receiving JR Time: " << BooleanToString(endpoint.SupportsReceivingJRTimestamps()) << std::endl;
-        std::cout << "- Multi-client:      " << BooleanToString(endpoint.SupportsMultiClient()) << std::endl;
+        std::cout << "- UMP Major.Minor:   " << declaredEndpointInfo.SpecificationVersionMajor << "." << declaredEndpointInfo.SpecificationVersionMinor << std::endl;
+        std::cout << "- MIDI 1.0 Protocol: " << BooleanToString(declaredEndpointInfo.SupportsMidi10Protocol) << std::endl;
+        std::cout << "- MIDI 2.0 Protocol: " << BooleanToString(declaredEndpointInfo.SupportsMidi20Protocol) << std::endl;
+        std::cout << "- Sending JR Time:   " << BooleanToString(declaredEndpointInfo.SupportsSendingJitterReductionTimestamps) << std::endl;
+        std::cout << "- Receiving JR Time: " << BooleanToString(declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps) << std::endl;
+        //std::cout << "- Multi-client:      " << BooleanToString(declaredEndpointInfo.SupportsMultiClient) << std::endl;
 
         // TODO: Configured protocol
 
+        auto transportInfo = endpoint.GetTransportSuppliedInfo();
         std::cout << std::endl << "Transport Information" << std::endl;
-        std::cout << "- Transport-supplied Name: " << winrt::to_string(endpoint.TransportSuppliedName()) << std::endl;
-        std::cout << "- Transport Id:            " << winrt::to_string(winrt::to_hstring(endpoint.TransportId())) << std::endl;
-        std::cout << "- Transport Mnemonic:      " << winrt::to_string(endpoint.TransportMnemonic()) << std::endl;
+        std::cout << "- Transport-supplied Name: " << winrt::to_string(transportInfo.Name) << std::endl;
+        std::cout << "- Description:             " << winrt::to_string(transportInfo.Description) << std::endl;
+        std::cout << "- Transport Id:            " << winrt::to_string(winrt::to_hstring(transportInfo.TransportId)) << std::endl;
+        std::cout << "- Transport Mnemonic:      " << winrt::to_string(transportInfo.TransportMnemonic) << std::endl;
 
-        if (endpoint.NativeDataFormat() == MidiEndpointNativeDataFormat::ByteStream)
+        if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::ByteStream)
         {
             std::cout << "- Native Data Format:      MIDI 1.0 Byte Stream" << std::endl;
         }
-        else if (endpoint.NativeDataFormat() == MidiEndpointNativeDataFormat::UniversalMidiPacket)
+        else if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::UniversalMidiPacket)
         {
             std::cout << "- Native Data Format:      MIDI 2.0 UMP" << std::endl;
         }
@@ -122,14 +176,27 @@ int main()
         std::cout << std::endl << "Function Block Information" << std::endl;
 
         // Function Blocks
-        std::cout << "- Static Blocks?:  " << BooleanToString(endpoint.HasStaticFunctionBlocks()) << std::endl;
-        std::cout << "- Block Count:     " << endpoint.FunctionBlocks().Size() << std::endl;
-        // TODO
+
+        auto functionBlocks = endpoint.GetDeclaredFunctionBlocks();
+        std::cout << "- Static Blocks?:  " << BooleanToString(declaredEndpointInfo.HasStaticFunctionBlocks) << std::endl;
+        std::cout << "- Block Count:     " << functionBlocks.Size() << std::endl;
+
+        for (auto const& functionBlock : functionBlocks)
+        {
+            std::cout << "  - " << functionBlock.Number() << " : " << winrt::to_string(functionBlock.Name()) << std::endl;
+        }
+        
 
         // Group Terminal Blocks
+        auto groupTerminalBlocks = endpoint.GetGroupTerminalBlocks();
         std::cout << std::endl << "Group Terminal Blocks" << std::endl;
-        std::cout << "- Block Count:     " << endpoint.GroupTerminalBlocks().Size() << std::endl;
-        // TODO
+        std::cout << "- Block Count:     " << groupTerminalBlocks.Size() << std::endl;
+
+        for (auto const& groupTerminalBlock : groupTerminalBlocks)
+        {
+            std::cout << "  - " << groupTerminalBlock.Number() << " : " << winrt::to_string(groupTerminalBlock.Name()) << std::endl;
+        }
+
 
 
         std::cout << "--------------------------------------------------------------------------" << std::endl << std::endl;

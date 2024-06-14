@@ -5,11 +5,21 @@
 
 // Windows MIDI Services sample code
 
-#include "pch.h"
+
 #include <iostream>
 
-using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For loopback endpoints
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
+
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
+
+
+using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK Core
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;        // For message utilities and strong types
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;  // for code to check if the service is installed/running
 
@@ -36,7 +46,6 @@ int main()
 
         // bootstrap the SDK runtime
         MidiServicesInitializer::InitializeSdkRuntime();
-
     }
 
 

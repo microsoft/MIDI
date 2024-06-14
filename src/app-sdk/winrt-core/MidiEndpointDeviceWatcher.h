@@ -18,7 +18,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         MidiEndpointDeviceWatcher() = default;
         ~MidiEndpointDeviceWatcher();
 
-        static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
+        static midi2::MidiEndpointDeviceWatcher Create(_In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         void Start();
         void Stop();

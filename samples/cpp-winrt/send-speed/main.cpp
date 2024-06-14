@@ -5,14 +5,23 @@
 
 // Windows MIDI Services sample code
 
-#include "pch.h"
 #include <iostream>
 #include <iomanip>
 
-using namespace winrt::Windows::Devices::Midi2;        // API
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.Enumeration.h>
 
-// standard WinRT enumeration support. This is how you find attached devices.
-using namespace winrt::Windows::Devices::Enumeration;
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
+
+using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK Core
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;        // For message utilities and strong types
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;  // for code to check if the service is installed/running
+
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
@@ -25,10 +34,10 @@ void DisplaySingleResult(std::wstring label, uint64_t totalTime, uint64_t errorC
         << label
         << L"Total: "
         << std::fixed << std::setprecision(2) << std::right
-        << MidiClock::ConvertTimestampToMilliseconds(totalTime)
+        << MidiClock::ConvertTimestampTicksToMilliseconds(totalTime)
         << "ms, average: "
         << std::fixed << std::setprecision(2) << std::right
-        << MidiClock::ConvertTimestampToMicroseconds((uint64_t)((double)totalTime / totalMessageCount))
+        << MidiClock::ConvertTimestampTicksToMicroseconds((uint64_t)((double)totalTime / totalMessageCount))
         << " microseconds per message, "
         << errorCount 
         << " errors"
@@ -46,7 +55,23 @@ int main()
 {
     winrt::init_apartment();
 
-    auto endpointId = MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId();
+    // Check to see if Windows MIDI Services is installed and running on this PC
+    if (!MidiServicesInitializer::EnsureServiceAvailable())
+    {
+        // you may wish to fallback to an older MIDI API if it suits your application's workflow
+        std::cout << std::endl << "** Windows MIDI Services is not running on this PC **" << std::endl;
+
+        return 1;
+    }
+    else
+    {
+        std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
+
+        // bootstrap the SDK runtime
+        MidiServicesInitializer::InitializeSdkRuntime();
+    }
+
+    auto endpointId = MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId();
 
     uint64_t TotalSendTicksIndividualMessagePackets{ 0 };
     uint64_t TotalSendTicksIndividualMessageWords{ 0 };
@@ -79,7 +104,7 @@ int main()
     // more than one session. If so, the session name should be meaningful to the user, like
     // the name of a browser tab, or a project.
 
-    auto session = MidiSession::CreateSession(L"Speed Test");
+    auto session = MidiSession::Create(L"Speed Test");
 
     auto sendEndpoint = session.CreateEndpointConnection(endpointId);
 
@@ -94,15 +119,15 @@ int main()
 
     auto ump64 = MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
         MidiClock::TimestampConstantSendImmediately(),
-        MidiGroup(5),      // group 5
+        MidiGroup(5),      // group 6
         Midi2ChannelVoiceMessageStatus::NoteOn,    
-        MidiChannel(3),      // channel 3
+        MidiChannel(3),      // channel 4
         120,    // note 120 - hex 0x78
         100);   // velocity 100 hex 0x64
 
     auto ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
         MidiClock::TimestampConstantSendImmediately(),
-        MidiGroup(5),      // group 5
+        MidiGroup(5),      // group 6
         Midi1ChannelVoiceMessageStatus::NoteOn,
         MidiChannel(2),      // channel 3
         110,    // note 110
@@ -208,7 +233,7 @@ int main()
         startTick = MidiClock::Now();
         for (auto const& message : structList)
         {
-            result = sendEndpoint.SendSingleMessageStruct(MidiClock::TimestampConstantSendImmediately(), (uint8_t)MidiMessageUtility::GetPacketTypeFromMessageFirstWord(message.Word0), message);
+            result = sendEndpoint.SendSingleMessageStruct(MidiClock::TimestampConstantSendImmediately(), (uint8_t)MidiMessageHelper::GetPacketTypeFromMessageFirstWord(message.Word0), message);
             if (MidiEndpointConnection::SendMessageFailed(result))
             {
                 TotalSendErrorsIndividualMessageStructs++;

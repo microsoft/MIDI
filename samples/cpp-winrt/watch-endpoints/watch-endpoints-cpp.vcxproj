@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Windows.Devices.Midi2.1.0.0-preview.6-0190\build\native\Windows.Devices.Midi2.props" Condition="Exists('packages\Windows.Devices.Midi2.1.0.0-preview.6-0190\build\native\Windows.Devices.Midi2.props')" />
+  <Import Project="..\packages\Microsoft.Windows.Devices.Midi2.1.0.24165.1955-preview.6\build\native\Microsoft.Windows.Devices.Midi2.props" Condition="Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24165.1955-preview.6\build\native\Microsoft.Windows.Devices.Midi2.props')" />
   <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <CppWinRTOptimized>true</CppWinRTOptimized>
@@ -10,7 +10,7 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{7BF3149C-DFA9-4419-B8E0-6E821875F83B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>api_watch_endpoints</RootNamespace>
+    <RootNamespace>sample</RootNamespace>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.20348.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
     <CppWinRTEnableDefaultCopyLocalFalse>true</CppWinRTEnableDefaultCopyLocalFalse>
@@ -92,9 +92,11 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>
+      </PrecompiledHeaderOutputFile>
       <PreprocessorDefinitions>_CONSOLE;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj</AdditionalOptions>
@@ -104,6 +106,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -113,11 +116,13 @@
   <ItemDefinitionGroup Condition="'$(Platform)'=='ARM64EC'">
     <ClCompile>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='ARM64'">
     <ClCompile>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
@@ -126,6 +131,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">stdcpp20</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,22 +143,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="watch-endpoints-cpp.exe.manifest" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" />
-    <Import Project="packages\Windows.Devices.Midi2.1.0.0-preview.6-0190\build\native\Windows.Devices.Midi2.targets" Condition="Exists('packages\Windows.Devices.Midi2.1.0.0-preview.6-0190\build\native\Windows.Devices.Midi2.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.Devices.Midi2.1.0.24165.1955-preview.6\build\native\Microsoft.Windows.Devices.Midi2.targets" Condition="Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24165.1955-preview.6\build\native\Microsoft.Windows.Devices.Midi2.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -158,7 +163,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets'))" />
-    <Error Condition="!Exists('packages\Windows.Devices.Midi2.1.0.0-preview.6-0190\build\native\Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Windows.Devices.Midi2.1.0.0-preview.6-0190\build\native\Windows.Devices.Midi2.props'))" />
-    <Error Condition="!Exists('packages\Windows.Devices.Midi2.1.0.0-preview.6-0190\build\native\Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Windows.Devices.Midi2.1.0.0-preview.6-0190\build\native\Windows.Devices.Midi2.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24165.1955-preview.6\build\native\Microsoft.Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.Devices.Midi2.1.0.24165.1955-preview.6\build\native\Microsoft.Windows.Devices.Midi2.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24165.1955-preview.6\build\native\Microsoft.Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.Devices.Midi2.1.0.24165.1955-preview.6\build\native\Microsoft.Windows.Devices.Midi2.targets'))" />
   </Target>
 </Project>
