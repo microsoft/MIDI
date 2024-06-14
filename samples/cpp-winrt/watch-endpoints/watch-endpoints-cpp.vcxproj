@@ -8,13 +8,13 @@
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
     <MinimalCoreWin>true</MinimalCoreWin>
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{fb9d8e00-e6e5-42fa-93b5-efe40dc66c04}</ProjectGuid>
+    <ProjectGuid>{7BF3149C-DFA9-4419-B8E0-6E821875F83B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>api_watch_endpoints</RootNamespace>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.20348.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
     <CppWinRTEnableDefaultCopyLocalFalse>true</CppWinRTEnableDefaultCopyLocalFalse>
-    <ProjectName>api-watch-endpoints-cpp</ProjectName>
+    <ProjectName>watch-endpoints-cpp</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">

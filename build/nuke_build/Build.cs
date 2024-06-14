@@ -232,7 +232,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    .SetVerbosity(MSBuildVerbosity.Minimal)
+                    //.SetVerbosity(MSBuildVerbosity.Minimal)
                     .EnableNodeReuse()
                 );
 
