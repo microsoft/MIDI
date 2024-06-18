@@ -28,6 +28,6 @@ namespace Microsoft.Windows.Devices.Midi2
         MidiEndpointNativeDataFormat NativeDataFormat;
 
         Guid TransportId;
-        String TransportMnemonic;
+        String TransportAbbreviation;   // formerly called 'Mnemonic'
     };
 }

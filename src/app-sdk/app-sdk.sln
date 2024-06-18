@@ -34,16 +34,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Packages", "Packages", "{FE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Windows.Devices.Midi2.NetProjection", "projections\dotnet-and-cpp\Microsoft.Windows.Devices.Midi2.NetProjection.csproj", "{25F09B3A-0D97-4245-8591-262A0DFF4320}"
 	ProjectSection(ProjectDependencies) = postProject
+		{5EC6D5EB-53D4-4731-891E-F746F0201429} = {5EC6D5EB-53D4-4731-891E-F746F0201429}
 		{B58C37D4-4E28-424F-93FA-5504C4A3B7A0} = {B58C37D4-4E28-424F-93FA-5504C4A3B7A0}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build Support", "Build Support", "{B35DD12B-68E2-4A8C-BF18-9072AD47C0AE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gen-headers", "generate-all-headers\gen-headers.vcxproj", "{B58C37D4-4E28-424F-93FA-5504C4A3B7A0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "coalesce", "coalesce\coalesce.vcxproj", "{B58C37D4-4E28-424F-93FA-5504C4A3B7A0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WinRT SDK Support", "WinRT SDK Support", "{8E176635-B6CB-44A9-B711-AB28959E5D1B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.Initialization", "winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj", "{0CA9273A-0BAE-4AC4-8290-A72A985DD264}"
+	ProjectSection(ProjectDependencies) = postProject
+		{31ED69A8-5310-45A9-953F-56C351D2C3E1} = {31ED69A8-5310-45A9-953F-56C351D2C3E1}
+		{787EC629-C0FB-4BA9-9746-4A82CD06B73E} = {787EC629-C0FB-4BA9-9746-4A82CD06B73E}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WinRT", "WinRT", "{F5AE94B4-47A7-4D35-A9EE-65FD4CF58C4B}"
 EndProject

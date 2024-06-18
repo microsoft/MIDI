@@ -47,8 +47,8 @@ struct component
     wstring module_name;
     wstring xmlns;
     HMODULE handle = nullptr;
-    activation_factory_type get_activation_factory;
-    ABI::Windows::Foundation::ThreadingType threading_model;
+    activation_factory_type get_activation_factory{};
+    ABI::Windows::Foundation::ThreadingType threading_model{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
 
     ~component()
     {
@@ -163,7 +163,7 @@ HRESULT WinRTLoadComponentFromFilePath(PCWSTR manifestPath)
 HRESULT WinRTLoadComponentFromString(std::string_view xmlStringValue)
 {
     ComPtr<IStream> xmlStream = nullptr;
-    xmlStream.Attach(SHCreateMemStream(reinterpret_cast<const BYTE*>(xmlStringValue.data()), strlen(xmlStringValue.data()) * sizeof(CHAR)));
+    xmlStream.Attach(SHCreateMemStream(reinterpret_cast<const BYTE*>(xmlStringValue.data()), (UINT)strlen(xmlStringValue.data()) * (UINT)sizeof(CHAR)));
     RETURN_HR_IF_NULL(E_OUTOFMEMORY, xmlStream);
     ComPtr<IXmlReaderInput> xmlReaderInput;
     RETURN_IF_FAILED(CreateXmlReaderInputWithEncodingName(xmlStream.Get(), nullptr, L"utf-8", FALSE, nullptr, &xmlReaderInput));
@@ -190,12 +190,15 @@ HRESULT ParseRootManifestFromXmlReaderInput(IUnknown* input)
     {
         if (nodeType == XmlNodeType_Element)
         {
+#pragma warning (disable:6387)
             RETURN_IF_FAILED((xmlReader->GetLocalName(&localName, nullptr)));
 
             if (_wcsicmp_l(localName, L"file", locale) == 0)
             {
                 RETURN_IF_FAILED(ParseFileTag(xmlReader));
             }
+
+#pragma warning (default:6387)
         }
     }
 

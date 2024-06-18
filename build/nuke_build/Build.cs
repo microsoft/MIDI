@@ -82,15 +82,17 @@ class Build : NukeBuild
     AbsolutePath MidiSettingsSolutionFolder => UserToolsRootFolder / "midi-settings";
     AbsolutePath MidiSettingsStagingFolder => StagingRootFolder / "midi-settings";
 
-    AbsolutePath SamplesRootFolder => NukeBuild.RootDirectory / "samples";
-    AbsolutePath CppWinRTSamplesRootFolder => SamplesRootFolder / "cpp-winrt";
-    AbsolutePath CSWinRTSamplesRootFolder => SamplesRootFolder / "csharp-net";
     //    AbsolutePath RustWinRTSamplesRootFolder => SamplesRootFolder / "rust-winrt";
     //    AbsolutePath ElectronJSSamplesRootFolder => SamplesRootFolder / "electron-js";
 
 
     AbsolutePath SetupBundleInfoIncludeFile => StagingRootFolder / "version" / "BundleInfo.wxi";
 
+
+    AbsolutePath SamplesRootFolder => NukeBuild.RootDirectory / "samples";
+    AbsolutePath SamplesCppWinRTSolutionFolder => SamplesRootFolder / "cpp-winrt";
+
+    AbsolutePath SamplesCSWinRTSolutionFolder => SamplesRootFolder / "csharp-net";
 
 
     string[] AllPlatforms => new string[] { "Arm64", "Arm64EC", "x64" };
@@ -412,14 +414,53 @@ class Build : NukeBuild
 
         });
 
-    Target BuildSamples => _ => _
+    Target BuildCppSamples => _ => _
         .DependsOn(BuildAndPackAllAppSDKs)
         .Executes(() =>
         {
+            var solution = SamplesCppWinRTSolutionFolder / "cpp-winrt-samples.sln";
+
             // update nuget packages
 
-            // make sure they compile
+            NuGetTasks.NuGetInstall(_ => _
+                .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+                .SetPackageID(NugetFullPackageId)
+            );
 
+            NuGetTasks.NuGetRestore(_ => _
+                .SetConfigFile(solution)
+            );
+
+            
+            // make sure they compile
+            foreach (var platform in AllPlatforms)
+            {
+                string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+                //msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"Solution:    {solution}");
+                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                Console.Out.WriteLine($"Platform:    {platform}");
+
+
+                MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(solution)
+                    .SetMaxCpuCount(14)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    //.SetVerbosity(MSBuildVerbosity.Minimal)
+                    .EnableNodeReuse()
+                );
+
+            }
         });
 
 
@@ -430,9 +471,9 @@ class Build : NukeBuild
         .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildAppSdkRuntimeInstaller)
+        .DependsOn(BuildCppSamples)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildConsoleApp)
-        .DependsOn(BuildSamples)
         .Executes(() =>
         {
         });

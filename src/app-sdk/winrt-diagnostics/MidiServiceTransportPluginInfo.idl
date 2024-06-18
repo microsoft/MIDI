@@ -14,7 +14,7 @@ namespace Microsoft.Windows.Devices.Midi2.Diagnostics
         Guid Id;
 
         String Name;
-        String Mnemonic;
+        String Abbreviation;
         String Description;
 
         String SmallImagePath;
