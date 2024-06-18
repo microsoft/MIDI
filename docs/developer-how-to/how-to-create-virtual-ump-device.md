@@ -11,11 +11,7 @@ If you develop an application which should appear as a new MIDI device to other 
 
 ## How the Virtual Device Works
 
-A Virtual UMP Device includes more functionality than just a loopback pair. 
 
-* The Virtual UMP Device includes two endpoints: one is just for the application creating the device, the other is for all other applications to connect to.
-* The lifetime of the Virtual UMP Device is controlled by the lifetime of the application's connection. Once the owning application disconnects from the endpoint, the Virtual UMP Device is torn down.
-* The Virtual UMP Device includes built-in functionality to respond to UMP Endpoint Discovery and Protocol Negotiation requests.
 
 More details available in the Endpoints documentation.
 
