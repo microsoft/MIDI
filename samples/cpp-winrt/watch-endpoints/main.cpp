@@ -56,8 +56,8 @@ int main()
     std::cout << "Enumerating endpoints..." << std::endl;
 
     auto filter = 
-        MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
-        MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+        MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative |
+        MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative |
         MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder;
 
     // normally, applications should not include diagnostics endpoints unless they are
@@ -67,7 +67,7 @@ int main()
         filter |= MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback;
     }
 
-    auto watcher = MidiEndpointDeviceWatcher::CreateWatcher(filter);
+    auto watcher = MidiEndpointDeviceWatcher::Create(filter);
 
 
 
@@ -77,7 +77,7 @@ int main()
             std::cout << "Watcher stopped." << std::endl;
         };
 
-    auto OnWatcherEnumerationCompleted = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& args)
+    auto OnWatcherEnumerationCompleted = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
         {
             std::cout << std::endl;
             std::cout << "Initial enumeration completed." << std::endl;

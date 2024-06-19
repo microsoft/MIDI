@@ -22,11 +22,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         try
         {
             winrt::hstring deviceSelector = midi2::MidiEndpointConnection::GetDeviceSelector();
-            
-            // start the device watcher for the specific Id
-            //winrt::hstring deviceSelector(
-            //    L"System.Devices.DeviceInstanceId:=\"" + m_endpointDeviceId + L"\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
-
+           
+            // we use a standard device watcher here, instead of the heavier MIDI-specific one
             m_autoReconnectDeviceWatcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector);
 
             if (m_autoReconnectDeviceWatcher != nullptr)

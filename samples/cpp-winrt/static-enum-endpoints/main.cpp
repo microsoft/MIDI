@@ -48,14 +48,12 @@ int main()
         MidiServicesInitializer::InitializeSdkRuntime();
     }
 
-    bool includeDiagnosticsEndpoints = true;
-
     std::cout << "Enumerating endpoints..." << std::endl;
 
     auto endpoints = MidiEndpointDeviceInformation::FindAll(
         MidiEndpointDeviceInformationSortOrder::Name,
-        MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
-        MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+        MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative |
+        MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative |
         MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
         MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
     );
@@ -100,7 +98,9 @@ int main()
             std::cout << "- Purpose: Unknown" << std::endl;
         }
 
-
+        // Note: Most of these std::cout calls should really be std::wcout due to the format
+        // of the string data. Similarly, conversions to std::string should be std::wstring
+        
         // info gathered through endpoint discovery
         auto declaredEndpointInfo = endpoint.GetDeclaredEndpointInfo();
 
@@ -110,27 +110,28 @@ int main()
     
         // Device Identity
         auto declaredDeviceIdentity = endpoint.GetDeclaredDeviceIdentity();
+
         std::cout << std::endl << "Device Identity" << std::endl;
         std::cout << "- System Exclusive Id:    "
-            << declaredDeviceIdentity.SystemExclusiveIdByte1 << L" " 
-            << declaredDeviceIdentity.SystemExclusiveIdByte2 << L" "
+            << declaredDeviceIdentity.SystemExclusiveIdByte1 << " " 
+            << declaredDeviceIdentity.SystemExclusiveIdByte2 << " "
             << declaredDeviceIdentity.SystemExclusiveIdByte3
             << std::endl;
 
         std::cout << "- Device Family:          "
-            << declaredDeviceIdentity.DeviceFamilyMsb << L" "
+            << declaredDeviceIdentity.DeviceFamilyMsb << " "
             << declaredDeviceIdentity.DeviceFamilyLsb
             << std::endl;
 
         std::cout << "- Device Family Model:    "
-            << declaredDeviceIdentity.DeviceFamilyModelNumberMsb << L" "
+            << declaredDeviceIdentity.DeviceFamilyModelNumberMsb << " "
             << declaredDeviceIdentity.DeviceFamilyModelNumberLsb
             << std::endl;
 
         std::cout << "- Software Revision Lvel: "
-            << declaredDeviceIdentity.SoftwareRevisionLevelByte1 << L" "
-            << declaredDeviceIdentity.SoftwareRevisionLevelByte2 << L" "
-            << declaredDeviceIdentity.SoftwareRevisionLevelByte3 << L" "
+            << declaredDeviceIdentity.SoftwareRevisionLevelByte1 << " "
+            << declaredDeviceIdentity.SoftwareRevisionLevelByte2 << " "
+            << declaredDeviceIdentity.SoftwareRevisionLevelByte3 << " "
             << declaredDeviceIdentity.SoftwareRevisionLevelByte4
             << std::endl;
 
@@ -158,7 +159,7 @@ int main()
         std::cout << "- Transport-supplied Name: " << winrt::to_string(transportInfo.Name) << std::endl;
         std::cout << "- Description:             " << winrt::to_string(transportInfo.Description) << std::endl;
         std::cout << "- Transport Id:            " << winrt::to_string(winrt::to_hstring(transportInfo.TransportId)) << std::endl;
-        std::cout << "- Transport Mnemonic:      " << winrt::to_string(transportInfo.TransportMnemonic) << std::endl;
+        std::cout << "- Transport Mnemonic:      " << winrt::to_string(transportInfo.TransportAbbreviation) << std::endl;
 
         if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::ByteStream)
         {

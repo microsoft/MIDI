@@ -32,6 +32,7 @@ class Build : NukeBuild
     //[GitVersion]
     //readonly GitVersion MasterBuildVersion;
 
+
     string SetupVersionName => "Developer Preview 6";
     string NuGetVersionName => "preview.6";
 
@@ -258,9 +259,9 @@ class Build : NukeBuild
                     "Microsoft.Windows.Devices.Midi2.Initialization"           // this last one gets packed 100% in the nuget, including the impl
                 })
                 {
-                    sdkBinaries.Add(sdkOutputRootFolder / "sdk" / platform / Configuration.Release / $"{ns}.winmd");
-                    sdkBinaries.Add(sdkOutputRootFolder / "sdk" / platform / Configuration.Release / $"{ns}.dll");
-                    sdkBinaries.Add(sdkOutputRootFolder / "sdk" / platform / Configuration.Release / $"{ns}.pri");
+                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / platform / Configuration.Release / $"{ns}.winmd");
+                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / platform / Configuration.Release / $"{ns}.dll");
+                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / platform / Configuration.Release / $"{ns}.pri");
 
                     // todo: CS projection dll
                 }
@@ -422,14 +423,38 @@ class Build : NukeBuild
 
             // update nuget packages
 
+            // for the MIDI nuget package
             NuGetTasks.NuGetInstall(_ => _
                 .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+                .SetPreRelease(true)
+                .SetSource(AppSdkNugetOutputFolder)
                 .SetPackageID(NugetFullPackageId)
             );
 
-            NuGetTasks.NuGetRestore(_ => _
-                .SetConfigFile(solution)
+            // for cppwinrt
+            NuGetTasks.NuGetInstall(_ => _
+                .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+                .SetPreRelease(true)
+                .SetSource("https://api.nuget.org/v3/index.json")
+                .SetPackageID("Microsoft.Windows.CppWinRT")
             );
+
+            // for WIL
+            //NuGetTasks.NuGetInstall(_ => _
+            //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+            //    .SetPreRelease(true)
+            //    .SetSource("https://api.nuget.org/v3/index.json")
+            //    .SetPackageID("Microsoft.Windows.ImplementationLibrary")
+            //);
+
+
+            NuGetTasks.NuGetRestore(_ => _
+                .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+                .SetSolutionDirectory(SamplesCppWinRTSolutionFolder)
+                .SetSource(AppSdkNugetOutputFolder)
+            /*.SetConfigFile(solution)*/
+            );
+
 
             
             // make sure they compile

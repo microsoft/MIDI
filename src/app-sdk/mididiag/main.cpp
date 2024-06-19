@@ -174,7 +174,7 @@ bool DoSectionTransports(_In_ bool const verbose)
             {
                 OutputGuidField(MIDIDIAG_FIELD_LABEL_TRANSPORT_ID, transport.Id);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME, transport.Name);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Mnemonic);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Abbreviation);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_VERSION, transport.Version);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description);
@@ -209,8 +209,8 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
         // list all devices
         devices = midi2::MidiEndpointDeviceInformation::FindAll(
             midi2::MidiEndpointDeviceInformationSortOrder::Name,
-            midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
-            midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+            midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative |
+            midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative |
             midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
             midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing |
             midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
@@ -236,7 +236,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
             OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.EndpointDeviceId());
             OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_NAME, device.Name());
-            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, transportInfo.TransportMnemonic);
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, transportInfo.TransportAbbreviation);
 
             if (verbose)
             {

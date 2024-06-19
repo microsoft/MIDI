@@ -121,7 +121,7 @@ int main()
         // MidiMessageReceivedEventArgs class provides the different ways to access the data
         // Your event handlers should return quickly as they are called synchronously.
 
-        auto MessageReceivedHandler = [&](foundation::IInspectable const& sender, MidiMessageReceivedEventArgs const& args)
+        auto MessageReceivedHandler = [&](foundation::IInspectable const& /*sender*/, MidiMessageReceivedEventArgs const& args)
             {
                 // there are several ways to get the message data from the arguments. If you want to use
                 // strongly-typed UMP classes, then you may start with the GetUmp() method. The GetXXX calls 

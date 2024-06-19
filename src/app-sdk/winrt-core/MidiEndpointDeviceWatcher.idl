@@ -19,6 +19,7 @@ namespace Microsoft.Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiEndpointDeviceWatcher
     {
+        static MidiEndpointDeviceWatcher Create();
         static MidiEndpointDeviceWatcher Create(MidiEndpointDeviceInformationFilters endpointFilters);
 
         void Start();

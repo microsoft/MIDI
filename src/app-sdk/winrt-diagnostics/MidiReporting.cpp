@@ -53,7 +53,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation
 
                                 info.Id = internal::StringToGuid(transportKV.Key().c_str());
                                 info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
-                                info.Mnemonic = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_MNEMONIC_PROPERTY_KEY, L"");
+                                info.Abbreviation = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_MNEMONIC_PROPERTY_KEY, L"");
                                 info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
                                 info.SmallImagePath = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, L"");
                                 info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
