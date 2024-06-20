@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiMessageTypeEndpointListener
-parent: Microsoft.Devices.Midi2.ClientPlugins
+parent: Midi2.ClientPlugins
 has_children: false
 ---
 
@@ -24,8 +24,6 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 | Property | Description |
 | ---- | ---- |
 | `MidiMessageTypeEndpointListener()` | Construct a new instance of this type |
-
-
 
 ## IDL
 

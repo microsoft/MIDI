@@ -1,7 +1,7 @@
 ---
 layout: api_group_page
 title: Virtual Devices
-parent: Microsoft.Devices.Midi2.Endpoints.Virtual
+parent: Midi2.Endpoints.Virtual
 has_children: true
 ---
 

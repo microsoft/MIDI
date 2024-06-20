@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiServiceTransportPluginInformation
-parent: Microsoft.Devices.Midi2.Diagnostics
+parent: Midi2.Diagnostics
 has_children: false
 ---
 
@@ -11,4 +11,4 @@ has_children: false
 
 ## IDL
 
-[MidiServiceTransportPluginInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiServiceTransportPluginInformation.idl)
+[MidiServiceTransportPluginInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-diagnostics/MidiServiceTransportPluginInformation.idl)

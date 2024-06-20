@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiGroupTerminalBlockProtocol
 parent: Metadata
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -26,4 +26,4 @@ Indicates the protocol specifics for the Group Terminal Block. Group terminal bl
 
 ## IDL
 
-[MidiGroupTerminalBlockProtocolEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroupTerminalBlockProtocolEnum.idl)
+[MidiGroupTerminalBlockProtocol IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroupTerminalBlockProtocolEnum.idl)

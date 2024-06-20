@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiMessage96
 parent: Messages
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 

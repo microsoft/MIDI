@@ -2,7 +2,7 @@
 layout: api_page
 title: IMidiEndpointMessageProcessingPlugin
 parent: Client Plugins
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 

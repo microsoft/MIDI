@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiFunctionBlockDirection
 parent: Metadata
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 

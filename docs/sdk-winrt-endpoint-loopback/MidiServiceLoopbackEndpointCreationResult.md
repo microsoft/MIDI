@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiServiceLoopbackEndpointCreationResult
-parent: Microsoft.Devices.Midi2.Endpoints.Loopback
+parent: Midi2.Endpoints.Loopback
 has_children: false
 ---
 

@@ -1,8 +1,7 @@
 ---
 layout: api_page
-title: MidiEndpointDiscoveryFilterFlags
-parent: Messages
-grand_parent: Microsoft.Devices.Midi2
+title: MidiEndpointDiscoveryRequests
+parent: Midi2.Messages
 has_children: false
 ---
 
@@ -24,4 +23,4 @@ Used to indicate which endpoint discovery messages you want to receive when you 
 
 ## IDL
 
-[MidiEndpointDiscoveryFilterFlagsEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDiscoveryFilterFlagsEnum.idl)
+[MidiEndpointDiscoveryRequests IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiEndpointDiscoveryRequestsEnum.idl)

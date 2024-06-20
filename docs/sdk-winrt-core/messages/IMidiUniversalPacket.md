@@ -2,7 +2,7 @@
 layout: api_page
 title: IMidiUniversalPacket
 parent: Messages
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 

@@ -1,7 +1,7 @@
 ---
 layout: api_group_page
 title: Service
-parent: Microsoft.Devices.Midi2.Endpoints.Loopback
+parent: Midi2.Endpoints.Loopback
 has_children: true
 ---
 

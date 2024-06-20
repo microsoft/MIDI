@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiUniqueId
-parent: Microsoft.Devices.Midi2.CapabilityInquiry
+parent: Midi2.CapabilityInquiry
 has_children: false
 ---
 
@@ -25,7 +25,7 @@ In the specification, Byte1 is the LSB and Byte4 is the MSB. We follow that conv
 | `Byte2` | The data value for byte 2 of the MUID (second-most LSB) |
 | `Byte3` | The data value for byte 3 of the MUID (second-most MSB) |
 | `Byte4` | The data value for byte 4 of the MUID (MSB) |
-| `As28BitInteger` | The data value converted to a 28 bit integer |
+| `AsCombined28BitValue` | The data value converted to a 28 bit integer |
 | `IsBroadcast` | True if this is the broadcast MUID value from the MIDI CI specification |
 | `IsReserved` | True if this is the reserved MUID value from the MIDI CI specification |
 

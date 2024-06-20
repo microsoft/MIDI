@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiFunctionBlock
 parent: Metadata
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -40,7 +40,7 @@ Most properties are 1:1 with the MIDI 2.0 UMP specification section on function 
 | `IsActive` | True if this block is active |
 | `Direction` | The direction of the block from the block's point of view. |
 | `UIHint` | A hint which tells you how this block should be treated in a user interface. This should be considered a "soft filter" for display, not a mechanism to keep blocks completely hidden from a user. |
-| `Midi10Connection` | How to treat this block if it is a MIDI 1.0 connection |
+| `RepresentsMidi10Connection` | How to treat this block if it is a MIDI 1.0 connection |
 | `FirstGroupIndex` | Zero-based index of the first group spanned by this block. |
 | `GroupCount` | The number of groups spanned. |
 | `MidiCIMessageVersionFormat` | MIDI CI version format value |

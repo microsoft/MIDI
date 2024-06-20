@@ -1,11 +1,13 @@
 ---
 layout: api_page
-title: MidiMessageUtility
-parent: Microsoft.Devices.Midi2.Messages
+title: MidiMessageHelper
+parent: Midi2.Messages
 has_children: false
 ---
 
-# MidiMessageUtility
+# MidiMessageHelper
+
+(TODO: This page is not complete)
 
 This class contains a number of static helper functions for reading information from Universal MIDI Packets, and also manipulating that information.
 
@@ -59,8 +61,8 @@ In most cases, the calling application needs to do some validation before callin
 
 | Function | Description |
 | --------------- | ----------- |
-| `GetMessageFriendlyNameFromFirstWord(UInt32 word0)` | Returns the localized "Friendly Name" string for a message. For example, this is what is displayed in the console output when you are monitoring an endpoint in verbose mode. |
+| `GetMessageDisplayNameFromFirstWord(UInt32 word0)` | Returns the localized "Friendly Name" string for a message. For example, this is what is displayed in the console output when you are monitoring an endpoint in verbose mode. |
 
 ## IDL
 
-[MidiMessageUtility IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageUtility.idl)
+[MidiMessageUtility IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiMessageHelper.idl)

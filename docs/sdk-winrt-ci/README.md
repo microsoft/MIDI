@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Microsoft.Devices.Midi2.CapabilityInquiry
+title: Midi2.CapabilityInquiry
 has_children: true
 ---
 
-# Microsoft.Devices.Midi2.CapabilityInquiry
+# Microsoft.Windows.Devices.Midi2.CapabilityInquiry

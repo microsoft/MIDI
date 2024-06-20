@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiEndpointConnection
 parent: Connections
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -25,11 +25,13 @@ Currently, in the implementation behind the scenes, the service receives each ti
 | Property | Description |
 | -------- | ----------- |
 | `ConnectionId` | The generated GUID which uniquely identifes this connection instance. This is what is provided to the `MidiSession` when disconnecting an endpoint |
-| `EndpointDeviceId` | The system-wide identifier for the endpoint device. This is returned through enumeration calls. |
+| `ConnectedEndpointDeviceId` | The system-wide identifier for the endpoint device. This is returned through enumeration calls. |
+| `LogMessageDataValidationErrorDetails` | When true, message data validation errors are logged to any connected ETL listener, in addition to other errors. |
 | `Tag` | You may use this `Tag` property to hold any additional information you wish to have associated with the connection. |
 | `IsOpen` | True if this connection is currently open. When first created, the connection is not open until the consuming code calls the `Open` method |
 | `Settings` | Settings used to create this connection. Treat this as read-only. |
 | `MessageProcessingPlugins` | Collection of all message processing plugins which will optionally handle incoming messages. |
+| `IsAutoReconnectEnabled` | True if endpoints are automatically reconnected if they are, for example, unplugged and then replugged. The value is set at the session level. |
 
 ## Static Member Functions
 
@@ -80,8 +82,8 @@ When sending multiple messages, there is no implied all-or-nothing transaction. 
 | Function | Description |
 | -------- | ----------- |
 | `Open()` | Open the connection and start receiving messages. Wire up the message event handler before calling this method. |
-| `AddEndpointProcessingPlugin(plugin)` | Add an endpoint processing plugin to this connection |
-| `RemoveEndpointProcessingPlugin(id)` | Remove an endpoint processing plugin from this connection |
+| `AddMessageProcessingPlugin(plugin)` | Add a message processing plugin to this connection |
+| `RemoveMessageProcessingPlugin(id)` | Remove a message processing plugin from this connection |
 
 ## Events
 
@@ -101,15 +103,15 @@ When processing the `MessageReceived` event, do so quickly. This event is synchr
 
 ## Sample
 
-Here's an excerpt from the full "API client basics" sample. It shows sending and receiving messages using the two built-in loopback endpoints. For more information on the loopback endpoints, see [diagnostics endpoints](../../../diagnostic-endpoints.md).
+Here's an excerpt from the full "API client basics" sample. It shows sending and receiving messages using the two built-in loopback endpoints. For more information on the loopback endpoints, see [diagnostics endpoints](../../endpoints/diagnostic-endpoints.md).
 
 ```cs
 using (var session = MidiSession.CreateSession("API Sample Session"))
 {
     // get the endpoint Ids. Normally, you'd use enumeration functions to get this
     // for non-diagnostics endpoints.
-    var endpointAId = MidiEndpointDeviceInformation.DiagnosticsLoopbackAEndpointId;
-    var endpointBId = MidiEndpointDeviceInformation.DiagnosticsLoopbackBEndpointId;
+    var endpointAId = MidiDiagnostics.DiagnosticsLoopbackAEndpointId;
+    var endpointBId = MidiDiagnostics.DiagnosticsLoopbackBEndpointId;
 
     Console.WriteLine("Connecting to Sender UMP Endpoint: " + endpointAId);
     Console.WriteLine("Connecting to Receiver UMP Endpoint: " + endpointBId);
@@ -127,7 +129,7 @@ using (var session = MidiSession.CreateSession("API Sample Session"))
         Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
         Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
         Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
-        Console.WriteLine("- Message:           " + MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
+        Console.WriteLine("- Message:           " + MidiMessageHelper.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
 
         if (ump is MidiMessage32)
         {
@@ -150,13 +152,13 @@ using (var session = MidiSession.CreateSession("API Sample Session"))
 
     var ump32 = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
         MidiClock.Now, // use current timestamp
-        5,      // group 5
+        5,      // group 4
         Midi1ChannelVoiceMessageStatus.NoteOn,  // 9
-        3,      // channel 3
+        3,      // channel 2
         120,    // note 120 - hex 0x78
         100);   // velocity 100 hex 0x64
 
-    sendEndpoint.SendMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
+    sendEndpoint.SendSingleMessagePacket((IMidiUniversalPacket)ump32);  // could also use the SendWords methods, etc.
 
     Console.WriteLine(" ** Wait for the message to arrive, and then press enter to cleanup. ** ");
     Console.ReadLine();

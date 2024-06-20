@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiGroupTerminalBlockDirection
 parent: Metadata
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -20,4 +20,4 @@ Indicates the message flow for a group terminal block. Note that this is, per th
 
 ## IDL
 
-[MidiGroupTerminalBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroupTerminalBlockDirectionEnum.idl)
+[MidiGroupTerminalBlockDirection IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroupTerminalBlockDirectionEnum.idl)

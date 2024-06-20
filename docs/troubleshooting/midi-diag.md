@@ -1,6 +1,6 @@
 ---
 layout: page
-title: MIDI Dump Utility
+title: MIDI Diagnostics Utility
 parent: Troubleshooting
 ---
 

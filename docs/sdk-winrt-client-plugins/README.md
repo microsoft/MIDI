@@ -1,6 +1,6 @@
 ---
 layout: api_group_page
-title: Microsoft.Devices.Midi2.ClientPlugins
+title: Midi2.ClientPlugins
 has_children: true
 ---
 

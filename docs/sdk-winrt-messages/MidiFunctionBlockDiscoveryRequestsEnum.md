@@ -1,8 +1,7 @@
 ---
 layout: api_page
-title: MidiFunctionBlockDiscoveryFilterFlags
-parent: Messages
-grand_parent: Microsoft.Devices.Midi2
+title: MidiFunctionBlockDiscoveryRequests
+parent: Midi2.Messages
 has_children: false
 ---
 
@@ -20,4 +19,4 @@ Used to indicate which function block messages you want to receive when you requ
 
 ## IDL
 
-[MidiFunctionBlockDiscoveryFilterFlagsEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlockDiscoveryFilterFlagsEnum.idl)
+[MidiFunctionBlockDiscoveryRequests IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiFunctionBlockDiscoveryRequestsEnum.idl)

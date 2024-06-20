@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiGroup
 parent: Simple Types
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -32,4 +32,4 @@ The `MidiGroup` class is used to provide formatting and data validation for MIDI
 
 ## See also
 
-[MidiGroup IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiGroup.idl)
+[MidiGroup IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroup.idl)

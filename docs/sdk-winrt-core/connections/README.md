@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: Connections
-parent: Microsoft.Devices.Midi2
+parent: Midi2
 has_children: true
 ---
 

@@ -1,13 +1,12 @@
 ---
 layout: api_page
 title: MidiServiceLoopbackEndpointDefinition
-parent: Microsoft.Devices.Midi2.Endpoints.Loopback
+parent: Midi2.Endpoints.Loopback
 has_children: false
 ---
 
 # MidiServiceLoopbackEndpointDefinition
 
-This class defines the properties of an endpoint which can be created at runtime. For example, a loopback endpoint.
 
 ## Properties
 
@@ -19,5 +18,4 @@ This class defines the properties of an endpoint which can be created at runtime
 
 ## IDL
 
-[MidiServiceLoopbackEndpointDefinition IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiServiceLoopbackEndpointDefinition.idl)
-
+[MidiServiceLoopbackEndpointDefinition IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-endpoints-loopback/MidiServiceLoopbackEndpointDefinition.idl)

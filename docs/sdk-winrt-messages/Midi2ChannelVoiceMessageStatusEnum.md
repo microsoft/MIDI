@@ -1,8 +1,7 @@
 ---
 layout: api_page
 title: Midi2ChannelVoiceMessageStatus
-parent: Messages
-grand_parent: Windows.Devices.Midi2 API
+parent: Midi2.Messages
 has_children: false
 ---
 
@@ -32,4 +31,4 @@ Status to use for MIDI 2.0 Channel Voice messages. These are message type 4 mess
 
 ## IDL
 
-[Midi2ChannelVoiceMessageStatusEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/Midi2ChannelVoiceMessageStatusEnum.idl)
+[Midi2ChannelVoiceMessageStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/Midi2ChannelVoiceMessageStatusEnum.idl)

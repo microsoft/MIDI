@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiSession
 parent: Session
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -16,7 +16,7 @@ An application may have any number of sessions open. For example, the applicatio
 
 ## Properties
 
-| `Id`  | Generated Id for the session |
+| `SessionId`  | Generated Id for the session |
 | `Name` | Name for this session. To change the name after creating the session, use the `UpdateName()` function. This will update the service |
 | `Settings`  | The settings used to create this session |
 | `IsOpen` | True if this session is open and ready to use |
@@ -26,8 +26,7 @@ An application may have any number of sessions open. For example, the applicatio
 
 The two static functions are factory-pattern methods for creating a new session.
 
-| `CreateSession(sessionName)` | Create and return a new session with the specified name |
-| `CreateSession(sessionName, settings)`  | Create and return a new session with the specified name and settings |
+| `Create(sessionName)` | Create and return a new session with the specified name |
 
 ## Methods
 

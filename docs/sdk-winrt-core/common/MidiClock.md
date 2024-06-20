@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiClock
-parent: Microsoft.Devices.Midi2
+parent: Midi2
 has_children: false
 ---
 
@@ -29,9 +29,10 @@ The static functions are for convenience in calculating offsets to a timestamp, 
 
 | Static Function | Description |
 | --------------- | ----------- |
-| `ConvertTimestampToMicroseconds(timestampValue)` | Converts the provided timestamp to microseconds |
-| `ConvertTimestampToMilliseconds(timestampValue)` | Converts the provided timestamp to milliseconds |
-| `ConvertTimestampToSeconds(timestampValue)` | Converts the provided timestamp to seconds |
+| `ConvertTimestampTicksToNanoseconds(timestampValue)` | Converts the provided timestamp to nanoseconds |
+| `ConvertTimestampTicksToMicroseconds(timestampValue)` | Converts the provided timestamp to microseconds |
+| `ConvertTimestampTicksToMilliseconds(timestampValue)` | Converts the provided timestamp to milliseconds |
+| `ConvertTimestampTicksToSeconds(timestampValue)` | Converts the provided timestamp to seconds |
 
 ## Static Functions for Offset
 
