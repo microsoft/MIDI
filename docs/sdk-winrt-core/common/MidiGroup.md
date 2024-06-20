@@ -1,8 +1,7 @@
 ---
 layout: api_page
 title: MidiGroup
-parent: Simple Types
-grand_parent: Midi2
+parent: Midi2 core
 has_children: false
 ---
 

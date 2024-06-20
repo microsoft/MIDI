@@ -12,7 +12,7 @@ namespace Microsoft.Windows.Devices.Midi2
     enum MidiGroupTerminalBlockDirection
     {
         Bidirectional = 0x0,
-        BlockInput = 0x1,
-        BlockOutput = 0x2,
+        BlockInput =    0x1,
+        BlockOutput =   0x2,
     };
 }

@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiFunctionBlockDirection
 parent: Metadata
-grand_parent: Midi2
+grand_parent: Midi2 core
 has_children: false
 ---
 

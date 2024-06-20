@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiEndpointDeviceInformationUpdatedEventArgs
 parent: Endpoint Enumeration
-grand_parent: Midi2
+grand_parent: Midi2 core
 has_children: false
 ---
 

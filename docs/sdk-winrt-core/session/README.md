@@ -1,7 +1,7 @@
 ---
 layout: api_group_page
 title: Session
-parent: Midi2
+parent: Midi2 core
 has_children: true
 ---
 
