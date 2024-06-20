@@ -1,3 +1,544 @@
+<<<<<<< HEAD:src/api/Client/Midi2Client/Windows.Devices.Midi2.vcxproj.filters
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Internal">
+      <UniqueIdentifier>{6abb387d-1da9-403e-bb35-70e4359f1b00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API">
+      <UniqueIdentifier>{4f6a2ac4-8b62-49bf-a42b-79a9e2584abe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Messages">
+      <UniqueIdentifier>{aa2a2918-1030-4549-946a-8ae21d00e0a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints">
+      <UniqueIdentifier>{6965e07f-f558-4fdb-821c-dcb0ae49819a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Transports">
+      <UniqueIdentifier>{7a309dc0-af6f-4fa7-8827-649ef97dcc9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Internal\ServiceAccess">
+      <UniqueIdentifier>{6da56400-6fd6-4457-a605-67182ec178bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Connections">
+      <UniqueIdentifier>{e57d1b46-4206-4afa-8fd3-adbe3d245aa7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Events">
+      <UniqueIdentifier>{27ac01b4-53c3-477f-a4c8-ded2d40e69b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Internal\Trace">
+      <UniqueIdentifier>{870a47af-3bdf-43ad-a1f9-21c144450b0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\BasicTypes">
+      <UniqueIdentifier>{95a0abe7-f4a2-472b-9c2b-f64e534ea12a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata">
+      <UniqueIdentifier>{11e76454-b867-4a89-975a-5839611cbba3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata\Endpoints">
+      <UniqueIdentifier>{bce3490a-eb00-4ae7-9e49-6e31e91d70d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="InstallSupport">
+      <UniqueIdentifier>{f99f0bd4-c968-4322-a806-90aca0f9e73e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service">
+      <UniqueIdentifier>{4bae9d9e-c02c-49f6-b4a6-b8d0a1a2551c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins">
+      <UniqueIdentifier>{577d9050-8eb1-416d-9d4f-17cbb58b9b47}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Interfaces">
+      <UniqueIdentifier>{abf74add-24a7-428a-b6f0-738ae3fadd6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Stock Plugins">
+      <UniqueIdentifier>{a82088aa-e010-490c-b11d-a2797913bffd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Stock Plugins\Convenience">
+      <UniqueIdentifier>{0d751466-e71b-4be8-965c-3af418878322}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Messages\Types">
+      <UniqueIdentifier>{d231ff79-8155-4199-bac4-bfca4accd267}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Messages\Utility">
+      <UniqueIdentifier>{8f3d4198-ee96-4a00-bcd1-d22248ce496f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Clock">
+      <UniqueIdentifier>{b99bb6ef-1d6e-4e3b-9f03-1be7d35b49f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device">
+      <UniqueIdentifier>{42159c00-f2e0-43d6-bfee-9ce7fe99dde3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Messages\Enum">
+      <UniqueIdentifier>{63ad72dd-0c2d-4539-86d7-8c527c249e3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Enumeration">
+      <UniqueIdentifier>{0a50ea56-af07-4bca-82f2-0b409820ef1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Metadata\Blocks">
+      <UniqueIdentifier>{277e880f-09e8-43d0-aaa9-926305908cd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Internal\Resources">
+      <UniqueIdentifier>{3360af9e-3363-4faf-861f-7d778c66bf70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Endpoints\Session">
+      <UniqueIdentifier>{6427be3d-78fd-4fff-9bf4-2353b462bfc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service\Reporting">
+      <UniqueIdentifier>{f47089c0-b3df-4af8-93e8-35731024db07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service\Health">
+      <UniqueIdentifier>{7610a401-8f83-470c-9ccc-6761e3759eab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service\Runtime Endpoints">
+      <UniqueIdentifier>{a21f8a09-4e72-422f-9569-e3eeee2ac830}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Service\Configuration">
+      <UniqueIdentifier>{2a7feacb-d6cd-45d7-a7a1-754e28d34e2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Enumeration\Watcher">
+      <UniqueIdentifier>{545b29a1-8b94-401a-9614-8467c4e00f99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Enumeration\Enum">
+      <UniqueIdentifier>{75e414e5-ade8-4844-916c-ca516268a935}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API\Enumeration\DeviceInformation">
+      <UniqueIdentifier>{d66b1849-1069-4d62-8b59-ab98a3199a90}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiSession.cpp" />
+    <ClCompile Include="MidiSessionSettings.cpp">
+      <Filter>SDK\Session</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiClock.cpp">
+      <Filter>API\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="trace_logging.cpp">
+      <Filter>Internal\Trace</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiChannel.cpp">
+      <Filter>API\BasicTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroup.cpp">
+      <Filter>API\BasicTypes</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiChannelEndpointListener.cpp">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroupEndpointListener.cpp">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageTypeEndpointListener.cpp">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlock.cpp">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUniqueId.cpp">
+      <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBuilder.cpp">
+      <Filter>API\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroupTerminalBlock.cpp">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+    </ClCompile>
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="MidiService.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServicePingResponse.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServicePingResponseSummary.cpp">
+      <Filter>API\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiStreamMessageBuilder.cpp">
+      <Filter>API\Messages\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformation.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageConverter.cpp">
+      <Filter>API\Messages\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcher.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualEndpointDeviceDefinition.cpp">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigurationResponse.cpp">
+      <Filter>API\Service\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointCreationResult.cpp">
+      <Filter>API\Service\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceLoopbackEndpointDefinition.cpp">
+      <Filter>API\Service\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendSingleMessage.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendMultipleMessages.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_Plugins.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnection_SendInfrastructure.cpp">
+      <Filter>API\Endpoints\Connections</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationAddedEventArgs.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceInformationRemovedEventArgs.cpp">
+      <Filter>API\Enumeration</Filter>
+    </ClCompile>
+    <ClCompile Include="midi_function_block_prop_util.cpp">
+      <Filter>API\Enumeration\DeviceInformation</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiStreamConfigurationRequestReceivedEventArgs.cpp">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiSession.h" />
+    <ClInclude Include="MidiSessionSettings.h">
+      <Filter>SDK\Session</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_service_interface.h">
+      <Filter>Internal\ServiceAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiClock.h">
+      <Filter>API\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="trace_logging.h">
+      <Filter>Internal\Trace</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiChannel.h">
+      <Filter>API\BasicTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroup.h">
+      <Filter>API\BasicTypes</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiChannelEndpointListener.h">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroupEndpointListener.h">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClInclude>
+    <ClInclude Include="memory_buffer.h">
+      <Filter>Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageTypeEndpointListener.h">
+      <Filter>API\Endpoints\Listeners</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlock.h">
+      <Filter>API\Endpoints\Metadata\Functions</Filter>
+    </ClInclude>
+    <ClInclude Include="midl_defines.h" />
+    <ClInclude Include="MidiUniqueId.h">
+      <Filter>API\Endpoints\Metadata\MUID</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBuilder.h">
+      <Filter>API\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroupTerminalBlock.h">
+      <Filter>API\Endpoints\Metadata\GroupTerminals</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiService.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServicePingResponse.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServicePingResponseSummary.h">
+      <Filter>API\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiStreamMessageBuilder.h">
+      <Filter>API\Messages\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_stream_message_defs.h" />
+    <ClInclude Include="MidiEndpointDeviceInformation.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcher.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageConverter.h">
+      <Filter>API\Messages\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcher.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Internal\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualEndpointDeviceDefinition.h">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceConfigurationResponse.h">
+      <Filter>API\Service\Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointCreationResult.h">
+      <Filter>API\Service\Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceLoopbackEndpointDefinition.h">
+      <Filter>API\Service\Configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationAddedEventArgs.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceInformationRemovedEventArgs.h">
+      <Filter>API\Enumeration</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_function_block_prop_util.h">
+      <Filter>API\Enumeration\DeviceInformation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiStreamConfigurationRequestReceivedEventArgs.h">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </ClInclude>
+    <ClInclude Include="namespace_defines.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiSession.idl">
+      <Filter>API\Endpoints\Session</Filter>
+    </Midl>
+    <Midl Include="MidiSessionSettings.idl">
+      <Filter>API\Endpoints\Session</Filter>
+    </Midl>
+    <Midl Include="MidiClock.idl">
+      <Filter>API\Clock</Filter>
+    </Midl>
+    <Midl Include="MidiMessageReceivedEventArgs.idl">
+      <Filter>API\Endpoints\Events</Filter>
+    </Midl>
+    <Midl Include="MidiGroup.idl">
+      <Filter>API\BasicTypes</Filter>
+    </Midl>
+    <Midl Include="MidiChannel.idl">
+      <Filter>API\BasicTypes</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlock.idl">
+      <Filter>API\Endpoints\Metadata\Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockUIHintEnum.idl">
+      <Filter>API\Endpoints\Metadata\Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiProtocolEnum.idl">
+      <Filter>API\Transports</Filter>
+    </Midl>
+    <Midl Include="IMidiMessageReceivedEventSource.idl">
+      <Filter>API\Endpoints\Events</Filter>
+    </Midl>
+    <Midl Include="MidiService.idl">
+      <Filter>API\Service</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointMessageProcessingPlugin.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Interfaces</Filter>
+    </Midl>
+    <Midl Include="MidiChannelEndpointListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Convenience</Filter>
+    </Midl>
+    <Midl Include="MidiGroupEndpointListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Convenience</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTypeEndpointListener.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Convenience</Filter>
+    </Midl>
+    <Midl Include="IMidiUniversalPacket.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiMessage32.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiMessage64.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiMessage96.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiMessage128.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="MidiMessageUtility.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBuilder.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockMidi10Enum.idl">
+      <Filter>API\Endpoints\Metadata\Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiStreamMessageBuilder.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiSendMessageResultsEnum.idl">
+      <Filter>API\Endpoints\Connections</Filter>
+    </Midl>
+    <Midl Include="MidiMessageStruct.idl">
+      <Filter>API\Messages\Types</Filter>
+    </Midl>
+    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiMessageTypeEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiPacketTypeEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiSystemExclusive8StatusEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiStreamConfigurationRequestedSettings.idl">
+      <Filter>API\Endpoints\Metadata\Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointNativeDataFormatEnum.idl">
+      <Filter>API\Transports</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockDirectionEnum.idl">
+      <Filter>API\Endpoints\Metadata\Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlock.idl">
+      <Filter>API\Endpoints\Metadata\Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiGroupTerminalBlockProtocolEnum.idl">
+      <Filter>API\Endpoints\Metadata\Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDirectionEnum.idl">
+      <Filter>API\Endpoints\Metadata\Blocks</Filter>
+    </Midl>
+    <Midl Include="MidiMessageConverter.idl">
+      <Filter>API\Messages\Utility</Filter>
+    </Midl>
+    <Midl Include="MidiUniqueId.idl">
+      <Filter>API\BasicTypes</Filter>
+    </Midl>
+    <Midl Include="MidiStreamConfigurationRequestReceivedEventArgs.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualEndpointDeviceDefinition.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualEndpointDevice.idl">
+      <Filter>API\Endpoints\Message Processing Plugins\Stock Plugins\Virtual Device</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointConnection.idl">
+      <Filter>API\Endpoints\Connections</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointConnectionSource.idl">
+      <Filter>API\Endpoints\Connections</Filter>
+    </Midl>
+    <Midl Include="IMidiEndpointConnectionSettings.idl">
+      <Filter>API\Endpoints\Connections</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponse.idl">
+      <Filter>API\Service\Health</Filter>
+    </Midl>
+    <Midl Include="MidiServicePingResponseSummary.idl">
+      <Filter>API\Service\Health</Filter>
+    </Midl>
+    <Midl Include="MidiServiceLoopbackEndpointDefinition.idl">
+      <Filter>API\Service\Runtime Endpoints</Filter>
+    </Midl>
+    <Midl Include="MidiServiceLoopbackEndpointCreationResult.idl">
+      <Filter>API\Service\Runtime Endpoints</Filter>
+    </Midl>
+    <Midl Include="IMidiServiceMessageProcessingPluginConfiguration.idl">
+      <Filter>API\Service\Configuration</Filter>
+    </Midl>
+    <Midl Include="IMidiServiceTransportPluginConfiguration.idl">
+      <Filter>API\Service\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigurationResponse.idl">
+      <Filter>API\Service\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigurationResponseStatusEnum.idl">
+      <Filter>API\Service\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceSessionConnectionInfo.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceSessionInfo.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportPluginInfo.idl">
+      <Filter>API\Service\Reporting</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl">
+      <Filter>API\Messages\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceWatcher.idl">
+      <Filter>API\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl">
+      <Filter>API\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl">
+      <Filter>API\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl">
+      <Filter>API\Enumeration\Watcher</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationFiltersEnum.idl">
+      <Filter>API\Enumeration\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
+      <Filter>API\Enumeration\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePurposeEnum.idl">
+      <Filter>API\Enumeration\Enum</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceInformation.idl">
+      <Filter>API\Enumeration\DeviceInformation</Filter>
+    </Midl>
+    <Midl Include="Midi2ApiContract.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-api.def" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="WinRTActivationEntries.txt">
+      <Filter>InstallSupport</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
+  </ItemGroup>
+=======
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
@@ -520,4 +1061,5 @@
   <ItemGroup>
     <ResourceCompile Include="Microsoft.Devices.Midi2.rc" />
   </ItemGroup>
+>>>>>>> pete-dev:src/app-sdk/winrt-client-plugins/Microsoft.Devices.Midi2.vcxproj.filters
 </Project>

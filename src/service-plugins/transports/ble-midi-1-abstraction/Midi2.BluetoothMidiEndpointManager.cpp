@@ -32,10 +32,13 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     return S_OK;
 
 #if 0
+<<<<<<< HEAD:src/api/Abstraction/BleMidiAbstraction/Midi2.BluetoothMidiEndpointManager.cpp
+=======
 
 
 
 
+>>>>>>> pete-dev:src/service-plugins/transports/ble-midi-1-abstraction/Midi2.BluetoothMidiEndpointManager.cpp
     try
     {
         TraceLoggingWrite(
@@ -84,7 +87,11 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
 
         return E_FAIL;
     }
+<<<<<<< HEAD:src/api/Abstraction/BleMidiAbstraction/Midi2.BluetoothMidiEndpointManager.cpp
 #endif
+=======
+#endif
+>>>>>>> pete-dev:src/service-plugins/transports/ble-midi-1-abstraction/Midi2.BluetoothMidiEndpointManager.cpp
 }
 
 HRESULT

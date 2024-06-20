@@ -252,7 +252,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         if (args.MessageType() == MidiMessageType::Stream128)
         {
+<<<<<<< HEAD:src/api/Client/Midi2Client/MidiVirtualEndpointDevice.cpp
+            auto message = winrt::make<MidiMessage128>();
+=======
             midi2::MidiMessage128 message{};
+>>>>>>> pete-dev:src/app-sdk/winrt-endpoint-virtual/MidiVirtualDevice.cpp
 
             if (args.FillMessage128(message))
             {
