@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #include "pch.h"
 #include "MidiMessageBuilder.h"
@@ -13,7 +14,7 @@
 #include "ump_helpers.h"
 #include "midi_ump.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageBuilder::BuildUtilityMessage(

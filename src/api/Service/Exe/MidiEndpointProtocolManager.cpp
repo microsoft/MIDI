@@ -62,11 +62,12 @@ CMidiEndpointProtocolManager::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
+    GUID AbstractionGuid,
     LPCWSTR DeviceInterfaceId,
     BOOL PreferToSendJRTimestampsToEndpoint,
     BOOL PreferToReceiveJRTimestampsFromEndpoint,
     BYTE PreferredMidiProtocol,
-    WORD TimeoutMS,
+    WORD TimeoutMilliseconds,
     PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
 ) noexcept
 {
@@ -79,27 +80,46 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
         TraceLoggingWideString(DeviceInterfaceId)
     );
 
-    // TEMP!
-    NegotiationResults = nullptr;
+    auto cleanDeviceInterfaceId = internal::NormalizeDeviceInstanceIdWStringCopy(DeviceInterfaceId);
 
-    ProtocolManagerWork work;
+    std::shared_ptr<CMidiEndpointProtocolWorker> worker{ nullptr };
 
-    //// DEBUG
-    ////TimeoutMS = 25000;
+    if (m_endpointWorkers.find(cleanDeviceInterfaceId) != m_endpointWorkers.end())
+    {
+        // already exists. We can re-request negotiation from the worker
+        worker = m_endpointWorkers[cleanDeviceInterfaceId];
+    }
 
-    work.EndpointInstanceId = DeviceInterfaceId;
-    work.PreferToSendJRTimestampsToEndpoint = PreferToSendJRTimestampsToEndpoint;
-    work.PreferToReceiveJRTimestampsFromEndpoint = PreferToReceiveJRTimestampsFromEndpoint;
-    work.PreferredMidiProtocol = PreferredMidiProtocol;
-    work.TimeoutMS = TimeoutMS;
+    if (worker == nullptr)
+    {
+        // allocate a new worker
+        worker = std::make_shared<CMidiEndpointProtocolWorker>();
 
-    //m_queueMutex.lock();
-    //m_workQueue.push(std::move(work));
-    //m_queueMutex.unlock();
+        RETURN_IF_NULL_ALLOC(worker);
+        RETURN_IF_FAILED(worker->Initialize(
+            m_sessionId, 
+            AbstractionGuid, 
+            cleanDeviceInterfaceId.c_str(), 
+            m_clientManager, 
+            m_deviceManager, 
+            m_sessionTracker
+            )
+        );
 
-    //// todo: signal event that there's new work
-    //m_queueWorkerThreadWakeup.SetEvent();
+        // add it to the map
+        m_endpointWorkers[cleanDeviceInterfaceId] = worker;
+    }
 
+    // now that we have the worker created, actually start the work. This function blocks for up to TimeoutMilliseconds.
+
+    RETURN_IF_FAILED(worker->NegotiateAndRequestMetadata(
+        PreferToSendJRTimestampsToEndpoint,
+        PreferToReceiveJRTimestampsFromEndpoint,
+        PreferredMidiProtocol,
+        TimeoutMilliseconds,
+        NegotiationResults
+        )
+    );
 
     return S_OK;
 }
@@ -116,449 +136,138 @@ CMidiEndpointProtocolManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-
     m_sessionTracker->RemoveClientSession(m_sessionId);
 
-    // TODO terminate any open threads and ensure they close up
+    for (auto& [key, val] : m_endpointWorkers)
+    {
+        LOG_IF_FAILED(val->Cleanup());
+        val.reset();
+    }
+
+    m_endpointWorkers.clear();
 
     m_clientManager.reset();
     m_deviceManager.reset();
     m_sessionTracker.reset();
 
-    // clear the queue
-    while (m_workQueue.size() > 0) m_workQueue.pop();
-
-    m_shutdown = true;
-//    m_queueWorkerThreadWakeup.SetEvent();
-
-//    if (m_queueWorkerThread.joinable())
-//        m_queueWorkerThread.join();
-
     return S_OK;
 }
 
 
-
-
-
-
-
-
-
-_Use_decl_annotations_
-HRESULT
-CMidiEndpointProtocolManager::Callback(PVOID Data, UINT Size, LONGLONG Position, LONGLONG Context)
-{
-    UNREFERENCED_PARAMETER(Position);
-    UNREFERENCED_PARAMETER(Context);
-
-    if (Data != nullptr && Size == UMP128_BYTE_COUNT)
-    {
-        internal::PackedUmp128 ump;
-
-        if (internal::FillPackedUmp128FromBytePointer((byte*)Data, (uint8_t)Size, ump))
-        {
-            // if type F, process it.
-
-            if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE)
-            {
-                auto messageStatus = internal::GetStatusFromStreamMessageFirstWord(ump.word0);
-
-                switch (messageStatus)
-                {
-                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Endpoint Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    m_currentWorkItem.TaskEndpointInfoReceived = true;
-                    m_currentWorkItem.DeclaredFunctionBlockCount = internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(ump.word1);
-
-                    RequestAllFunctionBlocks();
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Device Identity Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    m_currentWorkItem.TaskDeviceIdentityReceived = true;
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Stream Configuration Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    ProcessStreamConfigurationRequest(ump);
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Function Block Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    m_currentWorkItem.CountFunctionBlocksReceived += 1;
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Function Block Name Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
-                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
-                    {
-                        m_currentWorkItem.CountFunctionBlockNamesReceived += 1;
-                    }
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Product Instance Id Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
-                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
-                    {
-                        m_currentWorkItem.TaskEndpointProductInstanceIdReceived = true;
-                    }
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Endpoint Name Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
-                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
-                    {
-                        m_currentWorkItem.TaskEndpointNameReceived = true;
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-            }
-            else
-            {
-                // not a stream message. Ignore and move on
-            }
-        }
-        else
-        {
-            // couldn't fill the UMP. Shouldn't happen since we pre-validate
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Couldn't fill the UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-            return E_FAIL;
-        }
-    }
-    else
-    {
-        // Either null (hopefully not) or not a UMP128 so can't be a stream message. Fall out quickly
-    }
-
-
-    // check flags. If we've received everything, signal
-
-    if (m_currentWorkItem.TaskEndpointInfoReceived &&
-        m_currentWorkItem.TaskEndpointNameReceived &&
-        m_currentWorkItem.TaskEndpointProductInstanceIdReceived &&
-        m_currentWorkItem.TaskDeviceIdentityReceived &&
-        m_currentWorkItem.CountFunctionBlockNamesReceived == m_currentWorkItem.DeclaredFunctionBlockCount &&
-        m_currentWorkItem.CountFunctionBlocksReceived == m_currentWorkItem.DeclaredFunctionBlockCount &&
-        m_currentWorkItem.TaskFinalStreamNegotiationResponseReceived)
-    {
-//        m_allMessagesReceived.SetEvent();
-    }
-
-    return S_OK;
-}
-
-HRESULT
-CMidiEndpointProtocolManager::RequestAllFunctionBlocks()
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-    internal::PackedUmp128 ump{};
-
-    if (m_currentWorkItem.Endpoint)
-    {
-        // first word
-        ump.word0 = internal::BuildFunctionBlockDiscoveryRequestFirstWord(
-            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_ALL_FUNCTION_BLOCKS,
-            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_MESSAGE_ALL_FILTER_FLAGS);
-
-        // send it immediately
-        return m_currentWorkItem.Endpoint->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0);
-    }
-
-    return E_FAIL;
-}
-
-
-HRESULT
-CMidiEndpointProtocolManager::RequestAllEndpointDiscoveryInformation()
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-    internal::PackedUmp128 ump{};
-
-    if (m_currentWorkItem.Endpoint)
-    {
-        // first word
-        ump.word0 = internal::BuildEndpointDiscoveryRequestFirstWord(MIDI_PREFERRED_UMP_VERSION_MAJOR, MIDI_PREFERRED_UMP_VERSION_MINOR);
-
-        // second word
-        uint8_t filterBitmap = MIDI_ENDPOINT_DISCOVERY_MESSAGE_ALL_FILTER_FLAGS;
-        internal::SetMidiWordMostSignificantByte4(ump.word1, filterBitmap);
-
-        // send it immediately
-        return m_currentWorkItem.Endpoint->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0);
-    }
-    else
-    {
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Endpoint is null", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-    }
-
-    return E_FAIL;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiEndpointProtocolManager::ProcessStreamConfigurationRequest(internal::PackedUmp128 ump)
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-    // see if all is what we want. If not, we'll send a request to change configuration.
-
-    if (m_currentWorkItem.Endpoint)
-    {
-        auto protocol = internal::GetStreamConfigurationNotificationProtocolFromFirstWord(ump.word0);
-        auto endpointRxJR = internal::GetStreamConfigurationNotificationReceiveJRFromFirstWord(ump.word0);
-        auto endpointTxJR = internal::GetStreamConfigurationNotificationTransmitJRFromFirstWord(ump.word0);
-
-        if (protocol != m_currentWorkItem.PreferredMidiProtocol ||
-            endpointRxJR != m_currentWorkItem.PreferToSendJRTimestampsToEndpoint ||
-            endpointTxJR != m_currentWorkItem.PreferToReceiveJRTimestampsFromEndpoint)
-        {
-            if (!m_currentWorkItem.AlreadyTriedToNegotiationOnce)
-            {
-                internal::PackedUmp128 configurationRequestUmp{};
-
-                ump.word0 = internal::BuildStreamConfigurationRequestFirstWord(
-                    m_currentWorkItem.PreferredMidiProtocol,
-                    m_currentWorkItem.PreferToSendJRTimestampsToEndpoint,
-                    m_currentWorkItem.PreferToReceiveJRTimestampsFromEndpoint);
-
-                m_currentWorkItem.AlreadyTriedToNegotiationOnce = true;
-
-                // send it immediately
-                return m_currentWorkItem.Endpoint->SendMidiMessage((byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0);
-            }
-            else
-            {
-                // we've already tried negotiating once. Don't do it again
-                m_currentWorkItem.TaskFinalStreamNegotiationResponseReceived = true;
-                return S_OK;
-            }
-        }
-        else
-        {
-            // all good on this try
-            m_currentWorkItem.TaskFinalStreamNegotiationResponseReceived = true;
-            return S_OK;
-        }
-
-    }
-
-    return E_FAIL;
-}
-
-
-
-HRESULT
-CMidiEndpointProtocolManager::ProcessCurrentWorkEntry()
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-
-    // by using the existing abstractions and activation methods just 
-    // like any other client, we will get the transforms, including 
-    // the metadata listener, for free. So we don't need to duplicate
-    // metadata capture code here, and we don't need to make any
-    // explicit call to the metadata capture transform plugin
-
-    RETURN_HR_IF_NULL(E_FAIL, m_serviceAbstraction);
-
-    RETURN_IF_FAILED(m_serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&(m_currentWorkItem.Endpoint)));
-
-    // Create and open a connection to the endpoint, complete with metadata listeners
-
-    DWORD mmcssTaskId{};
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP, nullptr };
-
-    RETURN_IF_FAILED(m_currentWorkItem.Endpoint->Initialize(
-        m_currentWorkItem.EndpointInstanceId.c_str(),
-        &abstractionCreationParams,
-        &mmcssTaskId,
-        (IMidiCallback*)this,
-        MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT,
-        m_sessionId
-    ));
-
-
-//    if (m_allMessagesReceived.is_signaled()) m_allMessagesReceived.ResetEvent();
-
-    HRESULT hr = S_OK;
-
-    //// Send initial discovery request
-    //// the rest happens in response to messages in the callback
-    //LOG_IF_FAILED(hr = RequestAllEndpointDiscoveryInformation());
-
-    //if (SUCCEEDED(hr))
-    //{
-    //    OutputDebugString(__FUNCTION__ L" - Requested discovery information");
-    //}
-    //else
-    //{
-    //    TraceLoggingWrite(
-    //        MidiSrvTelemetryProvider::Provider(),
-    //        __FUNCTION__,
-    //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-    //        TraceLoggingPointer(this, "this"),
-    //        TraceLoggingWideString(L"Failed to request discovery information")
-    //    );
-    //}
-
-    //if (SUCCEEDED(hr))
-    //{
-    //    // Wait until all metadata arrives or we timeout
-    //    if (!m_allMessagesReceived.wait(m_currentWorkItem.TimeoutMS))
-    //    {
-    //        // we didn't receive everything, but that's not a failure condition for this.
-    //    }
-    //}
-
-    //if (m_allMessagesReceived.is_signaled()) m_allMessagesReceived.ResetEvent();
-
-    //m_currentWorkItem.Endpoint->Cleanup();
-    //m_currentWorkItem.Endpoint = nullptr;
-
-    return hr;
-}
-
-
-void CMidiEndpointProtocolManager::ThreadWorker()
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Thread worker enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    while (!m_shutdown)
-    {
-        if (m_workQueue.size() > 0)
-        {
-            m_queueMutex.lock();
-            m_currentWorkItem = std::move(m_workQueue.front());
-            m_workQueue.pop();
-            m_queueMutex.unlock();
-
-            // this will block until completed
-            LOG_IF_FAILED(ProcessCurrentWorkEntry());
-        }
-
-        // todo: how often do we want to process messages?
-        Sleep(300);
-    }
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Thread worker exit")
-    );
-
-}
+//HRESULT
+//CMidiEndpointProtocolManager::ProcessCurrentWorkEntry()
+//{
+//    TraceLoggingWrite(
+//        MidiSrvTelemetryProvider::Provider(),
+//        MIDI_TRACE_EVENT_INFO,
+//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+//        TraceLoggingPointer(this, "this")
+//    );
+//
+//
+//    // by using the existing abstractions and activation methods just 
+//    // like any other client, we will get the transforms, including 
+//    // the metadata listener, for free. So we don't need to duplicate
+//    // metadata capture code here, and we don't need to make any
+//    // explicit call to the metadata capture transform plugin
+//
+//    RETURN_HR_IF_NULL(E_FAIL, m_serviceAbstraction);
+//
+//    RETURN_IF_FAILED(m_serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&(m_currentWorkItem.Endpoint)));
+//
+//    // Create and open a connection to the endpoint, complete with metadata listeners
+//
+//    DWORD mmcssTaskId{};
+//    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP, nullptr };
+//
+//    RETURN_IF_FAILED(m_currentWorkItem.Endpoint->Initialize(
+//        m_currentWorkItem.EndpointInstanceId.c_str(),
+//        &abstractionCreationParams,
+//        &mmcssTaskId,
+//        (IMidiCallback*)this,
+//        MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT,
+//        m_sessionId
+//    ));
+//
+//
+////    if (m_allMessagesReceived.is_signaled()) m_allMessagesReceived.ResetEvent();
+//
+//    HRESULT hr = S_OK;
+//
+//    //// Send initial discovery request
+//    //// the rest happens in response to messages in the callback
+//    //LOG_IF_FAILED(hr = RequestAllEndpointDiscoveryInformation());
+//
+//    //if (SUCCEEDED(hr))
+//    //{
+//    //    OutputDebugString(__FUNCTION__ L" - Requested discovery information");
+//    //}
+//    //else
+//    //{
+//    //    TraceLoggingWrite(
+//    //        MidiSrvTelemetryProvider::Provider(),
+//    //        __FUNCTION__,
+//    //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+//    //        TraceLoggingPointer(this, "this"),
+//    //        TraceLoggingWideString(L"Failed to request discovery information")
+//    //    );
+//    //}
+//
+//    //if (SUCCEEDED(hr))
+//    //{
+//    //    // Wait until all metadata arrives or we timeout
+//    //    if (!m_allMessagesReceived.wait(m_currentWorkItem.TimeoutMS))
+//    //    {
+//    //        // we didn't receive everything, but that's not a failure condition for this.
+//    //    }
+//    //}
+//
+//    //if (m_allMessagesReceived.is_signaled()) m_allMessagesReceived.ResetEvent();
+//
+//    //m_currentWorkItem.Endpoint->Cleanup();
+//    //m_currentWorkItem.Endpoint = nullptr;
+//
+//    return hr;
+//}
+
+
+//void CMidiEndpointProtocolManager::ThreadWorker()
+//{
+//    TraceLoggingWrite(
+//        MidiSrvTelemetryProvider::Provider(),
+//        MIDI_TRACE_EVENT_INFO,
+//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+//        TraceLoggingPointer(this, "this"),
+//        TraceLoggingWideString(L"Thread worker enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+//    );
+//
+//    while (!m_shutdown)
+//    {
+//        if (m_workQueue.size() > 0)
+//        {
+//            m_queueMutex.lock();
+//            m_currentWorkItem = std::move(m_workQueue.front());
+//            m_workQueue.pop();
+//            m_queueMutex.unlock();
+//
+//            // this will block until completed
+//            LOG_IF_FAILED(ProcessCurrentWorkEntry());
+//        }
+//
+//        // todo: how often do we want to process messages?
+//        Sleep(300);
+//    }
+//
+//    TraceLoggingWrite(
+//        MidiSrvTelemetryProvider::Provider(),
+//        MIDI_TRACE_EVENT_INFO,
+//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+//        TraceLoggingPointer(this, "this"),
+//        TraceLoggingWideString(L"Thread worker exit")
+//    );
+//
+//}
 

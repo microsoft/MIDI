@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiSessionInformation
-parent: Microsoft.Devices.Midi2.Diagnostics
+parent: Midi2.Diagnostics
 has_children: false
 ---
 
@@ -30,5 +30,4 @@ In this case, you can see three open sessions. The process name and process id a
 
 ## IDL
 
-[MidiSessionInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiSessionInformation.idl)
-
+[MidiSessionInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-diagnostics/MidiSessionInformation.idl)

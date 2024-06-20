@@ -10,7 +10,4 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RegistryCustomActions\RegistryCustomActions.csproj" />
-  </ItemGroup>
 </Project>

@@ -1,9 +1,9 @@
-cmake 3.27.1
+cmake 3.28.3-msvc11
 features core
 portfile.cmake a711531b7f13b7da16fa1f25d7c5737a423d4a126465dc9e6689a0f043fcc1aa
 ports.cmake 0500e9e2422fe0084c99bdd0c9de4c7069b76da14c8b58228a7e95ebac43058a
 post_build_checks 2
-powershell 7.4.2
+powershell 7.2.16
 triplet x64-windows
 triplet_abi 4556164a2cd3dd6f4742101eabb46def7e71b6e5856faa88e5d005aac12a803c-e36df1c7f50ab25f9c182fa927d06c19ae082e0d599f132b3f655784b49e4b33-98c4f28b95d7ebd2cb2f3e129515e1e5b4dd023c
 vcpkg-port-config.cmake f0a30f77c8f5e3ac40436fe2518a61ad067f2955c7ef3be6d6a0ca4b81cd2a45

@@ -702,82 +702,82 @@ CMidiClientManager::GetMidiScheduler(
     return S_OK;
 }
 
-_Use_decl_annotations_
-HRESULT
-CMidiClientManager::GetMidiEndpointMetadataHandler(
-    handle_t BindingHandle,
-    MidiFlow Flow,
-    wil::com_ptr_nothrow<CMidiPipe>& DevicePipe,
-    wil::com_ptr_nothrow<CMidiPipe>& NextDeviceSidePipe,
-    wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
-)
-{
-    RETURN_HR_IF_NULL(E_INVALIDARG, DevicePipe);
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), "Device Id")
-    );
-
-    wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
-
-    // we only handle metadata on incoming messages
-    RETURN_HR_IF(E_UNEXPECTED, Flow != MidiFlow::MidiFlowIn);
-
-
-    auto transforms = m_TransformPipes.equal_range(DevicePipe->MidiDevice());
-    for (auto& transform = transforms.first; transform != transforms.second; ++transform)
-    {
-        //wil::com_ptr_nothrow<CMidiTransformPipe> pipe = transform->second.get();
-
-        if (transform->second->TransformGuid() == __uuidof(Midi2EndpointMetadataListenerTransform))
-        {
-            transformPipe = transform->second;
-            break;
-        }
-    }
-
-    // not found, instantiate the transform that is needed.
-    if (!transformPipe)
-    {
-        MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
-
-        creationParams.Flow = Flow;
-        creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_UMP;
-        creationParams.DataFormatOut = MidiDataFormat::MidiDataFormat_UMP;
-
-        creationParams.TransformGuid = __uuidof(Midi2EndpointMetadataListenerTransform);
-
-        // create the transform
-        wil::com_ptr_nothrow<CMidiTransformPipe> transform;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
-
-        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, (IUnknown*)m_DeviceManager.get()));
-
-        transformPipe = transform.get();
-
-        // connect the transform to the device
-
-        if (Flow == MidiFlowIn)
-        {
-            RETURN_IF_FAILED(NextDeviceSidePipe->AddConnectedPipe(transformPipe));
-        }
-        else
-        {
-            RETURN_IF_FAILED(transformPipe->AddConnectedPipe(NextDeviceSidePipe));
-        }
-
-        m_TransformPipes.emplace(DevicePipe->MidiDevice(), transform);
-    }
-
-    ClientConnectionPipe = transformPipe;
-
-    return S_OK;
-}
+//_Use_decl_annotations_
+//HRESULT
+//CMidiClientManager::GetMidiEndpointMetadataHandler(
+//    handle_t BindingHandle,
+//    MidiFlow Flow,
+//    wil::com_ptr_nothrow<CMidiPipe>& DevicePipe,
+//    wil::com_ptr_nothrow<CMidiPipe>& NextDeviceSidePipe,
+//    wil::com_ptr_nothrow<CMidiPipe>& ClientConnectionPipe
+//)
+//{
+//    RETURN_HR_IF_NULL(E_INVALIDARG, DevicePipe);
+//
+//    TraceLoggingWrite(
+//        MidiSrvTelemetryProvider::Provider(),
+//        MIDI_TRACE_EVENT_INFO,
+//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+//        TraceLoggingPointer(this, "this"),
+//        TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), "Device Id")
+//    );
+//
+//    wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
+//
+//    // we only handle metadata on incoming messages
+//    RETURN_HR_IF(E_UNEXPECTED, Flow != MidiFlow::MidiFlowIn);
+//
+//
+//    auto transforms = m_TransformPipes.equal_range(DevicePipe->MidiDevice());
+//    for (auto& transform = transforms.first; transform != transforms.second; ++transform)
+//    {
+//        //wil::com_ptr_nothrow<CMidiTransformPipe> pipe = transform->second.get();
+//
+//        if (transform->second->TransformGuid() == __uuidof(Midi2EndpointMetadataListenerTransform))
+//        {
+//            transformPipe = transform->second;
+//            break;
+//        }
+//    }
+//
+//    // not found, instantiate the transform that is needed.
+//    if (!transformPipe)
+//    {
+//        MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
+//
+//        creationParams.Flow = Flow;
+//        creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_UMP;
+//        creationParams.DataFormatOut = MidiDataFormat::MidiDataFormat_UMP;
+//
+//        creationParams.TransformGuid = __uuidof(Midi2EndpointMetadataListenerTransform);
+//
+//        // create the transform
+//        wil::com_ptr_nothrow<CMidiTransformPipe> transform;
+//        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
+//
+//        RETURN_IF_FAILED(transform->Initialize(BindingHandle, DevicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, (IUnknown*)m_DeviceManager.get()));
+//
+//        transformPipe = transform.get();
+//
+//        // connect the transform to the device
+//
+//        if (Flow == MidiFlowIn)
+//        {
+//            RETURN_IF_FAILED(NextDeviceSidePipe->AddConnectedPipe(transformPipe));
+//        }
+//        else
+//        {
+//            RETURN_IF_FAILED(transformPipe->AddConnectedPipe(NextDeviceSidePipe));
+//        }
+//
+//        m_TransformPipes.emplace(DevicePipe->MidiDevice(), transform);
+//    }
+//
+//    ClientConnectionPipe = transformPipe;
+//
+//    return S_OK;
+//}
 
 
 
@@ -807,21 +807,21 @@ CMidiClientManager::CreateMidiClient(
     RETURN_IF_FAILED(m_SessionTracker->IsValidSession(SessionId, ClientProcessId));
 
 
-    if (InternalProtocolNegotiationUseOnly && Client->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
-    {
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(MidiDevice),
-            TraceLoggingGuid(SessionId),
-            TraceLoggingWideString(L"Called for internal protocol negotiation, but client dataformat is not UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-            
-        return E_UNEXPECTED;
-    }
+    //if (InternalProtocolNegotiationUseOnly && Client->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
+    //{
+    //    TraceLoggingWrite(
+    //        MidiSrvTelemetryProvider::Provider(),
+    //        MIDI_TRACE_EVENT_ERROR,
+    //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+    //        TraceLoggingPointer(this, "this"),
+    //        TraceLoggingWideString(MidiDevice),
+    //        TraceLoggingGuid(SessionId),
+    //        TraceLoggingWideString(L"Called for internal protocol negotiation, but client dataformat is not UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    //    );
+    //        
+    //    return E_UNEXPECTED;
+    //}
 
     if (InternalProtocolNegotiationUseOnly && CreationParams->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
     {

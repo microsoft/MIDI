@@ -1,16 +1,17 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #include "pch.h"
 #include "MidiMessageHelper.h"
 #include "MidiMessageHelper.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
     collections::IVector<midi2::IMidiUniversalPacket> MidiMessageHelper::GetPacketListFromWordList(
@@ -295,7 +296,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     {
         switch (GetMessageTypeFromMessageFirstWord(word0))
         {
-        case MidiMessageType::UtilityMessage32:
+        case midi2::MidiMessageType::UtilityMessage32:
             switch (GetStatusFromUtilityMessage(word0))
             {
             case 0x0:
@@ -314,7 +315,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             }
             break;
 
-        case MidiMessageType::SystemCommon32:
+        case midi2::MidiMessageType::SystemCommon32:
             switch (GetStatusFromSystemCommonMessage(word0))
             {
             case 0xF0:
@@ -355,22 +356,22 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             }
             break;
 
-        case MidiMessageType::Midi1ChannelVoice32:
+        case midi2::MidiMessageType::Midi1ChannelVoice32:
             switch (GetStatusFromMidi1ChannelVoiceMessage(word0))
             {
-            case Midi1ChannelVoiceMessageStatus::NoteOff:
+            case msgs::Midi1ChannelVoiceMessageStatus::NoteOff:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_8_NOTE_OFF); //L"MIDI 1.0 Note Off";
-            case Midi1ChannelVoiceMessageStatus::NoteOn:
+            case msgs::Midi1ChannelVoiceMessageStatus::NoteOn:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_9_NOTE_ON); //L"MIDI 1.0 Note On";
-            case Midi1ChannelVoiceMessageStatus::PolyPressure:
+            case msgs::Midi1ChannelVoiceMessageStatus::PolyPressure:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_A_POLY_PRESSURE); //L"MIDI 1.0 Poly Pressure";
-            case Midi1ChannelVoiceMessageStatus::ControlChange:
+            case msgs::Midi1ChannelVoiceMessageStatus::ControlChange:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_B_CONTROL_CHANGE); //L"MIDI 1.0 Control Change";
-            case Midi1ChannelVoiceMessageStatus::ProgramChange:
+            case msgs::Midi1ChannelVoiceMessageStatus::ProgramChange:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_C_PROGRAM_CHANGE); //L"MIDI 1.0 Program Change";
-            case Midi1ChannelVoiceMessageStatus::ChannelPressure:
+            case msgs::Midi1ChannelVoiceMessageStatus::ChannelPressure:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_D_CHANNEL_PRESSURE); //L"MIDI 1.0 Channel Pressure";
-            case Midi1ChannelVoiceMessageStatus::PitchBend:
+            case msgs::Midi1ChannelVoiceMessageStatus::PitchBend:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_E_PITCH_BEND); //L"MIDI 1.0 Pitch Bend";
 
             default:
@@ -378,7 +379,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             }
             break;
 
-        case MidiMessageType::DataMessage64:
+        case midi2::MidiMessageType::DataMessage64:
             switch (GetStatusFromDataMessage64FirstWord(word0))
             {
             case 0x0:
@@ -395,36 +396,36 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             }
             break;
 
-        case MidiMessageType::Midi2ChannelVoice64:
+        case midi2::MidiMessageType::Midi2ChannelVoice64:
             switch (GetStatusFromMidi2ChannelVoiceMessageFirstWord(word0))
             {
-            case Midi2ChannelVoiceMessageStatus::RegisteredPerNoteController:
+            case msgs::Midi2ChannelVoiceMessageStatus::RegisteredPerNoteController:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_0_RPNC); //L"MIDI 2.0 Registered Per-Note Controller";
-            case Midi2ChannelVoiceMessageStatus::AssignablePerNoteController:
+            case msgs::Midi2ChannelVoiceMessageStatus::AssignablePerNoteController:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_1_APNC); //L"MIDI 2.0 Assignable Per-Note Controller";
-            case Midi2ChannelVoiceMessageStatus::RegisteredController:
+            case msgs::Midi2ChannelVoiceMessageStatus::RegisteredController:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_2_RC); //L"MIDI 2.0 Registered Controller";
-            case Midi2ChannelVoiceMessageStatus::AssignableController:
+            case msgs::Midi2ChannelVoiceMessageStatus::AssignableController:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_3_AC); //L"MIDI 2.0 Assignable Controller";
-            case Midi2ChannelVoiceMessageStatus::RelativeRegisteredController:
+            case msgs::Midi2ChannelVoiceMessageStatus::RelativeRegisteredController:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_4_REL_RC); //L"MIDI 2.0 Relative Registered Controller";
-            case Midi2ChannelVoiceMessageStatus::RelativeAssignableController:
+            case msgs::Midi2ChannelVoiceMessageStatus::RelativeAssignableController:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_5_REL_AC); //L"MIDI 2.0 Relative Assignable Controller";
-            case Midi2ChannelVoiceMessageStatus::PerNotePitchBend:
+            case msgs::Midi2ChannelVoiceMessageStatus::PerNotePitchBend:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_6_PER_NOTE_BEND); //L"MIDI 2.0 Per-Note Pitch Bend";
-            case Midi2ChannelVoiceMessageStatus::NoteOff:
+            case msgs::Midi2ChannelVoiceMessageStatus::NoteOff:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_8_NOTE_OFF); //L"MIDI 2.0 Note Off";
-            case Midi2ChannelVoiceMessageStatus::NoteOn:
+            case msgs::Midi2ChannelVoiceMessageStatus::NoteOn:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_9_NOTE_ON); //L"MIDI 2.0 Note On";
-            case Midi2ChannelVoiceMessageStatus::PolyPressure:
+            case msgs::Midi2ChannelVoiceMessageStatus::PolyPressure:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_A_POLY_PRESSURE); //L"MIDI 2.0 Poly Pressure";
-            case Midi2ChannelVoiceMessageStatus::ControlChange:
+            case msgs::Midi2ChannelVoiceMessageStatus::ControlChange:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_B_CONTROL_CHANGE); //L"MIDI 2.0 Control Change";
-            case Midi2ChannelVoiceMessageStatus::ProgramChange:
+            case msgs::Midi2ChannelVoiceMessageStatus::ProgramChange:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_C_PROGRAM_CHANGE); //L"MIDI 2.0 Program Change";
-            case Midi2ChannelVoiceMessageStatus::ChannelPressure:
+            case msgs::Midi2ChannelVoiceMessageStatus::ChannelPressure:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_D_CHANNEL_PRESSURE); //L"MIDI 2.0 Channel Pressure";
-            case Midi2ChannelVoiceMessageStatus::PitchBend:
+            case msgs::Midi2ChannelVoiceMessageStatus::PitchBend:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_E_PITCH_BEND); //L"MIDI 2.0 Pitch Bend";
 
             default:
@@ -432,7 +433,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             }
             break;
 
-        case MidiMessageType::DataMessage128:
+        case midi2::MidiMessageType::DataMessage128:
             switch (GetStatusFromDataMessage128FirstWord(word0))
             {
             case 0x0:
@@ -454,28 +455,28 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             }
             break;
 
-        case MidiMessageType::FutureReserved632:
+        case midi2::MidiMessageType::FutureReserved632:
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT6_RESERVED); //L"Unknown Type 6";
 
-        case MidiMessageType::FutureReserved732:
+        case midi2::MidiMessageType::FutureReserved732:
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT7_RESERVED); //L"Unknown Type 7";
 
-        case MidiMessageType::FutureReserved864:
+        case midi2::MidiMessageType::FutureReserved864:
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT8_RESERVED); //L"Unknown Type 8";
 
-        case MidiMessageType::FutureReserved964:
+        case midi2::MidiMessageType::FutureReserved964:
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT9_RESERVED); //L"Unknown Type 9";
 
-        case MidiMessageType::FutureReservedA64:
+        case midi2::MidiMessageType::FutureReservedA64:
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTA_RESERVED); //L"Unknown Type A";
 
-        case MidiMessageType::FutureReservedB96:
+        case midi2::MidiMessageType::FutureReservedB96:
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTB_RESERVED); //L"Unknown Type B";
 
-        case MidiMessageType::FutureReservedC96:
+        case midi2::MidiMessageType::FutureReservedC96:
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTC_RESERVED); //L"Unknown Type C";
 
-        case MidiMessageType::FlexData128:
+        case midi2::MidiMessageType::FlexData128:
             {
                 uint8_t statusBank = GetStatusBankFromFlexDataMessageFirstWord(word0);
                 uint8_t status = GetStatusFromFlexDataMessageFirstWord(word0);
@@ -538,10 +539,10 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
                 }
             }
 
-        case MidiMessageType::FutureReservedE128:
+        case midi2::MidiMessageType::FutureReservedE128:
             return internal::ResourceGetHString(IDS_MESSAGE_DESC_MTE_RESERVED); //L"Type E Unknown";
 
-        case MidiMessageType::Stream128:
+        case midi2::MidiMessageType::Stream128:
             switch (GetStatusFromStreamMessageFirstWord(word0))
             {
             case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_DISCOVERY:

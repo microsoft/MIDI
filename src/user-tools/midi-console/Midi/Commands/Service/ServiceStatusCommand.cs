@@ -32,7 +32,7 @@ namespace Microsoft.Midi.ConsoleApp
             // check to see if the service is running. 
             // NOTE: Equivalent code can't be moved to the SDK due to Desktop/WinRT limitations.
 
-            if (MidiService.IsAvailable())
+            if (MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Service reported as available by API."));
             }

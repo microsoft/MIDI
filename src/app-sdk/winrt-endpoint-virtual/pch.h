@@ -1,10 +1,11 @@
-﻿// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 
 #pragma once
@@ -35,11 +36,14 @@ namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace midi1 = ::winrt::Windows::Devices::Midi;
 
-#include <winrt/Microsoft.Devices.Midi2.h>
-namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
-#include <winrt/Microsoft.Devices.Midi2.Messages.h>
-namespace msgs = ::winrt::Microsoft::Devices::Midi2::Messages;
+#include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
+namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
+
+#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::Messages;
 
 
 #include <stdint.h>
@@ -88,11 +92,11 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "resource_util.h"
 #include "ping_ump_types.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual {};
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation {};
 
-namespace virt = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtual;
-namespace implementation = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation;
+namespace virt = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation;
 
 #include "midi_stream_message_defs.h"
 #include "midi_ump_message_defs.h"
@@ -101,11 +105,27 @@ namespace implementation = ::winrt::Microsoft::Devices::Midi2::Endpoints::Virtua
 #include "MidiDefs.h"
 #include "midi_function_block_prop_util.h"
 
+// References to other midi2 SDKs -------------------------------------
+
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
+
+#include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
+namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
+
+#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::Messages;
+
+// Project-local ------------------------------------------------
+
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation {};
+namespace virt = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation;
 
 
-#include "MidiStreamConfigurationRequestedSettings.h"
-#include "MidiStreamConfigurationRequestReceivedEventArgs.h"
+#include "MidiStreamConfigRequestReceivedEventArgs.h"
 #include "MidiVirtualDevice.h"
-#include "MidiVirtualDeviceCreationConfiguration.h"
+#include "MidiVirtualDeviceCreationConfig.h"
 
 #include "MidiVirtualDeviceManager.h"

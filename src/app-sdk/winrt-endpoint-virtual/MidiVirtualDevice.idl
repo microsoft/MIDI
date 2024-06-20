@@ -1,29 +1,30 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiStreamConfigurationRequestReceivedEventArgs.idl";
+
+import "MidiStreamConfigRequestReceivedEventArgs.idl";
 //import "MidiVirtualDeviceCreationConfiguration.idl";
 
-namespace Microsoft.Devices.Midi2.Endpoints.Virtual
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
     [default_interface]
-    runtimeclass MidiVirtualDevice : Microsoft.Devices.Midi2.IMidiEndpointMessageProcessingPlugin
+    runtimeclass MidiVirtualDevice : Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin
     {
         String DeviceEndpointDeviceId{ get; };
         String ClientEndpointDeviceId{ get; };
 
-        IMapView<UInt8, Microsoft.Devices.Midi2.MidiFunctionBlock> FunctionBlocks{ get; };
+        IMapView<UInt8, Microsoft.Windows.Devices.Midi2.MidiFunctionBlock> FunctionBlocks{ get; };
         
-        Boolean UpdateFunctionBlock(Microsoft.Devices.Midi2.MidiFunctionBlock block);
+        Boolean UpdateFunctionBlock(Microsoft.Windows.Devices.Midi2.MidiFunctionBlock block);
         Boolean UpdateEndpointName(String name);
 
         Boolean SuppressHandledMessages;
 
-        event Windows.Foundation.TypedEventHandler<MidiVirtualDevice, MidiStreamConfigurationRequestReceivedEventArgs> StreamConfigurationRequestReceived;
+        event Windows.Foundation.TypedEventHandler<MidiVirtualDevice, MidiStreamConfigRequestReceivedEventArgs> StreamConfigRequestReceived;
     }
 }

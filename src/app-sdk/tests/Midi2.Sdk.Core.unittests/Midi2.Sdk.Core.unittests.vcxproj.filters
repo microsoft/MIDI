@@ -18,25 +18,10 @@
     <ClCompile Include="Module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiClockTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiEndpointConnectionTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiMessageBuilderTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiMessagePacketTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiSessionTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiStreamMessageBuilderTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp">
@@ -56,25 +41,10 @@
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiClockTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiEndpointConnectionTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessageBuilderTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiMessagePacketTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiSessionTests.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiStreamMessageBuilderTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h">
@@ -101,5 +71,8 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="te.exe.manifest" />
   </ItemGroup>
 </Project>

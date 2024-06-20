@@ -43,9 +43,11 @@ Most apps need to display device and endpoint connection information to their us
 
 ### Use the MidiEndpointDeviceWatcher to respond to device changes
 
-MIDI devices come and go based on connecting/disconnecting USB cables, or new network endpoints coming online. In addition, properties like Function Blocks and Endpoint Name are subject to change at any time. Use the `Windows::Devices::Midi2::MidiEndpointDeviceWatcher` class on a background thread to monitor these endpoints, and receive notifications when anything changes. This is a much more robust approach vs simply enumerating a snapshot of devices up-front.
+MIDI devices come and go based on connecting/disconnecting USB cables, or new network endpoints coming online. In addition, properties like Function Blocks and Endpoint Name are subject to change at any time. Use the `Microsoft::Windows::Devices::Midi2::MidiEndpointDeviceWatcher` class on a background thread to monitor these endpoints, and receive notifications when anything changes. This is a much more robust approach vs simply enumerating a snapshot of devices up-front.
 
-There's no API or service reason to require a customer to reboot or reload/restart a MIDI DAW or other application to see newly added endpoints.
+There's no API or service reason to require a customer to reboot or reload/restart a MIDI DAW or other application to see newly added endpoints when using Windows MIDI Services.
+
+For more information, see the How to Watch Endpoints page.
 
 ### Don't include diagnostics endpoints for most apps
 

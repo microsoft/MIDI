@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiServiceConfigurationResponseStatus
 parent: Service
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -23,4 +23,4 @@ Indicates success or failure mode for configuring an endpoint or message process
 
 ## IDL
 
-[MidiServiceConfigurationResponseStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiServiceConfigurationResponseStatusEnum.idl)
+[MidiServiceConfigurationResponseStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiServiceConfigurationResponseStatusEnum.idl)

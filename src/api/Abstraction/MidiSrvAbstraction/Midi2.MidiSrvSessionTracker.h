@@ -25,9 +25,9 @@ public:
     //STDMETHOD(AddClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId));
     //STDMETHOD(RemoveClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId));
 
-    // This is called from the API
-    STDMETHOD(GetSessionListJson(_Out_ BSTR* SessionList));
-    STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
+    // This is called from the SDK
+    STDMETHOD(GetSessionList(_Out_ BSTR* SessionList));
+    //STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
 
     STDMETHOD(VerifyConnectivity)();
 

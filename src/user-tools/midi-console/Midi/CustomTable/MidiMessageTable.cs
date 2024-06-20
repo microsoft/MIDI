@@ -8,6 +8,8 @@
 
 
 
+using Microsoft.Windows.Devices.Midi2.Messages;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class MidiMessageTableColumn
@@ -165,7 +167,7 @@ namespace Microsoft.Midi.ConsoleApp
 
             string detailedMessageType = string.Empty;
 
-            if (m_verbose) detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(message.Word0);
+            if (m_verbose) detailedMessageType = MidiMessageHelper.GetMessageDisplayNameFromFirstWord(message.Word0);
 
             string word0 = string.Empty;
             string word1 = string.Empty;
@@ -220,11 +222,11 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (m_verbose)
             {
-                var messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(message.Word0);
+                var messageType = MidiMessageHelper.GetMessageTypeFromMessageFirstWord(message.Word0);
 
-                if (MidiMessageUtility.MessageTypeHasGroupField(messageType))
+                if (MidiMessageHelper.MessageTypeHasGroupField(messageType))
                 {
-                    groupText = MidiMessageUtility.GetGroupFromMessageFirstWord(message.Word0).NumberForDisplay.ToString().PadLeft(2);
+                    groupText = MidiMessageHelper.GetGroupFromMessageFirstWord(message.Word0).DisplayValue.ToString().PadLeft(2);
                 }
             }
 
@@ -232,11 +234,11 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (m_verbose)
             {
-                var messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(message.Word0);
+                var messageType = MidiMessageHelper.GetMessageTypeFromMessageFirstWord(message.Word0);
 
-                if (MidiMessageUtility.MessageTypeHasChannelField(messageType))
+                if (MidiMessageHelper.MessageTypeHasChannelField(messageType))
                 {
-                    channelText = MidiMessageUtility.GetChannelFromMessageFirstWord(message.Word0).NumberForDisplay.ToString().PadLeft(2);
+                    channelText = MidiMessageHelper.GetChannelFromMessageFirstWord(message.Word0).DisplayValue.ToString().PadLeft(2);
                 }
             }
 

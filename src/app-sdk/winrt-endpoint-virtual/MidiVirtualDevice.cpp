@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 
 #include "pch.h"
@@ -12,7 +13,7 @@
 #include "MidiVirtualDevice.g.cpp"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
     _Use_decl_annotations_
     bool MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept
@@ -249,13 +250,6 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
     {
         bool handled = false;
 
-        UNREFERENCED_PARAMETER(args);
-        UNREFERENCED_PARAMETER(skipFurtherListeners);
-        UNREFERENCED_PARAMETER(skipMainMessageReceivedEvent);
-
-
-#if 0   // TEMPORARY
-
         if (args.MessageType() == MidiMessageType::Stream128)
         {
 <<<<<<< HEAD:src/api/Client/Midi2Client/MidiVirtualEndpointDevice.cpp
@@ -275,16 +269,16 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
                     {
                         // send endpoint info notification
 
-                        auto notification = midi2::MidiStreamMessageBuilder::BuildEndpointInfoNotificationMessage(
+                        auto notification = msgs::MidiStreamMessageBuilder::BuildEndpointInfoNotificationMessage(
                             MidiClock::TimestampConstantSendImmediately(),
                             MIDI_PREFERRED_UMP_VERSION_MAJOR,
                             MIDI_PREFERRED_UMP_VERSION_MINOR,
                             m_areFunctionBlocksStatic,
                             (uint8_t)m_functionBlocks.Size(),
-                            m_virtualEndpointDeviceDefinition.SupportsMidi2ProtocolMessages(),
-                            m_virtualEndpointDeviceDefinition.SupportsMidi1ProtocolMessages(),
-                            m_virtualEndpointDeviceDefinition.SupportsReceivingJRTimestamps(),
-                            m_virtualEndpointDeviceDefinition.SupportsSendingJRTimestamps()
+                            m_declaredEndpointInfo.SupportsMidi20Protocol,
+                            m_declaredEndpointInfo.SupportsMidi10Protocol,
+                            m_declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps,
+                            m_declaredEndpointInfo.SupportsSendingJitterReductionTimestamps
                         );
 
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(notification)))
@@ -304,25 +298,25 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
                     if (internal::EndpointDiscoveryFilterRequestsDeviceIdentityNotification(filterFlags))
                     {
-                        internal::LogInfo(__FUNCTION__, L"Building/Sending Device Identity Notification");
+                     //   internal::LogInfo(__FUNCTION__, L"Building/Sending Device Identity Notification");
 
                         // send device identity notification
 
                         // TODO: Need to validate no indexes out of bounds here
 
-                        auto identityNotification = midi2::MidiStreamMessageBuilder::BuildDeviceIdentityNotificationMessage(
+                        auto identityNotification = msgs::MidiStreamMessageBuilder::BuildDeviceIdentityNotificationMessage(
                             MidiClock::TimestampConstantSendImmediately(),
-                            m_virtualEndpointDeviceDefinition.DeviceManufacturerSystemExclusiveId().GetAt(0),   // byte 1
-                            m_virtualEndpointDeviceDefinition.DeviceManufacturerSystemExclusiveId().GetAt(1),   // byte 2
-                            m_virtualEndpointDeviceDefinition.DeviceManufacturerSystemExclusiveId().GetAt(2),   // byte 3
-                            m_virtualEndpointDeviceDefinition.DeviceFamilyLsb(),
-                            m_virtualEndpointDeviceDefinition.DeviceFamilyMsb(),
-                            m_virtualEndpointDeviceDefinition.DeviceFamilyModelLsb(),
-                            m_virtualEndpointDeviceDefinition.DeviceFamilyModelMsb(),
-                            m_virtualEndpointDeviceDefinition.SoftwareRevisionLevel().GetAt(0),                 // byte 1
-                            m_virtualEndpointDeviceDefinition.SoftwareRevisionLevel().GetAt(1),                 // byte 2
-                            m_virtualEndpointDeviceDefinition.SoftwareRevisionLevel().GetAt(2),                 // byte 3
-                            m_virtualEndpointDeviceDefinition.SoftwareRevisionLevel().GetAt(3)                  // byte 4
+                            m_declaredDeviceIdentity.SystemExclusiveIdByte1,   // byte 1
+                            m_declaredDeviceIdentity.SystemExclusiveIdByte2,   // byte 2
+                            m_declaredDeviceIdentity.SystemExclusiveIdByte3,   // byte 3
+                            m_declaredDeviceIdentity.DeviceFamilyLsb,
+                            m_declaredDeviceIdentity.DeviceFamilyMsb,
+                            m_declaredDeviceIdentity.DeviceFamilyModelNumberLsb,
+                            m_declaredDeviceIdentity.DeviceFamilyModelNumberMsb,
+                            m_declaredDeviceIdentity.SoftwareRevisionLevelByte1,                 // byte 1
+                            m_declaredDeviceIdentity.SoftwareRevisionLevelByte2,                 // byte 2
+                            m_declaredDeviceIdentity.SoftwareRevisionLevelByte3,                 // byte 3
+                            m_declaredDeviceIdentity.SoftwareRevisionLevelByte4                  // byte 4
                         );
 
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(identityNotification)))
@@ -348,7 +342,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
                         if (!m_endpointName.empty())
                         {
-                            auto nameMessages = midi2::MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
+                            auto nameMessages = msgs::MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
                                 MidiClock::TimestampConstantSendImmediately(),
                                 m_endpointName
                             );
@@ -375,7 +369,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
                         if (!m_endpointProductInstanceId.empty())
                         {
-                            auto instanceIdMessages = midi2::MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
+                            auto instanceIdMessages = msgs::MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
                                 MidiClock::TimestampConstantSendImmediately(),
                                 m_endpointProductInstanceId
                             );
@@ -400,16 +394,16 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
                     {
                         uint8_t protocol{ (uint8_t)midi2::MidiProtocol::Midi1 };
 
-                        if (m_virtualEndpointDeviceDefinition.SupportsMidi2ProtocolMessages())
+                        if (m_declaredEndpointInfo.SupportsMidi20Protocol)
                         {
                             protocol = (uint8_t)midi2::MidiProtocol::Midi2;
                         }
 
-                        auto streamConfigurationNotification = midi2::MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
+                        auto streamConfigurationNotification = msgs::MidiStreamMessageBuilder::BuildStreamConfigurationNotificationMessage(
                             MidiClock::TimestampConstantSendImmediately(),
                             protocol,
-                            m_virtualEndpointDeviceDefinition.SupportsReceivingJRTimestamps(),
-                            m_virtualEndpointDeviceDefinition.SupportsSendingJRTimestamps()
+                            m_declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps,
+                            m_declaredEndpointInfo.SupportsSendingJitterReductionTimestamps
                         );
 
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(streamConfigurationNotification)))
@@ -470,7 +464,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
                 else if (internal::MessageIsStreamConfigurationRequest(message.Word0()))
                 {
                     // raise stream configuration request message
-                    auto reqArgs = winrt::make_self<implementation::MidiStreamConfigurationRequestReceivedEventArgs>();
+                    auto reqArgs = winrt::make_self<implementation::MidiStreamConfigRequestReceivedEventArgs>();
 
                     auto protocol = (midi2::MidiProtocol)MIDIWORDBYTE3(message.Word0());
                     bool rxjr = (bool)((message.Word0() & 0x00000002) == 0x00000002);
@@ -511,8 +505,6 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
 
         }
-
-#endif
 
 
         if (handled && SuppressHandledMessages())

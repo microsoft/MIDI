@@ -1,15 +1,16 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiVirtualDeviceCreationResult.idl";
-import "MidiVirtualDeviceCreationConfiguration.idl";
 
-namespace Microsoft.Devices.Midi2.Endpoints.Virtual
+import "MidiVirtualDeviceCreationResult.idl";
+import "MidiVirtualDeviceCreationConfig.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
     [default_interface]
     static runtimeclass MidiVirtualDeviceManager
@@ -19,7 +20,7 @@ namespace Microsoft.Devices.Midi2.Endpoints.Virtual
         static Guid AbstractionId{ get; };
 
         static MidiVirtualDeviceCreationResult CreateVirtualDevice(
-            MidiVirtualDeviceCreationConfiguration creationConfiguration);
+            MidiVirtualDeviceCreationConfig creationConfig);
 
         //static Boolean RemoveTransientLoopbackEndpoints(
         //    MidiLoopbackEndpointDeletionConfiguration deletionConfiguration);

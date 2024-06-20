@@ -24,11 +24,11 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (groupSpanCount > 1)
             {
-                return $"{MidiGroup.LabelFull}s {FormatGeneralNumber(group.NumberForDisplay)}-{FormatGeneralNumber(group.NumberForDisplay + groupSpanCount-1)}";
+                return $"{MidiGroup.LongLabel}s {FormatGeneralNumber(group.DisplayValue)}-{FormatGeneralNumber(group.DisplayValue + groupSpanCount-1)}";
             }
             else
             {
-                return $"{MidiGroup.LabelFull} {FormatGeneralNumber(group.NumberForDisplay)}";
+                return $"{MidiGroup.LongLabel} {FormatGeneralNumber(group.DisplayValue)}";
             }
         }
 

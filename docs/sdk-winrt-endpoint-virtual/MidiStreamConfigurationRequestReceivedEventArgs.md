@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiStreamConfigurationRequestReceivedEventArgs
-parent: Microsoft.Devices.Midi2.Endpoints.Virtual
+parent: Midi2.Endpoints.Virtual
 has_children: false
 ---
 
@@ -11,4 +11,4 @@ has_children: false
 
 ## IDL
 
-[MidiStreamConfigurationRequestReceivedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiStreamConfigurationRequestReceivedEventArgs.idl)
+[MidiStreamConfigurationRequestReceivedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-endpoints-virtual/MidiStreamConfigurationRequestReceivedEventArgs.idl)

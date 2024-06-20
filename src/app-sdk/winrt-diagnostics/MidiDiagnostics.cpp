@@ -1,8 +1,17 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
 #include "pch.h"
 #include "MidiDiagnostics.h"
 #include "MidiDiagnostics.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation
 {
     _Use_decl_annotations_
     diag::MidiServicePingResponseSummary MidiDiagnostics::PingService(
@@ -76,7 +85,7 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
 
             // we use the full session API from here to get accurate timing
 
-            auto session = midi2::MidiSession::TryCreate(L"Ping Test");
+            auto session = midi2::MidiSession::Create(L"Ping Test");
 
             if (session == nullptr)
             {
@@ -97,7 +106,7 @@ namespace winrt::Microsoft::Devices::Midi2::Diagnostics::implementation
 
             // This ID must be consistent with what the service is set up to use.
 
-            auto endpoint = session.TryCreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID, false);
+            auto endpoint = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID, false);
 
             if (endpoint == nullptr)
             {

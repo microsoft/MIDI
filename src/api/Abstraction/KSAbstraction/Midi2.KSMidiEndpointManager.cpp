@@ -861,27 +861,33 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 // Required MIDI 2.0 Protocol step
                 // Invoke the protocol negotiator to now capture updated endpoint info.
 
-                //bool preferToSendJRToEndpoint{ false };
-                //bool preferToReceiveJRFromEndpoint{ false };
-                //BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
-                //WORD negotiationTimeoutMS{ 5000 };  // this should be much shorter
+                bool preferToSendJRToEndpoint{ false };
+                bool preferToReceiveJRFromEndpoint{ false };
+                BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
+                WORD negotiationTimeoutMilliseconds{ 5000 };
 
-                //PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
+                PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
 
-                //LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
-                //    newDeviceInterfaceId,
-                //    preferToSendJRToEndpoint,
-                //    preferToReceiveJRFromEndpoint,
-                //    preferredProtocol,
-                //    negotiationTimeoutMS,
-                //    &negotiationResults
-                //));
-
-
-                // TODO: The negotiationResults structure contains the function blocks which 
-                // should be used to create MIDI 1.0 legacy ports for this MIDI 2.0 device.
+                LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+                    __uuidof(Midi2KSAbstraction),
+                    newDeviceInterfaceId,
+                    preferToSendJRToEndpoint,
+                    preferToReceiveJRFromEndpoint,
+                    preferredProtocol,
+                    negotiationTimeoutMilliseconds,
+                    &negotiationResults
+                ));
 
 
+                if (negotiationResults != nullptr)
+                {
+                    // TODO: The negotiationResults structure contains the function blocks which 
+                    // should be used to create MIDI 1.0 legacy ports for this MIDI 2.0 device.
+
+                    
+
+
+                }
             }
 
         }

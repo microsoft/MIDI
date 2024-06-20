@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiEndpointDeviceWatcher
 parent: Endpoint Enumeration
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -33,7 +33,8 @@ Create a `MidiEndpointDeviceWatcher` on a background thread, and use the interna
 
 | Static Function | Description |
 | --------------- | ----------- |
-| `CreateWatcher(endpointFilter)` | Create a watcher which will enumerate devices based on the provided filter |
+| `Create(endpointFilter)` | Create a watcher which will enumerate devices based on the provided filter |
+| `Create()` | Create a watcher which will enumerate devices based on the default filter, appropriate for most apps |
 
 ## Events
 
@@ -73,6 +74,8 @@ Loopback endpoints (other than the two diagnostic loopbacks built-in for testing
 
 When an endpoint is disconnected due to the parent device going away, all client connections are closed, and the device connection in the service is also closed. The cross-process message queues are torn down, and any messages there, in the outbound scheduler, or otherwise in the service pipelines are lost.
 
+If the auto-reconnect option was used when creating the connection from the SDK, a watcher is set up behind the scenes, and the endpoint is reconnected when it comes back online, assuming its id has not changed.
+
 ## IDL
 
-[MidiEndpointDeviceWatcher IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDeviceWatcher.idl)
+[MidiEndpointDeviceWatcher IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceWatcher.idl)

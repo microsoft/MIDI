@@ -153,7 +153,7 @@
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
     </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -171,7 +171,7 @@
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
     </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
@@ -189,7 +189,7 @@
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
     </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -222,7 +222,7 @@
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
     </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -240,7 +240,7 @@
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
     </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
@@ -258,7 +258,7 @@
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <HeaderFileName>%(Filename).h</HeaderFileName>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>

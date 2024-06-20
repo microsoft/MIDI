@@ -1,8 +1,7 @@
 ---
 layout: api_page
 title: MidiSystemExclusive8Status
-parent: Messages
-grand_parent: Windows.Devices.Midi2 API
+parent: Midi2.Messages
 has_children: false
 ---
 
@@ -21,4 +20,4 @@ Used to indicate the type of System Exclusive 8 Universal MIDI Packet (UMP) as p
 
 ## IDL
 
-[MidiSystemExclusive8StatusEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiSystemExclusive8StatusEnum.idl)
+[MidiSystemExclusive8StatusEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiSystemExclusive8StatusEnum.idl)

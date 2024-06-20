@@ -35,10 +35,10 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 
     allMessagesReceived.create();
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     uint32_t receivedMessageCount{};
 
@@ -94,16 +94,13 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
     connSend.Open();
     connReceive.Open();
 
-
-    std::cout << "Sending messages" << std::endl;
-
     // send messages
 
     for (uint32_t i = 0; i < messageCount; i++)
     {
         uint32_t word = word0 + i;
 
-        std::cout << "Sending: 0x" << std::hex << word << std::endl;
+ //       std::cout << "Sending: 0x" << std::hex << word << std::endl;
 
         // we increment the message value each time so we can keep track of order as well
 
@@ -117,27 +114,27 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
         Sleep(1);
     }
 
-    std::cout << "Waiting for response" << std::endl;
+//    std::cout << "Waiting for response" << std::endl;
 
     // Wait for incoming message
     if (!allMessagesReceived.wait(15000))
     {
-        std::cout << "Failure waiting for messages, timed out." << std::endl;
+        std::cout << std::endl << "Failure waiting for messages, timed out." << std::endl;
     }
 
-    std::cout << "Finished waiting. Unwiring event" << std::endl;
+    //std::cout << "Finished waiting. Unwiring event" << std::endl;
 
     connReceive.MessageReceived(eventRevokeToken);
 
     VERIFY_ARE_EQUAL(receivedMessageCount, messageCount);
 
-    std::cout << "Disconnecting endpoints" << std::endl;
+    //std::cout << "Disconnecting endpoints" << std::endl;
 
     // cleanup endpoint. Technically not required as session will do it
     session.DisconnectEndpointConnection(connSend.ConnectionId());
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
-    std::cout << "Endpoints disconnected" << std::endl;
+    //std::cout << "Endpoints disconnected" << std::endl;
 
     session.Close();
 }
@@ -151,10 +148,10 @@ void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
 
     allMessagesReceived.create();
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     uint32_t receivedMessageCount{};
 
@@ -212,7 +209,7 @@ void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
     // this will also test to ensure they arrive in the order sent
     auto scheduledTimeStamp = MidiClock::OffsetTimestampByMilliseconds(MidiClock::Now(), 2000);
 
-    std::cout << "Sending messages" << std::endl;
+    //std::cout << "Sending messages" << std::endl;
 
     // send messages
 
@@ -220,7 +217,7 @@ void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
     {
         uint32_t word = word0 + i;
 
-        std::cout << "Sending: 0x" << std::hex << word << std::endl;
+        //std::cout << "Sending: 0x" << std::hex << word << std::endl;
 
         // we increment the message value each time so we can keep track of order
         VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(scheduledTimeStamp, word)));
@@ -234,19 +231,19 @@ void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
         std::cout << "Failure waiting for messages, timed out." << std::endl;
     }
 
-    std::cout << "Finished waiting. Unwiring event" << std::endl;
+    //std::cout << "Finished waiting. Unwiring event" << std::endl;
 
     connReceive.MessageReceived(eventRevokeToken);
 
     VERIFY_ARE_EQUAL(receivedMessageCount, sentMessageCount);
 
-    std::cout << "Disconnecting endpoints" << std::endl;
+    //std::cout << "Disconnecting endpoints" << std::endl;
 
     // cleanup endpoint. Technically not required as session will do it
     session.DisconnectEndpointConnection(connSend.ConnectionId());
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
-    std::cout << "Endpoints disconnected" << std::endl;
+    //std::cout << "Endpoints disconnected" << std::endl;
 
     session.Close();
 }

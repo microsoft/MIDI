@@ -1,0 +1,81 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" 
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal"
+     xmlns:netfx="http://wixtoolset.org/schemas/v4/wxs/netfx"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util"
+     >
+
+    <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+
+    <?include $(StagingVersionIncludeFile) ?>
+
+    <!-- TODO: Gate on Arm64 or x64. No x86 installation -->
+    
+    <!-- TODO: Gate on Windows 10 22H2 or later -->
+
+    <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
+    <Bundle Name="Windows MIDI Services (App SDK Runtime) $(SetupVersionName) $(SetupVersionNumber)" 
+          Manufacturer="Microsoft Corporation" 
+          Version="$(SetupVersionNumber)" 
+          UpgradeCode="0b3e44a1-278f-4a6a-8be3-7dc71af4d2b3">
+
+        <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
+
+        <!-- These references are required so the searches aren't optimized out of the bundle -->
+        <util:RegistrySearchRef Id="SearchForVCRuntime" />
+
+        <BootstrapperApplication>
+            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
+                                                    Theme="hyperlinkLicense" 
+                                                    LogoFile="midi_installer_logo_square.png"/>
+        </BootstrapperApplication>
+
+        <Chain>
+            <PackageGroupRef Id="Prerequisites" />
+            <PackageGroupRef Id="MidiServicesPackages" />
+        </Chain>
+    </Bundle>
+
+    
+    <Fragment>
+
+        <!-- Check for Installed = 1-->
+        <util:RegistrySearch
+            Id="SearchForVCRuntime"
+            Variable="VCRuntimeInstalled"
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\$(var.Platform)"
+            Value="Installed"
+            Result="exists"/>
+
+        <PackageGroup Id="Prerequisites">
+
+            <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
+
+            <ExePackage
+                DisplayName="Microsoft Visual C++ Runtime"
+                SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
+                Compressed="yes"
+                DetectCondition="VCRuntimeInstalled"
+                InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
+                UninstallArguments="/uninstall /passive /norestart /quiet"
+                Permanent="true"
+                >
+            </ExePackage>
+            
+        </PackageGroup>
+        
+        <PackageGroup Id="MidiServicesPackages">
+            <MsiPackage
+                Id="MidiServicesSdkSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMIDIServicesSdkRedist.msi">
+            </MsiPackage>
+
+        </PackageGroup>
+        
+    </Fragment>
+</Wix>

@@ -8,6 +8,8 @@
 
 
 
+using Microsoft.Windows.Devices.Midi2.Messages;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     public struct ReceivedMidiMessage
@@ -129,7 +131,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 watcher.Removed += (s, e) =>
                 {
-                    if (e.Id.ToLower() == endpointId.ToLower())
+                    if (e.EndpointDeviceId.ToLower() == endpointId.ToLower())
                     {
                         _hasEndpointDisconnected = true;
                         _continueWatchingDevice = false;
@@ -157,7 +159,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -210,7 +212,7 @@ namespace Microsoft.Midi.ConsoleApp
                 //var table = new Table();
 
                 // when this goes out of scope, it will dispose of the session, which closes the connections
-                using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
+                using var session = MidiSession.Create($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
                 if (session == null)
                 {
                     AnsiConsole.WriteLine(Strings.ErrorUnableToCreateSession);
@@ -708,8 +710,8 @@ namespace Microsoft.Midi.ConsoleApp
             // format here is
             // # ___time___ ___timestamp___ ___message type___ ___friendly name___
 
-            string messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(word0).ToString();
-            string fullMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(word0);
+            string messageType = MidiMessageHelper.GetMessageTypeFromMessageFirstWord(word0).ToString();
+            string fullMessageType = MidiMessageHelper.GetMessageDisplayNameFromFirstWord(word0);
 
             string delimiter = GetConfiguredDelimiter(settings);
 

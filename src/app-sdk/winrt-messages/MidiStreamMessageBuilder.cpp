@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #include "pch.h"
 #include "MidiStreamMessageBuilder.h"
@@ -14,14 +15,14 @@
 
 
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(
          internal::MidiTimestamp const timestamp,
          uint8_t const umpVersionMajor,
          uint8_t const umpVersionMinor,
-         midi2::MidiEndpointDiscoveryRequests const requestFlags
+         msgs::MidiEndpointDiscoveryRequests const requestFlags
         ) noexcept
     {
         return MidiMessageBuilder::BuildStreamMessage(
@@ -362,7 +363,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     midi2::IMidiUniversalPacket MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
         internal::MidiTimestamp const timestamp,
         uint8_t const functionBlockNumber,
-        midi2::MidiFunctionBlockDiscoveryRequests const requestFlags
+        msgs::MidiFunctionBlockDiscoveryRequests const requestFlags
         )
     {
         uint16_t word0Remaining{ 0 };

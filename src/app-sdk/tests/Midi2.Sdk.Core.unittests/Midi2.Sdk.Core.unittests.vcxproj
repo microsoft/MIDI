@@ -76,28 +76,28 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <OutDir>$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)vsfiles\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)vsfiles\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)vsfiles\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)vsfiles\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</IncludePath>
@@ -149,31 +149,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MidiClockTests.cpp" />
     <ClCompile Include="MidiEndpointConnectionBufferTests.cpp" />
     <ClCompile Include="MidiEndpointConnectionTests.cpp" />
     <ClCompile Include="MidiEndpointCreationThreadTests.cpp" />
     <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp" />
-    <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp" />
-    <ClCompile Include="MidiMessageBuilderTests.cpp" />
-    <ClCompile Include="MidiMessagePacketTests.cpp" />
     <ClCompile Include="MidiMessageSchedulerTests.cpp" />
     <ClCompile Include="MidiSessionTests.cpp" />
-    <ClCompile Include="MidiStreamMessageBuilderTests.cpp" />
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MidiClockTests.h" />
     <ClInclude Include="MidiEndpointConnectionBufferTests.h" />
     <ClInclude Include="MidiEndpointConnectionTests.h" />
     <ClInclude Include="MidiEndpointCreationThreadTests.h" />
     <ClInclude Include="MidiEndpointDeviceWatcherTests.h" />
-    <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h" />
-    <ClInclude Include="MidiMessageBuilderTests.h" />
-    <ClInclude Include="MidiMessagePacketTests.h" />
     <ClInclude Include="MidiMessageSchedulerTests.h" />
     <ClInclude Include="MidiSessionTests.h" />
-    <ClInclude Include="MidiStreamMessageBuilderTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -184,18 +174,29 @@
     <None Include="testmd.definition" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\winrt-client-plugins\Microsoft.Devices.Midi2.Plugins.vcxproj">
-      <Project>{3d2bc934-cdc7-4dc7-b7fc-f34b755bf726}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-core\Microsoft.Devices.Midi2.vcxproj">
+    <ProjectReference Include="..\..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
-    <ProjectReference Include="..\..\winrt-diagnostics\Microsoft.Devices.Midi2.Diagnostics.vcxproj">
+    <ProjectReference Include="..\..\winrt-diagnostics\Microsoft.Windows.Devices.Midi2.Diagnostics.vcxproj">
       <Project>{05796b3c-25ff-4ac2-999b-edefb773393c}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
-    <ProjectReference Include="..\..\winrt-messages\Microsoft.Devices.Midi2.Messages.vcxproj">
+    <ProjectReference Include="..\..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj">
       <Project>{001601de-b7ab-41d1-81b7-40286b139841}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
+    <ProjectReference Include="..\..\winrt-service\Microsoft.Windows.Devices.Midi2.Service.vcxproj">
+      <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="te.exe.manifest">
+      <DeploymentContent>true</DeploymentContent>
+    </Manifest>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

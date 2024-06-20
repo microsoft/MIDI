@@ -1,20 +1,14 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
 
-MIDI_IDL_IMPORT
-
-namespace MIDI_MIDL_NAMESPACE
+namespace Microsoft.Windows.Devices.Midi2
 {
-
-    MIDI_API_CONTRACT_v1
     [flags]
     enum MidiSendMessageResults
     {
@@ -29,7 +23,7 @@ namespace MIDI_MIDL_NAMESPACE
         DataIndexOutOfRange =               0x00400000,
         TimestampOutOfRange =               0x00800000,
 
-        MessageListPartiallyProcessed =     0x00A00000,
+        MessageListPartiallyProcessed =     0x00F00000,
 
         /*Other = 0x01000000,*/
     };

@@ -1,7 +1,7 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -11,9 +11,6 @@
 
 #include "pch.h"
 
-using namespace winrt;
-using namespace winrt::Windows::Foundation;
-
 const std::wstring fieldSeparator = MIDIDIAG_FIELD_SEPARATOR;
 
 void OutputBlankLine()
@@ -22,7 +19,7 @@ void OutputBlankLine()
         << std::endl;
 }
 
-void OutputSectionHeader(_In_ std::wstring headerText)
+void OutputSectionHeader(_In_ std::wstring const& headerText)
 {
     const std::wstring sectionHeaderSeparator = std::wstring(MIDIDIAG_SEPARATOR_REPEATING_CHAR_COUNT_PER_LINE, MIDIDIAG_SECTION_HEADER_SEPARATOR_CHAR);
 
@@ -46,14 +43,14 @@ void OutputItemSeparator()
         << std::endl;
 }
 
-void OutputHeader(_In_ std::wstring headerText)
+void OutputHeader(_In_ std::wstring const& headerText)
 {
     std::wcout
         << headerText
         << std::endl;
 }
 
-void OutputFieldLabel(_In_ std::wstring fieldName)
+void OutputFieldLabel(_In_ std::wstring const& fieldName)
 {
     std::wcout
         << std::setw(MIDIDIAG_MAX_FIELD_LABEL_WIDTH)
@@ -61,7 +58,7 @@ void OutputFieldLabel(_In_ std::wstring fieldName)
         << fieldName;
 }
 
-void OutputStringField(_In_ std::wstring fieldName, _In_ winrt::hstring value)
+void OutputStringField(_In_ std::wstring const& fieldName, _In_ winrt::hstring const& value)
 {
     OutputFieldLabel(fieldName);
 
@@ -71,7 +68,7 @@ void OutputStringField(_In_ std::wstring fieldName, _In_ winrt::hstring value)
         << std::endl;
 }
 
-void OutputStringField(_In_ std::wstring fieldName, _In_ std::wstring value)
+void OutputStringField(_In_ std::wstring const& fieldName, _In_ std::wstring const& value)
 {
     OutputFieldLabel(fieldName);
 
@@ -81,7 +78,7 @@ void OutputStringField(_In_ std::wstring fieldName, _In_ std::wstring value)
         << std::endl;
 }
 
-void OutputBooleanField(_In_ std::wstring fieldName, _In_ bool value)
+void OutputBooleanField(_In_ std::wstring const& fieldName, _In_ bool const& value)
 {
     OutputFieldLabel(fieldName);
 
@@ -92,24 +89,26 @@ void OutputBooleanField(_In_ std::wstring fieldName, _In_ bool value)
         << std::endl;
 }
 
-void OutputGuidField(_In_ std::wstring fieldName, _In_ winrt::guid value)
+void OutputGuidField(_In_ std::wstring const& fieldName, _In_ winrt::guid const& value)
 {
     OutputStringField(fieldName, internal::GuidToString(value));
 }
 
 
-
 void OutputCurrentTime()
 {
-    auto const time = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
+    // At the time of this writing, C++ 20 consteval and format are broken in the MSVC 
+    // std library so need to use vformat instead of format
 
-    OutputStringField(MIDIDIAG_FIELD_LABEL_CURRENT_TIME, std::format(L"{:%Y-%m-%d %X}", time));
+    const auto time = std::time(nullptr);
+    auto formattedDateTime = std::vformat(L"{0:%F} {0:%X}", std::make_wformat_args(time));
 
+    OutputStringField(MIDIDIAG_FIELD_LABEL_CURRENT_TIME, formattedDateTime);
 }
 
 
 
-void OutputTimestampField(_In_ std::wstring fieldName, _In_ uint64_t value)
+void OutputTimestampField(_In_ std::wstring const& fieldName, _In_ uint64_t const value)
 {
     OutputFieldLabel(fieldName);
 
@@ -119,7 +118,7 @@ void OutputTimestampField(_In_ std::wstring fieldName, _In_ uint64_t value)
         << std::endl;
 }
 
-void OutputNumericField(_In_ std::wstring fieldName, _In_ uint32_t value)
+void OutputNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t const value)
 {
     OutputFieldLabel(fieldName);
 
@@ -130,7 +129,7 @@ void OutputNumericField(_In_ std::wstring fieldName, _In_ uint32_t value)
         << std::endl;
 }
 
-void OutputHexNumericField(_In_ std::wstring fieldName, _In_ uint32_t value)
+void OutputHexNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t const value)
 {
     OutputFieldLabel(fieldName);
 
@@ -143,7 +142,7 @@ void OutputHexNumericField(_In_ std::wstring fieldName, _In_ uint32_t value)
 }
 
 
-void OutputError(_In_ std::wstring errorMessage)
+void OutputError(_In_ std::wstring const& errorMessage)
 {
     const std::wstring errorLabel = L"ERROR";
 
@@ -159,7 +158,7 @@ void OutputError(_In_ std::wstring errorMessage)
 #define RETURN_FAIL return 1
 
 
-bool DoSectionTransports(_In_ bool verbose)
+bool DoSectionTransports(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
@@ -175,7 +174,7 @@ bool DoSectionTransports(_In_ bool verbose)
             {
                 OutputGuidField(MIDIDIAG_FIELD_LABEL_TRANSPORT_ID, transport.Id);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME, transport.Name);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Mnemonic);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_MNEMONIC, transport.Abbreviation);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_VERSION, transport.Version);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_AUTHOR, transport.Author);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_TRANSPORT_DESCRIPTION, transport.Description);
@@ -197,7 +196,7 @@ bool DoSectionTransports(_In_ bool verbose)
     return true;
 }
 
-bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
+bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 {
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI2_API_ENDPOINTS);
 
@@ -210,8 +209,8 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
         // list all devices
         devices = midi2::MidiEndpointDeviceInformation::FindAll(
             midi2::MidiEndpointDeviceInformationSortOrder::Name,
-            midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative |
-            midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpNative |
+            midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative |
+            midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative |
             midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
             midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing |
             midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
@@ -237,7 +236,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
 
             OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.EndpointDeviceId());
             OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_NAME, device.Name());
-            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, transportInfo.TransportMnemonic);
+            OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_MNEMONIC, transportInfo.TransportAbbreviation);
 
             if (verbose)
             {
@@ -275,7 +274,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool verbose)
     return true;
 }
 
-bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
+bool DoSectionMidi1ApiEndpoints(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
@@ -337,7 +336,7 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool verbose)
     return true;
 }
 
-bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
+bool DoSectionPingTest(_In_ bool const verbose, _In_ uint8_t const pingCount)
 {
     UNREFERENCED_PARAMETER(verbose);
 
@@ -386,9 +385,12 @@ bool DoSectionPingTest(_In_ bool verbose, _In_ uint8_t pingCount)
 
         return false;
     }
+
+
+    return true;
 }
 
-bool DoSectionClock(_In_ bool verbose)
+bool DoSectionClock(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
@@ -400,16 +402,19 @@ bool DoSectionClock(_In_ bool verbose)
     return true;
 }
 
-bool DoSectionServiceStatus(_In_ bool verbose)
+bool DoSectionServiceStatus(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SERVICE_STATUS);
 
     // this needs to be done before any other service calls
-    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, midi2::MidiService::EnsureAvailable());
 
-    return true;
+    bool available = init::MidiServicesInitializer::EnsureServiceAvailable();
+
+    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, available);
+
+    return available;
 }
 
 
@@ -460,7 +465,7 @@ std::wstring GetOSVersion()
 }
 
 
-std::wstring GetProcessorArchitectureString(WORD arch)
+std::wstring GetProcessorArchitectureString(WORD const arch)
 {
     switch (arch)
     {
@@ -480,7 +485,7 @@ std::wstring GetProcessorArchitectureString(WORD arch)
 
 }
 
-void OutputSystemInfo(_In_ SYSTEM_INFO& sysinfo)
+void OutputSystemInfo(_In_ SYSTEM_INFO const& sysinfo)
 {
     // that sysinfo.dwNumberOfProcessors can return some strange results.
     
@@ -494,15 +499,10 @@ void OutputSystemInfo(_In_ SYSTEM_INFO& sysinfo)
 
 bool DoSectionSystemInfo(_In_ bool verbose)
 {
-<<<<<<< HEAD:src/api/InBoxApps/mididmp/main.cpp
     UNREFERENCED_PARAMETER(verbose);
 
-    OutputSectionHeader(MIDIDMP_SECTION_LABEL_OS);
-    OutputStringField(MIDIDMP_FIELD_LABEL_OS_VERSION, GetOSVersion());
-=======
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_OS);
     OutputStringField(MIDIDIAG_FIELD_LABEL_OS_VERSION, GetOSVersion());
->>>>>>> pete-dev:src/app-sdk/mididiag/main.cpp
 
 
     // if running under emulation on Arm64, this is going to return the emulated sys info
@@ -543,7 +543,7 @@ int __cdecl main()
     {
         DoSectionSystemInfo(verbose);
 
-        DoSectionServiceStatus(verbose);
+        if (!DoSectionServiceStatus(verbose)) RETURN_FAIL;
 
         auto transportsWorked = DoSectionTransports(verbose);
 

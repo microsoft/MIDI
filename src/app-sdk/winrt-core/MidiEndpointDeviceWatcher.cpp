@@ -1,16 +1,17 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #include "pch.h"
 #include "MidiEndpointDeviceWatcher.h"
 #include "MidiEndpointDeviceWatcher.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     void MidiEndpointDeviceWatcher::Start()
     {
@@ -353,7 +354,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-    midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher::CreateWatcher(
+    midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher::Create(
         midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept
     {
         try
@@ -388,6 +389,13 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
             return nullptr;
         }
     }
+
+    _Use_decl_annotations_
+    midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher::Create() noexcept
+    {
+        return Create(MidiEndpointDeviceInformationFilters::AllTypicalEndpoints);
+    }
+
 
 
     winrt::Windows::Devices::Enumeration::DeviceWatcherStatus MidiEndpointDeviceWatcher::Status()

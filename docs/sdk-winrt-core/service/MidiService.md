@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiService
 parent: Service
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -26,4 +26,4 @@ For plugins which support updates at runtime, developers of those plugins should
 
 ## See also
 
-[MidiService IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiService.idl)
+[MidiService IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiService.idl)

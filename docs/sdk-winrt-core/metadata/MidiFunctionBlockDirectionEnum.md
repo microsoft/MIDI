@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiFunctionBlockDirection
 parent: Metadata
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -21,4 +21,4 @@ Indicates the message flow for a function block. Note that this is, per the spec
 
 ## IDL
 
-[MidiFunctionBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlockDirectionEnum.idl)
+[MidiFunctionBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlockDirectionEnum.idl)

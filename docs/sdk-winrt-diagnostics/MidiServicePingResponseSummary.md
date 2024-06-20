@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiServicePingResponseSummary
-parent: Microsoft.Devices.Midi2.Diagnostics
+parent: Midi2.Diagnostics
 has_children: false
 ---
 
@@ -21,5 +21,5 @@ This class represents a summary of the ping attempts against the Windows service
 
 ## IDL
 
-[MidiServicePingResponseSummary IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiServicePingResponseSummary.idl)
+[MidiServicePingResponseSummary IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-diagnostics/MidiServicePingResponseSummary.idl)
 

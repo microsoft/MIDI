@@ -18,7 +18,7 @@ void MidiEndpointCreationThreadTests::ReceiveThreadWorker(MidiSession session, w
     std::cout << "Receiver: connection thread: " << connectionThreadId << std::endl;
 
     // create the connection
-    auto connection = session.TryCreateEndpointConnection(endpointId);
+    auto connection = session.CreateEndpointConnection(endpointId);
 
     auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
         {
@@ -71,7 +71,7 @@ void MidiEndpointCreationThreadTests::SendThreadWorker(MidiSession session, winr
     std::cout << "Sender thread: " << threadId << std::endl;
 
     // create the connection
-    auto connection = session.TryCreateEndpointConnection(endpointId);
+    auto connection = session.CreateEndpointConnection(endpointId);
     connection.Open();
 
     for (uint32_t i = 0; i < NUM_MESSAGES_TO_TRANSMIT; i++)
@@ -97,7 +97,7 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
 
     // create session on this thread
 
-    auto session = MidiSession::TryCreate(L"Multi-threaded Test");
+    auto session = MidiSession::Create(L"Multi-threaded Test");
 
     // create loopback A on thread A
     std::thread workerThreadA(&MidiEndpointCreationThreadTests::ReceiveThreadWorker, this, session, MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());

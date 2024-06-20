@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #pragma once
 
@@ -13,7 +14,7 @@
 #include "MidiMessage32.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiMessage32 : MidiMessage32T<MidiMessage32>
     {
@@ -21,10 +22,19 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         MidiMessage32(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ uint32_t const word0);
+        
+        static midi2::MidiMessage32 CreateFromStruct(
+            _In_ internal::MidiTimestamp const timestamp, 
+            _In_ MidiMessageStruct const& message)
+        {
+            return midi2::MidiMessage32(timestamp, message.Word0);
+        }
+        
         // internal
         void InternalInitializeFromPointer(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ PVOID data);
+
 
         uint32_t Word0() const noexcept { return m_ump.word0; }
         void Word0(_In_ uint32_t value) noexcept { m_ump.word0 = value; }
@@ -65,7 +75,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiMessage32 : MidiMessage32T<MidiMessage32, implementation::MidiMessage32>
     {

@@ -1,15 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "namespace_defines.h"
-#include "midl_defines.h"
-
-MIDI_IDL_IMPORT
 
 import "MidiEndpointDeviceInformationFiltersEnum.idl";
 import "MidiEndpointDeviceInformation.idl";
@@ -18,13 +14,13 @@ import "MidiEndpointDeviceInformationUpdatedEventArgs.idl";
 import "MidiEndpointDeviceInformationRemovedEventArgs.idl";
 import "MidiEndpointDeviceInformationAddedEventArgs.idl";
 
-namespace Microsoft.Devices.Midi2
+namespace Microsoft.Windows.Devices.Midi2
 {
-    MIDI_API_CONTRACT_v1
     [default_interface]
     runtimeclass MidiEndpointDeviceWatcher
     {
-        static MidiEndpointDeviceWatcher CreateWatcher(MidiEndpointDeviceInformationFilters endpointFilters);
+        static MidiEndpointDeviceWatcher Create();
+        static MidiEndpointDeviceWatcher Create(MidiEndpointDeviceInformationFilters endpointFilters);
 
         void Start();
         void Stop();

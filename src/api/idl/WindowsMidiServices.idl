@@ -144,6 +144,10 @@ interface IMidiBiDi : IUnknown
     );
 };
 
+
+
+
+
 [
     object,
     local,
@@ -160,6 +164,10 @@ interface IMidiEndpointManager : IUnknown
 
     HRESULT Cleanup();
 };
+
+
+
+
 
 [
     object,
@@ -202,8 +210,11 @@ interface IMidiDataTransform : IUnknown
 };
 
 
+
+
+
 // If you change these, you should also update
-// the WinRT MidiEndpointDevicePurpose enum, which is projected through the API
+// the WinRT MidiEndpointDevicePurpose enum, which is projected through the WinRT SDK
 typedef enum
 {
     NormalMessageEndpoint = 0,
@@ -483,18 +494,19 @@ interface IMidiServicePluginMetadataReporterInterface : IUnknown
 };
 
 
-typedef struct
-{
-    GUID SessionId;
-    DWORD ProcessId;
-    BSTR ProcessName;
-    BSTR SessionName;
-} MIDI_SESSION_DETAIL, * PMIDI_SESSION_DETAIL;
+//typedef struct
+//{
+//    GUID SessionId;
+//    DWORD ProcessId;
+//    BSTR ProcessName;
+//    BSTR SessionName;
+//} MIDI_SESSION_DETAIL, *PMIDI_SESSION_DETAIL;
 
 
 
 // this is a bookkeeping class. It tracks only. It does
 // not own the lifetime of any of the items it tracks.
+// 
 [
     object,
     local,
@@ -521,13 +533,9 @@ interface IMidiSessionTracker : IUnknown
     );
 
     HRESULT GetSessionList(
-        [in, out] LPSAFEARRAY* SessionDetailsList
-    );
+        [out] BSTR* SessionDetailsList);
 
-
-
-    // TODO: May want to move this to an interface that deals with client and service disconnects
-    // and general connection health/tracking
+    // TODO: May want to move this to an interface that deals with connection health/tracking
     HRESULT VerifyConnectivity();
 
     HRESULT Cleanup();
@@ -537,36 +545,37 @@ interface IMidiSessionTracker : IUnknown
 
 typedef struct
 {
+    BYTE Number;
     BYTE FirstGroup;
     BYTE NumberOfGroupsSpanned;
     BOOL IsActive;
     BOOL IsMIDIMessageDestination;  // if clients can send messages TO this block. We should create a MIDI 1.0 output port
     BOOL IsMIDIMessageSource;       // if clients can receive messages FROM this block. We should create a MIDI 1.0 input port
-    BSTR Name;
-
-} DISCOVEREDFUNCTIONBLOCK, * PDISCOVEREDFUNCTIONBLOCK;
+    LPCWSTR Name;                   // this type is only used within the service process, so string pointers are fine
+} DISCOVEREDFUNCTIONBLOCK, *PDISCOVEREDFUNCTIONBLOCK;
 
 
 // this only contains key info required by the endpoint managers
 // so they can create compatible MIDI 1.0 ports from the results
-// from MIDI 2.0 protocol negotiation
+// from MIDI 2.0 protocol negotiation. This is not sent over RPC
+// or otherwise used cross-process. In-service only.
 typedef struct
 {
-    BOOL EndpointInformationReceived;
+    BOOL AllEndpointInformationReceived;
 
-    BSTR EndpointSuppliedName;
-    BSTR EndpointSuppliedProductInstanceId;
+    BOOL EndpointSupportsMIDI2Protocol;
+    BOOL EndpointSupportsMIDI1Protocol;
+
+    LPCWSTR EndpointSuppliedName;
+    LPCWSTR EndpointSuppliedProductInstanceId;
 
     BYTE NumberOfFunctionBlocksDeclared;
     BYTE NumberOfFunctionBlocksReceived;
     BOOL FunctionBlocksAreStatic;
 
-    BOOL EndpointSupportsMIDI2Protocol;
-    BOOL EndpointSupportsMIDI1Protocol;
+    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;  // pointer to an array of discovered function blocks. 
 
-    SAFEARRAY(DISCOVEREDFUNCTIONBLOCK) DiscoveredFunctionBlocks;
-
-}  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, * PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
+}  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
 
 
 [
@@ -578,20 +587,15 @@ typedef struct
 interface IMidiEndpointProtocolManagerInterface : IUnknown
 {
     HRESULT NegotiateAndRequestMetadata(
+        [in] GUID AbstractionGuid,
         [in] LPCWSTR DeviceInterfaceId,
         [in] BOOL PreferToSendJRTimestampsToEndpoint,
         [in] BOOL PreferToReceiveJRTimestampsFromEndpoint,
         [in] BYTE PreferredMidiProtocol,
-        [in] WORD TimeoutMS,
+        [in] WORD TimeoutMilliseconds,
         [out, retval] PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
     );
 
 
 };
-
-
-
-
-
-
 

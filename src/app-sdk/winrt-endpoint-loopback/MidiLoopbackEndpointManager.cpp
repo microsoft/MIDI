@@ -1,16 +1,17 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #include "pch.h"
 #include "MidiLoopbackEndpointManager.h"
 #include "MidiLoopbackEndpointManager.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
     bool MidiLoopbackEndpointManager::IsTransportAvailable() noexcept
     {
@@ -23,29 +24,29 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
 
     _Use_decl_annotations_
     loop::MidiLoopbackEndpointCreationResult MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(
-        loop::MidiLoopbackEndpointCreationConfiguration creationConfiguration)
+        loop::MidiLoopbackEndpointCreationConfig creationConfig)
     {
         // the success code in this defaults to False
         loop::MidiLoopbackEndpointCreationResult result{};
         result.Success = false;
 
-        json::JsonObject configurationObject;
+        json::JsonObject configObject;
 
-        if (json::JsonObject::TryParse(creationConfiguration.GetConfigurationJson(), configurationObject))
+        if (json::JsonObject::TryParse(creationConfig.GetConfigJson(), configObject))
         {
             // send it up
 
-            auto serviceResponse = midi2::MidiService::UpdateTransportPluginConfiguration(creationConfiguration);
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
 
             // parse the results
-            auto successResult = serviceResponse.Status() == midi2::MidiServiceConfigurationResponseStatus::Success;
+            auto successResult = serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success;
 
             if (successResult)
             {
                 json::JsonObject serviceResponseJson;
 
-                if (json::JsonObject::TryParse(serviceResponse.ResponseJson(), serviceResponseJson))
+                if (json::JsonObject::TryParse(serviceResponse.ResponseJson, serviceResponseJson))
                 {
                     auto deviceIdA = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY, L"");
                     auto deviceIdB = serviceResponseJson.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY, L"");
@@ -53,7 +54,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
                     if (!deviceIdA.empty() && !deviceIdB.empty())
                     {
                         // update the response object with the new ids
-                        result.AssociationId = creationConfiguration.AssociationId();
+                        result.AssociationId = creationConfig.AssociationId();
                         result.EndpointDeviceIdA = deviceIdA;
                         result.EndpointDeviceIdB = deviceIdB;
                         result.Success = true;
@@ -76,20 +77,20 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback::implementation
 
     _Use_decl_annotations_
     bool MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(
-        loop::MidiLoopbackEndpointDeletionConfiguration deletionConfiguration)
+        loop::MidiLoopbackEndpointDeletionConfig deletionConfig)
     {
         // the success code in this defaults to False
         bool result = false;
 
-        json::JsonObject configurationObject;
+        json::JsonObject configObject;
 
-        if (json::JsonObject::TryParse(deletionConfiguration.GetConfigurationJson(), configurationObject))
+        if (json::JsonObject::TryParse(deletionConfig.GetConfigJson(), configObject))
         {
             // send it up
 
-            auto serviceResponse = midi2::MidiService::UpdateTransportPluginConfiguration(deletionConfiguration);
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(deletionConfig);
 
-            result = (serviceResponse.Status() == midi2::MidiServiceConfigurationResponseStatus::Success);
+            result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
         }
         else
         {

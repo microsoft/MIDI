@@ -2,7 +2,7 @@
 layout: api_page
 title: IMidiUniversalPacket
 parent: Messages
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -29,5 +29,5 @@ This interface is implemented by the rich MidiMessageXX runtime class types. It 
 
 ## IDL
 
-[IMidiUniversalPacket IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/IMidiUniversalPacket.idl)
+[IMidiUniversalPacket IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiUniversalPacket.idl)
 

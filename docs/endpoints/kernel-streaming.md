@@ -11,13 +11,25 @@ has_children: false
 | Property | Value |
 | -------- | ----- |
 | Abstraction Id | `{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}` |
-| Mnemonic | `KS` |
+| Abbreviation | `KS` |
 
 ## Overview
 
 Kernel Streaming is the mechanism through which MIDI 1.0 and MIDI 2.0 devices using the new UMP-based class driver are enumerated and communicated with.
 
 In addition, any third-party UMP drivers will also route through this service.
+
+## Compatibility
+
+The best experience for Windows MIDI Services will be with applications using the new Windows MIDI Services SDK.
+
+| API | Compatible | Notes |
+| --- | ---------- | ----- |
+| Windows MIDI Services Native | Yes | This provides the best experience for applications. |
+| WinRT MIDI 1.0 | Yes | Data is translated between UMP and MIDI bytes (MIDI 1.0 data format) as required. |
+| WinMM MIDI 1.0 | Yes | Data is translated between UMP and MIDI bytes (MIDI 1.0 data format) as required. |
+
+> When creating endpoints for use by MIDI 1.0 applications which connect to MIDI 2.0 devices, we're limited to using the declared Group Terminal blocks and their associated groups, unless the device is MIDI 2.0 and the function blocks retrieved are marked as static function blocks. 
 
 ## Configuration
 

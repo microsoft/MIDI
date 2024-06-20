@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #pragma once
 #include "pch.h"
@@ -12,7 +13,7 @@
 #include "MidiMessage64.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiMessage64 : MidiMessage64T<MidiMessage64>
     {
@@ -27,8 +28,16 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
             _In_ internal::MidiTimestamp const timestamp,
             _In_ array_view<uint32_t const> words)
         {
-            if (words.size() == 2) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
+            if (words.size() >= 2) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
         }
+
+        static midi2::MidiMessage64 CreateFromStruct(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ MidiMessageStruct const& message)
+        {
+            return midi2::MidiMessage64(timestamp, message.Word0, message.Word1);
+        }
+
 
         // internal
         void InternalInitializeFromPointer(
@@ -50,7 +59,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         void MessageType(_In_ midi2::MidiMessageType const& value) noexcept 
             { internal::SetUmpMessageType(m_ump.word0, (uint8_t)value); }
 
-        MIDI_CPP_NAMESPACE::MidiPacketType PacketType() const noexcept 
+        midi2::MidiPacketType PacketType() const noexcept 
             { return midi2::MidiPacketType::UniversalMidiPacket64; }
 
         uint32_t PeekFirstWord() { return Word0(); }
@@ -77,7 +86,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiMessage64 : MidiMessage64T<MidiMessage64, implementation::MidiMessage64>
     {

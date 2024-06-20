@@ -1,19 +1,20 @@
 ---
 layout: api_page
-title: MidiVirtualEndpointDevice
-parent: Microsoft.Devices.Midi2.Endpoints.Virtual
+title: MidiVirtualDevice
+parent: Midi2.Endpoints.Virtual
 has_children: false
 ---
 
-# MidiVirtualEndpointDevice
-
-The `MidiVirtualEndpointDeviceDefinition` class specifies, in an easy to use format, the responses for discovery and protocol negotiation, as well as the properties to use when constructing the device endpoint.
+# MidiVirtualDevice
 
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `DeviceDefinition` | The MidiVirtualEndpointDeviceDefinition used to create this device. This should be treated as read-only data. |
+| `DeviceEndpointDeviceId` | The EndpointDeviceId to be used by the app creating the virtual device |
+| `ClientEndpointDeviceId` | The EndpointDeviceId to be used by apps which want to connect to this virtual device |
+
+
 | `FunctionBlocks` | Current list of function blocks for this device. |
 | `SuppressHandledMessages` | True if the protocol messages handled by this class should be filtered out of the incoming message stream |
 
@@ -28,8 +29,8 @@ The `MidiVirtualEndpointDeviceDefinition` class specifies, in an easy to use for
 
 | Event | Description |
 | --------------- | ----------- |
-| `StreamConfigurationRequestReceived(device, args)` | Raised when this device receives a Stream Configuration Request UMP message. |
+| `StreamConfigRequestReceived(device, args)` | Raised when this device receives a Stream Configuration Request UMP message. |
 
 ## IDL
 
-[MidiVirtualEndpointDevice IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiVirtualEndpointDevice.idl)
+[MidiVirtualDevice IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-endpoints-virtual/MidiVirtualDevice.idl)

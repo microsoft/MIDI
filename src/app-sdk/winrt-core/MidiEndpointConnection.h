@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #pragma once
 
@@ -16,7 +17,7 @@
 
 #define MIDI_MAX_ALLOWED_SCHEDULER_SECONDS_INTO_FUTURE 20
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, IMidiCallback> 
     {
@@ -265,7 +266,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         bool DeactivateMidiStream(_In_ bool const force);
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiEndpointConnection : MidiEndpointConnectionT<MidiEndpointConnection, implementation::MidiEndpointConnection>
     {

@@ -226,31 +226,31 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 //}
 
 
+//_Use_decl_annotations_
+//HRESULT
+//CMidi2MidiSrvSessionTracker::GetSessionList(
+//    LPSAFEARRAY* SessionDetailsList
+//)
+//{
+//    TraceLoggingWrite(
+//        MidiSrvAbstractionTelemetryProvider::Provider(),
+//        MIDI_TRACE_EVENT_INFO,
+//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+//        TraceLoggingPointer(this, "this")
+//    );
+//
+//    // TODO
+//    SessionDetailsList = nullptr;
+//
+//    return S_OK;
+//
+//}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::GetSessionList(
-    LPSAFEARRAY* SessionDetailsList
-)
-{
-    TraceLoggingWrite(
-        MidiSrvAbstractionTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-    // TODO
-    SessionDetailsList = nullptr;
-
-    return S_OK;
-
-}
-
-
-_Use_decl_annotations_
-HRESULT
-CMidi2MidiSrvSessionTracker::GetSessionListJson(
     BSTR* SessionList
 )
 {

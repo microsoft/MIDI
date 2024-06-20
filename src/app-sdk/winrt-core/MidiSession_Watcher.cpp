@@ -1,16 +1,17 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #include "pch.h"
 #include "MidiSession.h"
 #include "MidiEndpointConnection.h"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     
     // This monitors all endpoints that are in-scope for Windows MIDI Services
@@ -21,11 +22,8 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         try
         {
             winrt::hstring deviceSelector = midi2::MidiEndpointConnection::GetDeviceSelector();
-            
-            // start the device watcher for the specific Id
-            //winrt::hstring deviceSelector(
-            //    L"System.Devices.DeviceInstanceId:=\"" + m_endpointDeviceId + L"\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
-
+           
+            // we use a standard device watcher here, instead of the heavier MIDI-specific one
             m_autoReconnectDeviceWatcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector);
 
             if (m_autoReconnectDeviceWatcher != nullptr)

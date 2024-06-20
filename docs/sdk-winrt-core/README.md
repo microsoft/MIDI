@@ -1,12 +1,12 @@
 ---
 layout: page
-title: Microsoft.Devices.Midi2
+title: Midi2
 has_children: true
 ---
 
-# Microsoft.Devices.Midi2
+# Microsoft.Windows.Devices.Midi2
 
-The Microsoft.Devices.Midi2 types are documented in these pages.
+The Microsoft.Windows.Devices.Midi2 types are documented in these pages.
 
 Typical API workflow:
 

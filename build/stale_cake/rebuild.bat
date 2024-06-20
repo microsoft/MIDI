@@ -1,1 +1,0 @@
-dotnet cake --target Default --rebuild

@@ -1,7 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -15,9 +15,6 @@
 #include <unknwn.h>
 
 #include <Windows.h>
-
-//#include <wil/cppwinrt.h> // must be before the first C++ WinRT header
-//#include <wil/result.h>
 
 #include <wil\resource.h>
 #include <wil\result_macros.h>
@@ -34,8 +31,8 @@
 namespace json = ::winrt::Windows::Data::Json;
 namespace enumeration = ::winrt::Windows::Devices::Enumeration;
 namespace midi1 = ::winrt::Windows::Devices::Midi;
-
-#include <winrt/Microsoft.Devices.Midi2.h>
+namespace foundation = ::winrt::Windows::Foundation;
+namespace collections = ::winrt::Windows::Foundation::Collections;
 
 
 #include <stdint.h>
@@ -49,48 +46,52 @@ namespace midi1 = ::winrt::Windows::Devices::Midi;
 #include <format>
 #include <filesystem>
 
-#include "SdkTraceLogging.h"
 
-#include "ump_helpers.h"
-#include "wstring_util.h"
+// pre-declare namespaces
 
-// AbstractionUtilities
+namespace WindowsMidiServicesInternal {};
+namespace winrt::Microsoft::Windows::Devices::Midi2 {};
 
-// shared
-#include "midi_ump.h"   // general shared
-#include "loopback_ids.h"
-#include <midi_timestamp.h>
-
-//#include <wil/resource.h>
-
-namespace foundation = ::winrt::Windows::Foundation;
-namespace collections = ::winrt::Windows::Foundation::Collections;
-
-#include "hstring_util.h"
-#include "wstring_util.h"
 namespace internal = ::WindowsMidiServicesInternal;
+namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
-#include "MidiDefs.h"
-#include "WindowsMidiServices.h"
-#include "WindowsMidiServices_i.c"
-#include "Midi2MidiSrvAbstraction.h"
-
-#include "json_defs.h"
-#include "json_helpers.h"
-#include "swd_helpers.h"
-#include "resource_util.h"
-#include "ping_ump_types.h"
-
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins {};
-namespace winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation {};
-
-namespace midi2 = ::winrt::Microsoft::Devices::Midi2;
-namespace implementation = ::winrt::Microsoft::Devices::Midi2::ClientPlugins::implementation;
-
-#include "midi_ump_message_defs.h"
 
 #include <Devpropdef.h>
-#include "MidiDefs.h"
+#include <MidiDefs.h>
+#include <midi_group_terminal_blocks.h>
+
+// shared
+#include <midi_ump.h>   // general shared
+#include <loopback_ids.h>
+#include <midi_timestamp.h>
+#include <json_defs.h>
+#include <ping_ump_types.h>
+#include <ump_helpers.h>
+#include <hstring_util.h>
+#include <wstring_util.h>
+#include <json_helpers.h>
+#include <resource_util.h>
+#include <swd_helpers.h>
+#include <midi_ump_message_defs.h>
+
+
+// service interface
+#include <WindowsMidiServices.h>
+#include <WindowsMidiServices_i.c>
+#include <Midi2MidiSrvAbstraction.h>
+
+// SDK shared
+#include <SdkTraceLogging.h>
+
+// Project-local ------------------------------------------------
+
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation {};
+namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementation;
+
+//#include "resource.h"
+
 
 #include "MidiChannelEndpointListener.h"
 #include "MidiGroupEndpointListener.h"

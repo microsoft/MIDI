@@ -1,16 +1,17 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
 
 
+
 #pragma once
 #include "MidiVirtualDevice.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
     struct MidiVirtualDevice : MidiVirtualDeviceT<MidiVirtualDevice>
     {
@@ -31,12 +32,12 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
         foundation::IInspectable Tag() const noexcept { return m_tag; }
         void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
-        winrt::event_token StreamConfigurationRequestReceived(_In_ foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigurationRequestReceivedEventArgs> const& handler)
+        winrt::event_token StreamConfigRequestReceived(_In_ foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigRequestReceivedEventArgs> const& handler)
         {
             return m_streamConfigurationRequestReceivedEvent.add(handler);
         }
 
-        void StreamConfigurationRequestReceived(winrt::event_token const& token) noexcept
+        void StreamConfigRequestReceived(winrt::event_token const& token) noexcept
         {
             if (m_streamConfigurationRequestReceivedEvent) m_streamConfigurationRequestReceivedEvent.remove(token);
         }
@@ -70,6 +71,11 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
 
     private:
+        //virt::IMidiVirtualDeviceCreationConfiguration m_virtualDeviceConfiguration{ nullptr };
+
+        midi2::MidiDeclaredEndpointInfo m_declaredEndpointInfo{};
+        midi2::MidiDeclaredDeviceIdentity m_declaredDeviceIdentity{};
+
         bool SendFunctionBlockInfoNotificationMessage(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
         bool SendFunctionBlockNameNotificationMessages(_In_ midi2::MidiFunctionBlock const& fb) noexcept;
         bool SendEndpointNameNotificationMessages(_In_ winrt::hstring const& name) noexcept;
@@ -105,7 +111,7 @@ namespace winrt::Microsoft::Devices::Midi2::Endpoints::Virtual::implementation
 
         collections::IMap<uint8_t, midi2::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2::MidiFunctionBlock>() };
 
-        winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigurationRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
+        winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
     };
 }
 

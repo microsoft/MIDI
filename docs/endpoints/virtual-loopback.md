@@ -11,7 +11,7 @@ has_children: false
 | Property | Value |
 | -------- | ----- |
 | Abstraction Id | `{942BF02D-93C0-4EA8-B03E-D51156CA75E1}` |
-| Mnemonic | `LOOP` |
+| Abbreviation | `LOOP` |
 
 ## Overview
 

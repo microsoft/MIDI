@@ -10,15 +10,15 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
-#include <winrt/Microsoft.Devices.Midi2.h>
-#include <winrt/Microsoft.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Devices.Midi2.Messages.h>
-#include <winrt/Microsoft.Devices.Midi2.ClientPlugins.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
 
-using namespace winrt::Microsoft::Devices::Midi2;
-using namespace winrt::Microsoft::Devices::Midi2::Diagnostics;
-using namespace winrt::Microsoft::Devices::Midi2::Messages;
-using namespace winrt::Microsoft::Devices::Midi2::ClientPlugins;
+using namespace winrt::Microsoft::Windows::Devices::Midi2;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Service;
 
 #include <iostream>
 
@@ -32,17 +32,12 @@ using namespace winrt::Microsoft::Devices::Midi2::ClientPlugins;
 #include "MidiDefs.h"
 
 
-#include "MidiClockTests.h"
 #include "MidiEndpointConnectionBufferTests.h"
 #include "MidiEndpointConnectionTests.h"
 #include "MidiEndpointCreationThreadTests.h"
 #include "MidiEndpointDeviceWatcherTests.h"
-#include "MidiFunctionBlockMessageBuilderTests.h"
-#include "MidiMessageBuilderTests.h"
-#include "MidiMessagePacketTests.h"
 #include "MidiMessageSchedulerTests.h"
 #include "MidiSessionTests.h"
-#include "MidiStreamMessageBuilderTests.h"
 
 #ifndef LOG_OUTPUT
 #define LOG_OUTPUT(fmt, ...)  WEX::Logging::Log::Comment(WEX::Common::String().Format(fmt, __VA_ARGS__))

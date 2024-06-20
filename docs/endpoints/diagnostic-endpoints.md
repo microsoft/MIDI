@@ -11,7 +11,7 @@ has_children: false
 | Property | Value |
 | -------- | ----- |
 | Abstraction Id | `{ac9b5417-3fe0-4e62-960f-034ee4235a1a}` |
-| Mnemonic | `DIAG` |
+| Abbreviation | `DIAG` |
 
 (Note: This transport cannot be disabled and is not listed in the registry. Its activation is hard-coded into the Windows service. Settings for this transport are not read from the configuration file and cannot be changed.)
 
@@ -59,3 +59,7 @@ The Loopback endpoints capture Endpoint and Function Block metadata just like an
 The ping endpoint is not normally returned through any enumeration. It is for internal use only, and should not be used by any applications. It recognizes only one type of proprietary message.
 
 Behavior and implementation of the Ping endpoint is subject to change and should not be relied upon by any code outside of the API.
+
+## Compatibility
+
+Diagnostics endpoints are available only to applications using the Windows MIDI Services SDK and service.

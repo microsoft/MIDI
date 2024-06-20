@@ -66,9 +66,9 @@ public:
     STDMETHOD(RemoveClientSessionInternal)(_In_ PVOID ContextHandle);
 
 
-    // This is called from the API
-    STDMETHOD(GetSessionListJson)(_Out_ BSTR* SessionList);
-    STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
+    // This is called from the SDK
+    STDMETHOD(GetSessionList)(_Out_ BSTR* SessionList);
+    //STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
 
     STDMETHOD(VerifyConnectivity)();
 

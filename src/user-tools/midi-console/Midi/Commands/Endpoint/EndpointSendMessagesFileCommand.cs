@@ -8,6 +8,8 @@
 
 
 
+using Microsoft.Windows.Devices.Midi2.Messages;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointSendMessagesFileCommand : Command<EndpointSendMessagesFileCommand.Settings>
@@ -56,7 +58,7 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 byte newGroup = (byte)settings.NewGroupIndex.GetValueOrDefault(0);
 
-                if (!MidiGroup.IsValidGroupIndex(newGroup))
+                if (!MidiGroup.IsValidIndex(newGroup))
                 {
                     return ValidationResult.Error(Strings.ValidationErrorInvalidGroup);
                 }
@@ -70,7 +72,7 @@ namespace Microsoft.Midi.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiMessageUtility.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageHelper.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
             }
             else
             {
@@ -80,7 +82,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -111,7 +113,7 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.WriteLine();
 
 
-                using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+                using var session = MidiSession.Create($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
                 if (session == null)
                 {
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
@@ -282,9 +284,9 @@ namespace Microsoft.Midi.ConsoleApp
 
                                         if (changeGroup)
                                         {
-                                            if (MidiMessageUtility.MessageTypeHasGroupField(MidiMessageUtility.GetMessageTypeFromMessageFirstWord(words[0])))
+                                            if (MidiMessageHelper.MessageTypeHasGroupField(MidiMessageHelper.GetMessageTypeFromMessageFirstWord(words[0])))
                                             {
-                                                words[0] = MidiMessageUtility.ReplaceGroupInMessageFirstWord(words[0], newGroup);
+                                                words[0] = MidiMessageHelper.ReplaceGroupInMessageFirstWord(words[0], newGroup);
                                             }
                                         }
 
@@ -299,7 +301,7 @@ namespace Microsoft.Midi.ConsoleApp
                                         }
 
                                         
-                                        string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]);
+                                        string detailedMessageType = MidiMessageHelper.GetMessageDisplayNameFromFirstWord(words[0]);
 
 #if false
                                         // display the sent data

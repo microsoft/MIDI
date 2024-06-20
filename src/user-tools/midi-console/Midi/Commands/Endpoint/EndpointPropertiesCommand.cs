@@ -39,7 +39,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -80,39 +80,45 @@ namespace Microsoft.Midi.ConsoleApp
                 table.AddColumn(column2);
 
 
-                MidiEndpointDeviceInformation di = MidiEndpointDeviceInformation.CreateFromId(endpointId);
+                MidiEndpointDeviceInformation di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(endpointId);
+
+                var config = di.GetDeclaredStreamConfiguration();
+                var epinfo = di.GetDeclaredEndpointInfo();
+                var transportSuppliedInfo = di.GetTransportSuppliedInfo();
+
 
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertiesTableSectionHeaderIdentification), "");
                 table.AddRow(Strings.PropertiesTablePropertyLabelName, AnsiMarkupFormatter.FormatEndpointName(di.Name));
-                table.AddRow(Strings.PropertiesTablePropertyLabelId, AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.Id));
+                table.AddRow(Strings.PropertiesTablePropertyLabelId, AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.EndpointDeviceId));
                 table.AddRow(Strings.PropertiesTablePropertyLabelPurpose, di.EndpointPurpose.ToString());
 
-                table.AddRow(Strings.PropertiesTablePropertyLabelSerialNumber, AnsiMarkupFormatter.EscapeString(di.TransportSuppliedSerialNumber));
-                table.AddRow(Strings.PropertiesTablePropertyLabelManufacturer, AnsiMarkupFormatter.EscapeString(di.ManufacturerName));
 
-                if (di.TransportSuppliedVendorId > 0 || di.TransportSuppliedProductId > 0)
+                table.AddRow(Strings.PropertiesTablePropertyLabelSerialNumber, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.SerialNumber));
+                table.AddRow(Strings.PropertiesTablePropertyLabelManufacturer, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.ManufacturerName));
+
+                if (transportSuppliedInfo.VendorId > 0 || transportSuppliedInfo.ProductId > 0)
                 {
                     table.AddRow(Strings.PropertiesTablePropertyLabelVidPid, 
-                        AnsiMarkupFormatter.EscapeString(di.TransportSuppliedVendorId.ToString("X4")
+                        AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.VendorId.ToString("X4")
                         + " / " + 
-                        AnsiMarkupFormatter.EscapeString(di.TransportSuppliedProductId.ToString("X4"))));
+                        AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.ProductId.ToString("X4"))));
                 }
 
-                if (di.TransportSuppliedDescription != string.Empty)
+                if (transportSuppliedInfo.Description != string.Empty)
                 {
-                    table.AddRow(Strings.PropertiesTablePropertyLabelTransportSuppliedDescription, AnsiMarkupFormatter.EscapeString(di.TransportSuppliedDescription));
+                    table.AddRow(Strings.PropertiesTablePropertyLabelTransportSuppliedDescription, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.Description));
                 }
 
-                table.AddRow(Strings.PropertiesTablePropertyLabelMultiClient, di.SupportsMultiClient.ToString());
+                table.AddRow(Strings.PropertiesTablePropertyLabelMultiClient, transportSuppliedInfo.SupportsMultiClient.ToString());
 
 
                 // data format
 
-                if (di.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
+                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
                 {
                     table.AddRow(Strings.PropertiesTablePropertyLabelNativeDataFormat, Strings.PropertyValueNativeDataFormatUmp);
                 }
-                else if (di.NativeDataFormat == MidiEndpointNativeDataFormat.ByteStream)
+                else if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.ByteStream)
                 {
                     table.AddRow(Strings.PropertiesTablePropertyLabelNativeDataFormat, Strings.PropertyValueNativeDataFormatByteStream);
                 }
@@ -134,75 +140,77 @@ namespace Microsoft.Midi.ConsoleApp
 
                 // we only show protocol negotiation stuff if we're native UMP
 
-                if (di.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
+                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
                 {
                     if (settings.Verbose)
                     {
                         table.AddEmptyRow();
                         table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableSectionHeaderEndpointMetadata), "");
                         table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionEndpointMetadata), "");
-                        table.AddRow(Strings.PropertyTablePropertyLabelEndpointInfoLastUpdated, AnsiMarkupFormatter.FormatLongDateTime(di.EndpointInformationLastUpdateTime));
+                        //table.AddRow(Strings.PropertyTablePropertyLabelEndpointInfoLastUpdated, AnsiMarkupFormatter.FormatLongDateTime(epinfo.EndpointInformationLastUpdateTime));
 
-                        table.AddRow(Strings.PropertiesTablePropertyLabelProductInstanceId, AnsiMarkupFormatter.EscapeString(di.ProductInstanceId));
-                        table.AddRow(Strings.PropertyTablePropertyLabelProductInstanceIdLastUpdated, AnsiMarkupFormatter.FormatLongDateTime(di.ProductInstanceIdLastUpdateTime));
+                        table.AddRow(Strings.PropertiesTablePropertyLabelProductInstanceId, AnsiMarkupFormatter.EscapeString(epinfo.ProductInstanceId));
+                        //table.AddRow(Strings.PropertyTablePropertyLabelProductInstanceIdLastUpdated, AnsiMarkupFormatter.FormatLongDateTime(di.ProductInstanceIdLastUpdateTime));
 
-                        table.AddRow(Strings.PropertiesTablePropertyLabelEndpointSuppliedName, AnsiMarkupFormatter.FormatEndpointName(di.EndpointSuppliedName));
-                        table.AddRow(Strings.PropertyTablePropertyLabelEndpointSuppliedNameLastUpdated, AnsiMarkupFormatter.FormatLongDateTime(di.EndpointSuppliedNameLastUpdateTime));
+                        table.AddRow(Strings.PropertiesTablePropertyLabelEndpointSuppliedName, AnsiMarkupFormatter.FormatEndpointName(epinfo.Name));
+                        //table.AddRow(Strings.PropertyTablePropertyLabelEndpointSuppliedNameLastUpdated, AnsiMarkupFormatter.FormatLongDateTime(di.EndpointSuppliedNameLastUpdateTime));
 
-
+                        var identity = di.GetDeclaredDeviceIdentity();
                         table.AddRow(Strings.PropertiesTablePropertyLabelSystemExclusiveId,
-                            di.DeviceIdentitySystemExclusiveId[0].ToString("X2") + " " +
-                            di.DeviceIdentitySystemExclusiveId[1].ToString("X2") + " " +
-                            di.DeviceIdentitySystemExclusiveId[2].ToString("X2"));
+                            identity.SystemExclusiveIdByte1.ToString("X2") + " " +
+                            identity.SystemExclusiveIdByte2.ToString("X2") + " " +
+                            identity.SystemExclusiveIdByte3.ToString("X2"));
 
                         table.AddRow(Strings.PropertiesTablePropertyLabelDeviceFamily,
-                            di.DeviceIdentityDeviceFamilyMsb.ToString("X2") + " " +
-                            di.DeviceIdentityDeviceFamilyLsb.ToString("X2"));
+                            identity.DeviceFamilyMsb.ToString("X2") + " " +
+                            identity.DeviceFamilyLsb.ToString("X2"));
 
                         table.AddRow(Strings.PropertiesTablePropertyLabelDeviceFamilyModelNumber,
-                            di.DeviceIdentityDeviceFamilyModelNumberMsb.ToString("X2") + " " +
-                            di.DeviceIdentityDeviceFamilyModelNumberLsb.ToString("X2"));
+                            identity.DeviceFamilyModelNumberMsb.ToString("X2") + " " +
+                            identity.DeviceFamilyModelNumberLsb.ToString("X2"));
 
                         table.AddRow(Strings.PropertiesTablePropertyLabelSoftwareRevisionLevel,
-                            di.DeviceIdentitySoftwareRevisionLevel[0].ToString("X2") + " " +
-                            di.DeviceIdentitySoftwareRevisionLevel[1].ToString("X2") + " " +
-                            di.DeviceIdentitySoftwareRevisionLevel[2].ToString("X2") + " " +
-                            di.DeviceIdentitySoftwareRevisionLevel[3].ToString("X2"));
+                            identity.SoftwareRevisionLevelByte1.ToString("X2") + " " +
+                            identity.SoftwareRevisionLevelByte2.ToString("X2") + " " +
+                            identity.SoftwareRevisionLevelByte3.ToString("X2") + " " +
+                            identity.SoftwareRevisionLevelByte4.ToString("X2"));
 
-                        table.AddRow(Strings.PropertyTablePropertyLabelDeviceIdentityLastUpdated, AnsiMarkupFormatter.FormatLongDateTime(di.DeviceIdentityLastUpdateTime));
+                        //table.AddRow(Strings.PropertyTablePropertyLabelDeviceIdentityLastUpdated, AnsiMarkupFormatter.FormatLongDateTime(identity.LastUpdateTime));
 
                     }
                 }
 
+                var userInfo = di.GetUserSuppliedInfo();
+
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertiesTableSectionHeaderUserData), "");
-                table.AddRow(Strings.PropertiesTablePropertyLabelUserSuppliedName, AnsiMarkupFormatter.FormatEndpointName(di.UserSuppliedName));
-                table.AddRow(Strings.PropertiesTablePropertyLabelDescription, AnsiMarkupFormatter.EscapeString(di.UserSuppliedDescription));
-                table.AddRow(Strings.PropertiesTablePropertyLabelSmallImagePath, AnsiMarkupFormatter.EscapeString(di.UserSuppliedSmallImagePath));
-                table.AddRow(Strings.PropertiesTablePropertyLabelLargeImagePath, AnsiMarkupFormatter.EscapeString(di.UserSuppliedLargeImagePath));
+                table.AddRow(Strings.PropertiesTablePropertyLabelUserSuppliedName, AnsiMarkupFormatter.FormatEndpointName(userInfo.Name));
+                table.AddRow(Strings.PropertiesTablePropertyLabelDescription, AnsiMarkupFormatter.EscapeString(userInfo.Description));
+                table.AddRow(Strings.PropertiesTablePropertyLabelSmallImagePath, AnsiMarkupFormatter.EscapeString(userInfo.SmallImagePath));
+                table.AddRow(Strings.PropertiesTablePropertyLabelLargeImagePath, AnsiMarkupFormatter.EscapeString(userInfo.LargeImagePath));
 
 
 
-                if (di.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
+                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderActiveConfiguration), "");
                     table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionActiveConfiguration), "");
-                    table.AddRow(Strings.PropertyTablePropertyLabelProtocol, di.ConfiguredProtocol.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredSendJR, di.ConfiguredToSendJRTimestamps.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredReceiveJR, di.ConfiguredToReceiveJRTimestamps.ToString());
+                    table.AddRow(Strings.PropertyTablePropertyLabelProtocol, config.Protocol.ToString());
+                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredSendJR, config.SendJitterReductionTimestamps.ToString());
+                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredReceiveJR, config.ReceiveJitterReductionTimestamps.ToString());
 
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderDeclaredCapabilities), "");
                     table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionDeclaredCapabilities), "");
-                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredMIDI1Protocol, di.SupportsMidi10Protocol.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredMIDI2Protocol, di.SupportsMidi20Protocol.ToString());
+                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredMIDI1Protocol, epinfo.SupportsMidi10Protocol.ToString());
+                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredMIDI2Protocol, epinfo.SupportsMidi20Protocol.ToString());
 
                     if (settings.Verbose)
                     {
-                        table.AddRow(Strings.PropertyTablePropertyLabelUMPVersion, di.SpecificationVersionMajor + "." + di.SpecificationVersionMinor);
-                        table.AddRow(Strings.PropertyTablePropertyLabelSupportsSendingJR, di.SupportsSendingJRTimestamps.ToString());
-                        table.AddRow(Strings.PropertyTablePropertyLabelSupportsReceivingJR, di.SupportsReceivingJRTimestamps.ToString());
+                        table.AddRow(Strings.PropertyTablePropertyLabelUMPVersion, epinfo.SpecificationVersionMajor + "." + epinfo.SpecificationVersionMinor);
+                        table.AddRow(Strings.PropertyTablePropertyLabelSupportsSendingJR, epinfo.SupportsSendingJitterReductionTimestamps.ToString());
+                        table.AddRow(Strings.PropertyTablePropertyLabelSupportsReceivingJR, epinfo.SupportsReceivingJitterReductionTimestamps.ToString());
                     }
                 }
 
@@ -211,25 +219,25 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderTransportInformation), "");
                     table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionTransportInformation), "");
-                    table.AddRow(Strings.PropertyTablePropertyLabelTransportSuppliedName, AnsiMarkupFormatter.FormatEndpointName(di.TransportSuppliedName));
-                    table.AddRow(Strings.PropertyTablePropertyLabelTransportId, AnsiMarkupFormatter.EscapeString(di.TransportId.ToString()));
-                    table.AddRow(Strings.PropertyTablePropertyLabelTransportMnemonic, AnsiMarkupFormatter.EscapeString(di.TransportMnemonic));
+                    table.AddRow(Strings.PropertyTablePropertyLabelTransportSuppliedName, AnsiMarkupFormatter.FormatEndpointName(transportSuppliedInfo.Name));
+                    table.AddRow(Strings.PropertyTablePropertyLabelTransportId, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportId.ToString()));
+                    table.AddRow(Strings.PropertyTablePropertyLabelTransportMnemonic, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportMnemonic));
                 }
 
                 table.AddEmptyRow();
 
-                if (di.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
+                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderFunctionBlocks), "");
                     table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionFunctionBlocks), "");
-                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksStatic, di.HasStaticFunctionBlocks.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksDeclaredCount, di.DeclaredFunctionBlockCount.ToString());
+                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksStatic, epinfo.HasStaticFunctionBlocks.ToString());
+                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksDeclaredCount, epinfo.DeclaredFunctionBlockCount.ToString());
                     table.AddEmptyRow();
 
-                    if (di.FunctionBlocks.Count > 0)
+                    if (di.GetDeclaredFunctionBlocks().Count > 0)
                     {
-                        foreach (var functionBlock in di.FunctionBlocks.Values)
+                        foreach (var functionBlock in di.GetDeclaredFunctionBlocks())
                         {
                             if (!settings.Verbose)
                             {
@@ -249,7 +257,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                                 }
 
-                                functionInformation += $", [grey]{Strings.CommonStringMIDI}[/] " + functionBlock.Midi10Connection.ToString();
+                                functionInformation += $", [grey]{Strings.CommonStringMIDI}[/] " + functionBlock.RepresentsMidi10Connection.ToString();
                                 functionInformation += $", [grey]{Strings.CommonStringDirectionSingular}[/] " + functionBlock.Direction.ToString();
                                 functionInformation += $", [grey]{Strings.PropertyTablePropertyLabelFunctionBlockUIHint}[/] " + functionBlock.UIHint.ToString();
 
@@ -299,7 +307,7 @@ namespace Microsoft.Midi.ConsoleApp
                                     }
 
                                     table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockMaxSysEx8Streams, sysexStreams);
-                                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockMIDI10Connection, functionBlock.Midi10Connection.ToString());
+                                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockMIDI10Connection, functionBlock.RepresentsMidi10Connection.ToString());
                                     table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockMIDICIVersionFormat, functionBlock.MidiCIMessageVersionFormat.ToString());
                                 }
 
@@ -322,17 +330,17 @@ namespace Microsoft.Midi.ConsoleApp
 
                 // Show group terminal blocks only if verbose or if there are no function blocks
 
-                if ((settings.Verbose || di.DeclaredFunctionBlockCount == 0) && di.GroupTerminalBlocks.Count > 0)
+                if ((settings.Verbose || di.GetDeclaredEndpointInfo().DeclaredFunctionBlockCount == 0) && di.GetGroupTerminalBlocks().Count > 0)
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderGroupTerminalBlocks), "");
                     
-                    if (di.FunctionBlocks.Count > 0)
+                    if (di.GetDeclaredFunctionBlocks().Count > 0)
                     {
                         table.AddRow(Strings.PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent, "");
                     }
 
-                    foreach (var groupTerminalBlock in di.GroupTerminalBlocks)
+                    foreach (var groupTerminalBlock in di.GetGroupTerminalBlocks())
                     {
                         if (!settings.Verbose)
                         {
@@ -422,7 +430,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 // container ---------------------------------------------------------------------------------
 
-                var containerInfo = di.GetContainerInformation();
+                var containerInfo = di.GetContainerDeviceInformation();
 
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderContainer), "");

@@ -1,7 +1,7 @@
-﻿// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
@@ -11,7 +11,10 @@
 
 #include <windows.h>
 #include <winternl.h>
+
+//#pragma warning (disable: 4005)
 //#include <ntstatus.h>
+//#pragma warning (pop)
 
 
 #include <iostream>
@@ -24,16 +27,19 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Devices.Midi.h>
 
-#include <winrt/Microsoft.Devices.Midi2.h>
-#include <winrt/Microsoft.Devices.Midi2.Diagnostics.h>
-
-
-
-namespace midi2 = winrt::Microsoft::Devices::Midi2;
-namespace diag = winrt::Microsoft::Devices::Midi2::Diagnostics;
-
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
+
+
+#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
+
+namespace midi2 = winrt::Microsoft::Windows::Devices::Midi2;
+namespace init = winrt::Microsoft::Windows::Devices::Midi2::Initialization;
+namespace diag = winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
+namespace svc = winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include "combaseapi.h"
 #include "wstring_util.h"

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Microsoft.Devices.Midi2.Diagnostics
+title: Midi2.Diagnostics
 has_children: true
 ---
 

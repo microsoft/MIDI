@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiEndpointDevicePurpose
 parent: Endpoint Enumeration
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -22,5 +22,5 @@ Indicates the intended purpose of the endpoint. Use this to help classify endpoi
 
 ## IDL
 
-[MidiEndpointDevicePurposeEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDevicePurposeEnum.idl)
+[MidiEndpointDevicePurposeEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDevicePurposeEnum.idl)
 

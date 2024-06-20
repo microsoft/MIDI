@@ -1,8 +1,8 @@
 ---
 layout: api_page
-title: MidiFunctionBlockMidi10
+title: MidiFunctionBlockRepresentsMidi10Connection
 parent: Metadata
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -21,4 +21,4 @@ Indicates the MIDI 1.0 capability restrictions for a function block. Note that W
 
 ## IDL
 
-[MidiFunctionBlockMidi10Enum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlockMidi10Enum.idl)
+[MidiFunctionBlockRepresentsMidi10Connection IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl)

@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiSendMessageResult
 parent: Connections
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -38,10 +38,9 @@ else
 | `InvalidMessageOther` | `0x00200000` | The message sent was invalid for another reason. |
 | `DataIndexOutOfRange` | `0x00400000` | Reading a full message would result in overrunning the provided array, collection, or buffer. |
 | `TimestampOutOfRange` | `0x00800000` | The provided timestamp is too far in the future to be scheduled. |
-| `MessageListPartiallyProcessed` | `0x00A00000` | The message list was only partially processed. Not all messages were sent. |
-| `Other` | `0x01000000` | Other reason that cannot be determined. |
+| `MessageListPartiallyProcessed` | `0x00F00000` | The message list was only partially processed. Not all messages were sent. |
 
 ## IDL
 
-[MidiSendMessageResult IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiSendMessageResult.idl)
+[MidiSendMessageResult IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiSendMessageResult.idl)
 

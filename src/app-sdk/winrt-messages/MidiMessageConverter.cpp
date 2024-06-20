@@ -1,16 +1,17 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #include "pch.h"
 #include "MidiMessageConverter.h"
 #include "MidiMessageConverter.g.cpp"
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     _Use_decl_annotations_
     midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1Message(
@@ -37,7 +38,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
         // TODO: this is an assumption. We need to check the message type for system etc.
 
 
-        internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
 
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
@@ -72,7 +73,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
         // TODO: this is an assumption. We need to check the message type for system etc.
 
 
-        internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
         // set the group
@@ -108,7 +109,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff)
 
-        internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
 
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, group.Index());
@@ -166,13 +167,280 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
         }
 
         // TODO: this is an assumption. We really should check the message type
-        internal::SetUmpMessageType(midiWord, (uint8_t)MidiMessageType::Midi1ChannelVoice32);
+        internal::SetUmpMessageType(midiWord, (uint8_t)midi2::MidiMessageType::Midi1ChannelVoice32);
         //if (originalMessage.Type() == Windows::Devices::Midi::MidiMessageType::NoteOff) ...
 
         // set the group
         internal::SetGroupIndexInFirstWord(midiWord, groupIndex);
 
         return midiWord;
+    }
+
+
+
+
+    // System Common and System Real-time
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1TimeCodeMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiTimeCodeMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1SongPositionPointerMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiSongPositionPointerMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1SongSelectMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiSongSelectMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1TuneRequestMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiTuneRequestMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1TimingClockMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiTimingClockMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1StartMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiStartMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1ContinueMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiContinueMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1StopMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiStopMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1ActiveSensingMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiActiveSensingMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1SystemResetMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiSystemResetMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::SystemCommon32);
+
+        return message;
+    }
+
+
+    // Channel Voice
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1ChannelPressureMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiChannelPressureMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1NoteOffMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiNoteOffMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1NoteOnMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiNoteOnMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1PitchBendChangeMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiPitchBendChangeMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1PolyphonicKeyPressureMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiPolyphonicKeyPressureMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
+    }
+
+    _Use_decl_annotations_
+    midi2::MidiMessage32 MidiMessageConverter::ConvertMidi1ProgramChangeMessage(
+        internal::MidiTimestamp const timestamp,
+        midi2::MidiGroup const& group,
+        midi1::MidiProgramChangeMessage const& originalMessage
+    ) noexcept
+    {
+        midi2::MidiMessage32 message;
+        message.Timestamp(timestamp);
+        message.Word0(InternalConvertBytes(group.Index(), (midi1::IMidiMessage)originalMessage));
+
+        message.MessageType(midi2::MidiMessageType::Midi1ChannelVoice32);
+
+        return message;
     }
 
 }

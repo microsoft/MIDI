@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="memory_buffer.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiSystemExclusive8StatusEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="Midi1ChannelVoiceMessageStatusEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="Midi2ChannelVoiceMessageStatusEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBuilder.idl">
+      <Filter>SDK\Helpers</Filter>
+    </Midl>
+    <Midl Include="MidiMessageConverter.idl">
+      <Filter>SDK\Helpers</Filter>
+    </Midl>
+    <Midl Include="MidiMessageHelper.idl">
+      <Filter>SDK\Helpers</Filter>
+    </Midl>
+    <Midl Include="MidiStreamMessageBuilder.idl">
+      <Filter>SDK\Helpers</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDiscoveryRequestsEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+    <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl">
+      <Filter>SDK</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{4d4cec03-bbf4-4cc2-8604-cb1fd9d33867}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Helpers">
+      <UniqueIdentifier>{72347259-dff3-4dfd-bd66-8007a8fe65e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{4bb3b62b-39e3-40a6-8370-664fe193b1be}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

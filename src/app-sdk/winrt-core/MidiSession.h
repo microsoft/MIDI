@@ -1,22 +1,23 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+
 #pragma once
 #include "MidiSession.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiSession : MidiSessionT<MidiSession>
     {
         MidiSession() = default;
         ~MidiSession();
 
-        static midi2::MidiSession TryCreate(
+        static midi2::MidiSession Create(
             _In_ hstring const& sessionName
         ) noexcept;
 
@@ -29,16 +30,16 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
         foundation::Collections::IMapView<winrt::guid, midi2::MidiEndpointConnection> Connections() { return m_connections.GetView(); }
 
-        midi2::MidiEndpointConnection TryCreateEndpointConnection(
+        midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId
         ) noexcept;
 
-        midi2::MidiEndpointConnection TryCreateEndpointConnection(
+        midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ bool const autoReconnect
         ) noexcept;
 
-        midi2::MidiEndpointConnection TryCreateEndpointConnection(
+        midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ bool const autoReconnect,
             _In_ midi2::IMidiEndpointConnectionSettings const& settings
@@ -103,7 +104,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiSession : MidiSessionT<MidiSession, implementation::MidiSession>
     {

@@ -10,15 +10,13 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
-#include <winrt/Microsoft.Devices.Midi2.h>
-#include <winrt/Microsoft.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Devices.Midi2.Messages.h>
-#include <winrt/Microsoft.Devices.Midi2.Endpoints.Loopback.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
 
-using namespace winrt::Microsoft::Devices::Midi2;
-using namespace winrt::Microsoft::Devices::Midi2::Diagnostics;
-using namespace winrt::Microsoft::Devices::Midi2::Messages;
-using namespace winrt::Microsoft::Devices::Midi2::Endpoints::Loopback;
+using namespace winrt::Microsoft::Windows::Devices::Midi2;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Service;
 
 #include <iostream>
 

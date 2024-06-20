@@ -1,30 +1,29 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #pragma once
 #include "MidiStreamMessageBuilder.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiStreamMessageBuilder
     {
         MidiStreamMessageBuilder() = default;
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildEndpointDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
             _In_ uint8_t const umpVersionMinor,
-            _In_ midi2::MidiEndpointDiscoveryRequests const requestFlags
+            _In_ msgs::MidiEndpointDiscoveryRequests const requestFlags
             ) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildEndpointInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const umpVersionMajor,
@@ -37,7 +36,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ bool const supportsSendingJitterReductionTimestamps
             ) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildDeviceIdentityNotificationMessage(
             _In_ internal::MidiTimestamp timestamp,
             _In_ uint8_t const deviceManufacturerSysExIdByte1,
@@ -63,7 +61,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ winrt::hstring const& productInstanceId
             );
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildStreamConfigurationRequestMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const protocol,
@@ -71,7 +68,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ bool const requestToSendJRTimestamps
             );
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildStreamConfigurationNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const protocol,
@@ -91,14 +87,12 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 
         // function blocks
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildFunctionBlockDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const functionBlockNumber,
-            _In_ midi2::MidiFunctionBlockDiscoveryRequests requestFlags
+            _In_ msgs::MidiFunctionBlockDiscoveryRequests requestFlags
             );
 
-        _Success_(return != nullptr)
         static midi2::IMidiUniversalPacket BuildFunctionBlockInfoNotificationMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ bool const active,
@@ -135,6 +129,8 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint8_t const maxCharactersPerPacket,
             _In_ winrt::hstring const& text);
 
+
+
         inline static void AppendCharToString(
             _In_ std::string& s, 
             _In_ uint8_t ch
@@ -147,7 +143,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
     };
 }
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::factory_implementation
 {
     struct MidiStreamMessageBuilder : MidiStreamMessageBuilderT<MidiStreamMessageBuilder, implementation::MidiStreamMessageBuilder, winrt::static_lifetime>
     {

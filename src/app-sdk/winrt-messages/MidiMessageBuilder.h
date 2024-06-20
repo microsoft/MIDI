@@ -1,28 +1,27 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+
 #pragma once
 #include "MidiMessageBuilder.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiMessageBuilder
     {
         MidiMessageBuilder() = default;
 
         
-        _Success_(return != nullptr)
         static midi2::MidiMessage32 BuildUtilityMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const status, 
             _In_ uint32_t const dataOrReserved) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage32 BuildSystemMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -30,7 +29,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint8_t const midi1Byte2, 
             _In_ uint8_t const midi1Byte3) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage32 BuildMidi1ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -39,7 +37,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint8_t const byte3,
             _In_ uint8_t const byte4) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage64 BuildSystemExclusive7Message(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -52,7 +49,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint8_t const dataByte4,
             _In_ uint8_t const dataByte5) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage64 BuildMidi2ChannelVoiceMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -61,7 +57,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint16_t const index,
             _In_ uint32_t const data) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildSystemExclusive8Message(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -82,7 +77,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint8_t const dataByte11,
             _In_ uint8_t const dataByte12) noexcept;
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildMixedDataSetChunkHeaderMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -95,7 +89,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint16_t const subId1,
             _In_ uint16_t const subId2);
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildMixedDataSetChunkDataMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -115,7 +108,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint8_t const dataByte12,
             _In_ uint8_t const dataByte13);
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildFlexDataMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
@@ -128,7 +120,6 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint32_t const word2Data,
             _In_ uint32_t const word3Data);
 
-        _Success_(return != nullptr)
         static midi2::MidiMessage128 BuildStreamMessage(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ uint8_t const form,
@@ -139,7 +130,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
             _In_ uint32_t const word3Data) noexcept;
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::factory_implementation
 {
     struct MidiMessageBuilder : MidiMessageBuilderT<MidiMessageBuilder, implementation::MidiMessageBuilder, winrt::static_lifetime>
     {

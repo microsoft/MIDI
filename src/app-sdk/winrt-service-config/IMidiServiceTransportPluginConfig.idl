@@ -1,0 +1,20 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
+{
+    [uuid("b2417dde-ef35-499b-a89b-0a4c32cc699a"), version(1.0)]
+    interface IMidiServiceTransportPluginConfig
+    {
+        Guid TransportId { get; };
+        Boolean IsFromCurrentConfigFile{ get; };
+
+        String GetConfigJson();
+    }
+}

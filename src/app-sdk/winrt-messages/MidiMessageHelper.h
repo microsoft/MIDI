@@ -1,15 +1,16 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+
 #pragma once
 #include "MidiMessageHelper.g.h"
 
-namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiMessageHelper
     {
@@ -68,7 +69,7 @@ namespace winrt::Microsoft::Devices::Midi2::Messages::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::Messages::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::factory_implementation
 {
     struct MidiMessageHelper : MidiMessageHelperT<MidiMessageHelper, implementation::MidiMessageHelper, winrt::static_lifetime>
     {

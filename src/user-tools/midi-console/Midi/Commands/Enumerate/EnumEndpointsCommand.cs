@@ -43,7 +43,7 @@ namespace Microsoft.Midi.ConsoleApp
         {
             bool atLeastOneEndpointFound = false;
 
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -133,19 +133,19 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (settings.IncludeId)
             {
-                table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.Id)));
+                table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.EndpointDeviceId)));
             }
 
             if (settings.Verbose)
             {
-                if (!string.IsNullOrEmpty(endpointInfo.TransportSuppliedDescription))
+                if (!string.IsNullOrEmpty(endpointInfo.GetTransportSuppliedInfo().Description))
                 {
-                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.TransportSuppliedDescription)));
+                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.GetTransportSuppliedInfo().Description)));
                 }
 
-                if (!string.IsNullOrEmpty(endpointInfo.UserSuppliedDescription))
+                if (!string.IsNullOrEmpty(endpointInfo.GetUserSuppliedInfo().Description))
                 {
-                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.UserSuppliedDescription)));
+                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.GetUserSuppliedInfo().Description)));
                 }
             }
 
@@ -167,7 +167,7 @@ namespace Microsoft.Midi.ConsoleApp
                 activeColumn.Width = 6;
 
 
-                if (endpointInfo.FunctionBlocks.Count > 0)
+                if (endpointInfo.GetDeclaredFunctionBlocks().Count > 0)
                 {
                     var blockTable = new Table();
 
@@ -178,10 +178,8 @@ namespace Microsoft.Midi.ConsoleApp
                     blockTable.AddColumn(groupsColumn);
                     blockTable.AddColumn(activeColumn);
 
-                    foreach (var blockNumber in endpointInfo.FunctionBlocks.Keys)
+                    foreach (var block in endpointInfo.GetDeclaredFunctionBlocks())
                     {
-                        var block = endpointInfo.FunctionBlocks[blockNumber];
-
                         blockTable.AddRow(
                             AnsiMarkupFormatter.FormatBlockName(block.Name),
                             block.Direction.ToString(),
@@ -192,7 +190,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                     table.AddRow(blockTable);
                 }
-                else if (endpointInfo.GroupTerminalBlocks.Count > 0)
+                else if (endpointInfo.GetGroupTerminalBlocks().Count > 0)
                 {
                     var blockTable = new Table();
 
@@ -202,7 +200,7 @@ namespace Microsoft.Midi.ConsoleApp
                     blockTable.AddColumn(directionColumn);
                     blockTable.AddColumn(groupsColumn);
 
-                    foreach (var block in endpointInfo.GroupTerminalBlocks)
+                    foreach (var block in endpointInfo.GetGroupTerminalBlocks())
                     {
                         blockTable.AddRow(
                             AnsiMarkupFormatter.FormatBlockName(block.Name),

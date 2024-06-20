@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiFunctionBlockUIHint
 parent: Metadata
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -23,4 +23,4 @@ In general, these values should not restrict completely what you enable a user t
 
 ## IDL
 
-[MidiFunctionBlockUIHintEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiFunctionBlockUIHintEnum.idl)
+[MidiFunctionBlockUIHint IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlockUIHintEnum.idl)

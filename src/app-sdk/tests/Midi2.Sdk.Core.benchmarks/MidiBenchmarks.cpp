@@ -23,10 +23,10 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
 
     uint64_t setupStartTimestamp = MidiClock::Now();
 
-    auto session = MidiSession::TryCreate(L"Benchmark Session");
+    auto session = MidiSession::Create(L"Benchmark Session");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -273,10 +273,10 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
 
     uint64_t setupStartTimestamp = MidiClock::Now();
 
-    auto session = MidiSession::TryCreate(L"Benchmark Session");
+    auto session = MidiSession::Create(L"Benchmark Session");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);

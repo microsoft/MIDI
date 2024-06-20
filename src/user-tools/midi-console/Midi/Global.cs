@@ -14,7 +14,9 @@ global using System.ComponentModel;
 global using Spectre.Console;
 global using Spectre.Console.Cli;
 
-global using Microsoft.Devices.Midi2;
+global using Microsoft.Windows.Devices.Midi2.Service;
+global using Microsoft.Windows.Devices.Midi2;
+global using Microsoft.Windows.Devices.Midi2.Diagnostics;
 
 global using Microsoft.Midi.ConsoleApp;
 global using Microsoft.Midi.ConsoleApp.Resources;

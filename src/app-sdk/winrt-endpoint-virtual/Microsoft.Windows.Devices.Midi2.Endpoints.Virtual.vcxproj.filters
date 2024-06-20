@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="midi_function_block_prop_util.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiVirtualDeviceManager.cpp">
+      <Filter>SDK\Management</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="memory_buffer.h" />
+    <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="midi_stream_message_defs.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiVirtualDeviceManager.h">
+      <Filter>SDK\Management</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiStreamConfigRequestedSettings.idl">
+      <Filter>SDK\Metadata Handling</Filter>
+    </Midl>
+    <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl">
+      <Filter>SDK\Metadata Handling</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDevice.idl">
+      <Filter>SDK\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDeviceCreationConfig.idl">
+      <Filter>SDK\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDeviceManager.idl">
+      <Filter>SDK\Management</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualDeviceCreationResult.idl">
+      <Filter>SDK\Management</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{a886dff3-ea41-416f-8193-3ae9e215ec71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Configuration">
+      <UniqueIdentifier>{ab2d8f5e-3f0c-4a8a-98f2-3557b6a2dd0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Management">
+      <UniqueIdentifier>{63b8889a-a4fb-4b24-8f0e-711652f5b343}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Metadata Handling">
+      <UniqueIdentifier>{98b09694-a4d7-4229-a35f-f6a2ac8425a6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -10,10 +10,6 @@
 #include "stdafx.h"
 
 
-using namespace winrt::Microsoft::Devices::Midi2;
-
-
-
 void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificationLong()
 {
     LOG_OUTPUT(L"Test long function block name");

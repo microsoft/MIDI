@@ -50,7 +50,7 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 foreach (var endpoint in endpoints)
                 {
-                    choices.Add(new UmpEndpointPickerEntry(AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " + endpoint.Name.PadRight(50), endpoint.Id));
+                    choices.Add(new UmpEndpointPickerEntry(AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " + endpoint.Name.PadRight(50), endpoint.EndpointDeviceId));
                 }
 
                 choices.Sort();

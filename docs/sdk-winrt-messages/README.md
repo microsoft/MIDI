@@ -1,7 +1,7 @@
 ---
 layout: api_group_page
 title: Message Utilities
-parent: Microsoft.Devices.Midi2.Messages
+parent: Midi2.Messages
 has_children: true
 ---
 

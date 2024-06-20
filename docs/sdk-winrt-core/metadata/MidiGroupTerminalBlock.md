@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiGroupTerminalBlock
 parent: Metadata
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -36,4 +36,4 @@ A Group Terminal Block is a USB-only feature used to describe the groups on a de
 
 ## IDL
 
-[MidiGroupTerminalBlock IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiGroupTerminalBlock.idl)
+[MidiGroupTerminalBlock IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroupTerminalBlock.idl)

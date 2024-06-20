@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiMessageType
 parent: Messages
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -31,4 +31,4 @@ The values correspond directly to the "mt" field in the MIDI UMP packet and may 
 
 ## IDL
 
-[MidiMessageType IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiMessageTypeEnum.idl)
+[MidiMessageType IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessageTypeEnum.idl)

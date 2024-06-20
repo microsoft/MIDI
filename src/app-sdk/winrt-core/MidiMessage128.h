@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #pragma once
 
@@ -13,7 +14,7 @@
 #include "MidiMessage128.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiMessage128 : MidiMessage128T<MidiMessage128>
     {
@@ -25,14 +26,19 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
             _In_ uint32_t const word2, 
             _In_ uint32_t const word3);
 
-        // TODO: This doesn't do any bounds checking, and it should
         MidiMessage128(
             _In_ internal::MidiTimestamp const timestamp, 
             _In_ array_view<uint32_t const> words)
         {
-            if (words.size() == 4) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
+            if (words.size() >= 4) InternalInitializeFromPointer(timestamp, (PVOID)words.data());
         }
 
+        static midi2::MidiMessage128 CreateFromStruct(
+            _In_ internal::MidiTimestamp const timestamp,
+            _In_ MidiMessageStruct const& message)
+        {
+            return midi2::MidiMessage128(timestamp, message.Word0, message.Word1, message.Word2, message.Word3);
+        }
 
         // internal
         void InternalInitializeFromPointer(
@@ -91,7 +97,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
 
     };
 }
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiMessage128 : MidiMessage128T<MidiMessage128, implementation::MidiMessage128>
     {

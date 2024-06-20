@@ -8,6 +8,8 @@
 
 
 
+using Microsoft.Windows.Devices.Midi2.Messages;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointRequestEndpointMetadataCommand : Command<EndpointRequestEndpointMetadataCommand.Settings>
@@ -69,7 +71,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.IsAvailable())
+            if (!MidiService.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;

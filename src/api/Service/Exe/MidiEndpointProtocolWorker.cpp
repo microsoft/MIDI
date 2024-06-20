@@ -9,6 +9,58 @@
 #include "stdafx.h"
 
 
+_Use_decl_annotations_
+HRESULT
+CMidiEndpointProtocolWorker::Initialize(
+    GUID SessionId,
+    GUID AbstractionGuid,
+    LPCWSTR DeviceInterfaceId,
+    std::shared_ptr<CMidiClientManager>& ClientManager,
+    std::shared_ptr<CMidiDeviceManager>& DeviceManager,
+    std::shared_ptr<CMidiSessionTracker>& SessionTracker
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    m_abstractionGuid = AbstractionGuid;
+    m_sessionId = SessionId;
+    m_deviceInterfaceId = DeviceInterfaceId;
+
+    m_clientManager = ClientManager;
+    m_deviceManager = DeviceManager;
+    m_sessionTracker = SessionTracker;
+
+    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+
+    // we only support UMP data format for protocol negotiation
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
+    abstractionCreationParams.DataFormat = MidiDataFormat::MidiDataFormat_UMP;
+
+    DWORD mmcssTaskId{ 0 };
+    LONGLONG context{ 0 };
+
+
+    // This approach ONLY works because all UMP endpoints are required to be multi-client
+    RETURN_IF_FAILED(CoCreateInstance(m_abstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
+    RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(m_deviceInterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, context, m_sessionId));
+
+    // todo: add this connection to the session tracker
+
+
+
+
+    return S_OK;
+}
+
+
+
 
 _Use_decl_annotations_
 DEVPROPKEY
@@ -81,15 +133,15 @@ CMidiEndpointProtocolWorker::FunctionBlockNamePropertyKeyFromNumber(
 
 
 
+
 _Use_decl_annotations_
 HRESULT
-CMidiEndpointProtocolWorker::Initialize(
-    GUID SessionId,
-    GUID AbstractionGuid,
-    LPCWSTR DeviceInterfaceId,
-    std::shared_ptr<CMidiClientManager>& ClientManager,
-    std::shared_ptr<CMidiDeviceManager>& DeviceManager,
-    std::shared_ptr<CMidiSessionTracker>& SessionTracker
+CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
+    BOOL PreferToSendJRTimestampsToEndpoint,
+    BOOL PreferToReceiveJRTimestampsFromEndpoint,
+    BYTE PreferredMidiProtocol,
+    WORD TimeoutMilliseconds,
+    PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
 )
 {
     TraceLoggingWrite(
@@ -100,62 +152,90 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    m_abstractionGuid = AbstractionGuid;
-    m_sessionId = SessionId;
-    m_deviceInterfaceId = DeviceInterfaceId;
 
-    m_clientManager = ClientManager;
-    m_deviceManager = DeviceManager;
-    m_sessionTracker = SessionTracker;
+    m_preferToSendJRTimestampsToEndpoint = PreferToSendJRTimestampsToEndpoint;
+    m_preferToReceiveJRTimestampsFromEndpoint = PreferToReceiveJRTimestampsFromEndpoint;
+    m_preferredMidiProtocol = PreferredMidiProtocol;
 
-    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
-
-    // we only support UMP data format for protocol negotiation
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
-    abstractionCreationParams.DataFormat = MidiDataFormat::MidiDataFormat_UMP;
-
-    DWORD mmcssTaskId{ 0 };
-    LONGLONG context{ 0 };
-
-    RETURN_IF_FAILED(CoCreateInstance(m_abstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-    RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
-    RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(m_deviceInterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, context, m_sessionId));
+    // We continue listening for and updating metadata even after we return.
+    // We don't raise any changed events here. Instead, anyone interested in getting
+    // changes after the initial negotiation can use a device watcher on that device
+    // and react to our stored property changes. This also helps prevent any races.
 
     try
     {
-        // start background processing thread
+        // TODO: For now, we're keeping the initial negotiation all in-line, in the same thread.
+        // will evaluate a separate worker thread after the implementation is tested and working.
 
-        //std::thread workerThread(
-        //    &CMidiEndpointProtocolManager::ThreadWorker,
-        //    this);
+        // The lifetime of this object (CMidiEndpointProtocolWorker instance for the SWD) is controlled by the CMidiEndpointProtocolManager.
 
-        //m_queueWorkerThread = std::move(workerThread);
 
-        //// start up the worker thread
-        //m_queueWorkerThread.detach();
+        // reset all the data collection fields in case negotiation was
+        // called more than once (an allowed scenario)
+        m_countFunctionBlocksReceived = 0;
+        m_countFunctionBlockNamesReceived = 0;
+        m_declaredFunctionBlockCount = 0;
+        m_discoveredFunctionBlocks.clear();
+        m_functionBlockNames.clear();
+        m_endpointName.clear();
+        m_productInstanceId.clear();
 
+        m_allNegotiationMessagesReceived.reset();
+        m_alreadyTriedToNegotiationOnce = false;
+
+        m_taskDeviceIdentityReceived = false;
+        m_taskEndpointInfoReceived = false;
+        m_taskEndpointNameReceived = false;
+        m_taskEndpointProductInstanceIdReceived = false;
+        m_taskFinalStreamNegotiationResponseReceived = false;
+
+        // start initial negotiation. Return when timed out or when we have all the requested info.
+        LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
+
+        m_allNegotiationMessagesReceived.wait(TimeoutMilliseconds);
+        
+        if (m_allNegotiationMessagesReceived.is_signaled())
+        {
+            // provide all the negotiation results
+
+            m_mostRecentResults.AllEndpointInformationReceived = true;
+        }
+        else
+        {
+            // we only received partial results
+
+            m_mostRecentResults.AllEndpointInformationReceived = false;
+        }
+
+        // copy the data over into the results structure. We do this because the endpoint
+        // deals only with the manager. It doesn't work with this worker at all. Important
+        // because in the future, this worker may be on another thread etc. It's an internal
+        // implementation detail, not a public contract.
+
+        m_mostRecentResults.EndpointSuppliedName = m_endpointName.c_str();
+        m_mostRecentResults.EndpointSuppliedProductInstanceId = m_productInstanceId.c_str();
+
+        //results->FunctionBlocksAreStatic =
+        m_mostRecentResults.NumberOfFunctionBlocksReceived = m_countFunctionBlocksReceived;
+        m_mostRecentResults.NumberOfFunctionBlocksDeclared = m_declaredFunctionBlockCount;
+
+        // TODO: Loop through function blocks and copy the name pointers over 
+        // into the structure before returning it. Seems extra, but we need a friendly
+        // place to work on names before they are finished, and the structure only
+        // knows about the LPCWSTR, not std::wstring
+        
+        // MISSING NAME FUNCTIONALITY
+
+
+        // add the function blocks now they are fully valid
+        m_mostRecentResults.DiscoveredFunctionBlocks = m_discoveredFunctionBlocks.data();
+
+       
+        *NegotiationResults = &m_mostRecentResults;
+
+        return S_OK;
     }
     CATCH_RETURN();
-
-    return S_OK;
-}
-
-HRESULT
-CMidiEndpointProtocolWorker::ListenForMetadata()
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-    // TODO: Connect to the endpoint and listen
-
-
-
-    return S_OK;
 }
 
 _Use_decl_annotations_
@@ -169,7 +249,7 @@ CMidiEndpointProtocolWorker::Callback(
     UNREFERENCED_PARAMETER(Position);
     UNREFERENCED_PARAMETER(Context);
 
-    if (Size == UMP128_BYTE_COUNT)
+    if (Data != nullptr && Size == UMP128_BYTE_COUNT)
     {
         internal::PackedUmp128 ump;
 
@@ -177,10 +257,121 @@ CMidiEndpointProtocolWorker::Callback(
         {
             // if type F, process it.
 
-            if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == 0xF)
+            if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE)
             {
-                // process the metadata
-                LOG_IF_FAILED(ProcessStreamMessage(ump));
+                auto messageStatus = internal::GetStatusFromStreamMessageFirstWord(ump.word0);
+
+                switch (messageStatus)
+                {
+                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Endpoint Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                    m_taskEndpointInfoReceived = true;
+                    m_declaredFunctionBlockCount = internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(ump.word1);
+
+                    RequestAllFunctionBlocks();
+                    break;
+
+                case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Device Identity Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                    m_taskDeviceIdentityReceived = true;
+                    break;
+
+                case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Stream Configuration Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                    ProcessStreamConfigurationRequest(ump);
+                    break;
+
+                case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Function Block Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                    m_countFunctionBlocksReceived += 1;
+                    break;
+
+                case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Function Block Name Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
+                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
+                    {
+                        m_countFunctionBlockNamesReceived += 1;
+                    }
+                    break;
+
+                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Product Instance Id Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
+                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
+                    {
+                        m_taskEndpointProductInstanceIdReceived = true;
+                    }
+                    break;
+
+                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Received Endpoint Name Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
+                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
+                    {
+                        m_taskEndpointNameReceived = true;
+                    }
+                    break;
+
+                default:
+                    break;
+                }
             }
             else
             {
@@ -189,18 +380,166 @@ CMidiEndpointProtocolWorker::Callback(
         }
         else
         {
-            // couldn't fill the UMP. Shouldn't happen since we pre-validate. Just ignore.
-            //return E_FAIL;
+            // couldn't fill the UMP. Shouldn't happen since we pre-validate
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Couldn't fill the UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            return E_FAIL;
         }
     }
     else
     {
-        // Not a UMP128 so can't be a stream message. Fall out quickly
+        // Either null (hopefully not) or not a UMP128 so can't be a stream message. Fall out quickly
     }
 
 
+    // check flags. If we've received everything, signal
+
+    if (m_taskEndpointInfoReceived &&
+        m_taskEndpointNameReceived &&
+        m_taskEndpointProductInstanceIdReceived &&
+        m_taskDeviceIdentityReceived &&
+        m_countFunctionBlockNamesReceived == m_declaredFunctionBlockCount &&
+        m_countFunctionBlocksReceived == m_declaredFunctionBlockCount &&
+        m_taskFinalStreamNegotiationResponseReceived)
+    {
+        //        m_allMessagesReceived.SetEvent();
+    }
+
     return S_OK;
 }
+
+
+HRESULT
+CMidiEndpointProtocolWorker::RequestAllFunctionBlocks()
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    internal::PackedUmp128 ump{};
+
+    if (m_midiBiDiDevice)
+    {
+        // first word
+        ump.word0 = internal::BuildFunctionBlockDiscoveryRequestFirstWord(
+            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_ALL_FUNCTION_BLOCKS,
+            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_MESSAGE_ALL_FILTER_FLAGS);
+
+        // send it immediately
+        return m_midiBiDiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0);
+    }
+
+    return E_FAIL;
+}
+
+HRESULT
+CMidiEndpointProtocolWorker::RequestAllEndpointDiscoveryInformation()
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    internal::PackedUmp128 ump{};
+
+    if (m_midiBiDiDevice)
+    {
+        // first word
+        ump.word0 = internal::BuildEndpointDiscoveryRequestFirstWord(MIDI_PREFERRED_UMP_VERSION_MAJOR, MIDI_PREFERRED_UMP_VERSION_MINOR);
+
+        // second word
+        uint8_t filterBitmap = MIDI_ENDPOINT_DISCOVERY_MESSAGE_ALL_FILTER_FLAGS;
+        internal::SetMidiWordMostSignificantByte4(ump.word1, filterBitmap);
+
+        // send it immediately
+        return m_midiBiDiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0);
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Endpoint is null", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+    }
+
+    return E_FAIL;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedUmp128 ump)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    // see if all is what we want. If not, we'll send a request to change configuration.
+
+    if (m_midiBiDiDevice)
+    {
+        auto protocol = internal::GetStreamConfigurationNotificationProtocolFromFirstWord(ump.word0);
+        auto endpointRxJR = internal::GetStreamConfigurationNotificationReceiveJRFromFirstWord(ump.word0);
+        auto endpointTxJR = internal::GetStreamConfigurationNotificationTransmitJRFromFirstWord(ump.word0);
+
+        if (protocol !=m_preferredMidiProtocol ||
+            endpointRxJR != m_preferToSendJRTimestampsToEndpoint ||
+            endpointTxJR != m_preferToReceiveJRTimestampsFromEndpoint)
+        {
+            if (!m_alreadyTriedToNegotiationOnce)
+            {
+                internal::PackedUmp128 configurationRequestUmp{};
+
+                ump.word0 = internal::BuildStreamConfigurationRequestFirstWord(
+                    m_preferredMidiProtocol,
+                    m_preferToSendJRTimestampsToEndpoint,
+                    m_preferToReceiveJRTimestampsFromEndpoint);
+
+                m_alreadyTriedToNegotiationOnce = true;
+
+                // send it immediately
+                return m_midiBiDiDevice->SendMidiMessage((byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0);
+            }
+            else
+            {
+                // we've already tried negotiating once. Don't do it again
+                m_taskFinalStreamNegotiationResponseReceived = true;
+                return S_OK;
+            }
+        }
+        else
+        {
+            // all good on this try
+            m_taskFinalStreamNegotiationResponseReceived = true;
+            return S_OK;
+        }
+
+    }
+
+    return E_FAIL;
+}
+
 
 HRESULT
 CMidiEndpointProtocolWorker::Cleanup()
@@ -214,6 +553,13 @@ CMidiEndpointProtocolWorker::Cleanup()
     );
 
 
+    // stop worker thread
+
+    m_shutdown = true;
+    //    m_queueWorkerThreadWakeup.SetEvent();
+
+    //    if (m_queueWorkerThread.joinable())
+    //        m_queueWorkerThread.join();
 
 
     return S_OK;
@@ -620,7 +966,7 @@ CMidiEndpointProtocolWorker::ParseStreamTextMessage(internal::PackedUmp128& mess
 
     // preallocate a wstring to the maximum length for a single message to avoid reallocation. Fill with zero
 
-    uint8_t maxCharsThisMessage{ 14 };     // TODO
+    uint8_t maxCharsThisMessage{ };
 
     uint16_t messageStatus = internal::GetStatusFromStreamMessageFirstWord(message.word0);
 
@@ -629,9 +975,16 @@ CMidiEndpointProtocolWorker::ParseStreamTextMessage(internal::PackedUmp128& mess
         // function block name messages have 13 character bytes instead of 14 due to having the FB number in the message
         maxCharsThisMessage = 13;
     }
-    else
+    else if ((messageStatus == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION) ||
+             (messageStatus == MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION))
     {
         maxCharsThisMessage = 14;
+    }
+    else
+    {
+        // we don't recognize this type of text message. Bail
+
+        return std::wstring{};
     }
 
     std::wstring text;

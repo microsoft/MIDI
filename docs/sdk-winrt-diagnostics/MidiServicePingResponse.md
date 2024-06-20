@@ -1,7 +1,7 @@
 ---
 layout: api_page
 title: MidiServicePingResponse
-parent: Microsoft.Devices.Midi2.Diagnostics
+parent: Midi2.Diagnostics
 has_children: false
 ---
 # MidiServicePingResponse
@@ -21,5 +21,5 @@ This class represents a single ping message response. This is used to assess hea
 
 ## IDL
 
-[MidiServicePingResponse IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiServicePingResponse.idl)
+[MidiServicePingResponse IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-diagnostics/MidiServicePingResponse.idl)
 

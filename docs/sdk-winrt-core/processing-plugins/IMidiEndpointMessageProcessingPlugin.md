@@ -2,7 +2,7 @@
 layout: api_page
 title: IMidiEndpointMessageProcessingPlugin
 parent: Client Plugins
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -34,4 +34,4 @@ The main part of message processing is the `ProcessIncomingMessage` callback.
 
 ## IDL
 
-[IMidiEndpointMessageProcessingPlugin IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/IMidiEndpointMessageProcessingPlugin.idl)
+[IMidiEndpointMessageProcessingPlugin IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiEndpointMessageProcessingPlugin.idl)

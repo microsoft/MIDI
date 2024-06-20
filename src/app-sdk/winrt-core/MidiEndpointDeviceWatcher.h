@@ -1,23 +1,25 @@
-// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
-// This is part of the Windows MIDI Services App API and should be used
+// This is part of the Windows MIDI Services App SDK and should be used
 // in your Windows application via an official binary distribution.
 // Further information: https://aka.ms/midi
 // ============================================================================
+
 
 #pragma once
 #include "MidiEndpointDeviceWatcher.g.h"
 
 
-namespace winrt::Microsoft::Devices::Midi2::implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiEndpointDeviceWatcher : MidiEndpointDeviceWatcherT<MidiEndpointDeviceWatcher>
     {
         MidiEndpointDeviceWatcher() = default;
         ~MidiEndpointDeviceWatcher();
 
-        static midi2::MidiEndpointDeviceWatcher CreateWatcher(_In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
+        static midi2::MidiEndpointDeviceWatcher Create(_In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
+        static midi2::MidiEndpointDeviceWatcher Create() noexcept;
 
         void Start();
         void Stop();
@@ -102,8 +104,7 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
             _In_ winrt::Windows::Foundation::IInspectable args);
 
 
-        midi2::MidiEndpointDeviceInformationFilters m_endpointFilter{ 
-            MidiEndpointDeviceInformationFilters::IncludeClientByteStreamNative | MidiEndpointDeviceInformationFilters::IncludeClientUmpNative };
+        midi2::MidiEndpointDeviceInformationFilters m_endpointFilter{ MidiEndpointDeviceInformationFilters::AllTypicalEndpoints };
 
 
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationAddedEventArgs>> m_deviceAddedEvent;
@@ -121,14 +122,14 @@ namespace winrt::Microsoft::Devices::Midi2::implementation
         winrt::event_token m_stoppedEventRevokeToken;
 
         collections::IMap<winrt::hstring, midi2::MidiEndpointDeviceInformation> m_enumeratedEndpointDevices = 
-            winrt::single_threaded_map<winrt::hstring, midi2::MidiEndpointDeviceInformation>();
+            winrt::multi_threaded_map<winrt::hstring, midi2::MidiEndpointDeviceInformation>();
 
         winrt::Windows::Devices::Enumeration::DeviceWatcher m_watcher{ nullptr };
 
     };
 }
 
-namespace winrt::Microsoft::Devices::Midi2::factory_implementation
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
 {
     struct MidiEndpointDeviceWatcher : MidiEndpointDeviceWatcherT<MidiEndpointDeviceWatcher, implementation::MidiEndpointDeviceWatcher>
     {

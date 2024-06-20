@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiPacketType
 parent: Messages
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -20,4 +20,4 @@ The values correspond to the number of 32-bit MIDI words in the packet.
 
 ## IDL
 
-[MidiPacketType IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiPacketTypeEnum.idl)
+[MidiPacketType IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiPacketTypeEnum.idl)

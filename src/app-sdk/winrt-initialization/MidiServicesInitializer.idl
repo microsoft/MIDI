@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+namespace Microsoft.Windows.Devices.Midi2.Initialization
+{
+    [default_interface]
+    static runtimeclass MidiServicesInitializer
+    {
+        static Boolean IsOperatingSystemSupported();
+
+        static Boolean EnsureServiceAvailable();
+        static Boolean InitializeSdkRuntime();
+
+        static Boolean IsCompatibleDesktopAppSdkRuntimeInstalled();
+
+
+        static Windows.Foundation.Uri GetLatestRuntimeReleaseInstallerUri();
+        static Windows.Foundation.Uri GetLatestSettingsAppReleaseInstallerUri();
+        static Windows.Foundation.Uri GetLatestConsoleAppReleaseInstallerUri();
+    }
+}
+

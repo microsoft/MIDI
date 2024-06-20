@@ -10,18 +10,15 @@
 #include "stdafx.h"
 
 
-using namespace winrt::Microsoft::Devices::Midi2;
-
-
 void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnCode()
 {
     LOG_OUTPUT(L"TestSendMessageInvalidConnectionFailureReturnCode **********************************************************************");
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     //VERIFY_IS_TRUE(connSend.Open());      // we don't open the connection here
@@ -45,11 +42,11 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
 {
     LOG_OUTPUT(L"TestSendMessageValidationFailureReturnCode **********************************************************************");
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_TRUE(connSend.Open());
@@ -125,7 +122,7 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 {
     LOG_OUTPUT(L"TestCreateBiDiLoopbackA **********************************************************************");
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
 
@@ -133,7 +130,7 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 
     LOG_OUTPUT(L"Connecting to Bidirectional Loopback Endpoint A");
 
-    auto conn1 = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto conn1 = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
 
 
     VERIFY_IS_NOT_NULL(conn1);
@@ -151,14 +148,14 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 {
     LOG_OUTPUT(L"TestCreateBiDiLoopbackB **********************************************************************");
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
     LOG_OUTPUT(L"Connecting to Bidirectional Loopback Endpoint B");
 
-    auto conn1 = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto conn1 = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(conn1);
 
@@ -178,15 +175,15 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
     LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -260,7 +257,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
@@ -269,8 +266,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
     std::cout << std::endl << "Connecting to both Loopback A and Loopback B" << std::endl;
 
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -360,7 +357,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
   //  uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
@@ -369,8 +366,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
     LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
 
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -484,7 +481,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
     allMessagesReceived.create();
 
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
@@ -493,8 +490,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
     LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
 
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -597,7 +594,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
     allMessagesReceived.create();
 
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
@@ -606,8 +603,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
     LOG_OUTPUT(L"Connecting to BiDi loopback Endpoints A and B");
 
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);
@@ -714,12 +711,12 @@ void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
 {
     LOG_OUTPUT(L"TestSendWordArrayBoundsError **********************************************************************");
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
 
@@ -751,13 +748,13 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
 
-    auto session = MidiSession::TryCreate(L"Test Session Name");
+    auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
-    auto connSend = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
-    auto connReceive = session.TryCreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
     VERIFY_IS_NOT_NULL(connReceive);

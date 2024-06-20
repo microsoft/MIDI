@@ -37,4 +37,7 @@
   <ItemGroup>
     <Text Include="readme.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="mididiag.exe.manifest" />
+  </ItemGroup>
 </Project>

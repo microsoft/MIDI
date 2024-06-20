@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiEndpointDeviceInformationFilter
 parent: Endpoint Enumeration
-grand_parent: Microsoft.Devices.Midi2
+grand_parent: Midi2
 has_children: false
 ---
 
@@ -23,5 +23,5 @@ When enumerating devices, it is helpful to be able to filter for different types
 
 ## IDL
 
-[MidiEndpointDeviceInformationFilterEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/api/Client/Midi2Client/MidiEndpointDeviceInformationFilterEnum.idl)
+[MidiEndpointDeviceInformationFilterEnum IDL](https://github.com/microsoft/MIDI/blob/main/srcapp-sdk/winrt-core/MidiEndpointDeviceInformationFilterEnum.idl)
 

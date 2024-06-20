@@ -1,7 +1,7 @@
 ---
 layout: api_group_page
 title: Simple Types
-parent: Windows.Devices.Midi2 API
+parent: Midi2
 has_children: true
 ---
 
