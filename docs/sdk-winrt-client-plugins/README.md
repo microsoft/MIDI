@@ -4,7 +4,7 @@ title: Midi2.ClientPlugins
 has_children: true
 ---
 
-# Client-side Processing Plugins
+# Microsoft.Windows.Devices.Midi2.ClientPlugins
 
 Connections allocate service resources (time and memory), so we recommend applications maintain only a single connection to an endpoint within any session. But because the new endpoint stream-focused approach aggregates what used to be considered ports, we provide processing plugins to parcel out the incoming messages based on criteria set by the application. In this way, an application can have the logical equivalent of several input ports, without the associated resource usage.
 

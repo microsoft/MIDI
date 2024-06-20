@@ -2,7 +2,7 @@
 layout: api_page
 title: MidiGroupTerminalBlockDirection
 parent: Metadata
-grand_parent: Midi2
+grand_parent: Midi2 core
 has_children: false
 ---
 

@@ -11,9 +11,9 @@ namespace Microsoft.Windows.Devices.Midi2
 {
     enum MidiFunctionBlockUIHint
     {
-        Unknown = 0x0,
-        Receiver = 0x1,
-        Sender = 0x2,
+        Unknown =       0x0,
+        Receiver =      0x1,
+        Sender =        0x2,
         Bidirectional = 0x3
     };
 }

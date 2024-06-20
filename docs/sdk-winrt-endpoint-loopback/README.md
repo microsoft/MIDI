@@ -1,10 +1,9 @@
 ---
-layout: api_group_page
-title: Service
-parent: Midi2.Endpoints.Loopback
+layout: page
+title: Midi2.Endpoints.Loopback
 has_children: true
 ---
 
-# Service
+# Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 
-The `MidiService` class is a utility class which provides access to health and status information related to the MidiSrv Service. This is also where you can check to see if Windows MIDI Services is available on this PC.
+(TODO: Page not yet updated)

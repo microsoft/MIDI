@@ -55,6 +55,8 @@ namespace Microsoft.Windows.Devices.Midi2
 
         MidiSendMessageResults SendSingleMessageBuffer(UInt64 timestamp, UInt32 byteOffset, UInt8 byteCount, Windows.Foundation.IMemoryBuffer buffer);
 
+
+
         MidiSendMessageResults SendMultipleMessagesWordList(UInt64 timestamp, IIterable<UInt32> words);
         MidiSendMessageResults SendMultipleMessagesWordArray(UInt64 timestamp, UInt32 startIndex, UInt32 wordCount, UInt32[] words);
 

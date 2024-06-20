@@ -1,11 +1,10 @@
 ---
-layout: api_group_page
-title: Message Utilities
-parent: Midi2.Messages
+layout: page
+title: Midi2.Messages
 has_children: true
 ---
 
-# Message Utilities and Helpers
+# Microsoft.Windows.Devices.Midi2.Messages
 
 There are many open source and internal libraries that can be used for creating and parsing message data. For a functional MIDI API, however, we did have to create a number of these ourselves, and so surface them in the API so that you may take advantage of them in your own code.
 

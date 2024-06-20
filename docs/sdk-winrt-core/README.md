@@ -1,10 +1,10 @@
 ---
 layout: page
-title: Midi2
+title: Midi2 core
 has_children: true
 ---
 
-# Microsoft.Windows.Devices.Midi2
+# Microsoft.Windows.Devices.Midi2 core SDK
 
 The Microsoft.Windows.Devices.Midi2 types are documented in these pages.
 
