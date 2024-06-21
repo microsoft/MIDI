@@ -51,6 +51,3 @@ Endpoints for this transport are not created through the configuration file, but
 }
 ```
 
-
-## Implementation
-
