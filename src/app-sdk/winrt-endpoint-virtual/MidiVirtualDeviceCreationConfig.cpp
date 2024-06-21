@@ -20,9 +20,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         midi2::MidiDeclaredEndpointInfo declaredEndpointInfo
     )
     {
-        m_endpointName = name;
-        m_description = description;
-        m_manufacturer = manufacturer;
+        Name(name);
+        Description(description);
+        Manufacturer(manufacturer);
+
         m_declaredEndpointInfo = declaredEndpointInfo;
     }
 
@@ -77,19 +78,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         json::JsonObject topLevelTransportPluginSettingsObject;
         json::JsonObject outerWrapperObject;
 
-        // Create association guid
-        auto associationGuid = foundation::GuidHelper::CreateNewGuid();
-
         // set all of our properties.
 
         internal::JsonSetGuidProperty(
             endpointDefinitionObject,
             MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY,
-            associationGuid);
+            m_associationId);
 
         endpointDefinitionObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY,
-            json::JsonValue::CreateStringValue(m_declaredEndpointInfo.ProductInstanceId));
+            json::JsonValue::CreateStringValue(m_declaredEndpointInfo.ProductInstanceId));  // don't truncate here. Happens in service
 
         endpointDefinitionObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY,

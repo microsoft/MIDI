@@ -120,11 +120,36 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
             deviceEntry.BaseEndpointName = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
             deviceEntry.Description = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
 
-            // TODO: if no association id, or it already exists in the table, bail
+            // If no association id generate one
+            if (deviceEntry.VirtualEndpointAssociationId.empty())
+            {
+                deviceEntry.VirtualEndpointAssociationId = internal::GuidToString(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+            }
 
-            // TODO: if no unique Id, bail or maybe generate one
+            if (deviceEntry.BaseEndpointName.empty())
+            {
+                deviceEntry.BaseEndpointName = L"Unnamed Virtual";
+            }
 
-            // TODO: if a unique id and it's larger than the max length, truncate it
+            if (deviceEntry.ShortUniqueId.empty())
+            {
+                // get a guid and strip all non-alphanumeric characters
+                auto guidString = internal::GuidToString(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+
+                guidString.erase(
+                    std::remove_if(
+                        guidString.begin(),
+                        guidString.end(),
+                        [](wchar_t c) { return !std::isalnum(c); })
+                );
+
+                deviceEntry.ShortUniqueId = guidString;
+            }
+            else
+            {
+                // If a unique id and it's larger than the max length, truncate it
+                deviceEntry.ShortUniqueId = deviceEntry.ShortUniqueId.substr(0, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN);
+            }
 
             // create the device-side endpoint
             LOG_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateDeviceSideEndpoint(deviceEntry));

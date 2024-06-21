@@ -56,15 +56,15 @@ int main()
     std::cout << "Enumerating endpoints..." << std::endl;
 
     auto filter = 
-        MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative |
-        MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative |
-        MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder;
+        MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat |
+        MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat |
+        MidiEndpointDeviceInformationFilters::VirtualDeviceResponder;   // apps normally don't use this type
 
     // normally, applications should not include diagnostics endpoints unless they are
     // providing diagnostics functions.
     if (includeDiagnosticsEndpoints)
     {
-        filter |= MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback;
+        filter |= MidiEndpointDeviceInformationFilters::DiagnosticLoopback;
     }
 
     auto watcher = MidiEndpointDeviceWatcher::Create(filter);

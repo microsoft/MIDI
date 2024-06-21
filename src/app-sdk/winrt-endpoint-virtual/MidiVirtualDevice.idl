@@ -17,6 +17,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
     {
         String DeviceEndpointDeviceId{ get; };
         //String ClientEndpointDeviceId{ get; };    // this is not available at initial creation time
+        Guid AssociationId{ get; };
 
         IMapView<UInt8, Microsoft.Windows.Devices.Midi2.MidiFunctionBlock> FunctionBlocks{ get; };
         

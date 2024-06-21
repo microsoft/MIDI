@@ -52,10 +52,10 @@ int main()
 
     auto endpoints = MidiEndpointDeviceInformation::FindAll(
         MidiEndpointDeviceInformationSortOrder::Name,
-        MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative |
-        MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative |
-        MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
-        MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
+        MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat |
+        MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat |
+        MidiEndpointDeviceInformationFilters::DiagnosticLoopback |
+        MidiEndpointDeviceInformationFilters::VirtualDeviceResponder
     );
 
     std::cout << endpoints.Size() << " endpoints returned" << std::endl << std::endl;
@@ -161,7 +161,7 @@ int main()
         std::cout << "- Transport Id:            " << winrt::to_string(winrt::to_hstring(transportInfo.TransportId)) << std::endl;
         std::cout << "- Transport Mnemonic:      " << winrt::to_string(transportInfo.TransportAbbreviation) << std::endl;
 
-        if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::ByteFormat)
+        if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::Midi1ByteFormat)
         {
             std::cout << "- Native Data Format:      MIDI 1.0 Byte Stream" << std::endl;
         }

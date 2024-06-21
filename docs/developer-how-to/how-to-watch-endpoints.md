@@ -15,7 +15,7 @@ In Windows MIDI Services, we've provided a specialized version of the device wat
 
 ## Events
 
-To use the `MidiEndpointDeviceWatcher`, first wire up handlers for the `Added`, `Removed`, and `Updated` events. Optionally, you may wire up handlers for the `EnumerationCompleted` event to be notified when initial enumeration has finished, and the `Stopped` event to know when the watcher has been stopped by a call to the `Stop` method.
+To use the [`MidiEndpointDeviceWatcher`](../sdk-winrt-core/enumeration/MidiEndpointDeviceWatcher.md), first wire up handlers for the `Added`, `Removed`, and `Updated` events. Optionally, you may wire up handlers for the `EnumerationCompleted` event to be notified when initial enumeration has finished, and the `Stopped` event to know when the watcher has been stopped by a call to the `Stop` method.
 
 Once the event handlers have been wired up, create the watcher using the static `Create` function.
 
@@ -26,16 +26,16 @@ auto watcher = MidiEndpointDeviceWatcher::Create();
 If you wish to use a filter list that differs from the default (the default is appropriate for most applications, as it filters out diagnostics and other endpoints not typically shown to end users) you may use the overloaded Create function. For example, to show only native UMP endpoints, not translated MIDI 1.0 devices, you would do this:
 
 ```cpp
-auto watcher = MidiEndpointDeviceWatcher::Create(MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative);
+auto watcher = MidiEndpointDeviceWatcher::Create(MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat);
 ```
 
 And, conversely, to show only up-converted MIDI 1.0 byte format endpoints:
 
 ```cpp
-auto watcher = MidiEndpointDeviceWatcher::Create(MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative);
+auto watcher = MidiEndpointDeviceWatcher::Create(MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat);
 ```
 
-The default is to include both, which is also represented by `MidiEndpointDeviceInformationFilters::AllTypicalEndpoints`.
+The default is to include both, which is also represented by `MidiEndpointDeviceInformationFilters::AllStandardEndpoints`.
 
 ## Accessing the list
 

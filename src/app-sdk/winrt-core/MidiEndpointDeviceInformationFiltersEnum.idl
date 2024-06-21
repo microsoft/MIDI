@@ -12,15 +12,15 @@ namespace Microsoft.Windows.Devices.Midi2
     [flags]
     enum MidiEndpointDeviceInformationFilters
     {
-        IncludeClientUmpFormatNative =      0x00000001,     // a MIDI 2.0 UMP endpoint
-        IncludeClientByteFormatNative =     0x00000002,     // a MIDI 1.0 endpoint upscaled to UMP by service or driver
+        StandardNativeUniversalMidiPacketFormat =   0x00000001,     // a normal MIDI 2.0 UMP endpoint
+        StandardNativeMidi1ByteFormat =             0x00000002,     // a normal MIDI 1.0 endpoint upscaled to UMP by service or driver
 
-        IncludeVirtualDeviceResponder =     0x00000100,     // The app-side of a Virtual Device. Not normally presented to other apps.
+        VirtualDeviceResponder =                    0x00000100,     // The app-side of a Virtual Device. Not normally presented to other apps.
 
-        IncludeDiagnosticLoopback =         0x00010000,     // Diagnostics loopback. Don't show this in typical apps.
-        IncludeDiagnosticPing =             0x00020000,     // Internal ping. Don't show this in apps. For internal use.
+        DiagnosticLoopback =                        0x00010000,     // Diagnostics loopback. Don't show this in typical apps.
+        DiagnosticPing =                            0x00020000,     // Internal ping. Don't show this in apps. For internal use.
 
 
-        AllTypicalEndpoints = IncludeClientUmpFormatNative | IncludeClientByteFormatNative,
+        AllStandardEndpoints = StandardNativeUniversalMidiPacketFormat | StandardNativeMidi1ByteFormat,
     };
 }

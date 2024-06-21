@@ -27,18 +27,35 @@ namespace winrt::virtual_device_app_winui::implementation
         // create the session. The name here is just convenience.
         m_session = midi2::MidiSession::Create(creationConfig.Name());
 
-        if (m_session == nullptr) return; // return if unable to create session
+        // return if unable to create session
+        if (m_session == nullptr) return;
 
         // create the virtual device, so we can get the endpoint device id to connect to
         m_virtualDevice = virt::MidiVirtualDeviceManager::CreateVirtualDevice(creationConfig);
 
-        if (m_virtualDevice == nullptr) return; // return if unable to create virtual device
+        // return if unable to create virtual device
+        if (m_virtualDevice == nullptr) return;
 
+        // create our device-side connection
         m_connection = m_session.CreateEndpointConnection(m_virtualDevice.DeviceEndpointDeviceId());
 
-        // wire up a message received handler
+        // add the virtual device as a message processing plugin so it receives the messages
+        m_connection.AddMessageProcessingPlugin(m_virtualDevice);
 
+        // wire up the stream configuration request received handler
+        auto streamEventToken = m_virtualDevice.StreamConfigRequestReceived({ this, &MainWindow::OnStreamConfigurationRequestReceived });
 
+        // wire up the message received handler on the connection itself
+        auto messageEventToken = m_connection.MessageReceived({ this, &MainWindow::OnMidiMessageReceived });
+
+        if (m_connection.Open())
+        {
+         //   AppWindow().Title(creationConfig.Name() + L": Connected");
+        }
+        else
+        {
+         //   AppWindow().Title(creationConfig.Name() + L": (no connection)");
+        }
 
     }
 
@@ -73,7 +90,7 @@ namespace winrt::virtual_device_app_winui::implementation
         winrt::hstring endpointSuppliedName = transportSuppliedName;
 
 
-        midi2::MidiDeclaredEndpointInfo declaredEndpointInfo;
+        midi2::MidiDeclaredEndpointInfo declaredEndpointInfo{ };
         declaredEndpointInfo.Name = endpointSuppliedName;
         declaredEndpointInfo.ProductInstanceId = L"PMB_APP2_3263827";
         declaredEndpointInfo.SpecificationVersionMajor = 1; // see latest MIDI 2 UMP spec
@@ -84,10 +101,10 @@ namespace winrt::virtual_device_app_winui::implementation
         declaredEndpointInfo.SupportsSendingJitterReductionTimestamps = false;
         declaredEndpointInfo.HasStaticFunctionBlocks = true;
 
-        midi2::MidiDeclaredDeviceIdentity declaredDeviceIdentity;
+        midi2::MidiDeclaredDeviceIdentity declaredDeviceIdentity{ };
         // todo: set any device identity values if you want. This is optional
 
-        midi2::MidiEndpointUserSuppliedInfo userSuppliedInfo;
+        midi2::MidiEndpointUserSuppliedInfo userSuppliedInfo{ };
         userSuppliedInfo.Name = userSuppliedName;           // for names, this will bubble to the top in priority
         userSuppliedInfo.Description = userSuppliedDescription;
 
@@ -118,7 +135,7 @@ namespace winrt::virtual_device_app_winui::implementation
         config.FunctionBlocks().Append(block1);
 
         midi2::MidiFunctionBlock block2{};
-        block2.Number(0);
+        block2.Number(1);
         block2.Name(L"A Function Block");
         block2.IsActive(true);
         block2.UIHint(midi2::MidiFunctionBlockUIHint::Sender);

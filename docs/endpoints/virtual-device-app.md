@@ -23,8 +23,8 @@ In addition, MIDI 2.0 has additional requirements for endpoints. They need to be
 
 ### Lifetime
 
-* The Virtual UMP Device includes two endpoints: one is just for the application creating the device, the other is for all other applications to connect to.
-* The lifetime of the Virtual UMP Device is controlled by the lifetime of the application's connection. Once the owning application disconnects from the endpoint, the Virtual UMP Device is torn down.
+* The Virtual UMP Device includes two endpoints: one is just for the application creating the device (the "device side"), the other is for all other applications to connect to. 
+* The lifetime of the Virtual Device is controlled by the lifetime of the application's connection. Once the owning application disconnects from the endpoint, the Virtual UMP Device is torn down.
 
 ## Suggested Uses
 
@@ -44,4 +44,6 @@ The best experience for Windows MIDI Services will be with applications using th
 
 ## Configuration
 
-Because this type of endpoint is tied to the runtime of an application, it can be created only through the API by creating a `MidiVirtualDeviceDefinition` and calling the appropriate `MidiSession` methods to create and open the endpoint. This is not something that a MIDI user will pre-create in the settings app or configuration file.
+Virtual Devices cannot be specified in the configuration file. Instead, applications must create them through code.
+
+For information on how to set up a Virtual Device, see the [developer how-to](../developer-how-to/how-to-create-virtual-ump-device.md).

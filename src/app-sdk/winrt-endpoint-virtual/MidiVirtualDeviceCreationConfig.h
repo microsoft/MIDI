@@ -66,11 +66,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         collections::IVector<midi2::MidiFunctionBlock> FunctionBlocks() { return m_functionBlocks; }
 
+        winrt::guid AssociationId() const noexcept { return m_associationId; }
 
     private:
         winrt::hstring m_endpointName{};
         winrt::hstring m_description{};
         winrt::hstring m_manufacturer{};
+
+        winrt::guid m_associationId{ foundation::GuidHelper::CreateNewGuid() };
 
         midi2::MidiDeclaredDeviceIdentity m_declaredDeviceIdentity{};
         midi2::MidiDeclaredEndpointInfo m_declaredEndpointInfo{};

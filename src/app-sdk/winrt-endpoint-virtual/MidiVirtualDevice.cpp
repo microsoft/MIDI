@@ -29,6 +29,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         m_name = L"Virtual: " + m_declaredEndpointInfo.Name;
         m_id = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
+
+        m_associationId = config.AssociationId();
     }
 
 

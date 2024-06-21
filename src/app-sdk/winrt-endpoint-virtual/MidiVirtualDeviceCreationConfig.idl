@@ -46,6 +46,8 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
         String Description;
         String Manufacturer;
 
+        Guid AssociationId{ get; };
+
 
         Microsoft.Windows.Devices.Midi2.MidiDeclaredDeviceIdentity DeclaredDeviceIdentity;
         Microsoft.Windows.Devices.Midi2.MidiDeclaredEndpointInfo DeclaredEndpointInfo;

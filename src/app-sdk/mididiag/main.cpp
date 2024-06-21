@@ -209,11 +209,11 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
         // list all devices
         devices = midi2::MidiEndpointDeviceInformation::FindAll(
             midi2::MidiEndpointDeviceInformationSortOrder::Name,
-            midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative |
-            midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative |
-            midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticLoopback |
-            midi2::MidiEndpointDeviceInformationFilters::IncludeDiagnosticPing |
-            midi2::MidiEndpointDeviceInformationFilters::IncludeVirtualDeviceResponder
+            midi2::MidiEndpointDeviceInformationFilters::StandardNativeMidi1ByteFormat |
+            midi2::MidiEndpointDeviceInformationFilters::StandardNativeUniversalMidiPacketFormat |
+            midi2::MidiEndpointDeviceInformationFilters::DiagnosticLoopback |
+            midi2::MidiEndpointDeviceInformationFilters::DiagnosticPing |
+            midi2::MidiEndpointDeviceInformationFilters::VirtualDeviceResponder
         );
     }
     catch (...)

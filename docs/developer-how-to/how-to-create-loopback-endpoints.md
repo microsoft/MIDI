@@ -55,7 +55,6 @@ else
     // failed to create the loopback pair. It may be that the unique
     // Ids are already in use.
 }
-
 ```
 
 One thing you may have noticed in the listing above is the use of an **association Id**. This identifier is a GUID you generate and then use to associate the endpoint pairs together. This is what establishes the relationship between the two endpoints.
@@ -65,10 +64,6 @@ winrt::guid m_associationId = winrt::Windows::Foundation::GuidHelper::CreateNewG
 ```
 
 That's all that's needed. You can connect to and open either endpoint and use it as you would any other.
-
-## Compatibility
-
-Loopback Endpoint Pairs are not currently visible to the WinMM MIDI 1.0 API. There are complexities with that older API when devices are added and removed at runtime. It's possible these devices will never be visibile to WinMM MIDI 1.0, but we are investigating. For full functionality, we recommend apps use the Windows MIDI Services SDK.
 
 ## Sample Code
 

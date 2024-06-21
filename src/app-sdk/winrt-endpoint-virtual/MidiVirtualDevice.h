@@ -56,6 +56,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         bool UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block) noexcept;
         bool UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
 
+        winrt::guid AssociationId() const noexcept { return m_associationId; }
+
 
         winrt::hstring DeviceEndpointDeviceId() const noexcept{ return m_deviceEndpointDeviceId; }
         //winrt::hstring ClientEndpointDeviceId() const noexcept{ return m_clientEndpointDeviceId; }
@@ -105,6 +107,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         midi2::MidiEndpointConnection m_endpointConnection{ nullptr };
 
+        winrt::guid m_associationId{};
         winrt::hstring m_deviceEndpointDeviceId{};
         //winrt::hstring m_clientEndpointDeviceId{};
 

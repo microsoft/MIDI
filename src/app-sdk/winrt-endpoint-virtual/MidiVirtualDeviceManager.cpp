@@ -27,10 +27,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         _In_ virt::MidiVirtualDeviceCreationConfig creationConfig
     ) noexcept
     {
-        UNREFERENCED_PARAMETER(creationConfig);
-
         winrt::hstring deviceEndpointDeviceId{};
-        winrt::hstring clientEndpointDeviceId{};
+        //winrt::hstring clientEndpointDeviceId{};
 
         auto createResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 

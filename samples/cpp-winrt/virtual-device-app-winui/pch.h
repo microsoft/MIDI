@@ -34,3 +34,5 @@ namespace init = winrt::Microsoft::Windows::Devices::Midi2::Initialization;
 namespace midi2 = winrt::Microsoft::Windows::Devices::Midi2;
 namespace virt = winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual;
 namespace msgs = winrt::Microsoft::Windows::Devices::Midi2::Messages;
+
+#include "note.h"

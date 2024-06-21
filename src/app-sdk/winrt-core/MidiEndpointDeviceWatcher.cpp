@@ -393,7 +393,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     midi2::MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher::Create() noexcept
     {
-        return Create(MidiEndpointDeviceInformationFilters::AllTypicalEndpoints);
+        return Create(MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
     }
 
 
