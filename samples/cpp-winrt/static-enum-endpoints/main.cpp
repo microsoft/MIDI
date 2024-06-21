@@ -161,11 +161,11 @@ int main()
         std::cout << "- Transport Id:            " << winrt::to_string(winrt::to_hstring(transportInfo.TransportId)) << std::endl;
         std::cout << "- Transport Mnemonic:      " << winrt::to_string(transportInfo.TransportAbbreviation) << std::endl;
 
-        if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::ByteStream)
+        if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::ByteFormat)
         {
             std::cout << "- Native Data Format:      MIDI 1.0 Byte Stream" << std::endl;
         }
-        else if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::UniversalMidiPacket)
+        else if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::UniversalMidiPacketFormat)
         {
             std::cout << "- Native Data Format:      MIDI 2.0 UMP" << std::endl;
         }

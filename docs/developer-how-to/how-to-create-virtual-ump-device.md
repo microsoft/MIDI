@@ -11,29 +11,33 @@ If you develop an application which should appear as a new MIDI device to other 
 
 ## Steps to Create a Virtual Device
 
-1. Create a MIDI session
-2. Define the Virtual MIDI Device, its function blocks, and other properties
-3. Create the Device and get the `EndpointDeviceId` for the device application
-4. Connect to the Device like any other MIDI connection
-5. Wire up event handlers for message received and optionally for protocol negotiation
-6. Open the connection
-7. Respond to any protocol negotiation or message received events
-8. When the application no longer needs to expose the virtual device, close the connection.
+1. [Check for and bootstrap Windows MIDI Services](./how-to-check-for-windows-midi-services.md)
+2. Create a MIDI session
+3. Define the Virtual MIDI Device, its function blocks, and other properties
+4. Create the Device and get the `EndpointDeviceId` for the device application
+5. Connect to the Device like any other MIDI connection
+6. Wire up event handlers for message received and optionally for protocol negotiation
+7. Open the connection
+8. Respond to any protocol negotiation or message received events
+9. When the application no longer needs to expose the virtual device, close the connection.
 
 On the service-side, the Virtual Device works like any other native UMP MIDI 2.0 device, including for endpoint metadata capture and protocol negotiation.
 
 More details available in the Endpoints documentation.
 
-### Example
+## Code
 
-TODO
+We'll assume you've already seen how to get to the point of being able to open MIDI connections within a session.
+
+```cpp
+```
 
 
+## Compatibility
 
+Virtual UMP devices are not currently visible to the WinMM MIDI 1.0 API (the API used by most MIDI 1.0 apps on Windows). There are enumeration complexities with that API when devices are added and removed at runtime, which is part of why we needed to create a new API anyway. It's possible these devices will never be visibile to WinMM MIDI 1.0, but we are investigating options. For full functionality, we recommend using the Windows MIDI Services SDK.
 
 ## Sample Code
 
-* [C# Sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/app-to-app-midi-cs)
-
-
-> Note: Virtual UMP devices are not currently visible to the WinMM MIDI 1.0 API (the API used by most MIDI 1.0 apps on Windows). There are enumeration complexities with that API when devices are added and removed at runtime, which is part of why we needed to create a new API anyway. It's possible these devices will never be visibile to WinMM MIDI 1.0. For full functionality, we recommend using the new Windows MIDI Services SDK.
+* [C# WinUI Sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/virtual-device-app-winui)
+* [C# WPF Sample (in-progress)](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/virtual-device-app-wpf)

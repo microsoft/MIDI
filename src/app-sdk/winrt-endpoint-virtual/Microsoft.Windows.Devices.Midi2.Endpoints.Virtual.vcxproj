@@ -299,7 +299,6 @@
   <ItemGroup>
     <Midl Include="MidiStreamConfigRequestedSettings.idl" />
     <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl" />
-    <Midl Include="MidiVirtualDeviceCreationResult.idl" />
     <Midl Include="MidiVirtualDevice.idl" />
     <Midl Include="MidiVirtualDeviceCreationConfig.idl" />
     <Midl Include="MidiVirtualDeviceManager.idl" />

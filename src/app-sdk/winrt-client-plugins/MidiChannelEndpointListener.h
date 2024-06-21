@@ -17,17 +17,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementati
     {
         MidiChannelEndpointListener() = default;
 
-        winrt::guid Id() const noexcept { return m_id; }
+        winrt::guid PluginId() const noexcept { return m_id; }
 
-        winrt::hstring Name() const noexcept { return m_name; }
-        void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
+        winrt::hstring PluginName() const noexcept { return m_name; }
+        void PluginName(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
 
         bool IsEnabled() const noexcept { return m_enabled; }
         void IsEnabled(_In_ bool const& value) noexcept { m_enabled = value; }
 
 
-        foundation::IInspectable Tag() const noexcept { return m_tag; }
-        void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
+        foundation::IInspectable PluginTag() const noexcept { return m_tag; }
+        void PluginTag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
         //midi2::MidiEndpointConnection Connection() const noexcept { return m_endpointConnection; }
         //void Connection(_In_ midi2::MidiEndpointConnection const& value) noexcept { m_endpointConnection = value; }

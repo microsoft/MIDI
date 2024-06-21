@@ -18,14 +18,14 @@
 BUILD_SHARED_LIBS:UNINITIALIZED=ON
 
 //Path to a program.
-CMAKE_AR:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.33901/bin/Hostx64/arm64/lib.exe
+CMAKE_AR:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.33923/bin/Hostx64/arm64/lib.exe
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
 CMAKE_BUILD_TYPE:STRING=Release
 
 //CXX compiler
-CMAKE_CXX_COMPILER:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.33901/bin/Hostx64/arm64/cl.exe
+CMAKE_CXX_COMPILER:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.33923/bin/Hostx64/arm64/cl.exe
 
 CMAKE_CXX_FLAGS:STRING=' /nologo /DWIN32 /D_WINDOWS /W3 /utf-8 /GR /EHsc /MP '
 
@@ -43,7 +43,7 @@ CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=/Zi /O2 /Ob1 /DNDEBUG
 CMAKE_CXX_STANDARD_LIBRARIES:STRING=kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
 
 //C compiler
-CMAKE_C_COMPILER:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.33901/bin/Hostx64/arm64/cl.exe
+CMAKE_C_COMPILER:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.33923/bin/Hostx64/arm64/cl.exe
 
 CMAKE_C_FLAGS:STRING=' /nologo /DWIN32 /D_WINDOWS /W3 /utf-8 /MP '
 
@@ -105,7 +105,7 @@ CMAKE_INSTALL_PREFIX:PATH=G:/GitHub/microsoft/midi/src/api/Transform/UmpProtocol
 CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP:UNINITIALIZED=TRUE
 
 //Path to a program.
-CMAKE_LINKER:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.33901/bin/Hostx64/arm64/link.exe
+CMAKE_LINKER:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.41.33923/bin/Hostx64/arm64/link.exe
 
 //make program
 CMAKE_MAKE_PROGRAM:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe
@@ -208,7 +208,7 @@ CMAKE_SYSTEM_NAME:STRING=Windows
 
 CMAKE_SYSTEM_PROCESSOR:STRING=ARM64
 
-CMAKE_SYSTEM_VERSION:STRING=10.0.26227
+CMAKE_SYSTEM_VERSION:STRING=10.0.26236
 
 //The CMake toolchain file
 CMAKE_TOOLCHAIN_FILE:FILEPATH=C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/vcpkg/scripts/buildsystems/vcpkg.cmake

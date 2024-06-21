@@ -36,9 +36,6 @@
     <Midl Include="MidiVirtualDeviceManager.idl">
       <Filter>SDK\Management</Filter>
     </Midl>
-    <Midl Include="MidiVirtualDeviceCreationResult.idl">
-      <Filter>SDK\Management</Filter>
-    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-sdk.def" />

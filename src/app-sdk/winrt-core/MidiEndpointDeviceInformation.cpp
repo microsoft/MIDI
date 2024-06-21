@@ -270,7 +270,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // check if normal client MIDI 1.0 / bytestream
         else if ((deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat::ByteStream))
+            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat::ByteFormat))
         {
             if ((endpointFilters & midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative) ==
                 midi2::MidiEndpointDeviceInformationFilters::IncludeClientByteFormatNative)
@@ -281,7 +281,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // check if normal client MIDI 2.0 / UMP 
         else if ((deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
-            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat::UniversalMidiPacket ||
+            (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat::UniversalMidiPacketFormat ||
                 deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat::Unknown))
         {
             if ((endpointFilters & midi2::MidiEndpointDeviceInformationFilters::IncludeClientUmpFormatNative) == 
@@ -842,9 +842,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         auto formatProperty = GetByteProperty(STRING_PKEY_MIDI_NativeDataFormat, 0);
 
         if (formatProperty == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
-            info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::ByteStream;
+            info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::ByteFormat;
         else if (formatProperty == MIDI_PROP_NATIVEDATAFORMAT_UMP)
-            info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::UniversalMidiPacket;
+            info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat;
         else
             info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::Unknown;
         
