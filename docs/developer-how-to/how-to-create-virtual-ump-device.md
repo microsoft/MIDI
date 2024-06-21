@@ -11,6 +11,8 @@ If you develop an application which should appear as a new MIDI device to other 
 
 ## How Virtual Devices work
 
+A virtual device enables an application to appear as a UMP Endpoint to other applications.
+
 [More information on how Virtual Devices work may be found here](../endpoints/virtual-device-app.md).
 
 ## Steps to Create a Virtual Device
