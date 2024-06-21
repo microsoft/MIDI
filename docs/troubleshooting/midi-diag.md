@@ -4,14 +4,14 @@ title: MIDI Diagnostics Utility
 parent: Troubleshooting
 ---
 
-# Windows Dump Utility
+# MIDI Diagnostics Utility
 
-Windows MIDI Services comes with a simple command-line utility `mididmp.exe`. This has been designed for use by DAWs and support applications which need to shell out to a known executable to capture health information about the system.
+The Windows MIDI Services SDK installer comes with a simple command-line utility `mididiag.exe`. This has been designed for use by DAWs and support applications which need to shell out to a known executable to capture health information about the system.
 
 The utility returns information only about MIDI. Here is example output:
 
 ```
-C:\Users\peteb>mididmp
+C:\Users\peteb>mididiag
 Microsoft Windows MIDI Services
 
 ===============================================================================
