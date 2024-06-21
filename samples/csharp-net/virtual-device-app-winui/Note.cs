@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Devices.Midi2;
-using midi2 = Windows.Devices.Midi2;
+using Microsoft.Windows.Devices.Midi2;
+using Microsoft.Windows.Devices.Midi2.Messages;
 
 namespace MidiSample.AppToAppMidi
 {
 
     public class Note
     {
-        public midi2.MidiEndpointConnection Connection { get; set; }
+        public MidiEndpointConnection Connection { get; set; }
         public byte NoteNumber { get; set; }
 
         public byte GroupIndex { get; set; }
@@ -30,10 +30,10 @@ namespace MidiSample.AppToAppMidi
             UInt32 word1 = (UInt32)velocity << 16;
 
             if (MidiEndpointConnection.SendMessageSucceeded(Connection.SendSingleMessagePacket(
-                midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
+                MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
                     0,
                     new MidiGroup(GroupIndex),
-                    midi2.Midi2ChannelVoiceMessageStatus.NoteOn,
+                    Midi2ChannelVoiceMessageStatus.NoteOn,
                     new MidiChannel(ChannelIndex),
                     index,
                     word1))))
@@ -49,10 +49,10 @@ namespace MidiSample.AppToAppMidi
             index <<= 8;
 
             if (MidiEndpointConnection.SendMessageSucceeded(Connection.SendSingleMessagePacket(
-                midi2.MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
+                MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
                     0,
                     new MidiGroup(GroupIndex),
-                    midi2.Midi2ChannelVoiceMessageStatus.NoteOff,
+                    Midi2ChannelVoiceMessageStatus.NoteOff,
                     new MidiChannel(ChannelIndex),
                     index,
                     0))))

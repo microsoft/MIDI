@@ -30,12 +30,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
             if (numWords == 1)
             {
-<<<<<<< HEAD:src/api/Client/Midi2Client/MidiMessageUtility.cpp
-                auto ump = winrt::make<MidiMessage32>();
-=======
                 midi2::MidiMessage32 ump{};
                 //auto ump = winrt::make<MidiMessage32>();
->>>>>>> pete-dev:src/app-sdk/winrt-messages/MidiMessageHelper.cpp
 
                 ump.Timestamp(timestamp);
 
@@ -47,13 +43,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
             else if (numWords == 2)
             {
-<<<<<<< HEAD:src/api/Client/Midi2Client/MidiMessageUtility.cpp
-                auto ump = winrt::make<MidiMessage64>();
-=======
                 midi2::MidiMessage64 ump{};
                 //auto ump = winrt::make<MidiMessage64>();
 
->>>>>>> pete-dev:src/app-sdk/winrt-messages/MidiMessageHelper.cpp
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
@@ -67,13 +59,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
             else if (numWords == 3)
             {
-<<<<<<< HEAD:src/api/Client/Midi2Client/MidiMessageUtility.cpp
-                auto ump = winrt::make<MidiMessage96>();
-=======
                 midi2::MidiMessage96 ump{};
                 //auto ump = winrt::make<MidiMessage96>();
 
->>>>>>> pete-dev:src/app-sdk/winrt-messages/MidiMessageHelper.cpp
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());
@@ -89,14 +77,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
             else if (numWords == 4)
             {
-<<<<<<< HEAD:src/api/Client/Midi2Client/MidiMessageUtility.cpp
-                auto ump = winrt::make<MidiMessage128>();
-
-=======
                 midi2::MidiMessage128 ump{};
                 //auto ump = winrt::make<MidiMessage128>();
 
->>>>>>> pete-dev:src/app-sdk/winrt-messages/MidiMessageHelper.cpp
                 ump.Timestamp(timestamp);
 
                 ump.Word0(iter.Current());

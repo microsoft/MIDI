@@ -13,7 +13,7 @@ has_children: false
 | Property | Value | Description |
 | --------------- | ---------- | ----------- |
 | `Unknown` | `0` | Unknown native data format |
-| `ByteFormat` | `0` | The native data format is the MIDI 1.0 byte message format |
+| `Midi1ByteFormat` | `0` | The native data format is the MIDI 1.0 byte message format |
 | `UniversalMidiPacketFormat` | `0` | The native data format is the Universal MIDI Packet data format |
 
 ## IDL

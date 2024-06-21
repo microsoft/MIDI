@@ -20,7 +20,7 @@ That is the equivalent of passing in a sort order of the name, and a filter of t
 ```cpp
 auto endpointList = MidiEndpointDeviceInformation::FindAll(
     MidiEndpointDeviceInformationSortOrder::Name,
-    MidiEndpointDeviceInformationFilters::AllTypicalEndpoints
+    MidiEndpointDeviceInformationFilters::AllStandardEndpoints
 );
 ```
 
@@ -30,7 +30,7 @@ The application may then iterate through the list, reading the properties as nee
 
 Windows MIDI Services has a very rich set of properties available for a UMP Endpoint. This information includes hardware and other transport information, parent device information, user-supplied information, and in the case of a MIDI 2.0 UMP Endpoint, declared information from endpoint discovery and protocol negotiation carried out within the Windows service.
 
-For more details, see the `MidiEndpointDeviceInformation` class documentation. You may also use the MIDI Console application to see all of the properties (including the raw property data if you choose to) for an endpoint.
+For more details, see the [`MidiEndpointDeviceInformation`](../sdk-winrt-core/enumeration/MidiEndpointDeviceInformation.md) class documentation. You may also use the [MIDI Console application](../console/midi-console.md) to see all of the properties (including the raw property data if you choose to) for an endpoint.
 
 ## Sample Code
 

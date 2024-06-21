@@ -129,11 +129,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     }
 
     _Use_decl_annotations_
-    void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid id)
+    void MidiEndpointConnection::RemoveMessageProcessingPlugin(winrt::guid pluginId)
     {
         for (uint32_t i = 0; i < m_messageProcessingPlugins.Size(); i++)
         {
-            if (m_messageProcessingPlugins.GetAt(i).Id() == id)
+            if (m_messageProcessingPlugins.GetAt(i).PluginId() == pluginId)
             {
                 m_messageProcessingPlugins.RemoveAt(i);
                 break;

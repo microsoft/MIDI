@@ -23,15 +23,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     }
 
     _Use_decl_annotations_
-    virt::MidiVirtualDeviceCreationResult MidiVirtualDeviceManager::CreateVirtualDevice(
+    virt::MidiVirtualDevice MidiVirtualDeviceManager::CreateVirtualDevice(
         _In_ virt::MidiVirtualDeviceCreationConfig creationConfig
     ) noexcept
     {
-        UNREFERENCED_PARAMETER(creationConfig);
-
-        virt::MidiVirtualDeviceCreationResult result{};
-
-        winrt::hstring endpointDeviceId{};
+        winrt::hstring deviceEndpointDeviceId{};
+        //winrt::hstring clientEndpointDeviceId{};
 
         auto createResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
@@ -47,7 +44,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                 {
                 //    internal::LogGeneralError(__FUNCTION__, L"Unexpected empty response array");
 
-                    result.Success = false;
+                    return nullptr;
                 }
                 else
                 {
@@ -55,12 +52,20 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
                     auto firstObject = responseArray.GetObjectAt(0);
 
-                    endpointDeviceId = firstObject.GetNamedString(
+                    deviceEndpointDeviceId = firstObject.GetNamedString(
                         MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY,
                         L"");
 
-                    result.DeviceSideEndpointDeviceId = endpointDeviceId;
-                    result.Success = true;
+
+                    // Create the MidiVirtualDevice
+                    auto device = winrt::make_self<implementation::MidiVirtualDevice>();
+
+                    // populate the virtual device with everything needed
+
+                    // TODO: We need to get the client id
+                    device->InternalInitialize(deviceEndpointDeviceId, creationConfig);
+
+                    return *device;
                 }
             }
         }
@@ -69,7 +74,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
             // failure return from service. createResponse.Status(). Should share this
         }
 
-        return result;
+        return nullptr;
     }
 
 }

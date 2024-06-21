@@ -16,7 +16,8 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
     runtimeclass MidiVirtualDevice : Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin
     {
         String DeviceEndpointDeviceId{ get; };
-        String ClientEndpointDeviceId{ get; };
+        //String ClientEndpointDeviceId{ get; };    // this is not available at initial creation time
+        Guid AssociationId{ get; };
 
         IMapView<UInt8, Microsoft.Windows.Devices.Midi2.MidiFunctionBlock> FunctionBlocks{ get; };
         

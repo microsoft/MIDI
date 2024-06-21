@@ -12,7 +12,7 @@ namespace Microsoft.Windows.Devices.Midi2
     enum MidiEndpointNativeDataFormat
     {
         Unknown =                   0,
-        ByteFormat =                1,
+        Midi1ByteFormat =           1,
         UniversalMidiPacketFormat = 2,
     };
 }

@@ -16,9 +16,10 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using WinUIEx;
 
-using midi2 = Microsoft.Windows.Devices.Midi2;
-using msgs = Microsoft.Windows.Devices.Midi2.Messages;
-using virt = Microsoft.Windows.Devices.Midi2.Endpoints.Virtual;
+using Microsoft.Windows.Devices.Midi2;
+using Microsoft.Windows.Devices.Midi2.Messages;
+using Microsoft.Windows.Devices.Midi2.Endpoints.Virtual;
+using Microsoft.Windows.Devices.Midi2.Initialization;
 
 
 namespace MidiSample.AppToAppMidi
@@ -26,8 +27,9 @@ namespace MidiSample.AppToAppMidi
 
     public sealed partial class MainWindow : Microsoft.UI.Xaml.Window
     {      
-        private midi2.MidiSession _session;
-        private midi2.MidiEndpointConnection _connection;
+        private MidiSession _session;
+        private MidiEndpointConnection _connection;
+        private MidiVirtualDevice _virtualDevice;
 
         public List<Note> Notes { get; }
 
@@ -35,19 +37,27 @@ namespace MidiSample.AppToAppMidi
         {
             this.InitializeComponent();
 
-            OpenConnection();
+            if (!MidiServicesInitializer.EnsureServiceAvailable())
+            {
+                // In your application, you may decide it is appropriate to fall back to an older MIDI API
+                Console.WriteLine("Windows MIDI Services is not available");
+            }
+            else
+            {
+                // bootstrap the SDK runtime. Should check the return result here
+                MidiServicesInitializer.InitializeSdkRuntime();
 
-            var notes = new byte[] { 50, 52, 53, 55, 57, 58, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76 };
-            
-            Notes = notes.Select(n=>new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
+                StartVirtualDevice();
+
+                var notes = new byte[] { 50, 52, 53, 55, 57, 58, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76 };
+
+                Notes = notes.Select(n => new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
+            }
 
             this.Closed += MainWindow_Closed;
 
-            //this.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(100, 100, 600, 600));
-
             this.SetWindowSize(500, 550);
             this.SetIsAlwaysOnTop(true);
-
         }
 
         private void MainWindow_Closed(object sender, WindowEventArgs args)
@@ -62,95 +72,51 @@ namespace MidiSample.AppToAppMidi
             _session.Dispose();
         }
 
-        private void OpenConnection()
+        private void StartVirtualDevice()
         {
             try
             {
-                System.Diagnostics.Debug.WriteLine("Open Connection enter");
 
 
-                // create our function blocks and endpoint info to be reported back through MIDI
+                System.Diagnostics.Debug.WriteLine("StartVirtualDevice Connection enter");
 
-                var deviceDefinition = new midi2.MidiVirtualEndpointDeviceDefinition();
+                // define our virtual device
+                var creationConfig = DefineDevice();
 
-                deviceDefinition.FunctionBlocks.Add(new midi2.MidiFunctionBlock()
+                // create the session. The name here is just convenience.
+                _session = MidiSession.Create(creationConfig.Name);
+
+                // return if unable to create session
+                if (_session == null) return;
+
+                // create the virtual device, so we can get the endpoint device id to connect to
+                _virtualDevice = MidiVirtualDeviceManager.CreateVirtualDevice(creationConfig);
+
+                // return if unable to create virtual device
+                if (_virtualDevice == null ) return;
+
+                // create our device-side connection
+                _connection = _session.CreateEndpointConnection(_virtualDevice.DeviceEndpointDeviceId);
+
+                // wire up the stream configuration request received handler
+                _virtualDevice.StreamConfigRequestReceived += OnStreamConfigurationRequestReceived;
+
+                // wire up the message received handler on the connection itself
+                _connection.MessageReceived += OnMidiMessageReceived;
+
+
+                if (_connection.Open())
                 {
-                    Number = 0,
-                    IsActive = true,
-                    Name = "Pads Output",
-                    UIHint = midi2.MidiFunctionBlockUIHint.Sender,
-                    FirstGroupIndex = 0,
-                    GroupCount = 1,
-                    Direction = midi2.MidiFunctionBlockDirection.Bidirectional,
-                    Midi10Connection = midi2.MidiFunctionBlockMidi10.Not10,
-                    MaxSystemExclusive8Streams = 0,
-                    MidiCIMessageVersionFormat = 0
-                });
+                    System.Diagnostics.Debug.WriteLine("Connection Opened");
 
-                deviceDefinition.FunctionBlocks.Add(new midi2.MidiFunctionBlock()
-                {
-                    Number = 1,
-                    IsActive = true,
-                    Name = "A Function Block",
-                    UIHint = midi2.MidiFunctionBlockUIHint.Sender,
-                    FirstGroupIndex = 1,
-                    GroupCount = 1,
-                    Direction = midi2.MidiFunctionBlockDirection.Bidirectional,
-                    Midi10Connection = midi2.MidiFunctionBlockMidi10.Not10,
-                    MaxSystemExclusive8Streams = 0,
-                    MidiCIMessageVersionFormat = 0
-                });
-
-                deviceDefinition.AreFunctionBlocksStatic = true;
-                deviceDefinition.EndpointName = "Pad Controller App";
-                deviceDefinition.EndpointProductInstanceId = "PMB_APP2_3263827";
-                deviceDefinition.SupportsMidi2ProtocolMessages = true;
-                deviceDefinition.SupportsMidi1ProtocolMessages = true;
-                deviceDefinition.SupportsReceivingJRTimestamps = false;
-                deviceDefinition.SupportsSendingJRTimestamps = false;
-
-
-                System.Diagnostics.Debug.WriteLine("Creating session");
-                _session = midi2.MidiSession.CreateSession(deviceDefinition.EndpointName);
-
-                if (_session != null)
-                {
-                    System.Diagnostics.Debug.WriteLine("Creating virtual device");
-                    _connection = _session.CreateVirtualDeviceAndConnection(deviceDefinition);
-
-                    if (_connection != null)
-                    {
-                        System.Diagnostics.Debug.WriteLine("Created endpoint id: " + _connection.EndpointDeviceId);
-                        System.Diagnostics.Debug.WriteLine("Connection created. Wiring up MessageReceived event");
-
-                        _connection.MessageReceived += _connection_MessageReceived;
-
-                        // do anything else needed here. The public endpoint is not available to other
-                        // applications until you open the device endpoint
-
-                        System.Diagnostics.Debug.WriteLine("Connection created. About to open it.");
-
-                        if (_connection.Open())
-                        {
-                            System.Diagnostics.Debug.WriteLine("Connection Opened");
-
-                            this.AppWindow.Title = deviceDefinition.EndpointName + ": Connected";
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine("Connection Open Failed");
-                            this.AppWindow.Title = deviceDefinition.EndpointName + ": (no connection)";
-                        }
-                    }
-                    else
-                    {
-                        System.Diagnostics.Debug.WriteLine("Returned connection is null");
-                    }
+                    this.AppWindow.Title = creationConfig.Name + ": Connected";
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine("Session Open Failed");
+                    System.Diagnostics.Debug.WriteLine("Connection Open Failed");
+                    this.AppWindow.Title = creationConfig.Name + ": (no connection)";
                 }
+
             }
             catch (Exception ex)
             {
@@ -158,10 +124,95 @@ namespace MidiSample.AppToAppMidi
             }
         }
 
-        private void _connection_MessageReceived(midi2.IMidiMessageReceivedEventSource sender, midi2.MidiMessageReceivedEventArgs args)
+        private void OnMidiMessageReceived(IMidiMessageReceivedEventSource sender, MidiMessageReceivedEventArgs args)
         {
-            System.Diagnostics.Debug.WriteLine("Message Received " + msgs.MidiMessageUtility.GetMessageDisplayNameFromFirstWord(
+            System.Diagnostics.Debug.WriteLine("Message Received " + MidiMessageHelper.GetMessageDisplayNameFromFirstWord(
                 args.PeekFirstWord()));
+        }
+
+        private void OnStreamConfigurationRequestReceived(MidiVirtualDevice sender, MidiStreamConfigRequestReceivedEventArgs args)
+        {
+
+
+        }
+
+
+        MidiVirtualDeviceCreationConfig DefineDevice()
+        {
+            // some of these values may seem redundant, but for physical devices
+            // they are all sourced from different locations, and we want virtual
+            // devices to behave like physical devices.
+
+            string userSuppliedName = "Pad Controller App";
+            string userSuppliedDescription = "My favorite demo app for Windows MIDI Services";
+
+            string transportSuppliedName = "Contoso Pad Controller 1.0";
+            string transportSuppliedDescription = "A sample app-to-app MIDI virtual device";
+            string transportSuppliedManufacturerName = "Constoso, Inc.";
+
+            string endpointSuppliedName = transportSuppliedName;
+
+
+            var declaredEndpointInfo = new MidiDeclaredEndpointInfo();
+            declaredEndpointInfo.Name = endpointSuppliedName;
+            declaredEndpointInfo.ProductInstanceId = "PMB_APP2_3263827";
+            declaredEndpointInfo.SpecificationVersionMajor = 1; // see latest MIDI 2 UMP spec
+            declaredEndpointInfo.SpecificationVersionMinor = 1; // see latest MIDI 2 UMP spec
+            declaredEndpointInfo.SupportsMidi10Protocol = true;
+            declaredEndpointInfo.SupportsMidi20Protocol = true;
+            declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps = false;
+            declaredEndpointInfo.SupportsSendingJitterReductionTimestamps = false;
+            declaredEndpointInfo.HasStaticFunctionBlocks = true;
+
+            var declaredDeviceIdentity = new MidiDeclaredDeviceIdentity() ;
+            // todo: set any device identity values if you want. This is optional
+
+            var userSuppliedInfo = new MidiEndpointUserSuppliedInfo() ;
+            userSuppliedInfo.Name = userSuppliedName;           // for names, this will bubble to the top in priority
+            userSuppliedInfo.Description = userSuppliedDescription;
+
+
+            var config = new MidiVirtualDeviceCreationConfig(
+                transportSuppliedName,                          // this could be a different "transport-supplied" name value here
+                transportSuppliedDescription,                   // transport-supplied description
+                transportSuppliedManufacturerName,              // transport-supplied company name
+                declaredEndpointInfo,                           // for endpoint discovery
+                declaredDeviceIdentity,                         // for endpoint discovery
+                userSuppliedInfo
+    
+            );
+
+            // Function blocks. The MIDI 2 UMP specification covers the meanings
+            // of these values
+            var block1 = new MidiFunctionBlock();
+            block1.Number = 0;
+            block1.Name = "Pads Output";
+            block1.IsActive = true;
+            block1.UIHint = MidiFunctionBlockUIHint.Sender;
+            block1.FirstGroupIndex = 0;
+            block1.GroupCount = 1;
+            block1.Direction = MidiFunctionBlockDirection.Bidirectional;
+            block1.RepresentsMidi10Connection = MidiFunctionBlockRepresentsMidi10Connection.Not10;
+            block1.MaxSystemExclusive8Streams = 0;
+            block1.MidiCIMessageVersionFormat = 0;
+
+            config.FunctionBlocks.Add(block1);
+
+            var block2 = new MidiFunctionBlock();
+            block2.Number = 1;
+            block2.Name = "A Function Block";
+            block2.IsActive = true;
+            block2.UIHint = MidiFunctionBlockUIHint.Sender;
+            block2.FirstGroupIndex = 1;
+            block2.GroupCount = 2;
+            block2.Direction = MidiFunctionBlockDirection.Bidirectional;
+            block2.RepresentsMidi10Connection = MidiFunctionBlockRepresentsMidi10Connection.Not10;
+            block2.MaxSystemExclusive8Streams = 0;
+            block2.MidiCIMessageVersionFormat = 0;
+
+            config.FunctionBlocks.Add(block2);
+
+            return config;
         }
     }
 }

@@ -54,6 +54,7 @@
     <ProjectReference Include="..\..\winrt-diagnostics\Microsoft.Windows.Devices.Midi2.Diagnostics.vcxproj" />
     <ProjectReference Include="..\..\winrt-endpoint-loopback\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.vcxproj" />
     <ProjectReference Include="..\..\winrt-endpoint-virtual\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.vcxproj" />
+    <ProjectReference Include="..\..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj" />
     <ProjectReference Include="..\..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj" />
     <ProjectReference Include="..\..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj" />
   </ItemGroup>

@@ -7,8 +7,8 @@
 // ============================================================================
 
 
-import "MidiVirtualDeviceCreationResult.idl";
 import "MidiVirtualDeviceCreationConfig.idl";
+import "MidiVirtualDevice.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
@@ -19,7 +19,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 
         static Guid AbstractionId{ get; };
 
-        static MidiVirtualDeviceCreationResult CreateVirtualDevice(
+        static MidiVirtualDevice CreateVirtualDevice(
             MidiVirtualDeviceCreationConfig creationConfig);
 
         //static Boolean RemoveTransientLoopbackEndpoints(

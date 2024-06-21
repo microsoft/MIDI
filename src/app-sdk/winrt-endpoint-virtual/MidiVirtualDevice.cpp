@@ -16,10 +16,29 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
     _Use_decl_annotations_
+    void MidiVirtualDevice::InternalInitialize(
+        _In_ winrt::hstring const& deviceEndpointDeviceId,
+        _In_ virt::MidiVirtualDeviceCreationConfig const& config
+    ) noexcept
+    {
+        m_deviceEndpointDeviceId = deviceEndpointDeviceId;
+
+        m_declaredDeviceIdentity = config.DeclaredDeviceIdentity();
+        m_declaredEndpointInfo = config.DeclaredEndpointInfo();
+
+
+        m_name = L"Virtual: " + m_declaredEndpointInfo.Name;
+        m_id = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
+
+        m_associationId = config.AssociationId();
+    }
+
+
+    _Use_decl_annotations_
     bool MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept
     {
         // If blocks are static, return false. By spec, they are not allowed to be updated.
-        if (m_areFunctionBlocksStatic)
+        if (m_declaredEndpointInfo.HasStaticFunctionBlocks)
         {
             LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
@@ -108,10 +127,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         // TODO: update the name and send the notification message
 
-        if (m_endpointName != cleanedName)
+        if (m_declaredEndpointInfo.Name != cleanedName)
         {
             if (!SendEndpointNameNotificationMessages(cleanedName))
             {
+                //m_declaredEndpointInfo.Name = cleanedName;
+
                 LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
                 TraceLoggingWrite(
@@ -252,11 +273,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         if (args.MessageType() == MidiMessageType::Stream128)
         {
-<<<<<<< HEAD:src/api/Client/Midi2Client/MidiVirtualEndpointDevice.cpp
-            auto message = winrt::make<MidiMessage128>();
-=======
             midi2::MidiMessage128 message{};
->>>>>>> pete-dev:src/app-sdk/winrt-endpoint-virtual/MidiVirtualDevice.cpp
 
             if (args.FillMessage128(message))
             {
@@ -273,7 +290,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                             MidiClock::TimestampConstantSendImmediately(),
                             MIDI_PREFERRED_UMP_VERSION_MAJOR,
                             MIDI_PREFERRED_UMP_VERSION_MINOR,
-                            m_areFunctionBlocksStatic,
+                            m_declaredEndpointInfo.HasStaticFunctionBlocks,
                             (uint8_t)m_functionBlocks.Size(),
                             m_declaredEndpointInfo.SupportsMidi20Protocol,
                             m_declaredEndpointInfo.SupportsMidi10Protocol,
@@ -340,11 +357,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                     {
                         // send endpoint name notification messages
 
-                        if (!m_endpointName.empty())
+                        if (!m_declaredEndpointInfo.Name.empty())
                         {
                             auto nameMessages = msgs::MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
                                 MidiClock::TimestampConstantSendImmediately(),
-                                m_endpointName
+                                m_declaredEndpointInfo.Name
                             );
 
                             if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(nameMessages.GetView())))
@@ -367,11 +384,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                     {
                         // send product instance id notification messages
 
-                        if (!m_endpointProductInstanceId.empty())
+                        if (!m_declaredEndpointInfo.ProductInstanceId.empty())
                         {
                             auto instanceIdMessages = msgs::MidiStreamMessageBuilder::BuildProductInstanceIdNotificationMessages(
                                 MidiClock::TimestampConstantSendImmediately(),
-                                m_endpointProductInstanceId
+                                m_declaredEndpointInfo.ProductInstanceId
                             );
 
                             if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(instanceIdMessages.GetView())))

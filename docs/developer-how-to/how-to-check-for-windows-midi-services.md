@@ -46,11 +46,11 @@ else
 
 ### How this works
 
-The Windows Service is triggered to start via a specific call, which triggers an ETL event. The ETL event is what the service watches for to spin up. Typically, this takes only a second or two to happen.
+The Windows Service is triggered to start via `EnsureServiceAvailable()`, which calls the service interface and triggers an ETL event. The ETL event is what the service watches for to spin up. Typically, this takes only a second or two to happen.
 
-Once the service is started, all the devices it is responsible for begin to be enumerated. 
+Once the service hass started, all the devices it is responsible for begin to be enumerated. It will remain running until manually shut down or the PC is rebooted.
 
-Once the service is demand-started, it remains running until manually shut down or the next reboot.
+> Musicians may want to set the service to auto-start with Windows. It adds a little bit of time to Windows startup, but the devices will be available when needed.
 
 ## Bootstrap the Windows MIDI Services SDK runtime (Desktop apps only)
 
@@ -58,17 +58,16 @@ For desktop apps, other than the initializer, the rest of the SDK is installed c
 
 Because the SDK is shipped out-of-band from Windows itself, and is restricted to specific versions of Windows and devices (no current support on Xbox and Hololens, for example) the SDK must be bootstrapped/initialized so the application can find the WinRT types contained within.
 
-Internally, the initializer uses a combination of Registration-free WinRT and the Detours library to hook into type resolution. To support the use of the initializer, the application must include a manifest file, named `AppName.exe.manifest` where "AppName" is the name of the executable.
+Internally, the initializer uses a combination of Registration-free WinRT and the Detours library to hook into type resolution and activation. To support the use of the initializer, the application must include an entry in the application manifest file, named `AppName.exe.manifest` where "AppName" is the name of the executable.
 
 Manifest contents:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
     <assemblyIdentity version="1.0.0.0" name="MyWindowsMidiServicesApplication.app"/>
+    <!-- This is the only manifest entry needed for desktop apps using MIDI -->
 
-    <!-- This is the only manifest entry needed for desktop apps -->
     <!-- This specific DLL is shipped with the app itself -->
     <file name="Microsoft.Windows.Devices.Midi2.Initialization.dll">
         <activatableClass
@@ -76,7 +75,7 @@ Manifest contents:
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
     </file>
-
+    <!-- Other manifest entries are not impacted by this entry -->
 </assembly>
 ```
 
@@ -89,18 +88,17 @@ In addition to the manifest, the application must include the `Microsoft.Windows
 If the runtime is not present, but the service is present, the application can either prompt the user to download and install the runtime. That is an application-specific decision.
 
 ```cpp
-auto uri = (MidiServicesInitializer::GetLatestRuntimeReleaseInstallerUri())
+auto uri = MidiServicesInitializer::GetLatestRuntimeReleaseInstallerUri();
 ```
 
-> Your desktop application installer can also include code to download and install the latest Windows MIDI Services runtime, rather than doing this after the application has already started.
+> Your desktop application's installer can also include code to download and install the latest Windows MIDI Services runtime, rather than doing this after the application has already started.
 
 ## Use the SDK from packaged (Store etc.) apps
 
-If the app is packaged using MSIX, the bootstrapper is not used. Instead, the app must declare all Windows MIDI Services WinRT types in its manifest. It must also declare a dependency on ... TODO
-
-
-## Sample Code
+If the app is packaged using MSIX, the bootstrapper is not used. Instead, the app must declare all Windows MIDI Services WinRT types in its manifest. It must also declare a dependency on ... 
 
 TODO
 
+## Sample Code
 
+The existing samples are in the process of being updated with this new bootstrapping code.

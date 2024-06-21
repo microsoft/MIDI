@@ -3,13 +3,13 @@
   "spdxVersion": "SPDX-2.2",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-x64-windows-0.10-e3646b00-d20e-430a-b012-3a6b95003fca",
-  "name": "libmidi2:x64-windows@0.10 c1dcc4e9eb756c27ba8fd2f4d6356959050364b5c0ef4de45d6b0b566fa4ba01",
+  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-x64-windows-0.10-6fdc751e-b90a-441f-ac1b-65fb2d9edcbe",
+  "name": "libmidi2:x64-windows@0.10 93e4704360ef8cb1f4da73c642c6b9659b8ac05b535baf2c0713a6f3824efb4c",
   "creationInfo": {
     "creators": [
       "Tool: vcpkg-d6945642ee5c3076addd1a42c331bbf4cfc97457"
     ],
-    "created": "2024-05-30T00:06:34Z"
+    "created": "2024-06-21T00:08:22Z"
   },
   "relationships": [
     {
@@ -59,7 +59,7 @@
     {
       "name": "libmidi2:x64-windows",
       "SPDXID": "SPDXRef-binary",
-      "versionInfo": "c1dcc4e9eb756c27ba8fd2f4d6356959050364b5c0ef4de45d6b0b566fa4ba01",
+      "versionInfo": "93e4704360ef8cb1f4da73c642c6b9659b8ac05b535baf2c0713a6f3824efb4c",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "NOASSERTION",

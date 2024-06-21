@@ -13,6 +13,9 @@
 		<tags>midi midi2 windows music audio native</tags>
 		<dependencies>
             <group targetFramework="net6.0-windows10.0.20348.0" />
+            <group targetFramework="net7.0-windows10.0.20348.0" />
+            <group targetFramework="net8.0-windows10.0.20348.0" />
+            <group targetFramework="net9.0-windows10.0.20348.0" />
             <group targetFramework="uap10.0" />
             <group targetFramework="native" />
         </dependencies>
@@ -22,6 +25,16 @@
             <group targetFramework="net6.0-windows10.0.20348.0">
                 <reference file="Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
             </group>
+            <group targetFramework="net7.0-windows10.0.20348.0">
+                <reference file="Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+            </group>
+            <group targetFramework="net8.0-windows10.0.20348.0">
+                <reference file="Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+            </group>
+            <group targetFramework="net9.0-windows10.0.20348.0">
+                <reference file="Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+            </group>
+            
             <group targetFramework="uap10.0">
                 <reference file="Microsoft.Windows.Devices.Midi2.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd" />
@@ -33,6 +46,7 @@
                 <reference file="Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd" />
                 <!-- Initializer wouldn't be allowed for UWP apps -->
             </group>
+            
             <group targetFramework="native">
                 <reference file="Microsoft.Windows.Devices.Midi2.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd" />
@@ -42,6 +56,7 @@
                 <reference file="Microsoft.Windows.Devices.Midi2.Messages.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd" />
                 <reference file="Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd" />
+                
                 <reference file="Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
             </group>
         </references>
@@ -64,6 +79,18 @@
         <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
 			  target="ref\net6.0-windows10.0.20348.0\" />
 
+        <!-- .NET Projection binary -->
+        <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
+			  target="ref\net7.0-windows10.0.20348.0\" />
+
+        <!-- .NET Projection binary -->
+        <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
+			  target="ref\net8.0-windows10.0.20348.0\" />
+
+        <!-- .NET Projection binary -->
+        <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
+			  target="ref\net9.0-windows10.0.20348.0\" />
+
         <!-- Reference winmds -->
         
         <file target="ref\uap10.0\" src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
@@ -74,6 +101,19 @@
         <!-- .NET Projection -->
         <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
               target="lib\net6.0-windows10.0.20348.0\" />
+
+        <!-- .NET Projection -->
+        <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
+              target="lib\net7.0-windows10.0.20348.0\" />
+
+        <!-- .NET Projection -->
+        <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
+              target="lib\net8.0-windows10.0.20348.0\" />
+
+        <!-- .NET Projection -->
+        <file src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
+              target="lib\net9.0-windows10.0.20348.0\" />
+
 
         <!-- These are required by the NuGet packager for older packages.config style projects, apparently -->
         <file target="lib\uap10.0\x64"      src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />

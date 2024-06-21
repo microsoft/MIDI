@@ -1,16 +1,11 @@
 ---
 layout: page
-title: Create Loopback Endpoints= Pairs
+title: Create Loopback Endpoint Pairs
 parent: Developer How-to
 has_children: false
 ---
 
 # How to create simple Loopback Endpoint Pairs at runtime
-
-## How the Loopback Endpoint Pair works
-
-
-## How to create a Loopback Endpoint Pair
 
 We'll assume here you've already initialized Windows MIDI Services and created a session.
 
@@ -31,7 +26,7 @@ definitionB.Description = L"The second description is optional, but is displayed
 definitionB.UniqueId = L"3263827-OU812-5150"; // can be the same as the first one, but doesn't need to be.
 ```
 
-Next, create the transient (meaning they are not in the config file and recreated after a reboot) loopback endpoint pair using the above definitions
+Next, create the transient (meaning they are not in the config file and therefore are not recreated after a reboot) loopback endpoint pair using the above definitions
 
 ```cpp
 MidiLoopbackEndpointCreationConfig creationConfig(m_associationId, definitionA, definitionB);
@@ -40,7 +35,7 @@ auto response = MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(cr
 
 if (response.Success)
 {
-    std::wcout << L"Endpoints created successfully" << std::endl << std::endl;
+    std::cout << "Endpoints created successfully" << std::endl << std::endl;
 
     std::cout
         << "Loopback Endpoint A: " << std::endl 
@@ -60,18 +55,15 @@ else
     // failed to create the loopback pair. It may be that the unique
     // Ids are already in use.
 }
-
 ```
 
-One thing you may have noticed in the listing above is the use of an association Id. This identifier is just a GUID you generate to associate the endpoint pairs together. This is what establishes the relationship between them.
+One thing you may have noticed in the listing above is the use of an **association Id**. This identifier is a GUID you generate and then use to associate the endpoint pairs together. This is what establishes the relationship between the two endpoints.
 
 ```cpp
 winrt::guid m_associationId = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
 ```
 
-That's all that's needed. You can connect to either endpoint and use it as you would any other.
-
-> Note: Loopback Endpoint Pairs are not currently visible to the WinMM MIDI 1.0 API. There are complexities with that API when devices are added and removed at runtime. It's possible these devices will never be visibile to WinMM MIDI 1.0. For full functionality, we recommend using the new Windows MIDI Services SDK.
+That's all that's needed. You can connect to and open either endpoint and use it as you would any other.
 
 ## Sample Code
 

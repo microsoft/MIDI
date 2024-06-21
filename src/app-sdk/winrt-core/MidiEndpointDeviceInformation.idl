@@ -30,13 +30,13 @@ namespace Microsoft.Windows.Devices.Midi2
 
         static IVectorView<MidiEndpointDeviceInformation> FindAll();
         static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
-        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, MidiEndpointDeviceInformationFilters endpointFilters);
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
 
         static Guid EndpointInterfaceClass{ get; };
 
         static IVectorView<String> GetAdditionalPropertiesList();
 
-        static Boolean DeviceMatchesFilter(MidiEndpointDeviceInformation deviceInformation, MidiEndpointDeviceInformationFilters endpointFilters);
+        static Boolean DeviceMatchesFilter(MidiEndpointDeviceInformation deviceInformation, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
 
 
         String EndpointDeviceId { get; };

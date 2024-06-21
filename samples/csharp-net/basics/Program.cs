@@ -1,4 +1,8 @@
-﻿using Microsoft.Devices.Midi2;
+﻿using Microsoft.Windows.Devices.Midi2;
+using Microsoft.Windows.Devices.Midi2.Initialization;
+using Microsoft.Windows.Devices.Midi2.Diagnostics;
+using Microsoft.Windows.Devices.Midi2.Messages;
+
 using Windows.Devices.Enumeration;
 using System;
 
@@ -8,20 +12,24 @@ using System;
 Console.WriteLine("Checking for Windows MIDI Services");
 
 // you only need to check this once
-if (!MidiService.IsAvailable())
+if (!MidiServicesInitializer.EnsureServiceAvailable())
 {
     // In your application, you may decide it is appropriate to fall back to an older MIDI API
     Console.WriteLine("Windows MIDI Services is not available");
 }
 else
 {
+    // bootstrap the SDK runtime. Should check the return result here
+    MidiServicesInitializer.InitializeSdkRuntime();
+
+
     Console.WriteLine("Creating session");
 
     // session implements IDisposable
-    using (var session = MidiSession.CreateSession("API Sample Session"))
+    using (var session = MidiSession.Create("API Sample Session"))
     {
-        var endpointAId = MidiEndpointDeviceInformation.DiagnosticsLoopbackAEndpointId;
-        var endpointBId = MidiEndpointDeviceInformation.DiagnosticsLoopbackBEndpointId;
+        var endpointAId = MidiDiagnostics.DiagnosticsLoopbackAEndpointDeviceId;
+        var endpointBId = MidiDiagnostics.DiagnosticsLoopbackBEndpointDeviceId;
 
         Console.WriteLine("Connecting to Sender UMP Endpoint: " + endpointAId);
         Console.WriteLine("Connecting to Receiver UMP Endpoint: " + endpointBId);
@@ -42,7 +50,7 @@ else
             Console.WriteLine("- UMP Timestamp:     " + ump.Timestamp);
             Console.WriteLine("- UMP Msg Type:      " + ump.MessageType);
             Console.WriteLine("- UMP Packet Type:   " + ump.PacketType);
-            Console.WriteLine("- Message:           " + MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(args.PeekFirstWord()));
+            Console.WriteLine("- Message:           " + MidiMessageHelper.GetMessageDisplayNameFromFirstWord(args.PeekFirstWord()));
 
             if (ump is MidiMessage32)
             {

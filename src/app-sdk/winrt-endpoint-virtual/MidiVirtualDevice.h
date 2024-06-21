@@ -18,19 +18,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         MidiVirtualDevice() = default;
 
         // plugin Id
-        winrt::guid Id() const noexcept { return m_id; }
+        winrt::guid PluginId() const noexcept { return m_id; }
 
         // plugin name
-        winrt::hstring Name() const noexcept { return m_name; }
-        void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
+        winrt::hstring PluginName() const noexcept { return m_name; }
+        void PluginName(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
 
         // plugin isEnabled
         bool IsEnabled() const noexcept { return m_enabled; }
         void IsEnabled(_In_ bool const& value) noexcept { m_enabled = value; }
 
         // plugin tag
-        foundation::IInspectable Tag() const noexcept { return m_tag; }
-        void Tag(_In_ foundation::IInspectable const& value) { m_tag = value; }
+        foundation::IInspectable PluginTag() const noexcept { return m_tag; }
+        void PluginTag(_In_ foundation::IInspectable const& value) { m_tag = value; }
 
         winrt::event_token StreamConfigRequestReceived(_In_ foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigRequestReceivedEventArgs> const& handler)
         {
@@ -46,18 +46,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         bool SuppressHandledMessages() { return m_suppressHandledMessages; }
         void SuppressHandledMessages(_In_ bool const value) { m_suppressHandledMessages = value; }
 
-        winrt::hstring EndpointName() const noexcept { return m_endpointName; }
-        winrt::hstring EndpointProductInstanceId() const noexcept { return m_endpointProductInstanceId; }
+        // TODO: This should be the calcualted final name
+        winrt::hstring EndpointName() const noexcept { return m_declaredEndpointInfo.Name; }
+        winrt::hstring EndpointProductInstanceId() const noexcept { return m_declaredEndpointInfo.ProductInstanceId; }
 
-        bool AreFunctionBlocksStatic() { return m_areFunctionBlocksStatic; }
+        bool AreFunctionBlocksStatic() { return m_declaredEndpointInfo.HasStaticFunctionBlocks; }
         collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks() noexcept { return m_functionBlocks.GetView(); }
 
         bool UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block) noexcept;
         bool UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
 
+        winrt::guid AssociationId() const noexcept { return m_associationId; }
+
 
         winrt::hstring DeviceEndpointDeviceId() const noexcept{ return m_deviceEndpointDeviceId; }
-        winrt::hstring ClientEndpointDeviceId() const noexcept{ return m_clientEndpointDeviceId; }
+        //winrt::hstring ClientEndpointDeviceId() const noexcept{ return m_clientEndpointDeviceId; }
 
 
         void Initialize(_In_ midi2::IMidiEndpointConnectionSource const& endpointConnection) noexcept;
@@ -69,6 +72,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
             _Out_ bool& skipFurtherListeners,
             _Out_ bool& skipMainMessageReceivedEvent)  noexcept;
 
+
+
+        void InternalInitialize(
+            _In_ winrt::hstring const& deviceEndpointDeviceId, 
+            _In_ virt::MidiVirtualDeviceCreationConfig const& config
+            ) noexcept;
 
     private:
         //virt::IMidiVirtualDeviceCreationConfiguration m_virtualDeviceConfiguration{ nullptr };
@@ -98,14 +107,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         midi2::MidiEndpointConnection m_endpointConnection{ nullptr };
 
+        winrt::guid m_associationId{};
         winrt::hstring m_deviceEndpointDeviceId{};
-        winrt::hstring m_clientEndpointDeviceId{};
+        //winrt::hstring m_clientEndpointDeviceId{};
 
         bool m_isMidiCIDevice{ false };
-        winrt::hstring m_endpointName{};
-        winrt::hstring m_endpointProductInstanceId{};
+        //winrt::hstring m_endpointName{};
+        //winrt::hstring m_endpointProductInstanceId{};
 
-        bool m_areFunctionBlocksStatic{ false };
+        //bool m_areFunctionBlocksStatic{ false };
 
         bool m_suppressHandledMessages{ true };
 

@@ -21,10 +21,12 @@ Another approach is to allow applications to create and publish an endpoint whic
 
 In addition, MIDI 2.0 has additional requirements for endpoints. They need to be able to participate in the MIDI Endpoint Discovery process, and respond with appropriate endpoint capabilities and preferred settings. The Virtual Device App makes that configuration simple for application developers and musicians.
 
+![Virtual Device](virtual-device.png)
+
 ### Lifetime
 
-* The Virtual UMP Device includes two endpoints: one is just for the application creating the device, the other is for all other applications to connect to.
-* The lifetime of the Virtual UMP Device is controlled by the lifetime of the application's connection. Once the owning application disconnects from the endpoint, the Virtual UMP Device is torn down.
+* The Virtual UMP Device includes two endpoints: one is just for the application creating the device (the "device side"), the other is for all other applications to connect to. 
+* The lifetime of the Virtual Device is controlled by the lifetime of the application's connection. Once the owning application disconnects from the endpoint, the Virtual UMP Device is torn down.
 
 ## Suggested Uses
 
@@ -39,9 +41,11 @@ The best experience for Windows MIDI Services will be with applications using th
 | API | Compatible App User | Compatible App Host | Notes |
 | --- | ---------- | ---------- | ----- |
 | Windows MIDI Services Native | Yes | Yes | This provides the best experience for applications. |
-| WinRT MIDI 1.0 | Yes | No | Any applications using the WinRT MIDI 1.0 API we shipped with Windows 10/11 will be able to see these devices. Note that they can only send/receive MIDI 1.0 messages, and will not see any MIDI 2.0-specific messages that cannot be translated, including stream messages. |
-| WinMM MIDI 1.0 | No | No | There are challenges with the port indexes with the WinMM API. For the forseeable future, we will not surface these virtual devices with the WinMM API. This means that most MIDI 1.0 applications will not recognize these devices. |
+| WinRT MIDI 1.0 | Yes | No | Any applications using the WinRT MIDI 1.0 API we shipped with Windows 10/11 will be able to see these devices and connect to them. Note that they can only send/receive MIDI 1.0 messages, and will not see any MIDI 2.0-specific messages that cannot be translated, including stream messages. |
+| WinMM MIDI 1.0 | No | No | There are challenges with the port indexes with the WinMM API. For the forseeable future, we will not surface these virtual devices to the WinMM API. This means that most MIDI 1.0 applications will not recognize these virtual devices. |
 
 ## Configuration
 
-Because this type of endpoint is tied to the runtime of an application, it can be created only through the API by creating a `MidiVirtualDeviceDefinition` and calling the appropriate `MidiSession` methods to create and open the endpoint. This is not something that a MIDI user will pre-create in the settings app or configuration file.
+Virtual Devices cannot be specified in the configuration file. Instead, applications must create them through code.
+
+For developer information on how to set up a Virtual Device, see the [developer how-to](../developer-how-to/how-to-create-virtual-ump-device.md).
