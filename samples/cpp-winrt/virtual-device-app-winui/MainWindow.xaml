@@ -14,7 +14,7 @@
         </Grid.RowDefinitions>
 
         <Grid x:Name="PadContainer" Grid.Row="0" Margin="5,25,5,5">
-            <!--<GridView ItemsSource="{x:Bind Notes}" HorizontalAlignment="Center" VerticalAlignment="Center" >
+            <GridView ItemsSource="{x:Bind Notes}" HorizontalAlignment="Center" VerticalAlignment="Center" >
                 <ItemsPanelTemplate>
                     <UniformGridLayout x:Name="PadLayout" MaximumRowsOrColumns="4" />
                 </ItemsPanelTemplate>
@@ -26,7 +26,7 @@
                                    PointerReleased="{x:Bind NoteOff}" />
                     </DataTemplate>
                 </GridView.ItemTemplate>
-            </GridView>-->
+            </GridView>
         </Grid>
 
 
