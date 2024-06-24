@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+
+
+namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointUtility
     {
@@ -21,9 +25,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         const string STRING_DEVINTERFACE_BYTESTREAM_OUTPUT = "{6dc23320-ab33-4ce4-80d4-bbb3ebbf2814}";
 
 
-        public static EndpointDirection GetUmpEndpointTypeFromInstanceId(string instanceId)
+        public static EndpointDirection GetUmpEndpointTypeFromEndpointInterfaceId(string id)
         {
-            var id = instanceId.ToLower().Trim();
+            id = id.ToLower().Trim();
 
             if (id.EndsWith(STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT))
                 return EndpointDirection.In;
@@ -38,9 +42,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 throw new ArgumentException("Invalid instanceId. Does not contain a UMP device interface GUID");
         }
 
-        public static LegacyEndpointDirection GetLegacyEndpointTypeFromInstanceId(string instanceId)
+        public static LegacyEndpointDirection GetLegacyEndpointTypeFromEndpointInterfaceId(string id)
         {
-            var id = instanceId.ToLower().Trim();
+            id = id.ToLower().Trim();
 
             if (id.EndsWith(STRING_DEVINTERFACE_BYTESTREAM_INPUT))
                 return LegacyEndpointDirection.In;
@@ -52,6 +56,19 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 throw new ArgumentException("Invalid instanceId. Does not contain the byte stream (MIDI 1.0) device interface GUID");
         }
 
+        public static string GetEndpointNameFromEndpointInterfaceId(string id)
+        {
+            var device = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(id);
+
+            if (device != null)
+            {
+                return device.Name;
+            }
+            else
+            {
+                return string.Empty;
+            }
+        }
 
     }
 }

@@ -1,0 +1,26 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [flags]
+    enum MidiEndpointDeviceInformationFilters
+    {
+        StandardNativeUniversalMidiPacketFormat =   0x00000001,     // a normal MIDI 2.0 UMP endpoint
+        StandardNativeMidi1ByteFormat =             0x00000002,     // a normal MIDI 1.0 endpoint upscaled to UMP by service or driver
+
+        VirtualDeviceResponder =                    0x00000100,     // The app-side of a Virtual Device. Not normally presented to other apps.
+
+        DiagnosticLoopback =                        0x00010000,     // Diagnostics loopback. Don't show this in typical apps.
+        DiagnosticPing =                            0x00020000,     // Internal ping. Don't show this in apps. For internal use.
+
+
+        AllStandardEndpoints = StandardNativeUniversalMidiPacketFormat | StandardNativeMidi1ByteFormat,
+    };
+}

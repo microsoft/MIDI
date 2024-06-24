@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -33,6 +33,8 @@ struct MidiSessionEntry
     std::wstring SessionName;
 
     std::map<std::wstring, MidiSessionConnectionEntry> Connections;
+    std::vector<MidiClientHandle> ClientHandles;
+
 };
 
 
@@ -41,27 +43,41 @@ class CMidiSessionTracker : public Microsoft::WRL::RuntimeClass<
     IMidiSessionTracker>
 {
 public:
-
     CMidiSessionTracker() {}
     ~CMidiSessionTracker() {}
 
-    STDMETHOD(Initialize)();
+    // needed for interface. A bit hacky
+    STDMETHOD(Initialize)() { return S_OK; }
 
-    // These are called from the API
-    STDMETHOD(AddClientSession)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName);
+
+    STDMETHOD(Initialize)(_In_ std::shared_ptr<CMidiClientManager>& clientManager);
+    
+    // interface method. It's a dummy method because we need to pass up the processid and process name from the abstraction
+    STDMETHOD(AddClientSession)(_In_ GUID SessionId, _In_ LPCWSTR SessionName);
+    STDMETHOD(UpdateClientSessionName)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId);
     STDMETHOD(RemoveClientSession)(_In_ GUID SessionId);
 
     // These are called from within the service
-    HRESULT AddClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
-    HRESULT RemoveClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId);
+    STDMETHOD(IsValidSession)(_In_ GUID SessionId, _In_ DWORD ClientProcessId);
+    STDMETHOD(AddClientSessionInternal)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName, _Out_ PVOID* ContextHandle);
+    STDMETHOD(AddClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId, _In_ MidiClientHandle ClientHandle);
+    STDMETHOD(RemoveClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId, _In_ MidiClientHandle ClientHandle);
 
-    // This is called from the API
-    STDMETHOD(GetSessionListJson)(_Out_ BSTR* SessionList);
+    STDMETHOD(RemoveClientSessionInternal)(_In_ PVOID ContextHandle);
+
+
+    // This is called from the SDK
+    STDMETHOD(GetSessionList)(_Out_ BSTR* SessionList);
+    //STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
+
+    STDMETHOD(VerifyConnectivity)();
 
     STDMETHOD(Cleanup)();
 
 private:
-    std::map<GUID, MidiSessionEntry, GUIDCompare> m_sessions{};
+    std::weak_ptr<CMidiClientManager> m_clientManager;
 
+    std::map<GUID, MidiSessionEntry, GUIDCompare> m_sessions{};
+    std::map<PVOID, GUID> m_sessionContextHandles{};
 
 };

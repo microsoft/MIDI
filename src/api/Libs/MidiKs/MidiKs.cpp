@@ -13,8 +13,8 @@
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 
-#include "MidiAbstraction_i.c"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include <Devpkey.h>
 #include "MidiDefs.h"
@@ -319,7 +319,7 @@ KSMidiOutDevice::WritePacketMidiData(
 
     kssh.Size = sizeof(KSSTREAM_HEADER);
 
-    // mirroring win32 midi, presenatation time on outgoing messages
+    // mirroring win32 midi, presentation time on outgoing messages
     // is always 1.
     kssh.PresentationTime.Numerator = 1;
     kssh.PresentationTime.Denominator = 1;

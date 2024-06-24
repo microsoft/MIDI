@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "stdafx.h"
@@ -32,7 +32,8 @@ CMidiSrv::Initialize()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -72,7 +73,8 @@ CMidiSrv::Initialize()
     RETURN_IF_NULL_ALLOC(m_SessionTracker);
 
 
-    RETURN_IF_FAILED(m_SessionTracker->Initialize());
+    // NOTE: client manager is not yet initialized when this is called
+    RETURN_IF_FAILED(m_SessionTracker->Initialize(m_ClientManager));
 
     RETURN_IF_FAILED(m_PerformanceManager->Initialize());
     RETURN_IF_FAILED(m_ProcessManager->Initialize());
@@ -92,28 +94,62 @@ CMidiSrv::Initialize()
         NULL));
 
     
-    // this is an ugly set of casts, but the reinterpret_cast error only
-    // comes up with C++/20. Risk of a straight c-style cast here going
-    // poorly is low. Error comes from the function taking non-const params
-    // but our arguments here are const.
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerUseProtseqEp(
-        (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
-        RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
-        (RPC_WSTR)MIDISRV_ENDPOINT,
-        rpcSecurityDescriptor.get())));
+    if (rpcSecurityDescriptor.is_valid())
+    {
+        // this is an ugly set of casts, but the reinterpret_cast error only
+        // comes up with C++/20. Risk of a straight c-style cast here going
+        // poorly is low. Error comes from the function taking non-const params
+        // but our arguments here are const.
+        auto rpcStatus = RpcServerUseProtseqEp(
+            (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
+            RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
+            (RPC_WSTR)MIDISRV_ENDPOINT,
+            rpcSecurityDescriptor.get());
 
-    //RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerUseProtseqEp(
-    //    reinterpret_cast<RPC_WSTR>(MIDISRV_LRPC_PROTOCOL),
-    //    RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
-    //    reinterpret_cast<RPC_WSTR>(MIDISRV_ENDPOINT),
-    //    rpcSecurityDescriptor.get())));
+        auto rpcHr = HRESULT_FROM_RPCSTATUS(rpcStatus);
 
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcServerRegisterIf3(
-        MidiSrvRPC_v1_0_s_ifspec,
-        NULL, NULL,
-        RPC_IF_AUTOLISTEN | RPC_IF_ALLOW_LOCAL_ONLY,
-        RPC_C_LISTEN_MAX_CALLS_DEFAULT, 0,
-        MidiSrvRpcIfCallback, rpcSecurityDescriptor.get())));
+        if (FAILED(rpcHr))
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"RpcServerUseProtseqEp failed. It's likely the service is not responding due to a failed startup.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHResult(rpcHr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                TraceLoggingLong(rpcStatus, "rpc_status")
+            );
+        }
+
+        RETURN_IF_FAILED(rpcHr);
+
+        RETURN_IF_FAILED(
+            HRESULT_FROM_RPCSTATUS(
+                RpcServerRegisterIf3(
+                    MidiSrvRPC_v1_0_s_ifspec,                       // IfSpec
+                    NULL,                                           // MgrTypeUuid
+                    NULL,                                           // MgrEpv
+                    RPC_IF_AUTOLISTEN | RPC_IF_ALLOW_LOCAL_ONLY,    // Flags
+                    RPC_C_LISTEN_MAX_CALLS_DEFAULT,                 // MaxCalls
+                    0,                                              // MaxRpcSize (no effect for ncalrpc -- local)
+                    MidiSrvRpcIfCallback,                           // IfCallback
+                    rpcSecurityDescriptor.get()                     // SecurityDescriptor
+                )
+            )
+        );                 
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Returned RPC Security Descriptor is not valid", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+    }
 
     cleanupOnError.release();
 
@@ -125,7 +161,8 @@ CMidiSrv::Cleanup()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

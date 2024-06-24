@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiClock
+    {
+        static UInt64 Now{ get; };
+
+        static UInt64 TimestampConstantSendImmediately{ get; };
+
+        static UInt64 TimestampFrequency{ get; };
+
+        static Double ConvertTimestampTicksToNanoseconds(UInt64 timestampValue);
+        static Double ConvertTimestampTicksToMicroseconds(UInt64 timestampValue);
+        static Double ConvertTimestampTicksToMilliseconds(UInt64 timestampValue);
+        static Double ConvertTimestampTicksToSeconds(UInt64 timestampValue);
+
+        static UInt64 OffsetTimestampByTicks(UInt64 timestampValue, Int64 offsetTicks);
+
+        static UInt64 OffsetTimestampByMicroseconds(UInt64 timestampValue, Int64 offsetMicroseconds);
+        static UInt64 OffsetTimestampByMilliseconds(UInt64 timestampValue, Int64 offsetMilliseconds);
+        static UInt64 OffsetTimestampBySeconds(UInt64 timestampValue, Int64 offsetSeconds);
+    }
+}
+

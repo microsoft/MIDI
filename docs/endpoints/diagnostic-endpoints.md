@@ -11,7 +11,7 @@ has_children: false
 | Property | Value |
 | -------- | ----- |
 | Abstraction Id | `{ac9b5417-3fe0-4e62-960f-034ee4235a1a}` |
-| Mnemonic | `DIAG` |
+| Abbreviation | `DIAG` |
 
 (Note: This transport cannot be disabled and is not listed in the registry. Its activation is hard-coded into the Windows service. Settings for this transport are not read from the configuration file and cannot be changed.)
 
@@ -21,17 +21,17 @@ Windows MIDI Services comes with three diagnostic endpoints, two of which are th
 
 Windows MIDI Services comes with two loopback endpoints which are always present if the Windows service is running. These cannot be turned off by applications or configuration, and so may be relied upon by customer support, unit tests, and more.
 
-The Endpoint Device Ids are available as static members of the `MidiEndpointDeviceInformation` class
+The Endpoint Device Ids are available as static members of the `MidiDiagnostics` class
 
 ```cpp
-winrt::hstring MidiEndpointDeviceInformation::DiagnosticsLoopbackAEndpointId();
-winrt::hstring MidiEndpointDeviceInformation::DiagnosticsLoopbackBEndpointId();
+winrt::hstring MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId();
+winrt::hstring MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId();
 ```
 
-By default, these endpoints are not returned by enumeration calls, because most applications would not want to present them to the user. However, you can include them in the `MidiEndpointDeviceInformation::FindAll` and `MidiEndpointDeviceWatcher::CreateWatcher` device filters by using the `MidiEndpointDeviceInformationFilter` enum value `IncludeDiagnosticLoopback` if your application has a diagnostic need for them.
+By default, these endpoints are not returned by enumeration calls, because most applications would not want to present them to the user. However, you can include them in the `MidiEndpointDeviceInformation::FindAll` and `MidiEndpointDeviceWatcher::CreateWatcher` device filters by using the `MidiEndpointDeviceInformationFilters` enum value `DiagnosticLoopback` if your application has a diagnostic need for them.
 
 ```cpp
-MidiEndpointDeviceInformationFilter::IncludeDiagnosticLoopback
+MidiEndpointDeviceInformationFilters::DiagnosticLoopback
 ```
 
 Diagnostic Loopback Endpoints A and B are cross-wired so that any message sent out on loopback A will come in on loopback B, and any message sent out on B will come in on A. In this way, the loopbacks function as a global app-to-app MIDI implementation for testing.
@@ -59,3 +59,7 @@ The Loopback endpoints capture Endpoint and Function Block metadata just like an
 The ping endpoint is not normally returned through any enumeration. It is for internal use only, and should not be used by any applications. It recognizes only one type of proprietary message.
 
 Behavior and implementation of the Ping endpoint is subject to change and should not be relied upon by any code outside of the API.
+
+## Compatibility
+
+Diagnostics endpoints are available only to applications using the Windows MIDI Services SDK and service.

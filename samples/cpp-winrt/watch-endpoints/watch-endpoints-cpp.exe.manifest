@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+    <assemblyIdentity version="1.0.0.0" name="MyWindowsMidiServicesApplication.app"/>
+
+    <!-- This is the only manifest entry needed for desktop apps -->
+    <!-- This specific DLL is shipped with the app itself -->
+    <file name="Microsoft.Windows.Devices.Midi2.Initialization.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Initialization.IMidiServicesInitializerStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+</assembly>

@@ -1,15 +1,16 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
 using System.Management;
 using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+
+namespace Microsoft.Midi.ConsoleApp
 {
     // commands to check the health of Windows MIDI Services on this PC
     // will check for MIDI services
@@ -31,26 +32,33 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             // check to see if the service is running. 
             // NOTE: Equivalent code can't be moved to the SDK due to Desktop/WinRT limitations.
 
-            string serviceName = "MidiSrv";
+            if (MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Service reported as available by API."));
+            }
+            else
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Service reported as NOT available by API."));
+            }
 
             ServiceController controller;
 
             try
             {
-                controller = new System.ServiceProcess.ServiceController(serviceName);
+                controller = new System.ServiceProcess.ServiceController(MidiServiceHelper.GetServiceName());
 
                 if (controller.Status == System.ServiceProcess.ServiceControllerStatus.Running)
                 {
-                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess($"Service {serviceName} is running."));
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess($"Service {MidiServiceHelper.GetServiceName()} is running."));
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Service '{serviceName}' status is {controller.Status.ToString()}. You may want to restart the service or reboot."));
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Service '{MidiServiceHelper.GetServiceName()}' status is {controller.Status.ToString()}. You may want to restart the service or reboot."));
                 }
             }
             catch (InvalidOperationException)
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{serviceName}'. Is Windows MIDI Services installed?\n"));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{MidiServiceHelper.GetServiceName()}'. Is Windows MIDI Services installed?\n"));
                 return (int)MidiConsoleReturnCode.ErrorMidiServicesNotInstalled;
             }
 
@@ -69,7 +77,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.Rows.Add(new[] { new Markup("Name"), new Markup(controller.ServiceName) });
                 table.Rows.Add(new[] { new Markup("Display Name"), new Markup(controller.DisplayName) });
 
-                using (var serviceObject = new ManagementObject(new ManagementPath(string.Format("Win32_Service.Name='{0}'", serviceName))))
+                using (var serviceObject = new ManagementObject(new ManagementPath(string.Format("Win32_Service.Name='{0}'", controller.ServiceName))))
                 {
                     if (serviceObject != null) 
                     {

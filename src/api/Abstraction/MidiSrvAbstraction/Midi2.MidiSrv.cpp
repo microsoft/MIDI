@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "pch.h"
@@ -23,7 +23,8 @@ CMidi2MidiSrv::Initialize(
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -57,11 +58,18 @@ CMidi2MidiSrv::Initialize(
     creationParams.DataFormat = CreationParams->DataFormat;
 
     // Todo: client side buffering requests to come from some service setting?
-    // - See https://github.com/microsoft/MIDI/issues/219 for details
+    // - See https://aka.ms/midiissues/219 for details
     
     //creationParams.BufferSize = PAGE_SIZE;  // original
-    //creationParams.BufferSize = 512;    // Set this for debugging see https://github.com/microsoft/MIDI/issues/182 for all the drama :)
+    //creationParams.BufferSize = 512;    // Set this for debugging see https://aka.ms/midiissues/182 for all the drama :)
     creationParams.BufferSize = PAGE_SIZE * 2;
+
+
+    // Get process id 
+    DWORD clientProcessId = GetCurrentProcessId();
+
+    // Get process name
+
 
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
@@ -70,7 +78,7 @@ CMidi2MidiSrv::Initialize(
     {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, SessionId, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, SessionId, clientProcessId, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;
@@ -140,7 +148,8 @@ CMidi2MidiSrv::Cleanup()
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );

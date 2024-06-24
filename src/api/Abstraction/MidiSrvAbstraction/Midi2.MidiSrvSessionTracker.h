@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -17,21 +17,27 @@ public:
     STDMETHOD(Initialize());
 
     // These are called from the client API
-    STDMETHOD(AddClientSession(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName));
+    STDMETHOD(AddClientSession(_In_ GUID SessionId, _In_ LPCWSTR SessionName));
+    STDMETHOD(UpdateClientSessionName(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId));
     STDMETHOD(RemoveClientSession(_In_ GUID SessionId));
 
     // These are called from within the service
     //STDMETHOD(AddClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId));
     //STDMETHOD(RemoveClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId));
 
-    // This is called from the API
-    STDMETHOD(GetSessionListJson(_Out_ BSTR* SessionList));
+    // This is called from the SDK
+    STDMETHOD(GetSessionList(_Out_ BSTR* SessionList));
+    //STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
+
+    STDMETHOD(VerifyConnectivity)();
 
     STDMETHOD(Cleanup());
 
 private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;
 
-    GUID m_abstractionGuid;
+    PVOID m_contextHandle{ nullptr };
+
+    //GUID m_abstractionGuid;
 };
 

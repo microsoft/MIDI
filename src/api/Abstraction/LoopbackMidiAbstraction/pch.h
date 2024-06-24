@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -74,12 +74,11 @@ namespace json = ::winrt::Windows::Data::Json;
 
 // AbstractionUtilities
 #include "wstring_util.h"
-namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
-#include "MidiDataFormat.h"
-#include "MidiFlow.h"
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include "json_defs.h"
 #include "json_helpers.h"
@@ -90,20 +89,8 @@ namespace internal = ::Windows::Devices::Midi2::Internal;
 
 #include "abstraction_defs.h"
 
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
-
 #include "Midi2LoopbackMidiAbstraction_i.c"
 #include "Midi2LoopbackMidiAbstraction.h"
-
-
-
-#include "mididevicemanagerinterface_i.c"
-#include "mididevicemanagerinterface.h"
-
-#include "MidiEndpointProtocolManagerInterface_i.c"
-#include "MidiEndpointProtocolManagerInterface.h"
-
 
 #include "dllmain.h"
 

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.1/schemas/spdx-schema.json",
+  "spdxVersion": "SPDX-2.2",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-x64-windows-0.10-6fdc751e-b90a-441f-ac1b-65fb2d9edcbe",
+  "name": "libmidi2:x64-windows@0.10 93e4704360ef8cb1f4da73c642c6b9659b8ac05b535baf2c0713a6f3824efb4c",
+  "creationInfo": {
+    "creators": [
+      "Tool: vcpkg-d6945642ee5c3076addd1a42c331bbf4cfc97457"
+    ],
+    "created": "2024-06-21T00:08:22Z"
+  },
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "GENERATES",
+      "relatedSpdxElement": "SPDXRef-binary"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-0"
+    },
+    {
+      "spdxElementId": "SPDXRef-port",
+      "relationshipType": "CONTAINS",
+      "relatedSpdxElement": "SPDXRef-file-1"
+    },
+    {
+      "spdxElementId": "SPDXRef-binary",
+      "relationshipType": "GENERATED_FROM",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-0",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    },
+    {
+      "spdxElementId": "SPDXRef-file-1",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-port"
+    }
+  ],
+  "packages": [
+    {
+      "name": "libmidi2",
+      "SPDXID": "SPDXRef-port",
+      "versionInfo": "0.10",
+      "downloadLocation": "git+https://github.com/microsoft/vcpkg@3a8e774a8ec628d02f193004a97f2b6b3b331825",
+      "homepage": "https://github.com/midi2-dev/AM_MIDI2.0Lib",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "description": "General purpose Midi 2 library for bytestream conversions and midi-ci",
+      "comment": "This is the port (recipe) consumed by vcpkg."
+    },
+    {
+      "name": "libmidi2:x64-windows",
+      "SPDXID": "SPDXRef-binary",
+      "versionInfo": "93e4704360ef8cb1f4da73c642c6b9659b8ac05b535baf2c0713a6f3824efb4c",
+      "downloadLocation": "NONE",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "comment": "This is a binary package built by vcpkg."
+    },
+    {
+      "SPDXID": "SPDXRef-resource-1",
+      "name": "midi2-dev/AM_MIDI2.0Lib",
+      "downloadLocation": "git+https://github.com/midi2-dev/AM_MIDI2.0Lib@v0.10",
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "checksums": [
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "ff925aff38adfbeff4bae6c211d18e6a59e97f11d11af7616f3386208d1a0d30e64b60ba74f604d75c8da50f57f320f86a4f09bf292bb587be837bdda91f7110"
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/3a8e774a8ec628d02f193004a97f2b6b3b331825/portfile.cmake",
+      "SPDXID": "SPDXRef-file-0",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "87d785552ed7b5e9246a61bb763946ba1ad6972f0ba4d4bae603b116c69852a2"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    },
+    {
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/3a8e774a8ec628d02f193004a97f2b6b3b331825/vcpkg.json",
+      "SPDXID": "SPDXRef-file-1",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "30f3d4bd1d077e3281594b2d016c621db780386332a195362ee43cd35a9ce8c0"
+        }
+      ],
+      "licenseConcluded": "NOASSERTION",
+      "copyrightText": "NOASSERTION"
+    }
+  ]
+}

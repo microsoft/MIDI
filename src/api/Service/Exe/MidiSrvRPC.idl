@@ -3,21 +3,22 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 import "oaidl.idl";
 import "ocidl.idl";
 
-import "MidiDataFormat.idl";
-import "MidiFlow.idl";
-//import "mididevicemanagerinterface.idl";
+import "WindowsMidiServices.idl";
 
 cpp_quote("#define MIDISRV_LRPC_PROTOCOL  L\"ncalrpc\"")
 cpp_quote("#define MIDISRV_ENDPOINT L\"MidiSrvClientRpc\"")
 
 typedef [system_handle(sh_section)] HANDLE CP_MMAP_HANDLE;
 typedef [system_handle(sh_event, 0x001F0003L)] HANDLE CP_EVENT_HANDLE;
+
+// this is used for auto-cleanup of connections and other resources
+typedef [context_handle] void * PMIDISRV_CONTEXT_HANDLE;
 
 // temporary test RPC data, to be removed
 typedef enum
@@ -70,9 +71,10 @@ typedef struct MIDISRV_CLIENT
 } MIDISRV_CLIENT, *PMIDISRV_CLIENT;
 
 [
-    uuid(64839251-9DAF-4E79-AA4E-9771C86FFBC1),
+    uuid(64839251-9daf-4e79-aa4e-9771c86ffbc1),
     version(1.0),
     pointer_default(unique),
+    endpoint("ncalrpc:[MidiSrv]")
 ]
 interface MidiSrvRPC
 {
@@ -89,6 +91,7 @@ interface MidiSrvRPC
         [in, string] LPCWSTR MidiDevice, 
         [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, 
         [in] GUID SessionId, 
+        [in] DWORD ClientProcessId,
         [out] PMIDISRV_CLIENT *Client);
 
     HRESULT MidiSrvDestroyClient(
@@ -109,14 +112,27 @@ interface MidiSrvRPC
 
     HRESULT MidiSrvRegisterSession(
         [in] handle_t BindingHandle, 
-        [in] GUID SessionId, 
-        [in, string] LPCWSTR SessionName, 
-        [in] DWORD ProcessId, 
-        [in, string] LPCWSTR ProcessName);
+        [in] GUID SessionId,
+        [in, string] LPCWSTR SessionName,
+        [in] DWORD ProcessId,
+        [in] LPCWSTR ProcessName,
+        [in,out] PMIDISRV_CONTEXT_HANDLE *ContextHandle
+    );
+
+    HRESULT MidiSrvUpdateSessionName(
+        [in] handle_t BindingHandle,
+        [in] PMIDISRV_CONTEXT_HANDLE ContextHandle,
+        [in] GUID SessionId,
+        [in, string] LPCWSTR SessionName,
+        [in] DWORD ProcessId
+    );
 
     HRESULT MidiSrvDeregisterSession(
         [in] handle_t BindingHandle, 
-        [in] GUID SessionId);
+        [in] PMIDISRV_CONTEXT_HANDLE ContextHandle,
+        [in] GUID SessionId
+    );
+
 
     HRESULT MidiSrvGetSessionList(
         [in] handle_t BindingHandle, 
@@ -132,5 +148,8 @@ interface MidiSrvRPC
     HRESULT MidiSrvGetTransformList(
         [in] handle_t BindingHandle,
         [out] BSTR* TransformListJson);
+
+    HRESULT MidiSrvVerifyConnectivity(
+        [in] handle_t BindingHandle);
 
 }

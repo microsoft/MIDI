@@ -3,12 +3,14 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
 #include "pch.h"
 #include "midi2.ksabstraction.h"
+
+
 
 _Use_decl_annotations_
 HRESULT
@@ -29,7 +31,8 @@ CMidi2KSMidi::Initialize(
 
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(Device, "Device"),
@@ -115,6 +118,12 @@ CMidi2KSMidi::Initialize(
         RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE));
     }
 
+
+    ULONG requestedBufferSize = PAGE_SIZE;
+    RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
+    RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
+
+
     if (Flow == MidiFlowBidirectional)
     {
         prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
@@ -131,11 +140,6 @@ CMidi2KSMidi::Initialize(
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
         inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
     }
-
-    ULONG requestedBufferSize = PAGE_SIZE;
-    RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
-
-    RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
 
     if (Flow == MidiFlowIn || Flow == MidiFlowBidirectional)
     {
@@ -161,7 +165,8 @@ CMidi2KSMidi::Cleanup()
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );

@@ -18,7 +18,7 @@
 #include <wil\result.h>
 #include <wil\wistd_memory.h>
 
-#include "MidiAbstraction.h"
+#include "WindowsMidiServices.h"
 
 #include <Devpkey.h>
 #include "MidiKsDef.h"

@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "pch.h"
@@ -22,7 +22,8 @@ CMidi2VirtualMidiConfigurationManager::Initialize(
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -45,7 +46,8 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(ConfigurationJsonSection, "json")
@@ -58,10 +60,11 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Virtual endpoints can be created only at runtime through the API, not from the configuration file.", "message")
+            TraceLoggingWideString(L"Virtual endpoints can be created only at runtime through the API, not from the configuration file.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return E_FAIL;
@@ -80,10 +83,11 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Failed to parse Configuration JSON", "message"),
+            TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(ConfigurationJsonSection, "json")
         );
 
@@ -116,11 +120,36 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
             deviceEntry.BaseEndpointName = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
             deviceEntry.Description = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
 
-            // TODO: if no association id, or it already exists in the table, bail
+            // If no association id generate one
+            if (deviceEntry.VirtualEndpointAssociationId.empty())
+            {
+                deviceEntry.VirtualEndpointAssociationId = internal::GuidToString(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+            }
 
-            // TODO: if no unique Id, bail or maybe generate one
+            if (deviceEntry.BaseEndpointName.empty())
+            {
+                deviceEntry.BaseEndpointName = L"Unnamed Virtual";
+            }
 
-            // TODO: if a unique id and it's larger than the max length, truncate it
+            if (deviceEntry.ShortUniqueId.empty())
+            {
+                // get a guid and strip all non-alphanumeric characters
+                auto guidString = internal::GuidToString(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
+
+                guidString.erase(
+                    std::remove_if(
+                        guidString.begin(),
+                        guidString.end(),
+                        [](wchar_t c) { return !std::isalnum(c); })
+                );
+
+                deviceEntry.ShortUniqueId = guidString;
+            }
+            else
+            {
+                // If a unique id and it's larger than the max length, truncate it
+                deviceEntry.ShortUniqueId = deviceEntry.ShortUniqueId.substr(0, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN);
+            }
 
             // create the device-side endpoint
             LOG_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateDeviceSideEndpoint(deviceEntry));
@@ -150,7 +179,8 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(responseObject.Stringify().c_str())
@@ -168,7 +198,8 @@ CMidi2VirtualMidiConfigurationManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

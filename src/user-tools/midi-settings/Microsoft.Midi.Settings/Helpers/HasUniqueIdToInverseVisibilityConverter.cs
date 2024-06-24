@@ -24,7 +24,7 @@ public class HasUniqueIdToInverseVisibilityConverter : IValueConverter
         throw new ArgumentException("HasUniqueIdToInverseVisibilityConverter object must be a string");
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    public object? ConvertBack(object value, Type targetType, object parameter, string language)
     {
         return null;
     }

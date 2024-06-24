@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "stdafx.h"
@@ -20,7 +20,8 @@ CMidiDeviceManager::Initialize(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -43,15 +44,26 @@ CMidiDeviceManager::Initialize(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Loading abstraction layer", "message"),
+                TraceLoggingWideString(L"Getting abstraction configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingGuid(AbstractionLayer, "abstraction layer")
             );
 
             // provide the initial settings for these transports
             auto transportSettingsJson = m_ConfigurationManager->GetSavedConfigurationForTransportAbstraction(AbstractionLayer);
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"CoCreating abstraction layer", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
 
             // changed these from a return-on-fail to just log, so we don't prevent service startup
             // due to one bad abstraction
@@ -60,26 +72,57 @@ CMidiDeviceManager::Initialize(
 
             if (midiAbstraction != nullptr)
             {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Activating abstraction layer IMidiEndpointManager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                );
+
                 LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
 
                 if (endpointManager != nullptr)
                 {
                     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
 
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Initializing abstraction layer Midi Endpoint Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                    );
+
                     auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get());
 
                     if (SUCCEEDED(initializeResult))
                     {
                         m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Midi Endpoint Manager initialized", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                        );
                     }
                     else
                     {
                         TraceLoggingWrite(
                             MidiSrvTelemetryProvider::Provider(),
-                            __FUNCTION__,
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Transport abstraction initialization failed.", "message"),
+                            TraceLoggingWideString(L"Transport abstraction initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                             TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                         );
                     }
@@ -89,14 +132,25 @@ CMidiDeviceManager::Initialize(
                 {
                     TraceLoggingWrite(
                         MidiSrvTelemetryProvider::Provider(),
-                        __FUNCTION__,
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Transport abstraction endpoint manager initialization failed.", "message"),
+                        TraceLoggingWideString(L"Transport abstraction endpoint manager initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                     );
 
                 }
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Activating abstraction configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                );
 
                 // we only log. This interface is optional
                 auto configHR = midiAbstraction->Activate(__uuidof(IMidiAbstractionConfigurationManager), (void**)&abstractionConfigurationManager);
@@ -112,13 +166,16 @@ CMidiDeviceManager::Initialize(
 
                         if (FAILED(initializeResult))
                         {
+                            LOG_IF_FAILED(initializeResult);
+
                             TraceLoggingWrite(
                                 MidiSrvTelemetryProvider::Provider(),
-                                __FUNCTION__,
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingHResult(initializeResult, "hresult"),
-                                TraceLoggingWideString(L"Failed to initialize abstraction configuration manager.", "message"),
+                                TraceLoggingHResult(initializeResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                TraceLoggingWideString(L"Failed to initialize abstraction configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                             );
                         }
@@ -129,6 +186,16 @@ CMidiDeviceManager::Initialize(
 
                             if (!transportSettingsJson.empty())
                             {
+                                TraceLoggingWrite(
+                                    MidiSrvTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Updating abstraction configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                                );
+
                                 CComBSTR response{};
                                 response.Empty();
 
@@ -137,18 +204,18 @@ CMidiDeviceManager::Initialize(
                                 // we don't use the response info here.
                                 ::SysFreeString(response);
 
-
                                 if (FAILED(updateConfigHR))
                                 {
                                     if (updateConfigHR == E_NOTIMPL)
                                     {
                                         TraceLoggingWrite(
                                             MidiSrvTelemetryProvider::Provider(),
-                                            __FUNCTION__,
+                                            MIDI_TRACE_EVENT_WARNING,
+                                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                                             TraceLoggingPointer(this, "this"),
-                                            TraceLoggingHResult(updateConfigHR, "hresult"),
-                                            TraceLoggingWideString(L"Config update not implemented for this abstraction.", "message"),
+                                            TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                            TraceLoggingWideString(L"Config update not implemented for this abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                             TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                                         );
                                     }
@@ -158,11 +225,12 @@ CMidiDeviceManager::Initialize(
 
                                         TraceLoggingWrite(
                                             MidiSrvTelemetryProvider::Provider(),
-                                            __FUNCTION__,
+                                            MIDI_TRACE_EVENT_ERROR,
+                                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                             TraceLoggingPointer(this, "this"),
-                                            TraceLoggingHResult(updateConfigHR, "hresult"),
-                                            TraceLoggingWideString(L"Failed to update configuration.", "message"),
+                                            TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                            TraceLoggingWideString(L"Failed to update configuration.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                             TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                                         );
                                     }
@@ -172,10 +240,11 @@ CMidiDeviceManager::Initialize(
 
                                     TraceLoggingWrite(
                                         MidiSrvTelemetryProvider::Provider(),
-                                        __FUNCTION__,
+                                        MIDI_TRACE_EVENT_INFO,
+                                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                         TraceLoggingPointer(this, "this"),
-                                        TraceLoggingWideString(L"Configuration updated.", "message"),
+                                        TraceLoggingWideString(L"Configuration updated.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                         TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                                     );
                                 }
@@ -189,10 +258,11 @@ CMidiDeviceManager::Initialize(
                     {
                         TraceLoggingWrite(
                             MidiSrvTelemetryProvider::Provider(),
-                            __FUNCTION__,
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Transport abstraction configuration manager activation failed with null result.", "message"),
+                            TraceLoggingWideString(L"Transport abstraction configuration manager activation failed with null result.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                             TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                         );
                     }
@@ -201,11 +271,12 @@ CMidiDeviceManager::Initialize(
                 {
                     TraceLoggingWrite(
                         MidiSrvTelemetryProvider::Provider(),
-                        __FUNCTION__,
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingHResult(configHR, "hresult"),
-                        TraceLoggingWideString(L"Transport abstraction configuration manager activation failed.", "message"),
+                        TraceLoggingHResult(configHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                        TraceLoggingWideString(L"Transport abstraction configuration manager activation failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                         TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                     );
                 }
@@ -214,24 +285,67 @@ CMidiDeviceManager::Initialize(
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Transport Abstraction activation failed (nullptr return).", "message"),
+                    TraceLoggingWideString(L"Transport Abstraction activation failed (nullptr return).", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                 );
             }
 
         }
-        catch (...)
+
+        catch (wil::ResultException rex)
         {
-            // TODO: Log exception
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Exception loading transport abstraction.", "message"),
+                TraceLoggingWideString(L"Result Exception loading transport abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingString(rex.what(), "error"),
+                TraceLoggingHResult(rex.GetErrorCode(), MIDI_TRACE_EVENT_HRESULT_FIELD),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
+
+        }
+        catch (std::runtime_error& err)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Runtime error loading transport abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingString(err.what(), "error"),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
+        }
+        catch (const std::exception& ex)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Exception loading transport abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingString(ex.what(), "exception"),
+                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+            );
+        }        
+        catch (...)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unknown exception loading transport abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingGuid(AbstractionLayer, "abstraction layer")
             );
 
@@ -268,7 +382,8 @@ void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationRes
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(creationContext->MidiPort->InstanceId.c_str(), "instance id"),
         TraceLoggingULong(creationContext->IntPropertyCount, "property count")
@@ -357,7 +472,8 @@ CMidiDeviceManager::ActivateVirtualParentDevice
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -429,7 +545,8 @@ CMidiDeviceManager::ActivateVirtualParentDevice
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(CreatedSwDeviceId)
@@ -464,7 +581,8 @@ CMidiDeviceManager::ActivateEndpoint
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(ParentInstanceId, "parent"),
@@ -499,11 +617,12 @@ CMidiDeviceManager::ActivateEndpoint
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(ParentInstanceId, "parent"),
-            TraceLoggingWideString(L"Already Activated", "message")
+            TraceLoggingWideString(L"Already Activated", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return S_FALSE;
@@ -523,7 +642,8 @@ CMidiDeviceManager::ActivateEndpoint
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(ParentInstanceId, "parent"),
@@ -540,11 +660,12 @@ CMidiDeviceManager::ActivateEndpoint
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(ParentInstanceId, "parent"),
-                TraceLoggingWideString(L"Common properties object supplied", "message")
+                TraceLoggingWideString(L"Common properties object supplied", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
 
@@ -563,11 +684,12 @@ CMidiDeviceManager::ActivateEndpoint
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Common Properties: Friendly Name is null or empty", "message")
+                    TraceLoggingWideString(L"Common Properties: Friendly Name is null or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 return E_INVALIDARG;
@@ -584,11 +706,12 @@ CMidiDeviceManager::ActivateEndpoint
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Common Properties: Transport Mnemonic is null or empty", "message")
+                    TraceLoggingWideString(L"Common Properties: Transport Mnemonic is null or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 return E_INVALIDARG;
@@ -604,11 +727,12 @@ CMidiDeviceManager::ActivateEndpoint
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_TransportSuppliedEndpointName", "message")
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_TransportSuppliedEndpointName", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
                 
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
@@ -623,11 +747,12 @@ CMidiDeviceManager::ActivateEndpoint
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_TransportSuppliedDescription", "message")
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_TransportSuppliedDescription", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
@@ -642,11 +767,12 @@ CMidiDeviceManager::ActivateEndpoint
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_SerialNumber", "message")
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_SerialNumber", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SerialNumber, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
@@ -661,11 +787,12 @@ CMidiDeviceManager::ActivateEndpoint
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_ManufacturerName", "message")
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_ManufacturerName", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ManufacturerName, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
@@ -682,11 +809,12 @@ CMidiDeviceManager::ActivateEndpoint
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_UserSuppliedEndpointName", "message")
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_UserSuppliedEndpointName", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
@@ -701,11 +829,12 @@ CMidiDeviceManager::ActivateEndpoint
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_UserSuppliedDescription", "message")
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_UserSuppliedDescription", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
@@ -714,11 +843,12 @@ CMidiDeviceManager::ActivateEndpoint
             // TEMP
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(ParentInstanceId, "parent"),
-                TraceLoggingWideString(L"Adding other non-string properties", "message")
+                TraceLoggingWideString(L"Adding other non-string properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             // data format. These each have different uses. Native format is the device's format. Supported
@@ -753,11 +883,12 @@ CMidiDeviceManager::ActivateEndpoint
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(ParentInstanceId, "parent"),
-                TraceLoggingWideString(L"NO Common properties object supplied", "message")
+                TraceLoggingWideString(L"NO Common properties object supplied", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
         }
@@ -765,11 +896,12 @@ CMidiDeviceManager::ActivateEndpoint
         // TEMP
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(ParentInstanceId, "parent"),
-            TraceLoggingWideString(L"Adding clearing properties", "message")
+            TraceLoggingWideString(L"Adding clearing properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         // Clear almost all of the protocol negotiation-discovered properties. We keep the "supports MIDI 1.0" and "supports MIDI 2.0" 
@@ -807,7 +939,7 @@ CMidiDeviceManager::ActivateEndpoint
         //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         //    TraceLoggingPointer(this, "this"),
         //    TraceLoggingWideString(ParentInstanceId, "parent"),
-        //    TraceLoggingWideString(L"Adding clearing properties for function blocks", "message")
+        //    TraceLoggingWideString(L"Adding clearing properties for function blocks", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         //);
 
         //for (int i = 0; i < MIDI_MAX_FUNCTION_BLOCKS; i++)
@@ -830,11 +962,12 @@ CMidiDeviceManager::ActivateEndpoint
         // TEMP
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(ParentInstanceId, "parent"),
-            TraceLoggingWideString(L"Registering cleanupOnFailure", "message")
+            TraceLoggingWideString(L"Registering cleanupOnFailure", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
 
@@ -849,11 +982,12 @@ CMidiDeviceManager::ActivateEndpoint
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(ParentInstanceId),
-            TraceLoggingWideString(L"Activating UMP Endpoint", "message")
+            TraceLoggingWideString(L"Activating UMP Endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
         
         // Activate the UMP version of this endpoint.
@@ -873,12 +1007,13 @@ CMidiDeviceManager::ActivateEndpoint
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(ParentInstanceId),
                 TraceLoggingHResult(activationResult, "Activation HRESULT"),
-                TraceLoggingWideString(L"Failed to activate UMP endpoint", "message")
+                TraceLoggingWideString(L"Failed to activate UMP endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             RETURN_IF_FAILED(activationResult);
@@ -977,7 +1112,8 @@ CMidiDeviceManager::ActivateEndpointInternal
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(ParentInstanceId, "parent instance id"),
@@ -1093,7 +1229,8 @@ CMidiDeviceManager::ActivateEndpointInternal
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Already exists"),
@@ -1124,10 +1261,11 @@ CMidiDeviceManager::ActivateEndpointInternal
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"SwDeviceCreate failed", "message"),
+            TraceLoggingWideString(L"SwDeviceCreate failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(ParentInstanceId),
             TraceLoggingBool(MidiOne)
         );
@@ -1139,11 +1277,12 @@ CMidiDeviceManager::ActivateEndpointInternal
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingHResult(midiPort->hr, "hresult"),
-            TraceLoggingWideString(L"SwDeviceCreate returned a failed HR", "message"),
+            TraceLoggingHResult(midiPort->hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+            TraceLoggingWideString(L"SwDeviceCreate returned a failed HR", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(ParentInstanceId),
             TraceLoggingBool(MidiOne)
         );
@@ -1154,10 +1293,11 @@ CMidiDeviceManager::ActivateEndpointInternal
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"SwDeviceState != SWDEVICESTATE::Created", "message"),
+            TraceLoggingWideString(L"SwDeviceState != SWDEVICESTATE::Created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(ParentInstanceId),
             TraceLoggingBool(MidiOne)
         );
@@ -1170,7 +1310,8 @@ CMidiDeviceManager::ActivateEndpointInternal
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(DeviceInterfaceId->c_str(), "created device interface id")
@@ -1199,7 +1340,8 @@ CMidiDeviceManager::UpdateEndpointProperties
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(DeviceInterfaceId, "device interface id"),
@@ -1220,10 +1362,11 @@ CMidiDeviceManager::UpdateEndpointProperties
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Device not found. If the updates are from the config file, the device may not yet have been enumerated.", "message"),
+            TraceLoggingWideString(L"Device not found. If the updates are from the config file, the device may not yet have been enumerated.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(DeviceInterfaceId, "device interface id"),
             TraceLoggingULong(IntPropertyCount, "property count")
         );
@@ -1247,10 +1390,11 @@ CMidiDeviceManager::UpdateEndpointProperties
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Properties set", "message"),
+                TraceLoggingWideString(L"Properties set", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(DeviceInterfaceId, "device interface id"),
                 TraceLoggingULong(IntPropertyCount, "property count")
             );
@@ -1261,11 +1405,12 @@ CMidiDeviceManager::UpdateEndpointProperties
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingHResult(propSetHR, "hresult"),
-                TraceLoggingWideString(L"Error setting properties", "message"),
+                TraceLoggingHResult(propSetHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                TraceLoggingWideString(L"Error setting properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(DeviceInterfaceId, "device interface id"),
                 TraceLoggingULong(IntPropertyCount, "property count")
             );
@@ -1288,15 +1433,13 @@ CMidiDeviceManager::DeleteEndpointProperties
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(DeviceInterfaceId),
         TraceLoggingULong(IntPropertyCount)
     );
-
-    OutputDebugString(L"\n" __FUNCTION__ " ");
-
 
     // create list of dev properties from the keys
 
@@ -1324,7 +1467,8 @@ CMidiDeviceManager::DeactivateEndpoint
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(InstanceId, "instance id")
@@ -1340,9 +1484,6 @@ CMidiDeviceManager::DeactivateEndpoint
         // NOTE: This uses InstanceId, not the Device Interface Id
         auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
-           // OutputDebugString(__FUNCTION__ L" Checking against stored instance id: ");
-           // OutputDebugString(Port->InstanceId.c_str());
-                
             if (cleanId == Port->InstanceId)
             {
                 return true;
@@ -1376,7 +1517,8 @@ CMidiDeviceManager::RemoveEndpoint
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(InstanceId)
@@ -1406,7 +1548,8 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingGuid(AbstractionId, "abstraction id"),
@@ -1427,11 +1570,12 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingGuid(AbstractionId, "abstraction id"),
-                TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID", "message")
+                TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
         }
@@ -1440,10 +1584,11 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Json is null", "message")
+            TraceLoggingWideString(L"Json is null", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
     }
 
@@ -1458,7 +1603,8 @@ CMidiDeviceManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

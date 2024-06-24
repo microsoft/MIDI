@@ -1,17 +1,16 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Devices.Midi2;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+
+using Microsoft.Windows.Devices.Midi2.Messages;
+
+namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointSendMessagesFileCommand : Command<EndpointSendMessagesFileCommand.Settings>
     {
@@ -59,7 +58,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             {
                 byte newGroup = (byte)settings.NewGroupIndex.GetValueOrDefault(0);
 
-                if (!MidiGroup.IsValidGroupIndex(newGroup))
+                if (!MidiGroup.IsValidIndex(newGroup))
                 {
                     return ValidationResult.Error(Strings.ValidationErrorInvalidGroup);
                 }
@@ -73,7 +72,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiMessageUtility.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageHelper.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
             }
             else
             {
@@ -83,6 +82,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -97,14 +103,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (!string.IsNullOrEmpty(endpointId))
             {
                 // TODO: Update loc strings
-                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+                string endpointName = EndpointUtility.GetEndpointNameFromEndpointInterfaceId(endpointId);
+
+                AnsiConsole.Markup(Strings.SendMessageSendingThroughEndpointLabel);
+                AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine("Only error lines will be displayed when sending messages.");
                 AnsiConsole.WriteLine();
 
-                AnsiConsole.MarkupLine("Temporary UI change: Only error lines will be displayed when sending messages.");
 
-
-
-                using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+                using var session = MidiSession.Create($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
                 if (session == null)
                 {
                     AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorUnableToCreateSession));
@@ -275,9 +284,9 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                                         if (changeGroup)
                                         {
-                                            if (MidiMessageUtility.MessageTypeHasGroupField(MidiMessageUtility.GetMessageTypeFromMessageFirstWord(words[0])))
+                                            if (MidiMessageHelper.MessageTypeHasGroupField(MidiMessageHelper.GetMessageTypeFromMessageFirstWord(words[0])))
                                             {
-                                                words[0] = MidiMessageUtility.ReplaceGroupInMessageFirstWord(words[0], newGroup);
+                                                words[0] = MidiMessageHelper.ReplaceGroupInMessageFirstWord(words[0], newGroup);
                                             }
                                         }
 
@@ -292,7 +301,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                         }
 
                                         
-                                        string detailedMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(words[0]);
+                                        string detailedMessageType = MidiMessageHelper.GetMessageDisplayNameFromFirstWord(words[0]);
 
 #if false
                                         // display the sent data

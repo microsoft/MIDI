@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "stdafx.h"
@@ -20,8 +20,8 @@ CMidiClientPipe::AdjustForBufferingRequirements(PMIDISRV_CLIENTCREATION_PARAMS C
 _Use_decl_annotations_
 HRESULT
 CMidiClientPipe::Initialize(
-    handle_t /* BindingHandle */,
-    HANDLE /* clientProcess */,
+    handle_t /* BindingHandle */,   // this isn't used now, but if used in the future, not this will not be set for internal clients like protocol negotiation
+    HANDLE /* clientProcess */,     // this isn't used now, but if used in the future, not this will not be set for internal clients like protocol negotiation
     LPCWSTR Device,
     GUID SessionId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
@@ -32,7 +32,8 @@ CMidiClientPipe::Initialize(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(Device),
@@ -141,7 +142,8 @@ CMidiClientPipe::Cleanup()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );

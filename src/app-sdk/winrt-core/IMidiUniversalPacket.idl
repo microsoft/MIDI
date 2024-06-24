@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiPacketTypeEnum.idl";
+import "MidiMessageTypeEnum.idl";
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [uuid("2eb5df8a-d751-4997-bf96-ba9a531fd5ff"), version(1.0)]
+    interface IMidiUniversalPacket
+    {
+        UInt64 Timestamp;
+
+        MidiMessageType MessageType;
+        MidiPacketType PacketType{ get; };
+
+        UInt32 PeekFirstWord();
+
+
+        IVector<UInt32> GetAllWords();
+        UInt8 AppendAllMessageWordsToList(IVector<UInt32> targetList);
+
+        UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
+    };
+}

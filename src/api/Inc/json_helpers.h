@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -26,7 +26,7 @@
 namespace json = ::winrt::Windows::Data::Json;
 
 
-namespace Windows::Devices::Midi2::Internal
+namespace WindowsMidiServicesInternal
 {
     inline json::JsonObject BuildConfigurationResponseObject(_In_ bool const success)
     {

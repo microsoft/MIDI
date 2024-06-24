@@ -1,18 +1,15 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Devices.Midi2;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-using Microsoft.Devices.Midi2.ConsoleApp.Resources;
-using System.Diagnostics.Eventing.Reader;
-using Windows.ApplicationModel.Preview.Notes;
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+using Microsoft.Windows.Devices.Midi2.Messages;
+
+namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointSendMessageCommand : Command<EndpointSendMessageCommand.Settings>
     {
@@ -87,7 +84,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             if (words != null && words.Length > 0 && words.Length <= 4)
             {
                 // allowed behavior is to cast the packet type to the word count
-                return (bool)((int)MidiMessageUtility.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
+                return (bool)((int)MidiMessageHelper.GetPacketTypeFromMessageFirstWord(words[0]) == words.Length);
             }
             else
             {
@@ -97,6 +94,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -110,13 +114,17 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (!string.IsNullOrEmpty(endpointId))
             {
-                AnsiConsole.MarkupLine(Strings.SendMessageSendingThroughEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+                string endpointName = EndpointUtility.GetEndpointNameFromEndpointInterfaceId(endpointId);
+
+                AnsiConsole.Markup(Strings.SendMessageSendingThroughEndpointLabel);
+                AnsiConsole.MarkupLine(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
                 AnsiConsole.WriteLine();
 
                 bool openSuccess = false;
 
                 // when this goes out of scope, it will dispose of the session, which closes the connections
-                using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
+                using var session = MidiSession.Create($"{Strings.AppShortName} - {Strings.SendMessageSessionNameSuffix}");
 
                 if (session == null)
                 {
@@ -316,7 +324,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 if (maxTimestampScheduled > MidiClock.Now)
                 {
-                    int sleepMs = (int)Math.Ceiling(MidiClock.ConvertTimestampToMilliseconds(maxTimestampScheduled - MidiClock.Now));
+                    int sleepMs = (int)Math.Ceiling(MidiClock.ConvertTimestampTicksToMilliseconds(maxTimestampScheduled - MidiClock.Now));
 
                     sleepMs += 1000;    // we wait an extra second to avoid any timing issues
 

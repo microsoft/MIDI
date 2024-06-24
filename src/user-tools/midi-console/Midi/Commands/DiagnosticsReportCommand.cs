@@ -1,13 +1,14 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+
+
+namespace Microsoft.Midi.ConsoleApp
 {
     // commands to check the health of Windows MIDI Services on this PC
     // will check for MIDI services
@@ -36,6 +37,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             // TODO: This code should be moved to the SDK (as C++) so the UI and apps can use it
             // Either that, or just share an assembly
 

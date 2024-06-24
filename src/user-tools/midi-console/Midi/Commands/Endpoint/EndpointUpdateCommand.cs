@@ -1,12 +1,14 @@
-﻿using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+
+
+namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointUpdateCommand : Command<EndpointUpdateCommand.Settings>
     {
@@ -19,6 +21,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))

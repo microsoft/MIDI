@@ -3,13 +3,25 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
-
 
 #pragma once
 
 #include <Devpropdef.h>
+
+
+#define MIDI_TRACE_EVENT_ERROR              "Midi.Error"
+#define MIDI_TRACE_EVENT_WARNING            "Midi.Warning"
+#define MIDI_TRACE_EVENT_INFO               "Midi.Info"
+
+
+#define MIDI_TRACE_EVENT_MESSAGE_FIELD      "message"
+#define MIDI_TRACE_EVENT_LOCATION_FIELD     "location"
+#define MIDI_TRACE_EVENT_HRESULT_FIELD      "hresult"
+#define MIDI_TRACE_EVENT_INTERFACE_FIELD    "interface"
+
+
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
@@ -570,59 +582,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVP
 // Structures for properties ================================================================
 
 
-// GTB structures Copied from driver code. This should be a shared file instead.
-
-// Group Terminal Block structure defines
-#pragma pack(push)
-#pragma pack(1)
-
-/* Based on current definitions in USB Class Definition for MIDI Devices Release 2.0
-
-For Group Terminal Block Type (sect. A.6)
-BIDIRECTIONAL                       0x00
-INPUT_ONLY                          0x01
-OUTPUT_ONLY                         0x02
-
-For Group Terminal Default MIDI Protocol (sect. A.7)
-USE_MIDI_CI                         0x00
-MIDI_1_0_UP_TO_64_BITS              0x01
-MIDI_1_0_UP_TO_64_BITS_AND_JRTS     0x02
-MIDI_1_0_UP_TO_128_BITS             0x03
-MIDI_1_0_UP_TO_128_BITS_AND_JRTS    0x04
-MIDI_2_0                            0x11
-MIDI_2_0_AND_JRTS                   0x12
-
-Group Terminal Number
-GROUP_1                             0x00
-GROUP_2                             0x01
-GROUP_3                             0x02
-...
-GROUP_16                            0x0F
-*/
-
-typedef struct
-{
-    WORD                            Size;
-    BYTE                            Number;             // Group Terminal Block ID
-    BYTE                            Direction;          // Group Terminal Block Type
-    BYTE                            FirstGroupIndex;    // The first group in this block
-    BYTE                            GroupCount;         // The number of groups spanned
-    BYTE                            Protocol;           // The MIDI Protocol
-    WORD                            MaxInputBandwidth;  ///< Maximum Input Bandwidth Capability in 4KB/second
-    WORD                            MaxOutputBandwidth; ///< Maximum Output Bandwidth Capability in 4KB/second
-} UMP_GROUP_TERMINAL_BLOCK_HEADER;
-
-
-
-typedef struct
-{
-    UMP_GROUP_TERMINAL_BLOCK_HEADER GrpTrmBlock;
-    WCHAR                           Name[1];             // NULL Terminated string, blank indicates none available
-    // from USB Device
-} UMP_GROUP_TERMINAL_BLOCK_DEFINITION, * PUMP_GROUP_TERMINAL_BLOCK_DEFINITION;
-
-
-#pragma pack(pop)
 
 
 

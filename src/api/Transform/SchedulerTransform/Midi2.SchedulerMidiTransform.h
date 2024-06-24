@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -88,7 +88,7 @@ private:
     //wil::unique_event_nothrow m_messageProcessorWakeup;
     wil::slim_event_manual_reset m_messageProcessorWakeup;
 
-    uint64_t m_timestampFrequency = internal::Shared::GetMidiTimestampFrequency();
+    uint64_t m_timestampFrequency = internal::GetMidiTimestampFrequency();
 };
 
 

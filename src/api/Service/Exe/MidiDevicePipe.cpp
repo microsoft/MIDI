@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "stdafx.h"
@@ -21,16 +21,13 @@ CMidiDevicePipe::Initialize(
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
 
-
     auto deviceLock = m_DevicePipeLock.lock();
-
-    OutputDebugString(L"" __FUNCTION__ " Initialize.");
-    OutputDebugString(Device);
 
     ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
 
@@ -127,13 +124,9 @@ CMidiDevicePipe::Initialize(
     }
     catch (...)
     {
-        OutputDebugString(L"" __FUNCTION__ " Exception checking device multiclient property. Defaulting to true.");
-
         // default to true for multiclient support
         m_endpointSupportsMulticlient = true;
     }
-
-    OutputDebugString(L"" __FUNCTION__ " Initialize finished.");
 
     return S_OK;
 }
@@ -143,13 +136,12 @@ CMidiDevicePipe::Cleanup()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
 
-
-    OutputDebugString(L"" __FUNCTION__ " Cleanup started.");
 
     {
         auto lock = m_DevicePipeLock.lock();
@@ -173,8 +165,6 @@ CMidiDevicePipe::Cleanup()
     }
 
     RETURN_IF_FAILED(CMidiPipe::Cleanup());
-
-    OutputDebugString(L"" __FUNCTION__ " Cleanup finished.");
 
     return S_OK;
 }
@@ -224,8 +214,6 @@ CMidiDevicePipe::SendMidiMessageNow(
     // TODO: This function is where we'll check to see if we're in SysEx or not. If we are
     // then we need to add the message to the SysEx set-aside scheduler, or maybe just add
     // it to the regular scheduler queue?
-
-//    OutputDebugString(L"" __FUNCTION__);
 
     // only one client may send a message to the device at a time
     auto lock = m_DevicePipeLock.lock();

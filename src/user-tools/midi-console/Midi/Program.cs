@@ -1,16 +1,26 @@
-﻿using Spectre.Console.Cli;
-using Spectre.Console;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
 using System.Runtime.Versioning;
 
-using Microsoft.Devices.Midi2.ConsoleApp;
-using Microsoft.Devices.Midi2.ConsoleApp.Resources;
-using Windows.Gaming.Input.ForceFeedback;
-using Windows.Devices.Midi2;
+using Microsoft.Midi.ConsoleApp;
+
 
 
 
 Console.InputEncoding = System.Text.Encoding.UTF8;
 Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+{
+    LoggingService.Current.LogError(e.ToString()!);
+};
+
 
 var app = new CommandApp();
 
@@ -60,7 +70,8 @@ app.Configure(config =>
 
     config.AddBranch<EndpointCommandSettings>("endpoint", endpoint =>
     {
-        endpoint.AddExample("endpoint", "properties", "--verbose");
+        //endpoint.AddExample("endpoint", "properties", "--verbose");
+        endpoint.AddExample("endpoint", "properties");
         endpoint.AddExample("endpoint", "send-message", "0x21234567");
 
         endpoint.SetDescription(Strings.CommandEndpointDescription);

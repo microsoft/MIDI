@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -28,6 +28,13 @@ DEFINE_DEVPROPKEY(DEVPKEY_KsMidiPort_OutPinId, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0x
 
 #define STRING_DEVPKEY_KsTransport L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},3"
 DEFINE_DEVPROPKEY(DEVPKEY_KsTransport, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 3);     // DEVPROP_TYPE_BYTE
+
+
+// The binary is KSMIDI_PIN_MAP which contains 16 input and 16 output group maps
+// this is used for when we create a UMP BIDI from a set of MIDI in and Out pins on a device
+#define STRING_DEVPKEY_KsMidiGroupPinMap L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},16"
+DEFINE_DEVPROPKEY(DEVPKEY_KsMidiGroupPinMap, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 16); // DEVPROP_TYPE_BINARY
+
 
 typedef enum _MidiTransport
 {

@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
 		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
 		<RootNamespace>Microsoft.Midi.Settings.Extensibility</RootNamespace>
 		<AssemblyName>Microsoft.Midi.Settings.Extensibility</AssemblyName>

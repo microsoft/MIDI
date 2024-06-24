@@ -3,13 +3,14 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "stdafx.h"
 
 #define SVCNAME L"MidiSrv"
-#define SVCDISPLAYNAME L"Microsoft MIDI Service"
+#define SVCDISPLAYNAME L"Microsoft Windows MIDI Service"
+#define SVCDESCRIPTION L"Microsoft Windows MIDI Services core service for MIDI 1.0 and MIDI 2.0 message routing and device discovery / enumeration"
 
 //#ifdef _DEBUG
 //#define SVCDESCRIPTION TEXT("Windows MIDI Services core service (Debug Build)")
@@ -43,6 +44,14 @@ VOID ReportSvcStatus(
     _In_ DWORD dwWin32ExitCode,
     _In_ DWORD dwWaitHint)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+
     static DWORD checkPoint = 1;
 
     // Fill in the SERVICE_STATUS structure.
@@ -72,9 +81,166 @@ VOID ReportSvcStatus(
     // Report the status of the service to the SCM.
     if (!SetServiceStatus(g_SvcStatusHandle, &g_SvcStatus))
     {
-        LOG_LAST_ERROR_MSG("Failed to set the service status");
+        LOG_LAST_ERROR_MSG("Failed to set the service status.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Failed to set the service status.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
     }
 }
+
+
+BOOL SvcUpdateDescription(
+    _In_ wil::unique_schandle& service
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+    // Set the service description so it's not just blank. This should be localized
+    // with "@[path]dllname,-strID" and a .rc file
+
+    std::wstring serviceDescription{ SVCDESCRIPTION };
+
+    SERVICE_DESCRIPTION info{ };
+    info.lpDescription = (LPWSTR)(serviceDescription.c_str());
+
+    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_DESCRIPTION, &info))
+    {
+        // non-fatal
+        LOG_LAST_ERROR_MSG("Changing service description failed.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Changing service description failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+// Should we also trigger on SERVICE_TRIGGER_TYPE_DEVICE_INTERFACE_ARRIVAL? We are the 
+// interface enumerator so I assume it would trigger on *all* audio devices, which would 
+// be pointless?
+// 
+// Also, there are situations when the system may have only network or BLE or something
+// MIDI devices, so then it would make no sense as it would trigger only for USB.
+//
+// So triggering on RPC call. Musicians are likely going to want to change the service
+// to automatic start, so I'll put an option in the settings app to enable that
+// for them. Otherwise, there's a delay between the service spinning up and all
+// devices being enumerated (and protocol negotiation complete)
+
+
+BOOL SvcSetStartTriggerRpc(
+    _In_ wil::unique_schandle& service
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+    SERVICE_TRIGGER_INFO triggerInfo{ 0 };
+    SERVICE_TRIGGER trigger{ 0 };
+    SERVICE_TRIGGER_SPECIFIC_DATA_ITEM triggerData{ 0 };
+
+    // Set the RPC call to triggers waking up this service
+    std::wstring rpcGuidString{ L"64839251-9daf-4e79-aa4e-9771c86ffbc1" }; // RPC Interface. should use __uuidof
+
+    triggerData.dwDataType = SERVICE_TRIGGER_DATA_TYPE_STRING;
+    triggerData.pData = (PBYTE)(rpcGuidString.c_str());
+    triggerData.cbData = (DWORD)(rpcGuidString.length() + 1) * sizeof(wchar_t);
+
+    auto triggerSubType = RPC_INTERFACE_EVENT_GUID;
+
+    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
+    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_NETWORK_ENDPOINT;
+    trigger.pTriggerSubtype = (LPGUID)&triggerSubType;
+    trigger.pDataItems = &triggerData;
+    trigger.cDataItems = 1;
+
+    triggerInfo.pTriggers = &trigger;
+    triggerInfo.cTriggers = 1;
+
+    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_TRIGGER_INFO, &triggerInfo))
+    {
+        LOG_LAST_ERROR_MSG("Changing service trigger to RPC call failed.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Changing service trigger to RPC call failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+BOOL SvcSetStartTriggerEtw(
+    _In_ wil::unique_schandle& service
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
+    SERVICE_TRIGGER_INFO triggerInfo{ 0 };
+    SERVICE_TRIGGER trigger{ 0 };
+    SERVICE_TRIGGER_SPECIFIC_DATA_ITEM triggerData{ 0 };
+
+    // use ETW trigger. This worked right away
+    GUID midiSrvAbstractionEtwProvider{ 0xc3263827, 0x0519, 0x1867, 0x53, 0x09, 0x51, 0x50, 0x19, 0x84, 0xed, 0xed };
+
+    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
+    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_CUSTOM;
+    trigger.pTriggerSubtype = (LPGUID)&midiSrvAbstractionEtwProvider;
+    //trigger.pDataItems = &triggerData;
+    trigger.cDataItems = 0;
+
+    triggerInfo.pTriggers = &trigger;
+    triggerInfo.cTriggers = 1;
+
+    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_TRIGGER_INFO, &triggerInfo))
+    {
+        LOG_LAST_ERROR_MSG("Changing service trigger to ETW event failed.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Changing service trigger to ETW event failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
 
 //
 // Purpose: 
@@ -82,6 +248,13 @@ VOID ReportSvcStatus(
 //
 VOID SvcInstall()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
     wil::unique_schandle serviceControlManager;
     wil::unique_schandle service;
     TCHAR unquotedPath[MAX_PATH] = {0};
@@ -90,7 +263,16 @@ VOID SvcInstall()
 
     if (!GetModuleFileName(NULL, unquotedPath, MAX_PATH))
     {
-        LOG_LAST_ERROR_MSG("Cannot install service, failed to retrieve module file name");
+        LOG_LAST_ERROR_MSG("Cannot install service. Failed to retrieve module file name.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot install service. Failed to retrieve module file name.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
 
@@ -98,7 +280,16 @@ VOID SvcInstall()
     hr = StringCbPrintf(quotedPath, MAX_PATH, TEXT("\"%s\""), unquotedPath);
     if (FAILED(hr))
     {
-        LOG_HR_MSG(hr, "Cannot install service, failed to compose quoted path");
+        LOG_HR_MSG(hr, "Cannot install service. Failed to compose quoted path.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot install service. Failed to compose quoted path.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
 
@@ -106,7 +297,16 @@ VOID SvcInstall()
     serviceControlManager.reset(OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS));
     if (!serviceControlManager)
     {
-        LOG_LAST_ERROR_MSG("Cannot install service, OpenSCManager failed");
+        LOG_LAST_ERROR_MSG("Cannot install service. OpenSCManager failed. This must be run as Administrator.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot install service. OpenSCManager failed. This must be run as Administrator.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
 
@@ -117,7 +317,7 @@ VOID SvcInstall()
         SVCDISPLAYNAME,
         SERVICE_ALL_ACCESS,
         SERVICE_WIN32_OWN_PROCESS,
-        SERVICE_AUTO_START,
+        SERVICE_DEMAND_START,           // Needs to be demand start to ship in-box in Windows
         SERVICE_ERROR_NORMAL,
         quotedPath,
         NULL,
@@ -125,29 +325,54 @@ VOID SvcInstall()
         NULL,
         NULL,
         NULL));
+
     if (!service)
     {
-        LOG_LAST_ERROR_MSG("Cannot install service, CreateService failed");
+        LOG_LAST_ERROR_MSG("Cannot install service. CreateService failed.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot install service. CreateService failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
 
-    if (!StartService(service.get(), 0, nullptr))
+    SvcUpdateDescription(service);
+
+#ifdef USE_RPC_DEMAND_TRIGGER
+    // tried the RPC trigger and just couldn't get it to work
+    if (!SvcSetStartTriggerRpc(service))
     {
-        LOG_LAST_ERROR_MSG("Starting the service failed during service install");
         return;
     }
-    //// Set the service description so it's not just blank. This should be localized
-    //// in the future with "@[path]dllname,-strID"
+#endif
 
-    //SERVICE_DESCRIPTION info;
-    //info.lpDescription = SVCDESCRIPTION;
+    // ETW-based trigger which starts the service when any ETW event
+    // from MidiSrvAbstraction is sent
+    if (!SvcSetStartTriggerEtw(service))
+    {
+        return;
+    }
 
-    //if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_DESCRIPTION, &info))
+    //if (!StartService(service.get(), 0, nullptr))
     //{
-    //    // non-fatal
-    //    LOG_LAST_ERROR_MSG("Changing service description failed");
+    //    LOG_LAST_ERROR_MSG("Starting the service failed during service install.");
     //    return;
     //}
+
+    //printf("\n\rMidiSrv: Service installed.\n\r");
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingWideString(L"Service install complete.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 }
 
 //
@@ -156,6 +381,13 @@ VOID SvcInstall()
 //
 VOID SvcUninstall()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
     wil::unique_schandle serviceControlManager;
     wil::unique_schandle service;
     SERVICE_STATUS_PROCESS status{0};
@@ -165,20 +397,47 @@ VOID SvcUninstall()
     serviceControlManager.reset(OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS));
     if (!serviceControlManager)
     {
-        LOG_LAST_ERROR_MSG("Cannot uninstall service, OpenSCManager failed");
+        LOG_LAST_ERROR_MSG("Cannot uninstall service. OpenSCManager failed");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot uninstall service. OpenSCManager failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
 
     service.reset(OpenService(serviceControlManager.get(), SVCNAME, SERVICE_QUERY_STATUS | SERVICE_STOP | DELETE));
     if (!service)
     {
-        LOG_LAST_ERROR_MSG("Cannot uninstall service, OpenService failed");
+        LOG_LAST_ERROR_MSG("Cannot uninstall service. OpenService failed");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot uninstall service. OpenService failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
 
     if (FALSE == QueryServiceStatusEx(service.get(), SC_STATUS_PROCESS_INFO, reinterpret_cast<LPBYTE>(&status), sizeof(status), &size_needed))
     {
-        LOG_LAST_ERROR_MSG("Cannot uninstall service, QueryServiceStatusEx failed");
+        LOG_LAST_ERROR_MSG("Cannot uninstall service. QueryServiceStatusEx failed");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot uninstall service. QueryServiceStatusEx failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
 
@@ -189,7 +448,16 @@ VOID SvcUninstall()
 
         if (FALSE == ControlService(service.get(), SERVICE_CONTROL_STOP, &ss))
         {
-            LOG_LAST_ERROR_MSG("Cannot uninstall service, service is not stopped and SERVICE_CONTROL_STOP failed");
+            LOG_LAST_ERROR_MSG("Cannot uninstall service. Service is not stopped and SERVICE_CONTROL_STOP failed");
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(L"Cannot uninstall service. Service is not stopped and SERVICE_CONTROL_STOP failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
             return;
         }
 
@@ -205,7 +473,16 @@ VOID SvcUninstall()
             size_needed = 0;
             if (FALSE == QueryServiceStatusEx(service.get(), SC_STATUS_PROCESS_INFO, reinterpret_cast<LPBYTE>(&status), sizeof(status), &size_needed))
             {
-                LOG_LAST_ERROR_MSG("Cannot uninstall service, QueryServiceStatusEx after SERVICE_CONTROL_STOP failed");
+                LOG_LAST_ERROR_MSG("Cannot uninstall service. QueryServiceStatusEx after SERVICE_CONTROL_STOP failed.");
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(L"Cannot uninstall service. QueryServiceStatusEx after SERVICE_CONTROL_STOP failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+
                 return;
             }
         }
@@ -213,16 +490,36 @@ VOID SvcUninstall()
         
         if (status.dwCurrentState != SERVICE_STOPPED)
         {
-            LOG_LAST_ERROR_MSG("Service did not stop during uninstall, calling DeleteService anyway, but deletion will pend.");
+            LOG_LAST_ERROR_MSG("Service did not stop during uninstall. Calling DeleteService anyway, but deletion will pend.");
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(L"Service did not stop during uninstall. Calling DeleteService anyway, but deletion will pend.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
         }
     }
 
     // Service is stopped, delete it from the database
     if (FALSE == DeleteService(service.get()))
     {
-        LOG_LAST_ERROR_MSG("Cannot uninstall service, DeleteService failed");
+        LOG_LAST_ERROR_MSG("Cannot uninstall service. DeleteService failed.");
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot uninstall service. DeleteService failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
+
+    //printf("\n\rMidiSrv: Service uninstalled.\n\r");
 }
 
 //
@@ -237,12 +534,29 @@ VOID SvcUninstall()
 //
 VOID SvcInit()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
     // service control event
     g_SvcStopEvent.reset(CreateEvent(NULL, TRUE, FALSE, NULL));
     if (NULL == g_SvcStopEvent)
     {
-        LOG_LAST_ERROR_MSG("Cannot init service, stop event creation failed");
+        LOG_LAST_ERROR_MSG("Cannot init service. stop event creation failed.");
         ReportSvcStatus( SERVICE_STOPPED, GetLastError(), 0 );
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"Cannot init service. stop event creation failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+
         return;
     }
 
@@ -251,6 +565,15 @@ VOID SvcInit()
     {
         LOG_IF_NULL_ALLOC(g_MidiService);
         ReportSvcStatus( SERVICE_STOPPED, ERROR_NOT_ENOUGH_MEMORY, 0 );
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"g_MidiService is nullptr.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         return;
     }
 
@@ -259,6 +582,16 @@ VOID SvcInit()
     {
         LOG_IF_FAILED(hr);
         ReportSvcStatus( SERVICE_STOPPED, hr, 0 );
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingWideString(L"MidiService initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+
         return;
     }
 
@@ -321,6 +654,14 @@ VOID SvcReportEvent(_In_z_ LPCSTR )
 //
 VOID WINAPI SvcCtrlHandler(_In_ DWORD Ctrl)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingUInt32(Ctrl, "ctrl")
+    );
+
    // Handle the requested control code. 
    switch(Ctrl) 
    {  
@@ -351,6 +692,13 @@ VOID WINAPI SvcCtrlHandler(_In_ DWORD Ctrl)
 //
 VOID WINAPI SvcMain(_In_ DWORD , _In_ LPTSTR *)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
     // Register the handler function for the service
     g_SvcStatusHandle = RegisterServiceCtrlHandler(SVCNAME, SvcCtrlHandler);
     if (!g_SvcStatusHandle)
@@ -372,6 +720,13 @@ VOID WINAPI SvcMain(_In_ DWORD , _In_ LPTSTR *)
 
 int __cdecl _tmain(_In_ int ArgC, _In_reads_(ArgC) TCHAR *ArgV[]) 
 { 
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+    );
+
     // If command-line parameter is "install", install the service. 
     // Otherwise, the service is probably being started by the SCM.
     wil::SetResultTelemetryFallback(MidiSrvTelemetryProvider::FallbackTelemetryCallback);

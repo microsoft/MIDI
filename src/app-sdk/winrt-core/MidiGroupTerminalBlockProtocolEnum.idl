@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    enum MidiGroupTerminalBlockProtocol
+    {
+        Unknown =                               0x00,
+        Midi1Message64 =                        0x01,
+        Midi1Message64WithJitterReduction =     0x02,
+        Midi1Message128 =                       0x03,
+        Midi1Message128WithJitterReduction =    0x04,
+        Midi2 =                                 0x11,
+        Midi2WithJitterReduction =              0x12
+    };
+}

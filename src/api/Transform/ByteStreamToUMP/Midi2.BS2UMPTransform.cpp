@@ -15,11 +15,12 @@ CMidi2BS2UMPTransform::Activate(
     {
         TraceLoggingWrite(
             MidiBS2UMPTransformTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Transform",
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiDataTransform", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+        );
 
         wil::com_ptr_nothrow<IMidiDataTransform> midiTransform;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2BS2UMPMidiTransform>(&midiTransform));

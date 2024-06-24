@@ -103,10 +103,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="abstraction_defs.h" />
+    <ClInclude Include="ble_utilities.h" />
+    <ClInclude Include="MidiBleAdvertisedEndpointManager.h" />
+    <ClInclude Include="MidiBleBiDi.h" />
+    <ClInclude Include="MidiBleDevice.h" />
+    <ClInclude Include="MidiBleEndpointManager.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MidiBleAdvertisedEndpointManager.cpp" />
+    <ClCompile Include="MidiBleBiDi.cpp" />
+    <ClCompile Include="MidiBleDevice.cpp" />
+    <ClCompile Include="MidiBleEndpointManager.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -114,6 +124,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Additional Properties.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

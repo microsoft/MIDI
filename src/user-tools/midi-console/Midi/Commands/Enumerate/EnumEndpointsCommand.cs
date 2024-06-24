@@ -1,20 +1,16 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using Spectre.Console.Rendering;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-using Windows.Devices.Enumeration;
-using Windows.Devices.Midi2;
 
-using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+using Spectre.Console;
+
+namespace Microsoft.Midi.ConsoleApp
 {
     internal sealed class EnumEndpointsCommand : Command<EnumEndpointsCommand.Settings>
     {
@@ -46,6 +42,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
         public override int Execute(CommandContext context, Settings settings)
         {
             bool atLeastOneEndpointFound = false;
+
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
 
             AnsiConsole.Status()
                 .Start("Enumerating endpoints...", ctx =>
@@ -91,9 +93,6 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                         filter |= MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback;
                     }
 
-
-
-
                     var endpoints = MidiEndpointDeviceInformation.FindAll(
                         MidiEndpointDeviceInformationSortOrder.Name,
                         filter
@@ -134,26 +133,93 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (settings.IncludeId)
             {
-                table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.Id)));
+                table.AddRow(new Markup(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointInfo.EndpointDeviceId)));
             }
 
             if (settings.Verbose)
             {
-                if (!string.IsNullOrEmpty(endpointInfo.TransportSuppliedDescription))
+                if (!string.IsNullOrEmpty(endpointInfo.GetTransportSuppliedInfo().Description))
                 {
-                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.TransportSuppliedDescription)));
+                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.GetTransportSuppliedInfo().Description)));
                 }
 
-                if (!string.IsNullOrEmpty(endpointInfo.UserSuppliedDescription))
+                if (!string.IsNullOrEmpty(endpointInfo.GetUserSuppliedInfo().Description))
                 {
-                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.UserSuppliedDescription)));
+                    table.AddRow(new Markup(AnsiMarkupFormatter.EscapeString(endpointInfo.GetUserSuppliedInfo().Description)));
                 }
+            }
 
+            // display a summary of blocks. This is especially important for aggregate MIDI 1.0 devices (turned into a UMP endpoint)
+            // so folks can understand what is what. We prioritize function blocks over GTBs
+
+            if (settings.Verbose)
+            {
+                var nameColumn = new TableColumn("Name");
+                nameColumn.Width=30;
+
+                var directionColumn = new TableColumn("Direction");
+                directionColumn.Width = 13;
+
+                var groupsColumn = new TableColumn("Groups");
+                groupsColumn.Width = 12;
+
+                var activeColumn = new TableColumn("Active");
+                activeColumn.Width = 6;
+
+
+                if (endpointInfo.GetDeclaredFunctionBlocks().Count > 0)
+                {
+                    var blockTable = new Table();
+
+                    AnsiMarkupFormatter.SetTableBorderStyle(blockTable);
+
+                    blockTable.AddColumn(nameColumn);
+                    blockTable.AddColumn(directionColumn);
+                    blockTable.AddColumn(groupsColumn);
+                    blockTable.AddColumn(activeColumn);
+
+                    foreach (var block in endpointInfo.GetDeclaredFunctionBlocks())
+                    {
+                        blockTable.AddRow(
+                            AnsiMarkupFormatter.FormatBlockName(block.Name),
+                            block.Direction.ToString(),
+                            AnsiMarkupFormatter.FormatGroupSpan(block.FirstGroupIndex, block.GroupCount),
+                            block.IsActive.ToString()
+                            );
+                    }
+
+                    table.AddRow(blockTable);
+                }
+                else if (endpointInfo.GetGroupTerminalBlocks().Count > 0)
+                {
+                    var blockTable = new Table();
+
+                    AnsiMarkupFormatter.SetTableBorderStyle(blockTable);
+
+                    blockTable.AddColumn(nameColumn);
+                    blockTable.AddColumn(directionColumn);
+                    blockTable.AddColumn(groupsColumn);
+
+                    foreach (var block in endpointInfo.GetGroupTerminalBlocks())
+                    {
+                        blockTable.AddRow(
+                            AnsiMarkupFormatter.FormatBlockName(block.Name),
+                            block.Direction.ToString(),
+                            AnsiMarkupFormatter.FormatGroupSpan(block.FirstGroupIndex, block.GroupCount)
+                            );
+                    }
+
+                    table.AddRow(blockTable);
+                }
+                else
+                {
+                    // no declared blocks
+                //    table.AddRow(AnsiMarkupFormatter.FormatError("No declared blocks"));
+                }
             }
 
             table.AddEmptyRow();
 
         }
-
     }
 }

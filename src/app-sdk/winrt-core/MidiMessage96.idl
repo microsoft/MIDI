@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "IMidiUniversalPacket.idl";
+import "MidiMessageStruct.idl";
+
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [default_interface]
+    unsealed runtimeclass MidiMessage96 : IMidiUniversalPacket,
+                                          Windows.Foundation.IStringable
+    {
+        MidiMessage96();
+        MidiMessage96(UInt64 timestamp, UInt32 word0, UInt32 word1, UInt32 word2);
+        MidiMessage96(UInt64 timestamp, UInt32[] words);
+
+        // required because can't overload constructors in WinRT except by arity
+        static MidiMessage96 CreateFromStruct(UInt64 timestamp, MidiMessageStruct message);
+
+        UInt32 Word0;
+        UInt32 Word1;
+        UInt32 Word2;
+    };
+}

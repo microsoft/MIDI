@@ -1,0 +1,7 @@
+Package: libmidi2
+Version: 0.10
+Depends: vcpkg-cmake:x64-windows, vcpkg-cmake-config:x64-windows
+Architecture: arm64-windows
+Multi-Arch: same
+Abi: 8c2bcfbfc643abf44c95fc907ebb17e5d8d74dec95d4ad37a306d962a6d20088
+Description: General purpose Midi 2 library for bytestream conversions and midi-ci

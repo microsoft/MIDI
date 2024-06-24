@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiEndpointDeviceInformationFiltersEnum.idl";
+import "MidiEndpointDeviceInformation.idl";
+
+import "MidiEndpointDeviceInformationUpdatedEventArgs.idl";
+import "MidiEndpointDeviceInformationRemovedEventArgs.idl";
+import "MidiEndpointDeviceInformationAddedEventArgs.idl";
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiEndpointDeviceWatcher
+    {
+        static MidiEndpointDeviceWatcher Create();
+        static MidiEndpointDeviceWatcher Create(MidiEndpointDeviceInformationFilters endpointFilters);
+
+        void Start();
+        void Stop();
+
+        Windows.Foundation.Collections.IMapView<String, MidiEndpointDeviceInformation> EnumeratedEndpointDevices{ get; };
+
+        Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
+
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationAddedEventArgs> Added;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationRemovedEventArgs> Removed;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, MidiEndpointDeviceInformationUpdatedEventArgs> Updated;
+
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, IInspectable> EnumerationCompleted;
+        event Windows.Foundation.TypedEventHandler<MidiEndpointDeviceWatcher, IInspectable> Stopped;
+    }
+}
+

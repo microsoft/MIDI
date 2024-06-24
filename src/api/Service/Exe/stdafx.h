@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -45,15 +45,14 @@
 // Shared helpers
 #include "midi_ump.h"
 #include "midi_timestamp.h"
+#include "ump_helpers.h"
+#include "midi_ump_message_defs.h"
 
 // AbstractionUtilities
 #include "wstring_util.h"
-namespace internal = ::Windows::Devices::Midi2::Internal;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
-#include "MidiDataFormat.h"
-#include "MidiFlow.h"
-#include "MidiAbstraction.h"
 
 //#pragma push_macro("GetObject")
 #undef GetObject
@@ -66,41 +65,24 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "swd_helpers.h"
 #include "wstring_util.h"
 
-namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 
 #include "resource.h"
 #include "propkey.h"
 
-// Abstractions. Only the Diagnostics abstraction is known to the service
-// All the others are discovered through COM
-
-#include "Midi2DiagnosticsAbstraction_i.c"
-#include "Midi2DiagnosticsAbstraction.h"
-
-//#include "Midi2NetworkMidiAbstraction.h"
-//#include "Midi2VirtualMidiAbstraction.h"
-//#include "Midi2KSAbstraction.h"
 
 // Base MIDI interfaces
 
-#include "MidiDataFormat.h"
-#include "MidiFlow.h"
-
-#include "MidiAbstraction.h"
-#include "MidiAbstraction_i.c"
-
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
-
-#include "MidiDeviceManagerInterface_i.c"
-#include "MidiDeviceManagerInterface.h"
-
-#include "MidiEndpointProtocolManagerInterface_i.c"
-#include "MidiEndpointProtocolManagerInterface.h"
+#include "WindowsMidiServices.h"
 
 // RPC Calls
 
 #include "MidiSrvRpc.h"
+
+// Abstractions. Only the Diagnostics abstraction is known to the service
+// All the others are discovered through COM activation of registry entries
+
+//#include "Midi2DiagnosticsAbstraction_i.c"
+#include "Midi2DiagnosticsAbstraction.h"
 
 // Transforms
 
@@ -108,7 +90,7 @@ namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
 #include "Midi2UMP2BSTransform.h"
 #include "Midi2SchedulerTransform.h"
 #include "Midi2EndpointMetadataListenerTransform.h"
-
+#include "Midi2UmpProtocolDownscalerTransform.h"
 
 // MidiSrv internal classes
 
@@ -134,6 +116,7 @@ class CMidiDevicePipe;
 #include "MidiTransformPipe.h"
 #include "MidiClientManager.h"
 
+#include "MidiEndpointProtocolWorker.h"
 #include "MidiEndpointProtocolManager.h"
 #include "MidiSessionTracker.h"
 

@@ -1,16 +1,16 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Devices.Midi2;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+
+using Microsoft.Windows.Devices.Midi2.Messages;
+
+namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointRequestEndpointMetadataCommand : Command<EndpointRequestEndpointMetadataCommand.Settings>
     {
@@ -71,6 +71,12 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
             // build the message
 
             UInt64 timestamp = 0;   // send immediately

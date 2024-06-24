@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
+using Microsoft.Midi.Settings.ViewModels.Data;
 using Microsoft.UI.Dispatching;
 using Windows.Devices.Enumeration;
 
@@ -14,6 +15,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public class DeviceDetailViewModel : ObservableRecipient, INavigationAware
     {
+        public EndpointUserMetadata UserMetadata { get; private set; } = new EndpointUserMetadata();
 
         public MidiEndpointDeviceInformation? DeviceInformation
         {

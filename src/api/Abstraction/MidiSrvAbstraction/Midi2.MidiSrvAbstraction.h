@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -16,6 +16,10 @@ class MidiSrvAbstractionTelemetryProvider : public wil::TraceLoggingProvider
         // {6e9d2090-31a4-5a2c-da35-fd606d7d6ac3}
         (0x6e9d2090,0x31a4,0x5a2c,0xda,0x35,0xfd,0x60,0x6d,0x7d,0x6a,0xc3))
 };
+
+
+
+
 
 HRESULT GetMidiSrvBindingHandle(_In_ handle_t* BindingHandle);
 

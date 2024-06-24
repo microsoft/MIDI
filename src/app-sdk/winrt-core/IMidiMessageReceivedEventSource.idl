@@ -1,0 +1,19 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiMessageReceivedEventArgs.idl";
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [uuid("101ceb4b-cca4-48a1-b91e-6002b928613c"), version(1.0)]
+    interface IMidiMessageReceivedEventSource
+    {      
+        event Windows.Foundation.TypedEventHandler<IMidiMessageReceivedEventSource, MidiMessageReceivedEventArgs> MessageReceived;
+    }
+}

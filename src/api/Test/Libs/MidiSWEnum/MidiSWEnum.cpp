@@ -16,7 +16,7 @@
 #include <Devpkey.h>
 #include <mmdeviceapi.h>
 #include "MidiDefs.h"
-#include "MidiDeviceManagerInterface.h"
+#include "WindowsMidiServices.h"
 #include "MidiSwEnum.h"
 
 #include "Midi2MidiSrvAbstraction.h"

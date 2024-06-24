@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -32,6 +32,8 @@ using namespace Microsoft::WRL::Wrappers;
 // never all 3 at the same time.
 //#define BIDI_REPLACES_INOUT_SWDS
 
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
@@ -41,9 +43,11 @@ CMidi2KSMidiEndpointManager::Initialize(
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
@@ -75,16 +79,21 @@ CMidi2KSMidiEndpointManager::Initialize(
 }
 
 _Use_decl_annotations_
-HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, DeviceInformation device)
+HRESULT 
+CMidi2KSMidiEndpointManager::OnDeviceAdded(
+    DeviceWatcher watcher, 
+    DeviceInformation device
+)
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(device.Id().c_str(), "added device")
+        TraceLoggingWideString(L"OnDeviceAdded. Processing new device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(device.Id().c_str(), "device id")
     );
-
 
     wil::unique_handle hFilter;
     std::wstring deviceName;
@@ -113,10 +122,23 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     // second, can we retrieve the localized part name for the interface using KS? That would likely require
     // calling a property to get the name GUID from the filter, and then using that guid to locate the string
     // from the KS friendly name registry path.
+    //
+    // MIDI 1 port Name hierarchy for friendly name (and generated GTB name) from most preferred to least
+    // - User-supplied Name from config
+    // - iJack (some devices use this for the port name)
+    // - iInterface (+ index if more than one pin)
+    // - iProduct from USB (+ index if more than one pin)
+    //
+    // A single device can have multiple filters. Roland / Yamaha would prefer we aggregate those
+    // when creating the bidi interface.
+    //
+    // The SWD id generated for a MIDI 2.0 UMP endpoint should have the iSerialNumber, if provided, as the
+    // primary differentiator in the id. No hashing required unless it is too long.
+    //
+
     auto parentDeviceInfo = DeviceInformation::CreateFromIdAsync(deviceInstanceId,
         additionalProperties,winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
     deviceName = parentDeviceInfo.Name();
-
 
     hash = std::to_wstring(hasher(deviceId));
 
@@ -126,8 +148,22 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     RETURN_IF_FAILED(FilterInstantiate(deviceId.c_str(), &hFilter));
     RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins)));
 
+    //UINT portNumberDifferentiatorInput{ 0 };
+    //UINT portNumberDifferentiatorOutput{ 0 };
+
     for (UINT i = 0; i < cPins; i++)
     {
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Processing pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(device.Id().c_str(), "device id"),
+            TraceLoggingUInt32(i, "pin id")
+        );
+
         wil::unique_handle hPin;
         KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
         MidiTransport transportCapability { MidiTransport_Invalid };
@@ -140,124 +176,253 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         std::unique_ptr<WCHAR> serialNumberData;
         ULONG serialNumberDataSize{ 0 };
+
         std::unique_ptr<WCHAR> manufacturerNameData;
         ULONG manufacturerNameDataSize{ 0 };
+
+        //std::unique_ptr<WCHAR> pinNameData;
+        //ULONG pinNameDataSize{ 0 };
 
         UINT16 deviceVID{ 0 };
         UINT16 devicePID{ 0 };
 
         RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION)));
 
-        // The external connector pin representing the phsyical connection
+        // The external connector pin representing the physical connection
         // has KSPIN_COMMUNICATION_NONE. We can only create on software IO pins which
         // have a valid communication. Skip connector pins.
         if (KSPIN_COMMUNICATION_NONE == communication)
         {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Pin is not for communication. Moving on", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(device.Id().c_str(), "device id"),
+                TraceLoggingUInt32(i, "pin id")
+            );
+
             continue;
         }
 
+        // ================== Standard Byte / MIDI 1.0 Interfaces ===============================================
         // attempt to instantiate using standard streaming for UMP buffers
         // and set that flag if we can.
         // NOTE: this has been for bring up performance comparison testing only, and will be removed.
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
-        {
-            transportCapability = ( MidiTransport )((DWORD) transportCapability | (DWORD) MidiTransport_StandardByteStream);
-            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
-            hPin.reset();
-        }
+        // (Note from Pete: the above statement doesn't seem correct. This is the branch all MIDI 1.0 devices with the old USB driver fall into)
+        //if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
+        //{
+        //    TraceLoggingWrite(
+        //        MidiKSAbstractionTelemetryProvider::Provider(),
+        //        __FUNCTION__,
+        //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        //        TraceLoggingPointer(this, "this"),
+        //        TraceLoggingWideString(L"Pin is MidiTransport_StandardByteStream", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        //        TraceLoggingWideString(device.Id().c_str(), "device id"),
+        //        TraceLoggingUInt32(i, "pin id")
+        //    );
 
+        //    transportCapability = (MidiTransport)((DWORD) transportCapability | (DWORD) MidiTransport_StandardByteStream);
+        //    dataFormatCapability = (MidiDataFormat) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
+
+        //    //midiPin->NativeDataFormat = KSDATAFORMAT_SUBTYPE_MIDI;
+
+        //    // get the name from the Pin. This is how many developers would prefer we name MIDI ports
+
+        //    LOG_IF_FAILED_WITH_EXPECTED(
+        //        PinPropertyAllocate(
+        //            hFilter.get(), 
+        //            i, 
+        //            KSPROPSETID_Pin, 
+        //            KSPROPERTY_PIN_NAME, 
+        //            (PVOID*)&pinNameData,
+        //            &pinNameDataSize),
+        //        HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+
+        //    if (pinNameDataSize > 0)
+        //    {
+        //        TraceLoggingWrite(
+        //            MidiKSAbstractionTelemetryProvider::Provider(),
+        //            __FUNCTION__,
+        //            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        //            TraceLoggingPointer(this, "this"),
+        //            TraceLoggingWideString(L"Retrieved pin name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        //            TraceLoggingWideString(device.Id().c_str(), "device id"),
+        //            TraceLoggingUInt32(i, "pin id"),
+        //            TraceLoggingWideString(pinNameData.get(), "pin name")
+        //        );
+
+
+        //        // TODO: If the pin name contains [pin number] then we shouldn't use it. That's an auto-generated
+        //        // name Windows creates when there's no iJack value. We only want the value when 
+        //        // iJack is actually specified. 
+
+        //        // This is hokey, but going to do a string search to see if the name ends with [n]
+
+
+        //        if (IsAutogeneratedPinName(deviceName.c_str(), i, pinNameData.get()))
+        //        {
+        //            // don't change the device name
+        //        }
+        //        else
+        //        {
+        //            // use the name from the pin. This is the most preferred name for most devices
+        //            deviceName = std::wstring(pinNameData.get());
+        //        }
+        //    }
+        //    //else
+        //    //{
+        //    //    // no pin name, so fall back to the interface name with a differentiator
+
+        //    //    RETURN_IF_FAILED(
+        //    //        PinPropertySimple(
+        //    //            hFilter.get(), 
+        //    //            i, 
+        //    //            KSPROPSETID_Pin, 
+        //    //            KSPROPERTY_PIN_DATAFLOW, 
+        //    //            &dataFlow, 
+        //    //            sizeof(KSPIN_DATAFLOW)));
+
+        //    //    if (dataFlow == KSPIN_DATAFLOW_IN)
+        //    //    {
+        //    //        // DATAFLOW_IN is an output port (in to the pin)
+        //    //        deviceName = parentDeviceInfo.Name() + L" [Out " + std::to_wstring(portNumberDifferentiatorOutput++) + L"]";
+        //    //    }
+        //    //    else
+        //    //    {
+        //    //        deviceName = parentDeviceInfo.Name() + L" [In " + std::to_wstring(portNumberDifferentiatorInput++) + L"]";
+        //    //    }
+        //    //}
+
+        //    hPin.reset();
+        //}
+
+        // ================== Cyclic UMP Interfaces ===============================================
         // attempt to instantiate using cyclic streaming for UMP buffers
         // and set that flag if we can.
         if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicUMP, &hPin)))
         {
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(device.Id().c_str(), "added device"),
-                TraceLoggingWideString(L"Pin is a Cyclic UMP MIDI pin", "message")
+                TraceLoggingWideString(L"Pin is MidiTransport_CyclicUMP pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(device.Id().c_str(), "device id"),
+                TraceLoggingUInt32(i, "pin id")
             );
 
-            transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
-            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_UMP);
+            transportCapability = (MidiTransport)((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
+            dataFormatCapability = (MidiDataFormat) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_UMP);
 
-            LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(), 
-                                            i, 
-                                            KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-                                            KSPROPERTY_MIDI2_NATIVEDATAFORMAT, 
-                                            &nativeDataFormat, 
-                                            sizeof(nativeDataFormat)),
-                                            HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertySimple(hPin.get(), 
+                    i, 
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+                    KSPROPERTY_MIDI2_NATIVEDATAFORMAT, 
+                    &nativeDataFormat, 
+                    sizeof(nativeDataFormat)),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(), 
-                                            i, 
-                                            KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, 
-                                            KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,
-                                            (PVOID *)&groupTerminalBlockData, 
-                                            &groupTerminalBlockDataSize),
-                                            HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertyAllocate(hPin.get(), 
+                    i, 
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, 
+                    KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,
+                    (PVOID *)&groupTerminalBlockData, 
+                    &groupTerminalBlockDataSize),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             //// Get the serial number
-            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
-            //                                i,
-            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //                                KSPROPERTY_MIDI2_SERIAL_NUMBER,
-            //                                (PVOID*)&serialNumberData,
-            //                                &serialNumberDataSize),
-            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(
+            //    PinPropertyAllocate(hPin.get(),
+            //        i,
+            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //        KSPROPERTY_MIDI2_SERIAL_NUMBER,
+            //        (PVOID*)&serialNumberData,
+            //        &serialNumberDataSize),
+            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
 
             //// Get the manufacturer name
-            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertyAllocate(hPin.get(),
-            //                                i,
-            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //                                KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
-            //                                (PVOID*)&manufacturerNameData,
-            //                                &manufacturerNameDataSize),
-            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(
+            //    PinPropertyAllocate(hPin.get(),
+            //        i,
+            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //        KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
+            //        (PVOID*)&manufacturerNameData,
+            //        &manufacturerNameDataSize),
+            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             //// VID iVendor
-            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(),
-            //                                i,
-            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //                                KSPROPERTY_MIDI2_DEVICE_VID,
-            //                                &deviceVID,
-            //                                sizeof(deviceVID)),
-            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(
+            //    PinPropertySimple(hPin.get(),
+            //        i,
+            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //        KSPROPERTY_MIDI2_DEVICE_VID,
+            //        &deviceVID,
+            //        sizeof(deviceVID)),
+            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             //// PID iProduct
-            //LOG_IF_FAILED_WITH_EXPECTED(PinPropertySimple(hPin.get(),
-            //                                i,
-            //                                KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //                                KSPROPERTY_MIDI2_DEVICE_PID,
-            //                                &devicePID,
-            //                                sizeof(devicePID)),
-            //                                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            //LOG_IF_FAILED_WITH_EXPECTED(
+            //    PinPropertySimple(hPin.get(),
+            //        i,
+            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+            //        KSPROPERTY_MIDI2_DEVICE_PID,
+            //        &devicePID,
+            //        sizeof(devicePID)),
+            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            hPin.reset();
+            //hPin.reset();
         }
 
+        // ================== Cyclic Byte / MIDI 1.0 Interfaces ===============================================
         // attempt to instantiate using standard streaming for midiOne buffers
         // and set that flag if we can.
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicByteStream, &hPin)))
-        {
-            transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicByteStream);
-            dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
-            hPin.reset();
-        }
+        
+ //       if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicByteStream, &hPin)))
+        //{
+        //    TraceLoggingWrite(
+        //        MidiKSAbstractionTelemetryProvider::Provider(),
+        //        __FUNCTION__,
+        //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        //        TraceLoggingPointer(this, "this"),
+        //        TraceLoggingWideString(L"Pin is MidiTransport_CyclicByteStream pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        //        TraceLoggingWideString(device.Id().c_str(), "device id"),
+        //        TraceLoggingUInt32(i, "pin id")
+        //    );
+
+        //    transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicByteStream);
+        //    dataFormatCapability = ( MidiDataFormat ) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_ByteStream);
+
+        //    hPin.reset();
+        //}
 
         // if this pin supports nothing, then it's not a streaming pin,
         // continue on
         if (0 == transportCapability)
         {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Pin has no transport capability", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(device.Id().c_str(), "device id"),
+                TraceLoggingUInt32(i, "pin id")
+            );
+
             continue;
         }
 
         RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_DATAFLOW, &dataFlow, sizeof(KSPIN_DATAFLOW)));
 
         std::unique_ptr<MIDI_PIN_INFO> midiPin = std::make_unique<MIDI_PIN_INFO>();
-
         RETURN_IF_NULL_ALLOC(midiPin);
 
         // for render (MIDIOut) we need KSPIN_DATAFLOW_IN
@@ -298,9 +463,11 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Retrieved serial number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(device.Id().c_str(), "device id"),
                 TraceLoggingWideString(midiPin->SerialNumber.c_str(), "serial number"),
                 TraceLoggingULong(serialNumberDataSize, "data size")
@@ -310,11 +477,12 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         {
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(device.Id().c_str(), "device id"),
-                TraceLoggingWideString(L"No serial number", "serial number")
+                TraceLoggingWideString(L"No serial number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(device.Id().c_str(), "device id")
             );
         }
 
@@ -326,9 +494,11 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Retrieved manufacturer name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(device.Id().c_str(), "device id"),
                 TraceLoggingWideString(midiPin->ManufacturerName.c_str(), "manufacturer"),
                 TraceLoggingULong(manufacturerNameDataSize, "data size")
@@ -338,17 +508,27 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         {
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(device.Id().c_str(), "device id"),
-                TraceLoggingWideString(L"No manufacturer name", "manufacturer")
+                TraceLoggingWideString(L"No manufacturer name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(device.Id().c_str(), "device id")
             );
         }
 
-        midiPin->InstanceId = L"MIDIU_KS_";
+        midiPin->InstanceId = MIDI_KS_INSTANCE_ID_PREFIX;
         midiPin->InstanceId += (midiPin->Flow == MidiFlowOut) ? L"OUT_" : L"IN_";
-        midiPin->InstanceId += hash;
+        
+        if (midiPin->SerialNumber.empty())
+        {
+            midiPin->InstanceId += hash;
+        }
+        else
+        {
+            midiPin->InstanceId += midiPin->SerialNumber;
+        }
+
         midiPin->InstanceId += L"_PIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);
 
@@ -356,18 +536,23 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
     }
 
 #ifdef CREATE_KS_BIDI_SWDS
-    // TODO: This logic needs to change because we want ALL KS devices to show up
-    // as bidi, even if they have only a single pin. We need to map each to a logical
-    // group instead.
-    // https://github.com/microsoft/MIDI/issues/184
-     
-     
-    // there must be exactly two pins on this filter, midi in, and midi out,
-    // and they must have the exact same capabilities
-    if (newMidiPins.size() == 2 &&
-        newMidiPins[0]->Flow != newMidiPins[1]->Flow &&
-        newMidiPins[0]->TransportCapability == newMidiPins[1]->TransportCapability)
+
+    // UMP devices only. Some redundant checking here, but just in case
+    if (newMidiPins.size() == 2 && 
+        (newMidiPins[0]->Flow != newMidiPins[1]->Flow) &&
+        (newMidiPins[0]->TransportCapability == newMidiPins[1]->TransportCapability) /* &&
+        (newMidiPins[0]->DataFormatCapability & MidiDataFormat::MidiDataFormat_UMP) == MidiDataFormat::MidiDataFormat_UMP*/ )
     {
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Creating UMP bidirectional endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(device.Id().c_str(), "device id")
+        );
+
         auto midiInPinIndex = newMidiPins[0]->Flow == MidiFlowIn?0:1;
         auto midiOutPinIndex = newMidiPins[0]->Flow == MidiFlowOut?0:1;
 
@@ -408,11 +593,17 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         midiPin->NativeDataFormat = newMidiPins[midiOutPinIndex]->NativeDataFormat;
         midiPin->Flow = MidiFlowBidirectional;
 
+        midiPin->InstanceId = MIDI_KS_INSTANCE_ID_PREFIX;
 
-        // TODO: If provided, hash using the serial?
+        if (midiPin->SerialNumber.empty())
+        {
+            midiPin->InstanceId += hash;
+        }
+        else
+        {
+            midiPin->InstanceId += midiPin->SerialNumber;
+        }
 
-        midiPin->InstanceId = L"MIDIU_KS_BIDI_";
-        midiPin->InstanceId += hash;
         midiPin->InstanceId += L"_OUTPIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);
         midiPin->InstanceId += L"_INPIN.";
@@ -428,19 +619,37 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         midiPin->CreateUMPOnly = TRUE;
 #endif
         newMidiPins.push_back(std::move(midiPin));
+
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"New pin added", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(device.Id().c_str(), "device id")
+        );
     }
+    
 #endif
 
     //in the added callback we're going to go ahead and create the SWD's:
     for (auto const& MidiPin : newMidiPins)
     {
-        GUID KsAbstractionLayerGUID = __uuidof(Midi2KSAbstraction);
-        //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-        //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+        TraceLoggingWrite(
+            MidiKSAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"creating endpoint from pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(MidiPin->Name.c_str(), "pin name"),
+            TraceLoggingUInt32(MidiPin->PinId, "pin id")
+        );
+
+        GUID KsAbstractionLayerGUID = ABSTRACTION_LAYER_GUID;
 
         std::vector<DEVPROPERTY> interfaceDevProperties;
-        //std::vector<DEVPROPERTY> deviceDevProperties;
-
 
         MIDIENDPOINTCOMMONPROPERTIES commonProperties {};
         commonProperties.AbstractionLayerGuid = KsAbstractionLayerGUID;
@@ -475,6 +684,16 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         {
             if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
             {
+                TraceLoggingWrite(
+                    MidiKSAbstractionTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Pin native data format is UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(MidiPin->Name.c_str(), "pin name")
+                );
+
                 // default native UMP devices to support MIDI 1.0 and MIDI 2.0 until they negotiation otherwise
                 // These properties were originally meant only for the results of protocol negotiation, but they were confusing when not set
 
@@ -485,6 +704,16 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             }
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
+                TraceLoggingWrite(
+                    MidiKSAbstractionTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Pin native data format is bytestream", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(MidiPin->Name.c_str(), "pin name")
+                );
+
                 // default bytestream devices to MIDI 1.0 protocol only
                 // These properties were originally meant only for the results of protocol negotiation, but they were confusing when not set
 
@@ -498,6 +727,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 RETURN_IF_FAILED(E_UNEXPECTED);
             }
         }
+
 
         if (MidiPin->GroupTerminalBlockDataSizeOut > 0)
         {
@@ -514,13 +744,34 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.
         if (MidiPin->Flow == MidiFlowBidirectional)
         {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Pin is MidiFlowBidirectional", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(MidiPin->Name.c_str(), "pin name")
+            );
+
             interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_OutPinId, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) });
+
             interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_InPinId, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinIdIn) });
         }
         else
         {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Pin is regular unidirectional MIDI pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(MidiPin->Name.c_str(), "pin name")
+            );
+
             // In and out have only a single pin id to create.
             interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_KsPinId, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) });
@@ -559,6 +810,17 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
         if (SUCCEEDED(MidiPin->SwdCreation))
         {
+            TraceLoggingWrite(
+                MidiKSAbstractionTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"SWD Creation succeeded", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(MidiPin->Name.c_str(), "name")
+            );
+
+
             // Here we're only building search keys for the SWD id, but we need to broaden this to
             // other relevant search criteria like serial number or the original name, etc.
 
@@ -566,9 +828,11 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
 
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Retrieved json search keys", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys")
             );
 
@@ -578,12 +842,13 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
             {
                 TraceLoggingWrite(
                     MidiKSAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unable to apply config file update for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys"),
-                    TraceLoggingHResult(applyConfigHR, "hresult"),
-                    TraceLoggingWideString(L"Unable to apply config file update for endpoint", "message")
+                    TraceLoggingHResult(applyConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD)
                 );
 
                 LOG_IF_FAILED(applyConfigHR);
@@ -599,15 +864,30 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
                 bool preferToSendJRToEndpoint{ false };
                 bool preferToReceiveJRFromEndpoint{ false };
                 BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
-                WORD negotiationTimeoutMS{ 5000 };  // this should be much shorter
+                WORD negotiationTimeoutMilliseconds{ 5000 };
+
+                PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
 
                 LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+                    __uuidof(Midi2KSAbstraction),
                     newDeviceInterfaceId,
                     preferToSendJRToEndpoint,
                     preferToReceiveJRFromEndpoint,
                     preferredProtocol,
-                    negotiationTimeoutMS
+                    negotiationTimeoutMilliseconds,
+                    &negotiationResults
                 ));
+
+
+                if (negotiationResults != nullptr)
+                {
+                    // TODO: The negotiationResults structure contains the function blocks which 
+                    // should be used to create MIDI 1.0 legacy ports for this MIDI 2.0 device.
+
+                    
+
+
+                }
             }
 
         }
@@ -615,11 +895,12 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         {
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingHResult(MidiPin->SwdCreation, "hresult"),
-                TraceLoggingWideString(L"Failed to activate endpoint", "message")
+                TraceLoggingHResult(MidiPin->SwdCreation, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                TraceLoggingWideString(L"Failed to activate endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
         }
 
@@ -633,6 +914,16 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceAdded(DeviceWatcher watcher, Device
         newMidiPins.pop_back();
     }
 
+    TraceLoggingWrite(
+        MidiKSAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"KS Device processing complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(device.Id().c_str(), "device id")
+    );
+
     return S_OK;
 }
 
@@ -642,9 +933,11 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInform
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Device removed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(device.Id().c_str(), "device id")
     );
 
@@ -708,7 +1001,8 @@ CMidi2KSMidiEndpointManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );

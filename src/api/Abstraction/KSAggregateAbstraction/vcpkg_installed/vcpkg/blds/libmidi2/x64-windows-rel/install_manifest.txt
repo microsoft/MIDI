@@ -1,0 +1,12 @@
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/lib/libmidi2.lib
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/share/libmidi2/libmidi2-config.cmake
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/share/libmidi2/libmidi2-config-release.cmake
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/bytestreamToUMP.h
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/mcoded7.h
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/midiCIMessageCreate.h
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/midiCIProcessor.h
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/umpMessageCreate.h
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/umpProcessor.h
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/umpToBytestream.h
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/umpToMIDI1Protocol.h
+C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/include/libmidi2/utils.h

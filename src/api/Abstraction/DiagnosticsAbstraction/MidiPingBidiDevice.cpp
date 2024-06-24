@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #include "pch.h"
@@ -19,20 +19,20 @@ MidiPingBidiDevice::SendMidiMessage
 {
     RETURN_HR_IF_NULL(E_POINTER, m_Callback);
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
-    RETURN_HR_IF(E_INVALIDARG, Size != sizeof(Windows::Devices::Midi2::Internal::PackedPingRequestUmp));
+    RETURN_HR_IF(E_INVALIDARG, Size != sizeof(internal::PackedPingRequestUmp));
    
-    auto requestUmp = (Windows::Devices::Midi2::Internal::PackedPingRequestUmp*)Message;
+    auto requestUmp = (internal::PackedPingRequestUmp*)Message;
 
     RETURN_HR_IF(E_INVALIDARG, requestUmp->Word0 != INTERNAL_PING_REQUEST_UMP_WORD0);
 
     // build response message
-    Windows::Devices::Midi2::Internal::PackedPingResponseUmp responseUmp;
+    internal::PackedPingResponseUmp responseUmp;
     responseUmp.Word0 = INTERNAL_PING_RESPONSE_UMP_WORD0;
     responseUmp.PingId = requestUmp->PingId;
 
-    auto newTimestamp = Windows::Devices::Midi2::Internal::Shared::GetCurrentMidiTimestamp();
+    auto newTimestamp = internal::GetCurrentMidiTimestamp();
 
-    return m_Callback->Callback(&responseUmp, sizeof(Windows::Devices::Midi2::Internal::PackedPingResponseUmp), newTimestamp, m_Context);
+    return m_Callback->Callback(&responseUmp, sizeof(internal::PackedPingResponseUmp), newTimestamp, m_Context);
 }
 
 _Use_decl_annotations_

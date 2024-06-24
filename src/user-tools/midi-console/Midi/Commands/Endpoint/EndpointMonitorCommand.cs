@@ -1,21 +1,16 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-using Windows.Devices.Midi2;
-using WinRT;
 
-using Microsoft.Devices.Midi2.ConsoleApp.Resources;
-using Windows.ApplicationModel.UserDataTasks;
-using System.Diagnostics.Eventing.Reader;
-using System.Reflection;
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+using Microsoft.Windows.Devices.Midi2.Messages;
+
+namespace Microsoft.Midi.ConsoleApp
 {
     public struct ReceivedMidiMessage
     {
@@ -88,6 +83,11 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             [DefaultValue(false)]
             public bool WarnIfSkippedIncrementMessage { get; set; }
 
+            [LocalizedDescription("ParameterMonitorEndpointAutoReconnect")]
+            [CommandOption("-r|--auto-reconnect")]
+            [DefaultValue(true)]
+            public bool AutoReconnect { get; set; }
+
             //[EnumLocalizedDescription("ParameterMonitorEndpointSkipToKeepUp", typeof(CaptureFieldDelimiter))]
             //[CommandOption("-k|--keep-up-display")]
             //[DefaultValue(false)]
@@ -131,7 +131,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 watcher.Removed += (s, e) =>
                 {
-                    if (e.Id.ToLower() == endpointId.ToLower())
+                    if (e.EndpointDeviceId.ToLower() == endpointId.ToLower())
                     {
                         _hasEndpointDisconnected = true;
                         _continueWatchingDevice = false;
@@ -159,6 +159,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             using AutoResetEvent m_displayMessageThreadWakeup = new AutoResetEvent(false);
             using AutoResetEvent m_fileMessageThreadWakeup = new AutoResetEvent(false);
             using AutoResetEvent m_messageDispatcherThreadWakeup = new AutoResetEvent(false);
@@ -183,20 +190,37 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
             if (!string.IsNullOrEmpty(endpointId))
             {
+                string endpointName = EndpointUtility.GetEndpointNameFromEndpointInterfaceId(endpointId);
 
-                AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + ": " + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+
+                AnsiConsole.Markup(Strings.MonitorMonitoringOnEndpointLabel);
+                AnsiConsole.Markup(" " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
+
+                if (settings.AutoReconnect)
+                {
+                    AnsiConsole.MarkupLine(" with auto-reconnect");
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine(" without auto-reconnect");
+                }
+
+
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatFullEndpointInterfaceId(endpointId));
+
 
                 //var table = new Table();
 
                 // when this goes out of scope, it will dispose of the session, which closes the connections
-                using var session = MidiSession.CreateSession($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
+                using var session = MidiSession.Create($"{Strings.AppShortName} - {Strings.MonitorSessionNameSuffix}");
                 if (session == null)
                 {
                     AnsiConsole.WriteLine(Strings.ErrorUnableToCreateSession);
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                var connection = session.CreateEndpointConnection(endpointId);
+                var connection = session.CreateEndpointConnection(endpointId, settings.AutoReconnect);
+
                 if (connection == null)
                 {
                     AnsiConsole.WriteLine(Strings.ErrorUnableToCreateEndpointConnection);
@@ -234,8 +258,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 UInt64 lastMessageReceivedEventTimestamp = 0;
                 UInt32 countMessagesReceived = 0;
 
-
-                MonitorEndpointConnectionStatusInTheBackground(endpointId);
+                if (settings.AutoReconnect)
+                {
+                    connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
+                    connection.EndpointDeviceReconnected += Connection_EndpointDeviceReconnected;
+                }
+                else
+                {
+                    MonitorEndpointConnectionStatusInTheBackground(endpointId);
+                }
 
                 bool continueWaiting = true;
                 
@@ -627,6 +658,15 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             return (int)MidiConsoleReturnCode.Success;
         }
 
+        private void Connection_EndpointDeviceReconnected(IMidiEndpointConnectionSource sender, object args)
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Endpoint device reconnected."));
+        }
+
+        private void Connection_EndpointDeviceDisconnected(IMidiEndpointConnectionSource sender, object args)
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Endpoint device disconnected."));
+        }
 
         private void WriteMessageToFile(Settings settings, StreamWriter writer, ReceivedMidiMessage message)
         {
@@ -670,8 +710,8 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
             // format here is
             // # ___time___ ___timestamp___ ___message type___ ___friendly name___
 
-            string messageType = MidiMessageUtility.GetMessageTypeFromMessageFirstWord(word0).ToString();
-            string fullMessageType = MidiMessageUtility.GetMessageFriendlyNameFromFirstWord(word0);
+            string messageType = MidiMessageHelper.GetMessageTypeFromMessageFirstWord(word0).ToString();
+            string fullMessageType = MidiMessageHelper.GetMessageDisplayNameFromFirstWord(word0);
 
             string delimiter = GetConfiguredDelimiter(settings);
 

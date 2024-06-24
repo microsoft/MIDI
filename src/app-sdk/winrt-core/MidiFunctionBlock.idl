@@ -1,0 +1,44 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiFunctionBlockDirectionEnum.idl";
+import "MidiFunctionBlockUIHintEnum.idl";
+import "MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl";
+
+import "MidiGroup.idl";
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiFunctionBlock
+    {
+        MidiFunctionBlock();
+
+        Boolean IsReadOnly { get; };
+
+        UInt8 Number;
+        String Name;
+
+        Boolean IsActive;
+
+        MidiFunctionBlockDirection Direction;
+        MidiFunctionBlockUIHint UIHint;
+
+        MidiFunctionBlockRepresentsMidi10Connection RepresentsMidi10Connection;
+
+        UInt8 FirstGroupIndex;
+        UInt8 GroupCount;
+
+        Boolean IncludesGroup(MidiGroup group);
+
+        UInt8 MidiCIMessageVersionFormat;
+
+        UInt8 MaxSystemExclusive8Streams;
+    }
+}

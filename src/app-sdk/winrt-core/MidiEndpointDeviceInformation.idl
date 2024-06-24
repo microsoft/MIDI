@@ -1,0 +1,79 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiGroupTerminalBlock.idl";
+import "MidiProtocolEnum.idl";
+import "MidiEndpointNativeDataFormatEnum.idl";
+import "MidiEndpointDevicePurposeEnum.idl";
+import "MidiFunctionBlock.idl";
+import "MidiDeclaredDeviceIdentity.idl";
+import "MidiDeclaredEndpointInfo.idl";
+import "MidiDeclaredStreamConfiguration.idl";
+import "MidiEndpointTransportSuppliedInfo.idl";
+import "MidiEndpointUserSuppliedInfo.idl";
+
+import "MidiEndpointDeviceInformationSortOrderEnum.idl";
+import "MidiEndpointDeviceInformationFiltersEnum.idl";
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [default_interface]
+    runtimeclass MidiEndpointDeviceInformation
+    {
+        static MidiEndpointDeviceInformation CreateFromEndpointDeviceId(String endpointDeviceId);
+
+        static IVectorView<MidiEndpointDeviceInformation> FindAll();
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder);
+        static IVectorView<MidiEndpointDeviceInformation> FindAll(MidiEndpointDeviceInformationSortOrder sortOrder, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
+
+        static Guid EndpointInterfaceClass{ get; };
+
+        static IVectorView<String> GetAdditionalPropertiesList();
+
+        static Boolean DeviceMatchesFilter(MidiEndpointDeviceInformation deviceInformation, MidiEndpointDeviceInformationFilters endpointTypesToInclude);
+
+
+        String EndpointDeviceId { get; };
+
+        String Name{ get; };
+
+        Guid ContainerId{ get; };
+        String DeviceInstanceId{ get; };
+
+        MidiEndpointDevicePurpose EndpointPurpose{ get; };
+
+
+        MidiDeclaredEndpointInfo GetDeclaredEndpointInfo();
+        Windows.Foundation.DateTime DeclaredEndpointInfoLastUpdateTime{ get; };
+
+        MidiDeclaredDeviceIdentity GetDeclaredDeviceIdentity();
+        Windows.Foundation.DateTime DeclaredDeviceIdentityLastUpdateTime{ get; };
+
+        MidiDeclaredStreamConfiguration GetDeclaredStreamConfiguration();
+        Windows.Foundation.DateTime DeclaredStreamConfigurationLastUpdateTime{ get; };
+
+        IVectorView<MidiFunctionBlock> GetDeclaredFunctionBlocks();
+        Windows.Foundation.DateTime DeclaredFunctionBlocksLastUpdateTime{ get; };
+
+        IVectorView<MidiGroupTerminalBlock> GetGroupTerminalBlocks();
+
+        MidiEndpointUserSuppliedInfo GetUserSuppliedInfo();
+
+        MidiEndpointTransportSuppliedInfo GetTransportSuppliedInfo();
+
+
+        Windows.Devices.Enumeration.DeviceInformation GetParentDeviceInformation();
+        Windows.Devices.Enumeration.DeviceInformation GetContainerDeviceInformation();
+
+        Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
+
+        //Boolean UpdateFromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
+        //Boolean UpdateFromDeviceInformationUpdate(Windows.Devices.Enumeration.DeviceInformationUpdate deviceInformationUpdate);
+    }
+}

@@ -1,0 +1,33 @@
+﻿<Window x:Class="virtual_device_app_wpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:virtual_device_app_wpf"
+        mc:Ignorable="d"
+        Title="Virtual Device App WPF" Height="450" Width="800">
+
+    <Grid Background="#252525">
+        <!--<Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="PadContainer" Grid.Row="0" Margin="5,25,5,5">
+            <GridView ItemsSource="{x:Bind Notes}" HorizontalAlignment="Center" VerticalAlignment="Center" >
+                <ItemsPanelTemplate>
+                    <UniformGridLayout x:Name="PadLayout" MaximumRowsOrColumns="4" />
+                </ItemsPanelTemplate>
+
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="local:Note">
+                        <Rectangle Fill="Orange" Margin="5" Width="95" Height="95"
+                                   PointerPressed="{x:Bind NoteOn}" 
+                                   PointerReleased="{x:Bind NoteOff}" />
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+        </Grid>-->
+    </Grid>
+    
+    
+</Window>

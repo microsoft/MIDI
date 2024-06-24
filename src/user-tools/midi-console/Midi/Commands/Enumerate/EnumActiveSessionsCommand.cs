@@ -1,16 +1,12 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-using Windows.Devices.Midi2;
-
-namespace Microsoft.Devices.Midi2.ConsoleApp
+namespace Microsoft.Midi.ConsoleApp
 {
     internal class EnumActiveSessionsCommand : Command<EnumActiveSessionsCommand.Settings>
     {
@@ -20,6 +16,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             AnsiConsole.Status()
             .Start("Enumerating transports...", ctx =>
             {
@@ -34,7 +37,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                 table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Sessions"));
 
 
-                var sessionList = MidiService.GetActiveSessions();
+                var sessionList = MidiReporting.GetActiveSessions();
 
 
                 if (sessionList.Count > 0)
@@ -76,7 +79,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
                                     connectionInfoString += $" [paleturquoise1]x{connection.InstanceCount}[/] ";
                                 }
 
-                                var di = MidiEndpointDeviceInformation.CreateFromId(connection.EndpointDeviceId);
+                                var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(connection.EndpointDeviceId);
 
                                 string epName;
                                 string icon;

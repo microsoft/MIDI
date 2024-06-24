@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
+    <Filter Include="Header Files\Protocol">
+      <UniqueIdentifier>{93df485d-cd67-4e5c-92f6-2593d5bb9550}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Protocol">
+      <UniqueIdentifier>{c9dff48d-794b-440a-a8e3-7365ee0e48ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiClientManager.cpp">
@@ -51,11 +57,14 @@
     <ClCompile Include="MidiTransformPipe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiEndpointProtocolManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiSessionTracker.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointProtocolManager.cpp">
+      <Filter>Source Files\Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointProtocolWorker.cpp">
+      <Filter>Source Files\Protocol</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -98,11 +107,14 @@
     <ClInclude Include="..\Inc\MidiPipe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiEndpointProtocolManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiSessionTracker.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointProtocolManager.h">
+      <Filter>Header Files\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointProtocolWorker.h">
+      <Filter>Header Files\Protocol</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

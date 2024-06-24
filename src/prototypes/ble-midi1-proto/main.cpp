@@ -19,406 +19,342 @@ using namespace Windows::Foundation;
 // https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/gatt-client
 
 
-
-#define MIDI_BLE_SERVICE L"{03B80E5A-EDE8-4B33-A751-6CE34EC4C700}"
-#define MIDI_BLE_DATA_IO_CHARACTERISTIC L"{7772E5DB-3868-4112-A1A9-F2669D106BF3}"
-
-winrt::guid MIDI_BLE_SERVICE_UUID(MIDI_BLE_SERVICE);
-winrt::guid MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID(MIDI_BLE_DATA_IO_CHARACTERISTIC);
-
-// Notes:
-//      Write (encryption recommended, write without response is required)
-//      Read (encryption recommended, respond with no payload)
-//      Notify (encryption recommended)
-// Max connection interval is 15ms. Lower is better.
-
-
-enumeration::DeviceWatcher m_Watcher{ nullptr };
-bool m_enumerationCompleted{ false };
-
-winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::Added_revoker m_DeviceAdded;
-winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::Removed_revoker m_DeviceRemoved;
-winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::Updated_revoker m_DeviceUpdated;
-winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::Stopped_revoker m_DeviceStopped;
-winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<enumeration::IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
-
-
-void OnDeviceAdded(enumeration::DeviceWatcher, enumeration::DeviceInformation info)
+struct MidiBleDeviceEntry
 {
-    std::cout << "Added: " << winrt::to_string(info.Id()) << std::endl;
-    std::cout << "Name: " << winrt::to_string(info.Name()) << std::endl;
+    uint64_t BluetoothAddress{};
 
+    BluetoothLEDevice Device{ nullptr };
+    GattDeviceService Service{ nullptr };
+};
 
-    // get the BLE device from this
+std::vector<MidiBleDeviceEntry> m_foundMidiDevices;
 
-    auto bleDevice = bt::BluetoothLEDevice::FromIdAsync(info.Id()).get();
+void TestFindingDevices()
+{
+//    GattCharacteristic characteristic{ nullptr };
 
-    if (bleDevice != nullptr)
-    {
-        std::cout << "BLE Name: " << winrt::to_string(bleDevice.Name()) << std::endl;
+    winrt::guid MIDI_BLE_SERVICE_UUID{ MIDI_BLE_SERVICE };
 
-        if (bleDevice.ConnectionStatus() == bt::BluetoothConnectionStatus::Connected)
+    BluetoothLEAdvertisementWatcher watcher;
+
+    watcher.Received([&](BluetoothLEAdvertisementWatcher /*source*/, BluetoothLEAdvertisementReceivedEventArgs const& args)
         {
-            std::cout << "Current status: Connected " << std::endl;
-        }
-        else
-        {
-            std::cout << "Current status: Disconnected " << std::endl;
-        }
+            auto device = BluetoothLEDevice::FromBluetoothAddressAsync(args.BluetoothAddress()).get();
 
-        
-
-        auto gattServicesResult = bleDevice.GetGattServicesAsync().get();
-
-        if (gattServicesResult.Status() == gatt::GattCommunicationStatus::Success)
-        {
-            for (auto service : gattServicesResult.Services())
+            if (device != nullptr)
             {
-                auto serviceUuid = service.Uuid();
+                auto service = GetBleMidiServiceFromDevice(device);
 
-                if (serviceUuid == MIDI_BLE_SERVICE_UUID)
+                if (service != nullptr)
                 {
-                    std::cout << "MIDI Service Found: " << winrt::to_string(winrt::to_hstring(serviceUuid)) << std::endl;
-
-                    auto characteristics = service.GetAllCharacteristics();
-
-                    for (auto characteristic : characteristics)
+                    // if not found, add it
+                    if (std::find_if(m_foundMidiDevices.begin(), m_foundMidiDevices.end(), [&](const MidiBleDeviceEntry& dev) { return device.BluetoothAddress() == dev.BluetoothAddress; }) == m_foundMidiDevices.end())
                     {
-                        auto uuid = characteristic.Uuid();
-                        //auto descriptorResult = characteristic.GetDescriptorsForUuidAsync(uuid).get();
-
-                        //for (auto desc : descriptorResult.Descriptors())
-                        //{
-                        //    desc.
-                        //}
-
-                        if (uuid == MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID)
-                        {
-                            std::cout << "MIDI Data IO Characteristic Found: " << winrt::to_string(winrt::to_hstring(uuid)) << std::endl;
-
-                            auto properties = characteristic.CharacteristicProperties();
-
-                            if ((properties & gatt::GattCharacteristicProperties::Read) == gatt::GattCharacteristicProperties::Read)
+                        device.ConnectionStatusChanged([&](BluetoothLEDevice connectionSource, IInspectable /*args*/)
                             {
-                                // includes input port
-                                std::cout << "- Supports READ (input port)" << std::endl;
-                            }
+                                if (connectionSource.ConnectionStatus() == BluetoothConnectionStatus::Connected)
+                                {
+                                    std::cout << "Connection status changed for " << winrt::to_string(connectionSource.Name()) << ", new status: Connected" << std::endl;
+                                }
+                                else
+                                {
+                                    std::cout << "Connection status changed for " << winrt::to_string(connectionSource.Name()) << ", new status: Disconnected" << std::endl;
+                                }
+                            });
 
-                            if ((properties & gatt::GattCharacteristicProperties::Write) == gatt::GattCharacteristicProperties::Write)
-                            {
-                                // includes output port
-                                std::cout << "- Supports WRITE (output port)" << std::endl;
-                            }
-
-                            if ((properties & gatt::GattCharacteristicProperties::Notify) == gatt::GattCharacteristicProperties::Notify)
-                            {
-                                std::cout << "- Supports NOTIFY" << std::endl;
-                            }
-
-                        }
+                        std::cout
+                            << "MIDI Device Found" << std::endl
+                            << " - Name:                    " << winrt::to_string(device.Name()) << std::endl
+                            << " - Timestamp:               " << args.Timestamp().time_since_epoch().count() << std::endl
+                            << " - Address:                 " << args.BluetoothAddress() << std::endl
+                            << " - IsConnectable:           " << args.IsConnectable() << std::endl
+                            << " - IsAnonymous:             " << args.IsAnonymous() << std::endl
+                            << " - IsDirected:              " << args.IsDirected() << std::endl
+                            << " - IsScannable:             " << args.IsScannable() << std::endl
+                            << " - RawSignalStrengthInDBm:  " << args.RawSignalStrengthInDBm() << std::endl;
 
 
+                        MidiBleDeviceEntry entry;
+                        entry.BluetoothAddress = device.BluetoothAddress();
+                        entry.Device = std::move(device);
+                        entry.Service = std::move(service);
+
+                        m_foundMidiDevices.push_back(std::move(entry));
                     }
-
-                    // no need to continue looking
-                    break;
                 }
+                //else
+                //{
+                //    std::cout << "Not a BLE MIDI Device" << std::endl;
+                //}
             }
-        }
-        else
-        {
-            std::cout << "Unable to communicate with device to get gatt services" << std::endl;
-        }
-
-        std::cout << "------------------------" << std::endl;
-
-    }
-
-}
-
-void OnDeviceRemoved(enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate upd)
-{
-    std::cout << "Removed: " << winrt::to_string(upd.Id()) << std::endl;
-}
-
-void OnDeviceUpdated(enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate upd)
-{
-    std::cout << "-----------" << std::endl;
-
-    std::cout << "Updated: " << winrt::to_string(upd.Id()).c_str() << std::endl;
-
-    auto bleDevice = bt::BluetoothLEDevice::FromIdAsync(upd.Id()).get();
-
-    if (bleDevice != nullptr)
-    {
-        std::cout << "Name: " << winrt::to_string(bleDevice.Name()) << " : ";
-
-        if (bleDevice.ConnectionStatus() == bt::BluetoothConnectionStatus::Connected)
-        {
-            std::cout << "Connected " << std::endl;
-        }
-        else
-        {
-            std::cout << "Disconnected " << std::endl;
-        }
-    }
-
-    // spit out the updated properties
-    for (auto prop : upd.Properties())
-    {
-        std::cout << winrt::to_string(prop.Key()) << std::endl;
-    }
-
-    std::cout << "-----------" << std::endl;
-}
-
-void OnDeviceStopped(enumeration::DeviceWatcher, foundation::IInspectable)
-{
-
-}
-
-void OnEnumerationCompleted(enumeration::DeviceWatcher, foundation::IInspectable)
-{
-    m_enumerationCompleted = true;
-
-}
-
-void TestEnumeration()
-{
-    // enumerate ble MIDI devices
-
-    winrt::hstring deviceSelector = bt::BluetoothLEDevice::GetDeviceSelector();
-
-
-    auto requestedProperties = winrt::single_threaded_vector<winrt::hstring>(
-        {
-            L"System.DeviceInterface.Bluetooth.DeviceAddress",
-            L"System.DeviceInterface.Bluetooth.Flags",
-            L"System.DeviceInterface.Bluetooth.LastConnectedTime",
-            L"System.DeviceInterface.Bluetooth.Manufacturer",
-            L"System.DeviceInterface.Bluetooth.ModelNumber",
-            L"System.DeviceInterface.Bluetooth.ProductId",
-            L"System.DeviceInterface.Bluetooth.ProductVersion",
-            L"System.DeviceInterface.Bluetooth.ServiceGuid",
-            L"System.DeviceInterface.Bluetooth.VendorId",
-            L"System.DeviceInterface.Bluetooth.VendorIdSource",
-            L"System.Devices.Connected",
-            L"System.Devices.DeviceCapabilities",
-            L"System.Devices.DeviceCharacteristics"
         }
     );
 
 
-    m_Watcher = enumeration::DeviceInformation::CreateWatcher(deviceSelector, requestedProperties);
+    watcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(MIDI_BLE_SERVICE_UUID);
 
-    auto deviceAddedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformation>(OnDeviceAdded);
-    auto deviceRemovedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(OnDeviceRemoved);
-    auto deviceUpdatedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, enumeration::DeviceInformationUpdate>(OnDeviceUpdated);
-    auto deviceStoppedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, foundation::IInspectable>(OnDeviceStopped);
-    auto deviceEnumerationCompletedHandler = foundation::TypedEventHandler<enumeration::DeviceWatcher, foundation::IInspectable>(OnEnumerationCompleted);
+    std::cout << "Starting watcher..." << std::endl;
 
-    m_DeviceAdded = m_Watcher.Added(winrt::auto_revoke, deviceAddedHandler);
-    m_DeviceRemoved = m_Watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
-    m_DeviceUpdated = m_Watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
-    m_DeviceStopped = m_Watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
-    m_DeviceEnumerationCompleted = m_Watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+    watcher.Start();
 
-    // this blocks
-    m_Watcher.Start();
+    system("pause > nul");
+}
 
+void ReportAdapterCapabilities()
+{
+    auto adapter = BluetoothAdapter::GetDefaultAsync().get();
+
+    if (adapter != nullptr)
+    {
+        std::cout << "IsCentralRoleSupported                 : " << adapter.IsCentralRoleSupported() << std::endl;
+        std::cout << "IsPeripheralRoleSupported              : " << adapter.IsPeripheralRoleSupported() << std::endl;
+        std::cout << "IsClassicSupported                     : " << adapter.IsClassicSupported() << std::endl;
+        std::cout << "IsLowEnergySupported                   : " << adapter.IsLowEnergySupported() << std::endl;
+        std::cout << "IsExtendedAdvertisingSupported         : " << adapter.IsExtendedAdvertisingSupported() << std::endl;
+        std::cout << "IsAdvertisementOffloadSupported        : " << adapter.IsAdvertisementOffloadSupported() << std::endl;
+        std::cout << "AreClassicSecureConnectionsSupported   : " << adapter.AreClassicSecureConnectionsSupported() << std::endl;
+        std::cout << "AreLowEnergySecureConnectionsSupported : " << adapter.AreLowEnergySecureConnectionsSupported() << std::endl;
+    }
+    else
+    {
+        std::cout << "No BT adapter present" << std::endl;
+    }
+
+    std::cout << "------------------------------------------" << std::endl;
 }
 
 
-IAsyncAction TestReceivingData()
+
+
+GattServiceProvider m_provider{ nullptr };
+winrt::event_token Revoke_AdvertisementStatusChanged;
+winrt::event_token Revoke_GattReadRequest;
+winrt::event_token Revoke_GattWriteRequest;
+GattLocalCharacteristic m_dataIOCharacteristic{ nullptr };
+
+
+void OnDataIOReadRequested(GattLocalCharacteristic const& /*source*/, GattReadRequestedEventArgs const& args)
 {
-    std::cout << "Test Receiving Data ---------------------------------------------------------" << std::endl;
+    //std::cout << __FUNCTION__ << std::endl;
 
-    winrt::hstring id = L"BluetoothLE#BluetoothLE3c:6a:a7:f0:4e:b0-48:b6:20:1a:71:9d";
+    auto request = args.GetRequestAsync().get();
 
-    try
+    args.Session().MaintainConnection(true);
+
+    std::cout << "Read Request: " << winrt::to_string(args.Session().DeviceId().Id()) 
+        << ", length=" << request.Length()
+        << std::endl;
+
+    // should respond with zero only the first time
+    streams::DataWriter writer;
+    writer.WriteByte(0);
+
+    request.RespondWithValue(writer.DetachBuffer());
+}
+
+void ProcessIncomingBuffer(streams::IBuffer buffer)
+{
+    auto reader = streams::DataReader::FromBuffer(buffer);
+
+    reader.ByteOrder(streams::ByteOrder::LittleEndian);
+
+    // TODO: Process the data. We'll just display for now
+
+    // Read header bytes
+    auto headerByte = reader.ReadByte();
+
+    if (headerByte & 0x80)
     {
-        gatt::GattSession session{ nullptr };
+        // valid header byte. Get the rest of the info
+        auto timestampByte = reader.ReadByte();
 
-        std::cout << "Creating session" << std::endl;
-
-        auto bleId = bt::BluetoothDeviceId::FromId(id);
-
-        session = co_await gatt::GattSession::FromDeviceIdAsync(bleId);
-
-        std::cout << "Session created" << std::endl;
-
-        session.MaintainConnection(true);
-
-        auto bleDevice = bt::BluetoothLEDevice::FromIdAsync(id).get();
-
-        if (bleDevice != nullptr)
+        if (timestampByte & 0x80)
         {
-            std::cout << "Using device " << winrt::to_string(bleDevice.Name()) << std::endl;
+            // timestamp high is bits 5-0 of header (6 bits)
+            uint16_t timestampHigh = headerByte & 0x3F;
 
-            auto service = bleDevice.GetGattService(MIDI_BLE_SERVICE_UUID);
+            // timestamp low is bites 6-0 of timestamp byte (7 bits)
+            uint16_t timestampLow = timestampByte & 0x7F;
 
-            if (service != nullptr)
+            uint16_t fullTimestamp = timestampLow | (timestampHigh << 7);
+
+            std::cout
+                << "TS:"
+                << std::setw(5) << std::setfill('0')
+                << std::dec
+                << fullTimestamp 
+                << std::nouppercase
+                << " Data: ";
+
+            // now read the message data
+            // In the real impl, this needs to account for
+            // timestamp (ts low) embedded in here between
+            // messages, as well as things like running
+            // status messages. This is just quick and dirty.
+            while (reader.UnconsumedBufferLength() > 0)
             {
-                std::cout << "Found service" << std::endl;;
-
-                auto openStatus = co_await service.OpenAsync(gatt::GattSharingMode::SharedReadAndWrite);
-
-                if (openStatus == gatt::GattOpenStatus::Success)
-                {
-                    std::cout << "Service opened" << std::endl;
-                }
-                else
-                {
-                    std::cout << "Unable to open service" << std::endl;
-                    co_return;
-                }
-
-                std::cout << "Getting MIDI Data IO characteristic" << std::endl;
-
-                auto characteristicsResult = co_await service.GetCharacteristicsForUuidAsync(MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID);
-
-                if (characteristicsResult.Status() == gatt::GattCommunicationStatus::Success)
-                {
-                    if (characteristicsResult.Characteristics().Size() == 0)
-                    {
-                        // this is unexpected
-                        std::cout << "Returned no characteristics for the required UUID" << std::endl;
-                    }
-                    else if (characteristicsResult.Characteristics().Size() > 1)
-                    {
-                        // TODO: Need to find out under which cases this happens
-                        std::cout << "Returned more than one characteristic for the same UUID" << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << "Returned just the one characteristic for the UUID" << std::endl;
-
-                        auto characteristic = characteristicsResult.Characteristics().GetAt(0);
-
-                        co_await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
-                            gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify);
-
-
-                        auto valueChangedHandler = [&](gatt::GattCharacteristic const& sender, gatt::GattValueChangedEventArgs const& args)
-                            {
-                                //std::cout << "Value changed" << std::endl;
-
-                                // we get an IBuffer here
-
-                                //std::cout << "Data size is " << args.CharacteristicValue().Length() << " bytes" << std::endl;
-
-                                std::cout << "> ";
-
-                                for (int i = 0; i < args.CharacteristicValue().Length(); i++)
-                                {
-                                    // read next byte
-                                    auto b = *(args.CharacteristicValue().data() + i);
-
-                                    std::cout << "0x" << std::hex << (unsigned)b << " ";
-                                }
-
-                                std::cout << std::endl;
-                            };
-
-                        // wire up ValueChanged so we actually get data
-                        characteristic.ValueChanged(valueChangedHandler);
-
-                        while (true)
-                        {
-                            ::Sleep(100);
-                        }
-
-                        session.Close();
-
-                    }
-                }
-
-
-                service.Close();
+                std::cout 
+                    << std::hex << std::setw(2) << std::setfill('0') << std::noshowbase 
+                    << std::uppercase
+                    << (unsigned)reader.ReadByte()
+                    << std::nouppercase
+                    << " ";
             }
-        }
 
-        std::cout << "Done" << std::endl;
-
-
-        // wait for incoming data indefinitely
-
-        //auto characteristic = characteristicsResult.Characteristics().GetAt(0);
-
-        //auto readResult = characteristic.ReadValueAsync().get();
-
-        //if (readResult.Status() == gatt::GattCommunicationStatus::Success)
-        //{
-        //    // we get an IBuffer here
-
-        //    for (int i = 0; i < readResult.Value().Length(); i++)
-        //    {
-        //        // read next byte
-        //        auto b = *(readResult.Value().data() + i);
-
-        //        std::cout << std::hex << b << " ";
-        //    }
-
-        //    std::cout << std::endl;
-
-        //}
-        //session.Close();
-
-
-
-
-
-
-
-
-    }
-    catch (winrt::hresult_error err)
-    {
-        // Important: using .get() means we don't actually get to handle these exceptions.
-
-        if (err.code() == HRESULT_FROM_WIN32(ERROR_SHARING_VIOLATION))
-        {
-            std::cout << "Cannot access the BLE device because it's being used by another process" << std::endl;
+            std::cout << std::endl;
         }
         else
         {
-            std::cout << "HRESULT exception 0x" << std::hex << err.code() << std::endl;
+            std::cout << "Invalid timestamp byte" << std::endl;
         }
-
-        co_return;
     }
-    catch (...)
+    else
     {
-        std::cout << "Exception" << std::endl;
-
-        co_return;
+        std::cout << "Invalid data" << std::endl;
     }
+}
+
+
+void OnDataIOWriteRequested(GattLocalCharacteristic const& /*source*/, GattWriteRequestedEventArgs const& args)
+{
+    //std::cout << __FUNCTION__ << std::endl;
+
+    auto request = args.GetRequestAsync().get();
+
+    //std::cout << "Write Request: " << winrt::to_string(args.Session().DeviceId().Id())
+    //    << ", offset=" << request.Offset()
+    //    << std::endl;
+
+    ProcessIncomingBuffer(request.Value());
 
 }
 
+void OnDataIOSubscribedClientsChanged(GattLocalCharacteristic const& /*source*/, foundation::IInspectable const& /*args*/)
+{
+    std::cout << __FUNCTION__ << std::endl;
+
+}
+
+
+void OnGattServiceProviderAdvertisementStatusChanged(GattServiceProvider const& /*source*/, GattServiceProviderAdvertisementStatusChangedEventArgs const& args)
+{
+//    std::cout << __FUNCTION__ << std::endl;
+
+    std::cout << "Provider ad status: ";
+
+    switch (args.Status())
+    {
+    case GattServiceProviderAdvertisementStatus::StartedWithoutAllAdvertisementData:
+        std::cout << "Started without all ad data";
+        break;
+    case GattServiceProviderAdvertisementStatus::Started:
+        std::cout << "Started";
+        break;
+    case GattServiceProviderAdvertisementStatus::Created:
+        std::cout << "Created";
+        break;
+    case GattServiceProviderAdvertisementStatus::Stopped:
+        std::cout << "Stopped";
+        break;
+    }
+
+    std::cout << std::endl;
+
+}
+
+void StartAsPeripheral()
+{
+    winrt::guid MIDI_BLE_SERVICE_UUID{ MIDI_BLE_SERVICE };
+    winrt::guid MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID{ MIDI_BLE_DATA_IO_CHARACTERISTIC };
+
+    auto result = GattServiceProvider::CreateAsync(MIDI_BLE_SERVICE_UUID).get();
+
+    if (result.Error() == BluetoothError::Success)
+    {
+        m_provider = result.ServiceProvider();
+
+        Revoke_AdvertisementStatusChanged = m_provider.AdvertisementStatusChanged(OnGattServiceProviderAdvertisementStatusChanged);
+
+        GattServiceProviderAdvertisingParameters params;
+        params.IsConnectable(true);
+        params.IsDiscoverable(true);
+
+        // BLE MIDI 1.0 requires WriteWithoutResponse
+        GattCharacteristicProperties dataIOProperties = 
+            GattCharacteristicProperties::WriteWithoutResponse | 
+            GattCharacteristicProperties::Read | 
+            GattCharacteristicProperties::Notify;
+
+        // BLE MIDI 1.0 supports encryption, and recommends it, but it isn't required. 
+        // We'll have this as a user setting later so the user can decide if, when the
+        // PC is acting as a peripheral, encryption and/or auth is required.
+        GattLocalCharacteristicParameters dataIOParameters;
+        dataIOParameters.ReadProtectionLevel(GattProtectionLevel::Plain);   
+        dataIOParameters.WriteProtectionLevel(GattProtectionLevel::Plain);  // same
+        dataIOParameters.UserDescription(L"MIDI Prototype");
+        dataIOParameters.CharacteristicProperties(dataIOProperties);
+
+        auto characteristicResult = m_provider.Service().CreateCharacteristicAsync(
+            MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID, 
+            dataIOParameters
+        ).get();
+
+        if (characteristicResult.Error() == BluetoothError::Success)
+        {
+            m_dataIOCharacteristic = characteristicResult.Characteristic();
+
+            Revoke_GattReadRequest = m_dataIOCharacteristic.ReadRequested(OnDataIOReadRequested);
+            Revoke_GattWriteRequest = m_dataIOCharacteristic.WriteRequested(OnDataIOWriteRequested);
+
+            m_dataIOCharacteristic.SubscribedClientsChanged(OnDataIOSubscribedClientsChanged);
+
+           // m_dataIOCharacteristic.StaticValue();
+
+            std::cout << "Start Advertising..." << std::endl;
+            m_provider.StartAdvertising(params);
+        }
+        else
+        {
+            std::cout << "Failed to create characteristic" << std::endl;
+        }
+    }
+}
+
+void StopPeripheral()
+{
+    std::cout << "Stopping peripheral..." << std::endl;
+
+    if (m_provider != nullptr)
+    {
+        m_provider.StopAdvertising();
+
+        // clean up event handler
+        m_provider.AdvertisementStatusChanged(Revoke_AdvertisementStatusChanged);
+
+        m_dataIOCharacteristic.ReadRequested(Revoke_GattReadRequest);
+        m_dataIOCharacteristic.WriteRequested(Revoke_GattWriteRequest);
+
+
+        m_provider == nullptr;
+    }
+}
 
 
 int main()
 {
     init_apartment();
 
-    //TestEnumeration();
 
-    std::thread enumerationThread(TestEnumeration);
+    ReportAdapterCapabilities();
 
-    enumerationThread.detach();
+    TestFindingDevices();
 
+    //StartAsPeripheral();
 
-    while (!m_enumerationCompleted)
-    {
-        Sleep(1000);
-    }
+    //system("pause");
 
-    TestReceivingData().get();
+    //StopPeripheral();
 
-    //system("pause > nul");
     system("pause");
-
-
 }
 

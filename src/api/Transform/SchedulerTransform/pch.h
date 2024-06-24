@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -51,15 +51,14 @@
 #include "midi_ump.h"
 #include "midi_timestamp.h"
 
-namespace internal = ::Windows::Devices::Midi2::Internal;
-namespace shared = ::Windows::Devices::Midi2::Internal::Shared;
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "plugin_defs.h"
 #include "ScheduledUmpMessage.h"
 
-#include "MidiServicePlugin.h"
-#include "MidiServicePlugin_i.c"
+#include "WindowsMidiServices.h"
+#include "WindowsMidiServices_i.c"
 
 #include "Midi2SchedulerTransform_i.c"
 #include "Midi2SchedulerTransform.h"

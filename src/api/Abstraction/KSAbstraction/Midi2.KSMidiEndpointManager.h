@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 #pragma once
@@ -34,6 +34,7 @@ public:
     std::wstring ManufacturerName;
     UINT16 VID{ 0 };
     UINT16 PID{ 0 };
+
 } MIDI_PIN_INFO, *PMIDI_PIN_INFO;
 
 class CMidi2KSMidiEndpointManager : 

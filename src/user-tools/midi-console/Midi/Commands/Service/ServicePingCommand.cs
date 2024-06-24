@@ -1,17 +1,13 @@
-﻿using Spectre.Console;
-using Spectre.Console.Cli;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.Devices.Midi2;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-using Microsoft.Devices.Midi2.ConsoleApp.Resources;
 
-namespace Microsoft.Devices.Midi2.ConsoleApp
+namespace Microsoft.Midi.ConsoleApp
 {
     // commands to check the health of Windows MIDI Services on this PC
     // will check for MIDI services
@@ -63,6 +59,13 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            if (!MidiService.EnsureServiceAvailable())
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            }
+
+
             try
             {
                 // check to see if the service is running. 
@@ -72,7 +75,7 @@ namespace Microsoft.Devices.Midi2.ConsoleApp
 
                 //UInt32 timeout = settings.Timeout.HasValue ? settings.Timeout.Value : 0;
 
-                var pingResult = MidiService.PingService((byte)settings.Count, (UInt32)settings.Timeout);
+                var pingResult = MidiDiagnostics.PingService((byte)settings.Count, (UInt32)settings.Timeout);
 
                 // TODO: Display results in a table
 

@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    struct MidiDeclaredDeviceIdentity
+    {
+        // can't declare fixed-size arrays in MIDL 3.0
+    
+        UInt8 SystemExclusiveIdByte1;
+        UInt8 SystemExclusiveIdByte2;
+        UInt8 SystemExclusiveIdByte3;
+
+        UInt8 DeviceFamilyLsb;
+        UInt8 DeviceFamilyMsb;
+
+        UInt8 DeviceFamilyModelNumberLsb;
+        UInt8 DeviceFamilyModelNumberMsb;
+
+        // can't declare fixed-sized arrays in a MIDL 3 struct, so 
+        // just keeping these as discrete fields. Same with SysEx.
+        UInt8 SoftwareRevisionLevelByte1;
+        UInt8 SoftwareRevisionLevelByte2;
+        UInt8 SoftwareRevisionLevelByte3;
+        UInt8 SoftwareRevisionLevelByte4;
+};
+}

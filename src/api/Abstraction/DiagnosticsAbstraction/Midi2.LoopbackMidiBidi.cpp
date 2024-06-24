@@ -3,7 +3,7 @@
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
 // in your Windows application via an official binary distribution.
-// Further information: https://github.com/microsoft/MIDI/
+// Further information: https://aka.ms/midi
 // ============================================================================
 
 
@@ -24,7 +24,8 @@ CMidi2LoopbackMidiBiDi::Initialize(
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -45,21 +46,16 @@ CMidi2LoopbackMidiBiDi::Initialize(
     CreationParams->DataFormat = MidiDataFormat_UMP;
 
     std::wstring id{ EndpointId };
-    Windows::Devices::Midi2::Internal::InPlaceToLower(id);
-    //OutputDebugString(id.c_str());
+    internal::InPlaceToLower(id);
 
     std::wstring pingBiDiId{ DEFAULT_PING_BIDI_ID };
-    Windows::Devices::Midi2::Internal::InPlaceToLower(pingBiDiId);
-    //OutputDebugString(pingBiDiId.c_str());
+    internal::InPlaceToLower(pingBiDiId);
 
     std::wstring loopBiDiAId{ DEFAULT_LOOPBACK_BIDI_A_ID };
-    Windows::Devices::Midi2::Internal::InPlaceToLower(loopBiDiAId);
-    //OutputDebugString(loopBiDiAId.c_str());
-
+    internal::InPlaceToLower(loopBiDiAId);
 
     std::wstring loopBiDiBId{ DEFAULT_LOOPBACK_BIDI_B_ID };
-    Windows::Devices::Midi2::Internal::InPlaceToLower(loopBiDiBId);
-    //OutputDebugString(loopBiDiBId.c_str());
+    internal::InPlaceToLower(loopBiDiBId);
 
     
     // Both loopback endpoints share the same internal device as a simple way of routing between the two. 
@@ -109,7 +105,8 @@ CMidi2LoopbackMidiBiDi::Cleanup()
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
         );
@@ -144,53 +141,21 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
     LONGLONG Timestamp
 )
 {
-    TraceLoggingWrite(
-        MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
     
     if (m_IsPing)
     {
-        TraceLoggingWrite(
-            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"), 
-            TraceLoggingWideString(L"Sending Ping")
-        );
-
         RETURN_HR_IF_NULL(E_POINTER, m_PingMidiDevice);
         return m_PingMidiDevice->SendMidiMessage(Message, Size, Timestamp);
     }
     else if (m_IsEndpointA)
     {
-        TraceLoggingWrite(
-            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Sending From Loopback A to B")
-        );
-
         RETURN_HR_IF_NULL(E_POINTER, m_LoopbackMidiDevice);
         return m_LoopbackMidiDevice->SendMidiMessageFromAToB(Message, Size, Timestamp);
     }
     else
     {
-        TraceLoggingWrite(
-            MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Sending From Loopback B to A")
-        );
-
         RETURN_HR_IF_NULL(E_POINTER, m_LoopbackMidiDevice);
         return m_LoopbackMidiDevice->SendMidiMessageFromBToA(Message, Size, Timestamp);
     }
@@ -207,7 +172,8 @@ CMidi2LoopbackMidiBiDi::Callback(
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
