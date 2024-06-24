@@ -238,7 +238,8 @@ StreamEngine::HandleIo()
                         USBMIDI2DriverIoWrite(
                             AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)),
                             (PUCHAR)startingReadAddress + sizeof(UMPDATAFORMAT),
-                            thisData->ByteCount
+                            thisData->ByteCount,
+                            (finalReadPosition != midiOutWritePosition) ? TRUE : FALSE  // indicates there is more data in this pass or not
                         );
                     }
 
