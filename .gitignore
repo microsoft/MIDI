@@ -3,6 +3,16 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# binaries for staging builds
+build/staging/app-sdk/*
+build/dependencies/*.exe
+build/dependencies/*.msi
+
+
+# annoying that these solution-level nuget restores create folders at the root and not /packages
+/src/user-tools/midi-console/Microsoft.Windows.Devices.Midi2.*/*
+/samples/cpp-winrt/Microsoft.Windows.Devices.Midi2.*/*
+
 # Dump files
 *.etl
 *.dmp
