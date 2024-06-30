@@ -16,10 +16,15 @@
 #define MIDI_TRACE_EVENT_INFO               "Midi.Info"
 
 
-#define MIDI_TRACE_EVENT_MESSAGE_FIELD      "message"
-#define MIDI_TRACE_EVENT_LOCATION_FIELD     "location"
-#define MIDI_TRACE_EVENT_HRESULT_FIELD      "hresult"
-#define MIDI_TRACE_EVENT_INTERFACE_FIELD    "interface"
+#define MIDI_TRACE_EVENT_MESSAGE_FIELD              "message"
+#define MIDI_TRACE_EVENT_LOCATION_FIELD             "location"
+#define MIDI_TRACE_EVENT_HRESULT_FIELD              "hresult"
+#define MIDI_TRACE_EVENT_INTERFACE_FIELD            "interface"
+
+#define MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD        "swd"
+#define MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD   "device instance"
+
+#define MIDI_TRACE_EVENT_MIDI_WORD0_FIELD            "word0"
 
 
 
@@ -610,6 +615,13 @@ struct MidiDeviceIdentityProperty
 // TODO: double check this number
 #define MIDI_FUNCTION_BLOCK_NAME_MAX_LENGTH 96
 
+// this should probably just be an enum
+#define MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_UNKNOWN         0x0
+#define MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_INPUT           0x1
+#define MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_OUTPUT          0x2
+#define MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_BIDIRECTIONAL   0x3
+
+
 // for PKEY_MIDI_FunctionBlocks
 // these properties are raw from the messages
 struct MidiFunctionBlockProperty
@@ -618,7 +630,7 @@ struct MidiFunctionBlockProperty
     bool IsActive{ false };
     uint8_t BlockNumber{ 0 };
     uint8_t Reserved0{ 0 };         // unused in UMP 1.1
-    uint8_t Direction{ 0 };
+    uint8_t Direction{ 0 };         // one of the MIDI_FUNCTION_BLOCK_DIRECTION_xxx values
     uint8_t Midi1{ 0 };
     uint8_t UIHint{ 0 };
     uint8_t FirstGroup{ 0 };

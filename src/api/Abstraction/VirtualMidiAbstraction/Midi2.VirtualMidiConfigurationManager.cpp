@@ -62,12 +62,13 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Virtual endpoints can be created only at runtime through the API, not from the configuration file.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-        return E_FAIL;
+        // we return S_OK here because this can happen at service startup, and no reason to log an error here
+        return S_OK;
     }
 
 

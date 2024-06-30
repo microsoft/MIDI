@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Microsoft.Windows.Devices.Midi2.Initialization;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EnumActiveSessionsCommand : Command<EnumActiveSessionsCommand.Settings>
@@ -16,7 +18,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.EnsureServiceAvailable())
+            if (!MidiServicesInitializer.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
