@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Microsoft.Windows.Devices.Midi2.Initialization;
 using System.Management;
 using System.ServiceProcess;
 
@@ -32,7 +33,7 @@ namespace Microsoft.Midi.ConsoleApp
             // check to see if the service is running. 
             // NOTE: Equivalent code can't be moved to the SDK due to Desktop/WinRT limitations.
 
-            if (MidiService.EnsureServiceAvailable())
+            if (MidiServicesInitializer.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Service reported as available by API."));
             }

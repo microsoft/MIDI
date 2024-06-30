@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Microsoft.Windows.Devices.Midi2.Initialization;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class WatchEndpointsCommand : Command<WatchEndpointsCommand.Settings>
@@ -22,7 +24,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.EnsureServiceAvailable())
+            if (!MidiServicesInitializer.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -30,16 +32,16 @@ namespace Microsoft.Midi.ConsoleApp
 
 
             MidiEndpointDeviceInformationFilters filter =
-                MidiEndpointDeviceInformationFilters.IncludeClientUmpNative |
-                MidiEndpointDeviceInformationFilters.IncludeClientByteStreamNative |
-                MidiEndpointDeviceInformationFilters.IncludeVirtualDeviceResponder;
+                MidiEndpointDeviceInformationFilters.StandardNativeUniversalMidiPacketFormat |
+                MidiEndpointDeviceInformationFilters.StandardNativeMidi1ByteFormat |
+                MidiEndpointDeviceInformationFilters.VirtualDeviceResponder;
 
             if (settings.IncludeDiagnosticLoopback)
             {
-                filter |= MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback;
+                filter |= MidiEndpointDeviceInformationFilters.DiagnosticLoopback;
             }
 
-            _watcher = MidiEndpointDeviceWatcher.CreateWatcher(filter);
+            _watcher = MidiEndpointDeviceWatcher.Create(filter);
 
 
             _watcher.Added += OnWatcherDeviceAdded;

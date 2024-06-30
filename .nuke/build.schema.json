@@ -68,10 +68,12 @@
               "BuildAndPublishAll",
               "BuildAppSdkRuntimeInstaller",
               "BuildConsoleApp",
+              "BuildConsoleAppInstaller",
               "BuildCppSamples",
               "BuildServiceAndPlugins",
               "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
+              "BuildUserToolsSharedComponents",
               "Prerequisites"
             ]
           }
@@ -86,10 +88,12 @@
               "BuildAndPublishAll",
               "BuildAppSdkRuntimeInstaller",
               "BuildConsoleApp",
+              "BuildConsoleAppInstaller",
               "BuildCppSamples",
               "BuildServiceAndPlugins",
               "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
+              "BuildUserToolsSharedComponents",
               "Prerequisites"
             ]
           }

@@ -1,0 +1,17 @@
+﻿<Project Sdk="WixToolset.Sdk/4.0.2">
+  <PropertyGroup>
+    <OutputName>WindowsMIDIServicesConsoleStandAloneSetup</OutputName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Arm64' ">
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\midi-console\Midi\Midi.csproj" />
+    <ProjectReference Include="..\..\shared\Microsoft.Devices.Midi2.Tools.Shared\Microsoft.Devices.Midi2.Tools.Shared.csproj" />
+  </ItemGroup>
+</Project>

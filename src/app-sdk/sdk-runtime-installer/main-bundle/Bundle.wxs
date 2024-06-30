@@ -18,7 +18,7 @@
     <Bundle Name="Windows MIDI Services (App SDK Runtime) $(SetupVersionName) $(SetupVersionNumber)" 
           Manufacturer="Microsoft Corporation" 
           Version="$(SetupVersionNumber)" 
-          UpgradeCode="0b3e44a1-278f-4a6a-8be3-7dc71af4d2b3">
+          UpgradeCode="738243ea-170f-4385-94d5-be4059d9d2fb">
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 

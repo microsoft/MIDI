@@ -8,6 +8,8 @@
 
 
 
+using Microsoft.Windows.Devices.Midi2.Initialization;
+
 namespace Microsoft.Midi.ConsoleApp
 {
 
@@ -39,7 +41,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.EnsureServiceAvailable())
+            if (!MidiServicesInitializer.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -114,11 +116,11 @@ namespace Microsoft.Midi.ConsoleApp
 
                 // data format
 
-                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
+                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
                     table.AddRow(Strings.PropertiesTablePropertyLabelNativeDataFormat, Strings.PropertyValueNativeDataFormatUmp);
                 }
-                else if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.ByteStream)
+                else if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.Midi1ByteFormat)
                 {
                     table.AddRow(Strings.PropertiesTablePropertyLabelNativeDataFormat, Strings.PropertyValueNativeDataFormatByteStream);
                 }
@@ -140,7 +142,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 // we only show protocol negotiation stuff if we're native UMP
 
-                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
+                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
                     if (settings.Verbose)
                     {
@@ -191,7 +193,7 @@ namespace Microsoft.Midi.ConsoleApp
 
 
 
-                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
+                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderActiveConfiguration), "");
@@ -221,12 +223,12 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionTransportInformation), "");
                     table.AddRow(Strings.PropertyTablePropertyLabelTransportSuppliedName, AnsiMarkupFormatter.FormatEndpointName(transportSuppliedInfo.Name));
                     table.AddRow(Strings.PropertyTablePropertyLabelTransportId, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportId.ToString()));
-                    table.AddRow(Strings.PropertyTablePropertyLabelTransportMnemonic, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportMnemonic));
+                    table.AddRow(Strings.PropertyTablePropertyLabelTransportMnemonic, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportAbbreviation));
                 }
 
                 table.AddEmptyRow();
 
-                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacket)
+                if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderFunctionBlocks), "");

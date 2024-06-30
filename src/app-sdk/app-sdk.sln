@@ -18,6 +18,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0 Shared", "0 Shared", "{78B3E981-FFD4-4C8D-9575-B288DED97905}"
 	ProjectSection(SolutionItems) = preProject
 		sdk-shared\SdkTraceLogging.h = sdk-shared\SdkTraceLogging.h
+		MyMidiApp.exe.manifest = MyMidiApp.exe.manifest
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{C8B31D71-0226-4D2D-AC78-53D5C84F472F}"

@@ -100,7 +100,7 @@ namespace WindowsMidiServicesInternal
         return ToUpperTrimmedWStringCopy(guidString);
     }
 
-    // note that this produces a GUID with uppercase letters and enclosing braces
+    // This produces a GUID with uppercase letters and enclosing braces
     inline std::wstring GuidToString(_In_ GUID guid)
     {
         LPOLESTR str;
@@ -118,6 +118,7 @@ namespace WindowsMidiServicesInternal
         }
     }
 
+    // Expects enclosing braces: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
     inline GUID StringToGuid(_In_ std::wstring value)
     {
         // this fails when {} are included

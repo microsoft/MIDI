@@ -8,6 +8,8 @@
 
 
 
+using Microsoft.Windows.Devices.Midi2.Initialization;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EnumTransportsCommand : Command<EnumTransportsCommand.Settings>
@@ -23,7 +25,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.EnsureServiceAvailable())
+            if (!MidiServicesInitializer.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -49,7 +51,7 @@ namespace Microsoft.Midi.ConsoleApp
                     foreach (var transport in transportList)
                     {
                         table.AddRow(
-                            $"{AnsiMarkupFormatter.FormatTransportName(transport.Name)} ({AnsiMarkupFormatter.FormatTransportMnemonic(transport.Mnemonic)}) Version {AnsiMarkupFormatter.FormatTransportVersion(transport.Version)}"
+                            $"{AnsiMarkupFormatter.FormatTransportName(transport.Name)} ({AnsiMarkupFormatter.FormatTransportMnemonic(transport.Abbreviation)}) Version {AnsiMarkupFormatter.FormatTransportVersion(transport.Version)}"
                             );
 
                         table.AddRow(

@@ -866,6 +866,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
                 WORD negotiationTimeoutMilliseconds{ 5000 };
 
+                // this pointer will be allocated and set in the negotiate method
                 PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
 
                 LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
