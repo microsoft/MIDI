@@ -42,9 +42,9 @@ namespace Microsoft.Midi.ConsoleApp
         {
             var endpoints = MidiEndpointDeviceInformation.FindAll(
                 MidiEndpointDeviceInformationSortOrder.Name, 
-                MidiEndpointDeviceInformationFilters.IncludeClientByteStreamNative | 
-                    MidiEndpointDeviceInformationFilters.IncludeClientUmpNative | 
-                    MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback);
+                MidiEndpointDeviceInformationFilters.StandardNativeMidi1ByteFormat | 
+                    MidiEndpointDeviceInformationFilters.StandardNativeUniversalMidiPacketFormat | 
+                    MidiEndpointDeviceInformationFilters.DiagnosticLoopback);
 
             if (endpoints != null)
             {

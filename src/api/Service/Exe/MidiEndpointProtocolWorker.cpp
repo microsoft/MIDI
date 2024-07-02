@@ -36,25 +36,45 @@ CMidiEndpointProtocolWorker::Initialize(
     m_deviceManager = DeviceManager;
     m_sessionTracker = SessionTracker;
 
-    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiAbstraction> serviceAbstraction;
 
     // we only support UMP data format for protocol negotiation
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
     abstractionCreationParams.DataFormat = MidiDataFormat::MidiDataFormat_UMP;
 
     DWORD mmcssTaskId{ 0 };
     LONGLONG context{ 0 };
 
+    // Working directly with the abstraction doesn't work here. Something doesn't hook up
+    // properly. When we open the device here, then the normal client endpoints don't 
+    // receive messages, even though they appear to be working.
+//    RETURN_IF_FAILED(CoCreateInstance(m_abstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+//    RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
+//    RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(m_deviceInterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, context, m_sessionId));
 
-    // This approach ONLY works because all UMP endpoints are required to be multi-client
-    RETURN_IF_FAILED(CoCreateInstance(m_abstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-    RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
-    RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(m_deviceInterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, context, m_sessionId));
+    // this is not a good idea, but we don't have a reference to the lib here
+    GUID midi2MidiSrvAbstractionIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
+    RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvAbstractionIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceAbstraction)));
 
-    // todo: add this connection to the session tracker
+    // create the bidi device
+    RETURN_IF_FAILED(serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
 
+    RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(
+        (LPCWSTR)(m_deviceInterfaceId.c_str()),
+        &abstractionCreationParams,
+        &mmcssTaskId,
+        (IMidiCallback*)(this),
+        context,
+        m_sessionId
+    ));
 
+    // add this connection to the session tracker. The manager already logged the overall session
+    //LOG_IF_FAILED(m_sessionTracker->AddClientEndpointConnection(
+    //    m_sessionId,
+    //    m_deviceInterfaceId.c_str(),
+    //    (MidiClientHandle)nullptr));
 
+    RETURN_IF_FAILED(m_allNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
 
     return S_OK;
 }
@@ -169,7 +189,6 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
 
         // The lifetime of this object (CMidiEndpointProtocolWorker instance for the SWD) is controlled by the CMidiEndpointProtocolManager.
 
-
         // reset all the data collection fields in case negotiation was
         // called more than once (an allowed scenario)
         m_countFunctionBlocksReceived = 0;
@@ -180,7 +199,7 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
         m_endpointName.clear();
         m_productInstanceId.clear();
 
-        m_allNegotiationMessagesReceived.reset();
+        m_allNegotiationMessagesReceived.ResetEvent();
         m_alreadyTriedToNegotiationOnce = false;
 
         m_taskDeviceIdentityReceived = false;
@@ -215,21 +234,29 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
         m_mostRecentResults.EndpointSuppliedName = m_endpointName.c_str();
         m_mostRecentResults.EndpointSuppliedProductInstanceId = m_productInstanceId.c_str();
 
-        //results->FunctionBlocksAreStatic =
-        m_mostRecentResults.NumberOfFunctionBlocksReceived = m_countFunctionBlocksReceived;
+        m_mostRecentResults.FunctionBlocksAreStatic = m_functionBlocksAreStatic;
         m_mostRecentResults.NumberOfFunctionBlocksDeclared = m_declaredFunctionBlockCount;
 
-        // TODO: Loop through function blocks and copy the name pointers over 
+        // Loop through function blocks and copy the name pointers over 
         // into the structure before returning it. Seems extra, but we need a friendly
         // place to work on names before they are finished, and the structure only
         // knows about the LPCWSTR, not std::wstring
         
-        // MISSING NAME FUNCTIONALITY
-
+        for (auto& fb : m_discoveredFunctionBlocks)
+        {
+            if (m_functionBlockNames.find(fb.Number) != m_functionBlockNames.end())
+            {
+                fb.Name = m_functionBlockNames[fb.Number].c_str();
+            }
+            else
+            {
+                fb.Name = nullptr;
+            }
+        }
 
         // add the function blocks now they are fully valid
         m_mostRecentResults.DiscoveredFunctionBlocks = m_discoveredFunctionBlocks.data();
-
+        m_mostRecentResults.NumberOfFunctionBlocksReceived = (BYTE)m_discoveredFunctionBlocks.size();
        
         *NegotiationResults = &m_mostRecentResults;
 
@@ -259,118 +286,21 @@ CMidiEndpointProtocolWorker::Callback(
 
             if (internal::GetUmpMessageTypeFromFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE)
             {
-                auto messageStatus = internal::GetStatusFromStreamMessageFirstWord(ump.word0);
+                LOG_IF_FAILED(ProcessStreamMessage(ump));
 
-                switch (messageStatus)
+                // check flags. If we've received everything, signal
+
+                if (m_taskEndpointInfoReceived &&
+                    m_taskEndpointNameReceived &&
+                    m_taskEndpointProductInstanceIdReceived &&
+                    m_taskDeviceIdentityReceived &&
+                    m_countFunctionBlockNamesReceived == m_declaredFunctionBlockCount &&
+                    m_countFunctionBlocksReceived == m_declaredFunctionBlockCount &&
+                    m_taskFinalStreamNegotiationResponseReceived)
                 {
-                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Endpoint Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    m_taskEndpointInfoReceived = true;
-                    m_declaredFunctionBlockCount = internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(ump.word1);
-
-                    RequestAllFunctionBlocks();
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Device Identity Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    m_taskDeviceIdentityReceived = true;
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Stream Configuration Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    ProcessStreamConfigurationRequest(ump);
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Function Block Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    m_countFunctionBlocksReceived += 1;
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Function Block Name Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
-                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
-                    {
-                        m_countFunctionBlockNamesReceived += 1;
-                    }
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Product Instance Id Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
-                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
-                    {
-                        m_taskEndpointProductInstanceIdReceived = true;
-                    }
-                    break;
-
-                case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Received Endpoint Name Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    );
-
-                    if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
-                        internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
-                    {
-                        m_taskEndpointNameReceived = true;
-                    }
-                    break;
-
-                default:
-                    break;
+                    // we're done with negotiation, and can return from the initial function. Code will continue to
+                    // capture new metadata when messages signal change, but the initial steps have completed.
+                    m_allNegotiationMessagesReceived.SetEvent();
                 }
             }
             else
@@ -399,21 +329,222 @@ CMidiEndpointProtocolWorker::Callback(
     }
 
 
-    // check flags. If we've received everything, signal
+    return S_OK;
+}
 
-    if (m_taskEndpointInfoReceived &&
-        m_taskEndpointNameReceived &&
-        m_taskEndpointProductInstanceIdReceived &&
-        m_taskDeviceIdentityReceived &&
-        m_countFunctionBlockNamesReceived == m_declaredFunctionBlockCount &&
-        m_countFunctionBlocksReceived == m_declaredFunctionBlockCount &&
-        m_taskFinalStreamNegotiationResponseReceived)
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiEndpointProtocolWorker::ProcessStreamMessage(internal::PackedUmp128 ump)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt32(ump.word0, MIDI_TRACE_EVENT_MIDI_WORD0_FIELD)
+    );
+
+    auto messageStatus = internal::GetStatusFromStreamMessageFirstWord(ump.word0);
+
+    switch (messageStatus)
     {
-        //        m_allMessagesReceived.SetEvent();
+    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
+    {
+#ifdef _DEBUG 
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received Endpoint Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+#endif
+
+        LOG_IF_FAILED(UpdateEndpointInfoProperties(ump));
+
+        m_taskEndpointInfoReceived = true;
+
+        m_declaredFunctionBlockCount = internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(ump.word1);
+        m_functionBlocksAreStatic = internal::GetEndpointInfoNotificationStaticFunctionBlocksFlagFromSecondWord(ump.word1);
+
+        // TODO: Update other internal values as needed
+
+        LOG_IF_FAILED(RequestAllFunctionBlocks());
+    }
+    break;
+
+    case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
+    {
+#ifdef _DEBUG 
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received Device Identity Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+#endif
+
+        LOG_IF_FAILED(UpdateDeviceIdentityProperty(ump));
+
+        m_taskDeviceIdentityReceived = true;
+    }
+    break;
+
+    case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
+    {
+#ifdef _DEBUG 
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received Stream Configuration Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+#endif
+
+        LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
+        LOG_IF_FAILED(ProcessStreamConfigurationRequest(ump));
+    }
+    break;
+
+    case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
+    {
+#ifdef _DEBUG 
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received Function Block Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+#endif
+
+        m_countFunctionBlocksReceived += 1;
+
+        DISCOVEREDFUNCTIONBLOCK block{};
+
+        auto direction = MIDIWORDBYTE4LOWCRUMB1(ump.word0);
+
+        if (direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_INPUT || direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_BIDIRECTIONAL)
+        {
+            // input to block == is a MIDI Output from PC
+            block.IsMIDIMessageDestination = true;
+        }
+
+        if (direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_OUTPUT || direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_BIDIRECTIONAL)
+        {
+            // output from block == is a MIDI input to PC
+            block.IsMIDIMessageSource = true;
+        }
+
+        block.IsActive = (BOOL)(MIDIWORDBYTE3HIGHBIT(ump.word0));
+        block.Number = internal::CleanupByte7(MIDIWORDBYTE3(ump.word0));
+        block.FirstGroup = MIDIWORDBYTE1(ump.word1);
+        block.NumberOfGroupsSpanned = MIDIWORDBYTE2(ump.word1);
+
+        m_discoveredFunctionBlocks.push_back(block);
+
+        LOG_IF_FAILED(UpdateFunctionBlockProperty(ump));
+    }
+    break;
+
+    case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
+    {
+#ifdef _DEBUG 
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received Function Block Name Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+#endif
+
+        if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
+            internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
+        {
+            m_countFunctionBlockNamesReceived += 1;
+        }
+
+        LOG_IF_FAILED(HandleFunctionBlockNameMessage(ump));
+    }
+    break;
+
+    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
+    {
+#ifdef _DEBUG 
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received Product Instance Id Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+#endif
+
+        if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
+            internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
+        {
+            m_taskEndpointProductInstanceIdReceived = true;
+        }
+
+        LOG_IF_FAILED(HandleProductInstanceIdMessage(ump));
+    }
+    break;
+
+    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
+    {
+#ifdef _DEBUG 
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received Endpoint Name Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+#endif
+
+        if (internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE ||
+            internal::GetFormFromStreamMessageFirstWord(ump.word0) == MIDI_STREAM_MESSAGE_MULTI_FORM_END)
+        {
+            m_taskEndpointNameReceived = true;
+        }
+        LOG_IF_FAILED(HandleEndpointNameMessage(ump));
+    }
+    break;
+
+    default:
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Message is unidentified stream message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+        // some other type F we don't understand. Just ignore
+    }
+    break;
+
     }
 
     return S_OK;
 }
+
+
 
 
 HRESULT
@@ -424,7 +555,8 @@ CMidiEndpointProtocolWorker::RequestAllFunctionBlocks()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     internal::PackedUmp128 ump{};
@@ -451,7 +583,8 @@ CMidiEndpointProtocolWorker::RequestAllEndpointDiscoveryInformation()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     internal::PackedUmp128 ump{};
@@ -492,7 +625,8 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     // see if all is what we want. If not, we'll send a request to change configuration.
@@ -549,9 +683,12 @@ CMidiEndpointProtocolWorker::Cleanup()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+
+    LOG_IF_FAILED(m_sessionTracker->RemoveClientEndpointConnection(m_sessionId, m_deviceInterfaceId.c_str(), (MidiClientHandle)nullptr));
 
     // stop worker thread
 
@@ -562,10 +699,18 @@ CMidiEndpointProtocolWorker::Cleanup()
     //        m_queueWorkerThread.join();
 
 
+    m_allNegotiationMessagesReceived.reset();
+
+
     return S_OK;
 }
 
 
+
+
+// TODO: An optimization that will help prevent so many update notifications (which trigger device manager
+// refresh, as well as client-side events) would be to build a complete update list when in the middle of
+// initial discovery/negotiation and committing them only after that completes or times out.
 
 
 HRESULT
@@ -576,29 +721,39 @@ CMidiEndpointProtocolWorker::UpdateEndpointNameProperty()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     auto cleanedValue{ internal::TrimmedWStringCopy(m_endpointName) + L"\0" };
 
-    FILETIME currentTime;
-    GetSystemTimePreciseAsFileTime(&currentTime);
-
-
-    DEVPROPERTY props[] =
+    if (!cleanedValue.empty())
     {
-        {{ PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
-        {{ PKEY_MIDI_EndpointProvidedNameLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
-    };
+        FILETIME currentTime;
+        GetSystemTimePreciseAsFileTime(&currentTime);
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
-    // clear out any old value that's in there
-    //m_endpointName.clear();
+        DEVPROPERTY props[] =
+        {
+            {{ PKEY_MIDI_EndpointProvidedName, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+            {{ PKEY_MIDI_EndpointProvidedNameLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
+        };
 
-    return S_OK;
+        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+
+        // clear out any old value that's in there
+        //m_endpointName.clear();
+
+        return S_OK;
+    }
+    else
+    {
+        // TODO: Need to remove the property
+
+        return S_OK;
+    }
 }
 
 HRESULT
@@ -609,7 +764,8 @@ CMidiEndpointProtocolWorker::UpdateEndpointProductInstanceIdProperty()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
 
@@ -619,20 +775,29 @@ CMidiEndpointProtocolWorker::UpdateEndpointProductInstanceIdProperty()
 
     std::wstring cleanedValue{ internal::TrimmedWStringCopy(m_productInstanceId) + L"\0" };
 
-    DEVPROPERTY props[] =
+    if (!cleanedValue.empty())
     {
-        {{ PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
-        {{ PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
-    };
+        DEVPROPERTY props[] =
+        {
+            {{ PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+            {{ PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
+        };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
-    // clear out any old value that's in there
-    //m_productInstanceId.clear();
+        // clear out any old value that's in there
+        //m_productInstanceId.clear();
 
-    return S_OK;
+        return S_OK;
+    }
+    else
+    {
+        // TODO: Need to remove the property
+
+        return S_OK;
+    }
 }
 
 
@@ -645,29 +810,38 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockNameProperty(uint8_t functionBlo
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     FILETIME currentTime;
     GetSystemTimePreciseAsFileTime(&currentTime);
 
-
     std::wstring cleanedValue{ internal::TrimmedWStringCopy(name) + L"\0" };
 
-    DEVPROPERTY props[] =
+    if (!cleanedValue.empty())
     {
-        {{ FunctionBlockNamePropertyKeyFromNumber(functionBlockNumber), DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
-        {{ PKEY_MIDI_FunctionBlocksLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
-    };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+        DEVPROPERTY props[] =
+        {
+            {{ FunctionBlockNamePropertyKeyFromNumber(functionBlockNumber), DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, static_cast<ULONG>((cleanedValue.length() + 1) * sizeof(WCHAR)), (PVOID)(cleanedValue.c_str()) },
+            {{ PKEY_MIDI_FunctionBlocksLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
+        };
 
-    // clear out any old name that's in there
-  //  m_functionBlockNames.erase(functionBlockNumber);
+        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
-    return S_OK;
+        // clear out any old name that's in there
+      //  m_functionBlockNames.erase(functionBlockNumber);
+        return S_OK;
+    }
+    else
+    {
+        // TODO: Need to remove the property
+
+        return S_OK;
+    }
 }
 
 _Use_decl_annotations_
@@ -679,7 +853,8 @@ CMidiEndpointProtocolWorker::UpdateStreamConfigurationProperties(internal::Packe
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     FILETIME currentTime;
@@ -706,11 +881,10 @@ CMidiEndpointProtocolWorker::UpdateStreamConfigurationProperties(internal::Packe
 
     };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
     return S_OK;
 }
-
 
 
 // The device identity is a single message, so we don't keep a copy. Instead, we just do
@@ -725,7 +899,8 @@ CMidiEndpointProtocolWorker::UpdateDeviceIdentityProperty(internal::PackedUmp128
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
 
@@ -761,7 +936,7 @@ CMidiEndpointProtocolWorker::UpdateDeviceIdentityProperty(internal::PackedUmp128
 
     };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
     return S_OK;
 }
@@ -776,7 +951,8 @@ CMidiEndpointProtocolWorker::UpdateEndpointInfoProperties(internal::PackedUmp128
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     BYTE umpVersionMajor = MIDIWORDBYTE3(endpointInfoNotificationMessage.word0);
@@ -826,7 +1002,7 @@ CMidiEndpointProtocolWorker::UpdateEndpointInfoProperties(internal::PackedUmp128
 
     };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
     return S_OK;
 }
@@ -841,7 +1017,8 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockProperty(internal::PackedUmp128&
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     MidiFunctionBlockProperty prop;
@@ -876,72 +1053,7 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockProperty(internal::PackedUmp128&
 
     };
 
-
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInstanceId.c_str(), ARRAYSIZE(props), (PVOID)props));
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiEndpointProtocolWorker::ProcessStreamMessage(internal::PackedUmp128 ump)
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-    auto messageStatus = internal::GetStatusFromStreamMessageFirstWord(ump.word0);
-
-    switch (messageStatus)
-    {
-    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
-        UpdateEndpointInfoProperties(ump);
-        //m_currentWorkItem.TaskEndpointInfoReceived = true;
-        //m_currentWorkItem.DeclaredFunctionBlockCount = internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(ump.word1);
-
-        //RequestAllFunctionBlocks();
-        break;
-
-    case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
-        UpdateDeviceIdentityProperty(ump);
-        //m_currentWorkItem.TaskDeviceIdentityReceived = true;
-        break;
-
-    case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
-        UpdateStreamConfigurationProperties(ump);
-        break;
-
-    case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
-        UpdateFunctionBlockProperty(ump);
-        break;
-
-    case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION:
-        HandleFunctionBlockNameMessage(ump);
-        break;
-
-    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION:
-        HandleProductInstanceIdMessage(ump);
-        break;
-
-    case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION:
-        HandleEndpointNameMessage(ump);
-        break;
-
-    default:
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Message is unidentified stream message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-        break;
-    }
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
 
     return S_OK;
 }
@@ -958,7 +1070,8 @@ CMidiEndpointProtocolWorker::ParseStreamTextMessage(internal::PackedUmp128& mess
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
 
@@ -1031,7 +1144,8 @@ CMidiEndpointProtocolWorker::HandleFunctionBlockNameMessage(internal::PackedUmp1
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
 
@@ -1097,7 +1211,8 @@ CMidiEndpointProtocolWorker::HandleEndpointNameMessage(internal::PackedUmp128& e
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     switch (internal::GetFormFromStreamMessageFirstWord(endpointNameMessage.word0))
@@ -1154,7 +1269,8 @@ CMidiEndpointProtocolWorker::HandleProductInstanceIdMessage(internal::PackedUmp1
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     switch (internal::GetFormFromStreamMessageFirstWord(productInstanceIdMessage.word0))

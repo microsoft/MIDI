@@ -42,7 +42,7 @@ public:
 
 private:
     std::wstring m_deviceInterfaceId;
-    std::wstring m_deviceInstanceId;
+    //std::wstring m_deviceInstanceId;
     GUID m_sessionId;
     GUID m_abstractionGuid;
 
@@ -84,6 +84,7 @@ private:
     bool m_taskEndpointProductInstanceIdReceived{ false };
     bool m_taskDeviceIdentityReceived{ false };
 
+    bool m_functionBlocksAreStatic{ false };
     uint8_t m_declaredFunctionBlockCount{ 0 };
 
     uint8_t m_countFunctionBlocksReceived{ 0 };

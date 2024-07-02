@@ -8,6 +8,7 @@
 
 
 
+using Microsoft.Windows.Devices.Midi2.Initialization;
 using Spectre.Console;
 
 namespace Microsoft.Midi.ConsoleApp
@@ -43,7 +44,7 @@ namespace Microsoft.Midi.ConsoleApp
         {
             bool atLeastOneEndpointFound = false;
 
-            if (!MidiService.EnsureServiceAvailable())
+            if (!MidiServicesInitializer.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -76,21 +77,21 @@ namespace Microsoft.Midi.ConsoleApp
                     }
 
                     MidiEndpointDeviceInformationFilters filter =
-                        MidiEndpointDeviceInformationFilters.IncludeClientByteStreamNative |
-                        MidiEndpointDeviceInformationFilters.IncludeClientUmpNative;
+                        MidiEndpointDeviceInformationFilters.StandardNativeMidi1ByteFormat |
+                        MidiEndpointDeviceInformationFilters.StandardNativeUniversalMidiPacketFormat;
 
                     if (settings.IncludeAll)
                     {
                         filter =
-                            MidiEndpointDeviceInformationFilters.IncludeClientByteStreamNative |
-                            MidiEndpointDeviceInformationFilters.IncludeClientUmpNative |
-                            MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback |
-                            MidiEndpointDeviceInformationFilters.IncludeDiagnosticPing |
-                            MidiEndpointDeviceInformationFilters.IncludeVirtualDeviceResponder;
+                            MidiEndpointDeviceInformationFilters.StandardNativeMidi1ByteFormat |
+                            MidiEndpointDeviceInformationFilters.StandardNativeUniversalMidiPacketFormat |
+                            MidiEndpointDeviceInformationFilters.DiagnosticLoopback |
+                            MidiEndpointDeviceInformationFilters.DiagnosticPing |
+                            MidiEndpointDeviceInformationFilters.VirtualDeviceResponder;
                     }
                     else if (settings.IncludeDiagnosticLoopback)
                     {
-                        filter |= MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback;
+                        filter |= MidiEndpointDeviceInformationFilters.DiagnosticLoopback;
                     }
 
                     var endpoints = MidiEndpointDeviceInformation.FindAll(

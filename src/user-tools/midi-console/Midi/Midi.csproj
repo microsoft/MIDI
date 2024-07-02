@@ -8,26 +8,34 @@
     <StartupObject></StartupObject>
     <AssemblyName>midi</AssemblyName>
     <RootNamespace>Microsoft.Midi.ConsoleApp</RootNamespace>
-    <!--<PlatformTarget>x64, arm64</PlatformTarget>-->
+    <PlatformTargets>x64, arm64</PlatformTargets>
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
 
-      <PublishSingleFile>true</PublishSingleFile>
-      <SelfContained>true</SelfContained>
-      <PublishTrimmed>False</PublishTrimmed>
+      <PublishSingleFile>false</PublishSingleFile>
+      <PublishSelfContained>false</PublishSelfContained>
+      <SelfContained>false</SelfContained>
+      <PublishTrimmed>false</PublishTrimmed>
+      <PublishAot>false</PublishAot>
+
       <Platforms>ARM64;x64</Platforms>
-      <!--<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>-->
+      <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+      <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
+      <!-- <UseRidGraph>true</UseRidGraph> -->
 
       <!-- Needed for System.Management for viewing service details -->
       <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
       
-      <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
-      <UseRidGraph>true</UseRidGraph>
       <AssemblyVersion></AssemblyVersion>
-      <PublishAot>False</PublishAot>
+      <ApplicationManifest>midi.exe.manifest</ApplicationManifest>
+
+        <!-- needed to copy the required winrt implmentation dlls to bin folder -->
+      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+      <RollForward>LatestMinor</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.0-preview.6-0210" />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24181.2154-preview.6" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
     <PackageReference Include="Spectre.Console" Version="0.49.1" />
@@ -49,6 +57,12 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>Strings.Designer.cs</LastGenOutput>
         </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="midi.exe.manifest">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
   

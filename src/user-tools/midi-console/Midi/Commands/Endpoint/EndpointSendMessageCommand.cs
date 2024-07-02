@@ -7,19 +7,22 @@
 // ============================================================================
 
 
+using Microsoft.Windows.Devices.Midi2.Initialization;
 using Microsoft.Windows.Devices.Midi2.Messages;
 
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class EndpointSendMessageCommand : Command<EndpointSendMessageCommand.Settings>
     {
+        private UInt32[]? _parsedWords;
+
         public sealed class Settings : SendMessageCommandSettings
         {
             // Would be better to remove this and just do an enumeration lookup to see what type of endpoint it is
 
             [LocalizedDescription("ParameterSendMessageWords")]
             [CommandArgument(1, "<MIDI Words>")]
-            public UInt32[]? Words { get; set; }
+            public string[]? Words { get; set; }
 
             [LocalizedDescription("ParameterSendMessageCount")]
             [CommandOption("-c|--count")]
@@ -46,33 +49,79 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
         {
-            if (settings.TimestampOffsetMicroseconds > 0 && settings.Timestamp != null)
+            if (settings.Words != null)
             {
-                // TODO: Localize
-                return Spectre.Console.ValidationResult.Error("Please specify a timestamp or an offset, but not both.");
-            }
+                _parsedWords = new UInt32[settings.Words.Length];
 
-            if (settings.Words == null)
+                for (int i = 0; i < settings.Words.Length; i++)
+                {
+                    UInt32 word = 0;
+
+                    string w = settings.Words[i];
+
+                    if (w.ToLower().StartsWith("0x"))
+                    {
+                        // hex, but the globalization setting doesn't like this prefix
+                        w = w.Substring(2);
+                        word = UInt32.Parse(w, System.Globalization.NumberStyles.HexNumber);
+                        _parsedWords![i] = word;
+                    }
+                    else if (w.ToLower().StartsWith("0b"))
+                    {
+                        // binary, but the globalization setting doesn't like this prefix
+                        w = w.Substring(2);
+                        word = UInt32.Parse(w, System.Globalization.NumberStyles.BinaryNumber);
+                        _parsedWords![i] = word;
+                    }
+                    else if (settings.WordDataFormat == MidiWordDataFormat.Hex)
+                    {
+                        if (w.ToLower().StartsWith("0x")) w = w.Substring(2);
+
+                        word = UInt32.Parse(w, System.Globalization.NumberStyles.HexNumber);
+                        _parsedWords![i] = word;
+                    }
+                    else if (settings.WordDataFormat == MidiWordDataFormat.Binary)
+                    {
+                        if (w.ToLower().StartsWith("0b")) w = w.Substring(2);
+
+                        word = UInt32.Parse(w, System.Globalization.NumberStyles.BinaryNumber);
+                        _parsedWords![i] = word;
+                    }
+                    else if (settings.WordDataFormat == MidiWordDataFormat.Decimal)
+                    {
+                        word = UInt32.Parse(w, System.Globalization.NumberStyles.Number);
+                        _parsedWords![i] = word;
+                    }
+
+                }
+
+                if (settings.TimestampOffsetMicroseconds > 0 && settings.Timestamp != null)
+                {
+                    // TODO: Localize
+                    return Spectre.Console.ValidationResult.Error("Please specify a timestamp or an offset, but not both.");
+                }
+
+                if (_parsedWords!.Length == 0)
+                {
+                    return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooFewWords);
+                }
+                else if (_parsedWords!.Length > 4)
+                {
+                    return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooManyWords);
+                }
+                else if (!ValidateMessage(_parsedWords))
+                {
+                    return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorInvalidUmp);
+                }
+
+                if (settings.Count < 1)
+                {
+                    return Spectre.Console.ValidationResult.Error(Strings.ValidationErrorInvalidMessageCount);
+                }
+            }
+            else
             {
                 return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooFewWords);
-            }
-            if (settings.Words.Length == 0)
-            {
-                return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooFewWords);
-            }
-            else if (settings.Words.Length > 4)
-            {
-                return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorTooManyWords);
-            }
-            else if (!ValidateMessage(settings.Words))
-            {
-                return Spectre.Console.ValidationResult.Error(Strings.MessageValidationErrorInvalidUmp);
-            }
-
-
-            if (settings.Count < 1)
-            {
-                return Spectre.Console.ValidationResult.Error(Strings.ValidationErrorInvalidMessageCount);
             }
 
             return base.Validate(context, settings);
@@ -94,7 +143,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiService.EnsureServiceAvailable())
+            if (!MidiServicesInitializer.EnsureServiceAvailable())
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
@@ -192,14 +241,14 @@ namespace Microsoft.Midi.ConsoleApp
 
 
                         // the debug auto increment
-                        if (settings.Words!.Count() > 1 && settings.DebugAutoIncrementLastWord)
+                        if (_parsedWords!.Count() > 1 && settings.DebugAutoIncrementLastWord)
                         {
-                            settings.Words![settings.Words!.Count() - 1] = (settings.Words![settings.Words!.Count() - 1] + 1) % UInt32.MaxValue;
+                            _parsedWords![_parsedWords!.Count() - 1] = (_parsedWords![_parsedWords!.Count() - 1] + 1) % UInt32.MaxValue;
                         }
 
 
                         messagesAttempted++;
-                        var sendResult = connection.SendSingleMessageWordArray(timestamp, 0, (byte)settings.Words!.Count(), settings.Words);
+                        var sendResult = connection.SendSingleMessageWordArray(timestamp, 0, (byte)_parsedWords!.Count(), _parsedWords);
 
                         if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
                         {
@@ -232,57 +281,65 @@ namespace Microsoft.Midi.ConsoleApp
                 });
 
 
-            //    const uint bufferWarningThreshold = 10000;
+                //    const uint bufferWarningThreshold = 10000;
 
+                if (settings.Count == 1)
+                {
+                    messageSenderThread.Start();
 
-                AnsiConsole.Progress()
-                    .Start(ctx =>
+                    while (messagesAttempted < 1)
                     {
-                        //if (settings.DelayBetweenMessages == 0 && (settings.Count * (settings.Words!.Length + 2)) > bufferWarningThreshold)
-                        //{
-                        //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.SendMessageFloodWarning));
-                        //    AnsiConsole.WriteLine();
-                        //}
-
-                        var sendTask = ctx.AddTask("[white]Sending messages[/]");
-                        sendTask.MaxValue = settings.Count;
-                        sendTask.Value = 0;
-
-                        messageSenderThread.Start();
-
-
-                        AnsiConsole.MarkupLine(Strings.SendMessagePressEscapeToStopSendingMessage);
-                        AnsiConsole.WriteLine();
-                        while (stillSending)
+                        Thread.Sleep(100);
+                    }
+                }
+                else
+                {
+                    AnsiConsole.Progress()
+                        .Start(ctx =>
                         {
-                            // check for input
+                            var sendTask = ctx.AddTask("[white]Sending messages[/]");
+                            sendTask.MaxValue = settings.Count;
+                            sendTask.Value = 0;
 
-                            if (Console.KeyAvailable)
+                            messageSenderThread.Start();
+
+                            if (settings.Count > 1)
                             {
-                                var keyInfo = Console.ReadKey(true);
+                                AnsiConsole.MarkupLine(Strings.SendMessagePressEscapeToStopSendingMessage);
+                                AnsiConsole.WriteLine();
+                            }
 
-                                if (keyInfo.Key == ConsoleKey.Escape)
+                            while (stillSending)
+                            {
+                                // check for input
+
+                                if (Console.KeyAvailable)
                                 {
-                                    stillSending = false;
+                                    var keyInfo = Console.ReadKey(true);
 
-                                    // wake up the threads so they terminate
-                                    m_messageDispatcherThreadWakeup.Set();
+                                    if (keyInfo.Key == ConsoleKey.Escape)
+                                    {
+                                        stillSending = false;
 
-                                    AnsiConsole.WriteLine();
-                                    AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
+                                        // wake up the threads so they terminate
+                                        m_messageDispatcherThreadWakeup.Set();
+
+                                        AnsiConsole.WriteLine();
+                                        AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
+                                    }
+
                                 }
 
+                                sendTask.Value = messagesSent;
+                                ctx.Refresh();
+
+                                if (stillSending) Thread.Sleep(100);
                             }
 
                             sendTask.Value = messagesSent;
-                            ctx.Refresh();
 
-                            if (stillSending) Thread.Sleep(100);
-                        }
-
-                        sendTask.Value = messagesSent;
-
-                    });
+                        });
+                }
 
                 if (messageFailures > 0)
                 {
@@ -291,18 +348,25 @@ namespace Microsoft.Midi.ConsoleApp
                 }
                 else
                 {
-                    // todo: localize
-                    if (settings.DelayBetweenMessages > 0)
+                    if (settings.Count > 1)
                     {
-                        AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s) with a delay of approximately [steelblue1]{settings.DelayBetweenMessages.ToString("N0")} ms[/] between each.");
+                        // todo: localize
+                        if (settings.DelayBetweenMessages > 0)
+                        {
+                            AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s) with a delay of approximately [steelblue1]{settings.DelayBetweenMessages.ToString("N0")} ms[/] between each.");
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s).");
+                        }
                     }
                     else
                     {
-                        AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s).");
+                        AnsiConsole.MarkupLine($"Sent [steelblue1]1[/] message.");
                     }
                 }
 
-                if (messagesSent > 0 && messageSendingFinishTimestamp >= messageSendingStartTimestamp)
+                if (messagesSent > 1 && messageSendingFinishTimestamp >= messageSendingStartTimestamp)
                 {
                     // calculate total send time, not total display time
 

@@ -37,15 +37,16 @@ class Build : NukeBuild
     string NuGetVersionName => "preview.6";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
-    string SetupBuildMajorMinor => "1.0";
-
-
-    string SetupBuildDateNumber => DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
-    string SetupBuildTimeNumber => DateTime.Now.ToString("HHmm");       // HHmm
+    string SetupBuildMajorMinor = "1.0";
+    string SetupBuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
+    string SetupBuildTimeNumber = DateTime.Now.ToString("HHmm");       // HHmm
 
 
     string NugetFullVersionString => SetupBuildMajorMinor + "." + SetupBuildDateNumber + "." + SetupBuildTimeNumber + "-" + NuGetVersionName;
     string NugetFullPackageId => "Microsoft.Windows.Devices.Midi2";
+
+
+    AbsolutePath _thisReleaseFolder;
 
 
     // ===========================================================
@@ -63,6 +64,9 @@ class Build : NukeBuild
     AbsolutePath ReleaseRootFolder => BuildRootFolder / "release";
     AbsolutePath AppSdkNugetOutputFolder => ReleaseRootFolder / "nuget";
 
+    AbsolutePath ThisReleaseFolder => _thisReleaseFolder;
+
+
     AbsolutePath AppSdkImplementationInstallerReleaseFolder => BuildRootFolder / "app-sdk-impl";
 
     AbsolutePath SourceRootFolder => NukeBuild.RootDirectory / "src";
@@ -70,6 +74,7 @@ class Build : NukeBuild
     AbsolutePath ApiSolutionFolder => SourceRootFolder / "api";
 
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
+
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
 
 
@@ -78,14 +83,15 @@ class Build : NukeBuild
 
     AbsolutePath MidiConsoleSolutionFolder => UserToolsRootFolder / "midi-console";
     AbsolutePath MidiConsoleStagingFolder => StagingRootFolder / "midi-console";
+    AbsolutePath ConsoleSetupSolutionFolder => UserToolsRootFolder / "midi-console-setup";
 
 
     AbsolutePath MidiSettingsSolutionFolder => UserToolsRootFolder / "midi-settings";
     AbsolutePath MidiSettingsStagingFolder => StagingRootFolder / "midi-settings";
+    AbsolutePath MidiSettingsSetupSolutionFolder => UserToolsRootFolder / "midi-settings-setup";
 
     //    AbsolutePath RustWinRTSamplesRootFolder => SamplesRootFolder / "rust-winrt";
     //    AbsolutePath ElectronJSSamplesRootFolder => SamplesRootFolder / "electron-js";
-
 
     AbsolutePath SetupBundleInfoIncludeFile => StagingRootFolder / "version" / "BundleInfo.wxi";
 
@@ -96,8 +102,8 @@ class Build : NukeBuild
     AbsolutePath SamplesCSWinRTSolutionFolder => SamplesRootFolder / "csharp-net";
 
 
-    string[] AllPlatforms => new string[] { "Arm64", "Arm64EC", "x64" };
-    string[] ServicePlatforms => new string[] { "Arm64", "x64" };
+    string[] InProcPlatforms => new string[] { "Arm64", "Arm64EC", "x64" };
+    string[] OutOfProcPlatforms => new string[] { "Arm64", "x64" };
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
@@ -113,7 +119,7 @@ class Build : NukeBuild
                 Environment.SetEnvironmentVariable("MIDI_REPO_ROOT", NukeBuild.RootDirectory);
             }
 
-
+            _thisReleaseFolder = $"{ReleaseRootFolder / SetupVersionName} ({DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")})";
 
         });
 
@@ -122,7 +128,7 @@ class Build : NukeBuild
         .DependsOn(Prerequisites)
         .Executes(() =>
     {
-        foreach (var platform in ServicePlatforms)
+        foreach (var platform in OutOfProcPlatforms)
         {
             string solutionDir = ApiSolutionFolder.ToString() + @"\";
 
@@ -184,7 +190,7 @@ class Build : NukeBuild
 
         var intermediateFolder = ApiSolutionFolder / "vsfiles" / "intermediate";
 
-        foreach (var platform in AllPlatforms)
+        foreach (var platform in InProcPlatforms)
         {
             var referenceFiles = new List<AbsolutePath>();
 
@@ -213,7 +219,7 @@ class Build : NukeBuild
         .DependsOn(BuildServiceAndPlugins)
         .Executes(() =>
         {
-            foreach (var platform in AllPlatforms)
+            foreach (var platform in InProcPlatforms)
             {
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
 
@@ -243,7 +249,7 @@ class Build : NukeBuild
 
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
 
-            foreach (var platform in AllPlatforms)
+            foreach (var platform in InProcPlatforms)
             {
                 var sdkBinaries = new List<AbsolutePath>();
 
@@ -284,7 +290,11 @@ class Build : NukeBuild
                     FileSystemTasks.CopyFileToDirectory(file, AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
                 }
 
+                // MIDI diagnostics app
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / platform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
+
+                // sample manifest
+                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "MyMidiApp.exe.manifest", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
             }
 
         });
@@ -297,7 +307,7 @@ class Build : NukeBuild
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
-            foreach (var platform in ServicePlatforms)
+            foreach (var platform in OutOfProcPlatforms)
             {
                 UpdateSetupBundleInfoIncludeFile(platform);
 
@@ -331,7 +341,7 @@ class Build : NukeBuild
 
                 FileSystemTasks.CopyFile(
                     setupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
-                    ReleaseRootFolder / $"Windows MIDI Services (App SDK Runtime) - {fullSetupVersionString}-{platform.ToLower()}.exe");
+                    ThisReleaseFolder / $"Windows MIDI Services (App SDK Runtime) - {fullSetupVersionString}-{platform.ToLower()}.exe");
 
             }
 
@@ -356,7 +366,7 @@ class Build : NukeBuild
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
-            foreach (var platform in ServicePlatforms)
+            foreach (var platform in OutOfProcPlatforms)
             {
                 UpdateSetupBundleInfoIncludeFile(platform);
 
@@ -388,15 +398,24 @@ class Build : NukeBuild
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
                 FileSystemTasks.CopyFile(
                     InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
-                    ReleaseRootFolder / $"Windows MIDI Services (In-Box Service) - {fullSetupVersionString}-{platform.ToLower()}.exe");
+                    ThisReleaseFolder / $"Windows MIDI Services (In-Box Service) - {fullSetupVersionString}-{platform.ToLower()}.exe");
             }
 
         });
 
 
+    Target BuildUserToolsSharedComponents => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildAndPackAllAppSDKs)
+        .Executes(() =>
+        {
+            // build x64 and Arm64
+        });
+
     Target BuildSettingsApp => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(BuildAndPackAllAppSDKs)
+        .DependsOn(BuildUserToolsSharedComponents)
         .Executes(() =>
         {
             // update nuget packages
@@ -407,11 +426,160 @@ class Build : NukeBuild
     Target BuildConsoleApp => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(BuildAndPackAllAppSDKs)
+        .DependsOn(BuildUserToolsSharedComponents)
         .Executes(() =>
         {
-            // update nuget packages
+            var solution = MidiConsoleSolutionFolder / "midi-console.sln";
 
-            // build x64 and Arm64
+            // for the MIDI nuget package
+            NuGetTasks.NuGetInstall(_ => _
+                .SetProcessWorkingDirectory(MidiConsoleSolutionFolder)
+                .SetPreRelease(true)
+                .SetSource(AppSdkNugetOutputFolder)
+                .SetPackageID(NugetFullPackageId)
+            );
+
+            NuGetTasks.NuGetRestore(_ => _
+                .SetProcessWorkingDirectory(MidiConsoleSolutionFolder)
+                .SetSolutionDirectory(MidiConsoleSolutionFolder)
+                .SetSource(AppSdkNugetOutputFolder)
+            );
+
+            // build x64 and Arm64, no Arm64EC
+            foreach (var platform in OutOfProcPlatforms)
+            {
+                string solutionDir = MidiConsoleSolutionFolder.ToString() + @"\";
+
+                string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
+
+
+                //var msbuildProperties = new Dictionary<string, object>();
+                //msbuildProperties.Add("Platform", platform);
+                //msbuildProperties.Add("SolutionDir", solutionDir);          // to include trailing slash
+                //msbuildProperties.Add("RuntimeIdentifier", rid);          
+                ////msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+
+                //Console.Out.WriteLine($"----------------------------------------------------------------------");
+                //Console.Out.WriteLine($"Solution:    {solution}");
+                //Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                //Console.Out.WriteLine($"Platform:    {platform}");
+                //Console.Out.WriteLine($"RID:         {rid}");
+
+
+                DotNetTasks.DotNetBuild(_ => _
+                    .SetProjectFile(MidiConsoleSolutionFolder / "Midi" / "Midi.csproj")
+                    .SetConfiguration(Configuration.Release)
+                    .SetPublishSingleFile(false)
+                    .SetPublishTrimmed(false)
+                    .SetSelfContained(false)
+                    .SetRuntime(rid)
+                );
+
+                // copy output to staging folder
+
+                // TODO: This doesn't deal with any localization content
+
+                var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / "net8.0-windows10.0.20348.0" / rid ;
+                //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
+                var runtimesFolder = consoleOutputFolder;
+
+                var stagingFolder = MidiConsoleStagingFolder / platform;
+
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.exe", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.deps.json", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.runtimeconfig.json", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.exe.manifest", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "WinRT.Runtime.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.SDK.NET.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Spectre.Console.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Spectre.Console.Cli.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.CodeDom.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Diagnostics.EventLog.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Diagnostics.EventLog.Messages.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Management.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.ServiceProcess.ServiceController.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Messages.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Initialization.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            }
+
+        });
+
+    Target BuildConsoleAppInstaller => _ => _
+        .DependsOn(BuildConsoleApp)
+        .DependsOn(BuildServiceAndPluginsInstaller)
+        .Executes(() =>
+        {
+            // we build for Arm64 and x64. No EC required here
+            foreach (var platform in OutOfProcPlatforms)
+            {
+                //UpdateSetupBundleInfoIncludeFile(platform);   // happens as part of service installer
+
+                string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+
+                string solutionDir = ConsoleSetupSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                Console.Out.WriteLine($"Platform:    {platform.ToLower()}");
+
+                var output = MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(ConsoleSetupSolutionFolder / "midi-console-setup.sln")
+                    .SetMaxCpuCount(14)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    .EnableNodeReuse()
+                );
+
+
+                // todo: it would be better to see if any of the sdk files have changed and only
+                // do this copy if a new setup file was created. Maybe do a before/after date/time check?
+                FileSystemTasks.CopyFile(
+                    ConsoleSetupSolutionFolder / "console-main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesConsoleSetup.exe",
+                    ThisReleaseFolder / $"Windows MIDI Services (Console) - {fullSetupVersionString}-{platform.ToLower()}.exe");
+            }
+
 
         });
 
@@ -458,7 +626,7 @@ class Build : NukeBuild
 
             
             // make sure they compile
-            foreach (var platform in AllPlatforms)
+            foreach (var platform in InProcPlatforms)
             {
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
 
@@ -485,6 +653,9 @@ class Build : NukeBuild
                     .EnableNodeReuse()
                 );
 
+
+
+
             }
         });
 
@@ -498,7 +669,9 @@ class Build : NukeBuild
         .DependsOn(BuildAppSdkRuntimeInstaller)
         .DependsOn(BuildCppSamples)
         .DependsOn(BuildSettingsApp)
+        /*.DependsOn(BuildSettingsAppInstaller) */
         .DependsOn(BuildConsoleApp)
+        .DependsOn(BuildConsoleAppInstaller)
         .Executes(() =>
         {
         });

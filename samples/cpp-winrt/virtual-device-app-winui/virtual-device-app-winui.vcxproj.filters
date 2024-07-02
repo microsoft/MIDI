@@ -8,13 +8,22 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MainWindow.idl" />
+    <Midl Include="Note.idl">
+      <Filter>Note</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+    <ClCompile Include="Note.cpp">
+      <Filter>Note</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Note.h">
+      <Filter>Note</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Wide310x150Logo.scale-200.png">
@@ -43,6 +52,9 @@
     <Filter Include="Assets">
       <UniqueIdentifier>{ae87fdf9-202f-4b21-b4d1-d83886c29053}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Note">
+      <UniqueIdentifier>{4d02b124-21cf-43a8-b975-0b7bdad85c11}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />
@@ -55,5 +67,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
 </Project>

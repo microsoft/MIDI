@@ -1,0 +1,82 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+
+    <Package  
+          Name="Windows MIDI Services Console $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="1.0.0.0"
+          UpgradeCode="725f08fc-24db-4824-8613-a796f2abf36a"
+          Scope="perMachine"
+          Compressed="true"
+          
+          >
+       
+        <MediaTemplate EmbedCab="yes" />
+
+        
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="API_INSTALLFOLDER" Name="API" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
+                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+
+        <Component Id="ConsoleAppExe"
+                   Bitness="always64"
+                   Directory="CONSOLEAPP_INSTALLFOLDER"
+                   Guid="8fbfa42a-554c-481a-93e3-0999d2abf3ab">
+
+            <!-- Install Tools: Console app -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.exe" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.deps.json" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.runtimeconfig.json" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.exe.manifest" />
+
+            <!-- C# / WinRT -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\WinRT.Runtime.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" />
+
+            <!-- WinRT Projections -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.ServiceConfig.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.ClientPlugins.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Diagnostics.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Messages.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
+
+
+
+            <!-- Spectre Console -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Spectre.Console.Cli.dll" />
+
+            <!-- Other .NET libs -->
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.CodeDom.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Diagnostics.EventLog.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Diagnostics.EventLog.Messages.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.Management.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\System.ServiceProcess.ServiceController.dll" />
+
+
+            <!-- Add folder to path -->
+            <Environment Id="AddConsoleAppToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes"
+                            Value="[CONSOLEAPP_INSTALLFOLDER]" Permanent="no"/>
+        </Component>
+
+        <Feature Id="WindowsMidiServicesConsole">
+            <ComponentRef Id="ConsoleAppExe"/>
+        </Feature>
+    </Package>
+</Wix>

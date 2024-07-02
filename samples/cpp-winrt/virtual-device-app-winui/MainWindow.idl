@@ -1,9 +1,14 @@
+import "Note.idl";
+
 namespace virtual_device_app_winui
 {
     [default_interface]
     runtimeclass MainWindow : Microsoft.UI.Xaml.Window
     {
         MainWindow();
+
+        // c++ requires IInspectable for binding
+        IVector<IInspectable> Notes{ get; };
 
     }
 }
