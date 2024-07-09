@@ -108,8 +108,11 @@ Environment:
 #define UMP_SYSTEM_MTC          0xf1  // 2 bytes incl status
 #define UMP_SYSTEM_SONG_POS_PTR 0xf2  // 3 bytes incl status
 #define UMP_SYSTEM_SONG_SELECT  0xf3  // 2 bytes incl status
+#define UMP_SYSTEM_UNDEFINED_F4 0xf4  // undefined
+#define UMP_SYSTEM_UNDEFINED_F5 0xf5  // undefined
 #define UMP_SYSTEM_TUNE_REQ     0xf6  // status byte only
 #define UMP_SYSTEM_TIMING_CLK   0xf8  // status byte only
+#define UMP_SYSTEM_UNDEFINED_F9 0xf9  // undefined
 #define UMP_SYSTEM_START        0xfa  // status byte only
 #define UMP_SYSTEM_CONTINUE     0xfb  // status byte only
 #define UMP_SYSTEM_STOP         0xfc  // status byte only
@@ -123,6 +126,7 @@ Environment:
 typedef enum
 {
     MIDI_CS_INTERFACE = 0x24,
+    MIDI_CS_ENDPOINT = 0x25,
     MIDI_CS_INTERFACE_GR_TRM_BLOCK = 0x26,
 } midi_cs_interface_types;
 

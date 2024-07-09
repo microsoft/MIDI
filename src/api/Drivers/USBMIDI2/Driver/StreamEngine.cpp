@@ -238,7 +238,8 @@ StreamEngine::HandleIo()
                         USBMIDI2DriverIoWrite(
                             AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)),
                             (PUCHAR)startingReadAddress + sizeof(UMPDATAFORMAT),
-                            thisData->ByteCount
+                            thisData->ByteCount,
+                            (finalReadPosition != midiOutWritePosition) ? TRUE : FALSE  // indicates there is more data in this pass or not
                         );
                     }
 
@@ -297,7 +298,7 @@ Return Value:
 
     // Current mechanism to determine if currently processing data is that
     // the StreamEngine is not null. TBD this mechanism needs to be fixed.
-    auto lock = m_MidiInLock.acquire();
+    //auto lock = m_MidiInLock.acquire();
 
     if (m_IsRunning)
     {
@@ -578,7 +579,7 @@ StreamEngine::Run()
     {
         // m_IsRunning is used to indicate running state. If m_IsRunning true, the out worker
         // thread will output data to the connected device, otherwise data will be thrown away.
-        auto lock = m_MidiInLock.acquire();
+        //auto lock = m_MidiInLock.acquire();
 
         WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
         PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
