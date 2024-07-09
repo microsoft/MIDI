@@ -157,6 +157,8 @@ Return Value:
     WDF_PNPPOWER_EVENT_CALLBACKS_INIT(&pnpPowerCallbacks);
     pnpPowerCallbacks.EvtDevicePrepareHardware = EvtDevicePrepareHardware;
     pnpPowerCallbacks.EvtDeviceReleaseHardware = EvtDeviceReleaseHardware;
+    pnpPowerCallbacks.EvtDeviceD0Entry = EvtDeviceD0Entry;
+    pnpPowerCallbacks.EvtDeviceD0Exit = EvtDeviceD0Exit;
     WdfDeviceInitSetPnpPowerEventCallbacks(DeviceInit, &pnpPowerCallbacks);
 
     //
@@ -184,7 +186,13 @@ Return Value:
 
     devCtx->Midi = nullptr;
     devCtx->ExcludeD3Cold = WdfFalse;
-
+    devCtx->DeviceInGTBIDs = NULL;
+    devCtx->DeviceGTBMemory = NULL;
+    devCtx->DeviceOutGTBIDs = NULL;
+    devCtx->DeviceWriteMemory = NULL;
+    devCtx->DeviceWriteBuffer = NULL;
+    devCtx->DeviceWriteBufferIndex = NULL;
+  
     for (int count = 0; count < MAX_NUM_GROUPS_CABLES; count++)
     {
         devCtx->midi1IsInSysex[count] = false;
@@ -420,7 +428,8 @@ SetPowerPolicy(
     //
     WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS idleSettings;
     WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS_INIT(&idleSettings, IdleCannotWakeFromS0);
-    idleSettings.IdleTimeout     = IDLE_POWER_TIMEOUT;
+    //idleSettings.IdleTimeout     = IDLE_POWER_TIMEOUT;
+    idleSettings.IdleTimeout     = 15*60*1000;
     idleSettings.IdleTimeoutType = SystemManagedIdleTimeoutWithHint;
     idleSettings.ExcludeD3Cold   = devCtx->ExcludeD3Cold;
 
@@ -434,6 +443,85 @@ SetPowerPolicy(
 exit:
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
+    return status;
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+NTSTATUS
+EvtDeviceD0Entry(
+    _In_  WDFDEVICE Device,
+    _In_  WDF_POWER_DEVICE_STATE PreviousState
+)
+{
+    UNREFERENCED_PARAMETER(Device);
+    UNREFERENCED_PARAMETER(PreviousState);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
+    return STATUS_SUCCESS;
+}
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+NTSTATUS
+EvtDeviceD0Exit(
+    _In_  WDFDEVICE Device,
+    _In_  WDF_POWER_DEVICE_STATE TargetState
+)
+{
+    NTSTATUS        status = STATUS_SUCCESS;
+    POWER_ACTION    powerAction;
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    PAGED_CODE();
+
+    powerAction = WdfDeviceGetSystemPowerAction(Device);
+
+    // 
+    // Update the power policy D3-cold info for Connected Standby.
+    //
+    if (TargetState == WdfPowerDeviceD3 && powerAction == PowerActionNone)
+    {
+        PDEVICE_CONTEXT         devCtx;
+        WDF_TRI_STATE           excludeD3Cold = WdfTrue;
+        ACX_DX_EXIT_LATENCY     latency;
+
+        devCtx = GetDeviceContext(Device);
+        ASSERT(devCtx != nullptr);
+
+        //
+        // Get the current exit latency.
+        //
+        latency = AcxDeviceGetCurrentDxExitLatency(Device,
+            WdfDeviceGetSystemPowerAction(Device),
+            TargetState);
+
+        if (latency == AcxDxExitLatencyResponsive)
+        {
+            excludeD3Cold = WdfFalse;
+        }
+
+        if (devCtx->ExcludeD3Cold != excludeD3Cold)
+        {
+            devCtx->ExcludeD3Cold = excludeD3Cold;
+
+            status = SetPowerPolicy(Device);
+            if (!NT_SUCCESS(status))
+            {
+                ASSERT(FALSE);
+                status = STATUS_SUCCESS;
+            }
+        }
+    }
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+    
     return status;
 }
 
@@ -661,7 +749,7 @@ Return Value:
         deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
         status = WdfMemoryCreate(
             &deviceConfigAttrib,
-            PagedPool,
+            NonPagedPoolNx,
             USBMIDI_POOLTAG,
             (size_t)((numChars + 1) * sizeof(WCHAR)),
             &pDeviceContext->DeviceSNMemory,
@@ -719,7 +807,7 @@ Return Value:
         deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
         status = WdfMemoryCreate(
             &deviceConfigAttrib,
-            PagedPool,
+            NonPagedPoolNx,
             USBMIDI_POOLTAG,
             (size_t)((numChars + 1) * sizeof(WCHAR)),
             &pDeviceContext->DeviceManfMemory,
@@ -772,7 +860,7 @@ Return Value:
         deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
         status = WdfMemoryCreate(
             &deviceConfigAttrib,
-            PagedPool,
+            NonPagedPoolNx,
             USBMIDI_POOLTAG,
             (size_t)((numChars + 1) * sizeof(WCHAR)),
             &pDeviceContext->DeviceProductNameMemory,
@@ -1181,6 +1269,15 @@ Return Value:
         }
         goto exit;
     }
+    else
+    {
+        status = USBMIDI2DriverGetGTBIndexes(Device);
+        if (!NT_SUCCESS(status))
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error determining GTB indexes for USB MIDI 2.0 device. %!STATUS!", status);
+            status = STATUS_SUCCESS;
+        }
+    }
 
     // First get the GTB Header to determine overall size needed
     // 
@@ -1227,7 +1324,7 @@ Return Value:
         goto exit;
     }
 
-    // First take a guess at size and declare memory
+    // Get size of full GTB memory from header
     gtbMemorySize = gtbHeader.wTotalLength;
 
     // Create temporary memory for holding the GTB data from device
@@ -1292,12 +1389,51 @@ Return Value:
     midi2_cs_interface_desc_group_terminal_blocks* pUSBGTBs =
         (midi2_cs_interface_desc_group_terminal_blocks *)gtbMemoryPtr;
 
+    // Get GTB ID Indexes
+    size_t numInIDs = 0;
+    size_t numOutIDs = 0;
+    PUCHAR inIDs = NULL;
+    PUCHAR outIDs = NULL;
+
+    if (devCtx->DeviceInGTBIDs)
+    {
+        inIDs = (PUCHAR)WdfMemoryGetBuffer(devCtx->DeviceInGTBIDs, &numInIDs);
+    }
+    if (devCtx->DeviceOutGTBIDs)
+    {
+        outIDs = (PUCHAR)WdfMemoryGetBuffer(devCtx->DeviceOutGTBIDs, &numOutIDs);
+    }
+
     // Determine the size of GTB Structure
     UINT grpTermBlockStructureSize = sizeof(KSMULTIPLE_ITEM);
     USHORT grpTermBlockStringSizes[255];
+    bool isInIndex;
+    UINT numCapturedGTBs = 0;
 
     for (UINT termBlockCount = 0; termBlockCount < numTerminalBlocks; termBlockCount++)
     {
+        isInIndex = false;
+        for (size_t count = 0; count < numInIDs; count++)
+        {
+            if (pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkID == inIDs[count])
+            {
+                isInIndex = true;
+                break;
+            }
+        }
+        for (size_t count = 0; count < numOutIDs; count++)
+        {
+            if (pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkID == outIDs[count])
+            {
+                isInIndex = true;
+                break;
+            }
+        }
+
+        // If not in index then cycle to next GTB
+        if (!isInIndex) continue;
+
+        numCapturedGTBs++;
         grpTermBlockStructureSize += sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER);
 
         // See if there is a string defined
@@ -1345,7 +1481,7 @@ Return Value:
     gtbMemoryAttributes.ParentObject = devCtx->UsbDevice;
     status = WdfMemoryCreate(
         &gtbMemoryAttributes,
-        PagedPool,
+        NonPagedPoolNx,
         USBMIDI_POOLTAG,
         (size_t)grpTermBlockStructureSize,
         &devCtx->DeviceGTBMemory,
@@ -1360,11 +1496,32 @@ Return Value:
     // Place KSMULTIPLE_ITEM Strucutre
     PKSMULTIPLE_ITEM pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
     pMultiHeader->Size = grpTermBlockStructureSize;
-    pMultiHeader->Count = numTerminalBlocks;
+    pMultiHeader->Count = numCapturedGTBs;
     pGTBPropertyBuffer += sizeof(KSMULTIPLE_ITEM);
 
     for (UINT termBlockCount = 0; termBlockCount < numTerminalBlocks; termBlockCount++)
     {
+        isInIndex = false;
+        for (size_t count = 0; count < numInIDs; count++)
+        {
+            if (pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkID == inIDs[count])
+            {
+                isInIndex = true;
+                break;
+            }
+        }
+        for (size_t count = 0; count < numOutIDs; count++)
+        {
+            if (pUSBGTBs->aBlock[termBlockCount].bGrpTrmBlkID == outIDs[count])
+            {
+                isInIndex = true;
+                break;
+            }
+        }
+
+        // If not in index then cycle to next GTB
+        if (!isInIndex) continue;
+
         PUMP_GROUP_TERMINAL_BLOCK_DEFINITION pThisGrpTrmBlk = (PUMP_GROUP_TERMINAL_BLOCK_DEFINITION)pGTBPropertyBuffer;
 
         // Populate data from GTB read from USB Device
@@ -1656,7 +1813,7 @@ Return Value:
     gtbMemoryAttributes.ParentObject = pDevCtx->UsbDevice;
     status = WdfMemoryCreate(
         &gtbMemoryAttributes,
-        PagedPool,
+        NonPagedPoolNx,
         USBMIDI_POOLTAG,
         (size_t)grpTermBlockStructureSize,
         &pDevCtx->DeviceGTBMemory,
@@ -1725,6 +1882,163 @@ exit:
 }
 
 _Use_decl_annotations_
+PAGED_CODE_SEG
+NTSTATUS
+USBMIDI2DriverGetGTBIndexes(
+    _In_    WDFDEVICE      Device
+)
+/*++
+Routine Description:
+
+    This is a helper routine to fetch the GTB IDs indexed by Endpoints for this
+    device interface.
+
+Arguments:
+    Device - the device context from USB Driver
+    Indexes - pointer to array of indexes to be populated with indexes found.
+
+Return Value:
+
+    NONE
+
+--*/
+{
+    PDEVICE_CONTEXT pDevCtx = NULL;
+    PUSB_CONFIGURATION_DESCRIPTOR pConfigurationDescriptor = NULL;
+    PUCHAR pCurrent = NULL;
+    PUCHAR pEnd = NULL;
+    size_t configDescSize;
+    NTSTATUS status = 0;
+    WDF_OBJECT_ATTRIBUTES deviceConfigAttrib;
+    bool isInEndpoint = false;
+    PUSB_ENDPOINT_DESCRIPTOR pEndpointDescriptor = NULL;
+
+    ASSERT(Device);
+    pDevCtx = GetDeviceContext(Device);
+    ASSERT(pDevCtx);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    if (pDevCtx->DeviceGTBMemory)
+    {
+        TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE, "GTB response memory already created.");
+        goto exit;
+    }
+
+    pConfigurationDescriptor = (PUSB_CONFIGURATION_DESCRIPTOR)WdfMemoryGetBuffer(pDevCtx->DeviceConfigDescriptorMemory, &configDescSize);
+    // Confirm this is a USB MIDI 2.0 device interface
+    if (pDevCtx->UsbMIDIbcdMSC != 0x200)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Unexpected bcdMSC version.");
+        goto exit;
+    }
+ 
+    // Find the relevant interface
+    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptor(
+        pConfigurationDescriptor,        // Descriptor Buffer
+        pDevCtx->UsbMIDIInterfaceNumber, // Interface Number
+        pDevCtx->UsbMIDIStreamingAlt     // Alternate Setting
+    );
+    if (!pInterfaceDescriptor)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Could not find interface descriptor for selected device.");
+        goto exit;
+    }
+    // Set current search possition
+    pCurrent = (PUCHAR)pInterfaceDescriptor + sizeof(USB_INTERFACE_DESCRIPTOR);
+
+    // Find the end of this interface by looking for end or next interface
+    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptorNext = USBD_ParseConfigurationDescriptorEx(
+        pConfigurationDescriptor,
+        (PVOID)pCurrent,
+        -1,         // looking for the next interface whatever it is
+        -1,
+        -1,
+        -1,
+        -1
+    );
+    if (!pInterfaceDescriptorNext)
+    {
+        // means likely last interface descriptor, thus we search to end
+        pEnd = (PUCHAR)pConfigurationDescriptor + configDescSize;
+    }
+    else
+    {
+        // Next interface marks end of interface descriptor of interest
+        pEnd = (PUCHAR)pInterfaceDescriptorNext;
+    }
+
+    // Now we know the bounds of the descriptor, look for endpoints to determine GTB ID Indexes.
+    // Walk through finding Class-Specific MIDI Streaming Data Endpoint Descriptors
+    // Walk through looking for Jack Descriptors
+    PUSB_COMMON_DESCRIPTOR pNextDescriptor;
+    while (nullptr != (pNextDescriptor = USBD_ParseDescriptors(
+        (PVOID)pConfigurationDescriptor,
+        (ULONG)configDescSize,
+        (PVOID)pCurrent,
+        (LONG)USB_ENDPOINT_DESCRIPTOR_TYPE)))
+    {
+        // pNextDescriptor is valid, make sure in search area for this interface
+        if ((PVOID)pNextDescriptor >= pEnd)
+        {
+            // Hit end of this interface descriptor
+            break;
+        }
+
+        // Get info from Endpoint Descriptor
+        pEndpointDescriptor = (PUSB_ENDPOINT_DESCRIPTOR)pNextDescriptor;
+        ASSERT(pEndpointDescriptor);
+        isInEndpoint = (pEndpointDescriptor->bEndpointAddress & 0x80) ? true : false;
+
+        // Advance to next descriptor which should be Class Specific Endpoint Descriptor
+        pCurrent = (PUCHAR)pNextDescriptor + pNextDescriptor->bLength;
+
+        // Check the subtype and process accordingly
+        midi_desc_header_common_t* pCommonHdr = (midi_desc_header_common_t*)pCurrent;
+        
+        // Is it correct descriptor
+        if (pCommonHdr->bDescriptorType != MIDI_CS_ENDPOINT || pCommonHdr->bDescriptorSubType != MIDI20_CS_ENDPOINT_GENERAL)
+        {
+            status = STATUS_INSUFFICIENT_RESOURCES;
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Expected MIDI2.0 CS Endpoint not found.");
+            goto exit;
+        }
+
+        midi2_desc_streaming_data_endpoint_t* pCSEndpointHdr = (midi2_desc_streaming_data_endpoint_t*)pCommonHdr;
+
+        // If there are defined GTB IDs and the device does not already have defined GTB IDs for endpoint
+        // then create and load
+        if (pCSEndpointHdr->bNumGrpTrmBlock && (isInEndpoint ? !pDevCtx->DeviceInGTBIDs : !pDevCtx->DeviceOutGTBIDs))
+        {
+            // Create temporary memory for holding the GTB data from device
+            WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
+            deviceConfigAttrib.ParentObject = pDevCtx->UsbDevice;
+            PUCHAR pGTBIDs;
+            status = WdfMemoryCreate(
+                &deviceConfigAttrib,
+                NonPagedPoolNx,
+                USBMIDI_POOLTAG,
+                (size_t)pCSEndpointHdr->bNumGrpTrmBlock,
+                (isInEndpoint) ? &pDevCtx->DeviceInGTBIDs : &pDevCtx->DeviceOutGTBIDs,
+                (PVOID*)&pGTBIDs
+            );
+            if (!NT_SUCCESS(status))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for GTB IDs. %!STATUS!", status);
+                goto exit;
+            }
+            RtlCopyMemory(pGTBIDs, (PUCHAR)&pCSEndpointHdr->bAssoGrpTrmBlkID, (size_t)pCSEndpointHdr->bNumGrpTrmBlock);
+        }
+    }
+
+exit:
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+        return status;
+}
+
+_Use_decl_annotations_
 NONPAGED_CODE_SEG
 VOID USBMIDI2DriverEvtReadComplete(
     WDFUSBPIPE Pipe,
@@ -1755,14 +2069,15 @@ Return Value:
     NTSTATUS            status;
     PUINT8              pReceivedBuffer;
     PUINT32             pReceivedWords;
-    UMP_PACKET          umpPacket;
+    static UMP_PACKET   umpPacket;          // Keep to fill over two USB packets
     UINT32              receivedIndex = 0;
     UINT32              receivedNumWords;
-    struct
+    static struct
     {
         UMPDATAFORMAT   umpHeader;
         UINT32          umpData[4];
     } UMP_Packet_Struct;
+    static UINT32       wordsRemain = 0;    // To know how many words remaining to process
 
     Pipe;
 
@@ -1795,7 +2110,7 @@ Return Value:
                 continue;
             }
 
-            // If not alternate indicating USB MIDI 1.0
+            // If indicating USB MIDI 1.0
             if (pDeviceContext->UsbMIDIbcdMSC == MIDI_CS_BCD_MIDI1)
             {
                 // Need Cable Number
@@ -1821,47 +2136,85 @@ Return Value:
             }
             else if (pDeviceContext->UsbMIDIbcdMSC == MIDI_CS_BCD_MIDI2)
             {
-                // Put data into buffer to pass
-                UMP_Packet_Struct.umpHeader.Position = NULL;    // For now allow service to tag time
-                // TODO: Processing for JR Timestamps
-                umpPacket.wordCount = 0;                        // use to store information
-
-                PUINT8 pWord = (PUINT8)&pReceivedWords[receivedIndex];
-
-                // Determine amount of data to copy based on message type
-                switch (pWord[3] & 0xf0)
+                // Determine if there remains data to transfer meaning UMP broken over two USB packets
+                if (wordsRemain)
                 {
-                case UMP_MT_UTILITY:
-                case UMP_MT_SYSTEM:
-                case UMP_MT_MIDI1_CV:
-                    umpPacket.wordCount = 1;
-                    break;
+                    UINT32 bytesToCopy;
+                    if (wordsRemain <= (receivedNumWords - receivedIndex))
+                    {
+                        bytesToCopy = wordsRemain * sizeof(UINT32);
+                        wordsRemain = 0;
+                    }
+                    else
+                    {
+                        bytesToCopy = (receivedNumWords - receivedIndex) * sizeof(UINT32);
+                        wordsRemain -= bytesToCopy / sizeof(UINT32);
+                    }
 
-                case UMP_MT_DATA_64:
-                case UMP_MT_MIDI2_CV:
-                    umpPacket.wordCount = 2;
-                    break;
+                    // Copy more data from bridging UMP over USB packets
+                    RtlCopyMemory(
+                        (PVOID)&UMP_Packet_Struct.umpData[UMP_Packet_Struct.umpHeader.ByteCount / sizeof(UINT32)],
+                        (PVOID)&pReceivedWords[receivedIndex],
+                        bytesToCopy
+                    );
+                    UMP_Packet_Struct.umpHeader.ByteCount += bytesToCopy;
+                    receivedIndex += bytesToCopy / sizeof(UINT32);
+                }
+                else
+                {
+                    // Put data into buffer to pass
+                    UMP_Packet_Struct.umpHeader.Position = NULL;    // For now allow service to tag time
+                    // TODO: Processing for JR Timestamps
+                    umpPacket.wordCount = 0;                        // use to store information
 
-                case UMP_MT_DATA_128:
-                case UMP_MT_FLEX_128:
-                case UMP_MT_STREAM_128:
-                    umpPacket.wordCount = 4;
+                    PUINT8 pWord = (PUINT8)&pReceivedWords[receivedIndex];
+
+                    // Determine amount of data to copy based on message type
+                    switch (pWord[3] & 0xf0)
+                    {
+                    case UMP_MT_UTILITY:
+                    case UMP_MT_SYSTEM:
+                    case UMP_MT_MIDI1_CV:
+                        umpPacket.wordCount = 1;
                         break;
 
-                default:
-                    // Could not process packet so skip current word and try with next one
-                    receivedIndex++;
-                    continue;
-                }
-                UMP_Packet_Struct.umpHeader.ByteCount = umpPacket.wordCount * sizeof(UINT32);
+                    case UMP_MT_DATA_64:
+                    case UMP_MT_MIDI2_CV:
+                        umpPacket.wordCount = 2;
+                        break;
 
-                // Copy appropriate data
-                RtlCopyMemory(
-                    (PVOID)&UMP_Packet_Struct.umpData,
-                    (PVOID)&pReceivedWords[receivedIndex],
-                    UMP_Packet_Struct.umpHeader.ByteCount
-                );
-                receivedIndex += umpPacket.wordCount;
+                    case UMP_MT_DATA_128:
+                    case UMP_MT_FLEX_128:
+                    case UMP_MT_STREAM_128:
+                        umpPacket.wordCount = 4;
+                        break;
+
+                    default:
+                        // Could not process packet so skip current word and try with next one
+                        receivedIndex++;
+                        continue;
+                    }
+
+                    // Determine if all data available to complete UMP packet
+                    if (umpPacket.wordCount <= (receivedNumWords - receivedIndex))
+                    {
+                        UMP_Packet_Struct.umpHeader.ByteCount = umpPacket.wordCount * sizeof(UINT32);
+                        wordsRemain = 0;    // no more to fill data
+                    }
+                    else
+                    {
+                        UMP_Packet_Struct.umpHeader.ByteCount = (receivedNumWords - receivedIndex) * sizeof(UINT32);
+                        wordsRemain = umpPacket.wordCount - (receivedNumWords - receivedIndex);
+                    }
+
+                    // Copy appropriate data
+                    RtlCopyMemory(
+                        (PVOID)&UMP_Packet_Struct.umpData,
+                        (PVOID)&pReceivedWords[receivedIndex],
+                        UMP_Packet_Struct.umpHeader.ByteCount
+                    );
+                    receivedIndex += UMP_Packet_Struct.umpHeader.ByteCount / sizeof(UINT32);
+                }
             }
             else
             {
@@ -1871,23 +2224,26 @@ Return Value:
             }
 
             // Send to circuit
-            if (pDeviceContext->pStreamEngine)
+            if (!wordsRemain)
             {
-                if (!pDeviceContext->pStreamEngine->FillReadStream(
-                    (PUINT8)&UMP_Packet_Struct,
-                    (size_t)(UMP_Packet_Struct.umpHeader.ByteCount) + sizeof(UMPDATAFORMAT)
-                ))
+                if (pDeviceContext->pStreamEngine)
                 {
-                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                        "Error submitting to read queue prep buffer.\n");
+                    if (!pDeviceContext->pStreamEngine->FillReadStream(
+                        (PUINT8)&UMP_Packet_Struct,
+                        (size_t)(UMP_Packet_Struct.umpHeader.ByteCount) + sizeof(UMPDATAFORMAT)
+                    ))
+                    {
+                        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                            "Error submitting to read queue prep buffer.\n");
+                        goto ReadCompleteExit;
+                    }
+                }
+                else
+                {
+                    TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE,
+                        "No StreamEngine found in Device Context for filling read stream.\n");
                     goto ReadCompleteExit;
                 }
-            }
-            else
-            {
-                TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE,
-                    "No StreamEngine found in Device Context for filling read stream.\n");
-                goto ReadCompleteExit;
             }
         }
     }
@@ -1964,13 +2320,12 @@ Return Value:Amy
     PDEVICE_CONTEXT         pDeviceContext = NULL;
     WDFUSBPIPE              pipe = NULL;
     PUCHAR                  pBuffer;
-    PUCHAR                  pWriteBuffer = NULL;
-    size_t                  writeBufferIndex = 0;
-    WDFREQUEST              usbRequest = NULL;
-    WDFMEMORY               writeMemory = NULL;
     PUINT32                 pWriteWords = NULL;
     WDF_OBJECT_ATTRIBUTES   writeMemoryAttributes;
-
+    bool bEnterSysex;
+    bool bEndSysex;
+    UINT8 numberBytes;
+    UINT8 sysexStatus;
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     pDeviceContext = GetDeviceContext(Device);
@@ -2116,9 +2471,10 @@ Return Value:Amy
                 break;
 
             case UMP_MT_DATA_64:
-            {
-                bool bEnterSysex = false;
-                bool bEndSysex = false;
+                bEnterSysex = false;
+                bEndSysex = false;
+
+                umpWritePacket.wordCount = 0;
 
                 // Determine if sysex will end after this message
                 switch (umpPacket.umpData.umpBytes[1] & UMP_SYSEX7_STATUS_MASK)
@@ -2141,135 +2497,114 @@ Return Value:Amy
                     // Determine if believed already in Sysex and if so, reset converter
                     if (pDeviceContext->midi1OutSysex[cbl_num].inSysex)
                     {
-                        // Need to flush any available bytes from converter
-                        while (pDeviceContext->midi1OutSysex[cbl_num].umpToBS.availableBS())
-                        {
-                            pDeviceContext->midi1OutSysex[cbl_num].umpToBS.readBS();
-                        }
                         pDeviceContext->midi1OutSysex[cbl_num].inSysex = false;
                     }
                 }
+
                 if (bEnterSysex && !pDeviceContext->midi1OutSysex[cbl_num].inSysex)
                 {
-                    pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Pos = 1; // first byte position to stream into
+                    pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head = 0;
+                    pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail = 0;
                     pDeviceContext->midi1OutSysex[cbl_num].inSysex = true;
                 }
 
-                // Use AM Lib to convert current UMP SYSEX7 into MIDIByte Stream
-                for (int count = 0; count < umpPacket.wordCount; count++)
+                UINT8 byteStream[UMPTOBS_BUFFER];
+                sysexStatus = (umpPacket.umpData.umpBytes[1] >> 4);
+                numberBytes = 0;
+
+                if (sysexStatus <= 1 && numberBytes < UMPTOBS_BUFFER)
                 {
-                    pDeviceContext->midi1OutSysex[cbl_num].umpToBS.UMPStreamParse(umpPacket.umpData.umpWords[count]);
+                    byteStream[numberBytes++] = SYSEX_START;
                 }
-
-                // Capture byte stream into outgoing data
-                umpWritePacket.wordCount = 0;   // For now we have no data to transfer to USB MIDI 1.0
-                // move BS to umpWritePacket
-
-                
-#if 0
-                // determine the size and move the data in
-                UINT8 sysexSize = umpPacket.umpData.umpBytes[1] & UMP_SYSEX7_SIZE_MASK;
-                UINT8 umpDataByteCount = 0;
-                while (sysexSize--)
+                for (UINT8 count = 0; count < (umpPacket.umpData.umpBytes[1] & 0xf); count++)
                 {
-                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].head++]
-                        = umpPacket.umpData.umpBytes[umpDataByteCount++];
-                    pDeviceContext->midi1OutSysex[cbl_num].head %= MIDI_STREAM_BUF_SIZE; // it should not be possible to overflow buffer
-                }
-
-                // If ending
-                if (bEndSysex && pDeviceContext->midi1OutSysex[cbl_num].inSysex)
-                {
-                    // We are responsible to start the Sysex flag for USB MIDI 1.0
-                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].head++] = 0xf7;
-                    pDeviceContext->midi1OutSysex[cbl_num].head %= MIDI_STREAM_BUF_SIZE;
-                    pDeviceContext->midi1OutSysex[cbl_num].inSysex = false;
-                }
-
-                // determine the number of USB MIDI 1 packets to be created
-                sysexSize = (pDeviceContext->midi1OutSysex[cbl_num].head >= pDeviceContext->midi1OutSysex[cbl_num].tail)
-                    ? (pDeviceContext->midi1OutSysex[cbl_num].head - pDeviceContect->midiOutSystex[cbl_num].tail)
-                    : ((MIDI_STREAM_BUF_SIZE - pDeviceContext->midi1OutSysex[cbl_num].tail) + pDeviceContext->midi1OutSysex[cbl_num].head);
-                UINT8 numWordsNeeded = sysexSize / 3;
-                UINT8 numBytesRemain = sysexSize % 3;
-                if (bEndSysex && numBytesRemain)
-                {
-                    numWordsNeeded++; // add word for any remaining sysex data
-                }
-                umpWritePacket.wordCount = numWordsNeeded;
-
-                UINT8 sysexCount = 0;
-                UINT8 sysexWordCount = 0;
-                while (sysexCount < sysexSize && sysexWordCount < numWordsNeeded)
-                {
-                    UINT8 currentWord;
-                    while (sysexCount < sysexSize)
+                    if (numberBytes < UMPTOBS_BUFFER)
                     {
-
+                        byteStream[numberBytes++] = umpPacket.umpData.umpBytes[2 + count];
                     }
-                    pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].index++]
-                        = umpPacket.umpData.umpBytes[2 + sysexCount++];
+                }
+                if ((sysexStatus == 0 || sysexStatus == 3) && numberBytes < UMPTOBS_BUFFER)
+                {
+                    byteStream[numberBytes++] = SYSEX_STOP;
+                }
 
-                    // is current packet build full
-                    if (pDeviceContext->midi1OutSysex[cbl_num].index == 4)
+                // Move into sysex circular buffer queue
+                for (UINT8 count = 0; count < numberBytes; count++)
+                {
+                    pDeviceContext->midi1OutSysex[cbl_num].sysexBS[pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head++]
+                        = byteStream[count];
+                    pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head %= SYSEX_BS_RB_SIZE;
+                }
+
+                // How many bytes available in BS
+                numberBytes = (pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head > pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail)
+                    ? pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head - pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail
+                    : (SYSEX_BS_RB_SIZE - pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head) + pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail;
+
+                while (numberBytes && umpWritePacket.wordCount < 4)
+                {
+                    umpWritePacket.umpData.umpWords[umpWritePacket.wordCount] = 0;
+
+                    if (numberBytes > 2)
                     {
-                        pDeviceContext->midi1OutSysex[cbl_num].buffer[0] = (cbl_num << 4);
+                        PUINT8 pumpBytes = (PUINT8) & umpWritePacket.umpData.umpWords[umpWritePacket.wordCount];
+                        for (UINT8 count = 0; count < 3; count++)
+                        {
+                            pumpBytes[count + 1] =
+                                pDeviceContext->midi1OutSysex[cbl_num].sysexBS[pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail++];
+                            pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail %= SYSEX_BS_RB_SIZE;
+                            numberBytes--;
+                        }
+                        // Mark cable number and CIN for start / continue SYSEX in USB MIDI 1.0 format
+                        if (bEndSysex && !numberBytes)
+                        {
+                            pumpBytes[0] = (UINT8)(cbl_num << 4) | MIDI_CIN_SYSEX_END_3BYTE;
+                        }
+                        else
+                        {
+                            pumpBytes[0] = (UINT8)(cbl_num << 4) | MIDI_CIN_SYSEX_START;
+                        }
+                    }
+                    else
+                    {
+                        // If less than two and we have a word to populate, check if the end of sysex
                         if (bEndSysex)
                         {
-                            if (sysexCount == sysexSize)
+                            // Process bytes
+                            PUINT8 pumpBytes = (PUINT8)&umpWritePacket.umpData.umpWords[umpWritePacket.wordCount];
+                            UINT8 count;
+                            for (count = 0; numberBytes; count++)
                             {
-                                pDeviceContext->midi1OutSysex[cbl_num].buffer[0] |= MIDI_CIN_SYSEX_END_3BYTE;
+                                pumpBytes[count + 1] =
+                                    pDeviceContext->midi1OutSysex[cbl_num].sysexBS[pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail++];
+                                pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail %= SYSEX_BS_RB_SIZE;
+                                numberBytes--;
                             }
-                            else
+                            // Mark cable number and CIN for start / continue SYSEX in USB MIDI 1.0 format
+                            switch (count)
                             {
-                                pDeviceContext->midi1OutSysex[cbl_num].buffer[0] |= MIDI_CIN_SYSEX_START;
+                            case 1:
+                                pumpBytes[0] = (UINT8)(cbl_num << 4) | MIDI_CIN_SYSEX_END_1BYTE;
+                                break;
+
+                            case 2:
+                            default:
+                                pumpBytes[0] = (UINT8)(cbl_num << 4) | MIDI_CIN_SYSEX_END_2BYTE;
+                                break;
                             }
                         }
                         else
                         {
-                            pDeviceContext->midi1OutSysex[cbl_num].buffer[0] |= MIDI_CIN_SYSEX_START;
+                            break;
                         }
-
-                        // Fill Word into write packet and reset index
-                        umpWritePacket.umpData.umpWords[sysexWordCount++] = *(PUINT32)&pDeviceContext->midi1OutSysex[cbl_num].buffer;
-                        pDeviceContext->midi1OutSysex[cbl_num].index = 1;
                     }
+                    umpWritePacket.wordCount++;
                 }
-
-                // Determine if need to terminate current word
-                if (bEndSysex && numBytesRemain)
-                {
-                    // Fill rest of buffer
-                    while (pDeviceContext->midi1OutSysex[cbl_num].index < 4) // WRONG LOGIC HERE
-                    {
-                        pDeviceContext->midi1OutSysex[cbl_num].buffer[pDeviceContext->midi1OutSysex[cbl_num].index++] = 0x00;
-                    }
-                    switch (numBytesRemain)
-                    {
-                    case 1:
-                        pDeviceContext->midi1OutSysex[cbl_num].buffer[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_1BYTE;
-                        break;
-
-                    case 2:
-                        pDeviceContext->midi1OutSysex[cbl_num].buffer[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_2BYTE;
-                        break;
-
-                    default:
-                        // should never get here, but use full packet in error
-                        pDeviceContext->midi1OutSysex[cbl_num].buffer[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_3BYTE;
-                    }
-
-                    // Fill Word into write packet
-                    umpWritePacket.umpData.umpWords[sysexWordCount++] = *(PUINT32)&pDeviceContext->midi1OutSysex[cbl_num].buffer;
-                    pDeviceContext->midi1OutSysex[cbl_num].index = 1;
-                }
-#endif
                 break;
-            }
 
             default:
                 // Not handled so ignore
-                numProcessed += umpPacket.wordCount;
+                numProcessed += umpPacket.wordCount;    // ignore this UMP packet as corrupted
                 umpWritePacket.wordCount = 0;
             }
 
@@ -2278,13 +2613,13 @@ Return Value:Amy
                 numProcessed += umpPacket.wordCount;
 
                 // If currently no write buffer, create one
-                if (!pWriteBuffer)
+                if (!pDeviceContext->DeviceWriteBuffer)
                 {
                     // Create Request
                     status = WdfRequestCreate(
                         NULL,       // attributes
                         WdfUsbTargetPipeGetIoTarget(pipe),
-                        &usbRequest    // retuest object
+                        &pDeviceContext->DeviceUSBWriteRequest    // retuest object
                     );
                     if (!NT_SUCCESS(status))
                     {
@@ -2294,7 +2629,7 @@ Return Value:Amy
                     }
 
                     WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
-                    writeMemoryAttributes.ParentObject = usbRequest;
+                    writeMemoryAttributes.ParentObject = pDeviceContext->DeviceUSBWriteRequest;
 
                     // Create Memory Object
                     status = WdfMemoryCreate(
@@ -2302,7 +2637,7 @@ Return Value:Amy
                         NonPagedPoolNx,
                         USBMIDI_POOLTAG,
                         pDeviceContext->MidiOutMaxSize,
-                        &writeMemory,
+                        &pDeviceContext->DeviceWriteMemory,
                         NULL
                     );
                     if (!NT_SUCCESS(status))
@@ -2311,24 +2646,24 @@ Return Value:Amy
                             "%!FUNC! could not create WdfMemory with status: %!STATUS!", status);
                         goto DriverIoWriteExit;
                     }
-                    pWriteBuffer = (PUCHAR)WdfMemoryGetBuffer(writeMemory, NULL);
-                    pWriteWords = (PUINT32)pWriteBuffer;
+                    pDeviceContext->DeviceWriteBuffer = (PUCHAR)WdfMemoryGetBuffer(pDeviceContext->DeviceWriteMemory, NULL);
                 }
+                pWriteWords = (PUINT32)pDeviceContext->DeviceWriteBuffer;
 
                 // Write into buffer
                 for (int count = 0; count < umpWritePacket.wordCount; count++)
                 {
-                    pWriteWords[writeBufferIndex++] = umpWritePacket.umpData.umpWords[count];
+                    pWriteWords[pDeviceContext->DeviceWriteBufferIndex++] = umpWritePacket.umpData.umpWords[count];
                 }
 
-                if ((writeBufferIndex*sizeof(UINT32)) == pDeviceContext->MidiOutMaxSize)
+                if ((pDeviceContext->DeviceWriteBufferIndex*sizeof(UINT32)) == pDeviceContext->MidiOutMaxSize)
                 {
                     // Write to buffer
                     if (!USBMIDI2DriverSendToUSB(
-                        usbRequest,
-                        writeMemory,
+                        pDeviceContext->DeviceUSBWriteRequest,
+                        pDeviceContext->DeviceWriteMemory,
                         pipe,
-                        writeBufferIndex*sizeof(UINT32),
+                        pDeviceContext->DeviceWriteBufferIndex*sizeof(UINT32),
                         pDeviceContext,
                         true    // delete this request when complete
                     ))
@@ -2337,23 +2672,22 @@ Return Value:Amy
                     }
 
                     // Indicate new buffer needed
-                    pWriteBuffer = NULL;
-                    writeBufferIndex = 0;
+                    pDeviceContext->DeviceWriteBuffer = NULL;
+                    pDeviceContext->DeviceWriteBufferIndex = 0;
                 }
             }
         }
 
         // Check if anything leftover to write to USB
-        if (writeBufferIndex && !isMoreData) // and there is not more data coming
+        if (pDeviceContext->DeviceWriteBufferIndex && !isMoreData) // and there is not more data coming
         {
-            // NEED TO FILL REST OF BUFFER WITH NULL
             // 
             // Write to buffer
             if (!USBMIDI2DriverSendToUSB(
-                usbRequest,
-                writeMemory,
+                pDeviceContext->DeviceUSBWriteRequest,
+                pDeviceContext->DeviceWriteMemory,
                 pipe,
-                writeBufferIndex*sizeof(UINT32),
+                pDeviceContext->DeviceWriteBufferIndex*sizeof(UINT32),
                 pDeviceContext,
                 true    // delete this request when complete
             ))
@@ -2362,8 +2696,8 @@ Return Value:Amy
             }
 
             // Indicate new buffer needed
-            pWriteBuffer = NULL;
-            writeBufferIndex = 0;
+            pDeviceContext->DeviceWriteBuffer = NULL;
+            pDeviceContext->DeviceWriteBufferIndex = 0;
         }
     }
     else if (pDeviceContext->UsbMIDIbcdMSC == MIDI_CS_BCD_MIDI2)
@@ -2376,70 +2710,90 @@ Return Value:Amy
 
         while (transferPos < numBytes)
         {
+            // If there is currently no USB packet being worked on, create a working space
+            if (!pDeviceContext->DeviceWriteBuffer)
+            {
+                pDeviceContext->DeviceWriteBufferIndex = 0;
+
+                // Create Request
+                status = WdfRequestCreate(
+                    NULL,       // attributes
+                    WdfUsbTargetPipeGetIoTarget(pipe),
+                    &pDeviceContext->DeviceUSBWriteRequest    // retuest object
+                );
+                if (!NT_SUCCESS(status))
+                {
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                        "%!FUNC! Error creating request for USB Write with status: %!STATUS!", status);
+                    goto DriverIoWriteExit;
+                }
+
+                WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
+                writeMemoryAttributes.ParentObject = pDeviceContext->DeviceUSBWriteRequest;
+
+                // Create Memory Object
+                status = WdfMemoryCreate(
+                    &writeMemoryAttributes,
+                    NonPagedPoolNx,
+                    USBMIDI_POOLTAG,
+                    pDeviceContext->MidiOutMaxSize,
+                    &pDeviceContext->DeviceWriteMemory,
+                    NULL
+                );
+                if (!NT_SUCCESS(status))
+                {
+                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                        "%!FUNC! could not create WdfMemory with status: %!STATUS!", status);
+                    goto DriverIoWriteExit;
+                }
+                pDeviceContext->DeviceWriteBuffer = (PUCHAR)WdfMemoryGetBuffer(pDeviceContext->DeviceWriteMemory, NULL);
+            }
+
             thisTransferSize = numBytes - transferPos;
 
-            // Enusre not bigger than max
-            if (thisTransferSize > pDeviceContext->MidiOutMaxSize)
+            bool pushUSBTransfer = false;
+            PUINT32 pWriteMem = (PUINT32)pDeviceContext->DeviceWriteBuffer;
+
+            // Can we transfer current into buffer?
+            if ((thisTransferSize + pDeviceContext->DeviceWriteBufferIndex*sizeof(UINT32)) <= pDeviceContext->MidiOutMaxSize)
             {
-                thisTransferSize = pDeviceContext->MidiOutMaxSize;
+                // Copy necessary data into the buffer performing byte swap
+                PUINT32 pReadMem = (PUINT32)&pBuffer[transferPos];
+                for (size_t count = 0; count < (thisTransferSize / sizeof(UINT32)); count++)
+                {
+                    pWriteMem[pDeviceContext->DeviceWriteBufferIndex++] = pReadMem[count];     // USB is Little Endian format
+                }
+                transferPos += thisTransferSize;
+            }
+            else
+            {
+                pushUSBTransfer = true;
             }
 
-            // Create request, buffer and copy data into buffer
-            // Create Request
-            status = WdfRequestCreate(
-                NULL,       // attributes
-                WdfUsbTargetPipeGetIoTarget(pipe),
-                &usbRequest    // retuest object
-            );
-            if (!NT_SUCCESS(status))
+            if (pushUSBTransfer || !isMoreData)
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "%!FUNC! Error creating request for USB Write with status: %!STATUS!", status);
-                goto DriverIoWriteExit;
+                // Fill rest of buffer
+                while (pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32) < pDeviceContext->MidiOutMaxSize)
+                {
+                    pWriteMem[pDeviceContext->DeviceWriteBufferIndex++] = 0;
+                }
+
+                // Write to buffer
+                if (!USBMIDI2DriverSendToUSB(
+                    pDeviceContext->DeviceUSBWriteRequest,
+                    pDeviceContext->DeviceWriteMemory,
+                    pipe,
+                    pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32),
+                    pDeviceContext,
+                    true    // delete this request when complete
+                ))
+                {
+                    goto DriverIoWriteExit;
+                }
+
+                pDeviceContext->DeviceWriteBuffer = NULL;
+                pDeviceContext->DeviceWriteBufferIndex = 0;
             }
-
-            WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
-            writeMemoryAttributes.ParentObject = usbRequest;
-
-            // Create Memory Object
-            status = WdfMemoryCreate(
-                &writeMemoryAttributes,
-                NonPagedPoolNx,
-                USBMIDI_POOLTAG,
-                pDeviceContext->MidiOutMaxSize,
-                &writeMemory,
-                NULL
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                    "%!FUNC! could not create WdfMemory with status: %!STATUS!", status);
-                goto DriverIoWriteExit;
-            }
-
-            // Copy necessary data into the buffer performing byte swap
-            PUINT32 pWriteMem = (PUINT32)WdfMemoryGetBuffer(writeMemory, NULL);
-            PUINT32 pReadMem = (PUINT32)&pBuffer[transferPos];
-            for (size_t count = 0; count < (thisTransferSize / sizeof(UINT32)); count++)
-            {
-                pWriteMem[count] = pReadMem[count];     // USB is Little Endian format
-            }
-
-            // Transfer to USB
-            if (!USBMIDI2DriverSendToUSB(
-                usbRequest,
-                writeMemory,
-                pipe,
-                thisTransferSize,
-                pDeviceContext,
-                true    // delete this request when complete
-            ))
-            {
-                goto DriverIoWriteExit;
-            }
-
-            // Increment position
-            transferPos += thisTransferSize;
         }
     }
     else
@@ -2727,41 +3081,60 @@ Return Value:
         }
     }
 
+    UINT8 firstByte = 1;
+    UINT8 lastByte = 4;
+    UINT8 copyPos;
+
     switch (code_index)
     {
-    case MIDI_CIN_SYSEX_START:
+    case MIDI_CIN_SYSEX_START: // or continue
+ 
+        if (!*pbIsInSysex)
+        {
+            // SYSEX Start means first byte should be SYSEX start
+            if (pBuffer[1] != SYSEX_START) return false;
+            firstByte = 2;
+            lastByte = 4;
+
+            // As this is start of SYSEX, need to set status to indicate so and copy 2 bytes of data
+            // as first byte of SYSEX_START
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_START | 2;
+
+            // Set that in SYSEX
+            *pbIsInSysex = true;
+        }
+        else
+        {
+            firstByte = 1;
+            lastByte = 4;
+
+            // As this is in SYSEX, then need to indicate continue
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_CONTINUE | 3;
+        }
+
+        // Capture Cable number
         umpPkt->umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;   // Message Type and group
 
-        // As this is start of SYSEX, need to set status to indicate so and copy 3 bytes of data
-        umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_START | 3;
-
-        // Set that in SYSEX
-        *pbIsInSysex = true;
-
-        // Copy in rest of data
-        for (int count = 1; count < 4; count++)
-        {
-            umpPkt->umpData.umpBytes[count + 1] = pBuffer[count];
-        }
-        // Pad rest of data
-        umpPkt->umpData.umpBytes[5] = 0x00;
-        umpPkt->umpData.umpBytes[6] = 0x00;
-        umpPkt->umpData.umpBytes[7] = 0x00;
-
         umpPkt->wordCount = 2;
+        // Transfer in bytes
+        copyPos = firstByte;
+        for (UINT8 count = 2; count < 8; count++)
+        {
+            umpPkt->umpData.umpBytes[count] = (copyPos < lastByte)
+                ? pBuffer[copyPos++] : 0x00;
+        }
         break;
 
     case MIDI_CIN_SYSEX_END_1BYTE: // or single byte System Common
         // Determine if a system common
-        if ((pBuffer[1] & 0x80) // most significant bit set and not sysex
-            && (pBuffer[1] != MIDI_STATUS_SYSEX_END))
+        if ( (pBuffer[1] & 0x80) // most significant bit set and not sysex ending
+            && (pBuffer[1] != SYSEX_STOP))
         {
             umpPkt->umpData.umpBytes[0] = UMP_MT_SYSTEM | cbl_num;
             umpPkt->umpData.umpBytes[1] = pBuffer[1];
-            umpPkt->umpData.umpBytes[2] = 0x00;
-            umpPkt->umpData.umpBytes[3] = 0x00;
-            umpPkt->wordCount = 1;
-            break;
+            firstByte = 1;
+            lastByte = 1;
+            goto COMPLETE_1BYTE;
         }
 
         umpPkt->umpData.umpBytes[0] = UMP_MT_DATA_64 | cbl_num;
@@ -2769,21 +3142,27 @@ Return Value:
         // Determine if complete based on if currently in SYSEX
         if (*pbIsInSysex)
         {
-            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 1;
+            if (pBuffer[1] != SYSEX_STOP) return false;
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 0;
             *pbIsInSysex = false; // we are done with SYSEX
+            firstByte = 1;
+            lastByte = 1;
         }
         else
         {
-            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 1;
+            // should not get here
+            return false;
         }
 
-        // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
-        for (int count = 1; count < 4; count++)
-        {
-            umpPkt->umpData.umpBytes[count + 1] = pBuffer[count];
-        }
-
+COMPLETE_1BYTE:
         umpPkt->wordCount = 2;
+        // Transfer in bytes
+        copyPos = firstByte;
+        for (UINT8 count = 2; count < 8; count++)
+        {
+            umpPkt->umpData.umpBytes[count] = (copyPos < lastByte)
+                ? pBuffer[copyPos++] : 0x00;
+        }
         break;
 
     case MIDI_CIN_SYSEX_END_2BYTE:
@@ -2792,24 +3171,28 @@ Return Value:
         // Determine if complete based on if currently in SYSEX
         if (*pbIsInSysex)
         {
-            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 2;
+            if (pBuffer[2] != SYSEX_STOP) return false;
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 1;
             *pbIsInSysex = false; // we are done with SYSEX
+            firstByte = 1;
+            lastByte = 2;
         }
         else
         {
-            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 2;
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 0;
+            *pbIsInSysex = false; // we are done with SYSEX
+            firstByte = 1;
+            lastByte = 1;
         }
-
-        // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
-        for (int count = 1; count < 4; count++)
-        {
-            umpPkt->umpData.umpBytes[count + 1] = pBuffer[count];
-        }
-        // Pad rest of data
-        umpPkt->umpData.umpBytes[6] = 0x00;
-        umpPkt->umpData.umpBytes[7] = 0x00;
 
         umpPkt->wordCount = 2;
+        // Transfer in bytes
+        copyPos = firstByte;
+        for (UINT8 count = 2; count < 8; count++)
+        {
+            umpPkt->umpData.umpBytes[count] = (copyPos < lastByte)
+                ? pBuffer[copyPos++] : 0x00;
+        }
         break;
 
     case MIDI_CIN_SYSEX_END_3BYTE:
@@ -2818,24 +3201,29 @@ Return Value:
         // Determine if complete based on if currently in SYSEX
         if (*pbIsInSysex)
         {
-            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 3;
+            if (pBuffer[3] != SYSEX_STOP) return false;
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_END | 2;
             *pbIsInSysex = false; // we are done with SYSEX
+            firstByte = 1;
+            lastByte = 3;
         }
         else
         {
-            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 3;
+            if (pBuffer[1] != SYSEX_START || pBuffer[3] != SYSEX_STOP) return false;
+            umpPkt->umpData.umpBytes[1] = UMP_SYSEX7_COMPLETE | 1;
+            *pbIsInSysex = false; // we are done with SYSEX
+            firstByte = 2;
+            lastByte = 3;
         }
-
-        // Copy in the data, assumes the original USB MIDI 1.0 data has padded data
-        for (int count = 1; count < 4; count++)
-        {
-            umpPkt->umpData.umpBytes[count + 1] = pBuffer[count];
-        }
-        // Pad rest of data
-        umpPkt->umpData.umpBytes[6] = 0x00;
-        umpPkt->umpData.umpBytes[7] = 0x00;
 
         umpPkt->wordCount = 2;
+        // Transfer in bytes
+        copyPos = firstByte;
+        for (UINT8 count = 2; count < 8; count++)
+        {
+            umpPkt->umpData.umpBytes[count] = (copyPos < lastByte)
+                ? pBuffer[copyPos++] : 0x00;
+        }
         break;
 
         // MIDI1 Channel Voice Messages

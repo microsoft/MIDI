@@ -49,7 +49,11 @@ Environment:
 #include "Public.h"
 #include "Common.h"
 #include "StreamEngine.h"
-#include <libmidi2/umpToBytestream.h>
+
+// Used for handling exchange of SYSEX between USB MIDI 1.0 and UMP
+#define UMPTOBS_BUFFER 12
+#define SYSEX_START 0xF0
+#define SYSEX_STOP  0xF7
 
 /* make prototypes usable from C++ */
 #ifdef __cplusplus
@@ -59,15 +63,18 @@ extern "C" {
 // Maximum number of groups per UMP endpoint or virual cables for USB MIDI 1.0
 #define MAX_NUM_GROUPS_CABLES 16
 
+// Size of ring buffers for sysex bytestream
+#define SYSEX_BS_RB_SIZE    UMPTOBS_BUFFER + 4  // size coming in plus at least one USB MIDI1.0 SYSEX Packet
+
 //
 // Structure to aid in UMP SYSEX to USB MIDI 1.0
 //
 typedef struct UMP_TO_MIDI1_SYSEX_t
 {
     bool                inSysex;
-    umpToBytestream     umpToBS;
-    UINT8               usbMIDI1Pkt[4];
-    UINT8               usbMIDI1Pos;
+    UINT8               sysexBS[SYSEX_BS_RB_SIZE];
+    UINT8               usbMIDI1Tail;
+    UINT8               usbMIDI1Head;
 } UMP_TO_MIDI1_SYSEX;
 
 typedef struct
@@ -121,6 +128,12 @@ typedef struct _DEVICE_CONTEXT {
     WDFMEMORY                   DeviceNameMemory;
     WDFMEMORY                   DeviceSNMemory;
     WDFMEMORY                   DeviceGTBMemory;
+    WDFMEMORY                   DeviceInGTBIDs;
+    WDFMEMORY                   DeviceOutGTBIDs;
+    WDFMEMORY                   DeviceWriteMemory;
+    PUCHAR                      DeviceWriteBuffer;
+    size_t                      DeviceWriteBufferIndex;
+    WDFREQUEST                  DeviceUSBWriteRequest;
 
     //
     // Streaming Engine
@@ -136,6 +149,8 @@ EVT_WDF_DRIVER_DEVICE_ADD           EvtBusDeviceAdd;
 EVT_WDF_DEVICE_PREPARE_HARDWARE     EvtDevicePrepareHardware;
 EVT_WDF_DEVICE_RELEASE_HARDWARE     EvtDeviceReleaseHardware;
 EVT_WDF_DEVICE_CONTEXT_CLEANUP      EvtDeviceContextCleanup;
+EVT_WDF_DEVICE_D0_ENTRY             EvtDeviceD0Entry;
+EVT_WDF_DEVICE_D0_EXIT              EvtDeviceD0Exit;
 
 /* make internal prototypes usable from C++ */
 #ifdef __cplusplus
@@ -198,6 +213,18 @@ PAGED_CODE_SEG
 NTSTATUS
 USBMIDI2DriverCreateGTB(
     _In_ WDFDEVICE    Device
+);
+
+//
+// Function to get flags indicating in and Out GTB IDs active
+// from Endpoint information in USB descriptors.
+//
+_Must_inspect_result_
+__drv_requiresIRQL(PASSIVE_LEVEL)
+PAGED_CODE_SEG
+NTSTATUS
+USBMIDI2DriverGetGTBIndexes(
+    _In_    WDFDEVICE      Device
 );
 
 //
