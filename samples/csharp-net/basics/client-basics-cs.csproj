@@ -11,7 +11,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24173.1521-preview.6" />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24185.1707-preview.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="client-basics-cs.exe.manifest">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

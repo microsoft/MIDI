@@ -76,27 +76,42 @@ namespace MidiSample.AppToAppMidi
         {
             try
             {
-
-
                 System.Diagnostics.Debug.WriteLine("StartVirtualDevice Connection enter");
 
                 // define our virtual device
                 var creationConfig = DefineDevice();
 
                 // create the session. The name here is just convenience.
+                System.Diagnostics.Debug.WriteLine("StartVirtualDevice Creating session");
                 _session = MidiSession.Create(creationConfig.Name);
 
                 // return if unable to create session
-                if (_session == null) return;
+                if (_session == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("StartVirtualDevice Unable to create session");
+                    return;
+                }
 
                 // create the virtual device, so we can get the endpoint device id to connect to
+                System.Diagnostics.Debug.WriteLine("StartVirtualDevice Creating virtual device");
                 _virtualDevice = MidiVirtualDeviceManager.CreateVirtualDevice(creationConfig);
 
                 // return if unable to create virtual device
-                if (_virtualDevice == null ) return;
+                if (_virtualDevice == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("StartVirtualDevice Unable to create virtual device");
+                    return;
+                }
 
                 // create our device-side connection
+                System.Diagnostics.Debug.WriteLine("StartVirtualDevice Creating endpoint connection");
                 _connection = _session.CreateEndpointConnection(_virtualDevice.DeviceEndpointDeviceId);
+
+                if (_connection == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("StartVirtualDevice failed to create connection");
+                    return;
+                }
 
                 // wire up the stream configuration request received handler
                 _virtualDevice.StreamConfigRequestReceived += OnStreamConfigurationRequestReceived;
@@ -104,7 +119,7 @@ namespace MidiSample.AppToAppMidi
                 // wire up the message received handler on the connection itself
                 _connection.MessageReceived += OnMidiMessageReceived;
 
-
+                System.Diagnostics.Debug.WriteLine("StartVirtualDevice Opening connection");
                 if (_connection.Open())
                 {
                     System.Diagnostics.Debug.WriteLine("Connection Opened");

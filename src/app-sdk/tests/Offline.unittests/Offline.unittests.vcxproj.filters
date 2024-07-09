@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="MidiChannelTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiClockTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiGroupTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Module.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiFunctionBlockMessageBuilderTests.cpp">
+      <Filter>Source\Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageBuilderTests.cpp">
+      <Filter>Source\Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiStreamMessageBuilderTests.cpp">
+      <Filter>Source\Helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessage32Tests.cpp">
+      <Filter>Source\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessage64Tests.cpp">
+      <Filter>Source\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessage96Tests.cpp">
+      <Filter>Source\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessage128Tests.cpp">
+      <Filter>Source\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUniqueIdTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessagePacketTests.cpp">
+      <Filter>Source\Messages</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MidiChannelTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiClockTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiGroupTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiFunctionBlockMessageBuilderTests.h">
+      <Filter>Headers\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageBuilderTests.h">
+      <Filter>Headers\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiStreamMessageBuilderTests.h">
+      <Filter>Headers\Helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessage32Tests.h">
+      <Filter>Headers\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessage64Tests.h">
+      <Filter>Headers\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessage96Tests.h">
+      <Filter>Headers\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessage128Tests.h">
+      <Filter>Headers\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUniqueIdTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessagePacketTests.h">
+      <Filter>Headers\Messages</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{c820e5fa-c151-414f-90ec-f35b9481c8c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{4638c084-db5e-4519-b99c-977a156ef3a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support">
+      <UniqueIdentifier>{c5b7a825-d5f9-473d-a584-9329146b7256}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Helpers">
+      <UniqueIdentifier>{2b56ac30-8882-4c6a-8665-8a3b2cb18c97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Helpers">
+      <UniqueIdentifier>{9ef747ff-0757-45b0-9f17-22d5f0cadbf1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers\Messages">
+      <UniqueIdentifier>{ddd396b8-ad6f-4eda-9782-2eca164ebe2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Messages">
+      <UniqueIdentifier>{45b5a992-a7a1-4402-962d-83a16aeef3a7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Midi2ClientTests.rc">
+      <Filter>Support</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="te.exe.manifest" />
+  </ItemGroup>
+</Project>

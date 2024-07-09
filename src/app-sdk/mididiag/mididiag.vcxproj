@@ -66,9 +66,6 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets">
-    <Import Project="PropertySheet.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
@@ -178,13 +175,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="PropertySheet.props" />
-    <Text Include="readme.txt">
-      <DeploymentContent>false</DeploymentContent>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
@@ -202,6 +192,9 @@
     <Manifest Include="mididiag.exe.manifest">
       <DeploymentContent>true</DeploymentContent>
     </Manifest>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Module.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiBenchmarks.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSchedulerBenchmarks.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBenchmarks.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSchedulerBenchmarks.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{205c3afa-ed50-49ff-add2-f455ba3bc3f9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{9709cee3-f1f4-49c6-b9fb-e0626b534922}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support">
+      <UniqueIdentifier>{6e68e43b-a54f-4beb-a08c-4aa57daf4ada}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Midi2ClientBenchmarks.rc">
+      <Filter>Support</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="te.exe.manifest" />
+  </ItemGroup>
+</Project>
