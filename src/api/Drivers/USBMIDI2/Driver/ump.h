@@ -126,6 +126,7 @@ Environment:
 typedef enum
 {
     MIDI_CS_INTERFACE = 0x24,
+    MIDI_CS_ENDPOINT = 0x25,
     MIDI_CS_INTERFACE_GR_TRM_BLOCK = 0x26,
 } midi_cs_interface_types;
 
