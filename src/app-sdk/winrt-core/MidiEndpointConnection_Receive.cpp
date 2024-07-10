@@ -13,7 +13,7 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG)
+    HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG context)
     {
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
@@ -28,6 +28,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
 #endif
+
+        UNREFERENCED_PARAMETER(context);
+
+        if ((!m_messageReceivedEvent) && (!m_messageProcessingPlugins || m_messageProcessingPlugins.Size() == 0))
+        {
+            // fast exit if there's nothing listening
+            return S_OK;
+        }
 
 
         try
