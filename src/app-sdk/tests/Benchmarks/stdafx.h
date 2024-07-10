@@ -14,11 +14,11 @@
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Service.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
 
 using namespace winrt::Microsoft::Windows::Devices::Midi2;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Service;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include <iostream>
 #include <iomanip>

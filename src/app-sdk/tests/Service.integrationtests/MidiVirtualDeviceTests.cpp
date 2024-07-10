@@ -15,6 +15,11 @@ void MidiVirtualDeviceTests::TestVirtualDevice()
     LOG_OUTPUT(L"TestVirtualDevice **********************************************************************");
 
     // TODO: Test virtual device creation
+
+
+
+
+
 }
 
 
