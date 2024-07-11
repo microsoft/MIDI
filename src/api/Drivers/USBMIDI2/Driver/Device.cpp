@@ -3073,6 +3073,7 @@ Return Value:
         case UMP_SYSTEM_UNDEFINED_F4:
         case UMP_SYSTEM_UNDEFINED_F5:
         case UMP_SYSTEM_UNDEFINED_F9:
+        case UMP_SYSTEM_UNDEFINED_FD:
             code_index = MIDI_CIN_SYSEX_END_1BYTE;
             break;
 

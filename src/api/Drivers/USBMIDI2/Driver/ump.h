@@ -116,6 +116,7 @@ Environment:
 #define UMP_SYSTEM_START        0xfa  // status byte only
 #define UMP_SYSTEM_CONTINUE     0xfb  // status byte only
 #define UMP_SYSTEM_STOP         0xfc  // status byte only
+#define UMP_SYSTEM_UNDEFINED_FD 0xfd  // undefined
 #define UMP_SYSTEM_ACTIVE_SENSE 0xfe  // status byte only
 #define UMP_SYSTEM_RESET        0xff  // status byte only
 
