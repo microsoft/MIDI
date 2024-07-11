@@ -222,6 +222,9 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
         &negotiationResults
     ));
 
+    // TODO: Use the negotiationResults to create compat MIDI 1.0 endpoints
+
+
     return S_OK;
 }
 

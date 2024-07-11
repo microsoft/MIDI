@@ -15,6 +15,27 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG context)
     {
+        UNREFERENCED_PARAMETER(context);
+
+        if ((!m_messageReceivedEvent) && (!m_messageProcessingPlugins || m_messageProcessingPlugins.Size() == 0))
+        {
+#ifdef _DEBUG
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exiting quickly due to no listeners", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+            );
+#endif
+
+            // fast exit if there's nothing listening
+            return S_OK;
+        }
+
 #ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
@@ -28,14 +49,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
 #endif
-
-        UNREFERENCED_PARAMETER(context);
-
-        if ((!m_messageReceivedEvent) && (!m_messageProcessingPlugins || m_messageProcessingPlugins.Size() == 0))
-        {
-            // fast exit if there's nothing listening
-            return S_OK;
-        }
 
 
         try
@@ -91,7 +104,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         }
         catch (winrt::hresult_error const& ex)
         {
-            //internal::LogHresultError(__FUNCTION__, L"hresult exception activating stream. Service may be unavailable", ex, m_endpointDeviceId);
             LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
 
             TraceLoggingWrite(
@@ -100,7 +112,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception activating stream. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"hresult exception handling received message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
@@ -118,7 +130,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception handling received messages.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"std::exception handling received message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingString(ex.what(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
@@ -135,7 +147,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception handling received message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"General exception handling received message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
 

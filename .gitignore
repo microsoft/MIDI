@@ -376,3 +376,4 @@ build/dependencies/winui/WindowsAppRuntimeInstall-arm64.exe
 *.debugtarget
 *.winmd
 *.dll
+*.exe

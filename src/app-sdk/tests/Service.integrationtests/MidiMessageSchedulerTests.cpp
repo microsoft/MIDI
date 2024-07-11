@@ -30,6 +30,9 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 {
     LOG_OUTPUT(L"Test timing **********************************************************************");
 
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
+
     wil::unique_event_nothrow allMessagesReceived;
     wil::critical_section messageLock;
 
@@ -142,6 +145,8 @@ void MidiMessageSchedulerTests::TestScheduledMessagesTiming(uint16_t const messa
 void MidiMessageSchedulerTests::TestScheduledMessagesOrder()
 {
     LOG_OUTPUT(L"TestScheduledMessages **********************************************************************");
+
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     wil::critical_section messageLock;

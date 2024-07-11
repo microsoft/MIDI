@@ -484,7 +484,7 @@ MidiSrvGetAbstractionList(
         abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsRuntimeCreatableBySettings));
         abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsSystemManaged));
         abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsClientConfigurable));
-        if (metadata.ClientConfigurationAssemblyName != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.ClientConfigurationAssemblyName));
+//        if (metadata.ClientConfigurationAssemblyName != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.ClientConfigurationAssemblyName));
 
         // add the abstraction metadata to the root, using the abstraction id as the key
         rootObject.SetNamedValue(internal::GuidToString(metadata.Id).c_str(), abstractionObject);
@@ -496,7 +496,7 @@ MidiSrvGetAbstractionList(
         ::SysFreeString(metadata.Author);
         ::SysFreeString(metadata.SmallImagePath);
         ::SysFreeString(metadata.Version);
-        ::SysFreeString(metadata.ClientConfigurationAssemblyName);
+//        ::SysFreeString(metadata.ClientConfigurationAssemblyName);
 
     }
 

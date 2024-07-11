@@ -26,7 +26,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         m_declaredDeviceIdentity = config.DeclaredDeviceIdentity();
         m_declaredEndpointInfo = config.DeclaredEndpointInfo();
 
-
         m_name = L"Virtual: " + m_declaredEndpointInfo.Name;
         m_id = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
 

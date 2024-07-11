@@ -156,7 +156,7 @@
     <ClCompile Include="MidiEndpointListenerTests.cpp" />
     <ClCompile Include="MidiLoopbackEndpointTests.cpp" />
     <ClCompile Include="MidiMessageSchedulerTests.cpp" />
-    <ClCompile Include="MidiServiceConfigTests.cpp" />
+    <ClCompile Include="MidiInitializationTests.cpp" />
     <ClCompile Include="MidiSessionTests.cpp" />
     <ClCompile Include="MidiVirtualDeviceTests.cpp" />
     <ClCompile Include="Module.cpp" />
@@ -169,7 +169,7 @@
     <ClInclude Include="MidiEndpointListenerTests.h" />
     <ClInclude Include="MidiLoopbackEndpointTests.h" />
     <ClInclude Include="MidiMessageSchedulerTests.h" />
-    <ClInclude Include="MidiServiceConfigTests.h" />
+    <ClInclude Include="MidiInitializationTests.h" />
     <ClInclude Include="MidiSessionTests.h" />
     <ClInclude Include="MidiVirtualDeviceTests.h" />
     <ClInclude Include="stdafx.h" />
@@ -183,12 +183,18 @@
   <ItemGroup>
     <ProjectReference Include="..\..\projections\dotnet-and-cpp\Microsoft.Windows.Devices.Midi2.NetProjection.csproj">
       <Project>{25f09b3a-0d97-4245-8591-262a0dff4320}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-ci\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.vcxproj">
       <Project>{38e2cbfd-6c7a-45fb-b162-6bcc1734a0a1}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-client-plugins\Microsoft.Windows.Devices.Midi2.Plugins.vcxproj">
       <Project>{3d2bc934-cdc7-4dc7-b7fc-f34b755bf726}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
@@ -197,21 +203,33 @@
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-diagnostics\Microsoft.Windows.Devices.Midi2.Diagnostics.vcxproj">
       <Project>{05796b3c-25ff-4ac2-999b-edefb773393c}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-endpoint-loopback\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.vcxproj">
       <Project>{d3b84d5d-8bed-4cb7-b430-b0bf1e46f3a1}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-endpoint-virtual\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.vcxproj">
       <Project>{9b93146c-4d9d-4915-becb-5227df2667e2}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj">
       <Project>{0ca9273a-0bae-4ac4-8290-a72a985dd264}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj">
       <Project>{001601de-b7ab-41d1-81b7-40286b139841}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
     <ProjectReference Include="..\..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj">
       <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
+      <Private>true</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

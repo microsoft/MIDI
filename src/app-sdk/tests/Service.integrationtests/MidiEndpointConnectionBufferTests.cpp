@@ -21,6 +21,8 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
 {
     LOG_OUTPUT(L"TestSendBuffer **********************************************************************");
 
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
     auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
@@ -70,6 +72,9 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
 void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
 {
     LOG_OUTPUT(L"TestSendAndReceiveBuffer **********************************************************************");
+
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -191,6 +196,8 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 {
     LOG_OUTPUT(L"TestSendBufferBoundsError **********************************************************************");
 
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
     auto session = MidiSession::Create(L"Test Session Name");
 
     VERIFY_IS_TRUE(session.IsOpen());
@@ -252,6 +259,9 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer()
 {
     LOG_OUTPUT(L"TestSendAndReceiveMultipleMessagesBuffer **********************************************************************");
+
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();

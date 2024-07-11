@@ -77,17 +77,17 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(DeviceInterfaceId)
+        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    auto cleanDeviceInterfaceId = internal::NormalizeDeviceInstanceIdWStringCopy(DeviceInterfaceId);
+    auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(DeviceInterfaceId);
 
     std::shared_ptr<CMidiEndpointProtocolWorker> worker{ nullptr };
 
-    if (m_endpointWorkers.find(cleanDeviceInterfaceId) != m_endpointWorkers.end())
+    if (m_endpointWorkers.find(cleanEndpointDeviceInterfaceId) != m_endpointWorkers.end())
     {
         // already exists. We can re-request negotiation from the worker
-        worker = m_endpointWorkers[cleanDeviceInterfaceId];
+        worker = m_endpointWorkers[cleanEndpointDeviceInterfaceId];
     }
 
     if (worker == nullptr)
@@ -99,7 +99,7 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
         RETURN_IF_FAILED(worker->Initialize(
             m_sessionId, 
             AbstractionGuid, 
-            cleanDeviceInterfaceId.c_str(), 
+            cleanEndpointDeviceInterfaceId.c_str(),
             m_clientManager, 
             m_deviceManager, 
             m_sessionTracker
@@ -107,7 +107,7 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
         );
 
         // add it to the map
-        m_endpointWorkers[cleanDeviceInterfaceId] = worker;
+        m_endpointWorkers[cleanEndpointDeviceInterfaceId] = worker;
     }
 
     // now that we have the worker created, actually start the work. This function blocks for up to TimeoutMilliseconds.

@@ -84,6 +84,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
                     TraceLoggingWideString(L"Failed to initialize config manager", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingHResult(initializeResult, MIDI_SDK_TRACE_HRESULT_FIELD)
                 );
+
                 // return a fail result
                 return response;
             }
@@ -234,6 +235,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         if (success)
         {
             response.Status = svc::MidiServiceConfigResponseStatus::Success;
+            response.ResponseJson = responseJsonObject.Stringify();
 
             return response;
         }

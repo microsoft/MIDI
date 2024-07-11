@@ -11,6 +11,8 @@
 
 void MidiSessionTests::TestCreateNewSession()
 {
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
     winrt::hstring sessionName = L"Test Session Name";
 
     auto session = MidiSession::Create(sessionName);
@@ -28,6 +30,8 @@ void MidiSessionTests::TestCreateNewSession()
 
 void MidiSessionTests::TestSessionList()
 {
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
     winrt::hstring session1Name = L"Session 1 Name";
     winrt::hstring session2Name = L"Session 2 Name";
 
@@ -62,6 +66,8 @@ void MidiSessionTests::TestSessionList()
 
 void MidiSessionTests::TestUpdateSessionName()
 {
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
     winrt::hstring oldSessionName = L"Test Session Name";
     winrt::hstring newSessionName = L"New Session Name";
 

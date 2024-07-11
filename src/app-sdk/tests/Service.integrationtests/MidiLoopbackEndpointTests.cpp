@@ -10,11 +10,71 @@
 #include "stdafx.h"
 
 
-void MidiLoopbackEndpointTests::TestLoopbackEndpoint()
+void MidiLoopbackEndpointTests::TestCreateLoopbackEndpoints()
 {
-    LOG_OUTPUT(L"TestLoopbackEndpoint **********************************************************************");
+    LOG_OUTPUT(L"TestCreateLoopbackEndpoints **********************************************************************");
 
-    // TODO: Test loopback endpoint creation
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
+    winrt::hstring endpointAId{};
+    winrt::hstring endpointBId{};
+
+    MidiLoopbackEndpointDefinition definitionA;
+    MidiLoopbackEndpointDefinition definitionB;
+
+    auto uniqueId = L"ID" + winrt::to_hstring(MidiClock::Now());
+
+    // A-side of the loopback
+    definitionA.Name = L"Test Loopback A";
+    definitionA.Description = L"The first description is optional, but is displayed to users. This becomes the transport-defined description.";
+    definitionA.UniqueId = uniqueId;
+
+    // B-side of the loopback
+    definitionB.Name = L"Test Loopback B";
+    definitionB.Description = L"The second description is optional, but is displayed to users. This becomes the transport-defined description.";
+    definitionB.UniqueId = uniqueId; // can be the same as the first one, but doesn't need to be.
+
+    winrt::guid associationId = foundation::GuidHelper::CreateNewGuid();
+
+    LOG_OUTPUT(L"Creating loopback endpoint creation config");
+
+    MidiLoopbackEndpointCreationConfig creationConfig(associationId, definitionA, definitionB);
+
+    LOG_OUTPUT(L"Creating loopbacks");
+
+    auto response = MidiLoopbackEndpointManager::CreateTransientLoopbackEndpoints(creationConfig);
+
+    if (response.Success)
+    {
+        LOG_OUTPUT(L"Endpoints created successfully");
+
+        std::cout
+            << "Loopback Endpoint A: " << std::endl
+            << " - " << winrt::to_string(definitionA.Name) << std::endl
+            << " - " << winrt::to_string(response.EndpointDeviceIdA) << std::endl << std::endl;
+
+        std::cout
+            << "Loopback Endpoint B: " << std::endl
+            << " - " << winrt::to_string(definitionB.Name) << std::endl
+            << " - " << winrt::to_string(response.EndpointDeviceIdB) << std::endl << std::endl;
+
+        endpointAId = response.EndpointDeviceIdA;
+        endpointBId = response.EndpointDeviceIdB;
+    }
+    else
+    {
+        LOG_OUTPUT(L"Return result indicates failure");
+
+        // failed to create the loopback pair. It may be that the unique
+        // Ids are already in use.
+
+        VERIFY_FAIL();
+    }
+
+    // TODO: enumerate endpoints and verify that the endpoints are present
+
+
+
 
 }
 

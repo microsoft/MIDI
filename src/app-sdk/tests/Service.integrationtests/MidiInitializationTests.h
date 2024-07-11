@@ -9,14 +9,14 @@
 
 #pragma once
 
-class MidiServiceTests
-    : public WEX::TestClass<MidiServiceTests>
+class MidiInitializationTests
+    : public WEX::TestClass<MidiInitializationTests>
 {
 public:
 
-    BEGIN_TEST_CLASS(MidiServiceTests)
+    BEGIN_TEST_CLASS(MidiInitializationTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.Service.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.Initialization.dll")
     END_TEST_CLASS()
 
     //TEST_CLASS_SETUP(ClassSetup);

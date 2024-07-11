@@ -9,8 +9,9 @@
 
 #include "stdafx.h"
 
-void MidiServiceTests::TestEnsureServiceAvailable()
+void MidiInitializationTests::TestEnsureServiceAvailable()
 {
+    LOG_OUTPUT(L"TestEnsureServiceAvailable **********************************************************************");
 
-    VERIFY_FAIL();      // TEMP
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 }

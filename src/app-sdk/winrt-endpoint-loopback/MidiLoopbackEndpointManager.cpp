@@ -16,7 +16,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
     bool MidiLoopbackEndpointManager::IsTransportAvailable() noexcept
     {
         // TODO: Check to see if service abstraction is installed and running. May require a new service call
-        return false;
+        return true;
     }
 
 
@@ -65,6 +65,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             else
             {
                 //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Device creation failed (payload has false success value)", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(creationConfig.AssociationId(), "association id")
+                );
             }
         }
         else

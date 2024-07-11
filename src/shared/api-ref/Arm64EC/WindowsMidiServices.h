@@ -1555,7 +1555,6 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_00
     BOOL IsRuntimeCreatableBySettings;
     BOOL IsSystemManaged;
     BOOL IsClientConfigurable;
-    BSTR ClientConfigurationAssemblyName;
     } 	ABSTRACTIONMETADATA;
 
 typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0001 *PABSTRACTIONMETADATA;
@@ -1572,7 +1571,6 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_00
     BOOL IsRuntimeCreatableBySettings;
     BOOL IsSystemManaged;
     BOOL IsClientConfigurable;
-    BSTR ClientConfigurationAssemblyName;
     } 	TRANSFORMMETADATA;
 
 typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0002 *PTRANSFORMMETADATA;

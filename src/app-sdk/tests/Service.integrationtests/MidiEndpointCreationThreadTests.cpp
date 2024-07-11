@@ -88,6 +88,9 @@ void MidiEndpointCreationThreadTests::SendThreadWorker(MidiSession session, winr
 
 void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
 {
+    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
+
     m_receiveComplete.create();
     m_receiverReady.create();
 

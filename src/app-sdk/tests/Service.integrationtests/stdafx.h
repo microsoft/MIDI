@@ -10,6 +10,9 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+namespace foundation = winrt::Windows::Foundation;
+namespace collections = winrt::Windows::Foundation::Collections;
+
 #include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
@@ -49,7 +52,7 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include "MidiEndpointListenerTests.h"
 #include "MidiLoopbackEndpointTests.h"
 #include "MidiMessageSchedulerTests.h"
-#include "MidiServiceConfigTests.h"
+#include "MidiInitializationTests.h"
 #include "MidiSessionTests.h"
 #include "MidiVirtualDeviceTests.h"
 

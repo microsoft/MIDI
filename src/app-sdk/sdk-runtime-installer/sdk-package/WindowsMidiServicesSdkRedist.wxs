@@ -167,7 +167,7 @@
             <!-- Add folder to path -->
             <Environment Id="AddMidiDiagUtilityToSystemPath"
                             Name="PATH" Action="set" Part="last" System="yes"
-                            Value="[ROOTINSTALLFOLDER]" Permanent="no"/>
+                            Value="[MIDIDIAG_INSTALLFOLDER]" Permanent="no"/>
         </Component>
 
         

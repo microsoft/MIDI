@@ -42,7 +42,7 @@
     <ClInclude Include="MidiMessageSchedulerTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="MidiServiceConfigTests.h">
+    <ClInclude Include="MidiInitializationTests.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MidiSessionTests.h">
@@ -77,7 +77,7 @@
     <ClCompile Include="MidiMessageSchedulerTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="MidiServiceConfigTests.cpp">
+    <ClCompile Include="MidiInitializationTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="MidiSessionTests.cpp">

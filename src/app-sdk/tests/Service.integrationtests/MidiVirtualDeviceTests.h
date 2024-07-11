@@ -25,7 +25,7 @@ public:
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
 
-        TEST_METHOD(TestVirtualDevice);
+        TEST_METHOD(TestCreateVirtualDevice);
 
 
 private:

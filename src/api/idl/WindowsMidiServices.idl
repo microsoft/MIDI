@@ -415,7 +415,7 @@ typedef struct
     BOOL IsSystemManaged;
     BOOL IsClientConfigurable;
 
-    BSTR ClientConfigurationAssemblyName;
+    //BSTR ClientConfigurationAssemblyName;
 } ABSTRACTIONMETADATA, * PABSTRACTIONMETADATA;
 
 
@@ -438,7 +438,7 @@ typedef struct
     BOOL IsSystemManaged;
     BOOL IsClientConfigurable;
 
-    BSTR ClientConfigurationAssemblyName;
+    //BSTR ClientConfigurationAssemblyName;
 } TRANSFORMMETADATA, * PTRANSFORMMETADATA;
 
 
