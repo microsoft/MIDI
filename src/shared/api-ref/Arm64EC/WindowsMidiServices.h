@@ -157,6 +157,13 @@ typedef interface IMidiSessionTracker IMidiSessionTracker;
 #endif 	/* __IMidiSessionTracker_FWD_DEFINED__ */
 
 
+#ifndef __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__
+#define __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__
+typedef interface IMidiProtocolNegotiationCompleteCallback IMidiProtocolNegotiationCompleteCallback;
+
+#endif 	/* __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__ */
+
+
 #ifndef __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__
 #define __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__
 typedef interface IMidiEndpointProtocolManagerInterface IMidiEndpointProtocolManagerInterface;
@@ -2052,18 +2059,116 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_00
     BOOL EndpointSupportsMIDI1Protocol;
     LPCWSTR EndpointSuppliedName;
     LPCWSTR EndpointSuppliedProductInstanceId;
-    BYTE NumberOfFunctionBlocksDeclared;
-    BYTE NumberOfFunctionBlocksReceived;
+    BYTE CountFunctionBlocksDeclared;
+    BYTE CountFunctionBlocksReceived;
     BOOL FunctionBlocksAreStatic;
     PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;
     } 	ENDPOINTPROTOCOLNEGOTIATIONRESULTS;
 
 typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0002 *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
 
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0003
+    {
+    BOOL PreferToSendJRTimestampsToEndpoint;
+    BOOL PreferToReceiveJRTimestampsFromEndpoint;
+    BYTE PreferredMidiProtocol;
+    WORD TimeoutMilliseconds;
+    } 	ENDPOINTPROTOCOLNEGOTIATIONPARAMS;
+
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0003 *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
+
 
 
 extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0015_v0_0_c_ifspec;
 extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0015_v0_0_s_ifspec;
+
+#ifndef __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
+#define __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
+
+/* interface IMidiProtocolNegotiationCompleteCallback */
+/* [unique][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("f948dc64-e03a-4e24-bc6e-437ad729cd50")
+    IMidiProtocolNegotiationCompleteCallback : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE ProtocolNegotiationCompleteCallback( 
+            /* [in] */ GUID AbstractionGuid,
+            /* [in] */ LPCWSTR DeviceInterfaceId,
+            /* [in] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results) = 0;
+        
+    };
+    
+    
+#else 	/* C style interface */
+
+    typedef struct IMidiProtocolNegotiationCompleteCallbackVtbl
+    {
+        BEGIN_INTERFACE
+        
+        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IMidiProtocolNegotiationCompleteCallback * This,
+            /* [in] */ REFIID riid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **ppvObject);
+        
+        DECLSPEC_XFGVIRT(IUnknown, AddRef)
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IMidiProtocolNegotiationCompleteCallback * This);
+        
+        DECLSPEC_XFGVIRT(IUnknown, Release)
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IMidiProtocolNegotiationCompleteCallback * This);
+        
+        DECLSPEC_XFGVIRT(IMidiProtocolNegotiationCompleteCallback, ProtocolNegotiationCompleteCallback)
+        HRESULT ( STDMETHODCALLTYPE *ProtocolNegotiationCompleteCallback )( 
+            IMidiProtocolNegotiationCompleteCallback * This,
+            /* [in] */ GUID AbstractionGuid,
+            /* [in] */ LPCWSTR DeviceInterfaceId,
+            /* [in] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results);
+        
+        END_INTERFACE
+    } IMidiProtocolNegotiationCompleteCallbackVtbl;
+
+    interface IMidiProtocolNegotiationCompleteCallback
+    {
+        CONST_VTBL struct IMidiProtocolNegotiationCompleteCallbackVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IMidiProtocolNegotiationCompleteCallback_QueryInterface(This,riid,ppvObject)	\
+    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
+
+#define IMidiProtocolNegotiationCompleteCallback_AddRef(This)	\
+    ( (This)->lpVtbl -> AddRef(This) ) 
+
+#define IMidiProtocolNegotiationCompleteCallback_Release(This)	\
+    ( (This)->lpVtbl -> Release(This) ) 
+
+
+#define IMidiProtocolNegotiationCompleteCallback_ProtocolNegotiationCompleteCallback(This,AbstractionGuid,DeviceInterfaceId,Results)	\
+    ( (This)->lpVtbl -> ProtocolNegotiationCompleteCallback(This,AbstractionGuid,DeviceInterfaceId,Results) ) 
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+
+#endif 	/* __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__ */
+
 
 #ifndef __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
 #define __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
@@ -2083,11 +2188,8 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
         virtual HRESULT STDMETHODCALLTYPE NegotiateAndRequestMetadata( 
             /* [in] */ GUID AbstractionGuid,
             /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ BOOL PreferToSendJRTimestampsToEndpoint,
-            /* [in] */ BOOL PreferToReceiveJRTimestampsFromEndpoint,
-            /* [in] */ BYTE PreferredMidiProtocol,
-            /* [in] */ WORD TimeoutMilliseconds,
-            /* [retval][out] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS *NegotiationResults) = 0;
+            /* [in] */ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+            /* [in] */ IMidiProtocolNegotiationCompleteCallback *NegotiationCompleteCallback) = 0;
         
     };
     
@@ -2118,11 +2220,8 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
             IMidiEndpointProtocolManagerInterface * This,
             /* [in] */ GUID AbstractionGuid,
             /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ BOOL PreferToSendJRTimestampsToEndpoint,
-            /* [in] */ BOOL PreferToReceiveJRTimestampsFromEndpoint,
-            /* [in] */ BYTE PreferredMidiProtocol,
-            /* [in] */ WORD TimeoutMilliseconds,
-            /* [retval][out] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS *NegotiationResults);
+            /* [in] */ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+            /* [in] */ IMidiProtocolNegotiationCompleteCallback *NegotiationCompleteCallback);
         
         END_INTERFACE
     } IMidiEndpointProtocolManagerInterfaceVtbl;
@@ -2147,8 +2246,8 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiEndpointProtocolManagerInterface_NegotiateAndRequestMetadata(This,AbstractionGuid,DeviceInterfaceId,PreferToSendJRTimestampsToEndpoint,PreferToReceiveJRTimestampsFromEndpoint,PreferredMidiProtocol,TimeoutMilliseconds,NegotiationResults)	\
-    ( (This)->lpVtbl -> NegotiateAndRequestMetadata(This,AbstractionGuid,DeviceInterfaceId,PreferToSendJRTimestampsToEndpoint,PreferToReceiveJRTimestampsFromEndpoint,PreferredMidiProtocol,TimeoutMilliseconds,NegotiationResults) ) 
+#define IMidiEndpointProtocolManagerInterface_NegotiateAndRequestMetadata(This,AbstractionGuid,DeviceInterfaceId,NegotiationParams,NegotiationCompleteCallback)	\
+    ( (This)->lpVtbl -> NegotiateAndRequestMetadata(This,AbstractionGuid,DeviceInterfaceId,NegotiationParams,NegotiationCompleteCallback) ) 
 
 #endif /* COBJMACROS */
 

@@ -105,5 +105,6 @@ namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoint
 //#include "resource.h"
 
 #include "MidiLoopbackEndpointCreationConfig.h"
+#include "MidiLoopbackEndpointRemovalConfig.h"
 
 #include "MidiLoopbackEndpointManager.h"

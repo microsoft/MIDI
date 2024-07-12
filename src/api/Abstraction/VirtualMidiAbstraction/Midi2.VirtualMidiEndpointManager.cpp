@@ -205,24 +205,19 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
         TraceLoggingWideString(endpointId.c_str(), "endpoint id")
     );
 
-    bool preferToSendJRToEndpoint{ false };
-    bool preferToReceiveJRFromEndpoint{ false };
-    BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
-    WORD negotiationTimeoutMS{ 2000 };
+    ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
 
-    PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
+    negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
+    negotiationParams.PreferToSendJRTimestampsToEndpoint = false;
+    negotiationParams.PreferToReceiveJRTimestampsFromEndpoint = false;
+    negotiationParams.TimeoutMilliseconds = 2000;
 
     RETURN_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
         AbstractionLayerGUID,
         endpointId.c_str(),
-        preferToSendJRToEndpoint,
-        preferToReceiveJRFromEndpoint,
-        preferredProtocol,
-        negotiationTimeoutMS, 
-        &negotiationResults
+        negotiationParams,
+        nullptr                 // TODO: Provide callback
     ));
-
-    // TODO: Use the negotiationResults to create compat MIDI 1.0 endpoints
 
 
     return S_OK;

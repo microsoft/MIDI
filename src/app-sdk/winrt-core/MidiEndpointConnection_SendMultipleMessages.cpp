@@ -88,7 +88,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             while (true)
             {
-                uint8_t bytesInThisMessage = internal::GetUmpLengthInBytesFromFirstWord((uint32_t&)byteDataPointer);
+                uint8_t bytesInThisMessage = internal::GetUmpLengthInBytesFromFirstWord(*(uint32_t*)byteDataPointer);
 
                 if (bytesProcessed + bytesInThisMessage <= byteCount)
                 {

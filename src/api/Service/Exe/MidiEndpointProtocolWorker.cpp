@@ -14,7 +14,7 @@ HRESULT
 CMidiEndpointProtocolWorker::Initialize(
     GUID SessionId,
     GUID AbstractionGuid,
-    LPCWSTR DeviceInterfaceId,
+    LPCWSTR EndpointDeviceInterfaceId,
     std::shared_ptr<CMidiClientManager>& ClientManager,
     std::shared_ptr<CMidiDeviceManager>& DeviceManager,
     std::shared_ptr<CMidiSessionTracker>& SessionTracker
@@ -27,61 +27,18 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(EndpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     m_abstractionGuid = AbstractionGuid;
     m_sessionId = SessionId;
-    m_deviceInterfaceId = DeviceInterfaceId;
+    m_deviceInterfaceId = EndpointDeviceInterfaceId;
 
     m_clientManager = ClientManager;
     m_deviceManager = DeviceManager;
     m_sessionTracker = SessionTracker;
 
-    wil::com_ptr_nothrow<IMidiAbstraction> serviceAbstraction;
-
-    // we only support UMP data format for protocol negotiation
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
-    abstractionCreationParams.DataFormat = MidiDataFormat::MidiDataFormat_UMP;
-    abstractionCreationParams.InstanceConfigurationJsonData = nullptr;
-
-
-    DWORD mmcssTaskId{ 0 };
-    LONGLONG context{ 0 };
-
-    // Working directly with the abstraction doesn't work here. Something doesn't hook up
-    // properly. When we open the device here, then the normal client endpoints don't 
-    // receive messages, even though they appear to be working. It's likely a multiclient problem
-    // at least in some cases
-//    RETURN_IF_FAILED(CoCreateInstance(m_abstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-//    RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
-//    RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(m_deviceInterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, context, m_sessionId));
-
-
-    // this is not a good idea, but we don't have a reference to the lib here
-    GUID midi2MidiSrvAbstractionIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
-    RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvAbstractionIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceAbstraction)));
-
-    // create the bidi device
-    RETURN_IF_FAILED(serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
-
-    RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(
-        (LPCWSTR)(m_deviceInterfaceId.c_str()),
-        &abstractionCreationParams,
-        &mmcssTaskId,
-        (IMidiCallback*)(this),
-        context,
-        m_sessionId
-    ));
-
-    // add this connection to the session tracker. The manager already logged the overall session
-    //LOG_IF_FAILED(m_sessionTracker->AddClientEndpointConnection(
-    //    m_sessionId,
-    //    m_deviceInterfaceId.c_str(),
-    //    (MidiClientHandle)nullptr));
-
-    RETURN_IF_FAILED(m_allNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
-
+    RETURN_IF_FAILED(m_endProcessing.create(wil::EventOptions::ManualReset));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -90,7 +47,7 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Initialize complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(EndpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
     return S_OK;
 }
@@ -177,12 +134,9 @@ CMidiEndpointProtocolWorker::FunctionBlockNamePropertyKeyFromNumber(
 
 _Use_decl_annotations_
 HRESULT
-CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
-    BOOL PreferToSendJRTimestampsToEndpoint,
-    BOOL PreferToReceiveJRTimestampsFromEndpoint,
-    BYTE PreferredMidiProtocol,
-    WORD TimeoutMilliseconds,
-    PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
+CMidiEndpointProtocolWorker::Start(
+    ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+    IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
 )
 {
     TraceLoggingWrite(
@@ -196,9 +150,11 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
     );
 
 
-    m_preferToSendJRTimestampsToEndpoint = PreferToSendJRTimestampsToEndpoint;
-    m_preferToReceiveJRTimestampsFromEndpoint = PreferToReceiveJRTimestampsFromEndpoint;
-    m_preferredMidiProtocol = PreferredMidiProtocol;
+    m_negotiationCompleteCallback = NegotiationCompleteCallback;
+
+    m_preferToSendJRTimestampsToEndpoint = NegotiationParams.PreferToSendJRTimestampsToEndpoint;
+    m_preferToReceiveJRTimestampsFromEndpoint = NegotiationParams.PreferToReceiveJRTimestampsFromEndpoint;
+    m_preferredMidiProtocol = NegotiationParams.PreferredMidiProtocol;
 
     // We continue listening for and updating metadata even after we return.
     // We don't raise any changed events here. Instead, anyone interested in getting
@@ -207,6 +163,50 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
 
     try
     {
+
+        // we do this here instead of initialize so this is created on the worker thread
+        if (!m_midiBiDiDevice)
+        {
+            wil::com_ptr_nothrow<IMidiAbstraction> serviceAbstraction;
+
+            // we only support UMP data format for protocol negotiation
+            ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
+            abstractionCreationParams.DataFormat = MidiDataFormat::MidiDataFormat_UMP;
+            abstractionCreationParams.InstanceConfigurationJsonData = nullptr;
+
+            DWORD mmcssTaskId{ 0 };
+            LONGLONG context{ 0 };
+
+
+            // this is not a good idea, but we don't have a reference to the lib here
+            GUID midi2MidiSrvAbstractionIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
+            RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvAbstractionIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceAbstraction)));
+
+            // create the bidi device
+            RETURN_IF_FAILED(serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
+
+            RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(
+                (LPCWSTR)(m_deviceInterfaceId.c_str()),
+                &abstractionCreationParams,
+                &mmcssTaskId,
+                (IMidiCallback*)(this),
+                context,
+                m_sessionId
+            ));
+        }
+
+        // add this connection to the session tracker. The manager already logged the overall session
+        //LOG_IF_FAILED(m_sessionTracker->AddClientEndpointConnection(
+        //    m_sessionId,
+        //    m_deviceInterfaceId.c_str(),
+        //    (MidiClientHandle)nullptr));
+
+        if (!m_allNegotiationMessagesReceived)
+        {
+            RETURN_IF_FAILED(m_allNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
+        }
+
+
         // TODO: For now, we're keeping the initial negotiation all in-line, in the same thread.
         // will evaluate a separate worker thread after the implementation is tested and working.
 
@@ -246,7 +246,7 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
         // start initial negotiation. Return when timed out or when we have all the requested info.
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
-        m_allNegotiationMessagesReceived.wait(TimeoutMilliseconds);
+        m_allNegotiationMessagesReceived.wait(NegotiationParams.TimeoutMilliseconds);
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -359,7 +359,7 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
         }
 
         m_mostRecentResults.FunctionBlocksAreStatic = m_functionBlocksAreStatic;
-        m_mostRecentResults.NumberOfFunctionBlocksDeclared = m_declaredFunctionBlockCount;
+        m_mostRecentResults.CountFunctionBlocksDeclared = m_declaredFunctionBlockCount;
 
         // Loop through function blocks and copy the name pointers over 
         // into the structure before returning it. Seems extra, but we need a friendly
@@ -392,7 +392,7 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
 
             // add the function blocks now they are fully valid
             m_mostRecentResults.DiscoveredFunctionBlocks = m_discoveredFunctionBlocks.data();
-            m_mostRecentResults.NumberOfFunctionBlocksReceived = (BYTE)m_discoveredFunctionBlocks.size();
+            m_mostRecentResults.CountFunctionBlocksReceived = (BYTE)m_discoveredFunctionBlocks.size();
         }
         else
         {
@@ -407,20 +407,51 @@ CMidiEndpointProtocolWorker::NegotiateAndRequestMetadata(
             );
 
             m_mostRecentResults.DiscoveredFunctionBlocks = nullptr;
-            m_mostRecentResults.NumberOfFunctionBlocksReceived = 0;
+            m_mostRecentResults.CountFunctionBlocksReceived = 0;
         }
        
-        *NegotiationResults = &m_mostRecentResults;
+        // Call callback
 
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_WARNING,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Returning from initial protocol negotiation", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-        );
+        if (m_negotiationCompleteCallback != nullptr)
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Initial protocol negotiation complete, calling callback function", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            LOG_IF_FAILED(m_negotiationCompleteCallback->ProtocolNegotiationCompleteCallback(
+                m_abstractionGuid, 
+                m_deviceInterfaceId.c_str(), 
+                &m_mostRecentResults
+                )
+            );
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Initial protocol negotiation complete, but no callback provided", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+        }
+
+
+        // we just hang out until endProcessing is set
+        // TODO: This won't allow calling negotiation a second time, so need to think about that
+
+        m_endProcessing.wait();
+
+
 
         return S_OK;
     }

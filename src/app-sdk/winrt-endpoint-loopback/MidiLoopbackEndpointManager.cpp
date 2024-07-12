@@ -87,18 +87,18 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
     _Use_decl_annotations_
     bool MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(
-        loop::MidiLoopbackEndpointDeletionConfig deletionConfig)
+        loop::MidiLoopbackEndpointRemovalConfig removalConfig)
     {
         // the success code in this defaults to False
         bool result = false;
 
         json::JsonObject configObject;
 
-        if (json::JsonObject::TryParse(deletionConfig.GetConfigJson(), configObject))
+        if (json::JsonObject::TryParse(removalConfig.GetConfigJson(), configObject))
         {
             // send it up
 
-            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(deletionConfig);
+            auto serviceResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(removalConfig);
 
             result = (serviceResponse.Status == svc::MidiServiceConfigResponseStatus::Success);
         }

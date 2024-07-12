@@ -260,8 +260,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiLoopbackEndpointDeletionConfig.h">
-      <DependentUpon>MidiLoopbackEndpointDeletionConfig.idl</DependentUpon>
+    <ClInclude Include="MidiLoopbackEndpointRemovalConfig.h">
+      <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiLoopbackEndpointManager.h">
       <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
@@ -273,8 +273,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-    <ClCompile Include="MidiLoopbackEndpointDeletionConfig.cpp">
-      <DependentUpon>MidiLoopbackEndpointDeletionConfig.idl</DependentUpon>
+    <ClCompile Include="MidiLoopbackEndpointRemovalConfig.cpp">
+      <DependentUpon>MidiLoopbackEndpointRemovalConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiLoopbackEndpointManager.cpp">
       <DependentUpon>MidiLoopbackEndpointManager.idl</DependentUpon>
@@ -287,7 +287,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="MidiLoopbackEndpointDeletionConfig.idl" />
+    <Midl Include="MidiLoopbackEndpointRemovalConfig.idl" />
     <Midl Include="MidiLoopbackEndpointManager.idl" />
     <Midl Include="MidiLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiLoopbackEndpointCreationResult.idl" />

@@ -24,7 +24,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             _In_ loop::MidiLoopbackEndpointCreationConfig creationConfig);
 
         static bool RemoveTransientLoopbackEndpoints(
-            _In_ loop::MidiLoopbackEndpointDeletionConfig deletionConfig);
+            _In_ loop::MidiLoopbackEndpointRemovalConfig deletionConfig);
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::factory_implementation

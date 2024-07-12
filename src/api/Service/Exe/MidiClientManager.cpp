@@ -880,11 +880,7 @@ CMidiClientManager::CreateMidiClient(
         return E_UNEXPECTED;
     }
 
-    // TODO: Check with Gary to see if this was needed. It deadlocks
-    // with the protocol negotiation stuff and seems to work fine without it
-    // but I assume there's a change it'll fail in a busy system.
-    
-//    auto lock = m_ClientManagerLock.lock();
+    auto lock = m_ClientManagerLock.lock();
 
     DWORD clientProcessId{0};
     wil::unique_handle clientProcessHandle;

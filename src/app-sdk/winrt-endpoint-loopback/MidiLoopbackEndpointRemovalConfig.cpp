@@ -8,13 +8,13 @@
 
 
 #include "pch.h"
-#include "MidiLoopbackEndpointDeletionConfig.h"
-#include "MidiLoopbackEndpointDeletionConfig.g.cpp"
+#include "MidiLoopbackEndpointRemovalConfig.h"
+#include "MidiLoopbackEndpointRemovalConfig.g.cpp"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
     _Use_decl_annotations_
-    MidiLoopbackEndpointDeletionConfig::MidiLoopbackEndpointDeletionConfig(winrt::guid const& associationId)
+    MidiLoopbackEndpointRemovalConfig::MidiLoopbackEndpointRemovalConfig(winrt::guid const& associationId)
     {
         m_associationId = associationId;
     }
@@ -29,7 +29,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
     //     }
     //   }
     // }
-    winrt::hstring MidiLoopbackEndpointDeletionConfig::GetConfigJson()
+    winrt::hstring MidiLoopbackEndpointRemovalConfig::GetConfigJson()
     {
         json::JsonArray endpointDeletionArray;
         json::JsonObject abstractionObject;

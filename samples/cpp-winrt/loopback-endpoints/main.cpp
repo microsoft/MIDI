@@ -213,9 +213,9 @@ int main()
         // If you don't do this, they will stay active, and the next attempt
         // to create them will fail because the unique Ids are already in use
 
-        MidiLoopbackEndpointDeletionConfig deletionConfig(m_associationId);
+        MidiLoopbackEndpointRemovalConfig removalConfig(m_associationId);
 
-        if (MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(deletionConfig))
+        if (MidiLoopbackEndpointManager::RemoveTransientLoopbackEndpoints(removalConfig))
         {
             std::cout << "Loopback endpoints removed." << std::endl;
         }

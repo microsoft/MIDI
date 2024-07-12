@@ -12,9 +12,9 @@ import "MidiLoopbackEndpointDefinition.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [default_interface]
-    runtimeclass MidiLoopbackEndpointDeletionConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    runtimeclass MidiLoopbackEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
-        MidiLoopbackEndpointDeletionConfig(Guid associationId);
+        MidiLoopbackEndpointRemovalConfig(Guid associationId);
 
         Guid AssociationId;
     }

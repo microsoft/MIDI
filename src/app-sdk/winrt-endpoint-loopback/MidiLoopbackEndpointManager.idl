@@ -9,7 +9,7 @@
 
 import "MidiLoopbackEndpointCreationResult.idl";
 import "MidiLoopbackEndpointCreationConfig.idl";
-import "MidiLoopbackEndpointDeletionConfig.idl";
+import "MidiLoopbackEndpointRemovalConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
@@ -24,7 +24,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
             MidiLoopbackEndpointCreationConfig creationConfig);
 
         static Boolean RemoveTransientLoopbackEndpoints(
-            MidiLoopbackEndpointDeletionConfig deletionConfig);
+            MidiLoopbackEndpointRemovalConfig removalConfig);
     }
 }
 

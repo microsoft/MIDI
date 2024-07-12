@@ -212,21 +212,21 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
 
                     RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateClientVisibleEndpoint(entry));
 
-                    TraceLoggingWrite(
-                        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                        __FUNCTION__,
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"After creating client visible endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), "Endpoint interface id"),
-                        TraceLoggingWideString(entry.BaseEndpointName.c_str(), "Base endpoint name"),
-                        TraceLoggingWideString(entry.CreatedClientEndpointId.c_str(), "Created Client Endpoint Id"),
-                        TraceLoggingWideString(entry.CreatedShortClientInstanceId.c_str(), "Created Short Client Instance Id"),
-                        TraceLoggingWideString(entry.CreatedDeviceEndpointId.c_str(), "Created Device Endpoint Id"),
-                        TraceLoggingWideString(entry.CreatedShortDeviceInstanceId.c_str(), "Created Short Device Instance Id"),
-                        TraceLoggingWideString(entry.ShortUniqueId.c_str(), "Short Unique Id"),
-                        TraceLoggingWideString(entry.VirtualEndpointAssociationId.c_str(), "Association Id")
-                    );
+                    //TraceLoggingWrite(
+                    //    MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                    //    __FUNCTION__,
+                    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    //    TraceLoggingPointer(this, "this"),
+                    //    TraceLoggingWideString(L"After creating client visible endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    //    TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), "Endpoint interface id"),
+                    //    TraceLoggingWideString(entry.BaseEndpointName.c_str(), "Base endpoint name"),
+                    //    TraceLoggingWideString(entry.CreatedClientEndpointId.c_str(), "Created Client Endpoint Id"),
+                    //    TraceLoggingWideString(entry.CreatedShortClientInstanceId.c_str(), "Created Short Client Instance Id"),
+                    //    TraceLoggingWideString(entry.CreatedDeviceEndpointId.c_str(), "Created Device Endpoint Id"),
+                    //    TraceLoggingWideString(entry.CreatedShortDeviceInstanceId.c_str(), "Created Short Device Instance Id"),
+                    //    TraceLoggingWideString(entry.ShortUniqueId.c_str(), "Short Unique Id"),
+                    //    TraceLoggingWideString(entry.VirtualEndpointAssociationId.c_str(), "Association Id")
+                    //);
 
                     m_endpoints[associationId] = entry;
 
@@ -255,6 +255,8 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
+
+                return E_FAIL;
             }
         }
         else
@@ -268,6 +270,8 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Association id property was blank", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
+
+            return E_FAIL;
         }
     }
     CATCH_RETURN();

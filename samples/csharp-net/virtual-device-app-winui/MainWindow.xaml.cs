@@ -113,6 +113,9 @@ namespace MidiSample.AppToAppMidi
                     return;
                 }
 
+                // necessary for the virtual device to participate in MIDI communication
+                _connection.AddMessageProcessingPlugin(_virtualDevice);
+
                 // wire up the stream configuration request received handler
                 _virtualDevice.StreamConfigRequestReceived += OnStreamConfigurationRequestReceived;
 

@@ -145,7 +145,7 @@
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
         <activatableClass
-            name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointDeletionConfig"
+            name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
         <activatableClass

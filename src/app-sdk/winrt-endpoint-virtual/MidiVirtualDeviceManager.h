@@ -21,6 +21,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         static const winrt::guid AbstractionId() noexcept { return internal::StringToGuid(L"{8FEAAD91-70E1-4A19-997A-377720A719C1}"); }
 
         static virt::MidiVirtualDevice CreateVirtualDevice(_In_ virt::MidiVirtualDeviceCreationConfig creationConfig) noexcept;
+        //static bool RemoveVirtualDevice(_In_ virt::MidiVirtualDeviceRemovalConfig removalConfig) noexcept;
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::factory_implementation
