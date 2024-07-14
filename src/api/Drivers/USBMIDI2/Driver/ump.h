@@ -92,7 +92,7 @@ Environment:
 #define UMP_MT_DATA_128     0x50
 #define UMP_MT_RESERVED_6   0x60 // 32bits reserved future
 #define UMP_MT_RESERVED_7   0x70 // 32bits reserved future
-#define UMP_MT_RESERVED_8   0x80 // 54bits reserved future
+#define UMP_MT_RESERVED_8   0x80 // 64bits reserved future
 #define UMP_MT_RESERVED_9   0x90 // 64bits reserved future
 #define UMP_MT_RESERVED_A   0xA0 // 64bits reserved future
 #define UMP_MT_RESERVED_B   0xB0 // 96bits reserved future
