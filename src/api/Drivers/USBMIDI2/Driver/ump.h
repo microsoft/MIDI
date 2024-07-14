@@ -83,15 +83,23 @@ Environment:
 // UMP Protocol definitions
 //--------------------------------------------------------------------+
 // Message Types
-#define UMP_MT_MASK       0xf0
-#define UMP_MT_UTILITY    0x00
-#define UMP_MT_SYSTEM     0x10
-#define UMP_MT_MIDI1_CV   0x20
-#define UMP_MT_DATA_64    0x30
-#define UMP_MT_MIDI2_CV   0x40
-#define UMP_MT_DATA_128   0x50
-#define UMP_MT_FLEX_128   0xd0
-#define UMP_MT_STREAM_128 0xf0
+#define UMP_MT_MASK         0xf0
+#define UMP_MT_UTILITY      0x00
+#define UMP_MT_SYSTEM       0x10
+#define UMP_MT_MIDI1_CV     0x20
+#define UMP_MT_DATA_64      0x30
+#define UMP_MT_MIDI2_CV     0x40
+#define UMP_MT_DATA_128     0x50
+#define UMP_MT_RESERVED_6   0x60 // 32bits reserved future
+#define UMP_MT_RESERVED_7   0x70 // 32bits reserved future
+#define UMP_MT_RESERVED_8   0x80 // 64bits reserved future
+#define UMP_MT_RESERVED_9   0x90 // 64bits reserved future
+#define UMP_MT_RESERVED_A   0xA0 // 64bits reserved future
+#define UMP_MT_RESERVED_B   0xB0 // 96bits reserved future
+#define UMP_MT_RESERVED_C   0xC0 // 96bits reserved future
+#define UMP_MT_FLEX_128     0xd0
+#define UMP_MT_RESERVED_E   0xE0 // 128bits reserved future
+#define UMP_MT_STREAM_128   0xf0
 
 // Group Number
 #define UMP_GROUP_MASK    0x0f
@@ -116,6 +124,7 @@ Environment:
 #define UMP_SYSTEM_START        0xfa  // status byte only
 #define UMP_SYSTEM_CONTINUE     0xfb  // status byte only
 #define UMP_SYSTEM_STOP         0xfc  // status byte only
+#define UMP_SYSTEM_UNDEFINED_FD 0xfd  // undefined
 #define UMP_SYSTEM_ACTIVE_SENSE 0xfe  // status byte only
 #define UMP_SYSTEM_RESET        0xff  // status byte only
 
