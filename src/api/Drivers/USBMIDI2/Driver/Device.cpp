@@ -2375,28 +2375,28 @@ Return Value:Amy
             case UMP_MT_UTILITY:
             case UMP_MT_SYSTEM:
             case UMP_MT_MIDI1_CV:
-            case 0x60: // undefined
-            case 0x70: // undefined
+            case UMP_MT_RESERVED_6:
+            case UMP_MT_RESERVED_7:
                 umpPacket.wordCount = 1;
                 break;
 
             case UMP_MT_DATA_64:
             case UMP_MT_MIDI2_CV:
-            case 0x80: // undefined
-            case 0x90: // undefined
-            case 0xa0: // undefined
+            case UMP_MT_RESERVED_8:
+            case UMP_MT_RESERVED_9:
+            case UMP_MT_RESERVED_A:
                 umpPacket.wordCount = 2;
                 break;
 
-            case 0xb0: // undefined
-            case 0xc0: // undefined
+            case UMP_MT_RESERVED_B:
+            case UMP_MT_RESERVED_C:
                 umpPacket.wordCount = 3;
                 break;
 
             case UMP_MT_DATA_128:
             case UMP_MT_FLEX_128:
             case UMP_MT_STREAM_128:
-            case 0xe0: // undefined
+            case UMP_MT_RESERVED_E:
                 umpPacket.wordCount = 4;
                 break;
 
@@ -2773,11 +2773,11 @@ Return Value:Amy
             if (pushUSBTransfer || !isMoreData)
             {
                 // Fill rest of buffer
-                while (pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32) < pDeviceContext->MidiOutMaxSize)
+/*                while (pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32) < pDeviceContext->MidiOutMaxSize)
                 {
                     pWriteMem[pDeviceContext->DeviceWriteBufferIndex++] = 0;
                 }
-
+*/
                 // Write to buffer
                 if (!USBMIDI2DriverSendToUSB(
                     pDeviceContext->DeviceUSBWriteRequest,
