@@ -18,8 +18,6 @@ using Windows.Devices.Enumeration;
 
 //using Microsoft.Midi.Settings.SdkMock;
 
-using Windows.Devices.Midi2;
-
 namespace Microsoft.Midi.Settings.ViewModels
 {
     public class DevicesViewModel : ObservableRecipient, INavigationAware
@@ -70,7 +68,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // pre-populate with transports
 
-                foreach (var transport in MidiService.GetInstalledTransportPlugins())
+                foreach (var transport in MidiReporting.GetInstalledTransportPlugins())
                 {
                     var t = new MidiEndpointDevicesByTransport(transport);
 
@@ -83,7 +81,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     // Get the transport
 
-                    var transportId = endpointDevice.TransportId;
+                    var transportId = endpointDevice.GetTransportSuppliedInfo().TransportId;
 
                     var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
 
@@ -105,7 +103,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     // TODO: this is a hack. Probably shouldn't be using the mnemonic directly
                     // Instead, need a transport properly for purpose like we have with endpoints
-                    if (item.Transport.Mnemonic == "DIAG")
+                    if (item.Transport.Abbreviation == "DIAG")
                     {
                         if (showDiagnosticsEndpoints)
                         {

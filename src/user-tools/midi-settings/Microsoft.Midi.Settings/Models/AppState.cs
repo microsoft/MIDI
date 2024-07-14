@@ -61,16 +61,16 @@ public class AppState
             ShutDownDeviceWatcher();
         }
 
-        var filter = MidiEndpointDeviceInformationFilters.AllTypicalEndpoints;
+        var filter = MidiEndpointDeviceInformationFilters.AllStandardEndpoints;
 
         if (includeAll)
         {
-            filter |= MidiEndpointDeviceInformationFilters.IncludeDiagnosticLoopback;
-            filter |= MidiEndpointDeviceInformationFilters.IncludeDiagnosticPing;
-            filter |= MidiEndpointDeviceInformationFilters.IncludeVirtualDeviceResponder;
+            filter |= MidiEndpointDeviceInformationFilters.DiagnosticLoopback;
+            filter |= MidiEndpointDeviceInformationFilters.DiagnosticPing;
+            filter |= MidiEndpointDeviceInformationFilters.VirtualDeviceResponder;
         }
 
-        _watcher = MidiEndpointDeviceWatcher.CreateWatcher(filter);
+        _watcher = MidiEndpointDeviceWatcher.Create(filter);
 
         _watcher.Stopped += OnDeviceWatcherStopped;
         //_watcher.Updated += OnDeviceWatcherEndpointUpdated;

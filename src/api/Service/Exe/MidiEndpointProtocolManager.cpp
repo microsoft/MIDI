@@ -53,7 +53,6 @@ CMidiEndpointProtocolManager::Initialize(
         MIDI_PROTOCOL_MANAGER_PROCESS_NAME,
         nullptr));
  
-
     return S_OK;
 }
 
@@ -64,11 +63,8 @@ HRESULT
 CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
     GUID AbstractionGuid,
     LPCWSTR DeviceInterfaceId,
-    BOOL PreferToSendJRTimestampsToEndpoint,
-    BOOL PreferToReceiveJRTimestampsFromEndpoint,
-    BYTE PreferredMidiProtocol,
-    WORD TimeoutMilliseconds,
-    PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
+    ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+    IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
 ) noexcept
 {
     TraceLoggingWrite(
@@ -77,17 +73,17 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(DeviceInterfaceId)
+        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    auto cleanDeviceInterfaceId = internal::NormalizeDeviceInstanceIdWStringCopy(DeviceInterfaceId);
+    auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(DeviceInterfaceId);
 
     std::shared_ptr<CMidiEndpointProtocolWorker> worker{ nullptr };
 
-    if (m_endpointWorkers.find(cleanDeviceInterfaceId) != m_endpointWorkers.end())
+    if (m_endpointWorkers.find(cleanEndpointDeviceInterfaceId) != m_endpointWorkers.end())
     {
         // already exists. We can re-request negotiation from the worker
-        worker = m_endpointWorkers[cleanDeviceInterfaceId];
+        worker = m_endpointWorkers[cleanEndpointDeviceInterfaceId].Worker;
     }
 
     if (worker == nullptr)
@@ -95,31 +91,50 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
         // allocate a new worker
         worker = std::make_shared<CMidiEndpointProtocolWorker>();
 
-        RETURN_IF_NULL_ALLOC(worker);
-        RETURN_IF_FAILED(worker->Initialize(
-            m_sessionId, 
-            AbstractionGuid, 
-            cleanDeviceInterfaceId.c_str(), 
-            m_clientManager, 
-            m_deviceManager, 
-            m_sessionTracker
-            )
-        );
+        if (worker)
+        {
+            auto initializeHR = worker->Initialize(
+                m_sessionId,
+                AbstractionGuid,
+                cleanEndpointDeviceInterfaceId.c_str(),
+                m_clientManager,
+                m_deviceManager,
+                m_sessionTracker
+            );
 
-        // add it to the map
-        m_endpointWorkers[cleanDeviceInterfaceId] = worker;
+            if (FAILED(initializeHR))
+            {
+                // TODO: Log
+
+                return E_FAIL;
+            }
+
+            // create the thread
+
+            ProtocolNegotiationWorkerThreadEntry newEntry{};
+
+            newEntry.Worker = worker;
+
+            newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
+                NegotiationParams,
+                NegotiationCompleteCallback);
+
+            // TODO: Need to protect this map
+            m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
+
+            m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();
+        }
+        else
+        {
+            // TODO: log failed allocation
+
+            return E_FAIL;
+        }
+
+
     }
 
     // now that we have the worker created, actually start the work. This function blocks for up to TimeoutMilliseconds.
-
-    RETURN_IF_FAILED(worker->NegotiateAndRequestMetadata(
-        PreferToSendJRTimestampsToEndpoint,
-        PreferToReceiveJRTimestampsFromEndpoint,
-        PreferredMidiProtocol,
-        TimeoutMilliseconds,
-        NegotiationResults
-        )
-    );
 
     return S_OK;
 }
@@ -133,15 +148,25 @@ CMidiEndpointProtocolManager::Cleanup()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     m_sessionTracker->RemoveClientSession(m_sessionId);
 
     for (auto& [key, val] : m_endpointWorkers)
     {
-        LOG_IF_FAILED(val->Cleanup());
-        val.reset();
+        val.Worker->EndProcessing();    // this sets an event that tells the thread to quit
+        
+        if (val.Thread->joinable())
+        {
+            val.Thread->join();             // join until the thread is done
+        }
+
+        LOG_IF_FAILED(val.Worker->Cleanup());  
+
+        val.Worker.reset();
+        val.Thread.reset();
     }
 
     m_endpointWorkers.clear();
@@ -149,6 +174,15 @@ CMidiEndpointProtocolManager::Cleanup()
     m_clientManager.reset();
     m_deviceManager.reset();
     m_sessionTracker.reset();
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }

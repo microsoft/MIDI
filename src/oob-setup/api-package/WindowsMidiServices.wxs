@@ -49,9 +49,9 @@
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="76dbd487-7646-4c4b-a5c7-fde28a2102c7"  >
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.MidiSrvAbstraction.dll"                  SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsAbstraction.dll"              SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAbstraction.dll"                       SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateAbstraction.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsAbstraction.dll"              SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.LoopbackMidiAbstraction.dll"             SelfRegCost="1" Vital="true" />
 
@@ -108,10 +108,6 @@
                         <RegistryValue Type="string" Name="CLSID" Value="{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" />
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
-
-
-                    
-
                 </RegistryKey>
             </RegistryKey>
         </Component>
@@ -144,6 +140,7 @@
             <ComponentRef Id="WindowsService"/>
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>
+            
             <ComponentRef Id="ConfigurationFile"/>
             <ComponentRef Id="ConfigurationRegistryEntries"/>
 

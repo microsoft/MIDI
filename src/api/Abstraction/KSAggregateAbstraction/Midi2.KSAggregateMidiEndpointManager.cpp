@@ -7,6 +7,7 @@
 // ============================================================================
 
 
+
 #include "pch.h"
 
 using namespace wil;
@@ -287,6 +288,37 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiBytestreamEndpoints(
 }
 
 
+
+
+// TODO: Currently, this process is set up to get alerted of new devices at the
+// filter level, which is normal. However, some MIDI devices, especially those
+// with custom drivers, present different filters solely for naming reasons. 
+// Those filters end up as different aggregate endpoints here, which is very 
+// messy. For example, the MOTU MIDI Express 128 presents one filter for each
+// numbered port pair, resulting 8 created MIDI BiDi Endpoint devices.
+// Others, like some Roland devices, end up as two different devices for a
+// management port and a user port, adding to confusion from users when they
+// go to select them. 
+//
+// So the logic needs to change to consider the whole set of filters at a 
+// parent device or container level. This could mean a ton of additional
+// alerts as the parent device can show up in any number of ways (composite
+// device, audio device etc.). Another option will be to capture the info
+// like it is now, but not create the aggregate device until we're sure
+// we have all the filters and all their pins accounted for first. This will
+// require some additional logic, but will result in fewer unnecessary 
+// device notifications being handled by this abstraction.
+//
+// Note that devices can dynamically create filters using KsCreateFilterFactory
+// which may complicate this, as there may be no defined upper bound to the
+// number of filters a device may expose.
+// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ks/ns-ks-_ksdevice_descriptor
+// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ks/ns-ks-_ksdevice
+// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ks/nf-ks-ksfiltergetdevice
+//
+// The ugly but functional approach may be to create the devices per-filter, but to 
+// keep track of previously created devices, and then update those devices with new
+// filters and pins in their pin maps as they are discovered.
 
 _Use_decl_annotations_
 HRESULT 

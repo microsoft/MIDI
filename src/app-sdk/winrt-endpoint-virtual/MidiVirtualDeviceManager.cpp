@@ -68,6 +68,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                     return *device;
                 }
             }
+            else
+            {
+                // couldn't parse the json
+            }
         }
         else
         {

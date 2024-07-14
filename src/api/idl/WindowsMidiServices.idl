@@ -299,10 +299,6 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in, annotation("_In_")] PVOID DevPropKeys
     );
 
-    //HRESULT DeleteAllEndpointInProtocolDiscoveredProperties(
-    //    [in] LPCWSTR DeviceInterfaceId
-    //);
-
     HRESULT DeactivateEndpoint(
         [in] LPCWSTR InstanceId
     );
@@ -322,6 +318,9 @@ interface IMidiDeviceManagerInterface : IUnknown
 
 
 };
+
+
+// Service (and Abstraction/Transform) Configuration ==================================================================
 
 
 [
@@ -396,6 +395,9 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 
 
 
+// Service Plugin Reporting ===============================================================================
+
+
 typedef struct
 {
     GUID Id;            // class Id
@@ -414,8 +416,6 @@ typedef struct
 
     BOOL IsSystemManaged;
     BOOL IsClientConfigurable;
-
-    BSTR ClientConfigurationAssemblyName;
 } ABSTRACTIONMETADATA, * PABSTRACTIONMETADATA;
 
 
@@ -437,8 +437,6 @@ typedef struct
 
     BOOL IsSystemManaged;
     BOOL IsClientConfigurable;
-
-    BSTR ClientConfigurationAssemblyName;
 } TRANSFORMMETADATA, * PTRANSFORMMETADATA;
 
 
@@ -494,19 +492,10 @@ interface IMidiServicePluginMetadataReporterInterface : IUnknown
 };
 
 
-//typedef struct
-//{
-//    GUID SessionId;
-//    DWORD ProcessId;
-//    BSTR ProcessName;
-//    BSTR SessionName;
-//} MIDI_SESSION_DETAIL, *PMIDI_SESSION_DETAIL;
-
-
+// Session Tracking / Reporting ===============================================================================
 
 // this is a bookkeeping class. It tracks only. It does
 // not own the lifetime of any of the items it tracks.
-// 
 [
     object,
     local,
@@ -543,6 +532,8 @@ interface IMidiSessionTracker : IUnknown
 
 
 
+// Endpoint Discovery and Protocol Negotiation ===============================================================================
+
 typedef struct
 {
     BYTE Number;
@@ -569,13 +560,37 @@ typedef struct
     LPCWSTR EndpointSuppliedName;
     LPCWSTR EndpointSuppliedProductInstanceId;
 
-    BYTE NumberOfFunctionBlocksDeclared;
-    BYTE NumberOfFunctionBlocksReceived;
+    BYTE CountFunctionBlocksDeclared;
+    BYTE CountFunctionBlocksReceived;
     BOOL FunctionBlocksAreStatic;
 
     PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;  // pointer to an array of discovered function blocks. 
 
 }  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
+
+
+typedef struct
+{
+    BOOL PreferToSendJRTimestampsToEndpoint;
+    BOOL PreferToReceiveJRTimestampsFromEndpoint;
+    BYTE PreferredMidiProtocol;
+    WORD TimeoutMilliseconds;
+} ENDPOINTPROTOCOLNEGOTIATIONPARAMS, *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
+
+[
+    object,
+        local,
+        uuid(f948dc64-e03a-4e24-bc6e-437ad729cd50),
+        pointer_default(unique)
+]
+interface IMidiProtocolNegotiationCompleteCallback : IUnknown
+{
+    HRESULT ProtocolNegotiationCompleteCallback(
+        [in] GUID AbstractionGuid,
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results
+    );
+};
 
 
 [
@@ -589,11 +604,8 @@ interface IMidiEndpointProtocolManagerInterface : IUnknown
     HRESULT NegotiateAndRequestMetadata(
         [in] GUID AbstractionGuid,
         [in] LPCWSTR DeviceInterfaceId,
-        [in] BOOL PreferToSendJRTimestampsToEndpoint,
-        [in] BOOL PreferToReceiveJRTimestampsFromEndpoint,
-        [in] BYTE PreferredMidiProtocol,
-        [in] WORD TimeoutMilliseconds,
-        [out, retval] PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
+        [in] ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+        [in] IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
     );
 
 

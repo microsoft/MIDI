@@ -8,6 +8,12 @@
 
 #pragma once
 
+struct ProtocolNegotiationWorkerThreadEntry
+{
+    std::shared_ptr<std::thread> Thread;
+    std::shared_ptr<CMidiEndpointProtocolWorker> Worker;
+};
+
 class CMidiEndpointProtocolManager : public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
     IMidiEndpointProtocolManagerInterface>
@@ -25,12 +31,10 @@ public:
     STDMETHOD(NegotiateAndRequestMetadata)(
         _In_ GUID AbstractionGuid,
         _In_ LPCWSTR DeviceInterfaceId,
-        _In_ BOOL PreferToSendJRTimestampsToEndpoint,
-        _In_ BOOL PreferToReceiveJRTimestampsFromEndpoint,
-        _In_ BYTE PreferredMidiProtocol,
-        _In_ WORD TimeoutMilliseconds,
-        _Out_ PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
+        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+        _In_ IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
         );
+
 
     HRESULT Cleanup();
 
@@ -41,5 +45,6 @@ private:
     std::shared_ptr<CMidiDeviceManager> m_deviceManager;
     std::shared_ptr<CMidiSessionTracker> m_sessionTracker;
 
-    std::map<std::wstring, std::shared_ptr<CMidiEndpointProtocolWorker>> m_endpointWorkers;
+    std::map<std::wstring, ProtocolNegotiationWorkerThreadEntry> m_endpointWorkers;
+
 };

@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This file should be named yourapp.exe.manifest -->
+
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+    <assemblyIdentity version="1.0.0.0" name="MyApplication.app"/>
+
+
+    <file name="Microsoft.Windows.Devices.Midi2.Initialization.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Initialization.IMidiServiceInitializerStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+    <file name="Microsoft.Windows.Devices.Midi2.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiChannel"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.IMidiChannelStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiGroup"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.IMidiGroupStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.IMidiClockStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceInformationStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceWatcherStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiFunctionBlock"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiMessage32"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiMessage64"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiMessage96"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiMessage128"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.IMidiSessionStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+    <file name="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.MidiUniqueId"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueIdStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+    <file name="Microsoft.Windows.Devices.Midi2.ClientPlugins.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.ClientPlugins.MidiChannelEndpointListener"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.ClientPlugins.MidiGroupEndpointListener"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.ClientPlugins.MidiMessageTypeEndpointListener"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+    <file name="Microsoft.Windows.Devices.Midi2.Diagnostics.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Diagnostics.IMidiDiagnosticsStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Diagnostics.IMidiReportingStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+    <file name="Microsoft.Windows.Devices.Midi2.Messages.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageBuilderStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageConverterStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageHelperStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Messages.IMidiStreamMessageBuilderStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+    <file name="Microsoft.Windows.Devices.Midi2.ServiceConfig.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+    <file name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointManagerStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+    <file name="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.MidiVirtualDeviceCreationConfig"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.IMidiVirtualDeviceManagerStatics"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
+
+
+</assembly>

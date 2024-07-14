@@ -48,7 +48,6 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 
         Guid AssociationId{ get; };
 
-
         Microsoft.Windows.Devices.Midi2.MidiDeclaredDeviceIdentity DeclaredDeviceIdentity;
         Microsoft.Windows.Devices.Midi2.MidiDeclaredEndpointInfo DeclaredEndpointInfo;
         Microsoft.Windows.Devices.Midi2.MidiEndpointUserSuppliedInfo UserSuppliedInfo;

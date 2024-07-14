@@ -22,23 +22,22 @@ public:
     STDMETHOD(Initialize)(
         _In_ GUID SessionId,
         _In_ GUID AbstractionGuid,
-        _In_ LPCWSTR DeviceInterfaceId,
+        _In_ LPCWSTR EndpointDeviceInterfaceId,
         _In_ std::shared_ptr<CMidiClientManager>& ClientManager,
         _In_ std::shared_ptr<CMidiDeviceManager>& DeviceManager,
         _In_ std::shared_ptr<CMidiSessionTracker>& SessionTracker
         );
 
-    STDMETHOD(NegotiateAndRequestMetadata)(
-        _In_ BOOL PreferToSendJRTimestampsToEndpoint,
-        _In_ BOOL PreferToReceiveJRTimestampsFromEndpoint,
-        _In_ BYTE PreferredMidiProtocol,
-        _In_ WORD TimeoutMilliseconds,
-        _Out_ PENDPOINTPROTOCOLNEGOTIATIONRESULTS* NegotiationResults
+    STDMETHOD(Start)(
+        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+        _In_ IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
         );
 
     STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context);
 
     STDMETHOD(Cleanup)();
+
+    void EndProcessing() { if (m_endProcessing.is_valid()) m_endProcessing.SetEvent(); }
 
 private:
     std::wstring m_deviceInterfaceId;
@@ -48,6 +47,7 @@ private:
 
     LONGLONG m_context{ 0 };
 
+    wil::unique_event_nothrow m_endProcessing;
     wil::unique_event_nothrow m_allNegotiationMessagesReceived;
     //wil::unique_event_nothrow m_queueWorkerThreadWakeup;
 
@@ -58,6 +58,8 @@ private:
     std::shared_ptr<CMidiClientManager> m_clientManager;
     std::shared_ptr<CMidiDeviceManager> m_deviceManager;
     std::shared_ptr<CMidiSessionTracker> m_sessionTracker;
+
+    wil::com_ptr_nothrow<IMidiProtocolNegotiationCompleteCallback> m_negotiationCompleteCallback{ nullptr };
 
     //MIDISRV_CLIENT m_midiClient{ };
 

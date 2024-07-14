@@ -537,7 +537,8 @@ int __cdecl main()
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_HEADER);
 
-    OutputCurrentTime();
+    // this fails on Windows 10
+//    OutputCurrentTime();
 
     try
     {
@@ -581,3 +582,4 @@ int __cdecl main()
 
     RETURN_SUCCESS;
 }
+

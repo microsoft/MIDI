@@ -33,7 +33,7 @@ CMidi2VirtualMidiPluginMetadataProvider::GetMetadata(
     internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_VERSION, &metadata->Version);
 
     metadata->SmallImagePath = NULL;                        // TODO
-    metadata->ClientConfigurationAssemblyName = NULL;       // TODO
+//    metadata->ClientConfigurationAssemblyName = NULL;       // TODO
 
     metadata->IsRuntimeCreatableByApps = true;
     metadata->IsRuntimeCreatableBySettings = false;

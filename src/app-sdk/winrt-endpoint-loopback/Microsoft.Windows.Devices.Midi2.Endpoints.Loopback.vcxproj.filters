@@ -20,7 +20,7 @@
     <Midl Include="MidiLoopbackEndpointCreationConfig.idl">
       <Filter>SDK\Configuration</Filter>
     </Midl>
-    <Midl Include="MidiLoopbackEndpointDeletionConfig.idl">
+    <Midl Include="MidiLoopbackEndpointRemovalConfig.idl">
       <Filter>SDK\Configuration</Filter>
     </Midl>
     <Midl Include="MidiLoopbackEndpointManager.idl">

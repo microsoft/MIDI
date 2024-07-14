@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Support">
+      <UniqueIdentifier>{e1c991ae-4355-4c49-acde-242d0ae28638}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{00ce2739-d0b9-4957-b5e2-f355369fa098}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{6a1da353-e4dc-41c9-8d67-9a38a5573360}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointConnectionBufferTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointConnectionTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointCreationThreadTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceWatcherTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointListenerTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackEndpointTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiMessageSchedulerTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiInitializationTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSessionTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualDeviceTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Module.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnectionBufferTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointConnectionTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointCreationThreadTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceWatcherTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointListenerTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiLoopbackEndpointTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiMessageSchedulerTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiInitializationTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiSessionTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Midi2ClientTests.rc">
+      <Filter>Support</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="te.exe.manifest" />
+  </ItemGroup>
+</Project>

@@ -22,7 +22,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
         static MidiVirtualDevice CreateVirtualDevice(
             MidiVirtualDeviceCreationConfig creationConfig);
 
-        //static Boolean RemoveTransientLoopbackEndpoints(
-        //    MidiLoopbackEndpointDeletionConfiguration deletionConfiguration);
+        //static Boolean RemoveVirtualDevice(
+        //    MidiVirtualDeviceRemovalConfig removalConfig);
     }
 }

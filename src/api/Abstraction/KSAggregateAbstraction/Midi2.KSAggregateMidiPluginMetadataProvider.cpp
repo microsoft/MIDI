@@ -36,7 +36,7 @@ CMidi2KSAggregateMidiPluginMetadataProvider::GetMetadata(
     internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_VERSION, &metadata->Version);
 
     metadata->SmallImagePath = NULL;   // TODO
-    metadata->ClientConfigurationAssemblyName = NULL;    // No assembly
+//    metadata->ClientConfigurationAssemblyName = NULL;    // No assembly
 
 
     metadata->IsRuntimeCreatableByApps = false;

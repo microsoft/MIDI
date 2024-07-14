@@ -31,13 +31,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="PropertySheet.props" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Manifest Include="mididiag.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

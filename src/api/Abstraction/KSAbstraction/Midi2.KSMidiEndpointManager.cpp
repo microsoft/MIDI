@@ -861,34 +861,21 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 // Required MIDI 2.0 Protocol step
                 // Invoke the protocol negotiator to now capture updated endpoint info.
 
-                bool preferToSendJRToEndpoint{ false };
-                bool preferToReceiveJRFromEndpoint{ false };
-                BYTE preferredProtocol{ MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2 };
-                WORD negotiationTimeoutMilliseconds{ 5000 };
+                ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
 
-                // this pointer will be allocated and set in the negotiate method
-                PENDPOINTPROTOCOLNEGOTIATIONRESULTS negotiationResults;
+                negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
+                negotiationParams.PreferToSendJRTimestampsToEndpoint = false;
+                negotiationParams.PreferToReceiveJRTimestampsFromEndpoint = false;
+                negotiationParams.TimeoutMilliseconds = 5000;
 
                 LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
                     __uuidof(Midi2KSAbstraction),
                     newDeviceInterfaceId,
-                    preferToSendJRToEndpoint,
-                    preferToReceiveJRFromEndpoint,
-                    preferredProtocol,
-                    negotiationTimeoutMilliseconds,
-                    &negotiationResults
+                    negotiationParams,
+                    nullptr                 // TODO: Provide callback
                 ));
 
 
-                if (negotiationResults != nullptr)
-                {
-                    // TODO: The negotiationResults structure contains the function blocks which 
-                    // should be used to create MIDI 1.0 legacy ports for this MIDI 2.0 device.
-
-                    
-
-
-                }
             }
 
         }
