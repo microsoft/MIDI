@@ -3,13 +3,13 @@
   "spdxVersion": "SPDX-2.2",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-x64-windows-0.10-62052a6a-380d-4eb7-bfce-8afec14506c1",
-  "name": "libmidi2:x64-windows@0.10 7e27954df97c283b373ea004c663c781ed7c59ab81b57f1134b13b74e57d328d",
+  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-x64-windows-0.10-d012b531-d851-488f-bdc1-1f01cfc289a4",
+  "name": "libmidi2:x64-windows@0.10 5f629e21d804b3a5a19c282ddacfb4d605942d79324410f3921902e12f1dc9c7",
   "creationInfo": {
     "creators": [
-      "Tool: vcpkg-7d353e869753e5609a1f1a057df3db8fd356e49d"
+      "Tool: vcpkg-d6945642ee5c3076addd1a42c331bbf4cfc97457"
     ],
-    "created": "2024-05-18T20:00:42Z"
+    "created": "2024-07-18T20:31:49Z"
   },
   "relationships": [
     {
@@ -59,7 +59,7 @@
     {
       "name": "libmidi2:x64-windows",
       "SPDXID": "SPDXRef-binary",
-      "versionInfo": "7e27954df97c283b373ea004c663c781ed7c59ab81b57f1134b13b74e57d328d",
+      "versionInfo": "5f629e21d804b3a5a19c282ddacfb4d605942d79324410f3921902e12f1dc9c7",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "NOASSERTION",
@@ -83,7 +83,7 @@
   ],
   "files": [
     {
-      "fileName": "./C:/Users/pmbrown/AppData/Local/vcpkg/registries/git-trees/3a8e774a8ec628d02f193004a97f2b6b3b331825/portfile.cmake",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/3a8e774a8ec628d02f193004a97f2b6b3b331825/portfile.cmake",
       "SPDXID": "SPDXRef-file-0",
       "checksums": [
         {
@@ -95,7 +95,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/pmbrown/AppData/Local/vcpkg/registries/git-trees/3a8e774a8ec628d02f193004a97f2b6b3b331825/vcpkg.json",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/3a8e774a8ec628d02f193004a97f2b6b3b331825/vcpkg.json",
       "SPDXID": "SPDXRef-file-1",
       "checksums": [
         {
