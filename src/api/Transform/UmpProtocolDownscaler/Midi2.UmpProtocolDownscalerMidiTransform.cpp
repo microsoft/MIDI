@@ -48,7 +48,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
     return S_OK;
 }
 
-// #define USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
+#define USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
 
 #ifndef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
 
@@ -59,15 +59,15 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
 
 #endif
 
-// TEMP due to missing libmidi2 function impl
-void umpToMIDI1Protocol::increaseWrite()
-{
-    bufferLength++;
-    writeIndex++;
-    if (writeIndex == UMPTOPROTO1_BUFFER) {
-        writeIndex = 0;
-    }
-}
+//// TEMP due to missing libmidi2 function impl
+//void umpToMIDI1Protocol::increaseWrite()
+//{
+//    bufferLength++;
+//    writeIndex++;
+//    if (writeIndex == UMPTOPROTO1_BUFFER) {
+//        writeIndex = 0;
+//    }
+//}
 
 _Use_decl_annotations_
 HRESULT
