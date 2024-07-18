@@ -10,16 +10,16 @@ using System.ServiceProcess;
 
 namespace Microsoft.Midi.ConsoleApp
 {
-    // commands to check the health of Windows MIDI Services on this PC
-    // will check for MIDI services
-    // will attempt a loopback test
-
 
     internal class ServiceStartCommand : Command<ServiceStartCommand.Settings>
     {
         public sealed class Settings : CommandSettings
         {
         }
+
+
+        // this does a forced start of the service using SCM. It doesn't do a triggered start
+        // like the SDK Initializer does
 
         public override int Execute(CommandContext context, Settings settings)
         {
