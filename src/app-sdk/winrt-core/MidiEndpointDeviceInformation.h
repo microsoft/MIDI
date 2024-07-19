@@ -31,8 +31,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
-        static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
-            _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
+        //static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
+        //    _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         static bool DeviceMatchesFilter(
             _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
