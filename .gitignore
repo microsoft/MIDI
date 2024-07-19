@@ -4,14 +4,13 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # binaries for staging builds
-build/staging/app-sdk/*
-build/dependencies/*.exe
-build/dependencies/*.msi
-
-
-# annoying that these solution-level nuget restores create folders at the root and not /packages
-/src/user-tools/midi-console/Microsoft.Windows.Devices.Midi2.*/*
-/samples/cpp-winrt/Microsoft.Windows.Devices.Midi2.*/*
+/build/**/*.dll
+/build/**/*.exe
+/build/**/*.winmd
+/build/**/*.msi
+/build/**/*.msix
+/build/**/*.zip
+/build/**/*.nupkg
 
 # Dump files
 *.etl
@@ -216,7 +215,7 @@ PublishScripts/
 *.nuget.targets
 
 #Vcpkg directories
-vcpkg_installed/
+**/vcpkg_installed/**
 
 # Microsoft Azure Build Output
 csx/
