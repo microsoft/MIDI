@@ -150,6 +150,8 @@ CMidiEndpointProtocolWorker::Start(
     );
 
 
+    m_initialNegotiation = true;
+
     m_negotiationCompleteCallback = NegotiationCompleteCallback;
 
     m_preferToSendJRTimestampsToEndpoint = NegotiationParams.PreferToSendJRTimestampsToEndpoint;
@@ -201,16 +203,11 @@ CMidiEndpointProtocolWorker::Start(
         //    m_deviceInterfaceId.c_str(),
         //    (MidiClientHandle)nullptr));
 
-        if (!m_allNegotiationMessagesReceived)
+        if (m_initialNegotiation && !m_allNegotiationMessagesReceived)
         {
             RETURN_IF_FAILED(m_allNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
         }
 
-
-        // TODO: For now, we're keeping the initial negotiation all in-line, in the same thread.
-        // will evaluate a separate worker thread after the implementation is tested and working.
-
-        // The lifetime of this object (CMidiEndpointProtocolWorker instance for the SWD) is controlled by the CMidiEndpointProtocolManager.
 
         // reset all the data collection fields in case negotiation was
         // called more than once (an allowed scenario)
@@ -445,13 +442,12 @@ CMidiEndpointProtocolWorker::Start(
 
         }
 
+        m_initialNegotiation = false;
 
         // we just hang out until endProcessing is set
         // TODO: This won't allow calling negotiation a second time, so need to think about that
 
         m_endProcessing.wait();
-
-
 
         return S_OK;
     }
@@ -491,11 +487,13 @@ CMidiEndpointProtocolWorker::Callback(
                     m_countFunctionBlocksReceived == m_declaredFunctionBlockCount &&
                     m_taskFinalStreamNegotiationResponseReceived)
                 {
-                    if (m_allNegotiationMessagesReceived.is_valid() && !m_allNegotiationMessagesReceived.is_signaled())
+                    if (m_initialNegotiation && m_allNegotiationMessagesReceived.is_valid() && !m_allNegotiationMessagesReceived.is_signaled())
                     {
                         // we're done with negotiation, and can return from the initial function. Code will continue to
                         // capture new metadata when messages signal change, but the initial steps have completed.
                         m_allNegotiationMessagesReceived.SetEvent();
+
+                        m_initialNegotiation = false;
                     }
                 }
             }

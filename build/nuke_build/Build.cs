@@ -33,8 +33,8 @@ class Build : NukeBuild
     //readonly GitVersion MasterBuildVersion;
 
 
-    string SetupVersionName => "Developer Preview 6";
-    string NuGetVersionName => "preview.6";
+    string SetupVersionName => "Developer Preview 7";
+    string NuGetVersionName => "preview.7";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
     string SetupBuildMajorMinor = "1.0";

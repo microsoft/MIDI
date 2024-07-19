@@ -8,6 +8,7 @@
 
 #pragma once
 
+
 struct ProtocolNegotiationWorkerThreadEntry
 {
     std::shared_ptr<std::thread> Thread;
@@ -46,5 +47,21 @@ private:
     std::shared_ptr<CMidiSessionTracker> m_sessionTracker;
 
     std::map<std::wstring, ProtocolNegotiationWorkerThreadEntry> m_endpointWorkers;
+
+    HRESULT RemoveWorkerIfPresent(_In_ std::wstring endpointInterfaceId);
+
+    winrt::Windows::Devices::Enumeration::DeviceWatcher m_watcher{ nullptr };
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<winrt::Windows::Devices::Enumeration::IDeviceWatcher>::Added_revoker m_DeviceAdded;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<winrt::Windows::Devices::Enumeration::IDeviceWatcher>::Removed_revoker m_DeviceRemoved;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<winrt::Windows::Devices::Enumeration::IDeviceWatcher>::Updated_revoker m_DeviceUpdated;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<winrt::Windows::Devices::Enumeration::IDeviceWatcher>::Stopped_revoker m_DeviceStopped;
+    winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<winrt::Windows::Devices::Enumeration::IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
+
+    HRESULT OnDeviceAdded(_In_ winrt::Windows::Devices::Enumeration::DeviceWatcher, _In_ winrt::Windows::Devices::Enumeration::DeviceInformation);
+    HRESULT OnDeviceRemoved(_In_ winrt::Windows::Devices::Enumeration::DeviceWatcher, _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate);
+    HRESULT OnDeviceUpdated(_In_ winrt::Windows::Devices::Enumeration::DeviceWatcher, _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate);
+    HRESULT OnDeviceStopped(_In_ winrt::Windows::Devices::Enumeration::DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
+    HRESULT OnEnumerationCompleted(_In_ winrt::Windows::Devices::Enumeration::DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
+
 
 };

@@ -24,17 +24,16 @@ struct MidiSessionConnectionEntry
 
 struct MidiSessionEntry
 {
-    GUID SessionId;
-    DWORD ClientProcessId;
+    GUID SessionId{ };
+    DWORD ClientProcessId{ };
     //SYSTEMTIME StartTime;   // use GetSystemTime to generate
-    std::chrono::time_point<std::chrono::system_clock> StartTime;
+    std::chrono::time_point<std::chrono::system_clock> StartTime{ };
 
     std::wstring ProcessName;
     std::wstring SessionName;
 
     std::map<std::wstring, MidiSessionConnectionEntry> Connections;
     std::vector<MidiClientHandle> ClientHandles;
-
 };
 
 
@@ -59,7 +58,7 @@ public:
 
     // These are called from within the service
     STDMETHOD(IsValidSession)(_In_ GUID SessionId, _In_ DWORD ClientProcessId);
-    STDMETHOD(AddClientSessionInternal)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName, _Out_ PVOID* ContextHandle);
+    STDMETHOD(AddClientSessionInternal)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ LPCWSTR ClientProcessName, _Out_opt_ PVOID* ContextHandle);
     STDMETHOD(AddClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId, _In_ MidiClientHandle ClientHandle);
     STDMETHOD(RemoveClientEndpointConnection)(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId, _In_ MidiClientHandle ClientHandle);
 
