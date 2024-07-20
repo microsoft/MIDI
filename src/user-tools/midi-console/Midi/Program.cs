@@ -42,6 +42,7 @@ app.Configure(config =>
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
             .WithExample("enumerate", "midi-services-endpoints", "--include-loopback")
             .WithExample("enumerate", "endpoints")
+            .WithExample("list", "endpoints")
             .WithExample("enum", "ep")
             ;
 
@@ -52,6 +53,7 @@ app.Configure(config =>
             .WithDescription(Strings.CommandEnumerateLegacyEndpointsDescription)
             .WithExample("enumerate", "legacy-winrt-api-endpoints", "--direction", "all")
             .WithExample("enumerate", "legacy", "--direction", "all")
+            .WithExample("list", "legacy-endpoints")
             ;
 
         enumerate.AddCommand<EnumActiveSessionsCommand>("active-sessions")
