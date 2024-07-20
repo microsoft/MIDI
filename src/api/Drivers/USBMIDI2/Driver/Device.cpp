@@ -2103,16 +2103,16 @@ Return Value:
 
         while (receivedIndex < receivedNumWords)
         {
-            // Do not need to process any NULL data (NOOP in UMP)
-            if (!pReceivedWords[receivedIndex])
-            {
-                receivedIndex++;
-                continue;
-            }
-
             // If indicating USB MIDI 1.0
             if (pDeviceContext->UsbMIDIbcdMSC == MIDI_CS_BCD_MIDI1)
             {
+                // Do not need to process any NULL data (NOOP in UMP)
+                if (!pReceivedWords[receivedIndex])
+                {
+                    receivedIndex++;
+                    continue;
+                }
+
                 // Need Cable Number
                 PUINT8 pBuffer = (PUINT8)&pReceivedWords[receivedIndex];
                 UINT8 cbl_num = (pBuffer[0] & 0xf0) >> 4;
@@ -2550,7 +2550,7 @@ Return Value:Amy
                 // How many bytes available in BS
                 numberBytes = (pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head > pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail)
                     ? pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head - pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail
-                    : (SYSEX_BS_RB_SIZE - pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head) + pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail;
+                    : (SYSEX_BS_RB_SIZE - pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Tail) + pDeviceContext->midi1OutSysex[cbl_num].usbMIDI1Head;
 
                 while (numberBytes && umpWritePacket.wordCount < 4)
                 {
