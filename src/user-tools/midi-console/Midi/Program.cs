@@ -35,25 +35,30 @@ app.Configure(config =>
     {
         enumerate.SetDescription(Strings.CommandEnumerateDescription);
 
-        enumerate.AddCommand<EnumEndpointsCommand>("ump-endpoints")
-            .WithAlias("ump")
+        enumerate.AddCommand<EnumEndpointsCommand>("midi-services-endpoints")
             .WithAlias("endpoints")
+            .WithAlias("ump-endpoints")
+            .WithAlias("ep")
             .WithDescription(Strings.CommandEnumerateEndpointsDescription)
-            .WithExample("enumerate", "ump-endpoints", "--include-loopback")
-            .WithExample("enum", "ump")
+            .WithExample("enumerate", "midi-services-endpoints", "--include-loopback")
+            .WithExample("enumerate", "endpoints")
+            .WithExample("enum", "ep")
             ;
 
-        enumerate.AddCommand<EnumLegacyEndpointsCommand>("bytestream-endpoints")
+        enumerate.AddCommand<EnumLegacyEndpointsCommand>("legacy-winrt-api-endpoints")
             .WithAlias("legacy-endpoints")
+            .WithAlias("bytestream-endpoints")
             .WithAlias("legacy")
             .WithDescription(Strings.CommandEnumerateLegacyEndpointsDescription)
-            .WithExample("enumerate", "bytestream-endpoints", "--direction", "all")
+            .WithExample("enumerate", "legacy-winrt-api-endpoints", "--direction", "all")
+            .WithExample("enumerate", "legacy", "--direction", "all")
             ;
 
         enumerate.AddCommand<EnumActiveSessionsCommand>("active-sessions")
             .WithAlias("sessions")
             .WithDescription(Strings.CommandEnumerateActiveSessionsDescription)
             .WithExample("enumerate", "active-sessions")
+            .WithExample("enumerate", "sessions")
             ;
 
         enumerate.AddCommand<EnumTransportsCommand>("transport-plugins")
@@ -121,7 +126,9 @@ app.Configure(config =>
                 .WithDescription(Strings.CommandEndpointRequestFunctionBlocksDescription)
                 ;
 
-            request.AddCommand<EndpointRequestEndpointMetadataCommand>("endpoint-metadata")
+            request.AddCommand<EndpointRequestEndpointMetadataCommand>("endpoint-info")
+                .WithAlias("endpoint-metadata")
+                .WithAlias("endpoint-data")
                 .WithAlias("em")
                 .WithAlias("metadata")
                 .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "endpoint-metadata", "--all")
@@ -132,8 +139,6 @@ app.Configure(config =>
 
     }).WithAlias("ep");
      
-
-
 
     config.AddBranch("service", service =>
     {
@@ -178,26 +183,6 @@ app.Configure(config =>
         .WithExample("watch-endpoints")
         .WithAlias("watch")
         ;
-
-
-    /*
-    config.AddBranch<CacheCommandSettings>("cache", cache =>
-    {
-        // todo: commands to work with the global cache and the endpoint cache
-        // including ways to flush all cache items for a single endpoint, 
-        // way to set the value of the data for an endpoint property
-        // and then the same for global
-        // cache endpoint <endpoint id> flush
-        // cache endpoint <endpoint id> list|enumerate
-        // cache endpoint <endpoint id> set <property> <value>
-        // cache endpoint <endpoint id> set-from-file <property> <filename>
-        // TBD: provide a way to do the same for *all* endpoints in the cache?
-        // cache global flush
-        // cache global list|enumerate
-        // cache global set <property> <value>
-        // cache global set-from-file <property> <filename>
-    });
-    */
 
     /*
     config.AddBranch<SimulateCommandSettings>("simulate", cache =>
