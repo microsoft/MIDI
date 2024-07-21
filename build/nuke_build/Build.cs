@@ -166,6 +166,7 @@ class Build : NukeBuild
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.KSAggregateAbstraction.dll");
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.VirtualMidiAbstraction.dll");
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.LoopbackMidiAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.VirtualPatchBayAbstraction.dll");
 
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.BS2UMPTransform.dll");
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.UMP2BSTransform.dll");
