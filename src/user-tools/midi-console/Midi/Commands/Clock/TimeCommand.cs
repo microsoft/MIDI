@@ -46,7 +46,7 @@ namespace Microsoft.Midi.ConsoleApp
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine($"➡️ 1 microsecond: {AnsiMarkupFormatter.FormatTimestamp(MidiClock.OffsetTimestampByMicroseconds(0, 1))} ticks");
             AnsiConsole.MarkupLine($"➡️ 1 millisecond: {AnsiMarkupFormatter.FormatTimestamp(MidiClock.OffsetTimestampByMilliseconds(0, 1))} ticks");
-            AnsiConsole.MarkupLine($"➡️ 1 second:       {AnsiMarkupFormatter.FormatTimestamp(MidiClock.OffsetTimestampByMilliseconds(0, 1000))} ticks");
+            AnsiConsole.MarkupLine($"➡️ 1 second:      {AnsiMarkupFormatter.FormatTimestamp(MidiClock.OffsetTimestampByMilliseconds(0, 1000))} ticks");
             AnsiConsole.WriteLine();
 
             var now = MidiClock.Now;
