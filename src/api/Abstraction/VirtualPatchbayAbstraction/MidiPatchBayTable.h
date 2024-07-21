@@ -8,10 +8,6 @@
 
 #pragma once
 
-//#include "MidiVirtualDevice.h"
-
-
-
 
 // thread-safe meyers singleton for storing the devices we'll use
 
@@ -26,7 +22,7 @@ public:
     MidiPatchBayTable& operator=(_In_ const MidiPatchBayTable&) = delete;
 
 
-    MidiVirtualPatchBayEntry* GetEntryForId(_In_ std::wstring const associationId) const noexcept;
+    CMidi2VirtualPatchBayRoutingEntry* GetEntryForId(_In_ std::wstring const associationId) const noexcept;
     void RemoveEntry(_In_ std::wstring const associationId) noexcept;
 
 private:
@@ -34,5 +30,5 @@ private:
     ~MidiPatchBayTable();
 
     // key is the association Id
-    std::map<std::wstring, MidiVirtualPatchBayEntry> m_patchBayEntries;
+    std::map<std::wstring, CMidi2VirtualPatchBayRoutingEntry> m_patchBayEntries;
 };

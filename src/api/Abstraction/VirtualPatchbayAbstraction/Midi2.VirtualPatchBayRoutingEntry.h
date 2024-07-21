@@ -11,7 +11,7 @@
 
 
 
-class CMidiVirtualPatchBayRoutingEntry :
+class CMidi2VirtualPatchBayRoutingEntry :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
     IMidiCallback>
@@ -29,22 +29,14 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
-    std::wstring associationId;
+    std::wstring m_associationId;
 
-    std::wstring Name;
-    std::wstring Description;
+    std::wstring m_name;
+    std::wstring m_description;
 
-    bool FullyResolved{ false };    // true if we've been able to resolve all the devices in here
-
-    VirtualPatchBayRouter m_router{ };
+    bool m_fullyResolved{ false };    // true if we've been able to resolve all the devices in here
 
     std::vector<CMidi2VirtualPatchBayRoutingSource> m_messageSources;
     std::vector<CMidi2VirtualPatchBayRoutingDestination> m_messageDestinations;
 
-
-    //~CMidiVirtualPatchBayRoutingEntry()
-    //{
-    //    MessageSources.clear();
-    //    MessageDestinations.clear();
-    //}
 };

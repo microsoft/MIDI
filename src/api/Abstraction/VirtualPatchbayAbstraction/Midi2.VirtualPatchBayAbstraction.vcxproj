@@ -280,6 +280,9 @@
     <ClCompile Include="Midi2.VirtualPatchBayConfigurationManager.cpp" />
     <ClCompile Include="Midi2.VirtualPatchBayEndpointManager.cpp" />
     <ClCompile Include="Midi2.VirtualPatchBayPluginMetadataProvider.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingDestination.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingEntry.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingSource.cpp" />
     <ClCompile Include="MidiPatchBayTable.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>

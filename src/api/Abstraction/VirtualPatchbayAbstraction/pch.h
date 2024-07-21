@@ -93,7 +93,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 class CMidi2VirtualPatchBayEndpointManager;
 class AbstractionState;
-class CMidi2VirtualPatchBaySourceEntry;
+class CMidi2VirtualPatchBayRoutingSource;
+class CMidi2VirtualPatchBayRoutingDestination;
+class CMidi2VirtualPatchBayRoutingEntry;
 
 #include "MidiPatchBayTable.h"
 
@@ -102,9 +104,9 @@ class CMidi2VirtualPatchBaySourceEntry;
 #include "Midi2.VirtualPatchBayConfigurationManager.h"
 #include "Midi2.VirtualPatchBayPluginMetadataProvider.h"
 
+#include "Midi2.VirtualPatchBayRoutingEntry.h"
 #include "Midi2.VirtualPatchBayRoutingSource.h"
 #include "Midi2.VirtualPatchBayRoutingDestination.h"
-#include "Midi2.VirtualPatchBayRoutingEntry.h"
 
 
 #include "AbstractionState.h"

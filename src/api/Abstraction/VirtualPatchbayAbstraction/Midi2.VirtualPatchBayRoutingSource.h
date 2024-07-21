@@ -16,12 +16,12 @@ class CMidi2VirtualPatchBayRoutingSource :
     IMidiCallback>
 {
 public:
-    STDMETHOD(Initialize)(_In_ LPCWSTR endpointMatchJson);
+    STDMETHOD(Initialize)(_In_ LPCWSTR endpointMatchJson, _In_ CMidi2VirtualPatchBayRoutingEntry* router);
 
     STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT length, _In_ LONGLONG position, _In_ LONGLONG context);
 
     STDMETHOD(AddIncludedGroups)(_In_ std::vector<uint8_t> groupIndexes);
-    STDMETHOD(SetEndpointBiDi)(_In_ LPCWSTR resolvedEndpointDeviceInterfaceId, _In_ IMidiBiDi* sourceEndpointBiDi);
+    STDMETHOD(SetEndpointCallback)(_In_ LPCWSTR resolvedEndpointDeviceInterfaceId, _In_ IMidiCallback* sourceEndpointCallback);
 
     STDMETHOD(Cleanup)();
 

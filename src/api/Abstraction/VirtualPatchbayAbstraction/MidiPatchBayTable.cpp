@@ -23,14 +23,14 @@ MidiPatchBayTable& MidiPatchBayTable::Current()
 
 
 _Use_decl_annotations_
-MidiVirtualPatchBayEntry* MidiPatchBayTable::GetEntryForId(std::wstring const associationId) const noexcept
+CMidi2VirtualPatchBayRoutingEntry* MidiPatchBayTable::GetEntryForId(std::wstring const associationId) const noexcept
 {
     try
     {
         auto result = m_patchBayEntries.find(associationId);
 
         if (result != m_patchBayEntries.end())
-            return (MidiVirtualPatchBayEntry*)(&(result->second));
+            return (CMidi2VirtualPatchBayRoutingEntry*)(&(result->second));
         else
             return nullptr;
     }
