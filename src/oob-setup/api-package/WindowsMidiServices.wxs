@@ -54,6 +54,7 @@
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsAbstraction.dll"              SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.LoopbackMidiAbstraction.dll"             SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" />
 
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BS2UMPTransform.dll"                     SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
@@ -108,6 +109,12 @@
                         <RegistryValue Type="string" Name="CLSID" Value="{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" />
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
+
+                    <RegistryKey Key="Midi2VirtualPatchBayAbstraction">
+                        <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    </RegistryKey>
+
                 </RegistryKey>
             </RegistryKey>
         </Component>
