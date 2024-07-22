@@ -126,42 +126,78 @@ CMidi2VirtualPatchBayConfigurationManager::UpdateConfiguration(
     // Once complete, signal that we're ready for devices to be resolved
 
 
+    if (!json::JsonObject::TryParse(winrt::to_hstring(ConfigurationJsonSection), jsonObject))
+    {
+        LOG_IF_FAILED(E_FAIL);  // cause fallbackerror to be logged
+
+        TraceLoggingWrite(
+            MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(ConfigurationJsonSection, "json")
+        );
+
+        return E_FAIL;
+    }
+
+    auto createArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
+
+    if (createArray == nullptr || createArray.Size() == 0)
+    {
+        // nothing in the array. Maybe we're looking at update or delete 
+
+        // TODO: Set the response to something meaningful here
+
+        return S_OK;
+    }
+
+    // iterate through all the work we need to do. Just 
+    // "create" instructions, in this case.
+    for (uint32_t i = 0; i < createArray.Size(); i++)
+    {
+        auto jsonEntry = (createArray.GetObjectAt(i));
+
+        if (jsonEntry)
+        {
 
 
-    //if (!json::JsonObject::TryParse(winrt::to_hstring(ConfigurationJsonSection), jsonObject))
-    //{
-    //    TraceLoggingWrite(
-    //        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-    //        MIDI_TRACE_EVENT_ERROR,
-    //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-    //        TraceLoggingPointer(this, "this"),
-    //        TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-    //        TraceLoggingWideString(ConfigurationJsonSection, "json")
-    //    );
 
-    //    return E_FAIL;
-    //}
 
-    //auto createArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
 
-    //if (createArray == nullptr || createArray.Size() == 0)
-    //{
-    //    // nothing in the array. Maybe we're looking at update or delete 
 
-    //    // TODO: Set the response to something meaningful here
+            // create the entry
 
-    //    return S_OK;
-    //}
+        //    CMidi2VirtualPatchBayRoutingEntry entry;
 
-    //// iterate through all the work we need to do. Just 
-    //// "create" instructions, in this case.
-    //for (uint32_t i = 0; i < createArray.Size(); i++)
-    //{
-    //    auto jsonEntry = (createArray.GetObjectAt(i));
+      //      entry.Initialize(associationId, name, description);
 
-    //    if (jsonEntry)
-    //    {
+
+            // add each source
+
+            //entry.AddSource();
+            
+             
+
+            // add each destination 
+            
+            //entry.AddDestination();
+
+
+
+            // Add the entry to the patch bay table
+
+            //MidiPatchBayTable::Current().
+
+
+
+
+
+
+
+
     //        MidiVirtualDeviceEndpointEntry deviceEntry;
 
     //        deviceEntry.VirtualEndpointAssociationId = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY, L"");
@@ -210,8 +246,8 @@ CMidi2VirtualPatchBayConfigurationManager::UpdateConfiguration(
     //            deviceEntry.CreatedDeviceEndpointId);
 
     //        createdDevicesResponseArray.Append(singleResponse);
-    //    }
-    //}
+        }
+    }
 
     //responseObject.SetNamedValue(
     //    MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY,

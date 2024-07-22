@@ -21,6 +21,7 @@ public:
     MidiPatchBayTable(_In_ const MidiPatchBayTable&) = delete;
     MidiPatchBayTable& operator=(_In_ const MidiPatchBayTable&) = delete;
 
+    void AddEntry(_In_ std::wstring const associationId, _In_ wil::com_ptr<CMidi2VirtualPatchBayRoutingEntry> entry);
 
     CMidi2VirtualPatchBayRoutingEntry* GetEntryForId(_In_ std::wstring const associationId) const noexcept;
     void RemoveEntry(_In_ std::wstring const associationId) noexcept;
@@ -30,5 +31,5 @@ private:
     ~MidiPatchBayTable();
 
     // key is the association Id
-    std::map<std::wstring, CMidi2VirtualPatchBayRoutingEntry> m_patchBayEntries;
+    std::map<std::wstring, wil::com_ptr<CMidi2VirtualPatchBayRoutingEntry>> m_patchBayEntries;
 };

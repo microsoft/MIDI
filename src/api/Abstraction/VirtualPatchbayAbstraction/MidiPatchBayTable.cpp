@@ -41,6 +41,22 @@ CMidi2VirtualPatchBayRoutingEntry* MidiPatchBayTable::GetEntryForId(std::wstring
 }
 
 
+
+_Use_decl_annotations_
+void MidiPatchBayTable::AddEntry(std::wstring const associationId, wil::com_ptr<CMidi2VirtualPatchBayRoutingEntry> entry)
+{
+    try
+    {
+        m_patchBayEntries[associationId] = entry;
+    }
+    catch (...)
+    {
+
+    }
+}
+
+
+
 _Use_decl_annotations_
 void MidiPatchBayTable::RemoveEntry(std::wstring const associationId) noexcept
 {
