@@ -47,6 +47,8 @@ private:
 
     LONGLONG m_context{ 0 };
 
+    bool m_initialNegotiation{ false }; // true if we're in the initial negotiation phase where we need to call callback
+
     wil::unique_event_nothrow m_endProcessing;
     wil::unique_event_nothrow m_allNegotiationMessagesReceived;
     //wil::unique_event_nothrow m_queueWorkerThreadWakeup;

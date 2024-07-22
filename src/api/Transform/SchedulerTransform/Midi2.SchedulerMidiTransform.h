@@ -21,6 +21,8 @@ public:
 
 private:
 
+    std::wstring m_endpointDeviceId{ };
+
     HRESULT GetTopMessageTimestamp(_Out_ internal::MidiTimestamp& timestamp);
 
     HRESULT CalculateSafeSleepTime(_In_ internal::MidiTimestamp nextWakeupWindowTimestamp, _Out_ uint32_t& sleepMS);
@@ -80,10 +82,10 @@ private:
 
     uint64_t m_currentReceivedIndex{ 0 };     // need to use the queueLock before writing to this
 
-    //bool m_continueProcessing{ true };
-    std::atomic<bool> m_continueProcessing{ true };
-
-    std::thread m_queueWorkerThread;
+    //std::atomic<bool> m_continueProcessing{ true };
+    std::jthread m_queueWorkerThread;
+    std::stop_token m_queueWorkerThreadStopToken;
+    std::atomic<bool> m_queueWorkerThreadCleanlyExited{ false };
 
     //wil::unique_event_nothrow m_messageProcessorWakeup;
     wil::slim_event_manual_reset m_messageProcessorWakeup;

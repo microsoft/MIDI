@@ -31,7 +31,7 @@ public:
         _In_ BOOL);
 
     HRESULT DestroyMidiClient(
-        _In_ handle_t,
+        _In_opt_ handle_t,
         _In_ MidiClientHandle);
 
 

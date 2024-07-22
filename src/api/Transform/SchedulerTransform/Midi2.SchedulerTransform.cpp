@@ -27,7 +27,6 @@ CMidi2SchedulerTransform::Activate(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"IMidiDataTransform", MIDI_TRACE_EVENT_INTERFACE_FIELD)
-
             );
 
         wil::com_ptr_nothrow<IMidiDataTransform> midiTransform;

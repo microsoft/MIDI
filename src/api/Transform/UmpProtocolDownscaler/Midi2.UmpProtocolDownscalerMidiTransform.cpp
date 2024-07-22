@@ -48,7 +48,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
     return S_OK;
 }
 
-// #define USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
+#define USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
 
 #ifndef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
 
@@ -59,15 +59,15 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
 
 #endif
 
-// TEMP due to missing libmidi2 function impl
-void umpToMIDI1Protocol::increaseWrite()
-{
-    bufferLength++;
-    writeIndex++;
-    if (writeIndex == UMPTOPROTO1_BUFFER) {
-        writeIndex = 0;
-    }
-}
+//// TEMP due to missing libmidi2 function impl
+//void umpToMIDI1Protocol::increaseWrite()
+//{
+//    bufferLength++;
+//    writeIndex++;
+//    if (writeIndex == UMPTOPROTO1_BUFFER) {
+//        writeIndex = 0;
+//    }
+//}
 
 _Use_decl_annotations_
 HRESULT
@@ -89,8 +89,6 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     if (Length >= sizeof(uint32_t))
     {
 #ifdef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
-        // using libmidi2. It has a bug it it at the moment.
-        // 
         // Send the UMP(s) to the parser
         uint32_t* data = (uint32_t*)Data;
         for (UINT i = 0; i < (Length / sizeof(uint32_t)); i++)
@@ -116,6 +114,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
             }
         }
 #else
+        // this section was due to some bugs in libmidi2.
+
         auto originalWord0 = internal::MidiWord0FromVoidMessageDataPointer(Data);
 
         // only translate MT4 to MT2 (MIDI 2.0 protocol to MIDI 1.0 protocol)

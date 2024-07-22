@@ -19,6 +19,10 @@
 #define MIDI_PROTOCOL_MANAGER_PROCESS_NAME L"midisrv.exe"
 
 
+using namespace winrt::Windows::Devices::Enumeration;
+using namespace winrt::Windows::Foundation;
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::Initialize(
@@ -52,9 +56,72 @@ CMidiEndpointProtocolManager::Initialize(
         pid,
         MIDI_PROTOCOL_MANAGER_PROCESS_NAME,
         nullptr));
- 
+
+
+    winrt::hstring deviceSelector(
+        L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+
+    m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
+
+    auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidiEndpointProtocolManager::OnDeviceAdded);
+    auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidiEndpointProtocolManager::OnDeviceRemoved);
+    auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidiEndpointProtocolManager::OnDeviceUpdated);
+    auto deviceStoppedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidiEndpointProtocolManager::OnDeviceStopped);
+    auto deviceEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidiEndpointProtocolManager::OnEnumerationCompleted);
+
+    m_DeviceAdded = m_watcher.Added(winrt::auto_revoke, deviceAddedHandler);
+    m_DeviceRemoved = m_watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
+    m_DeviceUpdated = m_watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
+    m_DeviceStopped = m_watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
+    m_DeviceEnumerationCompleted = m_watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+
+    m_watcher.Start();
+
     return S_OK;
 }
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiEndpointProtocolManager::OnDeviceAdded(DeviceWatcher, DeviceInformation)
+{
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+CMidiEndpointProtocolManager::OnDeviceRemoved(DeviceWatcher, DeviceInformationUpdate update)
+{
+    // Check to see if we have an entry. If so, tear it down
+
+    auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(update.Id().c_str());
+
+    RETURN_IF_FAILED(RemoveWorkerIfPresent(cleanId));
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiEndpointProtocolManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate)
+{
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiEndpointProtocolManager::OnDeviceStopped(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+{
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiEndpointProtocolManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+{
+    return S_OK;
+}
+
 
 
 
@@ -140,6 +207,33 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidiEndpointProtocolManager::RemoveWorkerIfPresent(std::wstring endpointInterfaceId)
+{
+    auto val = m_endpointWorkers.find(endpointInterfaceId);
+
+    if (val != m_endpointWorkers.end())
+    {
+        val->second.Worker->EndProcessing();    // this sets an event that tells the thread to quit
+
+        if (val->second.Thread->joinable())
+        {
+            val->second.Thread->join();             // join until the thread is done
+        }
+
+        LOG_IF_FAILED(val->second.Worker->Cleanup());
+
+        val->second.Worker.reset();
+        val->second.Thread.reset();
+
+        m_endpointWorkers.erase(endpointInterfaceId);
+    }
+
+    return S_OK;
+}
+
+
 HRESULT
 CMidiEndpointProtocolManager::Cleanup()
 {
@@ -156,17 +250,7 @@ CMidiEndpointProtocolManager::Cleanup()
 
     for (auto& [key, val] : m_endpointWorkers)
     {
-        val.Worker->EndProcessing();    // this sets an event that tells the thread to quit
-        
-        if (val.Thread->joinable())
-        {
-            val.Thread->join();             // join until the thread is done
-        }
-
-        LOG_IF_FAILED(val.Worker->Cleanup());  
-
-        val.Worker.reset();
-        val.Thread.reset();
+        RemoveWorkerIfPresent(key);
     }
 
     m_endpointWorkers.clear();

@@ -423,6 +423,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_7D9A5C9AEC5148B39DB927169445CE49"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_95A010555EE939A8528D490FA44410C9"
         "OwnerKey" = "8:_1D3C83321B67411EA0904B305816D102"
         "MsmSig" = "8:_UNDEFINED"
@@ -1847,6 +1853,34 @@
             "OutputConfiguration" = "8:"
             "OutputGroupCanonicalName" = "8:Built"
             "OutputProjectGuid" = "8:{366FA284-D8C0-4CC5-B9A3-917EAB967173}"
+            "ShowKeyOutput" = "11:TRUE"
+                "ExcludeFilters"
+                {
+                }
+            }
+            "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_7D9A5C9AEC5148B39DB927169445CE49"
+            {
+            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.VirtualPatchBayAbstraction.dll"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_1DC960FE630C406E9A1F93C99C1E099A"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            "ProjectOutputGroupRegister" = "3:4"
+            "OutputConfiguration" = "8:"
+            "OutputGroupCanonicalName" = "8:Built"
+            "OutputProjectGuid" = "8:{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}"
             "ShowKeyOutput" = "11:TRUE"
                 "ExcludeFilters"
                 {

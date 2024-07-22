@@ -53,6 +53,7 @@
 
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
 
+            <!-- Removed DetectCondition="VCRuntimeInstalled" because the redist does its own checking -->
             <ExePackage
                 DisplayName="Microsoft Visual C++ Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"

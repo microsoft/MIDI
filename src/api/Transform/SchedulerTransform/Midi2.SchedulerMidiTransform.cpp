@@ -29,28 +29,28 @@ CMidi2SchedulerMidiTransform::Initialize(
     IUnknown* /*MidiDeviceManager*/
 )
 {
-    UNREFERENCED_PARAMETER(deviceId);
     UNREFERENCED_PARAMETER(creationParams);
     UNREFERENCED_PARAMETER(mmcssTaskId);
     
+    m_endpointDeviceId = deviceId;
+
+
     TraceLoggingWrite(
         MidiSchedulerTransformTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
 
     m_callback = callback;
-
     m_context = context;
 
-    // need to make sure this is created before starting up the worker thread
- //   m_messageProcessorWakeup.create(wil::EventOptions::ManualReset);
-
     // create the queue worker thread
-    std::thread workerThread(
+    std::jthread workerThread(
         &CMidi2SchedulerMidiTransform::QueueWorker,
         this);
 
@@ -58,10 +58,21 @@ CMidi2SchedulerMidiTransform::Initialize(
     //SetThreadPriority(workerThread.native_handle(), ... );
 
     m_queueWorkerThread = std::move(workerThread);
+    m_queueWorkerThreadStopToken = m_queueWorkerThread.get_stop_token();
 
     // start up the worker thread
     m_queueWorkerThread.detach();
 
+
+    TraceLoggingWrite(
+        MidiSchedulerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
 
     return S_OK;
 }
@@ -74,70 +85,80 @@ CMidi2SchedulerMidiTransform::Cleanup()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
     try
     {
 
-        // tell the thread to quit. Call SetEvent in case it is in a wait
-        m_continueProcessing = false;
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Setting wakeup event", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
 
-        // give the thread a change to terminate
+        // tell the thread to quit. Also call SetEvent in case it is in a wait
+        m_queueWorkerThread.request_stop();
+
+        // Alert the thread in case it's in a wait state, and then give the thread a chance to terminate
         m_messageProcessorWakeup.SetEvent();
-        Sleep(0);
 
-        //// clear the queue
-        //bool locked = false;
-        //while (!locked)
-        //{
-        //    // clear the queue
-        //    if (m_queueLock.try_lock())
-        //    {
-        //        while (m_messageQueue.size() > 0)
-        //        {
-        //            m_messageQueue.pop();
-        //        }
+        uint16_t cleanupAttempts{ 0 };
+        while (!m_queueWorkerThreadCleanlyExited && cleanupAttempts < 100)
+        {
+            std::this_thread::sleep_for(10ms);
+            cleanupAttempts++;
+        }
 
-        //        locked = true;
-        //    }
+        if (!m_queueWorkerThreadCleanlyExited)
+        {
+            TraceLoggingWrite(
+                MidiSchedulerTransformTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Exiting, but worker thread did not cleanly exit.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
 
-        //    Sleep(0);
-        //}
+            return E_FAIL;
+        }
+        else
+        {
 
+            TraceLoggingWrite(
+                MidiSchedulerTransformTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
 
-        // join the worker thread and wait for it to end
-        if (m_queueWorkerThread.joinable())
-            m_queueWorkerThread.join();
+            return S_OK;
+        }
 
-        // don't let the component shut down until we're sure everything is wrapped up.
-        // this has a bit of a smell to it, but was having problems with the queue
-        // getting torn down before the worker thread was done
-
-        //locked = false;
-
-        //while (!locked)
-        //{
-        //    // clear the queue
-        //    if (m_queueLock.try_lock())
-        //    {
-        //        locked = true;
-        //    }
-
-        //    Sleep(0);
-        //}
-
-        return S_OK;
     }
     catch (...)
     {
+        LOG_IF_FAILED(E_FAIL);      // cause fallback error to be logged
+
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception cleaning up", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Exception cleaning up", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         return S_OK;    // we don't care when cleaning up
@@ -154,11 +175,26 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     UINT size,
     LONGLONG timestamp)
 {
+#ifdef MIDI_DETAILED_TRACING
+    TraceLoggingWrite(
+        MidiSchedulerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+
+    );
+#endif
+
     try
     {
-        if (m_callback != nullptr)
+        if (m_callback != nullptr && data != nullptr)
         {
-            return m_callback->Callback(data, size, timestamp, m_context);
+            RETURN_IF_FAILED(m_callback->Callback(data, size, timestamp, m_context));
+
+            return S_OK;
         }
         else
         {
@@ -168,7 +204,9 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Callback is nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Callback or data is nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+
             );
 
             return E_FAIL;
@@ -176,13 +214,17 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     }
     catch (...)
     {
+        LOG_IF_FAILED(E_FAIL);      // cause fallback error to be logged
+
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception sending MIDI Message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Exception sending MIDI Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+
         );
 
         return E_FAIL;
@@ -197,7 +239,7 @@ HRESULT
 CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     ScheduledUmpMessage const message)
 {
-    if (!m_continueProcessing) return S_OK;
+    if (m_queueWorkerThreadStopToken.stop_requested()) return S_OK;
 
     return SendMidiMessageNow(
         (PVOID)(message.Data), 
@@ -207,8 +249,6 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
 }
 
 
-
-
 _Use_decl_annotations_
 HRESULT
 CMidi2SchedulerMidiTransform::SendMidiMessage(
@@ -216,7 +256,19 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
     UINT size,
     LONGLONG timestamp)
 {
-    if (!m_continueProcessing) return S_OK;
+#ifdef MIDI_DETAILED_TRACING
+    TraceLoggingWrite(
+        MidiSchedulerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+#endif
+
+    if (m_queueWorkerThreadStopToken.stop_requested()) return S_OK;
 
     try
     {
@@ -239,6 +291,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Error sending MIDI Message now (bypass queue)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                     TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
                 );
 
@@ -263,6 +316,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Error sending MIDI Message now (message timestamp older than window)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                     TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
                 );
 
@@ -275,24 +329,89 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
             if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
             {
-                std::lock_guard<std::mutex> lock{ m_queueMutex };
 
-                // recycle the current received index whenever the queue is empty. Prevents long-term wrapping
-                if (m_messageQueue.size() == 0)
-                {
-                    m_currentReceivedIndex = 0;
-                }
 
                 // schedule the message for sending in the future
 
                 if (m_messageQueue.size() < MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
                 {
-                    m_messageQueue.emplace(timestamp, ++m_currentReceivedIndex, size, (byte*)data);
+#ifdef MIDI_DETAILED_TRACING
+                    TraceLoggingWrite(
+                        MidiSchedulerTransformTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Adding message to outgoing queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+#endif
 
+#ifdef MIDI_DETAILED_TRACING
+                    TraceLoggingWrite(
+                        MidiSchedulerTransformTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Locking scheduler queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+#endif
+                    {   // scope for lock
+
+                        std::scoped_lock<std::mutex> lock(m_queueMutex);
+
+#ifdef MIDI_DETAILED_TRACING
+                        TraceLoggingWrite(
+                            MidiSchedulerTransformTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Lock acquired", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                        );
+#endif
+                        // reset the current received index whenever the queue is empty. Prevents long-long-term wrapping
+                        if (m_messageQueue.empty())
+                        {
+                            m_currentReceivedIndex = 0;
+                        }
+                        else
+                        {
+                            m_currentReceivedIndex++;
+                        }
+
+                        m_messageQueue.emplace(timestamp, m_currentReceivedIndex, size, (byte*)data);
+                    }
+                    
+#ifdef MIDI_DETAILED_TRACING
+                    TraceLoggingWrite(
+                        MidiSchedulerTransformTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Added message to queue. About to wakeup worker thread.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+#endif
                     // notify the worker thread
-                    if (m_continueProcessing) m_messageProcessorWakeup.SetEvent();
+                    if (!m_queueWorkerThreadStopToken.stop_requested()) m_messageProcessorWakeup.SetEvent();
                        
-                    // break out of the loop and return
+#ifdef MIDI_DETAILED_TRACING
+                    TraceLoggingWrite(
+                        MidiSchedulerTransformTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Scheduling complete.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+#endif
+
                     return HR_S_MIDI_SENDMSG_SCHEDULED;
                 }
                 else
@@ -302,10 +421,12 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
                     TraceLoggingWrite(
                         MidiSchedulerTransformTelemetryProvider::Provider(),
-                        __FUNCTION__,
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Outbound message queue full", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                        TraceLoggingWideString(L"Outbound message queue full", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                     );
 
                     return HR_E_MIDI_SENDMSG_SCHEDULER_QUEUE_FULL;
@@ -319,7 +440,8 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Invalid message data size", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Invalid message data size", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                 );
 
                 // invalid data size
@@ -335,7 +457,8 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception scheduling message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Exception scheduling message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         return E_FAIL;
@@ -347,7 +470,19 @@ _Use_decl_annotations_
 HRESULT
 CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &timestamp)
 {
-    if (!m_continueProcessing) return E_FAIL;
+#ifdef MIDI_DETAILED_TRACING
+    TraceLoggingWrite(
+        MidiSchedulerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+#endif
+
+    if (m_queueWorkerThreadStopToken.stop_requested()) return E_FAIL;
 
     HRESULT ret = E_FAIL;
     timestamp = 0;
@@ -357,9 +492,33 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
         // auto resets on exit
         //auto lock = m_queueLock.try_lock();
 
-        std::lock_guard<std::mutex> lock{ m_queueMutex };
+#ifdef MIDI_DETAILED_TRACING
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Acquiring queue lock", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+#endif
 
-        if (m_continueProcessing && !m_messageQueue.empty())
+        std::scoped_lock<std::mutex> lock(m_queueMutex);
+
+#ifdef MIDI_DETAILED_TRACING
+        TraceLoggingWrite(
+            MidiSchedulerTransformTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Lock acquired", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+#endif
+
+        if (!m_queueWorkerThreadStopToken.stop_requested() && !m_messageQueue.empty())
         {
             timestamp = m_messageQueue.top().Timestamp;
             ret = S_OK;
@@ -371,17 +530,33 @@ CMidi2SchedulerMidiTransform::GetTopMessageTimestamp(internal::MidiTimestamp &ti
     }
     catch (...)
     {
+        LOG_IF_FAILED(E_FAIL);  // cause fallback error to be logged
+
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception getting top-message timestamp", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Exception getting top message timestamp", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         ret = E_FAIL;
     }
+
+#ifdef MIDI_DETAILED_TRACING
+    TraceLoggingWrite(
+        MidiSchedulerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+#endif
+
 
     return ret;
 }
@@ -394,7 +569,19 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(
     uint32_t& sleepMS
 )
 {
-    if (!m_continueProcessing) return E_FAIL;
+#ifdef MIDI_DETAILED_TRACING
+    TraceLoggingWrite(
+        MidiSchedulerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+#endif
+
+    if (m_queueWorkerThreadStopToken.stop_requested()) return E_FAIL;
 
     HRESULT ret = E_FAIL;
     sleepMS = 0;
@@ -422,13 +609,16 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(
     }
     catch (...)
     {
+        LOG_IF_FAILED(E_FAIL); // fallback error
+
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception calculating safe sleep time", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Exception calculating safe sleep time", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         ret = E_FAIL;
@@ -441,21 +631,31 @@ CMidi2SchedulerMidiTransform::CalculateSafeSleepTime(
 
 void CMidi2SchedulerMidiTransform::QueueWorker()
 {
+    TraceLoggingWrite(
+        MidiSchedulerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
     try
     {
         const uint64_t totalExpectedLatency = m_deviceLatencyTicks + MIDI_SCHEDULER_LOCK_AND_SEND_FUNCTION_LATENCY_TICKS;
 
-        while (m_continueProcessing)
+        while (!m_queueWorkerThreadStopToken.stop_requested())
         {
             // check to see if the queue is empty, and if so, go to sleep until we're signaled
             // to wake up due to a new message arriving or due to shut down.
-            if (m_continueProcessing && m_messageQueue.empty())
+            if (m_messageQueue.empty())
             {
                 // queue empty so sleep until we get notified to wake up
                 m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
                 //bool triggered = m_messageProcessorWakeup.wait(MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS);
             }
-            else if (m_continueProcessing && !m_messageQueue.empty())
+            else if (!m_queueWorkerThreadStopToken.stop_requested() && !m_messageQueue.empty())
             {
                 internal::MidiTimestamp topTimestamp = 0;
 
@@ -469,14 +669,38 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                     // wrap back around
                     if (internal::GetCurrentMidiTimestamp() >= nextMessageSendTime)
                     {
-                        std::lock_guard<std::mutex> lock{ m_queueMutex };
+#ifdef MIDI_DETAILED_TRACING
+                        TraceLoggingWrite(
+                            MidiSchedulerTransformTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Acquiring queue lock", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                        );
+#endif
 
+                        std::scoped_lock<std::mutex> lock(m_queueMutex);
+
+#ifdef MIDI_DETAILED_TRACING
+                        TraceLoggingWrite(
+                            MidiSchedulerTransformTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Lock acquired", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                        );
+#endif
                         // we have the queue locked, so send ALL messages that have the *same* timestamp
                         // but we need to limit the number to send at once here, so we do.
 
-                        uint32_t processedMessages = 0;
+                        uint32_t processedMessages{ 0 };
 
                         while (!m_messageQueue.empty() && 
+                            !m_queueWorkerThreadStopToken.stop_requested() &&
                             processedMessages < MIDI_SCHEDULER_MAX_MESSAGES_TO_PROCESS_AT_ONCE &&
                             m_messageQueue.top().Timestamp <= topTimestamp)
                         {
@@ -499,6 +723,7 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                     TraceLoggingPointer(this, "this"),
                                     TraceLoggingWideString(L"Unable to send message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                                     TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
                                 );
 
@@ -515,10 +740,24 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                         // not yet time to send the top message, so we'll sleep
                         uint32_t sleepTime{ 0 };
 
-                        if (m_continueProcessing && SUCCEEDED(CalculateSafeSleepTime(nextMessageSendTime, sleepTime)))
+                        if (!m_queueWorkerThreadStopToken.stop_requested() && 
+                            SUCCEEDED(CalculateSafeSleepTime(nextMessageSendTime, sleepTime)))
                         {
                             if (sleepTime > 0)
                             {
+#ifdef MIDI_DETAILED_TRACING
+                                TraceLoggingWrite(
+                                    MidiSchedulerTransformTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_INFO,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Going to sleep", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                                    TraceLoggingUInt32(sleepTime, "Sleep Time Milliseconds")
+                                );
+#endif
+
                                 // waiting will get interrupted if a new message comes in. We want that.
                                 m_messageProcessorWakeup.wait(sleepTime);
                             }
@@ -528,35 +767,74 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                 else
                 {
                     // couldn't get top timestamp for some reason.
+#ifdef MIDI_DETAILED_TRACING
+                    TraceLoggingWrite(
+                        MidiSchedulerTransformTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Couldn't get top timestamp", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+#endif
                 }
 
             }
 
-            if (m_continueProcessing)
+            if (!m_queueWorkerThreadStopToken.stop_requested())
             {
                 // we're looping, not sleeping now, so we need to reset this to make sure we don't miss new messages
                 if (m_messageProcessorWakeup.is_signaled())
                 {
+#ifdef MIDI_DETAILED_TRACING
+                    TraceLoggingWrite(
+                        MidiSchedulerTransformTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Wakeup signaled. Resetting event", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+#endif
                     m_messageProcessorWakeup.ResetEvent();
                 }
 
                 // return the rest of the time slice so we're not in a tight loop
-                Sleep(0);
+                std::this_thread::sleep_for(0ms);
             }
 
         } // main loop
     }
     catch (...)
     {
+        LOG_IF_FAILED(E_FAIL);      // cause fallback error to be reported
+
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Exception processing queue", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Exception processing queue", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
     }
+
+    TraceLoggingWrite(
+        MidiSchedulerTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+
+    m_queueWorkerThreadCleanlyExited = true;
+
 }
 
 

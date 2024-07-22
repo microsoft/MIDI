@@ -24,9 +24,9 @@ CMidiClientManager::Initialize(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
-
 
     auto lock = m_ClientManagerLock.lock();
 
@@ -34,6 +34,15 @@ CMidiClientManager::Initialize(
     m_ProcessManager = ProcessManager;
     m_DeviceManager = DeviceManager;
     m_SessionTracker = SessionTracker;
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
@@ -46,9 +55,9 @@ CMidiClientManager::Cleanup()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
-
 
     auto lock = m_ClientManagerLock.lock();
 
@@ -75,6 +84,16 @@ CMidiClientManager::Cleanup()
         device.second->Cleanup();
     }
     m_DevicePipes.clear();
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
 
     return S_OK;
 }
@@ -331,6 +350,16 @@ GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlo
 
     std::transform(Alias.begin(), Alias.end(), Alias.begin(), ::towlower);
 
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
     return S_OK;
 }
 
@@ -370,6 +399,17 @@ CMidiClientManager::GetMidiClient(
     Client->ClientHandle = (MidiClientHandle)clientPipe.get();
     MidiClientPipe = clientPipe.get();
     m_ClientPipes.emplace(Client->ClientHandle, std::move(clientPipe));
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingGuid(SessionId, "Session Id")
+    );
 
     return S_OK;
 }
@@ -424,6 +464,16 @@ CMidiClientManager::GetMidiDevice(
         MidiDevicePipe = devicePipe.get();
         m_DevicePipes.emplace(MidiDevice, std::move(devicePipe));
     }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
 
     return S_OK;
 }
@@ -496,6 +546,16 @@ CMidiClientManager::GetMidiProtocolDownscalerTransform(
     }
 
     ClientConnectionPipe = transformPipe;
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
 
     return S_OK;
 }
@@ -621,6 +681,16 @@ CMidiClientManager::GetMidiTransform(
 
     ClientConnectionPipe = transformPipe;
 
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
     return S_OK;
 }
 
@@ -722,6 +792,16 @@ CMidiClientManager::GetMidiScheduler(
     }
 
     ClientConnectionPipe = transformPipe;
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(DevicePipe->MidiDevice().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
 
     return S_OK;
 }
@@ -825,11 +905,28 @@ CMidiClientManager::CreateMidiClient(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingGuid(SessionId)
+        TraceLoggingGuid(SessionId, "Session Id"),
+        TraceLoggingUInt32(ClientProcessId, "Client Process Id")
     );
 
-    // TODO: Need to pass in the client process id
-    RETURN_IF_FAILED(m_SessionTracker->IsValidSession(SessionId, ClientProcessId));
+    auto sessionCheckHR = m_SessionTracker->IsValidSession(SessionId, ClientProcessId);
+    if (FAILED(sessionCheckHR))
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Session is invalid for this client process. Cannot create MIDI client.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingGuid(SessionId, "Session Id"),
+            TraceLoggingUInt32(ClientProcessId, "Client Process Id")
+        );
+
+        RETURN_IF_FAILED(sessionCheckHR);
+    }
+
 
 
     //if (InternalProtocolNegotiationUseOnly && Client->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
@@ -1107,13 +1204,21 @@ CMidiClientManager::CreateMidiClient(
         newClientConnectionPipe.reset();
     }
 
-    // TODO: We need to verify the valid session before allowing client creation
-    // This will keep apps from bypassing this feature, which is an important
-    // requested feature from users.
-
     m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice, Client->ClientHandle);
 
     cleanupOnFailure.release();
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingGuid(SessionId, "Session Id"),
+        TraceLoggingUInt32(ClientProcessId, "Client Process Id")
+    );
 
     return S_OK;
 }
@@ -1189,5 +1294,3 @@ CMidiClientManager::DestroyMidiClient(
 
     return S_OK;
 }
-
-

@@ -289,6 +289,16 @@ namespace Microsoft.Midi.ConsoleApp
                                 table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockFirstGroupIndex, functionBlock.FirstGroupIndex.ToString());
                                 table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockGroupCount, functionBlock.GroupCount.ToString());
 
+                                if (functionBlock.GroupCount == 1)
+                                {
+                                    table.AddRow(Strings.CommonStringGroupSingular, $"{functionBlock.FirstGroupIndex + 1} ({Strings.CommonStringIndexSingular} {functionBlock.FirstGroupIndex})");
+                                }
+                                else
+                                {
+                                    int stopGroupIndex = functionBlock.FirstGroupIndex + functionBlock.GroupCount - 1;
+                                    table.AddRow(Strings.CommonStringGroupPlural, $"{functionBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {functionBlock.FirstGroupIndex}-{stopGroupIndex})");
+                                }
+
                                 if (settings.Verbose)
                                 {
                                     table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockDirection, functionBlock.Direction.ToString());
@@ -314,17 +324,8 @@ namespace Microsoft.Midi.ConsoleApp
                                 }
 
 
-                                if (functionBlock.GroupCount == 1)
-                                {
-                                    table.AddRow(Strings.CommonStringGroupSingular, $"{functionBlock.FirstGroupIndex + 1} ({Strings.CommonStringIndexSingular} {functionBlock.FirstGroupIndex})");
-                                }
-                                else
-                                {
-                                    int stopGroupIndex = functionBlock.FirstGroupIndex + functionBlock.GroupCount - 1;
-                                    table.AddRow(Strings.CommonStringGroupPlural, $"{functionBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {functionBlock.FirstGroupIndex}-{stopGroupIndex})");
-                                }
 
-                                table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockGroupCount, functionBlock.GroupCount.ToString());
+                                //table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockGroupCount, functionBlock.GroupCount.ToString());
                             }
                         }
                     }

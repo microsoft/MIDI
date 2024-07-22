@@ -9,8 +9,16 @@
 
 #pragma once
 
+
 #ifndef STRICT
 #define STRICT
+#endif
+
+#ifdef _DEBUG
+#define MIDI_DETAILED_TRACING
+#else
+// TODO: Move this into a global (to the service) MidiServiceSettings class, and read from a reg key
+//#define MIDI_DETAILED_TRACING
 #endif
 
 #include <windows.h>
@@ -47,6 +55,10 @@
 
 #include <queue>
 #include <thread>
+#include <chrono>
+#include <utility>
+
+using namespace std::literals;
 
 #include "midi_ump.h"
 #include "midi_timestamp.h"
