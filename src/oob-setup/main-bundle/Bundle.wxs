@@ -43,27 +43,13 @@
     
     <Fragment>
 
-        <!-- Check for Installed = 1-->
-        <util:RegistrySearch
-            Id="SearchForVCRuntime"
-            Variable="VCRuntimeInstalled"
-            Root="HKLM"
-            Key="SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\$(var.Platform)"
-            Value="Installed"
-            Result="exists"/>
-
-        <!--<bal:Condition Message="VC Runtime not found." Condition="VCRuntimeInstalled" /> -->
-        <!-- <bal:Condition Message=".NET 8 Version not found." Condition="DotNetDesktopRuntimeVersion" /> -->
-
         <PackageGroup Id="Prerequisites">
 
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
-            
             <ExePackage
                 DisplayName="Microsoft Visual C++ Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
                 Compressed="yes"
-                DetectCondition="VCRuntimeInstalled"
                 InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
                 UninstallArguments="/uninstall /passive /norestart /quiet"
                 Permanent="true"
