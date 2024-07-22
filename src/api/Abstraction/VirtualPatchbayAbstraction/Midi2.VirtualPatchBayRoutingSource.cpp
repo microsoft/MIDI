@@ -15,8 +15,8 @@ CMidi2VirtualPatchBayRoutingSource::Initialize(
     CMidi2VirtualPatchBayRoutingEntry* router
 )
 {
-    UNREFERENCED_PARAMETER(endpointMatchJson);
-    UNREFERENCED_PARAMETER(router);
+    m_matchJson = endpointMatchJson;
+    m_router = router;
 
     return S_OK;
 }
@@ -46,7 +46,6 @@ CMidi2VirtualPatchBayRoutingSource::AddIncludedGroups(
 {
     UNREFERENCED_PARAMETER(groupIndexes);
 
-    
     return S_OK;
 }
 
@@ -63,7 +62,6 @@ CMidi2VirtualPatchBayRoutingSource::SetEndpointCallback(
     return S_OK;
 }
 
-_Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayRoutingSource::Cleanup()
 {

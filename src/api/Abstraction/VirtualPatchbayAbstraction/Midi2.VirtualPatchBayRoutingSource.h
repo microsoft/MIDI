@@ -26,6 +26,8 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+    CMidi2VirtualPatchBayRoutingEntry* m_router;
+
     std::wstring m_matchJson{ };
     std::wstring m_resolvedEndpointDeviceInterfaceId{ };
 

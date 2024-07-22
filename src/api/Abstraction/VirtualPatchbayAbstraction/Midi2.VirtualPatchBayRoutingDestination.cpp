@@ -8,7 +8,6 @@
 
 #include "pch.h"
 
-
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayRoutingDestination::Initialize(
@@ -16,8 +15,8 @@ CMidi2VirtualPatchBayRoutingDestination::Initialize(
     CMidi2VirtualPatchBayRoutingEntry* router
 )
 {
-    UNREFERENCED_PARAMETER(endpointMatchJson);
-    UNREFERENCED_PARAMETER(router);
+    m_matchJson = endpointMatchJson;
+    m_router = router;
 
     return S_OK;
 }
@@ -34,6 +33,11 @@ CMidi2VirtualPatchBayRoutingDestination::Callback(
     UNREFERENCED_PARAMETER(length);
     UNREFERENCED_PARAMETER(position);
     UNREFERENCED_PARAMETER(context);
+
+    // TODO: Perform any group transformations
+
+    // TODO: Call the BiDi for the actual destination
+
 
     return S_OK;
 }
@@ -62,7 +66,6 @@ CMidi2VirtualPatchBayRoutingDestination::SetEndpointBiDi(
     return S_OK;
 }
 
-_Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayRoutingDestination::Cleanup()
 {

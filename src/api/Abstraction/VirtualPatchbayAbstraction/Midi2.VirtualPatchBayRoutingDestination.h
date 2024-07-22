@@ -29,12 +29,13 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+    CMidi2VirtualPatchBayRoutingEntry* m_router;
 
-    std::wstring MatchJson{ };
-    std::wstring ResolvedEndpointDeviceInterfaceId{ };
+    std::wstring m_matchJson{ };
+    std::wstring m_resolvedEndpointDeviceInterfaceId{ };
 
-    wil::com_ptr_nothrow<IMidiBiDi> EndpointBiDi{ nullptr };
+    wil::com_ptr_nothrow<IMidiBiDi> m_endpointBiDi{ nullptr };
 
-    std::map<uint8_t, uint8_t> GroupTransformMap{ };    // incoming group, outgoing group
+    std::map<uint8_t, uint8_t> m_groupTransformMap{ };    // incoming group, outgoing group
 
 };

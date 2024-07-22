@@ -8,7 +8,6 @@
 
 #include "pch.h"
 
-
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayRoutingEntry::Initialize(
@@ -17,9 +16,9 @@ CMidi2VirtualPatchBayRoutingEntry::Initialize(
     LPCWSTR description
 )
 {
-    UNREFERENCED_PARAMETER(associationId);
-    UNREFERENCED_PARAMETER(name);
-    UNREFERENCED_PARAMETER(description);
+    m_associationId = associationId;
+    m_name = name;
+    m_description = description;
 
     return S_OK;
 }
@@ -65,7 +64,6 @@ CMidi2VirtualPatchBayRoutingEntry::Callback(
     return S_OK;
 }
 
-_Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayRoutingEntry::Cleanup()
 {
