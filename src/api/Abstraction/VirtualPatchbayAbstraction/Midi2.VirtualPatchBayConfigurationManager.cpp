@@ -46,7 +46,7 @@ CMidi2VirtualPatchBayConfigurationManager::Initialize(
 //        {
 //            "{272357f5-6ab2-4737-b920-466eb94505bb}":
 //            {
-//                "name": "Test Fan Out",
+//                 "name": "Test Fan Out",
 //                 "description" : "A virtual patch bay entry to test fan out",
 //                 "enabled" : true,
 //                 "sources" :
@@ -57,7 +57,7 @@ CMidi2VirtualPatchBayConfigurationManager::Initialize(
 //                           "SWD" : "somenendpointdeviceidfoobarbazbal0"
 //                       },
 //                       "groupIndexes" : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-//                     }
+//                    }
 //                 ] ,
 //                 "destinations":
 //                 [
