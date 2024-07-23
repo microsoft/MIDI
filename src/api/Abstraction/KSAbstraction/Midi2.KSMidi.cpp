@@ -119,7 +119,7 @@ CMidi2KSMidi::Initialize(
     }
 
 
-    ULONG requestedBufferSize = PAGE_SIZE;
+    ULONG requestedBufferSize = PAGE_SIZE * 2;
     RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
     RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
 

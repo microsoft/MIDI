@@ -73,7 +73,7 @@ CMidi2KSAggregateMidi::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     interfaceClass = winrt::unbox_value<winrt::guid>(prop);
 
-    ULONG requestedBufferSize = PAGE_SIZE;
+    ULONG requestedBufferSize = PAGE_SIZE * 2;
     RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
     RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
 
