@@ -643,6 +643,10 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
 
     try
     {
+        SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
+        SetPriorityClass(GetCurrentThread(), REALTIME_PRIORITY_CLASS);
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+
         const uint64_t totalExpectedLatency = m_deviceLatencyTicks + MIDI_SCHEDULER_LOCK_AND_SEND_FUNCTION_LATENCY_TICKS;
 
         while (!m_queueWorkerThreadStopToken.stop_requested())
