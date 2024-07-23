@@ -124,8 +124,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     {
         auto cleanedName = internal::TrimmedHStringCopy(name);
 
-        // TODO: update the name and send the notification message
-
         if (m_declaredEndpointInfo.Name != cleanedName)
         {
             if (!SendEndpointNameNotificationMessages(cleanedName))
@@ -144,6 +142,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                 );
 
                 return false;
+            }
+            else
+            {
+                m_declaredEndpointInfo.Name == cleanedName;
             }
         }
 
@@ -236,6 +238,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     bool MidiVirtualDevice::SendEndpointNameNotificationMessages(winrt::hstring const& name) noexcept
     {
         if (name.empty()) return false;
+
+        if (m_endpointConnection == nullptr) return false;
 
         auto nameMessages = msgs::MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
             MidiClock::TimestampConstantSendImmediately(),
