@@ -83,15 +83,23 @@ Environment:
 // UMP Protocol definitions
 //--------------------------------------------------------------------+
 // Message Types
-#define UMP_MT_MASK       0xf0
-#define UMP_MT_UTILITY    0x00
-#define UMP_MT_SYSTEM     0x10
-#define UMP_MT_MIDI1_CV   0x20
-#define UMP_MT_DATA_64    0x30
-#define UMP_MT_MIDI2_CV   0x40
-#define UMP_MT_DATA_128   0x50
-#define UMP_MT_FLEX_128   0xd0
-#define UMP_MT_STREAM_128 0xf0
+#define UMP_MT_MASK         0xf0
+#define UMP_MT_UTILITY      0x00
+#define UMP_MT_SYSTEM       0x10
+#define UMP_MT_MIDI1_CV     0x20
+#define UMP_MT_DATA_64      0x30
+#define UMP_MT_MIDI2_CV     0x40
+#define UMP_MT_DATA_128     0x50
+#define UMP_MT_RESERVED_6   0x60 // 32bits reserved future
+#define UMP_MT_RESERVED_7   0x70 // 32bits reserved future
+#define UMP_MT_RESERVED_8   0x80 // 64bits reserved future
+#define UMP_MT_RESERVED_9   0x90 // 64bits reserved future
+#define UMP_MT_RESERVED_A   0xA0 // 64bits reserved future
+#define UMP_MT_RESERVED_B   0xB0 // 96bits reserved future
+#define UMP_MT_RESERVED_C   0xC0 // 96bits reserved future
+#define UMP_MT_FLEX_128     0xd0
+#define UMP_MT_RESERVED_E   0xE0 // 128bits reserved future
+#define UMP_MT_STREAM_128   0xf0
 
 // Group Number
 #define UMP_GROUP_MASK    0x0f
@@ -108,11 +116,15 @@ Environment:
 #define UMP_SYSTEM_MTC          0xf1  // 2 bytes incl status
 #define UMP_SYSTEM_SONG_POS_PTR 0xf2  // 3 bytes incl status
 #define UMP_SYSTEM_SONG_SELECT  0xf3  // 2 bytes incl status
+#define UMP_SYSTEM_UNDEFINED_F4 0xf4  // undefined
+#define UMP_SYSTEM_UNDEFINED_F5 0xf5  // undefined
 #define UMP_SYSTEM_TUNE_REQ     0xf6  // status byte only
 #define UMP_SYSTEM_TIMING_CLK   0xf8  // status byte only
+#define UMP_SYSTEM_UNDEFINED_F9 0xf9  // undefined
 #define UMP_SYSTEM_START        0xfa  // status byte only
 #define UMP_SYSTEM_CONTINUE     0xfb  // status byte only
 #define UMP_SYSTEM_STOP         0xfc  // status byte only
+#define UMP_SYSTEM_UNDEFINED_FD 0xfd  // undefined
 #define UMP_SYSTEM_ACTIVE_SENSE 0xfe  // status byte only
 #define UMP_SYSTEM_RESET        0xff  // status byte only
 
@@ -123,6 +135,7 @@ Environment:
 typedef enum
 {
     MIDI_CS_INTERFACE = 0x24,
+    MIDI_CS_ENDPOINT = 0x25,
     MIDI_CS_INTERFACE_GR_TRM_BLOCK = 0x26,
 } midi_cs_interface_types;
 
