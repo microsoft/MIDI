@@ -12,7 +12,8 @@ HRESULT MidiEndpointTable::Cleanup()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
@@ -27,7 +28,8 @@ HRESULT MidiEndpointTable::AddCreatedEndpointDevice(MidiVirtualDeviceEndpointEnt
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(entry.VirtualEndpointAssociationId.c_str(), "entry.VirtualEndpointAssociationId"),
@@ -56,10 +58,12 @@ MidiEndpointTable::OnClientConnected(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(clientEndpointInterfaceId.c_str())
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     // get the device BiDi, and then wire them together
@@ -74,7 +78,7 @@ MidiEndpointTable::OnClientConnected(
 
         auto associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
-        if (associationId != L"")
+        if (!associationId.empty())
         {
             if (m_endpoints.find(associationId) != m_endpoints.end())
             {
@@ -94,13 +98,19 @@ MidiEndpointTable::OnClientConnected(
             else
             {
                 // couldn't find the entry
+
+                LOG_IF_FAILED(E_FAIL);  // cause fallback error to be logged
+
                 TraceLoggingWrite(
                     MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Unable to find device table entry", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Unable to find device table entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                 );
+
             }
         }
     }
@@ -118,10 +128,12 @@ MidiEndpointTable::OnClientDisconnected(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(clientEndpointInterfaceId.c_str())
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     try
@@ -143,11 +155,14 @@ MidiEndpointTable::OnClientDisconnected(
 
                 TraceLoggingWrite(
                     MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                 );
+
             }
         }
         else
@@ -156,11 +171,14 @@ MidiEndpointTable::OnClientDisconnected(
 
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Association id property was blank", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Association id property was blank", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
+
         }
     }
     CATCH_RETURN();
@@ -176,11 +194,14 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), "deviceEndpointInterfaceId")
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
+
 
     try
     {
@@ -233,12 +254,16 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
                 }
                 else
                 {
+                    LOG_IF_FAILED(E_FAIL);  // cause fallback error to be logged
+
                     TraceLoggingWrite(
                         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                        __FUNCTION__,
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Endpoint Manager is null", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                        TraceLoggingWideString(L"Endpoint Manager is null", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                     );
 
                     return E_FAIL;
@@ -247,13 +272,16 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
             else
             {
                 // association id isn't present. That's not right.
+                LOG_IF_FAILED(E_FAIL);  // cause fallback error to be logged
 
                 TraceLoggingWrite(
                     MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Association id property was not present in device table", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                 );
 
                 return E_FAIL;
@@ -262,13 +290,16 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
         else
         {
             // association id is blank, which is also not right
+            LOG_IF_FAILED(E_FAIL);  // cause fallback error to be logged
 
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Association id property was blank", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Association id property was blank", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
             return E_FAIL;
@@ -284,11 +315,14 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"), 
-        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), "deviceEndpointInterfaceId")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
+
 
     try
     {
@@ -306,11 +340,12 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                     {
                         TraceLoggingWrite(
                             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                            __FUNCTION__,
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            MIDI_TRACE_EVENT_VERBOSE,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), "deviceEndpointInterfaceId"),
-                            TraceLoggingWideString(L"Unlinking from MidiDeviceBiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                            TraceLoggingWideString(L"Unlinking from MidiDeviceBiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                         );
 
                         // unlink the bidi devices
@@ -330,36 +365,49 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                 }
                 else
                 {
+                    LOG_IF_FAILED(E_FAIL);  // fallback error
+
                     TraceLoggingWrite(
                         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                        __FUNCTION__,
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
                         TraceLoggingWideString(L"Unexpected. There's no entry for associationId", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(associationId.c_str())
+                        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                     );
+
                 }
             }
             else
             {
+                LOG_IF_FAILED(E_FAIL);  // fallback error
+
                 TraceLoggingWrite(
                     MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                    __FUNCTION__,
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"unable to get association id for this endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Unable to get association id for this endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                 );
             }
         }
         else
         {
+            LOG_IF_FAILED(E_FAIL);  // fallback error
+
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                __FUNCTION__,
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"endpoint manager is null", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Endpoint Manager is null", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
+
         }
     }
     CATCH_LOG();

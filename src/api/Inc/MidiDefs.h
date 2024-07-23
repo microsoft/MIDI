@@ -14,6 +14,7 @@
 #define MIDI_TRACE_EVENT_ERROR              "Midi.Error"
 #define MIDI_TRACE_EVENT_WARNING            "Midi.Warning"
 #define MIDI_TRACE_EVENT_INFO               "Midi.Info"
+#define MIDI_TRACE_EVENT_VERBOSE            "Midi.Verbose"
 
 
 #define MIDI_TRACE_EVENT_MESSAGE_FIELD              "message"
