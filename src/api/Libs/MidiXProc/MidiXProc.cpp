@@ -126,7 +126,7 @@ DisableMmcss(
     unique_mmcss_handle& MmcssHandle
 )
 {
-#if 1
+#if 0
     RETURN_HR_IF(S_OK, NULL == MmcssHandle);
     // Detach the thread from the MMCSS service to free the handle.
     MmcssHandle.reset();
@@ -144,7 +144,7 @@ EnableMmcss(
     DWORD& MmcssTaskId
 )
 {
-#if 1
+#if 0
     MmcssHandle.reset(AvSetMmThreadCharacteristics( L"Pro Audio", &MmcssTaskId ));
     if (!MmcssHandle)
     {
