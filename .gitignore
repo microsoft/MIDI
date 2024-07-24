@@ -10,9 +10,9 @@
 *.msix
 *.zip
 *.nupkg
-build/release/**
-build/staging/**
-build/dependencies/**
+build/release/**/*.*
+build/staging/**/*.*
+build/dependencies/**/*.*
 
 # Dump files
 *.etl
