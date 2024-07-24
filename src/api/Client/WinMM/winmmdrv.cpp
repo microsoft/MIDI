@@ -52,8 +52,10 @@ struct MIDICLIENT
     LPMIDIHDR buffers[16] {0};
 };
 
-struct MIDICLIENT g_InClients[32];
-struct MIDICLIENT g_OutClients[32];
+#define MAX_CLIENTS 32
+
+struct MIDICLIENT g_InClients[MAX_CLIENTS];
+struct MIDICLIENT g_OutClients[MAX_CLIENTS];
 
 void Callback(struct MIDICLIENT* client, UINT msg, DWORD_PTR dw1, DWORD_PTR dw2)
 {
@@ -94,9 +96,9 @@ DWORD APIENTRY midMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
         case MIDM_OPEN:
             {
                 UINT freeIndex = 0;
-                for (freeIndex = 0; g_InClients[freeIndex].used && freeIndex < 32; freeIndex++);
+                for (freeIndex = 0;freeIndex < MAX_CLIENTS && g_InClients[freeIndex].used; freeIndex++);
 
-                if (freeIndex < 32 &&
+                if (freeIndex < MAX_CLIENTS &&
                     dwParam1 >= sizeof(MIDIOPENDESC))
                 {
                     g_InClients[freeIndex].used = TRUE;
@@ -118,7 +120,7 @@ DWORD APIENTRY midMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
             {
                 mmResult = MMSYSERR_ERROR;
 
-                for (UINT index = 0; index < 32; index++)
+                for (UINT index = 0; index < MAX_CLIENTS; index++)
                 {
                     if (g_InClients[index].used && g_InClients[index].user == dwUser)
                     {
@@ -141,7 +143,7 @@ DWORD APIENTRY midMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
                 if (nullptr != header &&
                     dwParam2 >= sizeof(MIDIHDR))
                 {
-                    for (UINT index = 0; index < 32; index++)
+                    for (UINT index = 0; index < MAX_CLIENTS; index++)
                     {
                         if (g_InClients[index].used && g_InClients[index].user == dwUser)
                         {
@@ -169,7 +171,7 @@ DWORD APIENTRY midMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
             {
                 mmResult = MMSYSERR_ERROR;
                 
-                for (UINT index = 0; index < 32; index++)
+                for (UINT index = 0; index < MAX_CLIENTS; index++)
                 {
                     if (g_InClients[index].used && g_InClients[index].user == dwUser)
                     {
@@ -185,7 +187,7 @@ DWORD APIENTRY midMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
             {
                 mmResult = MMSYSERR_ERROR;
                 
-                for (UINT index = 0; index < 32; index++)
+                for (UINT index = 0; index < MAX_CLIENTS; index++)
                 {
                     if (g_InClients[index].used && g_InClients[index].user == dwUser)
                     {
@@ -201,7 +203,7 @@ DWORD APIENTRY midMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
             {
                 mmResult = MMSYSERR_ERROR;
                 
-                for (UINT index = 0; index < 32; index++)
+                for (UINT index = 0; index < MAX_CLIENTS; index++)
                 {
                     if (g_InClients[index].used && g_InClients[index].user == dwUser)
                     {
@@ -252,9 +254,9 @@ DWORD APIENTRY modMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
         case MODM_OPEN:
             {
                 UINT freeIndex = 0;
-                for (freeIndex = 0; g_OutClients[freeIndex].used && freeIndex < 32; freeIndex++);
+                for (freeIndex = 0;freeIndex < MAX_CLIENTS && g_OutClients[freeIndex].used; freeIndex++);
 
-                if (freeIndex < 32 &&
+                if (freeIndex < MAX_CLIENTS &&
                     dwParam1 >= sizeof(MIDIOPENDESC))
                 {
                     g_OutClients[freeIndex].used = TRUE;
@@ -276,7 +278,7 @@ DWORD APIENTRY modMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
             {
                 mmResult = MMSYSERR_ERROR;
 
-                for (UINT index = 0; index < 32; index++)
+                for (UINT index = 0; index < MAX_CLIENTS; index++)
                 {
                     if (g_OutClients[index].used && 
                         g_OutClients[index].user == dwUser)
@@ -299,13 +301,13 @@ DWORD APIENTRY modMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
                 if (nullptr != header && 
                     dwParam2 >= sizeof(MIDIHDR))
                 {
-                    for (UINT outIndex = 0; outIndex < 32; outIndex++)
+                    for (UINT outIndex = 0; outIndex < MAX_CLIENTS; outIndex++)
                     {
                         if (g_OutClients[outIndex].used && g_OutClients[outIndex].user == dwUser)
                         {
                             mmResult = MMSYSERR_NOERROR;
 
-                            for (UINT inIndex = 0; inIndex < 32; inIndex++)
+                            for (UINT inIndex = 0; inIndex < MAX_CLIENTS; inIndex++)
                             {
                                 if (g_InClients[inIndex].used && 
                                     g_OutClients[outIndex].device == g_InClients[inIndex].device)
@@ -334,13 +336,13 @@ DWORD APIENTRY modMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
             {
                 mmResult = MMSYSERR_ERROR;
 
-                for (UINT outIndex = 0; outIndex < 32; outIndex++)
+                for (UINT outIndex = 0; outIndex < MAX_CLIENTS; outIndex++)
                 {
                     if (g_OutClients[outIndex].used && g_OutClients[outIndex].user == dwUser)
                     {
                         mmResult = MMSYSERR_NOERROR;
 
-                        for (UINT inIndex = 0; inIndex < 32; inIndex++)
+                        for (UINT inIndex = 0; inIndex < MAX_CLIENTS; inIndex++)
                         {
                             if (g_InClients[inIndex].used &&
                                 g_OutClients[outIndex].device == g_InClients[inIndex].device)
@@ -362,7 +364,7 @@ DWORD APIENTRY modMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR
             {
                 mmResult = MMSYSERR_ERROR;
                 
-                for (UINT index = 0; index < 32; index++)
+                for (UINT index = 0; index < MAX_CLIENTS; index++)
                 {
                     if (g_OutClients[index].used && g_OutClients[index].user == dwUser)
                     {
