@@ -56,18 +56,29 @@
 // Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs
 // Everything is under HKLM
 //
-#define MIDI_ROOT_REG_KEY L"Software\\Microsoft\\Windows MIDI Services"
-#define MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY MIDI_ROOT_REG_KEY L"\\Transport Plugins"
-#define MIDI_ROOT_ENDPOINT_PROCESSING_PLUGINS_REG_KEY MIDI_ROOT_REG_KEY L"\\Message Processing Plugins"
-#define MIDI_PLUGIN_ENABLED_REG_VALUE L"Enabled"
-#define MIDI_PLUGIN_CLSID_REG_VALUE L"CLSID"
+#define MIDI_ROOT_REG_KEY                               L"Software\\Microsoft\\Windows MIDI Services"
 
 // DWORD value. 0 to not use MMCSS. > 0 to use it. This is used in the midixproc project
 // HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services\UseMMCSS (DWORD)
-#define MIDI_USE_MMCSS_REG_VALUE L"UseMMCSS"
-#define MIDI_USE_MMCSS_REG_DEFAULT_VALUE 0x00000000
+#define MIDI_USE_MMCSS_REG_VALUE                        L"UseMMCSS"
+#define MIDI_USE_MMCSS_REG_DEFAULT_VALUE                0x00000000
 
-#define MIDI_CONFIG_FILE_REG_VALUE L"CurrentConfig"
+#define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"
+
+
+
+#define MIDI_ROOT_ENDPOINT_APP_SDK_REG_KEY              MIDI_ROOT_REG_KEY L"\\Desktop App SDK Runtime"
+#define MIDI_APP_SDK_ARM64_REG_VALUE                    L"Arm64"
+#define MIDI_APP_SDK_ARM64EC_REG_VALUE                  L"Arm64EC"
+#define MIDI_APP_SDK_X64_REG_VALUE                      L"x64"
+
+
+#define MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY             MIDI_ROOT_REG_KEY L"\\Transport Plugins"
+#define MIDI_ROOT_ENDPOINT_PROCESSING_PLUGINS_REG_KEY   MIDI_ROOT_REG_KEY L"\\Message Processing Plugins"
+#define MIDI_PLUGIN_ENABLED_REG_VALUE                   L"Enabled"
+#define MIDI_PLUGIN_CLSID_REG_VALUE                     L"CLSID"
+
+
 
 // we force this root so the service can't be told to open some other random file on the system
 // note that this is a restricted folder. The installer has to create this folder for us and

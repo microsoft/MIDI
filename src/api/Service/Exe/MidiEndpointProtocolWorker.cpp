@@ -232,9 +232,9 @@ CMidiEndpointProtocolWorker::Start(
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
+            MIDI_TRACE_EVENT_VERBOSE,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Requesting discovery information", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
@@ -247,9 +247,9 @@ CMidiEndpointProtocolWorker::Start(
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
+            MIDI_TRACE_EVENT_VERBOSE,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Returned from manual reset event wait", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
@@ -298,9 +298,9 @@ CMidiEndpointProtocolWorker::Start(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
+                MIDI_TRACE_EVENT_VERBOSE,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Endpoint name received", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
@@ -329,9 +329,9 @@ CMidiEndpointProtocolWorker::Start(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
+                MIDI_TRACE_EVENT_VERBOSE,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Product instance Id received", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
@@ -367,9 +367,9 @@ CMidiEndpointProtocolWorker::Start(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
+                MIDI_TRACE_EVENT_VERBOSE,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Function blocks received", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
@@ -413,9 +413,9 @@ CMidiEndpointProtocolWorker::Start(
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
+                MIDI_TRACE_EVENT_VERBOSE,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Initial protocol negotiation complete, calling callback function", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
