@@ -4,16 +4,15 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # binaries for staging builds
-build/staging/app-sdk/Arm64EC/*.*
-build/staging/app-sdk/Arm64/*.*
-build/staging/app-sdk/x64/*.*
-build/**/*.dll
-build/**/*.exe
-build/**/*.winmd
-build/**/*.msi
-build/**/*.msix
-build/**/*.zip
-build/**/*.nupkg
+*.dll
+*.exe
+*.msi
+*.msix
+*.zip
+*.nupkg
+build/release/**
+build/staging/**
+build/dependencies/**
 
 # Dump files
 *.etl
