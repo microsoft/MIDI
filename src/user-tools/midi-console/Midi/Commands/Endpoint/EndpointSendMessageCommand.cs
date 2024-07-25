@@ -297,7 +297,7 @@ namespace Microsoft.Midi.ConsoleApp
                     AnsiConsole.Progress()
                         .Start(ctx =>
                         {
-                            var sendTask = ctx.AddTask("[white]Sending messages[/]");
+                            var sendTask = ctx.AddTask("[white]Sending messages to MIDI service[/]");
                             sendTask.MaxValue = settings.Count;
                             sendTask.Value = 0;
 
@@ -397,6 +397,29 @@ namespace Microsoft.Midi.ConsoleApp
                     Thread.Sleep(sleepMs);
                 }
 
+                // BEGIN TEMP --------------------------------------------------
+                //AnsiConsole.MarkupLine(Strings.MonitorPressEscapeToStopMonitoringMessage);
+                //AnsiConsole.WriteLine();
+
+                //bool continueWaiting = true;
+
+                //while (continueWaiting)
+                //{
+                //    if (Console.KeyAvailable)
+                //    {
+                //        var keyInfo = Console.ReadKey(true);
+
+                //        if (keyInfo.Key == ConsoleKey.Escape)
+                //        {
+                //            continueWaiting = false;
+
+                //            AnsiConsole.WriteLine();
+                //            AnsiConsole.MarkupLine("🛑 " + Strings.MonitorEscapePressedMessage);
+                //        }
+
+                //    }
+                //}
+                // END TEMP --------------------------------------------------
 
                 session.DisconnectEndpointConnection(connection.ConnectionId);
 

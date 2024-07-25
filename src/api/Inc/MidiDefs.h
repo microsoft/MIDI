@@ -11,21 +11,26 @@
 #include <Devpropdef.h>
 
 
-#define MIDI_TRACE_EVENT_ERROR              "Midi.Error"
-#define MIDI_TRACE_EVENT_WARNING            "Midi.Warning"
-#define MIDI_TRACE_EVENT_INFO               "Midi.Info"
-#define MIDI_TRACE_EVENT_VERBOSE            "Midi.Verbose"
+#define MIDI_TRACE_EVENT_ERROR                      "Midi.Error"
+#define MIDI_TRACE_EVENT_WARNING                    "Midi.Warning"
+#define MIDI_TRACE_EVENT_INFO                       "Midi.Info"
+#define MIDI_TRACE_EVENT_VERBOSE                    "Midi.Verbose"
+#define MIDI_TRACE_EVENT_METRICS                    "Midi.Metrics"
 
 
-#define MIDI_TRACE_EVENT_MESSAGE_FIELD              "message"
-#define MIDI_TRACE_EVENT_LOCATION_FIELD             "location"
-#define MIDI_TRACE_EVENT_HRESULT_FIELD              "hresult"
-#define MIDI_TRACE_EVENT_INTERFACE_FIELD            "interface"
+#define MIDI_TRACE_EVENT_MESSAGE_FIELD              "Message"
+#define MIDI_TRACE_EVENT_LOCATION_FIELD             "Location"
+#define MIDI_TRACE_EVENT_HRESULT_FIELD              "HResult"
+#define MIDI_TRACE_EVENT_INTERFACE_FIELD            "Interface"
 
-#define MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD        "swd"
-#define MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD   "device instance"
+#define MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD    "Midi Timestamp"
+#define MIDI_TRACE_EVENT_MESSAGE_DATA_FIELD         "Midi Data"
+#define MIDI_TRACE_EVENT_MIDI_WORD0_FIELD           "Midi Word 0"
 
-#define MIDI_TRACE_EVENT_MIDI_WORD0_FIELD            "word0"
+
+#define MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD        "Endpoint Device Interface Id (SWD)"
+#define MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD   "Device Instance Id"
+
 
 
 

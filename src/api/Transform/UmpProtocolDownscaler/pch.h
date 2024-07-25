@@ -45,6 +45,8 @@
 #include <libmidi2/umpToMIDI1Protocol.h>
 
 #include "ump_helpers.h"        // internal helpers
+#include "wstring_util.h"
+#include "swd_helpers.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
 

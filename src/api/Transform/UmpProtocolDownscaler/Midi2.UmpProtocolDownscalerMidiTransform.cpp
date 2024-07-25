@@ -20,14 +20,16 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     // this only converts UMP to UMP
     RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, CreationParams->DataFormatIn != MidiDataFormat_UMP);
     RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, CreationParams->DataFormatOut != MidiDataFormat_UMP);
 
-    m_Device = Device;
+    m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(Device);
     m_Callback = Callback;
     m_Context = Context;
 
@@ -42,7 +44,9 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
     return S_OK;
@@ -77,13 +81,13 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     LONGLONG Timestamp
 )
 {
-    TraceLoggingWrite(
-        MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+    //TraceLoggingWrite(
+    //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this")
+    //);
 
 
     if (Length >= sizeof(uint32_t))
@@ -110,6 +114,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
 
             if (wordCount > 0)
             {
+                // we use return here instead of log, because the number of UMPs created should be no more than 1
                 RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), Timestamp, m_Context));
             }
         }
@@ -360,10 +365,12 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
             MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"invalid UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt32(Length, "Length in Bytes")
+            TraceLoggingWideString(L"Invalid UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingUInt32(Length, "Message Length in Bytes"),
+            TraceLoggingUInt64(Timestamp, "Message Timestamp")
             );
     }
 

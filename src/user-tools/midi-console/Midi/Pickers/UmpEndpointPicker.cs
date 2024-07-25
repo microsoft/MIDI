@@ -50,13 +50,16 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 foreach (var endpoint in endpoints)
                 {
-                    choices.Add(new UmpEndpointPickerEntry(AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " + endpoint.Name.PadRight(50), endpoint.EndpointDeviceId));
+                    choices.Add(new UmpEndpointPickerEntry(
+                        AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " + 
+                        (endpoint.Name + " [grey35](" + endpoint.GetParentDeviceInformation().Name + ")[/]").PadRight(80), 
+                        endpoint.EndpointDeviceId));
                 }
 
                 choices.Sort();
 
                 // this feels so dirty               
-                choices.Add(new UmpEndpointPickerEntry("🔙 " + "(Cancel)".PadRight(50), "")); // TODO: Localize
+                choices.Add(new UmpEndpointPickerEntry("🔙 " + "(Cancel)".PadRight(80), "")); // TODO: Localize
 
             }
         }
@@ -76,6 +79,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 var result = AnsiConsole.Prompt(
                     new SelectionPrompt<UmpEndpointPickerEntry>()
+                        .PageSize(20)
                         .Title(Strings.EndpointPickerPleaseSelectEndpoint)
                         .HighlightStyle(selectionStyle)
                         .AddChoices(choices)
