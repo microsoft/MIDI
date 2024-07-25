@@ -76,6 +76,8 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "json_helpers.h"
 #include "swd_helpers.h"
 #include "resource_util.h"
+#include "ump_helpers.h"
+#include "midi_ump.h"
 
 #include "MidiXProc.h"
 

@@ -29,15 +29,35 @@ CMidi2VirtualPatchBayRoutingDestination::Callback(
     LONGLONG position, 
     LONGLONG context)
 {
-    UNREFERENCED_PARAMETER(data);
-    UNREFERENCED_PARAMETER(length);
-    UNREFERENCED_PARAMETER(position);
     UNREFERENCED_PARAMETER(context);
 
-    // TODO: Perform any group transformations
+    RETURN_HR_IF_NULL(E_INVALIDARG, data);
+    RETURN_HR_IF_NULL(E_FAIL, m_router);
 
-    // TODO: Call the BiDi for the actual destination
+    auto word0 = internal::MidiWord0FromVoidMessageDataPointer(data);
 
+    byte* newData{ nullptr };
+
+    // if this is a groupless message
+    if (internal::MessageHasGroupField(word0))
+    {
+        // TODO: Perform any group transformations and create new message data
+
+
+
+
+
+
+
+
+    }
+    else
+    {
+        // nothing changes, so just send original data
+        newData = (byte*)data;
+    }
+
+    RETURN_IF_FAILED(m_endpointBiDi->SendMidiMessage(newData, length, position));
 
     return S_OK;
 }
@@ -69,6 +89,7 @@ CMidi2VirtualPatchBayRoutingDestination::SetEndpointBiDi(
 HRESULT
 CMidi2VirtualPatchBayRoutingDestination::Cleanup()
 {
+    m_router = nullptr;
 
     return S_OK;
 }
