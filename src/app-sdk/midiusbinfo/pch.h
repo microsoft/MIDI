@@ -34,6 +34,7 @@ namespace collections = winrt::Windows::Foundation::Collections;
 
 #include <wrl\module.h>
 #include <wrl\event.h>
+#include <devioctl.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include <avrt.h>
@@ -41,6 +42,10 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
+
+#include <wil\com.h>
+#include <wil\resource.h>
+#include <wil\result_macros.h>
 
 #include <atlbase.h>
 #include <atlcom.h>

@@ -291,15 +291,33 @@ class Build : NukeBuild
                     FileSystemTasks.CopyFileToDirectory(file, AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
                 }
 
+            }
+
+
+
+            foreach(var targetPlatform in InProcPlatforms)
+            {
+                string sourcePlatform;
+
+                if (targetPlatform.ToLower() == "arm64ec")
+                {
+                    sourcePlatform = "Arm64";
+                }
+                else
+                {
+                    sourcePlatform = targetPlatform;
+                }
+
                 // MIDI diagnostics app
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / platform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / platform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / sourcePlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / sourcePlatform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
 
                 // MIDI USB info utility
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / platform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / sourcePlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
 
                 // sample manifest
-                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "MyMidiApp.exe.manifest", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "MyMidiApp.exe.manifest", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
+
             }
 
         });
