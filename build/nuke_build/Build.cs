@@ -295,6 +295,9 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / platform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / platform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
 
+                // MIDI USB info utility
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / platform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
+
                 // sample manifest
                 FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "MyMidiApp.exe.manifest", AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
             }
