@@ -1,0 +1,51 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiSystemExclusiveDataReaderFormatEnum.idl";
+import "MidiSystemExclusiveDataFormatEnum.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Utilities.SysEx
+{
+    runtimeclass MidiSystemExclusiveSender
+    {
+        // progress result is true if succeeded. Progress is number of units 
+        // of data sent (for byte format, it's bytes, for UMP format, it's words)
+        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, UInt32> SendDataAsync(
+            Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination, 
+            Windows.Storage.Streams.IDataReader dataSource,
+            MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
+            MidiSystemExclusiveDataFormat dataFormat,
+            UInt8 messageSpacingMilliseconds,
+            Microsoft.Windows.Devices.Midi2.MidiGroup newGroup
+        );
+
+        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, UInt32> SendDataAsync(
+            Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination,
+            Windows.Storage.Streams.IDataReader dataSource,
+            MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
+            MidiSystemExclusiveDataFormat dataFormat
+        );
+
+        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, UInt32> SendDataAsync(
+            Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination,
+            Windows.Storage.Streams.IDataReader dataSource
+        );
+
+
+    }
+}
+
+
+
+
+
+
+
+
+

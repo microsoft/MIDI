@@ -58,6 +58,7 @@
     <ProjectReference Include="..\..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj" />
     <ProjectReference Include="..\..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj" />
     <ProjectReference Include="..\..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj" />
+    <ProjectReference Include="..\..\winrt-utilities-sysex\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.vcxproj" />
   </ItemGroup>
 
 </Project>
