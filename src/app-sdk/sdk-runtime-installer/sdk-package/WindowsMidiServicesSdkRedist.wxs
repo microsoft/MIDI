@@ -19,8 +19,10 @@
                     <Directory Id="SDK_Arm64_INSTALLFOLDER" Name="Arm64" />
                     <Directory Id="SDK_Arm64EC_INSTALLFOLDER" Name="Arm64EC" />
                 </Directory>
-                <Directory Id="MIDIDIAG_INSTALLFOLDER" Name="Diagnostics" />
-                <Directory Id="MIDIUSB_INSTALLFOLDER" Name="UsbInfo" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="MIDIDIAG_INSTALLFOLDER" Name="Diagnostics" />
+                    <Directory Id="MIDIUSB_INSTALLFOLDER" Name="UsbInfo" />
+                </Directory>
             </Directory>
         </StandardDirectory>
         

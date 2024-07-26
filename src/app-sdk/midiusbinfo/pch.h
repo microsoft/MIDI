@@ -121,3 +121,4 @@ typedef enum {
 
 namespace internal = ::WindowsMidiServicesInternal;
 
+
