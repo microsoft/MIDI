@@ -597,7 +597,7 @@ namespace Microsoft.Midi.ConsoleApp
                     AnsiConsole.MarkupLine(message);
                 }
 
-                if (countMessagesReceived > 0)
+                if (countMessagesReceived > 1)
                 {
                     if (outOfTimestampOrderMessageCount > 0)
                     {
@@ -622,7 +622,7 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                 }
 
-                if (countMessagesReceived > 0 && settings.WarnIfSkippedIncrementMessage)
+                if (countMessagesReceived > 1 && settings.WarnIfSkippedIncrementMessage)
                 {
                     if (numberOfSkippedDebugMessages > 0)
                     {
@@ -684,15 +684,15 @@ namespace Microsoft.Midi.ConsoleApp
                     AnsiConsole.MarkupLine($"🧮 Total time between first message and last message [steelblue1]{totalTime.ToString("N2")} {totalTimeLabel}[/]");
                     AnsiConsole.MarkupLine($"🔽 Minimum time between messages [steelblue1]{minDelta.ToString("N2")} {minDeltaLabel}[/]");
                     AnsiConsole.MarkupLine($"🔼 Maximum time between messages [steelblue1]{maxDelta.ToString("N2")} {maxDeltaLabel}[/]");
-                    AnsiConsole.MarkupLine($"➗ Average time between messages [steelblue1]{avgDelta.ToString("N2")} {avgDeltaLabel}[/]");
+                    AnsiConsole.MarkupLine($"✅ Average time between messages [steelblue1]{avgDelta.ToString("N2")} {avgDeltaLabel}[/]");
 
-                    if (maxJitterTicks > MidiClock.OffsetTimestampByMilliseconds(0, 1))
+                    if (maxJitterTicks > MidiClock.OffsetTimestampByMicroseconds(0, 3500))
                     {
-                        AnsiConsole.MarkupLine($"🫨 Maximum jitter [red]{maxJitter.ToString("N2")} {maxJitterLabel}[/]");
+                        AnsiConsole.MarkupLine($"❎ Maximum jitter [red]{maxJitter.ToString("N2")} {maxJitterLabel}[/]");
                     }
                     else
                     {
-                        AnsiConsole.MarkupLine($"😊 Maximum jitter [steelblue1]{maxJitter.ToString("N2")} {maxJitterLabel}[/]");
+                        AnsiConsole.MarkupLine($"✅ Maximum jitter [steelblue1]{maxJitter.ToString("N2")} {maxJitterLabel}[/]");
                     }
 
                     AnsiConsole.WriteLine();

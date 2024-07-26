@@ -175,21 +175,25 @@ CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
 
                 return E_FAIL;
             }
+            else
+            {
+                std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
 
-            // create the thread
+                // create the thread
 
-            ProtocolNegotiationWorkerThreadEntry newEntry{};
+                ProtocolNegotiationWorkerThreadEntry newEntry{};
 
-            newEntry.Worker = worker;
+                newEntry.Worker = worker;
 
-            newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
-                NegotiationParams,
-                NegotiationCompleteCallback);
+                newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
+                    NegotiationParams,
+                    NegotiationCompleteCallback);
 
-            // TODO: Need to protect this map
-            m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
+                // TODO: Need to protect this map
+                m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
 
-            m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();
+                m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();
+            }
         }
         else
         {
@@ -211,10 +215,14 @@ _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::RemoveWorkerIfPresent(std::wstring endpointInterfaceId)
 {
+    // TODO: Should have a lock on the internal map
+
     auto val = m_endpointWorkers.find(endpointInterfaceId);
 
     if (val != m_endpointWorkers.end())
     {
+        std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
+
         val->second.Worker->EndProcessing();    // this sets an event that tells the thread to quit
 
         if (val->second.Thread->joinable())

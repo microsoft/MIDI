@@ -27,7 +27,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         );
 
         // Deactivate MIDI stream
-        DeactivateMidiStream(true);
+ //       DeactivateMidiStream(true);
+        m_endpointAbstraction = nullptr;
 
         // Let plugins know we're not connected
         // TODO

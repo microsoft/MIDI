@@ -35,7 +35,7 @@ CMidi2KSMidi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(Device, "Device"),
+        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingHexUInt32(CreationParams->DataFormat, "MidiDataFormat"),
         TraceLoggingHexUInt32(Flow, "MidiFlow"),
         TraceLoggingHexUInt32(*MmCssTaskId, "MmCssTaskId"),

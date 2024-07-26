@@ -465,7 +465,10 @@ CMidiEndpointProtocolWorker::Callback(
     UNREFERENCED_PARAMETER(Position);
     UNREFERENCED_PARAMETER(Context);
 
-    if (Data != nullptr && Size == UMP128_BYTE_COUNT)
+    RETURN_HR_IF_NULL(E_INVALIDARG, Data);
+
+
+    if (Size == UMP128_BYTE_COUNT)
     {
         internal::PackedUmp128 ump;
 
@@ -520,7 +523,7 @@ CMidiEndpointProtocolWorker::Callback(
     }
     else
     {
-        // Either null (hopefully not) or not a UMP128 so can't be a stream message. Fall out quickly
+        // Not a UMP128 so can't be a stream message. Ignore and fall out quickly
     }
 
 
@@ -757,20 +760,19 @@ CMidiEndpointProtocolWorker::RequestAllFunctionBlocks()
         TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+    RETURN_HR_IF_NULL(E_POINTER, m_midiBiDiDevice);
+
     internal::PackedUmp128 ump{};
 
-    if (m_midiBiDiDevice)
-    {
-        // first word
-        ump.word0 = internal::BuildFunctionBlockDiscoveryRequestFirstWord(
-            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_ALL_FUNCTION_BLOCKS,
-            MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_MESSAGE_ALL_FILTER_FLAGS);
+    // first word
+    ump.word0 = internal::BuildFunctionBlockDiscoveryRequestFirstWord(
+        MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_ALL_FUNCTION_BLOCKS,
+        MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_MESSAGE_ALL_FILTER_FLAGS);
 
-        // send it immediately
-        return m_midiBiDiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0);
-    }
+    // send it immediately
+    RETURN_IF_FAILED(m_midiBiDiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0));
 
-    return E_FAIL;
+    return S_OK;
 }
 
 HRESULT
@@ -786,34 +788,21 @@ CMidiEndpointProtocolWorker::RequestAllEndpointDiscoveryInformation()
         TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+    RETURN_HR_IF_NULL(E_POINTER, m_midiBiDiDevice);
+
     internal::PackedUmp128 ump{};
 
-    if (m_midiBiDiDevice)
-    {
-        // first word
-        ump.word0 = internal::BuildEndpointDiscoveryRequestFirstWord(MIDI_PREFERRED_UMP_VERSION_MAJOR, MIDI_PREFERRED_UMP_VERSION_MINOR);
+    // first word
+    ump.word0 = internal::BuildEndpointDiscoveryRequestFirstWord(MIDI_PREFERRED_UMP_VERSION_MAJOR, MIDI_PREFERRED_UMP_VERSION_MINOR);
 
-        // second word
-        uint8_t filterBitmap = MIDI_ENDPOINT_DISCOVERY_MESSAGE_ALL_FILTER_FLAGS;
-        internal::SetMidiWordMostSignificantByte4(ump.word1, filterBitmap);
+    // second word
+    uint8_t filterBitmap = MIDI_ENDPOINT_DISCOVERY_MESSAGE_ALL_FILTER_FLAGS;
+    internal::SetMidiWordMostSignificantByte4(ump.word1, filterBitmap);
 
-        // send it immediately
-        return m_midiBiDiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0);
-    }
-    else
-    {
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Endpoint is null", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-        );
-    }
+    // send it immediately
+    RETURN_IF_FAILED(m_midiBiDiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0));
 
-    return E_FAIL;
+    return S_OK;
 }
 
 _Use_decl_annotations_
@@ -830,49 +819,49 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
         TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+    RETURN_HR_IF_NULL(E_POINTER, m_midiBiDiDevice);
+
     // see if all is what we want. If not, we'll send a request to change configuration.
 
-    if (m_midiBiDiDevice)
+    auto protocol = internal::GetStreamConfigurationNotificationProtocolFromFirstWord(ump.word0);
+    auto endpointRxJR = internal::GetStreamConfigurationNotificationReceiveJRFromFirstWord(ump.word0);
+    auto endpointTxJR = internal::GetStreamConfigurationNotificationTransmitJRFromFirstWord(ump.word0);
+
+    if (protocol !=m_preferredMidiProtocol ||
+        endpointRxJR != m_preferToSendJRTimestampsToEndpoint ||
+        endpointTxJR != m_preferToReceiveJRTimestampsFromEndpoint)
     {
-        auto protocol = internal::GetStreamConfigurationNotificationProtocolFromFirstWord(ump.word0);
-        auto endpointRxJR = internal::GetStreamConfigurationNotificationReceiveJRFromFirstWord(ump.word0);
-        auto endpointTxJR = internal::GetStreamConfigurationNotificationTransmitJRFromFirstWord(ump.word0);
-
-        if (protocol !=m_preferredMidiProtocol ||
-            endpointRxJR != m_preferToSendJRTimestampsToEndpoint ||
-            endpointTxJR != m_preferToReceiveJRTimestampsFromEndpoint)
+        if (!m_alreadyTriedToNegotiationOnce)
         {
-            if (!m_alreadyTriedToNegotiationOnce)
-            {
-                internal::PackedUmp128 configurationRequestUmp{};
+            internal::PackedUmp128 configurationRequestUmp{};
 
-                ump.word0 = internal::BuildStreamConfigurationRequestFirstWord(
-                    m_preferredMidiProtocol,
-                    m_preferToSendJRTimestampsToEndpoint,
-                    m_preferToReceiveJRTimestampsFromEndpoint);
+            ump.word0 = internal::BuildStreamConfigurationRequestFirstWord(
+                m_preferredMidiProtocol,
+                m_preferToSendJRTimestampsToEndpoint,
+                m_preferToReceiveJRTimestampsFromEndpoint);
 
-                m_alreadyTriedToNegotiationOnce = true;
+            m_alreadyTriedToNegotiationOnce = true;
 
-                // send it immediately
-                return m_midiBiDiDevice->SendMidiMessage((byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0);
-            }
-            else
-            {
-                // we've already tried negotiating once. Don't do it again
-                m_taskFinalStreamNegotiationResponseReceived = true;
-                return S_OK;
-            }
+            // send it immediately
+            RETURN_IF_FAILED(m_midiBiDiDevice->SendMidiMessage((byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0));
+
+            return S_OK;
         }
         else
         {
-            // all good on this try
+            // we've already tried negotiating once. Don't do it again
             m_taskFinalStreamNegotiationResponseReceived = true;
+
             return S_OK;
         }
-
     }
+    else
+    {
+        // all good on this try
+        m_taskFinalStreamNegotiationResponseReceived = true;
 
-    return E_FAIL;
+        return S_OK;
+    }
 }
 
 
@@ -889,9 +878,6 @@ CMidiEndpointProtocolWorker::Cleanup()
         TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-
-    LOG_IF_FAILED(m_sessionTracker->RemoveClientEndpointConnection(m_sessionId, m_deviceInterfaceId.c_str(), (MidiClientHandle)nullptr));
-
     // stop worker thread
 
     m_shutdown = true;
@@ -903,6 +889,9 @@ CMidiEndpointProtocolWorker::Cleanup()
 
     m_allNegotiationMessagesReceived.reset();
 
+    m_negotiationCompleteCallback = nullptr;
+
+    LOG_IF_FAILED(m_sessionTracker->RemoveClientEndpointConnection(m_sessionId, m_deviceInterfaceId.c_str(), (MidiClientHandle)nullptr));
 
     return S_OK;
 }

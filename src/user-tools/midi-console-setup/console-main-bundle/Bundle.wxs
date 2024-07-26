@@ -63,9 +63,9 @@
 
             <ExePackage
                 DisplayName="Microsoft .NET 8 Desktop Runtime"
-                SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\windowsdesktop-runtime-8.0.6-win-$(var.Platform).exe"
+                SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\windowsdesktop-runtime-8.0.7-win-$(var.Platform).exe"
                 Compressed="yes"
-                DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.6"
+                DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.7"
                 InstallArguments="/install /passive /norestart /log midi_dotnet8_install_log.txt"
                 UninstallArguments="/uninstall /passive /norestart /quiet"
                 />

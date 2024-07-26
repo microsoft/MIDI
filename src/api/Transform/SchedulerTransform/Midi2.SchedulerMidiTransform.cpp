@@ -54,9 +54,6 @@ CMidi2SchedulerMidiTransform::Initialize(
         &CMidi2SchedulerMidiTransform::QueueWorker,
         this);
 
-    // TODO: may need to set thread priority
-    //SetThreadPriority(workerThread.native_handle(), ... );
-
     m_queueWorkerThread = std::move(workerThread);
     m_queueWorkerThreadStopToken = m_queueWorkerThread.get_stop_token();
 

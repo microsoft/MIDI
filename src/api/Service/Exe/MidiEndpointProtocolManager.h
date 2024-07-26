@@ -11,7 +11,7 @@
 
 struct ProtocolNegotiationWorkerThreadEntry
 {
-    std::shared_ptr<std::thread> Thread;
+    std::shared_ptr<std::thread> Thread;        // todo: consider making this a std::jthread and keeping stop token in this structure
     std::shared_ptr<CMidiEndpointProtocolWorker> Worker;
 };
 
@@ -46,6 +46,8 @@ private:
     std::shared_ptr<CMidiDeviceManager> m_deviceManager;
     std::shared_ptr<CMidiSessionTracker> m_sessionTracker;
 
+
+    std::mutex m_endpointWorkersMapMutex{};
     std::map<std::wstring, ProtocolNegotiationWorkerThreadEntry> m_endpointWorkers;
 
     HRESULT RemoveWorkerIfPresent(_In_ std::wstring endpointInterfaceId);
