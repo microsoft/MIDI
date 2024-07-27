@@ -263,6 +263,7 @@ class Build : NukeBuild
                     "Microsoft.Windows.Devices.Midi2.Messages",
                     "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback",
                     "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual",
+                    "Microsoft.Windows.Devices.Midi2.Utilities.SysEx",
                     "Microsoft.Windows.Devices.Midi2.Initialization"           // this last one gets packed 100% in the nuget, including the impl
                 })
                 {

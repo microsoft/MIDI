@@ -107,6 +107,14 @@ app.Configure(config =>
             .WithDescription(Strings.CommandSendMessagesFileDescription)
             ;
 
+        endpoint.AddCommand<EndpointSendSysExFileCommand>("send-sysex-file")
+            .WithAlias("send-sysex")
+            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-sysex-file", "%USERPROFILE%\\Documents\\patch_dump.syx")
+            .WithExample("endpoint", "send-sysex", "patch_dump.syx")
+            .WithDescription(Strings.CommandSendSysExFileDescription)
+            ;
+
+
         endpoint.AddCommand<EndpointPropertiesCommand>("properties")
             .WithAlias("props")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "properties")

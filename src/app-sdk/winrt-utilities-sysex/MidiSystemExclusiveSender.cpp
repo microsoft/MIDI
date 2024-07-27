@@ -10,28 +10,28 @@
 #include "MidiSystemExclusiveSender.h"
 #include "MidiSystemExclusiveSender.g.cpp"
 
+//#include <libmidi2/bytestreamToUMP.h>
+#include "bytestreamToUMP.h"
+
 #define DEFAULT_MESSAGE_SPACING_MILLISECONDS 2
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implementation
 {
     _Use_decl_annotations_
-    foundation::IAsyncOperationWithProgress<bool, uint32_t> MidiSystemExclusiveSender::SendDataAsync(
+    foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> MidiSystemExclusiveSender::SendDataAsync(
         midi2::MidiEndpointConnection destination, 
         streams::IDataReader dataSource, 
         sysex::MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
-        sysex::MidiSystemExclusiveDataFormat dataFormat,
+        sysex::MidiSystemExclusiveDataFormat sysexDataFormat,
         uint8_t messageSpacingMilliseconds,
         midi2::MidiGroup newGroup) noexcept
     {
-        UNREFERENCED_PARAMETER(destination);
-        UNREFERENCED_PARAMETER(dataSource);
-        UNREFERENCED_PARAMETER(sourceReaderFormat);
-        UNREFERENCED_PARAMETER(dataFormat);
-        UNREFERENCED_PARAMETER(messageSpacingMilliseconds);
-
         auto progress{ co_await winrt::get_progress_token() };
+        auto cancel{ co_await winrt::get_cancellation_token() };
 
-        uint32_t transferCount{ 0 };
+        sysex::MidiSystemExclusiveSendProgress progressUpdate{};
+
+        bytestreamToUMP BS2UMP;
 
         if (destination == nullptr)
         {
@@ -49,39 +49,90 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
 
         // if sourceReaderFormat is InferFromData, try to figure out the reader format (binary, text)
 
-        // if dataFormat is InferFromData, try to figure out the data format (sysex7, 8, byte, words, etc.)
+        if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::Binary && sysexDataFormat == sysex::MidiSystemExclusiveDataFormat::ByteFormatSystemExclusive7)
+        {
+            // data is binary sysex 7 bytestream format
+            while (dataSource.UnconsumedBufferLength() > 0 && !cancel())
+            {
+                byte b = dataSource.ReadByte();
+
+                progressUpdate.BytesRead++;
+
+                BS2UMP.bytestreamParse(b);
+
+                // retrieve the UMP(s) from the parser
+                // and sent it on
+                while (BS2UMP.availableUMP())
+                {
+                    uint32_t umpWords[4];
+                    uint8_t wordCount;
+
+                    for (wordCount = 0; wordCount < _countof(umpWords) && BS2UMP.availableUMP(); wordCount++)
+                    {
+                        umpWords[wordCount] = BS2UMP.readUMP();
+                    }
+
+                    if (wordCount > 0)
+                    {
+                        destination.SendSingleMessageWordArray(0, 0, wordCount, umpWords);
+
+                        progressUpdate.MessagesSent++;
+
+                        if (messageSpacingMilliseconds > 0)
+                        {
+                            Sleep(messageSpacingMilliseconds);
+                        }
+                    }
+                }
+
+                progress(progressUpdate);
+            }
+
+            if (!cancel()) co_return true;
+
+        }
+        else if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::Text)
+        {
+            // data is text format
+        }
+        else if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::InferFromData)
+        {
+            // read the 
+        }
+        else
+        {
+            // invalid source reader format
+            co_return false;
+        }
 
 
-        // do the transfer here
 
-        progress(transferCount);
-
-
-
-        co_return true;
+        // return false until this is fully implemented
+        co_return false;
 
     }
 
 
     _Use_decl_annotations_
-    foundation::IAsyncOperationWithProgress<bool, uint32_t> MidiSystemExclusiveSender::SendDataAsync(
+    foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> MidiSystemExclusiveSender::SendDataAsync(
         midi2::MidiEndpointConnection destination,
         streams::IDataReader dataSource,
         sysex::MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
-        sysex::MidiSystemExclusiveDataFormat dataFormat) noexcept
+        sysex::MidiSystemExclusiveDataFormat sysexDataFormat) noexcept
     {
         return SendDataAsync(
             destination,
             dataSource,
             sourceReaderFormat,
-            dataFormat,
+            sysexDataFormat,
             DEFAULT_MESSAGE_SPACING_MILLISECONDS,
             nullptr
         );
     }
 
+
     _Use_decl_annotations_
-    foundation::IAsyncOperationWithProgress<bool, uint32_t> MidiSystemExclusiveSender::SendDataAsync(
+    foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> MidiSystemExclusiveSender::SendDataAsync(
         midi2::MidiEndpointConnection destination,
         streams::IDataReader dataSource) noexcept
     {
@@ -92,10 +143,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
             sysex::MidiSystemExclusiveDataFormat::InferFromData
         );
     }
-
-
-
-
 
 
 

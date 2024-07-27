@@ -67,6 +67,11 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
+
+            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
+
         </Component>
 
         <Component Id="WindowsAppSDKArm64"
@@ -107,6 +112,11 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
+
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
+
         </Component>
 
         <Component Id="WindowsAppSDKArm64EC"
@@ -148,6 +158,11 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
+
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
+
         </Component>
 
         <!-- Install MIDI Diag Utility -->

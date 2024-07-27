@@ -15,23 +15,25 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
     {
         MidiSystemExclusiveSender() = default;
 
-        static foundation::IAsyncOperationWithProgress<bool, uint32_t> SendDataAsync(
+        static foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> SendDataAsync(
             _In_ midi2::MidiEndpointConnection destination, 
             _In_ streams::IDataReader dataSource,
             _In_ sysex::MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
-            _In_ sysex::MidiSystemExclusiveDataFormat dataFormat,
+            _In_ sysex::MidiSystemExclusiveDataFormat sysexDataFormat,
             _In_ uint8_t messageSpacingMilliseconds,
             _In_ midi2::MidiGroup newGroup) noexcept;
 
-        static foundation::IAsyncOperationWithProgress<bool, uint32_t> SendDataAsync(
+        static foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> SendDataAsync(
             _In_ midi2::MidiEndpointConnection destination,
             _In_ streams::IDataReader dataSource,
             _In_ sysex::MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
-            _In_ sysex::MidiSystemExclusiveDataFormat dataFormat) noexcept;
+            _In_ sysex::MidiSystemExclusiveDataFormat sysexDataFormat) noexcept;
 
-        static foundation::IAsyncOperationWithProgress<bool, uint32_t> SendDataAsync(
+        static foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> SendDataAsync(
             _In_ midi2::MidiEndpointConnection destination,
             _In_ streams::IDataReader dataSource) noexcept;
+
+    private:
 
     };
 }

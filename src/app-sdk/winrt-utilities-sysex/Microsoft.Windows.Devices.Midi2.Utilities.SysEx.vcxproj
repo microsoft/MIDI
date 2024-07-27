@@ -97,7 +97,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(ProjectDir)libmidi2\include</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
@@ -106,7 +106,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(ProjectDir)libmidi2\include</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
@@ -114,7 +114,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(ProjectDir)libmidi2\include</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
@@ -123,7 +123,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(ProjectDir)libmidi2\include</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
@@ -131,7 +131,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(ProjectDir)libmidi2\include</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
@@ -140,12 +140,16 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(ProjectDir)libmidi2\include</IncludePath>
     <TargetName>$(ProjectName)</TargetName>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>false</VcpkgEnableManifest>
+    <VcpkgEnabled>false</VcpkgEnabled>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -260,12 +264,93 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="libmidi2\include\bytestreamToUMP.h" />
+    <ClInclude Include="libmidi2\include\mcoded7.h" />
+    <ClInclude Include="libmidi2\include\midiCIMessageCreate.h" />
+    <ClInclude Include="libmidi2\include\midiCIProcessor.h" />
+    <ClInclude Include="libmidi2\include\umpMessageCreate.h" />
+    <ClInclude Include="libmidi2\include\umpProcessor.h" />
+    <ClInclude Include="libmidi2\include\umpToBytestream.h" />
+    <ClInclude Include="libmidi2\include\umpToMIDI1Protocol.h" />
+    <ClInclude Include="libmidi2\include\utils.h" />
     <ClInclude Include="MidiSystemExclusiveSender.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="libmidi2\src\bytestreamToUMP.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="libmidi2\src\mcoded7.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="libmidi2\src\midiCIMessageCreate.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="libmidi2\src\midiCIProcessor.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="libmidi2\src\umpMessageCreate.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="libmidi2\src\umpProcessor.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="libmidi2\src\umpToBytestream.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="libmidi2\src\umpToMIDI1Protocol.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="libmidi2\src\utils.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSender.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -275,6 +360,7 @@
     <Midl Include="MidiSystemExclusiveDataFormatEnum.idl" />
     <Midl Include="MidiSystemExclusiveDataReaderFormatEnum.idl" />
     <Midl Include="MidiSystemExclusiveSender.idl" />
+    <Midl Include="MidiSystemExclusiveSendProgress.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-sdk.def" />

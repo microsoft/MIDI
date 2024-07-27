@@ -208,6 +208,9 @@
     <ProjectReference Include="..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj">
       <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\winrt-utilities-sysex\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.vcxproj">
+      <Project>{0d4739ef-c0d3-441c-ac25-20a55909e1dc}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

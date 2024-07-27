@@ -214,6 +214,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint..
+        /// </summary>
+        internal static string CommandSendSysExFileDescription {
+            get {
+                return ResourceManager.GetString("CommandSendSysExFileDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc..
         /// </summary>
         internal static string CommandServiceDescription {

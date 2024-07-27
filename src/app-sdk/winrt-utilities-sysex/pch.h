@@ -71,5 +71,6 @@ namespace sysex = ::winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx;
 namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implementation;
 
 
+
 #include "MidiSystemExclusiveSender.h"
 

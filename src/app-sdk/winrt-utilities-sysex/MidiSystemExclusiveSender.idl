@@ -10,29 +10,31 @@
 import "MidiSystemExclusiveDataReaderFormatEnum.idl";
 import "MidiSystemExclusiveDataFormatEnum.idl";
 
+import "MidiSystemExclusiveSendProgress.idl";
+
 namespace Microsoft.Windows.Devices.Midi2.Utilities.SysEx
 {
     runtimeclass MidiSystemExclusiveSender
     {
         // progress result is true if succeeded. Progress is number of units 
         // of data sent (for byte format, it's bytes, for UMP format, it's words)
-        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, UInt32> SendDataAsync(
+        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, MidiSystemExclusiveSendProgress> SendDataAsync(
             Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination, 
             Windows.Storage.Streams.IDataReader dataSource,
             MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
-            MidiSystemExclusiveDataFormat dataFormat,
+            MidiSystemExclusiveDataFormat sysexDataFormat,
             UInt8 messageSpacingMilliseconds,
             Microsoft.Windows.Devices.Midi2.MidiGroup newGroup
         );
 
-        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, UInt32> SendDataAsync(
+        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, MidiSystemExclusiveSendProgress> SendDataAsync(
             Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination,
             Windows.Storage.Streams.IDataReader dataSource,
             MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
-            MidiSystemExclusiveDataFormat dataFormat
+            MidiSystemExclusiveDataFormat sysexDataFormat
         );
 
-        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, UInt32> SendDataAsync(
+        static Windows.Foundation.IAsyncOperationWithProgress<Boolean, MidiSystemExclusiveSendProgress> SendDataAsync(
             Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination,
             Windows.Storage.Streams.IDataReader dataSource
         );
