@@ -120,19 +120,19 @@ CMidi2KSAggregateMidiInProxy::Callback(
     while (m_BS2UMP.availableUMP())
     {
         uint32_t umpMessage[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
-        UINT umpCount;
-        for (umpCount = 0; umpCount < _countof(umpMessage) && m_BS2UMP.availableUMP(); umpCount++)
+        UINT wordCount;
+        for (wordCount = 0; wordCount < _countof(umpMessage) && m_BS2UMP.availableUMP(); wordCount++)
         {
-            umpMessage[umpCount] = m_BS2UMP.readUMP();
+            umpMessage[wordCount] = m_BS2UMP.readUMP();
         }
 
-        if (umpCount > 0)
+        if (wordCount > 0)
         {
             // in case it goes null while we're in the loop
             RETURN_HR_IF_NULL(E_POINTER, m_callback);
 
             // there are 4 bytes per each 32 bit UMP returned by the parser.
-            auto hr = m_callback->Callback(&(umpMessage[0]), umpCount * sizeof(uint32_t), Timestamp, Context);
+            auto hr = m_callback->Callback(&(umpMessage[0]), wordCount * sizeof(uint32_t), Timestamp, Context);
 
             if (SUCCEEDED(hr))
             {

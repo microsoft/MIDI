@@ -316,6 +316,10 @@ CMidi2KSAggregateMidi::Cleanup()
     return S_OK;
 }
 
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidi::SendMidiMessage(

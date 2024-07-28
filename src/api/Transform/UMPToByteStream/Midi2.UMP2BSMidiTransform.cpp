@@ -75,6 +75,9 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
 
         if (byteCount > 0)
         {
+            // TODO: If this fails, it leaves a bunch of stuff in the m_UMP2BS that will get sent next time
+            // around. Should likely drain that before moving on
+
             RETURN_IF_FAILED(m_Callback->Callback(&(byteStream[0]), byteCount, Position, m_Context));
         }
     }
