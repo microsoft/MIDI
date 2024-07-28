@@ -20,23 +20,24 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.SysEx
         // of data sent (for byte format, it's bytes, for UMP format, it's words)
         static Windows.Foundation.IAsyncOperationWithProgress<Boolean, MidiSystemExclusiveSendProgress> SendDataAsync(
             Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination, 
-            Windows.Storage.Streams.IDataReader dataSource,
+            Windows.Storage.Streams.IInputStream dataSource,
             MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
             MidiSystemExclusiveDataFormat sysexDataFormat,
-            UInt8 messageSpacingMilliseconds,
+            UInt16 messageSpacingMilliseconds,
+            Boolean changeGroup,
             Microsoft.Windows.Devices.Midi2.MidiGroup newGroup
         );
 
         static Windows.Foundation.IAsyncOperationWithProgress<Boolean, MidiSystemExclusiveSendProgress> SendDataAsync(
             Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination,
-            Windows.Storage.Streams.IDataReader dataSource,
+            Windows.Storage.Streams.IInputStream dataSource,
             MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
             MidiSystemExclusiveDataFormat sysexDataFormat
         );
 
         static Windows.Foundation.IAsyncOperationWithProgress<Boolean, MidiSystemExclusiveSendProgress> SendDataAsync(
             Microsoft.Windows.Devices.Midi2.MidiEndpointConnection destination,
-            Windows.Storage.Streams.IDataReader dataSource
+            Windows.Storage.Streams.IInputStream dataSource
         );
 
 

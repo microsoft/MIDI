@@ -38,7 +38,10 @@
         <Reference Include="Microsoft.Windows.Devices.Midi2.CapabilityInquiry">
             <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd</HintPath>
         </Reference>
-        
+        <Reference Include="Microsoft.Windows.Devices.Midi2.Utilities.SysEx">
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.winmd</HintPath>
+        </Reference>
+
         <Reference Include="Microsoft.Windows.Devices.Midi2.Initialization">
             <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Initialization.winmd</HintPath>
         </Reference>

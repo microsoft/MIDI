@@ -15,10 +15,10 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
     <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
-    <Bundle Name="Windows MIDI Services (App SDK Runtime) $(SetupVersionName) $(SetupVersionNumber)" 
+    <Bundle Name="Windows MIDI Services (Tools and SDKs) $(SetupVersionName) $(SetupVersionNumber)" 
           Manufacturer="Microsoft Corporation" 
           Version="$(SetupVersionNumber)" 
-          UpgradeCode="738243ea-170f-4385-94d5-be4059d9d2fb">
+          UpgradeCode="7afb7a7b-86d4-42d7-8cb5-08f65ddcb1a9">
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
@@ -36,6 +36,28 @@
 
     
     <Fragment>
+        <!-- Believe it or not, the DotNetCoreSearch barfs if you send ARM64 instead of arm64 -->
+
+        <?if $(var.Platform) = ARM64 ?>
+        <!-- Apps use .NET Core 8 -->
+        <netfx:DotNetCoreSearch
+            Id="SearchForDotNet8"
+            RuntimeType="desktop"
+            Platform="arm64"
+            MajorVersion="8"
+            Variable="DotNetDesktopRuntimeVersion"
+                />
+        <?else?>
+        <netfx:DotNetCoreSearch
+            Id="SearchForDotNet8"
+            RuntimeType="desktop"
+            Platform="x64"
+            MajorVersion="8"
+            Variable="DotNetDesktopRuntimeVersion"
+                />
+        <?endif?>
+
+
         <PackageGroup Id="Prerequisites">
 
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
@@ -47,8 +69,16 @@
                 Compressed="yes"
                 InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
                 Permanent="true"
-                >
-            </ExePackage>
+                />
+
+            <ExePackage
+                DisplayName="Microsoft .NET 8 Desktop Runtime"
+                SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\windowsdesktop-runtime-8.0.7-win-$(var.Platform).exe"
+                Compressed="yes"
+                DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.7"
+                InstallArguments="/install /passive /norestart /log midi_dotnet8_install_log.txt"
+                UninstallArguments="/uninstall /passive /norestart /quiet"
+                />
             
         </PackageGroup>
         
@@ -59,6 +89,14 @@
                 Permanent="no"
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesSdkRedist.msi">
+            </MsiPackage>
+
+            <MsiPackage
+                Id="MidiServicesConsoleSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMIDIServicesConsoleStandAloneSetup.msi">
             </MsiPackage>
 
         </PackageGroup>

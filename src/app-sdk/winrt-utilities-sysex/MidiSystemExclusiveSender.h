@@ -17,21 +17,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
 
         static foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> SendDataAsync(
             _In_ midi2::MidiEndpointConnection destination, 
-            _In_ streams::IDataReader dataSource,
+            _In_ streams::IInputStream dataSource,
             _In_ sysex::MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
             _In_ sysex::MidiSystemExclusiveDataFormat sysexDataFormat,
-            _In_ uint8_t messageSpacingMilliseconds,
+            _In_ uint16_t messageSpacingMilliseconds,
+            _In_ bool changeGroup,
             _In_ midi2::MidiGroup newGroup) noexcept;
 
         static foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> SendDataAsync(
             _In_ midi2::MidiEndpointConnection destination,
-            _In_ streams::IDataReader dataSource,
+            _In_ streams::IInputStream dataSource,
             _In_ sysex::MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
             _In_ sysex::MidiSystemExclusiveDataFormat sysexDataFormat) noexcept;
 
         static foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> SendDataAsync(
             _In_ midi2::MidiEndpointConnection destination,
-            _In_ streams::IDataReader dataSource) noexcept;
+            _In_ streams::IInputStream dataSource) noexcept;
 
     private:
 

@@ -20,12 +20,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
     _Use_decl_annotations_
     foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> MidiSystemExclusiveSender::SendDataAsync(
         midi2::MidiEndpointConnection destination, 
-        streams::IDataReader dataSource, 
+        streams::IInputStream dataSource, 
         sysex::MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
         sysex::MidiSystemExclusiveDataFormat sysexDataFormat,
-        uint8_t messageSpacingMilliseconds,
+        uint16_t messageSpacingMilliseconds,
+        bool changeGroup,
         midi2::MidiGroup newGroup) noexcept
     {
+        co_await winrt::resume_background();
+
         auto progress{ co_await winrt::get_progress_token() };
         auto cancel{ co_await winrt::get_cancellation_token() };
 
@@ -45,26 +48,55 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
             co_return false;
         }
 
-        co_await winrt::resume_background();
 
-        // if sourceReaderFormat is InferFromData, try to figure out the reader format (binary, text)
 
-        if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::Binary && sysexDataFormat == sysex::MidiSystemExclusiveDataFormat::ByteFormatSystemExclusive7)
+        // binary format MIDI 1.0 Data Format SysEx 7
+        if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::Binary && 
+            sysexDataFormat == sysex::MidiSystemExclusiveDataFormat::ByteFormatSystemExclusive7)
         {
-            // data is binary sysex 7 bytestream format
-            while (dataSource.UnconsumedBufferLength() > 0 && !cancel())
+            streams::DataReader reader(dataSource);
+
+            //reader.InputStreamOptions(streams::InputStreamOptions::ReadAhead);
+          
+            if (changeGroup && newGroup != nullptr)
             {
-                byte b = dataSource.ReadByte();
+                BS2UMP.defaultGroup = newGroup.Index();
+            }
 
-                progressUpdate.BytesRead++;
+            const uint32_t chunkSize = 4096;
+            auto bytesRead = co_await reader.LoadAsync(chunkSize);
 
-                BS2UMP.bytestreamParse(b);
+            bool done = (bytesRead == 0);
+            bool lastPass = (bytesRead < chunkSize);
+            bool success = false;
+
+            if (done)
+            {
+                progressUpdate.LastErrorMessage = L"No data read from file.";
+            }
+
+            progressUpdate.BytesRead = 0;
+            progressUpdate.MessagesSent = 0;
+            progress(progressUpdate);
+
+            // data is binary sysex 7 bytestream format
+            while (!done && !cancel())
+            {
+                while (reader.UnconsumedBufferLength() > 0)
+                {
+                    byte b = reader.ReadByte();
+                    progressUpdate.BytesRead += 1;
+
+                    BS2UMP.bytestreamParse(b);
+                }
+
+                progress(progressUpdate);
 
                 // retrieve the UMP(s) from the parser
                 // and sent it on
                 while (BS2UMP.availableUMP())
                 {
-                    uint32_t umpWords[4];
+                    uint32_t umpWords[2];       // Sysex7 is a 64 bit packet
                     uint8_t wordCount;
 
                     for (wordCount = 0; wordCount < _countof(umpWords) && BS2UMP.availableUMP(); wordCount++)
@@ -86,19 +118,37 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
                 }
 
                 progress(progressUpdate);
+
+                if (!lastPass)
+                {
+                    auto bytesReadThisPass = co_await reader.LoadAsync(chunkSize);
+
+                    if (bytesReadThisPass < chunkSize)
+                    {
+                        lastPass = true;
+                    }
+                }
+                else
+                {
+                    // drained the end of the data
+                    done = true;
+
+                    success = true;
+                }
             }
 
-            if (!cancel()) co_return true;
+            co_return success;
+        }
+        else if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::Text &&
+            sysexDataFormat == sysex::MidiSystemExclusiveDataFormat::ByteFormatSystemExclusive7)
+        {
+            // data is text format MIDI 1.0 Data Format SysEx 7
 
         }
-        else if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::Text)
-        {
-            // data is text format
-        }
-        else if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::InferFromData)
-        {
-            // read the 
-        }
+
+        // todo: other formats
+
+
         else
         {
             // invalid source reader format
@@ -116,7 +166,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
     _Use_decl_annotations_
     foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> MidiSystemExclusiveSender::SendDataAsync(
         midi2::MidiEndpointConnection destination,
-        streams::IDataReader dataSource,
+        streams::IInputStream dataSource,
         sysex::MidiSystemExclusiveDataReaderFormat sourceReaderFormat,
         sysex::MidiSystemExclusiveDataFormat sysexDataFormat) noexcept
     {
@@ -126,6 +176,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
             sourceReaderFormat,
             sysexDataFormat,
             DEFAULT_MESSAGE_SPACING_MILLISECONDS,
+            false,
             nullptr
         );
     }
@@ -134,7 +185,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
     _Use_decl_annotations_
     foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> MidiSystemExclusiveSender::SendDataAsync(
         midi2::MidiEndpointConnection destination,
-        streams::IDataReader dataSource) noexcept
+        streams::IInputStream dataSource) noexcept
     {
         return SendDataAsync(
             destination,

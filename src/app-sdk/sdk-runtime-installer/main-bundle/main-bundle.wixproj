@@ -20,6 +20,7 @@
     <PackageReference Include="WixToolset.Util.wixext" Version="4.0.5" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\console-package\console-package.wixproj" />
     <ProjectReference Include="..\sdk-package\sdk-redist-package.wixproj" />
   </ItemGroup>
 </Project>
