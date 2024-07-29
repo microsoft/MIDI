@@ -744,7 +744,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 negotiationParams.PreferToReceiveJRTimestampsFromEndpoint = false;
                 negotiationParams.TimeoutMilliseconds = 5000;
 
-                LOG_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+                LOG_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
                     __uuidof(Midi2KSAbstraction),
                     newDeviceInterfaceId,
                     negotiationParams,

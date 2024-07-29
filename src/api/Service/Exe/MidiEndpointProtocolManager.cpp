@@ -127,7 +127,7 @@ CMidiEndpointProtocolManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windo
 
 _Use_decl_annotations_
 HRESULT
-CMidiEndpointProtocolManager::NegotiateAndRequestMetadata(
+CMidiEndpointProtocolManager::DiscoverAndNegotiate(
     GUID AbstractionGuid,
     LPCWSTR DeviceInterfaceId,
     ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,

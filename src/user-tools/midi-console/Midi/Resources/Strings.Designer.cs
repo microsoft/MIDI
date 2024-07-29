@@ -1749,20 +1749,20 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Transport Code.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelTransportCode {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelTransportCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transport Id.
         /// </summary>
         internal static string PropertyTablePropertyLabelTransportId {
             get {
                 return ResourceManager.GetString("PropertyTablePropertyLabelTransportId", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Transport Mnemonic.
-        /// </summary>
-        internal static string PropertyTablePropertyLabelTransportMnemonic {
-            get {
-                return ResourceManager.GetString("PropertyTablePropertyLabelTransportMnemonic", resourceCulture);
             }
         }
         

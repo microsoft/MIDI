@@ -505,7 +505,7 @@ interface IMidiProtocolNegotiationCompleteCallback : IUnknown
 ]
 interface IMidiEndpointProtocolManagerInterface : IUnknown
 {
-    HRESULT NegotiateAndRequestMetadata(
+    HRESULT DiscoverAndNegotiate(
         [in] GUID AbstractionGuid,
         [in] LPCWSTR DeviceInterfaceId,
         [in] ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,

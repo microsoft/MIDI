@@ -689,8 +689,8 @@ Timestamp</value>
   <data name="PropertyTablePropertyLabelTransportId" xml:space="preserve">
     <value>Transport Id</value>
   </data>
-  <data name="PropertyTablePropertyLabelTransportMnemonic" xml:space="preserve">
-    <value>Transport Mnemonic</value>
+  <data name="PropertyTablePropertyLabelTransportCode" xml:space="preserve">
+    <value>Transport Code</value>
   </data>
   <data name="PropertyTablePropertyLabelTransportSuppliedName" xml:space="preserve">
     <value>Transport-supplied Name</value>

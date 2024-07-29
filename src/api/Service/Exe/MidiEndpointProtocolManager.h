@@ -29,7 +29,7 @@ public:
         _In_ std::shared_ptr<CMidiSessionTracker>& SessionTracker
     );
 
-    STDMETHOD(NegotiateAndRequestMetadata)(
+    STDMETHOD(DiscoverAndNegotiate)(
         _In_ GUID AbstractionGuid,
         _In_ LPCWSTR DeviceInterfaceId,
         _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,

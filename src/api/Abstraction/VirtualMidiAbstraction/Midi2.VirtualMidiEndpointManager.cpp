@@ -212,7 +212,7 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
     negotiationParams.PreferToReceiveJRTimestampsFromEndpoint = false;
     negotiationParams.TimeoutMilliseconds = 2000;
 
-    RETURN_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+    RETURN_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
         AbstractionLayerGUID,
         endpointId.c_str(),
         negotiationParams,

@@ -121,7 +121,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // Basics ============================================================================
         additionalProperties.Append(STRING_PKEY_MIDI_AbstractionLayer);
-        additionalProperties.Append(STRING_PKEY_MIDI_TransportMnemonic);
+        additionalProperties.Append(STRING_PKEY_MIDI_TransportCode);
 
         additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
         additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
@@ -411,10 +411,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {
-                    if (device1.GetTransportSuppliedInfo().TransportAbbreviation == device2.GetTransportSuppliedInfo().TransportAbbreviation)
+                    if (device1.GetTransportSuppliedInfo().TransportCode == device2.GetTransportSuppliedInfo().TransportCode)
                         return device1.Name() < device2.Name();
 
-                    return device1.GetTransportSuppliedInfo().TransportAbbreviation < device2.GetTransportSuppliedInfo().TransportAbbreviation;
+                    return device1.GetTransportSuppliedInfo().TransportCode < device2.GetTransportSuppliedInfo().TransportCode;
                 });
             break;
 
@@ -422,10 +422,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {
-                    if (device1.GetTransportSuppliedInfo().TransportAbbreviation == device2.GetTransportSuppliedInfo().TransportAbbreviation)
+                    if (device1.GetTransportSuppliedInfo().TransportCode == device2.GetTransportSuppliedInfo().TransportCode)
                         return device1.EndpointDeviceId() < device2.EndpointDeviceId();
 
-                    return device1.GetTransportSuppliedInfo().TransportAbbreviation < device2.GetTransportSuppliedInfo().TransportAbbreviation;
+                    return device1.GetTransportSuppliedInfo().TransportCode < device2.GetTransportSuppliedInfo().TransportCode;
                 });
             break;
 
@@ -433,10 +433,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {
-                    if (device1.GetTransportSuppliedInfo().TransportAbbreviation == device2.GetTransportSuppliedInfo().TransportAbbreviation)
+                    if (device1.GetTransportSuppliedInfo().TransportCode == device2.GetTransportSuppliedInfo().TransportCode)
                         return device1.DeviceInstanceId() < device2.DeviceInstanceId();
 
-                    return device1.GetTransportSuppliedInfo().TransportAbbreviation < device2.GetTransportSuppliedInfo().TransportAbbreviation;
+                    return device1.GetTransportSuppliedInfo().TransportCode < device2.GetTransportSuppliedInfo().TransportCode;
                 });
             break;
 
@@ -831,7 +831,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 //        info.SmallImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedSmallImagePath, L"");
 
         info.TransportId = GetGuidProperty(STRING_PKEY_MIDI_AbstractionLayer, winrt::guid{});
-        info.TransportAbbreviation = GetStringProperty(STRING_PKEY_MIDI_TransportMnemonic, L"");
+        info.TransportCode = GetStringProperty(STRING_PKEY_MIDI_TransportCode, L"");
         info.SupportsMultiClient = GetBoolProperty(STRING_PKEY_MIDI_SupportsMulticlient, true);
 
         info.VendorId = GetUInt16Property(STRING_PKEY_MIDI_UsbVID, 0);
