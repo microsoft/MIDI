@@ -91,7 +91,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     std::wstring hash;
     ULONG cPins{ 0 };
 
-    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+    std::wstring transportCode(TRANSPORT_CODE);
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
@@ -529,7 +529,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         commonProperties.AbstractionLayerGuid = KsAbstractionLayerGUID;
         commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
         commonProperties.FriendlyName = MidiPin->Name.c_str();
-        commonProperties.TransportMnemonic = mnemonic.c_str();
+        commonProperties.TransportCode = transportCode.c_str();
         commonProperties.TransportSuppliedEndpointName = MidiPin->Name.c_str();
         commonProperties.TransportSuppliedEndpointDescription = nullptr;
         commonProperties.UserSuppliedEndpointName = nullptr;

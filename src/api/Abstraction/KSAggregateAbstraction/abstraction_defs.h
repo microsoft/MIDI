@@ -10,7 +10,7 @@
 
 #define ABSTRACTION_LAYER_GUID      __uuidof(Midi2KSAggregateAbstraction)
 
-#define TRANSPORT_MNEMONIC              L"KSA"
+#define TRANSPORT_CODE                  L"KSA"
 #define TRANSPORT_INSTANCE_ID_PREFIX    L"MIDIU_KSA_"
 
 #define TRANSPORT_ENUMERATOR            L"MIDISRV"

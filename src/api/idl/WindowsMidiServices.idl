@@ -12,6 +12,7 @@ import "oaidl.idl";
 import "ocidl.idl";
 
 
+// Enumeration of midi data formats. These are used to communicate both a requested format, and the negotiated format.
 typedef enum
 {
     MidiDataFormat_Invalid = 0,
@@ -20,6 +21,7 @@ typedef enum
     MidiDataFormat_Any = 0x3
 } MidiDataFormat;
 
+// Enumeration to communicate the direction of flow of midi data, with respect to the midi peripheral.
 typedef enum
 {
     MidiFlowIn = 0,
@@ -27,21 +29,33 @@ typedef enum
     MidiFlowBidirectional
 } MidiFlow;
 
-
+// Structure used during abstraction initialization to communicate format information and other configuration
 typedef struct
 {
     MidiDataFormat DataFormat;
     LPCWSTR InstanceConfigurationJsonData;
 } ABSTRACTIONCREATIONPARAMS, * PABSTRACTIONCREATIONPARAMS;
 
-typedef struct
+
+// This serves as the starting point for activating the various other methods implemented by the abstraction layer. 
+[
+    object,
+    local,
+    uuid(EA264200-3328-49E5-8815-73649A8748BE),
+    pointer_default(unique)
+]
+interface IMidiAbstraction : IUnknown
 {
-    MidiDataFormat DataFormatIn;
-    MidiDataFormat DataFormatOut;
-    LPCWSTR InstanceConfigurationJsonData;
-} TRANSFORMCREATIONPARAMS, * PTRANSFORMCREATIONPARAMS;
+    HRESULT Activate(
+        [in, annotation("_In_")] REFIID Iid,
+        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
+    );
+};
 
+// ============================================================================================
+// Endpoint types: In/Out/Bidirectional and the Callback
 
+// Used for sending data upstream from an abstraction to a client. Also used in transforms.
 [
     object,
         local,
@@ -58,20 +72,7 @@ interface IMidiCallback : IUnknown
     );
 };
 
-[
-    object,
-    local,
-    uuid(EA264200-3328-49E5-8815-73649A8748BE),
-    pointer_default(unique)
-]
-interface IMidiAbstraction : IUnknown
-{
-    HRESULT Activate(
-        [in, annotation("_In_")] REFIID Iid,
-        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
-    );
-};
-
+// Represents a MidiIn abstraction instance, which is used to move data from a peripheral upstream to a client
 [
     object,
         local,
@@ -93,6 +94,7 @@ interface IMidiIn : IUnknown
     HRESULT Cleanup();
 };
 
+// Represents a MidiOut abstraction instance, which is used to move data from a client to the abstraction
 [
     object,
     local,
@@ -118,6 +120,8 @@ interface IMidiOut : IUnknown
     );
 };
 
+// Represents a bidirectional midi connection, which is used to move data both to and from the midi 
+// abstraction. This is the primary interface for MIDI 2.0 endpoint communication.
 [
     object,
     local,
@@ -145,9 +149,13 @@ interface IMidiBiDi : IUnknown
 };
 
 
+// ============================================================================================
+// Endpoint manager in the service
 
 
-
+// IMidiEndpointManager is implemented by midi endpoint abstractions, and is called by MidiSrv 
+// during service startup to allow the endpoint abstraction to coordinate with MidiSrv for 
+// configuring and publishing midi endpoints.
 [
     object,
     local,
@@ -167,50 +175,8 @@ interface IMidiEndpointManager : IUnknown
 
 
 
-
-
-[
-    object,
-    local,
-    uuid(65FA86A4-0433-4DCD-88E4-E565051CAB2D),
-    pointer_default(unique)
-]
-interface IMidiTransform : IUnknown
-{
-    HRESULT Activate(
-        [in, annotation("_In_")] REFIID Iid,
-        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
-    );
-};
-
-[
-    object,
-    local,
-    uuid(5D2400F0-F2EE-4A51-A3BE-0AC9A19C09C4),
-    pointer_default(unique)
-]
-interface IMidiDataTransform : IUnknown
-{
-    HRESULT Initialize(
-        [in] LPCWSTR deviceId,
-        [in] PTRANSFORMCREATIONPARAMS creationParams,
-        [in] DWORD* mmcssTaskId,
-        [in] IMidiCallback* callback,
-        [in] LONGLONG context,
-        [in] IUnknown* midiDeviceManager
-    );
-
-    HRESULT Cleanup();
-
-    HRESULT SendMidiMessage(
-        [in] PVOID message,
-        [in] UINT size,
-        [in] LONGLONG position
-    );
-};
-
-
-
+// ============================================================================================
+// Endpoint management
 
 
 // If you change these, you should also update
@@ -225,7 +191,7 @@ typedef enum
 } MidiEndpointDevicePurposePropertyValue;
 
 
-// This is used when creating a device endpoint from an abstraction
+// Used during endpoint creation to communicate common midi endpoint properties.
 typedef struct
 {
     GUID AbstractionLayerGuid;
@@ -233,7 +199,7 @@ typedef struct
 
     LPCWSTR FriendlyName;
 
-    LPCWSTR TransportMnemonic;
+    LPCWSTR TransportCode;
     LPCWSTR TransportSuppliedEndpointName;
     LPCWSTR TransportSuppliedEndpointDescription;
 
@@ -254,7 +220,7 @@ typedef struct
     BOOL GenerateIncomingTimestamps;
 } MIDIENDPOINTCOMMONPROPERTIES, * PMIDIENDPOINTCOMMONPROPERTIES;
 
-
+// Used for communicating midi endpoint information from an abstraction to MidiSrv, for publishing the endpoint.
 [
     object,
         local,
@@ -320,9 +286,12 @@ interface IMidiDeviceManagerInterface : IUnknown
 };
 
 
-// Service (and Abstraction/Transform) Configuration ==================================================================
 
 
+// ============================================================================================
+// Service (and Abstraction/Transform) Configuration
+
+// Provides common functionality implemented in the service, and used by abstractions and transforms
 [
     object,
     local,
@@ -367,6 +336,10 @@ interface IMidiServiceConfigurationManagerInterface : IUnknown
 
 };
 
+// Used for sending configuration information to the abstraction from a client (for runtime updates) 
+// or from the device manager in the service (for global configuration file updates), which may 
+// affect the published endpoints
+// 
 // we're going to want one of these for transforms, but it needs to have
 // enough context to be able to target a specific instance of a transform
 // for a specific device
@@ -395,13 +368,168 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 
 
 
-// Service Plugin Reporting ===============================================================================
+// ============================================================================================
+// Message transformation
+
+// Configuration parameters for initializing the transform
+typedef struct
+{
+    MidiDataFormat DataFormatIn;
+    MidiDataFormat DataFormatOut;
+    LPCWSTR InstanceConfigurationJsonData;
+} TRANSFORMCREATIONPARAMS, * PTRANSFORMCREATIONPARAMS;
+
+// All MidiTransform COM components implement the IMidiTransform interface, which contains
+// only a single Activate method. This serves as the starting point for activating the various
+// other methods implemented by the transforms
+[
+    object,
+        local,
+        uuid(65FA86A4-0433-4DCD-88E4-E565051CAB2D),
+        pointer_default(unique)
+]
+interface IMidiTransform : IUnknown
+{
+    HRESULT Activate(
+        [in, annotation("_In_")] REFIID Iid,
+        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
+    );
+};
+
+// Represent a midi transform operation which is happening on a stream of midi data
+[
+    object,
+        local,
+        uuid(5D2400F0-F2EE-4A51-A3BE-0AC9A19C09C4),
+        pointer_default(unique)
+]
+interface IMidiDataTransform : IUnknown
+{
+    HRESULT Initialize(
+        [in] LPCWSTR deviceId,
+        [in] PTRANSFORMCREATIONPARAMS creationParams,
+        [in] DWORD* mmcssTaskId,
+        [in] IMidiCallback* callback,
+        [in] LONGLONG context,
+        [in] IUnknown* midiDeviceManager
+    );
+
+    HRESULT Cleanup();
+
+    HRESULT SendMidiMessage(
+        [in] PVOID message,
+        [in] UINT size,
+        [in] LONGLONG position
+    );
+};
 
 
+
+// ============================================================================================
+// MIDI 2.0 Endpoint Discovery and Protocol Negotiation
+
+// Represents a single function block discovered from a MIDI 2.0 device during discovery and protocol negotiation
+typedef struct
+{
+    BYTE Number;
+    BYTE FirstGroup;
+    BYTE NumberOfGroupsSpanned;
+    BOOL IsActive;
+    BOOL IsMIDIMessageDestination;  // if clients can send messages TO this block. We should create a MIDI 1.0 output port
+    BOOL IsMIDIMessageSource;       // if clients can receive messages FROM this block. We should create a MIDI 1.0 input port
+    LPCWSTR Name;                   // this type is only used within the service process, so string pointers are fine
+} DISCOVEREDFUNCTIONBLOCK, *PDISCOVEREDFUNCTIONBLOCK;
+
+// Used between the MIDI Service and the loaded MIDI 2.0 abstractions. This contains the
+// results of the required MIDI 2.0 discovery and protocol negotiation steps, and is used
+// to inform the creation of the backwards-compatible API endpoints for these devices.
+// 
+// this only contains key info required by the endpoint managers
+// so they can create compatible MIDI 1.0 ports from the results
+// from MIDI 2.0 protocol negotiation. This is not sent over RPC
+// or otherwise used cross-process. In-service only.
+typedef struct
+{
+    BOOL AllEndpointInformationReceived;
+
+    BOOL EndpointSupportsMIDI2Protocol;
+    BOOL EndpointSupportsMIDI1Protocol;
+
+    LPCWSTR EndpointSuppliedName;
+    LPCWSTR EndpointSuppliedProductInstanceId;
+
+    BYTE CountFunctionBlocksDeclared;
+    BYTE CountFunctionBlocksReceived;
+    BOOL FunctionBlocksAreStatic;
+
+    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;  // pointer to an array of discovered function blocks. 
+
+}  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
+
+// The service's input into the protocol negotiation process for a single endpoint
+typedef struct
+{
+    BOOL PreferToSendJRTimestampsToEndpoint;
+    BOOL PreferToReceiveJRTimestampsFromEndpoint;
+    BYTE PreferredMidiProtocol;
+    WORD TimeoutMilliseconds;
+} ENDPOINTPROTOCOLNEGOTIATIONPARAMS, *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
+
+// During discovery and protocol negotiation, the service receives the initial
+// metadata from the endpoint. This metadata may used to create the 
+// backwards-compatible MIDI 1.0 ports. The callback enables the process to 
+// provide those initial results and then continue watching for metadata for 
+// the lifetime of the service.
+[
+    object,
+        local,
+        uuid(f948dc64-e03a-4e24-bc6e-437ad729cd50),
+        pointer_default(unique)
+]
+interface IMidiProtocolNegotiationCompleteCallback : IUnknown
+{
+    HRESULT ProtocolNegotiationCompleteCallback(
+        [in] GUID AbstractionGuid,
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results
+    );
+};
+
+// Endpoint abstractions for MIDI 2.0 devices need to access the protocol 
+// manager in the service. This interface facilitates that.
+[
+    object,
+    local,
+    uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482),
+    pointer_default(unique)
+]
+interface IMidiEndpointProtocolManagerInterface : IUnknown
+{
+    HRESULT NegotiateAndRequestMetadata(
+        [in] GUID AbstractionGuid,
+        [in] LPCWSTR DeviceInterfaceId,
+        [in] ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+        [in] IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
+    );
+
+
+};
+
+
+
+
+
+
+// ============================================================================================
+// Service Plugin Reporting
+
+// Information provided by the abstraction to self-identify itself to the user. This 
+// information is supplied through the diagnostics and reporting SDK primarily to the MIDI 
+// Settings and MIDI Console apps. 
 typedef struct
 {
     GUID Id;            // class Id
-    LPCWSTR Mnemonic;   // this comes from a constant, not resources
+    LPCWSTR TransportCode;   // this comes from a constant, not resources
 
     BSTR Name;
     BSTR Description;
@@ -419,7 +547,9 @@ typedef struct
 } ABSTRACTIONMETADATA, * PABSTRACTIONMETADATA;
 
 
-
+// Information provided by the transform to self-identify itself to the user. This 
+// information is supplied through the diagnostics and reporting SDK primarily to 
+// the MIDI Settings and MIDI Console apps. 
 typedef struct
 {
     GUID Id;           // class Id
@@ -439,12 +569,13 @@ typedef struct
     BOOL IsClientConfigurable;
 } TRANSFORMMETADATA, * PTRANSFORMMETADATA;
 
-
+// Interface used to obtain the abstraction metadata for reporting to the user. 
+// This is implemented by each abstraction in the service.
 [
     object,
-    local,
-    uuid(8d542740-83f8-4a9a-8627-cd6324b6c1f4),
-    pointer_default(unique)
+        local,
+        uuid(8d542740-83f8-4a9a-8627-cd6324b6c1f4),
+        pointer_default(unique)
 ]
 interface IMidiServiceAbstractionPluginMetadataProvider : IUnknown
 {
@@ -457,11 +588,13 @@ interface IMidiServiceAbstractionPluginMetadataProvider : IUnknown
     HRESULT Cleanup();
 };
 
+// Interface used to obtain the transform metadata for reporting to the user. 
+// This is implemented by each transform in the service.
 [
     object,
-    local,
-    uuid(76c65f88-061f-4e4f-bb9d-3ac1981f12f2),
-    pointer_default(unique)
+        local,
+        uuid(76c65f88-061f-4e4f-bb9d-3ac1981f12f2),
+        pointer_default(unique)
 ]
 interface IMidiServiceTransformPluginMetadataProvider : IUnknown
 {
@@ -474,12 +607,12 @@ interface IMidiServiceTransformPluginMetadataProvider : IUnknown
     HRESULT Cleanup();
 };
 
-
+// Used by the client to request the abstraction and transform metadata.
 [
     object,
-    local,
-    uuid(469c7722-f779-40c3-b648-52620f75dcee),
-    pointer_default(unique)
+        local,
+        uuid(469c7722-f779-40c3-b648-52620f75dcee),
+        pointer_default(unique)
 ]
 interface IMidiServicePluginMetadataReporterInterface : IUnknown
 {
@@ -492,15 +625,18 @@ interface IMidiServicePluginMetadataReporterInterface : IUnknown
 };
 
 
-// Session Tracking / Reporting ===============================================================================
 
-// this is a bookkeeping class. It tracks only. It does
-// not own the lifetime of any of the items it tracks.
+// ============================================================================================
+// Session Tracking / Reporting
+
+// Used to register client API sessions so that a user may have visibility into which 
+// application is using which devices.
+// This is a bookkeeping class. It tracks only. It does not own the lifetime of any of the items it tracks.
 [
     object,
-    local,
-    uuid(194c2746-3ae5-419a-94d9-20416c7dbefe),
-    pointer_default(unique)
+        local,
+        uuid(194c2746-3ae5-419a-94d9-20416c7dbefe),
+        pointer_default(unique)
 ]
 interface IMidiSessionTracker : IUnknown
 {
@@ -529,85 +665,3 @@ interface IMidiSessionTracker : IUnknown
 
     HRESULT Cleanup();
 };
-
-
-
-// Endpoint Discovery and Protocol Negotiation ===============================================================================
-
-typedef struct
-{
-    BYTE Number;
-    BYTE FirstGroup;
-    BYTE NumberOfGroupsSpanned;
-    BOOL IsActive;
-    BOOL IsMIDIMessageDestination;  // if clients can send messages TO this block. We should create a MIDI 1.0 output port
-    BOOL IsMIDIMessageSource;       // if clients can receive messages FROM this block. We should create a MIDI 1.0 input port
-    LPCWSTR Name;                   // this type is only used within the service process, so string pointers are fine
-} DISCOVEREDFUNCTIONBLOCK, *PDISCOVEREDFUNCTIONBLOCK;
-
-
-// this only contains key info required by the endpoint managers
-// so they can create compatible MIDI 1.0 ports from the results
-// from MIDI 2.0 protocol negotiation. This is not sent over RPC
-// or otherwise used cross-process. In-service only.
-typedef struct
-{
-    BOOL AllEndpointInformationReceived;
-
-    BOOL EndpointSupportsMIDI2Protocol;
-    BOOL EndpointSupportsMIDI1Protocol;
-
-    LPCWSTR EndpointSuppliedName;
-    LPCWSTR EndpointSuppliedProductInstanceId;
-
-    BYTE CountFunctionBlocksDeclared;
-    BYTE CountFunctionBlocksReceived;
-    BOOL FunctionBlocksAreStatic;
-
-    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;  // pointer to an array of discovered function blocks. 
-
-}  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
-
-
-typedef struct
-{
-    BOOL PreferToSendJRTimestampsToEndpoint;
-    BOOL PreferToReceiveJRTimestampsFromEndpoint;
-    BYTE PreferredMidiProtocol;
-    WORD TimeoutMilliseconds;
-} ENDPOINTPROTOCOLNEGOTIATIONPARAMS, *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
-
-[
-    object,
-        local,
-        uuid(f948dc64-e03a-4e24-bc6e-437ad729cd50),
-        pointer_default(unique)
-]
-interface IMidiProtocolNegotiationCompleteCallback : IUnknown
-{
-    HRESULT ProtocolNegotiationCompleteCallback(
-        [in] GUID AbstractionGuid,
-        [in] LPCWSTR DeviceInterfaceId,
-        [in] PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results
-    );
-};
-
-
-[
-    object,
-    local,
-    uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482),
-    pointer_default(unique)
-]
-interface IMidiEndpointProtocolManagerInterface : IUnknown
-{
-    HRESULT NegotiateAndRequestMetadata(
-        [in] GUID AbstractionGuid,
-        [in] LPCWSTR DeviceInterfaceId,
-        [in] ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-        [in] IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
-    );
-
-
-};
-

@@ -62,6 +62,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysEx::implement
             {
                 BS2UMP.defaultGroup = newGroup.Index();
             }
+            else
+            {
+                // TODO: for byte data, we do need a group. What we should do is 
+                // pull from the group terminal blocks from the target device and
+                // just grab the first valid midi out group index.
+
+                BS2UMP.defaultGroup = 0;
+            }
 
             const uint32_t chunkSize = 4096;
             auto bytesRead = co_await reader.LoadAsync(chunkSize);

@@ -106,7 +106,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
     commonProperties.FriendlyName = MasterEndpointDefinition.EndpointName.c_str();
-    commonProperties.TransportMnemonic = TRANSPORT_MNEMONIC;
+    commonProperties.TransportCode = TRANSPORT_CODE;
     commonProperties.TransportSuppliedEndpointName = MasterEndpointDefinition.FilterName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = nullptr;
     commonProperties.UserSuppliedEndpointName = nullptr;
@@ -342,7 +342,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     std::wstring hash;
     ULONG cPins{ 0 };
 
-    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+    std::wstring transportCode(TRANSPORT_CODE);
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
