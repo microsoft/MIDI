@@ -268,6 +268,8 @@ namespace Microsoft.Midi.ConsoleApp
                 UInt64 minDeltaBetweenMessages = UInt64.MaxValue;
                 UInt64 totalDeltaBetweenMessages = 0;
 
+                UInt64 countSysEx7BytesReceived = 0;
+
                 // we ignore the first two messages for jitter calculation.
                 const int jitterCalcMessageIgnoreCount = 2;
 
@@ -322,6 +324,11 @@ namespace Microsoft.Midi.ConsoleApp
 
                             index++;
 
+
+                            if (MidiMessageHelper.MessageIsSystemExclusive7Message(e.PeekFirstWord()))
+                            {
+                                countSysEx7BytesReceived += MidiMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(e.PeekFirstWord());
+                            }
 
                             var receivedMessage = new ReceivedMidiMessage()
                             {
@@ -620,6 +627,24 @@ namespace Microsoft.Midi.ConsoleApp
                     {
                         AnsiConsole.MarkupLine("✅ No messages received out of expected timestamp order.");
                     }
+                }
+
+                if (countSysEx7BytesReceived > 0)
+                {
+                    string message = "➡️ [steelblue1]";
+
+                    if (countSysEx7BytesReceived == 1)
+                    {
+                        message += $"One SysEx 7-bit byte ";
+                    }
+                    else
+                    {
+                        message += $"{countSysEx7BytesReceived.ToString("N0")} SysEx 7-bit bytes ";
+                    }
+
+                    message += "received (not counting stripped F0/F7)[/]";
+
+                    AnsiConsole.MarkupLine(message);
                 }
 
                 if (countMessagesReceived > 1 && settings.WarnIfSkippedIncrementMessage)

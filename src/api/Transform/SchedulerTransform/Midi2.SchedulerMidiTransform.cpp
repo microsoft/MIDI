@@ -100,6 +100,7 @@ CMidi2SchedulerMidiTransform::Cleanup()
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
+
         // tell the thread to quit. Also call SetEvent in case it is in a wait
         m_queueWorkerThread.request_stop();
 
@@ -112,6 +113,8 @@ CMidi2SchedulerMidiTransform::Cleanup()
             std::this_thread::sleep_for(10ms);
             cleanupAttempts++;
         }
+
+        m_callback = nullptr;
 
         if (!m_queueWorkerThreadCleanlyExited)
         {
@@ -129,6 +132,7 @@ CMidi2SchedulerMidiTransform::Cleanup()
         }
         else
         {
+            m_messageQueue = {};    // clear the queue
 
             TraceLoggingWrite(
                 MidiSchedulerTransformTelemetryProvider::Provider(),

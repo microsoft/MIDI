@@ -130,7 +130,7 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorOpeningEndpointConnection;
                 }
 
-                var info = new FileInfo(settings.InputFile);
+                var info = new FileInfo(settings.InputFile!);
                 var fullFilePath = info.FullName;
 
                 AnsiConsole.WriteLine($"{fullFilePath}");

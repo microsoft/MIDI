@@ -51,3 +51,7 @@
 #include "Midi2.BS2UMPTransform.h"
 #include "Midi2.BS2UMPMidiTransform.h"
 
+#include "ump_helpers.h"
+
+namespace internal = ::WindowsMidiServicesInternal;
+

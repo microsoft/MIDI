@@ -827,7 +827,11 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
     auto endpointRxJR = internal::GetStreamConfigurationNotificationReceiveJRFromFirstWord(ump.word0);
     auto endpointTxJR = internal::GetStreamConfigurationNotificationTransmitJRFromFirstWord(ump.word0);
 
-    if (protocol !=m_preferredMidiProtocol ||
+    // TODO: See bugs 279/280. We should only negotiate protocol if the device supports both m1 and m2.
+    // if it only supports m1, we should stick with that. If only m2, we should stick with that.
+    // but JR timestamps can still be negotiated
+
+    if (protocol != m_preferredMidiProtocol ||
         endpointRxJR != m_preferToSendJRTimestampsToEndpoint ||
         endpointTxJR != m_preferToReceiveJRTimestampsFromEndpoint)
     {

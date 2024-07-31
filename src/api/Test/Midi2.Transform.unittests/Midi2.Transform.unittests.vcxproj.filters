@@ -18,12 +18,24 @@
     <ClCompile Include="MidiSchedulerTransformTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiBSToUMPTransformTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LibMidi2Tests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiSchedulerTransformTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiBSToUMPTransformTests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LibMidi2Tests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
