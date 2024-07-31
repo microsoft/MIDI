@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "client-basics-cs", "basics\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "virtual-device-app-winui-cs", "virtual-device-app-winui\virtual-device-app-winui-cs.csproj", "{B2A27EAA-93BA-4FA4-AFDA-62CD5031950A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "virtual-device-app-wpf", "virtual-device-app-wpf\virtual-device-app-wpf.csproj", "{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -33,14 +31,6 @@ Global
 		{B2A27EAA-93BA-4FA4-AFDA-62CD5031950A}.Release|ARM64.Build.0 = Release|ARM64
 		{B2A27EAA-93BA-4FA4-AFDA-62CD5031950A}.Release|x64.ActiveCfg = Release|x64
 		{B2A27EAA-93BA-4FA4-AFDA-62CD5031950A}.Release|x64.Build.0 = Release|x64
-		{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}.Debug|x64.Build.0 = Debug|Any CPU
-		{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}.Release|ARM64.Build.0 = Release|Any CPU
-		{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}.Release|x64.ActiveCfg = Release|Any CPU
-		{51C95EAA-B943-4DC6-92C8-855A6C50DBC1}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

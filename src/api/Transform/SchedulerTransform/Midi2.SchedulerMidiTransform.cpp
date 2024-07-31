@@ -54,9 +54,6 @@ CMidi2SchedulerMidiTransform::Initialize(
         &CMidi2SchedulerMidiTransform::QueueWorker,
         this);
 
-    // TODO: may need to set thread priority
-    //SetThreadPriority(workerThread.native_handle(), ... );
-
     m_queueWorkerThread = std::move(workerThread);
     m_queueWorkerThreadStopToken = m_queueWorkerThread.get_stop_token();
 
@@ -103,6 +100,7 @@ CMidi2SchedulerMidiTransform::Cleanup()
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
+
         // tell the thread to quit. Also call SetEvent in case it is in a wait
         m_queueWorkerThread.request_stop();
 
@@ -115,6 +113,8 @@ CMidi2SchedulerMidiTransform::Cleanup()
             std::this_thread::sleep_for(10ms);
             cleanupAttempts++;
         }
+
+        m_callback = nullptr;
 
         if (!m_queueWorkerThreadCleanlyExited)
         {
@@ -132,6 +132,7 @@ CMidi2SchedulerMidiTransform::Cleanup()
         }
         else
         {
+            m_messageQueue = {};    // clear the queue
 
             TraceLoggingWrite(
                 MidiSchedulerTransformTelemetryProvider::Provider(),
@@ -643,6 +644,10 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
 
     try
     {
+        SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
+        SetPriorityClass(GetCurrentThread(), REALTIME_PRIORITY_CLASS);
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+
         const uint64_t totalExpectedLatency = m_deviceLatencyTicks + MIDI_SCHEDULER_LOCK_AND_SEND_FUNCTION_LATENCY_TICKS;
 
         while (!m_queueWorkerThreadStopToken.stop_requested())

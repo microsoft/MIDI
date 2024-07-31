@@ -41,7 +41,7 @@ CMidi2VirtualPatchBayPluginMetadataProvider::GetMetadata(
     RETURN_HR_IF_NULL(E_INVALIDARG, metadata);
 
     metadata->Id = ABSTRACTION_LAYER_GUID;
-    metadata->Mnemonic = TRANSPORT_MNEMONIC;
+    metadata->TransportCode = TRANSPORT_CODE;
 
     internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_NAME, &metadata->Name);
     internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_DESCRIPTION, &metadata->Description);
@@ -68,9 +68,11 @@ CMidi2VirtualPatchBayPluginMetadataProvider::Cleanup()
         MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
 
     return S_OK;
 }

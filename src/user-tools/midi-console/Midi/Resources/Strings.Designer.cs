@@ -214,6 +214,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint..
+        /// </summary>
+        internal static string CommandSendSysExFileDescription {
+            get {
+                return ResourceManager.GetString("CommandSendSysExFileDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc..
         /// </summary>
         internal static string CommandServiceDescription {
@@ -1740,20 +1749,20 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Transport Code.
+        /// </summary>
+        internal static string PropertyTablePropertyLabelTransportCode {
+            get {
+                return ResourceManager.GetString("PropertyTablePropertyLabelTransportCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transport Id.
         /// </summary>
         internal static string PropertyTablePropertyLabelTransportId {
             get {
                 return ResourceManager.GetString("PropertyTablePropertyLabelTransportId", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Transport Mnemonic.
-        /// </summary>
-        internal static string PropertyTablePropertyLabelTransportMnemonic {
-            get {
-                return ResourceManager.GetString("PropertyTablePropertyLabelTransportMnemonic", resourceCulture);
             }
         }
         

@@ -21,6 +21,8 @@ CMidi2VirtualPatchBayRoutingSource::Initialize(
     return S_OK;
 }
 
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualPatchBayRoutingSource::Callback(
@@ -30,10 +32,34 @@ CMidi2VirtualPatchBayRoutingSource::Callback(
     LONGLONG context
 )
 {
-    UNREFERENCED_PARAMETER(data);
-    UNREFERENCED_PARAMETER(length);
-    UNREFERENCED_PARAMETER(position);
-    UNREFERENCED_PARAMETER(context);
+    RETURN_HR_IF_NULL(E_INVALIDARG, data);
+    RETURN_HR_IF_NULL(E_FAIL, m_router);
+
+    // Verify message meets criteria.
+
+    auto word0 = internal::MidiWord0FromVoidMessageDataPointer(data);
+
+    // if this is a groupless message
+    if (internal::MessageHasGroupField(word0))
+    {
+        // if group is not in our list, return
+        auto groupIndex = internal::GetGroupIndexFromFirstWord(word0);
+
+        if (!m_includedGroupIndexes[groupIndex])
+        {
+            return S_OK;
+        }
+    }
+    else
+    {
+        // message has no group field
+        if (!m_includeGrouplessMessages)
+        {
+            return S_OK;
+        }
+    }
+
+    RETURN_IF_FAILED(m_router->Callback(data, length, position, context));
 
     return S_OK;
 }
@@ -44,7 +70,13 @@ CMidi2VirtualPatchBayRoutingSource::AddIncludedGroups(
     std::vector<uint8_t> groupIndexes
 )
 {
-    UNREFERENCED_PARAMETER(groupIndexes);
+    for (auto const index : groupIndexes)
+    {
+        if (index < 16)
+        {
+            m_includedGroupIndexes[index] = true;
+        }
+    }
 
     return S_OK;
 }
@@ -65,6 +97,7 @@ CMidi2VirtualPatchBayRoutingSource::SetEndpointCallback(
 HRESULT
 CMidi2VirtualPatchBayRoutingSource::Cleanup()
 {
+    m_router = nullptr;
 
     return S_OK;
 }

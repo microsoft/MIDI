@@ -80,7 +80,7 @@ private:
 
     std::mutex m_queueMutex;
 
-    uint64_t m_currentReceivedIndex{ 0 };     // need to use the queueLock before writing to this
+    std::atomic<uint64_t> m_currentReceivedIndex{ 0 };
 
     //std::atomic<bool> m_continueProcessing{ true };
     std::jthread m_queueWorkerThread;

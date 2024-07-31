@@ -30,6 +30,9 @@ public:
     HRESULT Cleanup();
 
 private:
+    std::wstring m_endpointDeviceId{};
+    std::atomic<uint64_t> m_countMidiMessageSent{};
+
     bytestreamToUMP m_BS2UMP;
         
     IMidiCallback* m_callback{ nullptr };

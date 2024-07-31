@@ -97,7 +97,7 @@ namespace WindowsMidiServicesInternal
         _In_ uint32_t const dataSize
     ) noexcept
     {
-        std::vector<GroupTerminalBlockInternal> blocks;
+        std::vector<GroupTerminalBlockInternal> blocks{ };
 
         try
         {
@@ -169,7 +169,7 @@ namespace WindowsMidiServicesInternal
         // total up all the memory
 
         size_t totalMemory{ 0 };
-        std::vector<UMP_GROUP_TERMINAL_BLOCK_DEFINITION> blockdefs;
+        std::vector<UMP_GROUP_TERMINAL_BLOCK_DEFINITION> blockdefs{ };
 
         for (auto const& block : blocks)
         {
@@ -190,7 +190,7 @@ namespace WindowsMidiServicesInternal
             blockdefs.push_back(def);
         }
 
-        KSMULTIPLE_ITEM ksi;
+        KSMULTIPLE_ITEM ksi{ };
 
         // add in size of the KS multiple items header
         totalMemory += sizeof(KSMULTIPLE_ITEM);

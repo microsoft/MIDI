@@ -36,6 +36,9 @@ private:
 
     wil::com_ptr_nothrow<IMidiBiDi> m_endpointBiDi{ nullptr };
 
-    std::map<uint8_t, uint8_t> m_groupTransformMap{ };    // incoming group, outgoing group
+    // each entry in this array is the destination group. Index is the source group
+    // all values in this array must be valid. Multiple source groups can map to the 
+    // same destination group, but not the other way around.
+    uint8_t m_groupTransformMap[16]{ };
 
 };

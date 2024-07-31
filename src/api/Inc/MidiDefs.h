@@ -11,20 +11,26 @@
 #include <Devpropdef.h>
 
 
-#define MIDI_TRACE_EVENT_ERROR              "Midi.Error"
-#define MIDI_TRACE_EVENT_WARNING            "Midi.Warning"
-#define MIDI_TRACE_EVENT_INFO               "Midi.Info"
+#define MIDI_TRACE_EVENT_ERROR                      "Midi.Error"
+#define MIDI_TRACE_EVENT_WARNING                    "Midi.Warning"
+#define MIDI_TRACE_EVENT_INFO                       "Midi.Info"
+#define MIDI_TRACE_EVENT_VERBOSE                    "Midi.Verbose"
+#define MIDI_TRACE_EVENT_METRICS                    "Midi.Metrics"
 
 
-#define MIDI_TRACE_EVENT_MESSAGE_FIELD              "message"
-#define MIDI_TRACE_EVENT_LOCATION_FIELD             "location"
-#define MIDI_TRACE_EVENT_HRESULT_FIELD              "hresult"
-#define MIDI_TRACE_EVENT_INTERFACE_FIELD            "interface"
+#define MIDI_TRACE_EVENT_MESSAGE_FIELD              "Message"
+#define MIDI_TRACE_EVENT_LOCATION_FIELD             "Location"
+#define MIDI_TRACE_EVENT_HRESULT_FIELD              "HResult"
+#define MIDI_TRACE_EVENT_INTERFACE_FIELD            "Interface"
 
-#define MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD        "swd"
-#define MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD   "device instance"
+#define MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD    "Midi Timestamp"
+#define MIDI_TRACE_EVENT_MESSAGE_DATA_FIELD         "Midi Data"
+#define MIDI_TRACE_EVENT_MIDI_WORD0_FIELD           "Midi Word 0"
 
-#define MIDI_TRACE_EVENT_MIDI_WORD0_FIELD            "word0"
+
+#define MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD        "Endpoint Device Interface Id (SWD)"
+#define MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD   "Device Instance Id"
+
 
 
 
@@ -53,14 +59,31 @@
 
 //
 // Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs
+// Everything is under HKLM
 //
-#define MIDI_ROOT_REG_KEY L"Software\\Microsoft\\Windows MIDI Services"
-#define MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY MIDI_ROOT_REG_KEY L"\\Transport Plugins"
-#define MIDI_ROOT_ENDPOINT_PROCESSING_PLUGINS_REG_KEY MIDI_ROOT_REG_KEY L"\\Message Processing Plugins"
-#define MIDI_PLUGIN_ENABLED_REG_VALUE L"Enabled"
-#define MIDI_PLUGIN_CLSID_REG_VALUE L"CLSID"
+#define MIDI_ROOT_REG_KEY                               L"Software\\Microsoft\\Windows MIDI Services"
 
-#define MIDI_CONFIG_FILE_REG_VALUE L"CurrentConfig"
+// DWORD value. 0 to not use MMCSS. > 0 to use it. This is used in the midixproc project
+// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services\UseMMCSS (DWORD)
+#define MIDI_USE_MMCSS_REG_VALUE                        L"UseMMCSS"
+#define MIDI_USE_MMCSS_REG_DEFAULT_VALUE                0x00000000
+
+#define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"
+
+
+
+#define MIDI_ROOT_ENDPOINT_APP_SDK_REG_KEY              MIDI_ROOT_REG_KEY L"\\Desktop App SDK Runtime"
+#define MIDI_APP_SDK_ARM64_REG_VALUE                    L"Arm64"
+#define MIDI_APP_SDK_ARM64EC_REG_VALUE                  L"Arm64EC"
+#define MIDI_APP_SDK_X64_REG_VALUE                      L"x64"
+
+
+#define MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY             MIDI_ROOT_REG_KEY L"\\Transport Plugins"
+#define MIDI_ROOT_ENDPOINT_PROCESSING_PLUGINS_REG_KEY   MIDI_ROOT_REG_KEY L"\\Message Processing Plugins"
+#define MIDI_PLUGIN_ENABLED_REG_VALUE                   L"Enabled"
+#define MIDI_PLUGIN_CLSID_REG_VALUE                     L"CLSID"
+
+
 
 // we force this root so the service can't be told to open some other random file on the system
 // note that this is a restricted folder. The installer has to create this folder for us and
@@ -115,8 +138,8 @@ DEFINE_GUID(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI, 0xe7cce071, 0x3c03, 0x423f, 0
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AbstractionLayer, 1); // DEVPROP_TYPE_GUID
 
 // Provided as a property for convenience. BLE, NET, USB, etc.
-#define STRING_PKEY_MIDI_TransportMnemonic MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"2"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportMnemonic, 2);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_TransportCode MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"2"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportCode, 2);     // DEVPROP_TYPE_STRING
 
 // Match MidiDataFormat defined in MidiDeviceManagerInterface.idl
 // TODO: Can these be converged to use the same enum?

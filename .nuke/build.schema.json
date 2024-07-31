@@ -66,9 +66,8 @@
             "enum": [
               "BuildAndPackAllAppSDKs",
               "BuildAndPublishAll",
-              "BuildAppSdkRuntimeInstaller",
+              "BuildAppSdkRuntimeAndToolsInstaller",
               "BuildConsoleApp",
-              "BuildConsoleAppInstaller",
               "BuildCppSamples",
               "BuildServiceAndPlugins",
               "BuildServiceAndPluginsInstaller",
@@ -86,9 +85,8 @@
             "enum": [
               "BuildAndPackAllAppSDKs",
               "BuildAndPublishAll",
-              "BuildAppSdkRuntimeInstaller",
+              "BuildAppSdkRuntimeAndToolsInstaller",
               "BuildConsoleApp",
-              "BuildConsoleAppInstaller",
               "BuildCppSamples",
               "BuildServiceAndPlugins",
               "BuildServiceAndPluginsInstaller",

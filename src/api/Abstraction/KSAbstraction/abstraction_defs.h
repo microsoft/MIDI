@@ -10,7 +10,7 @@
 
 #define ABSTRACTION_LAYER_GUID      __uuidof(Midi2KSAbstraction)
 
-#define TRANSPORT_MNEMONIC          L"KS"
+#define TRANSPORT_CODE         L"KS"
 #define MIDI_KS_INSTANCE_ID_PREFIX  L"MIDIU_KS_"
 
 

@@ -414,12 +414,13 @@ KSMidiInDevice::SendRequestToDriver()
             // is closed and the SyncIoctl returns, it may succeed, but have no data.
             if (m_MidiInCallback && payloadSize > 0)
             {
-                m_MidiInCallback->Callback(data, payloadSize, kssh.PresentationTime.Time, m_MidiInCallbackContext);
+                LOG_IF_FAILED(m_MidiInCallback->Callback(data, payloadSize, kssh.PresentationTime.Time, m_MidiInCallbackContext));
             }
         }
         else
         {
-            return hr;
+            //return hr;
+            LOG_IF_FAILED(hr);
         }
     }
     return S_OK;

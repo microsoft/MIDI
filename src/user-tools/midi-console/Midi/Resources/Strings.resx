@@ -689,8 +689,8 @@ Timestamp</value>
   <data name="PropertyTablePropertyLabelTransportId" xml:space="preserve">
     <value>Transport Id</value>
   </data>
-  <data name="PropertyTablePropertyLabelTransportMnemonic" xml:space="preserve">
-    <value>Transport Mnemonic</value>
+  <data name="PropertyTablePropertyLabelTransportCode" xml:space="preserve">
+    <value>Transport Code</value>
   </data>
   <data name="PropertyTablePropertyLabelTransportSuppliedName" xml:space="preserve">
     <value>Transport-supplied Name</value>
@@ -820,5 +820,8 @@ Timestamp</value>
   </data>
   <data name="WatcherPressEscapeToStopWatchingMessage" xml:space="preserve">
     <value>Press escape to stop watching for endpoint changes.</value>
+  </data>
+  <data name="CommandSendSysExFileDescription" xml:space="preserve">
+    <value>Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint.</value>
   </data>
 </root>

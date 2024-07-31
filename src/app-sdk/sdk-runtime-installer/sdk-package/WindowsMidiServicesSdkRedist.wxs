@@ -19,7 +19,10 @@
                     <Directory Id="SDK_Arm64_INSTALLFOLDER" Name="Arm64" />
                     <Directory Id="SDK_Arm64EC_INSTALLFOLDER" Name="Arm64EC" />
                 </Directory>
-                <Directory Id="MIDIDIAG_INSTALLFOLDER" Name="Diagnostics" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="MIDIDIAG_INSTALLFOLDER" Name="Diagnostics" />
+                    <Directory Id="MIDIUSB_INSTALLFOLDER" Name="UsbInfo" />
+                </Directory>
             </Directory>
         </StandardDirectory>
         
@@ -64,6 +67,11 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
+
+            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
+
         </Component>
 
         <Component Id="WindowsAppSDKArm64"
@@ -104,6 +112,11 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
+
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
+
         </Component>
 
         <Component Id="WindowsAppSDKArm64EC"
@@ -145,6 +158,11 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
+
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
+
         </Component>
 
         <!-- Install MIDI Diag Utility -->
@@ -170,6 +188,19 @@
                             Value="[MIDIDIAG_INSTALLFOLDER]" Permanent="no"/>
         </Component>
 
+        <!-- Install MIDI USB Utility -->
+        <Component Id="MidiUsbUtility"
+                   Bitness="always64"
+                   Directory="MIDIUSB_INSTALLFOLDER"
+                   Guid="704c5cee-8af7-4826-a9b8-d45d14d24684"  >
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiusbinfo.exe" Vital="true" />
+
+            <!-- Add folder to path -->
+            <Environment Id="AddMidiUsbUtilityToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes"
+                            Value="[MIDIUSB_INSTALLFOLDER]" Permanent="no"/>
+        </Component>
+
         
         <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
         <Component Id="WindowsAppSdkImplementationRegEntries"
@@ -193,6 +224,7 @@
             <ComponentRef Id="WindowsAppSDKArm64EC"/>
             <ComponentRef Id="WindowsAppSdkImplementationRegEntries"/>
             <ComponentRef Id="MidiDiagUtility"/>
+            <ComponentRef Id="MidiUsbUtility"/>
         </Feature>
 
     </Package>

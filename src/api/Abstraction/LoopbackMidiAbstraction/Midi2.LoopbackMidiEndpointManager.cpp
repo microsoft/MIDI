@@ -177,7 +177,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
 
 
-    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+    std::wstring transportCode(TRANSPORT_CODE);
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
@@ -206,7 +206,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
         TraceLoggingWideString(L"Adding endpoint properties"),
         TraceLoggingWideString(friendlyName.c_str(), "friendlyName"),
-        TraceLoggingWideString(mnemonic.c_str(), "mnemonic"),
+        TraceLoggingWideString(transportCode.c_str(), "transport code"),
         TraceLoggingWideString(endpointName.c_str(), "endpointName"),
         TraceLoggingWideString(endpointDescription.c_str(), "endpointDescription")
     );
@@ -249,7 +249,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
     commonProperties.FriendlyName = friendlyName.c_str();
-    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportCode = transportCode.c_str();
     commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
     commonProperties.UserSuppliedEndpointName = nullptr;

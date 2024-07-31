@@ -78,9 +78,19 @@ public:
         _In_ UINT32,
         _In_ LONGLONG);
 
+    // this is set by a registry value
+    static bool MMCSSUseEnabled();
+
 private:
 
     BOOL m_OverwriteZeroTimestamp{ true };
+
+    static BOOL m_useMMCSS;             // true if we are configured to use MMCSS
+    static BOOL m_mmcssSettingRead;     // true if the MMCSS use value has been read from the registry
+
+    unique_mmcss_handle m_MmcssHandle;
+    DWORD m_MmcssTaskId{ 0 };
+
 
     wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;
     LONGLONG m_MidiInCallbackContext{};
@@ -91,9 +101,6 @@ private:
     static DWORD WINAPI MidiInWorker(_In_ LPVOID);
 
     HRESULT ProcessMidiIn();
-
-    unique_mmcss_handle m_MmcssHandle;
-    DWORD m_MmcssTaskId {0};
 
     wil::unique_event_nothrow m_ThreadTerminateEvent;
     wil::unique_event_nothrow m_ThreadStartedEvent;
