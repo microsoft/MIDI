@@ -638,19 +638,17 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         {
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
+                MIDI_TRACE_EVENT_INFO,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Pin is regular unidirectional MIDI pin. Aborting creation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Pin is unidirectional", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(MidiPin->Name.c_str(), "pin name")
             );
 
-            RETURN_IF_FAILED(E_UNEXPECTED);
-
-            //// In and out have only a single pin id to create.
-            //interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_KsPinId, DEVPROP_STORE_SYSTEM, nullptr },
-            //    DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) });
+            // In and out have only a single pin id to create.
+            interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_KsPinId, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) });
         }
 
         //deviceDevProperties.push_back({ { DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr },
