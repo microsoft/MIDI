@@ -625,7 +625,7 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                     else
                     {
-                        AnsiConsole.MarkupLine("✅ No messages received out of expected timestamp order.");
+                    //    AnsiConsole.MarkupLine("✅ No messages received out of expected timestamp order.");
                     }
                 }
 
@@ -635,11 +635,11 @@ namespace Microsoft.Midi.ConsoleApp
 
                     if (countSysEx7BytesReceived == 1)
                     {
-                        message += $"One SysEx 7-bit byte ";
+                        message += $"One SysEx 7-bit data byte ";
                     }
                     else
                     {
-                        message += $"{countSysEx7BytesReceived.ToString("N0")} SysEx 7-bit bytes ";
+                        message += $"{countSysEx7BytesReceived.ToString("N0")} SysEx 7-bit data bytes ";
                     }
 
                     message += "received (not counting stripped F0/F7)[/]";

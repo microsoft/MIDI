@@ -55,9 +55,7 @@ void LibMidi2Tests::InternalTestSysEx(uint8_t const sysexBytes[], uint32_t const
 
     std::cout << std::endl;
 
-    // hardcoding some values here
     VERIFY_ARE_EQUAL(expectedWords.size(), countWordsCreated);
-
 }
 
 //#include "Midi2"
