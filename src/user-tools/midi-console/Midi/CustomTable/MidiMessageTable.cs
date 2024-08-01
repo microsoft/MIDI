@@ -358,6 +358,11 @@ namespace Microsoft.Midi.ConsoleApp
             }
         }
 
+        private string FormatByteDecimal(byte value)
+        {
+            return value.ToString().PadLeft(3, ' ');
+        }
+
         private string GetDecodedMidi1ChannelVoiceData(ReceivedMidiMessage message)
         {
             string decodedData = string.Empty;
@@ -371,28 +376,28 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 case Midi1ChannelVoiceMessageStatus.NoteOn:
                 case Midi1ChannelVoiceMessageStatus.NoteOff:
-                    decodedData = $"Note: [darkseagreen2]{dataByte1.ToString("000")}[/] [deepskyblue1]({MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}{MidiMessageHelper.GetNoteOctaveFromNoteIndex(dataByte1)})[/], "+
-                        $"Velocity: [darkseagreen2]{dataByte2.ToString("000")}[/]";
+                    decodedData = $"Note: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/] [deepskyblue1]({MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}{MidiMessageHelper.GetNoteOctaveFromNoteIndex(dataByte1)})[/], "+
+                        $"Velocity: [darkseagreen2]{FormatByteDecimal(dataByte2)}[/]";
                     break;
 
                 case Midi1ChannelVoiceMessageStatus.ControlChange:
-                    decodedData = $"Controller: [darkseagreen2]{dataByte1.ToString("000")}[/], Value: [darkseagreen2]{dataByte2.ToString("000")}[/]";
+                    decodedData = $"Controller: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/], Value: [darkseagreen2]{FormatByteDecimal(dataByte2)}[/]";
                     break;
 
                 case Midi1ChannelVoiceMessageStatus.PitchBend:
-                    decodedData = $"Fine: [darkseagreen2]{dataByte1.ToString("000")}[/], Coarse: [darkseagreen2]{dataByte2.ToString("000")}[/]";
+                    decodedData = $"Fine: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/], Coarse: [darkseagreen2]{FormatByteDecimal(dataByte2)}[/]";
                     break;
 
                 case Midi1ChannelVoiceMessageStatus.ChannelPressure:
-                    decodedData = $"Value: [darkseagreen2]{dataByte1.ToString("000")}[/]";
+                    decodedData = $"Value: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/]";
                     break;
 
                 case Midi1ChannelVoiceMessageStatus.PolyPressure:
-                    decodedData = $"Key: [darkseagreen2]{dataByte1.ToString("000")}[/], Value: [darkseagreen2]{dataByte2.ToString("000")}[/]";
+                    decodedData = $"Key: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/], Value: [darkseagreen2]{FormatByteDecimal(dataByte2)}[/]";
                     break;
 
                 case Midi1ChannelVoiceMessageStatus.ProgramChange:
-                    decodedData = $"Value: [darkseagreen2]{dataByte1.ToString("000")}[/]";
+                    decodedData = $"Value: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/]";
                     break;
 
                 default:
@@ -420,8 +425,8 @@ namespace Microsoft.Midi.ConsoleApp
                         UInt16 attribute = (UInt16)(message.Word1 & 0xFFFF);
 
                         decodedData =
-                            $"Note: [darkseagreen2]{dataByte1.ToString("000")}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
-                            $"Type: [darkseagreen2]{dataByte2.ToString("000")}[/], " +
+                            $"Note: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
+                            $"Type: [darkseagreen2]{FormatByteDecimal(dataByte2)}[/], " +
                             $"Vel: [darkseagreen2]{velocity}[/], " +
                             $"Attr: [darkseagreen2]{attribute}[/]";
                     }
@@ -429,53 +434,53 @@ namespace Microsoft.Midi.ConsoleApp
 
                 case Midi2ChannelVoiceMessageStatus.PolyPressure:
                     decodedData =
-                        $"Note: [darkseagreen2]{dataByte1}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
+                        $"Note: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
                         $"Data: [darkseagreen2]{message.Word1}[/]";
                     break;
 
                 case Midi2ChannelVoiceMessageStatus.RegisteredPerNoteController:
                 case Midi2ChannelVoiceMessageStatus.AssignablePerNoteController:
                     decodedData =
-                        $"Note: [darkseagreen2]{dataByte1}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
-                        $"Index: [darkseagreen2]{dataByte2}[/], " + 
+                        $"Note: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
+                        $"Index: [darkseagreen2]{FormatByteDecimal(dataByte2)}[/], " + 
                         $"Data: [darkseagreen2]{message.Word1}[/]";
                     break;
 
                 case Midi2ChannelVoiceMessageStatus.PerNoteManagement:
                     decodedData =
-                        $"Note: [darkseagreen2]{dataByte1}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
+                        $"Note: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
                         $"Detach: [darkseagreen2]{(bool)((dataByte1 & 0x2) == 0x2)}[/], " +
                         $"Set: [darkseagreen2]{(bool)((dataByte1 & 0x1) == 0x1)}[/]";
                     break;
 
                 case Midi2ChannelVoiceMessageStatus.ControlChange:
                     decodedData = 
-                        $"Controller: [darkseagreen2]{dataByte1}[/], " +
+                        $"Controller: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/], " +
                         $"Data: [darkseagreen2]{message.Word1}[/]";
                     break;
 
                 case Midi2ChannelVoiceMessageStatus.RegisteredController:
                 case Midi2ChannelVoiceMessageStatus.AssignableController:
                     decodedData =
-                        $"Bank: [darkseagreen2]{dataByte1}[/], " +
-                        $"Index: [darkseagreen2]{dataByte2}[/], " +
+                        $"Bank: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/], " +
+                        $"Index: [darkseagreen2]{FormatByteDecimal(dataByte2)}[/], " +
                         $"Data: [darkseagreen2]{message.Word1}[/]";
                     break;
 
                 case Midi2ChannelVoiceMessageStatus.RelativeRegisteredController:
                 case Midi2ChannelVoiceMessageStatus.RelativeAssignableController:
                     decodedData =
-                        $"Bank: [darkseagreen2]{dataByte1}[/], " +
-                        $"Index: [darkseagreen2]{dataByte2}[/], " +
+                        $"Bank: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/], " +
+                        $"Index: [darkseagreen2]{FormatByteDecimal(dataByte2)}[/], " +
                         $"Data: [darkseagreen2]{message.Word1}[/]";
                     break;
 
                 case Midi2ChannelVoiceMessageStatus.ProgramChange:
                     decodedData = 
-                        $"Program: [darkseagreen2]{(byte)(message.Word1 & 0xFF000000 >> 24)}[/], " +
+                        $"Program: [darkseagreen2]{FormatByteDecimal((byte)(message.Word1 & 0xFF000000 >> 24))}[/], " +
                         $"Bank Valid: [darkseagreen2]{(bool)((dataByte1 & 0x1) == 0x1)}[/], " +
-                        $"MSB: [darkseagreen2]{(byte)(message.Word1 & 0x0000FF00 >> 8)}[/], " +
-                        $"LSB: [darkseagreen2]{(byte)(message.Word1 & 0x000000FF)}[/]";
+                        $"MSB: [darkseagreen2]{FormatByteDecimal((byte)(message.Word1 & 0x0000FF00 >> 8))}[/], " +
+                        $"LSB: [darkseagreen2]{FormatByteDecimal((byte)(message.Word1 & 0x000000FF))}[/]";
                     break;
 
                 case Midi2ChannelVoiceMessageStatus.ChannelPressure:
@@ -488,7 +493,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                 case Midi2ChannelVoiceMessageStatus.PerNotePitchBend:
                     decodedData = 
-                        $"Note: [darkseagreen2]{dataByte1}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
+                        $"Note: [darkseagreen2]{FormatByteDecimal(dataByte1)}[/] [deepskyblue1](May be: {MidiMessageHelper.GetNoteDisplayNameFromNoteIndex(dataByte1)}[/], " +
                         $"Data: [darkseagreen2]{message.Word1}[/]";
                     break;
 

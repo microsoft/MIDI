@@ -377,7 +377,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
             case msgs::Midi1ChannelVoiceMessageStatus::PolyPressure:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_A_POLY_PRESSURE); //L"MIDI 1.0 Poly Pressure";
             case msgs::Midi1ChannelVoiceMessageStatus::ControlChange:
-                return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_B_CONTROL_CHANGE); //L"MIDI 1.0 Control Change";
+            {
+                uint8_t ccNumber = static_cast<uint8_t>((word0 & 0x00007F00) >> 8);
+
+                if (ccNumber >= 120)
+                {
+                    return internal::ResourceGetHString(IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + ccNumber);
+                }
+                else
+                {
+                    return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_B_CONTROL_CHANGE); //L"MIDI 1.0 Control Change";
+                }
+            }
+
             case msgs::Midi1ChannelVoiceMessageStatus::ProgramChange:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT2_C_PROGRAM_CHANGE); //L"MIDI 1.0 Program Change";
             case msgs::Midi1ChannelVoiceMessageStatus::ChannelPressure:
@@ -431,7 +443,20 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
             case msgs::Midi2ChannelVoiceMessageStatus::PolyPressure:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_A_POLY_PRESSURE); //L"MIDI 2.0 Poly Pressure";
             case msgs::Midi2ChannelVoiceMessageStatus::ControlChange:
-                return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_B_CONTROL_CHANGE); //L"MIDI 2.0 Control Change";
+                {
+                    uint8_t ccNumber = static_cast<uint8_t>((word0 & 0x00007F00) >> 8);
+
+                    if (ccNumber >= 120)
+                    {
+                        return internal::ResourceGetHString(IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + ccNumber);
+                    }
+                    else
+                    {
+                        return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_B_CONTROL_CHANGE); //L"MIDI 2.0 Control Change";
+                    }
+                }
+
+
             case msgs::Midi2ChannelVoiceMessageStatus::ProgramChange:
                 return internal::ResourceGetHString(IDS_MESSAGE_DESC_MT4_C_PROGRAM_CHANGE); //L"MIDI 2.0 Program Change";
             case msgs::Midi2ChannelVoiceMessageStatus::ChannelPressure:
