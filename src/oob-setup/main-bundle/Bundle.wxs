@@ -23,9 +23,6 @@
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
-        <!-- These references are required so the searches aren't optimized out of the bundle -->
-        <util:RegistrySearchRef Id="SearchForVCRuntime" />
-
         <BootstrapperApplication>
             <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
                                                     Theme="hyperlinkLicense" 
@@ -51,7 +48,6 @@
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
                 Compressed="yes"
                 InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
-                UninstallArguments="/uninstall /passive /norestart /quiet"
                 Permanent="true"
                 >
             </ExePackage>

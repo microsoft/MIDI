@@ -212,7 +212,7 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
     negotiationParams.PreferToReceiveJRTimestampsFromEndpoint = false;
     negotiationParams.TimeoutMilliseconds = 2000;
 
-    RETURN_IF_FAILED(m_MidiProtocolManager->NegotiateAndRequestMetadata(
+    RETURN_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
         AbstractionLayerGUID,
         endpointId.c_str(),
         negotiationParams,
@@ -239,7 +239,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
-    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+    std::wstring transportCode(TRANSPORT_CODE);
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
@@ -278,7 +278,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
     commonProperties.FriendlyName = friendlyName.c_str();
-    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportCode = transportCode.c_str();
     commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
     commonProperties.UserSuppliedEndpointName = L"";
@@ -337,7 +337,7 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
-    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+    std::wstring transportCode(TRANSPORT_CODE);
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
@@ -378,7 +378,7 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
     commonProperties.FriendlyName = friendlyName.c_str();
-    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportCode = transportCode.c_str();
     commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
     commonProperties.UserSuppliedEndpointName = nullptr;

@@ -223,7 +223,7 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionTransportInformation), "");
                     table.AddRow(Strings.PropertyTablePropertyLabelTransportSuppliedName, AnsiMarkupFormatter.FormatEndpointName(transportSuppliedInfo.Name));
                     table.AddRow(Strings.PropertyTablePropertyLabelTransportId, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportId.ToString()));
-                    table.AddRow(Strings.PropertyTablePropertyLabelTransportMnemonic, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportAbbreviation));
+                    table.AddRow(Strings.PropertyTablePropertyLabelTransportCode, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportCode));
                 }
 
                 table.AddEmptyRow();

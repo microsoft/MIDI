@@ -3,7 +3,7 @@
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
     <Package  
-          Name="Windows MIDI Services Console $(var.Platform)"
+          Name="Windows MIDI Services (Console) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
           Version="1.0.0.0"
           UpgradeCode="725f08fc-24db-4824-8613-a796f2abf36a"
@@ -53,6 +53,7 @@
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Messages.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" />
+            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
 
 

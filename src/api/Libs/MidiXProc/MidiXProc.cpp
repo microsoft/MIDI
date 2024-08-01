@@ -25,6 +25,8 @@
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 
+
+
 _Use_decl_annotations_
 HRESULT
 GetRequiredBufferSize(ULONG& RequestedSize
@@ -126,13 +128,12 @@ DisableMmcss(
     unique_mmcss_handle& MmcssHandle
 )
 {
-#if 1
-    RETURN_HR_IF(S_OK, NULL == MmcssHandle);
-    // Detach the thread from the MMCSS service to free the handle.
-    MmcssHandle.reset();
-#else
-    UNREFERENCED_PARAMETER(MmcssHandle);
-#endif
+    if (CMidiXProc::MMCSSUseEnabled())
+    {
+        RETURN_HR_IF(S_OK, NULL == MmcssHandle);
+        // Detach the thread from the MMCSS service to free the handle.
+        MmcssHandle.reset();
+    }
 
     return S_OK;
 }
@@ -144,30 +145,30 @@ EnableMmcss(
     DWORD& MmcssTaskId
 )
 {
-#if 1
-    MmcssHandle.reset(AvSetMmThreadCharacteristics( L"Pro Audio", &MmcssTaskId ));
-    if (!MmcssHandle)
+    if (CMidiXProc::MMCSSUseEnabled())
     {
-        // If the task id has gone invalid, try with a new task id
-        MmcssTaskId = 0;
-        MmcssHandle.reset(AvSetMmThreadCharacteristics( L"Pro Audio", &MmcssTaskId ));
+        MmcssHandle.reset(AvSetMmThreadCharacteristics(L"Pro Audio", &MmcssTaskId));
+        if (!MmcssHandle)
+        {
+            // If the task id has gone invalid, try with a new task id
+            MmcssTaskId = 0;
+            MmcssHandle.reset(AvSetMmThreadCharacteristics(L"Pro Audio", &MmcssTaskId));
+        }
+
+        auto cleanupOnFailure = wil::scope_exit([&]()
+            {
+                MmcssHandle.reset();
+            });
+
+        RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), FALSE == AvSetMmThreadPriority(MmcssHandle.get(), AVRT_PRIORITY_HIGH));
+        cleanupOnFailure.release();
     }
-
-    auto cleanupOnFailure = wil::scope_exit([&]()
+    else
     {
-        MmcssHandle.reset();
-    });
-
-    RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), FALSE == AvSetMmThreadPriority(MmcssHandle.get(), AVRT_PRIORITY_HIGH));
-    cleanupOnFailure.release();
-#else
-    UNREFERENCED_PARAMETER(MmcssHandle);
-    UNREFERENCED_PARAMETER(MmcssTaskId);
-
-    SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
-    SetPriorityClass(GetCurrentThread(), REALTIME_PRIORITY_CLASS);
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
-#endif
+        SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
+        SetPriorityClass(GetCurrentThread(), REALTIME_PRIORITY_CLASS);
+        SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
+    }
 
     return S_OK;
 }
@@ -176,6 +177,26 @@ CMidiXProc::~CMidiXProc()
 {
     Cleanup();
 }
+
+// static members, because of the way the C-style functions are used
+constinit BOOL CMidiXProc::m_useMMCSS{ false };
+constinit BOOL CMidiXProc::m_mmcssSettingRead{ false };
+
+bool CMidiXProc::MMCSSUseEnabled()
+{
+    if (!m_mmcssSettingRead)
+    {
+        // see if we're going to use MMCSS here.
+        DWORD regValueUseMMCSS{ MIDI_USE_MMCSS_REG_DEFAULT_VALUE };
+        wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_USE_MMCSS_REG_VALUE, &regValueUseMMCSS);
+        m_useMMCSS = (bool)(regValueUseMMCSS > 0);
+
+        m_mmcssSettingRead = true;
+    }
+
+    return m_useMMCSS;
+}
+
 
 _Use_decl_annotations_
 HRESULT
@@ -196,6 +217,8 @@ CMidiXProc::Initialize(DWORD* MmcssTaskId,
     m_ThreadTerminateEvent.create();
     m_ThreadStartedEvent.create();
     m_MmcssTaskId = *MmcssTaskId;
+
+
 
     // now that we know we will succeed, take ownership of the
     // mapped pipes.

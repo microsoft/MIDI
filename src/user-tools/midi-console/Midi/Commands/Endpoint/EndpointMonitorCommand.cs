@@ -33,7 +33,7 @@ namespace Microsoft.Midi.ConsoleApp
     {
         // we have this struct so we can separate the relatively fast received processing
         // and its calculations from the comparatively slow displays processing
-        private Queue<ReceivedMidiMessage> m_receivedMessagesQueue = new Queue<ReceivedMidiMessage>(1000);
+        private Queue<ReceivedMidiMessage> m_receivedMessagesQueue = new Queue<ReceivedMidiMessage>(2000);
         private Queue<ReceivedMidiMessage> m_displayMessageQueue = new Queue<ReceivedMidiMessage>(1000);
         private Queue<ReceivedMidiMessage> m_fileWriterMessagesQueue = new Queue<ReceivedMidiMessage>(1000);
 
@@ -88,6 +88,11 @@ namespace Microsoft.Midi.ConsoleApp
             [CommandOption("-r|--auto-reconnect")]
             [DefaultValue(true)]
             public bool AutoReconnect { get; set; }
+
+            [LocalizedDescription("ParameterMonitorEndpointAutoReconnect")]
+            [CommandOption("-j|--jitter-statistics")]
+            [DefaultValue(false)]
+            public bool CalculateJitterStatistics { get; set; }
 
             //[EnumLocalizedDescription("ParameterMonitorEndpointSkipToKeepUp", typeof(CaptureFieldDelimiter))]
             //[CommandOption("-k|--keep-up-display")]
@@ -259,6 +264,15 @@ namespace Microsoft.Midi.ConsoleApp
                 UInt64 lastMessageReceivedEventTimestamp = 0;
                 UInt32 countMessagesReceived = 0;
 
+                UInt64 maxDeltaBetweenMessages = UInt64.MinValue;
+                UInt64 minDeltaBetweenMessages = UInt64.MaxValue;
+                UInt64 totalDeltaBetweenMessages = 0;
+
+                UInt64 countSysEx7BytesReceived = 0;
+
+                // we ignore the first two messages for jitter calculation.
+                const int jitterCalcMessageIgnoreCount = 2;
+
                 if (settings.AutoReconnect)
                 {
                     connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
@@ -308,10 +322,13 @@ namespace Microsoft.Midi.ConsoleApp
                                 lastMessageTimestamp = e.Timestamp;
                             }
 
-                            // helps prevent any race conditions with main loop and its output
-                            //if (!continueWaiting) return;
-
                             index++;
+
+
+                            if (MidiMessageHelper.MessageIsSystemExclusive7Message(e.PeekFirstWord()))
+                            {
+                                countSysEx7BytesReceived += MidiMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(e.PeekFirstWord());
+                            }
 
                             var receivedMessage = new ReceivedMidiMessage()
                             {
@@ -320,6 +337,22 @@ namespace Microsoft.Midi.ConsoleApp
                                 ReceivedOffsetFromLastMessage = thisMessageReceivedEventTimestamp - lastMessageReceivedEventTimestamp,
                                 MessageTimestamp = e.Timestamp
                             };
+
+
+                            if (index > jitterCalcMessageIgnoreCount && settings.CalculateJitterStatistics)
+                            {
+                                if (receivedMessage.ReceivedOffsetFromLastMessage > maxDeltaBetweenMessages)
+                                {
+                                    maxDeltaBetweenMessages = receivedMessage.ReceivedOffsetFromLastMessage;
+                                }
+
+                                if (receivedMessage.ReceivedOffsetFromLastMessage < minDeltaBetweenMessages)
+                                {
+                                    minDeltaBetweenMessages = receivedMessage.ReceivedOffsetFromLastMessage;
+                                }
+
+                                totalDeltaBetweenMessages += receivedMessage.ReceivedOffsetFromLastMessage;
+                            }
 
 
                             if (index > 1 && e.Timestamp < lastMessageTimestamp)
@@ -568,31 +601,10 @@ namespace Microsoft.Midi.ConsoleApp
                         message += $"[steelblue1]{countMessagesReceived.ToString("N0")} messages received[/]";
                     }
 
-                    if (countMessagesReceived > 0 && lastMessageReceivedEventTimestamp >= firstMessageReceivedEventTimestamp)
-                    {
-                        // calculate total receive time, not total display time
-
-                        UInt64 totalTicks = lastMessageReceivedEventTimestamp - firstMessageReceivedEventTimestamp;
-                        double totalTime = 0.0;
-                        string totalTimeLabel = string.Empty;
-
-                        AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(totalTicks, out totalTime, out totalTimeLabel);
-
-                        UInt64 averageTicks = totalTicks / countMessagesReceived;   // yes, this will truncate. That's ok
-                        double averageTime = 0.0;
-                        string averageTimeLabel = string.Empty;
-
-                        AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(averageTicks, out averageTime, out averageTimeLabel);
-
-                        message += $" over [steelblue1]{totalTime.ToString("N2")} {totalTimeLabel}[/], ";
-                        message += $"averaging [steelblue1]{averageTime.ToString("N2")} {averageTimeLabel}[/] per message. (Total display time may be longer)";
-
-                    }
-
                     AnsiConsole.MarkupLine(message);
                 }
 
-                if (countMessagesReceived > 0)
+                if (countMessagesReceived > 1)
                 {
                     if (outOfTimestampOrderMessageCount > 0)
                     {
@@ -613,11 +625,29 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                     else
                     {
-                        AnsiConsole.MarkupLine("✅ No messages received out of expected timestamp order.");
+                    //    AnsiConsole.MarkupLine("✅ No messages received out of expected timestamp order.");
                     }
                 }
 
-                if (countMessagesReceived > 0 && settings.WarnIfSkippedIncrementMessage)
+                if (countSysEx7BytesReceived > 0)
+                {
+                    string message = "➡️ [steelblue1]";
+
+                    if (countSysEx7BytesReceived == 1)
+                    {
+                        message += $"One SysEx 7-bit data byte ";
+                    }
+                    else
+                    {
+                        message += $"{countSysEx7BytesReceived.ToString("N0")} SysEx 7-bit data bytes ";
+                    }
+
+                    message += "received (not counting stripped F0/F7)[/]";
+
+                    AnsiConsole.MarkupLine(message);
+                }
+
+                if (countMessagesReceived > 1 && settings.WarnIfSkippedIncrementMessage)
                 {
                     if (numberOfSkippedDebugMessages > 0)
                     {
@@ -643,6 +673,64 @@ namespace Microsoft.Midi.ConsoleApp
                         AnsiConsole.MarkupLine("✅ No debug messages skipped. This does not include any missing from the end or beginning.");
                     }
                 }
+
+                const int minMessageCountToCalculateJitter = 50;
+
+                if (countMessagesReceived > minMessageCountToCalculateJitter && settings.CalculateJitterStatistics)
+                {
+                    UInt64 avgDeltaBetweenMessages = totalDeltaBetweenMessages / (countMessagesReceived - jitterCalcMessageIgnoreCount);
+
+                    double minDelta;
+                    string minDeltaLabel;
+
+                    double maxDelta;
+                    string maxDeltaLabel;
+
+                    double avgDelta;
+                    string avgDeltaLabel;
+
+                    UInt64 totalTicks = lastMessageReceivedEventTimestamp - firstMessageReceivedEventTimestamp;
+                    double totalTime = 0.0;
+                    string totalTimeLabel = string.Empty;
+
+                    UInt64 maxJitterTicks = maxDeltaBetweenMessages - avgDeltaBetweenMessages;
+                    double maxJitter;
+                    string maxJitterLabel;
+
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(maxJitterTicks, out maxJitter, out maxJitterLabel);
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(totalTicks, out totalTime, out totalTimeLabel);
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(minDeltaBetweenMessages, out minDelta, out minDeltaLabel);
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(maxDeltaBetweenMessages, out maxDelta, out maxDeltaLabel);
+                    AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(avgDeltaBetweenMessages, out avgDelta, out avgDeltaLabel);
+
+                    AnsiConsole.WriteLine();
+                    AnsiConsole.MarkupLine($"Timing for {AnsiMarkupFormatter.FormatEndpointName(endpointName)}, assuming messages were sent regularly, ignoring first {jitterCalcMessageIgnoreCount} messages.");
+                    AnsiConsole.WriteLine();
+                    AnsiConsole.MarkupLine($"🧮 Total time between first message and last message [steelblue1]{totalTime.ToString("N2")} {totalTimeLabel}[/]");
+                    AnsiConsole.MarkupLine($"🔽 Minimum time between messages [steelblue1]{minDelta.ToString("N2")} {minDeltaLabel}[/]");
+                    AnsiConsole.MarkupLine($"🔼 Maximum time between messages [steelblue1]{maxDelta.ToString("N2")} {maxDeltaLabel}[/]");
+                    AnsiConsole.MarkupLine($"✅ Average time between messages [steelblue1]{avgDelta.ToString("N2")} {avgDeltaLabel}[/]");
+
+                    if (maxJitterTicks > MidiClock.OffsetTimestampByMicroseconds(0, 3500))
+                    {
+                        AnsiConsole.MarkupLine($"❎ Maximum jitter [red]{maxJitter.ToString("N2")} {maxJitterLabel}[/]");
+                    }
+                    else
+                    {
+                        AnsiConsole.MarkupLine($"✅ Maximum jitter [steelblue1]{maxJitter.ToString("N2")} {maxJitterLabel}[/]");
+                    }
+
+                    AnsiConsole.WriteLine();
+                }
+                else if (settings.CalculateJitterStatistics)
+                {
+                    AnsiConsole.MarkupLine($"Message count received insufficient to calculate jitter. Need at least {minMessageCountToCalculateJitter} messages.");
+                    AnsiConsole.WriteLine();
+                }
+
+                //if (countMessagesReceived > 0 && lastMessageReceivedEventTimestamp >= firstMessageReceivedEventTimestamp)
+                //{
+                //}
 
 
 

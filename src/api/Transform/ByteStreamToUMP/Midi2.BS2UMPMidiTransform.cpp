@@ -31,6 +31,11 @@ CMidi2BS2UMPMidiTransform::Initialize(
     m_Context = Context;
 
     m_BS2UMP.outputMIDI2 = false;
+
+    // TODO: This group needs to come from a property, not be set to 0. See GH bug #377
+    // This won't impact the aggregated MIDI endpoints but it *will* impact the client-side
+    // MIDI 1.0 APIs
+
     m_BS2UMP.defaultGroup = 0;
 
     return S_OK;
@@ -70,19 +75,45 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     while (m_BS2UMP.availableUMP())
     {
         uint32_t umpMessage[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
-        UINT umpCount;
-        for(umpCount = 0; umpCount < _countof(umpMessage) && m_BS2UMP.availableUMP(); umpCount++)
+
+        // we need to send only a single message at a time. the library 
+        // converts to a stream of words which may be multiple UMPs. So we 
+        // need to walk the data
+
+        umpMessage[0] = m_BS2UMP.readUMP();
+        uint8_t messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(umpMessage[0]);
+        uint8_t messageWordsRead = 1 ;
+
+        if (m_BS2UMP.availableUMP())
         {
-            umpMessage[umpCount] = m_BS2UMP.readUMP();
+            // this starts at 1 because we already read the first word
+            for (uint8_t i = 1; i < messageWordCount && i < _countof(umpMessage) && m_BS2UMP.availableUMP(); i++)
+            {
+                umpMessage[i] = m_BS2UMP.readUMP();
+                messageWordsRead++;
+            }
         }
 
-        // Note from PMB for Gary: Pretty sure "ump" in this context is just a single UMP word. Some messages like
-        // SysEx are larger (64 bit) and so would be two words back-to-back, so umpCount would be 2 or greater.
-        if (umpCount > 0)
+
+        if (messageWordsRead != messageWordCount)
         {
-            // there are 4 bytes per each 32 bit UMP returned by the parser.
-            RETURN_IF_FAILED(m_Callback->Callback(&(umpMessage[0]), umpCount * sizeof(uint32_t), Position, m_Context));
+            // we have a problem here. 
+
+            RETURN_IF_FAILED(E_ABORT);
         }
+        else if (messageWordCount > 0)
+        {
+            // TODO: if this fails, it leaves a bunch of data in the m_BS2UMP cache. Needs
+            // to be drained if we'll return. So change to log, clear, and then return.
+            // Same with the UMP2BS MIDI Transform
+
+            RETURN_IF_FAILED(m_Callback->Callback(&(umpMessage[0]), messageWordCount * sizeof(uint32_t), Position, m_Context));
+        }
+        else
+        {
+            // no data to send
+        }
+
     }
 
     return S_OK;

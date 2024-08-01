@@ -697,10 +697,10 @@ CMidiDeviceManager::ActivateEndpoint
 
             // transport information
 
-            if (CommonProperties->TransportMnemonic != nullptr && wcslen(CommonProperties->TransportMnemonic) > 0)
+            if (CommonProperties->TransportCode != nullptr && wcslen(CommonProperties->TransportCode) > 0)
             {
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportMnemonic, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->TransportMnemonic) + 1)), (PVOID)CommonProperties->TransportMnemonic });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportCode, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->TransportCode) + 1)), (PVOID)CommonProperties->TransportCode });
             }
             else
             {
@@ -711,7 +711,7 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Common Properties: Transport Mnemonic is null or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Common Properties: Transport Code is null or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 return E_INVALIDARG;

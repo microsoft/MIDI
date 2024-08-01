@@ -56,7 +56,7 @@ namespace MidiSample.AppToAppMidi
 
             this.Closed += MainWindow_Closed;
 
-            this.SetWindowSize(500, 550);
+            this.SetWindowSize(500, 600);
             this.SetIsAlwaysOnTop(true);
         }
 
@@ -171,6 +171,11 @@ namespace MidiSample.AppToAppMidi
             string endpointSuppliedName = transportSuppliedName;
 
 
+
+
+            EndpointNameEntry.Text = endpointSuppliedName;
+
+
             var declaredEndpointInfo = new MidiDeclaredEndpointInfo();
             declaredEndpointInfo.Name = endpointSuppliedName;
             declaredEndpointInfo.ProductInstanceId = "PMB_APP2_3263827";
@@ -231,6 +236,24 @@ namespace MidiSample.AppToAppMidi
             config.FunctionBlocks.Add(block2);
 
             return config;
+        }
+
+        private void UpdateName_Click(object sender, RoutedEventArgs e)
+        {
+            var newName = EndpointNameEntry.Text.Trim();
+
+            if (!string.IsNullOrEmpty(newName))
+            {
+                if (_virtualDevice.UpdateEndpointName(newName))
+                {
+                    EndpointNameEntry.Text = newName;
+                }
+                else
+                {
+                    // failed to update name
+                }
+
+            }
         }
     }
 }

@@ -145,9 +145,14 @@ namespace Microsoft.Midi.ConsoleApp
             Columns.Add(new MidiMessageTableColumn(8, "", 8, true, "deepskyblue2", ""));
             Columns.Add(new MidiMessageTableColumn(9, "", 8, true, "deepskyblue3", ""));
             Columns.Add(new MidiMessageTableColumn(10, "", 8, true, "deepskyblue4", ""));
-            if (verbose) Columns.Add(new MidiMessageTableColumn(11, "Gr", 2, false, "indianred", ""));
-            if (verbose) Columns.Add(new MidiMessageTableColumn(12, "Ch", 2, true, "mediumorchid3", ""));
-            if (verbose) Columns.Add(new MidiMessageTableColumn(13, "Message Type", -35, false,"steelblue1_1", ""));
+
+            if (verbose)
+            {
+                Columns.Add(new MidiMessageTableColumn(11, "Gr", 2, false, "indianred", ""));
+                Columns.Add(new MidiMessageTableColumn(12, "Ch", 2, true, "mediumorchid3", ""));
+                Columns.Add(new MidiMessageTableColumn(13, "Decoded Data", -35, false, "deepskyblue1", ""));
+                Columns.Add(new MidiMessageTableColumn(14, "Message Type", -35, false, "steelblue1_1", ""));
+            }
 
             BuildStringFormats();
         }
@@ -166,8 +171,54 @@ namespace Microsoft.Midi.ConsoleApp
             string data = string.Empty;
 
             string detailedMessageType = string.Empty;
+            string decodedData = string.Empty;
 
-            if (m_verbose) detailedMessageType = MidiMessageHelper.GetMessageDisplayNameFromFirstWord(message.Word0);
+            var messageType = MidiMessageHelper.GetMessageTypeFromMessageFirstWord(message.Word0);
+
+
+            if (m_verbose)
+            {
+                detailedMessageType = MidiMessageHelper.GetMessageDisplayNameFromFirstWord(message.Word0);
+
+                // For SysEx, we display the bytes here. We may want to offer decoding for other message
+                // types as well, in the future, and just have a dedicated column for the decoding.
+
+                const uint maxSysEx7BytesPerMessage = 6;
+                if (MidiMessageHelper.MessageIsSystemExclusive7Message(message.Word0))
+                {
+                    // show the bytes
+                    var byteCount = MidiMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(message.Word0);
+
+                    foreach (var b in MidiMessageHelper.GetDataBytesFromSingleSystemExclusive7Message(message.Word0, message.Word1))
+                    {
+                        decodedData += b.ToString("X2") + " ";
+                    }
+
+                    if (byteCount < maxSysEx7BytesPerMessage)
+                    {
+                        decodedData += "[grey]";
+
+                        for (int i = 0; i < maxSysEx7BytesPerMessage - byteCount; i++)
+                        {
+                            decodedData += "-- ";
+                        }
+
+                        decodedData += "[/]";
+                    }
+
+                    decodedData = $"[darkseagreen2]{decodedData}[/]";                   
+                }
+
+                //if (messageType == MidiMessageType.DataMessage64)
+                //{
+                //}
+                //else if (MessageIsSysEx8(message))
+                //{
+                //}
+                //else
+                //{
+                //}
+            }
 
             string word0 = string.Empty;
             string word1 = string.Empty;
@@ -222,8 +273,6 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (m_verbose)
             {
-                var messageType = MidiMessageHelper.GetMessageTypeFromMessageFirstWord(message.Word0);
-
                 if (MidiMessageHelper.MessageTypeHasGroupField(messageType))
                 {
                     groupText = MidiMessageHelper.GetGroupFromMessageFirstWord(message.Word0).DisplayValue.ToString().PadLeft(2);
@@ -234,8 +283,6 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (m_verbose)
             {
-                var messageType = MidiMessageHelper.GetMessageTypeFromMessageFirstWord(message.Word0);
-
                 if (MidiMessageHelper.MessageTypeHasChannelField(messageType))
                 {
                     channelText = MidiMessageHelper.GetChannelFromMessageFirstWord(message.Word0).DisplayValue.ToString().PadLeft(2);
@@ -296,6 +343,7 @@ namespace Microsoft.Midi.ConsoleApp
                     word0, word1, word2, word3,
                     groupText,
                     channelText,
+                    decodedData,
                     detailedMessageType
                     );
             }
@@ -313,6 +361,7 @@ namespace Microsoft.Midi.ConsoleApp
                     word0, word1, word2, word3,
                     groupText,
                     channelText,
+                    decodedData,
                     detailedMessageType
                     );
 

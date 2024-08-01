@@ -52,18 +52,18 @@
 
 /* Forward Declarations */ 
 
-#ifndef __IMidiCallback_FWD_DEFINED__
-#define __IMidiCallback_FWD_DEFINED__
-typedef interface IMidiCallback IMidiCallback;
-
-#endif 	/* __IMidiCallback_FWD_DEFINED__ */
-
-
 #ifndef __IMidiAbstraction_FWD_DEFINED__
 #define __IMidiAbstraction_FWD_DEFINED__
 typedef interface IMidiAbstraction IMidiAbstraction;
 
 #endif 	/* __IMidiAbstraction_FWD_DEFINED__ */
+
+
+#ifndef __IMidiCallback_FWD_DEFINED__
+#define __IMidiCallback_FWD_DEFINED__
+typedef interface IMidiCallback IMidiCallback;
+
+#endif 	/* __IMidiCallback_FWD_DEFINED__ */
 
 
 #ifndef __IMidiIn_FWD_DEFINED__
@@ -94,20 +94,6 @@ typedef interface IMidiEndpointManager IMidiEndpointManager;
 #endif 	/* __IMidiEndpointManager_FWD_DEFINED__ */
 
 
-#ifndef __IMidiTransform_FWD_DEFINED__
-#define __IMidiTransform_FWD_DEFINED__
-typedef interface IMidiTransform IMidiTransform;
-
-#endif 	/* __IMidiTransform_FWD_DEFINED__ */
-
-
-#ifndef __IMidiDataTransform_FWD_DEFINED__
-#define __IMidiDataTransform_FWD_DEFINED__
-typedef interface IMidiDataTransform IMidiDataTransform;
-
-#endif 	/* __IMidiDataTransform_FWD_DEFINED__ */
-
-
 #ifndef __IMidiDeviceManagerInterface_FWD_DEFINED__
 #define __IMidiDeviceManagerInterface_FWD_DEFINED__
 typedef interface IMidiDeviceManagerInterface IMidiDeviceManagerInterface;
@@ -127,6 +113,34 @@ typedef interface IMidiServiceConfigurationManagerInterface IMidiServiceConfigur
 typedef interface IMidiAbstractionConfigurationManager IMidiAbstractionConfigurationManager;
 
 #endif 	/* __IMidiAbstractionConfigurationManager_FWD_DEFINED__ */
+
+
+#ifndef __IMidiTransform_FWD_DEFINED__
+#define __IMidiTransform_FWD_DEFINED__
+typedef interface IMidiTransform IMidiTransform;
+
+#endif 	/* __IMidiTransform_FWD_DEFINED__ */
+
+
+#ifndef __IMidiDataTransform_FWD_DEFINED__
+#define __IMidiDataTransform_FWD_DEFINED__
+typedef interface IMidiDataTransform IMidiDataTransform;
+
+#endif 	/* __IMidiDataTransform_FWD_DEFINED__ */
+
+
+#ifndef __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__
+#define __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__
+typedef interface IMidiProtocolNegotiationCompleteCallback IMidiProtocolNegotiationCompleteCallback;
+
+#endif 	/* __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__ */
+
+
+#ifndef __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__
+#define __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__
+typedef interface IMidiEndpointProtocolManagerInterface IMidiEndpointProtocolManagerInterface;
+
+#endif 	/* __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__ */
 
 
 #ifndef __IMidiServiceAbstractionPluginMetadataProvider_FWD_DEFINED__
@@ -155,20 +169,6 @@ typedef interface IMidiServicePluginMetadataReporterInterface IMidiServicePlugin
 typedef interface IMidiSessionTracker IMidiSessionTracker;
 
 #endif 	/* __IMidiSessionTracker_FWD_DEFINED__ */
-
-
-#ifndef __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__
-#define __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__
-typedef interface IMidiProtocolNegotiationCompleteCallback IMidiProtocolNegotiationCompleteCallback;
-
-#endif 	/* __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__ */
-
-
-#ifndef __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__
-#define __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__
-typedef interface IMidiEndpointProtocolManagerInterface IMidiEndpointProtocolManagerInterface;
-
-#endif 	/* __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__ */
 
 
 /* header files for imported files */
@@ -209,109 +209,10 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_00
 
 typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003 *PABSTRACTIONCREATIONPARAMS;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004
-    {
-    MidiDataFormat DataFormatIn;
-    MidiDataFormat DataFormatOut;
-    LPCWSTR InstanceConfigurationJsonData;
-    } 	TRANSFORMCREATIONPARAMS;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004 *PTRANSFORMCREATIONPARAMS;
-
 
 
 extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0000_v0_0_c_ifspec;
 extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0000_v0_0_s_ifspec;
-
-#ifndef __IMidiCallback_INTERFACE_DEFINED__
-#define __IMidiCallback_INTERFACE_DEFINED__
-
-/* interface IMidiCallback */
-/* [unique][uuid][local][object] */ 
-
-
-EXTERN_C const IID IID_IMidiCallback;
-
-#if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    MIDL_INTERFACE("4D6A29E5-DF4F-4A2D-A923-9B23B3F2D6F6")
-    IMidiCallback : public IUnknown
-    {
-    public:
-        virtual HRESULT STDMETHODCALLTYPE Callback( 
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position,
-            /* [in] */ LONGLONG context) = 0;
-        
-    };
-    
-    
-#else 	/* C style interface */
-
-    typedef struct IMidiCallbackVtbl
-    {
-        BEGIN_INTERFACE
-        
-        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiCallback * This,
-            /* [in] */ REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **ppvObject);
-        
-        DECLSPEC_XFGVIRT(IUnknown, AddRef)
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiCallback * This);
-        
-        DECLSPEC_XFGVIRT(IUnknown, Release)
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiCallback * This);
-        
-        DECLSPEC_XFGVIRT(IMidiCallback, Callback)
-        HRESULT ( STDMETHODCALLTYPE *Callback )( 
-            IMidiCallback * This,
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position,
-            /* [in] */ LONGLONG context);
-        
-        END_INTERFACE
-    } IMidiCallbackVtbl;
-
-    interface IMidiCallback
-    {
-        CONST_VTBL struct IMidiCallbackVtbl *lpVtbl;
-    };
-
-    
-
-#ifdef COBJMACROS
-
-
-#define IMidiCallback_QueryInterface(This,riid,ppvObject)	\
-    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
-
-#define IMidiCallback_AddRef(This)	\
-    ( (This)->lpVtbl -> AddRef(This) ) 
-
-#define IMidiCallback_Release(This)	\
-    ( (This)->lpVtbl -> Release(This) ) 
-
-
-#define IMidiCallback_Callback(This,message,size,position,context)	\
-    ( (This)->lpVtbl -> Callback(This,message,size,position,context) ) 
-
-#endif /* COBJMACROS */
-
-
-#endif 	/* C style interface */
-
-
-
-
-#endif 	/* __IMidiCallback_INTERFACE_DEFINED__ */
-
 
 #ifndef __IMidiAbstraction_INTERFACE_DEFINED__
 #define __IMidiAbstraction_INTERFACE_DEFINED__
@@ -401,6 +302,96 @@ EXTERN_C const IID IID_IMidiAbstraction;
 
 
 #endif 	/* __IMidiAbstraction_INTERFACE_DEFINED__ */
+
+
+#ifndef __IMidiCallback_INTERFACE_DEFINED__
+#define __IMidiCallback_INTERFACE_DEFINED__
+
+/* interface IMidiCallback */
+/* [unique][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IMidiCallback;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("4D6A29E5-DF4F-4A2D-A923-9B23B3F2D6F6")
+    IMidiCallback : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE Callback( 
+            /* [in] */ PVOID message,
+            /* [in] */ UINT size,
+            /* [in] */ LONGLONG position,
+            /* [in] */ LONGLONG context) = 0;
+        
+    };
+    
+    
+#else 	/* C style interface */
+
+    typedef struct IMidiCallbackVtbl
+    {
+        BEGIN_INTERFACE
+        
+        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IMidiCallback * This,
+            /* [in] */ REFIID riid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **ppvObject);
+        
+        DECLSPEC_XFGVIRT(IUnknown, AddRef)
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IMidiCallback * This);
+        
+        DECLSPEC_XFGVIRT(IUnknown, Release)
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IMidiCallback * This);
+        
+        DECLSPEC_XFGVIRT(IMidiCallback, Callback)
+        HRESULT ( STDMETHODCALLTYPE *Callback )( 
+            IMidiCallback * This,
+            /* [in] */ PVOID message,
+            /* [in] */ UINT size,
+            /* [in] */ LONGLONG position,
+            /* [in] */ LONGLONG context);
+        
+        END_INTERFACE
+    } IMidiCallbackVtbl;
+
+    interface IMidiCallback
+    {
+        CONST_VTBL struct IMidiCallbackVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IMidiCallback_QueryInterface(This,riid,ppvObject)	\
+    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
+
+#define IMidiCallback_AddRef(This)	\
+    ( (This)->lpVtbl -> AddRef(This) ) 
+
+#define IMidiCallback_Release(This)	\
+    ( (This)->lpVtbl -> Release(This) ) 
+
+
+#define IMidiCallback_Callback(This,message,size,position,context)	\
+    ( (This)->lpVtbl -> Callback(This,message,size,position,context) ) 
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+
+#endif 	/* __IMidiCallback_INTERFACE_DEFINED__ */
 
 
 #ifndef __IMidiIn_INTERFACE_DEFINED__
@@ -833,219 +824,11 @@ EXTERN_C const IID IID_IMidiEndpointManager;
 #endif 	/* __IMidiEndpointManager_INTERFACE_DEFINED__ */
 
 
-#ifndef __IMidiTransform_INTERFACE_DEFINED__
-#define __IMidiTransform_INTERFACE_DEFINED__
-
-/* interface IMidiTransform */
-/* [unique][uuid][local][object] */ 
-
-
-EXTERN_C const IID IID_IMidiTransform;
-
-#if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    MIDL_INTERFACE("65FA86A4-0433-4DCD-88E4-E565051CAB2D")
-    IMidiTransform : public IUnknown
-    {
-    public:
-        virtual HRESULT STDMETHODCALLTYPE Activate( 
-            /* [annotation][in] */ 
-            _In_  REFIID Iid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **Interface) = 0;
-        
-    };
-    
-    
-#else 	/* C style interface */
-
-    typedef struct IMidiTransformVtbl
-    {
-        BEGIN_INTERFACE
-        
-        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiTransform * This,
-            /* [in] */ REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **ppvObject);
-        
-        DECLSPEC_XFGVIRT(IUnknown, AddRef)
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiTransform * This);
-        
-        DECLSPEC_XFGVIRT(IUnknown, Release)
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiTransform * This);
-        
-        DECLSPEC_XFGVIRT(IMidiTransform, Activate)
-        HRESULT ( STDMETHODCALLTYPE *Activate )( 
-            IMidiTransform * This,
-            /* [annotation][in] */ 
-            _In_  REFIID Iid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **Interface);
-        
-        END_INTERFACE
-    } IMidiTransformVtbl;
-
-    interface IMidiTransform
-    {
-        CONST_VTBL struct IMidiTransformVtbl *lpVtbl;
-    };
-
-    
-
-#ifdef COBJMACROS
-
-
-#define IMidiTransform_QueryInterface(This,riid,ppvObject)	\
-    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
-
-#define IMidiTransform_AddRef(This)	\
-    ( (This)->lpVtbl -> AddRef(This) ) 
-
-#define IMidiTransform_Release(This)	\
-    ( (This)->lpVtbl -> Release(This) ) 
-
-
-#define IMidiTransform_Activate(This,Iid,Interface)	\
-    ( (This)->lpVtbl -> Activate(This,Iid,Interface) ) 
-
-#endif /* COBJMACROS */
-
-
-#endif 	/* C style interface */
-
-
-
-
-#endif 	/* __IMidiTransform_INTERFACE_DEFINED__ */
-
-
-#ifndef __IMidiDataTransform_INTERFACE_DEFINED__
-#define __IMidiDataTransform_INTERFACE_DEFINED__
-
-/* interface IMidiDataTransform */
-/* [unique][uuid][local][object] */ 
-
-
-EXTERN_C const IID IID_IMidiDataTransform;
-
-#if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    MIDL_INTERFACE("5D2400F0-F2EE-4A51-A3BE-0AC9A19C09C4")
-    IMidiDataTransform : public IUnknown
-    {
-    public:
-        virtual HRESULT STDMETHODCALLTYPE Initialize( 
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PTRANSFORMCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ IMidiCallback *callback,
-            /* [in] */ LONGLONG context,
-            /* [in] */ IUnknown *midiDeviceManager) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE SendMidiMessage( 
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position) = 0;
-        
-    };
-    
-    
-#else 	/* C style interface */
-
-    typedef struct IMidiDataTransformVtbl
-    {
-        BEGIN_INTERFACE
-        
-        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiDataTransform * This,
-            /* [in] */ REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **ppvObject);
-        
-        DECLSPEC_XFGVIRT(IUnknown, AddRef)
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiDataTransform * This);
-        
-        DECLSPEC_XFGVIRT(IUnknown, Release)
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiDataTransform * This);
-        
-        DECLSPEC_XFGVIRT(IMidiDataTransform, Initialize)
-        HRESULT ( STDMETHODCALLTYPE *Initialize )( 
-            IMidiDataTransform * This,
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PTRANSFORMCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ IMidiCallback *callback,
-            /* [in] */ LONGLONG context,
-            /* [in] */ IUnknown *midiDeviceManager);
-        
-        DECLSPEC_XFGVIRT(IMidiDataTransform, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
-            IMidiDataTransform * This);
-        
-        DECLSPEC_XFGVIRT(IMidiDataTransform, SendMidiMessage)
-        HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
-            IMidiDataTransform * This,
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position);
-        
-        END_INTERFACE
-    } IMidiDataTransformVtbl;
-
-    interface IMidiDataTransform
-    {
-        CONST_VTBL struct IMidiDataTransformVtbl *lpVtbl;
-    };
-
-    
-
-#ifdef COBJMACROS
-
-
-#define IMidiDataTransform_QueryInterface(This,riid,ppvObject)	\
-    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
-
-#define IMidiDataTransform_AddRef(This)	\
-    ( (This)->lpVtbl -> AddRef(This) ) 
-
-#define IMidiDataTransform_Release(This)	\
-    ( (This)->lpVtbl -> Release(This) ) 
-
-
-#define IMidiDataTransform_Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,midiDeviceManager)	\
-    ( (This)->lpVtbl -> Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,midiDeviceManager) ) 
-
-#define IMidiDataTransform_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
-
-#define IMidiDataTransform_SendMidiMessage(This,message,size,position)	\
-    ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
-
-#endif /* COBJMACROS */
-
-
-#endif 	/* C style interface */
-
-
-
-
-#endif 	/* __IMidiDataTransform_INTERFACE_DEFINED__ */
-
-
-/* interface __MIDL_itf_WindowsMidiServices_0000_0008 */
+/* interface __MIDL_itf_WindowsMidiServices_0000_0006 */
 /* [local] */ 
 
 typedef /* [public][public][public][public] */ 
-enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0008_0001
+enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0006_0001
     {
         NormalMessageEndpoint	= 0,
         VirtualDeviceResponder	= 100,
@@ -1054,12 +837,12 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0008_0001
         DiagnosticPing	= 510
     } 	MidiEndpointDevicePurposePropertyValue;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0008_0002
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0006_0002
     {
     GUID AbstractionLayerGuid;
     MidiEndpointDevicePurposePropertyValue EndpointPurpose;
     LPCWSTR FriendlyName;
-    LPCWSTR TransportMnemonic;
+    LPCWSTR TransportCode;
     LPCWSTR TransportSuppliedEndpointName;
     LPCWSTR TransportSuppliedEndpointDescription;
     LPCWSTR UserSuppliedEndpointName;
@@ -1075,12 +858,12 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0008_00
     BOOL GenerateIncomingTimestamps;
     } 	MIDIENDPOINTCOMMONPROPERTIES;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0008_0002 *PMIDIENDPOINTCOMMONPROPERTIES;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0006_0002 *PMIDIENDPOINTCOMMONPROPERTIES;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0008_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0008_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0006_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0006_v0_0_s_ifspec;
 
 #ifndef __IMidiDeviceManagerInterface_INTERFACE_DEFINED__
 #define __IMidiDeviceManagerInterface_INTERFACE_DEFINED__
@@ -1546,13 +1329,462 @@ EXTERN_C const IID IID_IMidiAbstractionConfigurationManager;
 #endif 	/* __IMidiAbstractionConfigurationManager_INTERFACE_DEFINED__ */
 
 
+/* interface __MIDL_itf_WindowsMidiServices_0000_0009 */
+/* [local] */ 
+
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0009_0001
+    {
+    MidiDataFormat DataFormatIn;
+    MidiDataFormat DataFormatOut;
+    LPCWSTR InstanceConfigurationJsonData;
+    } 	TRANSFORMCREATIONPARAMS;
+
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0009_0001 *PTRANSFORMCREATIONPARAMS;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0009_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0009_v0_0_s_ifspec;
+
+#ifndef __IMidiTransform_INTERFACE_DEFINED__
+#define __IMidiTransform_INTERFACE_DEFINED__
+
+/* interface IMidiTransform */
+/* [unique][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IMidiTransform;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("65FA86A4-0433-4DCD-88E4-E565051CAB2D")
+    IMidiTransform : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE Activate( 
+            /* [annotation][in] */ 
+            _In_  REFIID Iid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **Interface) = 0;
+        
+    };
+    
+    
+#else 	/* C style interface */
+
+    typedef struct IMidiTransformVtbl
+    {
+        BEGIN_INTERFACE
+        
+        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IMidiTransform * This,
+            /* [in] */ REFIID riid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **ppvObject);
+        
+        DECLSPEC_XFGVIRT(IUnknown, AddRef)
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IMidiTransform * This);
+        
+        DECLSPEC_XFGVIRT(IUnknown, Release)
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IMidiTransform * This);
+        
+        DECLSPEC_XFGVIRT(IMidiTransform, Activate)
+        HRESULT ( STDMETHODCALLTYPE *Activate )( 
+            IMidiTransform * This,
+            /* [annotation][in] */ 
+            _In_  REFIID Iid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **Interface);
+        
+        END_INTERFACE
+    } IMidiTransformVtbl;
+
+    interface IMidiTransform
+    {
+        CONST_VTBL struct IMidiTransformVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IMidiTransform_QueryInterface(This,riid,ppvObject)	\
+    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
+
+#define IMidiTransform_AddRef(This)	\
+    ( (This)->lpVtbl -> AddRef(This) ) 
+
+#define IMidiTransform_Release(This)	\
+    ( (This)->lpVtbl -> Release(This) ) 
+
+
+#define IMidiTransform_Activate(This,Iid,Interface)	\
+    ( (This)->lpVtbl -> Activate(This,Iid,Interface) ) 
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+
+#endif 	/* __IMidiTransform_INTERFACE_DEFINED__ */
+
+
+#ifndef __IMidiDataTransform_INTERFACE_DEFINED__
+#define __IMidiDataTransform_INTERFACE_DEFINED__
+
+/* interface IMidiDataTransform */
+/* [unique][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IMidiDataTransform;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("5D2400F0-F2EE-4A51-A3BE-0AC9A19C09C4")
+    IMidiDataTransform : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE Initialize( 
+            /* [in] */ LPCWSTR deviceId,
+            /* [in] */ PTRANSFORMCREATIONPARAMS creationParams,
+            /* [in] */ DWORD *mmcssTaskId,
+            /* [in] */ IMidiCallback *callback,
+            /* [in] */ LONGLONG context,
+            /* [in] */ IUnknown *midiDeviceManager) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE SendMidiMessage( 
+            /* [in] */ PVOID message,
+            /* [in] */ UINT size,
+            /* [in] */ LONGLONG position) = 0;
+        
+    };
+    
+    
+#else 	/* C style interface */
+
+    typedef struct IMidiDataTransformVtbl
+    {
+        BEGIN_INTERFACE
+        
+        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IMidiDataTransform * This,
+            /* [in] */ REFIID riid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **ppvObject);
+        
+        DECLSPEC_XFGVIRT(IUnknown, AddRef)
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IMidiDataTransform * This);
+        
+        DECLSPEC_XFGVIRT(IUnknown, Release)
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IMidiDataTransform * This);
+        
+        DECLSPEC_XFGVIRT(IMidiDataTransform, Initialize)
+        HRESULT ( STDMETHODCALLTYPE *Initialize )( 
+            IMidiDataTransform * This,
+            /* [in] */ LPCWSTR deviceId,
+            /* [in] */ PTRANSFORMCREATIONPARAMS creationParams,
+            /* [in] */ DWORD *mmcssTaskId,
+            /* [in] */ IMidiCallback *callback,
+            /* [in] */ LONGLONG context,
+            /* [in] */ IUnknown *midiDeviceManager);
+        
+        DECLSPEC_XFGVIRT(IMidiDataTransform, Cleanup)
+        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
+            IMidiDataTransform * This);
+        
+        DECLSPEC_XFGVIRT(IMidiDataTransform, SendMidiMessage)
+        HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
+            IMidiDataTransform * This,
+            /* [in] */ PVOID message,
+            /* [in] */ UINT size,
+            /* [in] */ LONGLONG position);
+        
+        END_INTERFACE
+    } IMidiDataTransformVtbl;
+
+    interface IMidiDataTransform
+    {
+        CONST_VTBL struct IMidiDataTransformVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IMidiDataTransform_QueryInterface(This,riid,ppvObject)	\
+    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
+
+#define IMidiDataTransform_AddRef(This)	\
+    ( (This)->lpVtbl -> AddRef(This) ) 
+
+#define IMidiDataTransform_Release(This)	\
+    ( (This)->lpVtbl -> Release(This) ) 
+
+
+#define IMidiDataTransform_Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,midiDeviceManager)	\
+    ( (This)->lpVtbl -> Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,midiDeviceManager) ) 
+
+#define IMidiDataTransform_Cleanup(This)	\
+    ( (This)->lpVtbl -> Cleanup(This) ) 
+
+#define IMidiDataTransform_SendMidiMessage(This,message,size,position)	\
+    ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+
+#endif 	/* __IMidiDataTransform_INTERFACE_DEFINED__ */
+
+
 /* interface __MIDL_itf_WindowsMidiServices_0000_0011 */
 /* [local] */ 
 
 typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0001
     {
+    BYTE Number;
+    BYTE FirstGroup;
+    BYTE NumberOfGroupsSpanned;
+    BOOL IsActive;
+    BOOL IsMIDIMessageDestination;
+    BOOL IsMIDIMessageSource;
+    LPCWSTR Name;
+    } 	DISCOVEREDFUNCTIONBLOCK;
+
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0001 *PDISCOVEREDFUNCTIONBLOCK;
+
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0002
+    {
+    BOOL AllEndpointInformationReceived;
+    BOOL EndpointSupportsMIDI2Protocol;
+    BOOL EndpointSupportsMIDI1Protocol;
+    LPCWSTR EndpointSuppliedName;
+    LPCWSTR EndpointSuppliedProductInstanceId;
+    BYTE CountFunctionBlocksDeclared;
+    BYTE CountFunctionBlocksReceived;
+    BOOL FunctionBlocksAreStatic;
+    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;
+    } 	ENDPOINTPROTOCOLNEGOTIATIONRESULTS;
+
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0002 *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
+
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0003
+    {
+    BOOL PreferToSendJRTimestampsToEndpoint;
+    BOOL PreferToReceiveJRTimestampsFromEndpoint;
+    BYTE PreferredMidiProtocol;
+    WORD TimeoutMilliseconds;
+    } 	ENDPOINTPROTOCOLNEGOTIATIONPARAMS;
+
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0003 *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0011_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0011_v0_0_s_ifspec;
+
+#ifndef __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
+#define __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
+
+/* interface IMidiProtocolNegotiationCompleteCallback */
+/* [unique][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("f948dc64-e03a-4e24-bc6e-437ad729cd50")
+    IMidiProtocolNegotiationCompleteCallback : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE ProtocolNegotiationCompleteCallback( 
+            /* [in] */ GUID AbstractionGuid,
+            /* [in] */ LPCWSTR DeviceInterfaceId,
+            /* [in] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results) = 0;
+        
+    };
+    
+    
+#else 	/* C style interface */
+
+    typedef struct IMidiProtocolNegotiationCompleteCallbackVtbl
+    {
+        BEGIN_INTERFACE
+        
+        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IMidiProtocolNegotiationCompleteCallback * This,
+            /* [in] */ REFIID riid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **ppvObject);
+        
+        DECLSPEC_XFGVIRT(IUnknown, AddRef)
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IMidiProtocolNegotiationCompleteCallback * This);
+        
+        DECLSPEC_XFGVIRT(IUnknown, Release)
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IMidiProtocolNegotiationCompleteCallback * This);
+        
+        DECLSPEC_XFGVIRT(IMidiProtocolNegotiationCompleteCallback, ProtocolNegotiationCompleteCallback)
+        HRESULT ( STDMETHODCALLTYPE *ProtocolNegotiationCompleteCallback )( 
+            IMidiProtocolNegotiationCompleteCallback * This,
+            /* [in] */ GUID AbstractionGuid,
+            /* [in] */ LPCWSTR DeviceInterfaceId,
+            /* [in] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results);
+        
+        END_INTERFACE
+    } IMidiProtocolNegotiationCompleteCallbackVtbl;
+
+    interface IMidiProtocolNegotiationCompleteCallback
+    {
+        CONST_VTBL struct IMidiProtocolNegotiationCompleteCallbackVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IMidiProtocolNegotiationCompleteCallback_QueryInterface(This,riid,ppvObject)	\
+    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
+
+#define IMidiProtocolNegotiationCompleteCallback_AddRef(This)	\
+    ( (This)->lpVtbl -> AddRef(This) ) 
+
+#define IMidiProtocolNegotiationCompleteCallback_Release(This)	\
+    ( (This)->lpVtbl -> Release(This) ) 
+
+
+#define IMidiProtocolNegotiationCompleteCallback_ProtocolNegotiationCompleteCallback(This,AbstractionGuid,DeviceInterfaceId,Results)	\
+    ( (This)->lpVtbl -> ProtocolNegotiationCompleteCallback(This,AbstractionGuid,DeviceInterfaceId,Results) ) 
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+
+#endif 	/* __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__ */
+
+
+#ifndef __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
+#define __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
+
+/* interface IMidiEndpointProtocolManagerInterface */
+/* [unique][uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("7a3def20-fb76-49b6-a3a0-3dcbcda8f482")
+    IMidiEndpointProtocolManagerInterface : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE DiscoverAndNegotiate( 
+            /* [in] */ GUID AbstractionGuid,
+            /* [in] */ LPCWSTR DeviceInterfaceId,
+            /* [in] */ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+            /* [in] */ IMidiProtocolNegotiationCompleteCallback *NegotiationCompleteCallback) = 0;
+        
+    };
+    
+    
+#else 	/* C style interface */
+
+    typedef struct IMidiEndpointProtocolManagerInterfaceVtbl
+    {
+        BEGIN_INTERFACE
+        
+        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IMidiEndpointProtocolManagerInterface * This,
+            /* [in] */ REFIID riid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **ppvObject);
+        
+        DECLSPEC_XFGVIRT(IUnknown, AddRef)
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IMidiEndpointProtocolManagerInterface * This);
+        
+        DECLSPEC_XFGVIRT(IUnknown, Release)
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IMidiEndpointProtocolManagerInterface * This);
+        
+        DECLSPEC_XFGVIRT(IMidiEndpointProtocolManagerInterface, DiscoverAndNegotiate)
+        HRESULT ( STDMETHODCALLTYPE *DiscoverAndNegotiate )( 
+            IMidiEndpointProtocolManagerInterface * This,
+            /* [in] */ GUID AbstractionGuid,
+            /* [in] */ LPCWSTR DeviceInterfaceId,
+            /* [in] */ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
+            /* [in] */ IMidiProtocolNegotiationCompleteCallback *NegotiationCompleteCallback);
+        
+        END_INTERFACE
+    } IMidiEndpointProtocolManagerInterfaceVtbl;
+
+    interface IMidiEndpointProtocolManagerInterface
+    {
+        CONST_VTBL struct IMidiEndpointProtocolManagerInterfaceVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IMidiEndpointProtocolManagerInterface_QueryInterface(This,riid,ppvObject)	\
+    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
+
+#define IMidiEndpointProtocolManagerInterface_AddRef(This)	\
+    ( (This)->lpVtbl -> AddRef(This) ) 
+
+#define IMidiEndpointProtocolManagerInterface_Release(This)	\
+    ( (This)->lpVtbl -> Release(This) ) 
+
+
+#define IMidiEndpointProtocolManagerInterface_DiscoverAndNegotiate(This,AbstractionGuid,DeviceInterfaceId,NegotiationParams,NegotiationCompleteCallback)	\
+    ( (This)->lpVtbl -> DiscoverAndNegotiate(This,AbstractionGuid,DeviceInterfaceId,NegotiationParams,NegotiationCompleteCallback) ) 
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+
+#endif 	/* __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_WindowsMidiServices_0000_0013 */
+/* [local] */ 
+
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0001
+    {
     GUID Id;
-    LPCWSTR Mnemonic;
+    LPCWSTR TransportCode;
     BSTR Name;
     BSTR Description;
     BSTR Author;
@@ -1564,9 +1796,9 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_00
     BOOL IsClientConfigurable;
     } 	ABSTRACTIONMETADATA;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0001 *PABSTRACTIONMETADATA;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0001 *PABSTRACTIONMETADATA;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0002
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0002
     {
     GUID Id;
     BSTR Name;
@@ -1580,12 +1812,12 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_00
     BOOL IsClientConfigurable;
     } 	TRANSFORMMETADATA;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0002 *PTRANSFORMMETADATA;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0002 *PTRANSFORMMETADATA;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0011_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0011_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0013_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0013_v0_0_s_ifspec;
 
 #ifndef __IMidiServiceAbstractionPluginMetadataProvider_INTERFACE_DEFINED__
 #define __IMidiServiceAbstractionPluginMetadataProvider_INTERFACE_DEFINED__
@@ -2034,230 +2266,6 @@ EXTERN_C const IID IID_IMidiSessionTracker;
 
 
 #endif 	/* __IMidiSessionTracker_INTERFACE_DEFINED__ */
-
-
-/* interface __MIDL_itf_WindowsMidiServices_0000_0015 */
-/* [local] */ 
-
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0001
-    {
-    BYTE Number;
-    BYTE FirstGroup;
-    BYTE NumberOfGroupsSpanned;
-    BOOL IsActive;
-    BOOL IsMIDIMessageDestination;
-    BOOL IsMIDIMessageSource;
-    LPCWSTR Name;
-    } 	DISCOVEREDFUNCTIONBLOCK;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0001 *PDISCOVEREDFUNCTIONBLOCK;
-
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0002
-    {
-    BOOL AllEndpointInformationReceived;
-    BOOL EndpointSupportsMIDI2Protocol;
-    BOOL EndpointSupportsMIDI1Protocol;
-    LPCWSTR EndpointSuppliedName;
-    LPCWSTR EndpointSuppliedProductInstanceId;
-    BYTE CountFunctionBlocksDeclared;
-    BYTE CountFunctionBlocksReceived;
-    BOOL FunctionBlocksAreStatic;
-    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;
-    } 	ENDPOINTPROTOCOLNEGOTIATIONRESULTS;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0002 *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
-
-typedef /* [public][public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0003
-    {
-    BOOL PreferToSendJRTimestampsToEndpoint;
-    BOOL PreferToReceiveJRTimestampsFromEndpoint;
-    BYTE PreferredMidiProtocol;
-    WORD TimeoutMilliseconds;
-    } 	ENDPOINTPROTOCOLNEGOTIATIONPARAMS;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0015_0003 *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
-
-
-
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0015_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0015_v0_0_s_ifspec;
-
-#ifndef __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
-#define __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
-
-/* interface IMidiProtocolNegotiationCompleteCallback */
-/* [unique][uuid][local][object] */ 
-
-
-EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
-
-#if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    MIDL_INTERFACE("f948dc64-e03a-4e24-bc6e-437ad729cd50")
-    IMidiProtocolNegotiationCompleteCallback : public IUnknown
-    {
-    public:
-        virtual HRESULT STDMETHODCALLTYPE ProtocolNegotiationCompleteCallback( 
-            /* [in] */ GUID AbstractionGuid,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results) = 0;
-        
-    };
-    
-    
-#else 	/* C style interface */
-
-    typedef struct IMidiProtocolNegotiationCompleteCallbackVtbl
-    {
-        BEGIN_INTERFACE
-        
-        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiProtocolNegotiationCompleteCallback * This,
-            /* [in] */ REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **ppvObject);
-        
-        DECLSPEC_XFGVIRT(IUnknown, AddRef)
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiProtocolNegotiationCompleteCallback * This);
-        
-        DECLSPEC_XFGVIRT(IUnknown, Release)
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiProtocolNegotiationCompleteCallback * This);
-        
-        DECLSPEC_XFGVIRT(IMidiProtocolNegotiationCompleteCallback, ProtocolNegotiationCompleteCallback)
-        HRESULT ( STDMETHODCALLTYPE *ProtocolNegotiationCompleteCallback )( 
-            IMidiProtocolNegotiationCompleteCallback * This,
-            /* [in] */ GUID AbstractionGuid,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results);
-        
-        END_INTERFACE
-    } IMidiProtocolNegotiationCompleteCallbackVtbl;
-
-    interface IMidiProtocolNegotiationCompleteCallback
-    {
-        CONST_VTBL struct IMidiProtocolNegotiationCompleteCallbackVtbl *lpVtbl;
-    };
-
-    
-
-#ifdef COBJMACROS
-
-
-#define IMidiProtocolNegotiationCompleteCallback_QueryInterface(This,riid,ppvObject)	\
-    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
-
-#define IMidiProtocolNegotiationCompleteCallback_AddRef(This)	\
-    ( (This)->lpVtbl -> AddRef(This) ) 
-
-#define IMidiProtocolNegotiationCompleteCallback_Release(This)	\
-    ( (This)->lpVtbl -> Release(This) ) 
-
-
-#define IMidiProtocolNegotiationCompleteCallback_ProtocolNegotiationCompleteCallback(This,AbstractionGuid,DeviceInterfaceId,Results)	\
-    ( (This)->lpVtbl -> ProtocolNegotiationCompleteCallback(This,AbstractionGuid,DeviceInterfaceId,Results) ) 
-
-#endif /* COBJMACROS */
-
-
-#endif 	/* C style interface */
-
-
-
-
-#endif 	/* __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__ */
-
-
-#ifndef __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
-#define __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
-
-/* interface IMidiEndpointProtocolManagerInterface */
-/* [unique][uuid][local][object] */ 
-
-
-EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
-
-#if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    MIDL_INTERFACE("7a3def20-fb76-49b6-a3a0-3dcbcda8f482")
-    IMidiEndpointProtocolManagerInterface : public IUnknown
-    {
-    public:
-        virtual HRESULT STDMETHODCALLTYPE NegotiateAndRequestMetadata( 
-            /* [in] */ GUID AbstractionGuid,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-            /* [in] */ IMidiProtocolNegotiationCompleteCallback *NegotiationCompleteCallback) = 0;
-        
-    };
-    
-    
-#else 	/* C style interface */
-
-    typedef struct IMidiEndpointProtocolManagerInterfaceVtbl
-    {
-        BEGIN_INTERFACE
-        
-        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiEndpointProtocolManagerInterface * This,
-            /* [in] */ REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **ppvObject);
-        
-        DECLSPEC_XFGVIRT(IUnknown, AddRef)
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiEndpointProtocolManagerInterface * This);
-        
-        DECLSPEC_XFGVIRT(IUnknown, Release)
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiEndpointProtocolManagerInterface * This);
-        
-        DECLSPEC_XFGVIRT(IMidiEndpointProtocolManagerInterface, NegotiateAndRequestMetadata)
-        HRESULT ( STDMETHODCALLTYPE *NegotiateAndRequestMetadata )( 
-            IMidiEndpointProtocolManagerInterface * This,
-            /* [in] */ GUID AbstractionGuid,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-            /* [in] */ IMidiProtocolNegotiationCompleteCallback *NegotiationCompleteCallback);
-        
-        END_INTERFACE
-    } IMidiEndpointProtocolManagerInterfaceVtbl;
-
-    interface IMidiEndpointProtocolManagerInterface
-    {
-        CONST_VTBL struct IMidiEndpointProtocolManagerInterfaceVtbl *lpVtbl;
-    };
-
-    
-
-#ifdef COBJMACROS
-
-
-#define IMidiEndpointProtocolManagerInterface_QueryInterface(This,riid,ppvObject)	\
-    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
-
-#define IMidiEndpointProtocolManagerInterface_AddRef(This)	\
-    ( (This)->lpVtbl -> AddRef(This) ) 
-
-#define IMidiEndpointProtocolManagerInterface_Release(This)	\
-    ( (This)->lpVtbl -> Release(This) ) 
-
-
-#define IMidiEndpointProtocolManagerInterface_NegotiateAndRequestMetadata(This,AbstractionGuid,DeviceInterfaceId,NegotiationParams,NegotiationCompleteCallback)	\
-    ( (This)->lpVtbl -> NegotiateAndRequestMetadata(This,AbstractionGuid,DeviceInterfaceId,NegotiationParams,NegotiationCompleteCallback) ) 
-
-#endif /* COBJMACROS */
-
-
-#endif 	/* C style interface */
-
-
-
-
-#endif 	/* __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__ */
 
 
 /* Additional Prototypes for ALL interfaces */

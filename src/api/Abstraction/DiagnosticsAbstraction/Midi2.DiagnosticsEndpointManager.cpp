@@ -117,7 +117,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
         TraceLoggingPointer(this, "this")
     );
 
-    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+    std::wstring transportCode(TRANSPORT_CODE);
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
@@ -154,7 +154,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::DiagnosticLoopback;
     commonProperties.FriendlyName = friendlyName.c_str();
-    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportCode = transportCode.c_str();
     commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
     commonProperties.UserSuppliedEndpointName = nullptr;
@@ -210,7 +210,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
-    std::wstring mnemonic(TRANSPORT_MNEMONIC);
+    std::wstring transportCode(TRANSPORT_CODE);
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
@@ -241,7 +241,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
     commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::DiagnosticPing;
     commonProperties.FriendlyName = friendlyName.c_str();
-    commonProperties.TransportMnemonic = mnemonic.c_str();
+    commonProperties.TransportCode = transportCode.c_str();
     commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
     commonProperties.UserSuppliedEndpointName = nullptr;

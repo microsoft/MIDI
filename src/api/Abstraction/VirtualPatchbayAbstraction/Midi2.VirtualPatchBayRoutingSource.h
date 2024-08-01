@@ -31,7 +31,12 @@ private:
     std::wstring m_matchJson{ };
     std::wstring m_resolvedEndpointDeviceInterfaceId{ };
 
-    std::vector<uint8_t> m_includedGroupIndexes{ };
+
+    bool m_includeGrouplessMessages{ false };
+    
+    // array of booleans. If an index is true, it is included
+    bool m_includedGroupIndexes[16]{ false };
+
 
     wil::com_ptr<IMidiBiDi> m_sourceEndpointBiDi{ nullptr };
 

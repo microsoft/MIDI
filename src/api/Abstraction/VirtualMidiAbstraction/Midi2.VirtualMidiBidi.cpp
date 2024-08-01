@@ -27,7 +27,8 @@ CMidi2VirtualMidiBiDi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(endpointId, "endpoint id")
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
     m_callbackContext = Context;
@@ -43,12 +44,12 @@ CMidi2VirtualMidiBiDi::Initialize(
         {
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
+                MIDI_TRACE_EVENT_VERBOSE,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Initializing device-side BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
             m_callback = Callback;
@@ -60,12 +61,12 @@ CMidi2VirtualMidiBiDi::Initialize(
         {
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
+                MIDI_TRACE_EVENT_VERBOSE,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Initializing client-side BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
             m_callback = Callback;
@@ -82,7 +83,7 @@ CMidi2VirtualMidiBiDi::Initialize(
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"We don't understand the endpoint Id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointId.c_str(), "endpoint id")
+                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                 );
 
             // we don't understand this endpoint id
@@ -109,7 +110,8 @@ CMidi2VirtualMidiBiDi::Cleanup()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingBool(m_isDeviceSide, "is device side")
         );
 
@@ -140,36 +142,50 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
+        MIDI_TRACE_EVENT_VERBOSE,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-        TraceLoggingBool(m_isDeviceSide, "is device side")
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(m_isDeviceSide, "is device side"),
+        TraceLoggingUInt32(Size, "bytes"),
+        TraceLoggingUInt64(Position, "timestamp")
     );
+
 
     // message received from the device
 
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    for (auto connection : m_linkedBiDiConnections)
+    if (m_linkedBiDiConnections.size() > 0)
     {
-        auto cb = connection->GetCallback();
-        
-        if (cb != nullptr)
+        for (auto connection : m_linkedBiDiConnections)
         {
-            return cb->Callback(Message, Size, Position, m_callbackContext);
+            auto cb = connection->GetCallback();
+
+            if (cb != nullptr)
+            {
+                LOG_IF_FAILED(cb->Callback(Message, Size, Position, m_callbackContext));
+            }
         }
     }
-
-
-    //// if there's no linked bidi, it's not a failure. We just lose the message
-    //if (m_linkedBiDiCallback != nullptr)
-    //{
-    //    //return m_linkedBiDi->SendMidiMessage(Message, Size, Position);
-    //    return m_linkedBiDiCallback->Callback(Message, Size, Position, m_callbackContext);
-    //}
+    else
+    {
+        TraceLoggingWrite(
+            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No linked connections", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingBool(m_isDeviceSide, "is device side"),
+            TraceLoggingUInt32(Size, "bytes"),
+            TraceLoggingUInt64(Position, "timestamp")
+        );
+    }
 
     return S_OK;
 
@@ -186,12 +202,15 @@ CMidi2VirtualMidiBiDi::Callback(
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
+        MIDI_TRACE_EVENT_VERBOSE,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
-        TraceLoggingBool(m_isDeviceSide, "is device side")
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(m_isDeviceSide, "is device side"),
+        TraceLoggingUInt32(Size, "bytes"),
+        TraceLoggingUInt64(Position, "timestamp")
     );
 
     // message received from the client

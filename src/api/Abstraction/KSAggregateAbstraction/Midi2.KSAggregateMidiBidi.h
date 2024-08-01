@@ -20,7 +20,12 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+    std::wstring m_endpointDeviceId{};
+    std::atomic<uint64_t> m_countMidiMessageSent{};
+
     std::unique_ptr<CMidi2KSAggregateMidi> m_MidiDevice;
+
+
 
 };
 
