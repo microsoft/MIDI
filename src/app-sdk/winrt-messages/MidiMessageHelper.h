@@ -48,7 +48,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
 
         static winrt::hstring GetMessageDisplayNameFromFirstWord(_In_ uint32_t const word0) noexcept;
-
+        static winrt::hstring GetNoteDisplayNameFromNoteIndex(_In_ uint8_t const noteIndex) noexcept;
+        
+        // these are int16_t becuase IDL doesn't support int8_t
+        static int16_t GetNoteOctaveFromNoteIndex(_In_ uint8_t const noteIndex) noexcept;
+        static int16_t GetNoteOctaveFromNoteIndex(_In_ uint8_t const noteIndex, _In_ uint8_t middleCOctave) noexcept;
 
         static uint8_t GetStatusFromUtilityMessage(_In_ uint32_t const word0) noexcept;
 
@@ -67,29 +71,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
             _In_ collections::IIterable<midi2::IMidiUniversalPacket> const& messages) noexcept;
 
 
-
-        static collections::IVector<uint8_t> GetDataBytesFromMultipleSystemExclusive7Messages(
-            _In_ collections::IIterable<midi2::MidiMessage64> const& messages) noexcept;
-
-        static collections::IVector<uint8_t> GetDataBytesFromSingleSystemExclusive7Message(
-            _In_ midi2::MidiMessage64 const& message) noexcept;
-
-        static collections::IVector<uint8_t> GetDataBytesFromSingleSystemExclusive7Message(
-            _In_ uint32_t const word0,
-            _In_ uint32_t const word1
-            ) noexcept;
-
-        static uint8_t AppendDataBytesFromSingleSystemExclusive7Message(
-            _In_ midi2::MidiMessage64 const& message,
-            _In_ collections::IVector<uint8_t> dataBytesToAppendTo) noexcept;
-
-        static uint8_t AppendDataBytesFromSingleSystemExclusive7Message(
-            _In_ uint32_t const word0,
-            _In_ uint32_t const word1,
-            _In_ collections::IVector<uint8_t> dataBytesToAppendTo) noexcept;
-
-        static uint8_t GetDataByteCountFromSystemExclusive7MessageFirstWord(_In_ uint32_t word0) noexcept;
-        static bool MessageIsSystemExclusive7Message(_In_ uint32_t word0) noexcept;
 
     };
 }

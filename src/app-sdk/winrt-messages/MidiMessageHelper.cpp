@@ -114,100 +114,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
 
 
-
-    _Use_decl_annotations_
-    uint8_t MidiMessageHelper::GetDataByteCountFromSystemExclusive7MessageFirstWord(uint32_t word0) noexcept
-    {
-        return MIDIWORDNIBBLE4(word0);
-    }
-
-    _Use_decl_annotations_
-    uint8_t MidiMessageHelper::AppendDataBytesFromSingleSystemExclusive7Message(
-        uint32_t const word0,
-        uint32_t const word1,
-        collections::IVector<uint8_t> dataBytesToAppendTo) noexcept
-    {
-        uint8_t messageByteCount = GetDataByteCountFromSystemExclusive7MessageFirstWord(word0);
-        uint32_t currentWord = word0;
-        uint8_t shift = 8;
-
-        for (uint8_t i = 0; i < messageByteCount; i++)
-        {
-            dataBytesToAppendTo.Append((uint8_t)(currentWord >> shift & 0xFF)); // we don't & 0x7F in case the data is actually bad
-
-            if (shift == 0)
-            {
-                currentWord = word1;
-                shift = 24;
-            }
-            else
-            {
-                shift -= 8;
-            }
-        }
-
-        return messageByteCount;
-    }
-
-    _Use_decl_annotations_
-    uint8_t MidiMessageHelper::AppendDataBytesFromSingleSystemExclusive7Message(
-        midi2::MidiMessage64 const& message,
-        collections::IVector<uint8_t> dataBytesToAppendTo) noexcept
-    {
-        return AppendDataBytesFromSingleSystemExclusive7Message(message.Word0(), message.Word1(), dataBytesToAppendTo);
-    }
-
-
-    _Use_decl_annotations_
-    collections::IVector<uint8_t> MidiMessageHelper::GetDataBytesFromMultipleSystemExclusive7Messages(
-        collections::IIterable<midi2::MidiMessage64> const& messages) noexcept
-    {
-        auto result = winrt::single_threaded_vector<uint8_t>();
-
-        for (auto const& message : messages)
-        {
-            AppendDataBytesFromSingleSystemExclusive7Message(message, result);
-        }
-
-        return result;
-    }
-
-    _Use_decl_annotations_
-    collections::IVector<uint8_t> MidiMessageHelper::GetDataBytesFromSingleSystemExclusive7Message(
-        uint32_t const word0,
-        uint32_t const word1
-    ) noexcept
-    {
-        auto result = winrt::single_threaded_vector<uint8_t>();
-
-        AppendDataBytesFromSingleSystemExclusive7Message(word0, word1, result);
-
-        return result;
-    }
-
-    _Use_decl_annotations_
-    collections::IVector<uint8_t> MidiMessageHelper::GetDataBytesFromSingleSystemExclusive7Message(
-        midi2::MidiMessage64 const& message) noexcept
-    {
-        auto result = winrt::single_threaded_vector<uint8_t>();
-
-        AppendDataBytesFromSingleSystemExclusive7Message(message.Word0(), message.Word1(), result);
-
-        return result;
-    }
-
-
-
-
-
-    _Use_decl_annotations_
-    bool MidiMessageHelper::MessageIsSystemExclusive7Message(uint32_t word0) noexcept
-    {
-        return internal::GetUmpMessageTypeFromFirstWord(word0) == MIDI_UMP_MESSAGE_TYPE_DATA_MESSAGE_64 &&
-            internal::GetStatusFromDataMessage64FirstWord(word0) <= 0x03;   // 0x0, 0x1, 0x2, 0x3 are SysEx7
-    }
-
-
     _Use_decl_annotations_
     bool MidiMessageHelper::ValidateMessage32MessageType(uint32_t const word0) noexcept
     {
@@ -363,6 +269,35 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
     }
 
 
+    // this works for classic note indexes 0-127
+    _Use_decl_annotations_
+    winrt::hstring MidiMessageHelper::GetNoteDisplayNameFromNoteIndex(uint8_t const noteIndex) noexcept
+    {
+        static const winrt::hstring noteNames[]{ L"C", L"C#/Db", L"D", L"D#/Eb", L"E", L"F", L"F#/Gb", L"G", L"G#/Ab", L"A", L"A#/Bb", L"B" };
+
+        if (noteIndex > 0x7F) return internal::ResourceGetHString(IDS_NOTE_INVALID);
+
+        return noteNames[noteIndex % _countof(noteNames)];
+    }
+
+    // this works for classic note indexes 0-127
+    _Use_decl_annotations_
+    int16_t MidiMessageHelper::GetNoteOctaveFromNoteIndex(uint8_t const noteIndex) noexcept
+    {
+        // default octave range is -2 to 8 with Middle C as C3. Note 0 is C -2, C0 is index 24
+
+        return GetNoteOctaveFromNoteIndex(noteIndex, 3);
+    }
+
+    // this works for classic note indexes 0-127
+    _Use_decl_annotations_
+    int16_t MidiMessageHelper::GetNoteOctaveFromNoteIndex(uint8_t const noteIndex, uint8_t middleCOctave) noexcept
+    {
+        if (noteIndex > 0x7F) return 0;
+        if ((middleCOctave < 1) || (middleCOctave > 7)) return 0;   // Middle C is typically 3, 4, or even 5. We allow a bit more.
+
+        return static_cast<int16_t>((noteIndex / 12) - (middleCOctave - 1));
+    }
 
 
     // Names used in this function are those used in the MIDI 2.0 Specification

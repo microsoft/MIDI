@@ -40,6 +40,12 @@
 #define IDS_MIDI_COMMON_LABEL_MUID_SHORT							50109
 
 
+// Note index info
+
+#define IDS_NOTE_INVALID                                            60000
+
+
+
 // Message type descriptions. These are optionally displayed by apps using the API
 
 
