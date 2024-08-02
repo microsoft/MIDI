@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiVirtualPatchBayRouteCreationResult.idl";
+import "MidiVirtualPatchBayRouteCreationConfig.idl";
+import "MidiVirtualPatchBayRouteRemovalConfig.idl";
+import "MidiVirtualPatchBayRouteDefinition.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
+{
+    [default_interface]
+    static runtimeclass MidiVirtualPatchBayManager
+    {
+        static Boolean IsTransportAvailable{ get; };
+
+        static Guid AbstractionId{ get; };
+
+        static MidiVirtualPatchBayRouteCreationResult CreateRoute(
+            MidiVirtualPatchBayRouteCreationConfig creationConfig);
+
+        static Boolean RemoveRoute(
+            MidiVirtualPatchBayRouteRemovalConfig removalConfig);
+
+
+        static IVector<MidiVirtualPatchBayRouteDefinition> GetRoutes();
+
+    }
+}
+
