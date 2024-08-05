@@ -129,6 +129,34 @@ void OutputNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t const 
         << std::endl;
 }
 
+void OutputDoubleField(_In_ std::wstring const& fieldName, _In_ double const value, _In_ uint32_t precision)
+{
+    OutputFieldLabel(fieldName);
+
+    std::wcout
+        << fieldSeparator
+        << std::dec
+        << std::setprecision(precision)
+        << value
+        << std::endl;
+}
+
+void OutputDecimalMillisecondsField(_In_ std::wstring const& fieldName, _In_ double const value, _In_ uint32_t precision)
+{
+    OutputFieldLabel(fieldName);
+
+    std::wcout
+        << fieldSeparator
+        << std::dec
+        << std::setprecision(precision)
+        << std::fixed
+        << value
+        << " ms"
+        << std::endl;
+}
+
+
+
 void OutputHexNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t const value)
 {
     OutputFieldLabel(fieldName);
@@ -518,6 +546,40 @@ bool DoSectionSystemInfo(_In_ bool verbose)
     SYSTEM_INFO sysinfoNative;
     ::GetNativeSystemInfo(&sysinfoNative);
     OutputSystemInfo(sysinfoNative);
+
+    TIMECAPS timecaps;
+    auto tcresult = ::timeGetDevCaps(&timecaps, sizeof(timecaps));
+
+    OutputBlankLine();
+
+    if (tcresult == MMSYSERR_NOERROR)
+    {
+        OutputNumericField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMECAPS_MIN_PERIOD, timecaps.wPeriodMin);
+        OutputNumericField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMECAPS_MAX_PERIOD, timecaps.wPeriodMax);
+    }
+    else
+    {
+        OutputStringField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMECAPS_ERROR, std::wstring{ L"Could not get timecaps" });
+    }
+
+    ULONG minResolution;
+    ULONG maxResolution;
+    ULONG actualResolution;
+
+    auto resresult = NtQueryTimerResolution(&maxResolution, &minResolution, &actualResolution);
+
+    if (resresult == STATUS_SUCCESS)
+    {
+        double minResolutionMilliseconds = (double)minResolution / 10000.0;   // minResolution is in 100 nanosecond units
+        double maxResolutionMilliseconds = (double)maxResolution / 10000.0;   // maxResolution is in 100 nanosecond units
+        double actualResolutionMilliseconds = (double)actualResolution / 10000.0;   // actualResolution is in 100 nanosecond units
+
+        // results here are in 100ns units
+        OutputBlankLine();
+        OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_MIN_MS, minResolutionMilliseconds, 3);
+        OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_MAX_MS, maxResolutionMilliseconds, 3);
+        OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_CURRENT_MS, actualResolutionMilliseconds, 3);
+    }
 
     return true;
 }

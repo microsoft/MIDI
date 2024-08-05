@@ -70,6 +70,15 @@
 #define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_LEVEL                 L"processor_level"
 #define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_REVISION              L"processor_revision"
 
+#define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMECAPS_ERROR                 L"timecaps_error"
+#define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMECAPS_MIN_PERIOD            L"timecaps_min_period"
+#define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMECAPS_MAX_PERIOD            L"timecaps_max_period"
+
+#define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_MIN_MS        L"timer_resolution_min"
+#define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_MAX_MS        L"timer_resolution_max"
+#define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_CURRENT_MS    L"timer_resolution_current"
+
+
 #define MIDIDIAG_SECTION_LABEL_HEADER                                    L"header"
 #define MIDIDIAG_FIELD_LABEL_CURRENT_TIME                                L"current_time"
 
