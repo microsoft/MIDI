@@ -10,6 +10,7 @@
 
 using Microsoft.Windows.Devices.Midi2.Initialization;
 using Microsoft.Windows.Devices.Midi2.Messages;
+using Microsoft.Windows.Devices.Midi2.Utilities.SysEx;
 
 namespace Microsoft.Midi.ConsoleApp
 {
@@ -325,9 +326,9 @@ namespace Microsoft.Midi.ConsoleApp
                             index++;
 
 
-                            if (MidiMessageHelper.MessageIsSystemExclusive7Message(e.PeekFirstWord()))
+                            if (MidiSystemExclusiveMessageHelper.MessageIsSystemExclusive7Message(e.PeekFirstWord()))
                             {
-                                countSysEx7BytesReceived += MidiMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(e.PeekFirstWord());
+                                countSysEx7BytesReceived += MidiSystemExclusiveMessageHelper.GetDataByteCountFromSystemExclusive7MessageFirstWord(e.PeekFirstWord());
                             }
 
                             var receivedMessage = new ReceivedMidiMessage()

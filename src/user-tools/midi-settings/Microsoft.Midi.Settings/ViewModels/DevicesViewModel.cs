@@ -103,7 +103,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     // TODO: this is a hack. Probably shouldn't be using the mnemonic directly
                     // Instead, need a transport properly for purpose like we have with endpoints
-                    if (item.Transport.Abbreviation == "DIAG")
+                    if (item.Transport.TransportCode == "DIAG")
                     {
                         if (showDiagnosticsEndpoints)
                         {

@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Microsoft.Midi.Settings.Views"
-    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
@@ -60,23 +60,23 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Manufacturer" Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.DeviceInformation.ManufacturerName }" 
+                <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                 <TextBlock Grid.Column="0" Grid.Row="1" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.DeviceInformation.ProductInstanceId }" 
+                <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointInfo.ProductInstanceId }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                 <TextBlock Grid.Column="0" Grid.Row="2" Text="Serial Number" Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedSerialNumber }" 
+                <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                 <TextBlock Grid.Column="0" Grid.Row="3" Text="Native Data Format" Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.DeviceInformation.NativeDataFormat, Converter={StaticResource EndpointNativeDataFormatConverter} }" 
+                <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.NativeDataFormat, Converter={StaticResource EndpointNativeDataFormatConverter} }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                 <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport" Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.DeviceInformation.TransportMnemonic }" 
+                <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" /> <!-- Needs a format converter -->
             </Grid>
             
@@ -108,10 +108,10 @@
                                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Large Image" Style="{StaticResource SmallPropertyLabel}"/>
                                     <TextBlock Grid.Row="3" Grid.Column="0" Text="Small Image" Style="{StaticResource SmallPropertyLabel}"/>
 
-                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedName}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedLargeImagePath}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
-                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{x:Bind ViewModel.DeviceInformation.UserSuppliedSmallImagePath}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind ViewModel.UserSuppliedInfo.Name}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ViewModel.UserSuppliedInfo.Description}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ViewModel.UserSuppliedInfo.LargeImagePath}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{x:Bind ViewModel.UserSuppliedInfo.SmallImagePath}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                 </Grid>
                             </controls:SettingsCard.Header>
@@ -142,20 +142,20 @@
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Name" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.Name}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="1" Text="Description" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedDescription}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.TransportSuppliedInfo.Description}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="2" Text="Serial Number" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedSerialNumber}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
 
                                     <TextBlock Grid.Column="0" Grid.Row="3" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.DeviceInformation.TransportId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.DeviceInformation.TransportMnemonic}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 </Grid>
                             </controls:SettingsCard.Header>
@@ -184,19 +184,19 @@
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Supports MIDI 1.0 Protocol" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.DeviceInformation.SupportsMidi10Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.EndpointInfo.SupportsMidi10Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="1" Text="Supports MIDI 2.0 Protocol" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.DeviceInformation.SupportsMidi20Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointInfo.SupportsMidi20Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="2" Text="Configured Protocol" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredProtocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.StreamConfiguration.Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="3" Text="Configured to send Jitter Reduction Timestamps" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredToSendJRTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.StreamConfiguration.SendJitterReductionTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="4" Text="Configured to receive Jitter Reduction Timestamps" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.DeviceInformation.ConfiguredToReceiveJRTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.StreamConfiguration.ReceiveJitterReductionTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 </Grid>
                             </controls:SettingsCard.Header>
@@ -211,7 +211,7 @@
 
                 <!-- Function Blocks -->
                 <controls:SettingsExpander Header="Function Blocks" 
-                                           ItemsSource="{x:Bind ViewModel.DeviceInformation.FunctionBlocks.Values}"
+                                           ItemsSource="{x:Bind ViewModel.FunctionBlocks}"
                                            IsExpanded="True">
                     <controls:SettingsExpander.ItemTemplate>
                         <DataTemplate x:DataType="midi2:MidiFunctionBlock">
@@ -308,7 +308,7 @@
                                                        Text="MIDI 1.0" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                       Text="{x:Bind Midi10Connection, Converter={StaticResource MidiFunctionBlockMidi10Converter} }" 
+                                                       Text="{x:Bind RepresentsMidi10Connection, Converter={StaticResource MidiFunctionBlockMidi10Converter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" /> <!-- Needs converter -->
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
@@ -390,13 +390,13 @@
             <StackPanel Orientation="Vertical" Spacing="5" HorizontalAlignment="Stretch">
 
                 <StackPanel Orientation="Vertical" Margin="0,20,0,20">
-                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.ManufacturerName}" 
+                    <TextBlock Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName}" 
                                Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.TransportSuppliedName}" 
+                    <TextBlock Text="{x:Bind ViewModel.TransportSuppliedInfo.Name}" 
                                Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.Id}" 
+                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.EndpointDeviceId}" 
                                Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                 </StackPanel>

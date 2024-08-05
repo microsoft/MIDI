@@ -36,6 +36,9 @@
     <ClCompile Include="libmidi2\src\utils.cpp">
       <Filter>libmidi2\src</Filter>
     </ClCompile>
+    <ClCompile Include="MidiSystemExclusiveMessageHelper.cpp">
+      <Filter>SDK\Messages</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -72,6 +75,9 @@
     <ClInclude Include="libmidi2\include\utils.h">
       <Filter>libmidi2\include</Filter>
     </ClInclude>
+    <ClInclude Include="MidiSystemExclusiveMessageHelper.h">
+      <Filter>SDK\Messages</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiSystemExclusiveSender.idl">
@@ -85,6 +91,9 @@
     </Midl>
     <Midl Include="MidiSystemExclusiveSendProgress.idl">
       <Filter>SDK\SysEx Sending</Filter>
+    </Midl>
+    <Midl Include="MidiSystemExclusiveMessageHelper.idl">
+      <Filter>SDK\Messages</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -110,6 +119,9 @@
     </Filter>
     <Filter Include="libmidi2\src">
       <UniqueIdentifier>{bbdd01b4-c1f5-4b22-9f6e-060d872329f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Messages">
+      <UniqueIdentifier>{2268b5d2-008c-4671-85d2-496e318b0c03}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

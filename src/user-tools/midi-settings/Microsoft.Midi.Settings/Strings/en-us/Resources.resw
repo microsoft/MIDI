@@ -297,4 +297,7 @@
   <data name="Shell_Home.Content" xml:space="preserve">
     <value>Home</value>
   </data>
+  <data name="Shell_Routes.Content" xml:space="preserve">
+    <value>Routing</value>
+  </data>
 </root>

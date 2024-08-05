@@ -40,6 +40,12 @@
 #define IDS_MIDI_COMMON_LABEL_MUID_SHORT							50109
 
 
+// Note index info
+
+#define IDS_NOTE_INVALID                                            50199
+
+
+
 // Message type descriptions. These are optionally displayed by apps using the API
 
 
@@ -197,5 +203,17 @@
 #define IDS_MESSAGE_DESC_MTF_UNKNOWN								51999
 
 
+// CC Mode messages
+// these are the base index + the CC number
+
+#define IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX                         60000
+#define IDS_MESSAGE_DESC_CC_MODE_ALL_SOUNDS_OFF                     IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + 120
+#define IDS_MESSAGE_DESC_CC_MODE_RESET_CONTROLLERS                  IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + 121
+#define IDS_MESSAGE_DESC_CC_MODE_LOCAL_CONTROL                      IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + 122
+#define IDS_MESSAGE_DESC_CC_MODE_ALL_NOTES_OFF                      IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + 123
+#define IDS_MESSAGE_DESC_CC_MODE_OMNI_OFF                           IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + 124
+#define IDS_MESSAGE_DESC_CC_MODE_OMNI_ON                            IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + 125
+#define IDS_MESSAGE_DESC_CC_MODE_MONO_ON                            IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + 126
+#define IDS_MESSAGE_DESC_CC_MODE_POLY_ON                            IDS_MESSAGE_DESC_CC_MODE_BASE_INDEX + 127
 
 // Errors

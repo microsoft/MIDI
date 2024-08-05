@@ -38,48 +38,82 @@ CMidi2VirtualPatchBayRoutingSource::Callback(
     // Verify message meets criteria.
 
     auto word0 = internal::MidiWord0FromVoidMessageDataPointer(data);
+    auto mt = internal::GetUmpMessageTypeFromFirstWord(word0);
 
-    // if this is a groupless message
-    if (internal::MessageHasGroupField(word0))
+    // check to see if we support this message type
+    if (m_includedMessageTypes[mt])
     {
-        // if group is not in our list, return
-        auto groupIndex = internal::GetGroupIndexFromFirstWord(word0);
-
-        if (!m_includedGroupIndexes[groupIndex])
+        if (internal::MessageHasGroupField(word0))
         {
-            return S_OK;
-        }
-    }
-    else
-    {
-        // message has no group field
-        if (!m_includeGrouplessMessages)
-        {
-            return S_OK;
-        }
-    }
+            // if group is not in our list, return
+            auto groupIndex = internal::GetGroupIndexFromFirstWord(word0);
 
-    RETURN_IF_FAILED(m_router->Callback(data, length, position, context));
+            if (!m_includedGroupIndexes[groupIndex])
+            {
+                return S_OK;
+            }
+        }
+
+        RETURN_IF_FAILED(m_router->Callback(data, length, position, context));
+    }
 
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualPatchBayRoutingSource::AddIncludedGroups(
+CMidi2VirtualPatchBayRoutingSource::SetIncludedGroups(
     std::vector<uint8_t> groupIndexes
 )
 {
-    for (auto const index : groupIndexes)
+    if (groupIndexes.size() > 0)
     {
-        if (index < 16)
+        m_includedGroupIndexes = { false };
+
+        for (auto const messageType : groupIndexes)
         {
-            m_includedGroupIndexes[index] = true;
+            if (messageType < 16)
+            {
+                m_includedGroupIndexes[messageType] = true;
+            }
         }
+    }
+    else
+    {
+        // if an empty set is provided, all groups are included
+        m_includedGroupIndexes = { true };
     }
 
     return S_OK;
 }
+
+_Use_decl_annotations_
+HRESULT
+CMidi2VirtualPatchBayRoutingSource::SetIncludedMessageTypes(
+    std::vector<uint8_t> messageTypes
+)
+{
+    if (messageTypes.size() > 0)
+    {
+        m_includedMessageTypes = { false };
+
+        for (auto const messageType : messageTypes)
+        {
+            if (messageType < 16)
+            {
+                m_includedMessageTypes[messageType] = true;
+            }
+        }
+    }
+    else
+    {
+        // if an empty set is provided, all message types are included
+        m_includedMessageTypes = { true };
+    }
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT

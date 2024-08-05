@@ -30,10 +30,12 @@ int __cdecl main()
     winrt::init_apartment();
 
     std::cout << dye::grey("===================================================================") << std::endl;
-    std::cout << "Enumerating kernel streaming devices to discover MIDI pins" << std::endl;
-    std::cout << "-------------------------------------------------------------------" << std::endl;
-    std::cout << dye::aqua("If the MIDI service is running when you run this utility, some") << std::endl;
-    std::cout << dye::aqua("devices may not report all pin properties.") << std::endl;
+    std::cout << dye::aqua(" Enumerating kernel streaming devices to discover MIDI pins") << std::endl;
+    std::cout << dye::aqua(" Typically, these are USB, but other KS drivers will be included") << std::endl;
+    std::cout << dye::grey("-------------------------------------------------------------------") << std::endl;
+    std::cout << dye::aqua(" If the MIDI service is running when you run this utility, some") << std::endl;
+    std::cout << dye::aqua(" devices may not report all pin properties. It is recommended") << std::endl;
+    std::cout << dye::aqua(" that you stop the midisrv service before running this tool.") << std::endl;
     std::cout << dye::grey("===================================================================") << std::endl;
 
     // enumerate all in-scope devices

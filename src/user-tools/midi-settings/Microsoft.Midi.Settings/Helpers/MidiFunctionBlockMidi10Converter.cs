@@ -16,21 +16,21 @@ namespace Microsoft.Midi.Settings.Helpers
                 return string.Empty;
             }
 
-            if (value is MidiFunctionBlockMidi10)
+            if (value is MidiFunctionBlockRepresentsMidi10Connection)
             {
-                var val = (MidiFunctionBlockMidi10)value;
+                var val = (MidiFunctionBlockRepresentsMidi10Connection)value;
 
                 // TODO: Localize
 
                 switch (val)
                 {
-                    case MidiFunctionBlockMidi10.Not10:
+                    case MidiFunctionBlockRepresentsMidi10Connection.Not10:
                         return "Not MIDI 1.0";
 
-                    case MidiFunctionBlockMidi10.YesBandwidthUnrestricted:
+                    case MidiFunctionBlockRepresentsMidi10Connection.YesBandwidthUnrestricted:
                         return "MIDI 1.0 unrestricted bandwidth";
 
-                    case MidiFunctionBlockMidi10.YesBandwidthRestricted:
+                    case MidiFunctionBlockRepresentsMidi10Connection.YesBandwidthRestricted:
                         return "MIDI 1.0 restricted bandwidth";
 
                     default:

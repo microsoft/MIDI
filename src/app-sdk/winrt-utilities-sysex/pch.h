@@ -58,6 +58,7 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 #include <midi_timestamp.h>
 #include <hstring_util.h>
 #include <wstring_util.h>
+#include <ump_helpers.h>
 
 // SDK shared
 #include <SdkTraceLogging.h>
@@ -73,4 +74,5 @@ namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Utilitie
 
 
 #include "MidiSystemExclusiveSender.h"
+#include "MidiSystemExclusiveMessageHelper.h"
 
