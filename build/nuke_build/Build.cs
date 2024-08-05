@@ -264,6 +264,7 @@ class Build : NukeBuild
                     "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback",
                     "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual",
                     "Microsoft.Windows.Devices.Midi2.Utilities.SysEx",
+                    "Microsoft.Windows.Devices.Midi2.VirtualPatchBay",
                     "Microsoft.Windows.Devices.Midi2.Initialization"           // this last one gets packed 100% in the nuget, including the impl
                 })
                 {
@@ -540,6 +541,7 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Utilities.SysEx.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.VirtualPatchBay.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
 
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
@@ -550,6 +552,7 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.VirtualPatchBay.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Utilities.SysEx.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
 

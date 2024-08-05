@@ -15,6 +15,7 @@ public class PageService : IPageService
     {
         Configure<DevicesViewModel, DevicesPage>();
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
+        Configure<RoutesViewModel, RoutesPage>();
 
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
         //Configure<MainViewModel, MainPage>();

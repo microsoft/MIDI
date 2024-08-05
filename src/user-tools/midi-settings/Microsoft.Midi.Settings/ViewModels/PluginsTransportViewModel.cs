@@ -17,7 +17,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             Plugins.Clear();
 
-            var plugins = MidiService.GetInstalledTransportPlugins();
+            var plugins = MidiReporting.GetInstalledTransportPlugins();
 
             foreach (var plugin in plugins.OrderBy(x => x.Name)) 
             {

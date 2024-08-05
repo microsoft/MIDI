@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="MidiVirtualPatchBayManager.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteCreationConfig.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteRemovalConfig.cpp">
+      <Filter>SDK</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiVirtualPatchBayManager.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteCreationConfig.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteRemovalConfig.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="MidiVirtualPatchBayRouteCreationConfig.idl">
+      <Filter>SDK\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteRemovalConfig.idl">
+      <Filter>SDK\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayManager.idl">
+      <Filter>SDK\Management</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteCreationResult.idl">
+      <Filter>SDK\Management</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayDestinationDefinition.idl">
+      <Filter>SDK\Definitions</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBaySourceDefinition.idl">
+      <Filter>SDK\Definitions</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl">
+      <Filter>SDK\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteDefinition.idl">
+      <Filter>SDK\Definitions</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl">
+      <Filter>SDK\Management</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="midi-app-sdk.def" />
+    <None Include="packages.config" />
+    <None Include="PropertySheet.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="SDK">
+      <UniqueIdentifier>{be86096a-366a-491b-825e-1722b96c678d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Configuration">
+      <UniqueIdentifier>{7bedd7f9-3966-4a85-b089-916e72f4211d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Management">
+      <UniqueIdentifier>{656ea1ee-7afd-4546-89aa-1e2ed9d80f83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Definitions">
+      <UniqueIdentifier>{1d805a69-c470-459d-be7d-59011bb9d8d9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

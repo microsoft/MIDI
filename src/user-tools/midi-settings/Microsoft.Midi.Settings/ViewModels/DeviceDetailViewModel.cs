@@ -17,15 +17,23 @@ namespace Microsoft.Midi.Settings.ViewModels
     {
         public EndpointUserMetadata UserMetadata { get; private set; } = new EndpointUserMetadata();
 
-        public MidiEndpointDeviceInformation? DeviceInformation
+        public MidiEndpointDeviceInformation DeviceInformation
         {
             get; private set;
         }
+        public IReadOnlyList<MidiFunctionBlock> FunctionBlocks => DeviceInformation.GetDeclaredFunctionBlocks();
 
-        public DeviceInformation? ParentDeviceInformation
-        {
-            get; private set;
-        }
+        public MidiEndpointTransportSuppliedInfo TransportSuppliedInfo => DeviceInformation.GetTransportSuppliedInfo();
+
+        public MidiEndpointUserSuppliedInfo UserSuppliedInfo => DeviceInformation.GetUserSuppliedInfo();
+
+        public MidiDeclaredDeviceIdentity DeviceIdentity => DeviceInformation.GetDeclaredDeviceIdentity();
+
+        public MidiDeclaredStreamConfiguration StreamConfiguration => DeviceInformation.GetDeclaredStreamConfiguration();
+
+        public MidiDeclaredEndpointInfo EndpointInfo => DeviceInformation.GetDeclaredEndpointInfo();
+
+        public DeviceInformation ParentDeviceInformation => DeviceInformation.GetParentDeviceInformation();
 
 
         public void OnNavigatedFrom()
@@ -36,8 +44,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         public void OnNavigatedTo(object parameter)
         {
             DeviceInformation = (MidiEndpointDeviceInformation)parameter;
-
-            ParentDeviceInformation = DeviceInformation.GetParentDeviceInformation();
         }
     }
 }

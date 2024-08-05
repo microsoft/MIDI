@@ -150,5 +150,17 @@
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
     </file>
 
+    <file name="Microsoft.Windows.Devices.Midi2.Utilities.SysEx.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Utilities.SysEx.MidiSystemExclusiveMessageHelper"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Utilities.SysEx.MidiSystemExclusiveSender"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
 
+
+    
 </assembly>

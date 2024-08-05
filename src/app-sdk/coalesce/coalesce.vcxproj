@@ -211,6 +211,9 @@
     <ProjectReference Include="..\winrt-utilities-sysex\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.vcxproj">
       <Project>{0d4739ef-c0d3-441c-ac25-20a55909e1dc}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\winrt-virtual-patchbay\Microsoft.Windows.Devices.Midi2.VirtualPatchBay.vcxproj">
+      <Project>{7bcb819f-ca97-4312-bf7b-1919a5ccde69}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

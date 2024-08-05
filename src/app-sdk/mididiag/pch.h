@@ -12,6 +12,8 @@
 #include <windows.h>
 #include <winternl.h>
 
+#include <ntstatus.h>
+
 //#pragma warning (disable: 4005)
 //#include <ntstatus.h>
 //#pragma warning (pop)
@@ -42,6 +44,9 @@ namespace diag = winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
 namespace svc = winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include "combaseapi.h"
+#include <mmsystem.h>
+#include <timeapi.h>
+
 #include "wstring_util.h"
 
 namespace internal = ::WindowsMidiServicesInternal;

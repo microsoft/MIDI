@@ -18,6 +18,11 @@ CMidi2VirtualPatchBayRoutingDestination::Initialize(
     m_matchJson = endpointMatchJson;
     m_router = router;
 
+    for (uint8_t i = 0; i < 16; i++)
+    {
+        m_groupTransformMap[i] = i;
+    }
+
     return S_OK;
 }
 
@@ -68,7 +73,20 @@ CMidi2VirtualPatchBayRoutingDestination::SetGroupTransforms(
     std::map<uint8_t, uint8_t> groupTransformMap
 )
 {
-    UNREFERENCED_PARAMETER(groupTransformMap);
+    // reset all groups before applying any transform
+    for (uint8_t i = 0; i < 16; i++)
+    {
+        m_groupTransformMap[i] = i;
+    }
+
+    // apply only the transforms presented
+    for (auto transform : groupTransformMap)
+    {
+        if (transform.first < 16)
+        {
+            m_groupTransformMap[transform.first] = transform.second;
+        }
+    }
 
     return S_OK;
 }

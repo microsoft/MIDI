@@ -7,7 +7,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="using:Microsoft.Midi.Settings.Views"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
-    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
+    xmlns:mididiag="using:Microsoft.Windows.Devices.Midi2.Diagnostics"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -35,7 +36,7 @@
 
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Plugins}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="midi2:MidiServiceTransportPluginInfo">
+                        <DataTemplate x:DataType="mididiag:MidiServiceTransportPluginInfo">
                            
                             <controls:SettingsCard IsClickEnabled="False" Margin="3">
                                 <controls:SettingsCard.Header>
@@ -78,7 +79,7 @@
                                             <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind Version}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" Text="Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind Mnemonic}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind TransportCode}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" Text="Id" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind Id}"  Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" />
@@ -103,7 +104,7 @@
                                             <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind IsSystemManaged, Converter={StaticResource BooleanToEmojiCheckConverter}}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" Text="Configurable" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind IsClientConfigurable, Converter={StaticResource BooleanToEmojiCheckConverter}}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind CanConfigure, Converter={StaticResource BooleanToEmojiCheckConverter}}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" Text="Creatable by Apps" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind IsRuntimeCreatableByApps, Converter={StaticResource BooleanToEmojiCheckConverter}}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />

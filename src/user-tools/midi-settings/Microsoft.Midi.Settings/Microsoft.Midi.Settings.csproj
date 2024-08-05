@@ -15,7 +15,7 @@
 	    
         <UseWinUI>true</UseWinUI>
         <EnableMsixTooling>true</EnableMsixTooling>
-        <!--<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>-->
+        <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
         <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
         <!--<WindowsPackageType>None</WindowsPackageType>-->
 		
@@ -63,6 +63,7 @@
     <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
     <None Remove="Views\PluginsTransportPage.xaml" />
+    <None Remove="Views\RoutesPage.xaml" />
     <None Remove="Views\SetupPage.xaml" />
     <None Remove="Views\ToolsConsolePage.xaml" />
     <None Remove="Views\ToolsMonitorPage.xaml" />
@@ -82,7 +83,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.TraceSource" Version="8.0.0" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24185.1707-preview.6" />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24215.1710-preview.7" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240404000" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
       
@@ -127,6 +128,9 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\RoutesPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\HomePage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

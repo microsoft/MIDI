@@ -41,6 +41,9 @@
         <Reference Include="Microsoft.Windows.Devices.Midi2.Utilities.SysEx">
             <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.winmd</HintPath>
         </Reference>
+        <Reference Include="Microsoft.Windows.Devices.Midi2.VirtualPatchBay">
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.VirtualPatchBay.winmd</HintPath>
+        </Reference>
 
         <Reference Include="Microsoft.Windows.Devices.Midi2.Initialization">
             <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Initialization.winmd</HintPath>

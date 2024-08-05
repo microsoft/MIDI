@@ -12,6 +12,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.Messages", "winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj", "{001601DE-B7AB-41D1-81B7-40286B139841}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback", "winrt-endpoint-loopback\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.vcxproj", "{D3B84D5D-8BED-4CB7-B430-B0BF1E46F3A1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{001601DE-B7AB-41D1-81B7-40286B139841} = {001601DE-B7AB-41D1-81B7-40286B139841}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual", "winrt-endpoint-virtual\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.vcxproj", "{9B93146C-4D9D-4915-BECB-5227DF2667E2}"
 EndProject
@@ -63,6 +66,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midiusbinfo", "midiusbinfo\midiusbinfo.vcxproj", "{0F688DE9-BE99-4A86-BE79-C5BE32BC471D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.Utilities.SysEx", "winrt-utilities-sysex\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.vcxproj", "{0D4739EF-C0D3-441C-AC25-20A55909E1DC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.VirtualPatchBay", "winrt-virtual-patchbay\Microsoft.Windows.Devices.Midi2.VirtualPatchBay.vcxproj", "{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -348,6 +353,22 @@ Global
 		{0D4739EF-C0D3-441C-AC25-20A55909E1DC}.Release|ARM64EC.Build.0 = Release|ARM64EC
 		{0D4739EF-C0D3-441C-AC25-20A55909E1DC}.Release|x64.ActiveCfg = Release|x64
 		{0D4739EF-C0D3-441C-AC25-20A55909E1DC}.Release|x64.Build.0 = Release|x64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Debug|Any CPU.Build.0 = Debug|x64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Debug|ARM64.Build.0 = Debug|ARM64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Debug|x64.ActiveCfg = Debug|x64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Debug|x64.Build.0 = Debug|x64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Release|Any CPU.ActiveCfg = Release|x64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Release|Any CPU.Build.0 = Release|x64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Release|ARM64.ActiveCfg = Release|ARM64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Release|ARM64.Build.0 = Release|ARM64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Release|x64.ActiveCfg = Release|x64
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -375,6 +396,7 @@ Global
 		{4DABE157-7DD5-422A-8C77-B83EAC9987D0} = {900D72D2-91F0-4E6C-B694-192FD48393D2}
 		{0F688DE9-BE99-4A86-BE79-C5BE32BC471D} = {C8B31D71-0226-4D2D-AC78-53D5C84F472F}
 		{0D4739EF-C0D3-441C-AC25-20A55909E1DC} = {F5AE94B4-47A7-4D35-A9EE-65FD4CF58C4B}
+		{7BCB819F-CA97-4312-BF7B-1919A5CCDE69} = {F5AE94B4-47A7-4D35-A9EE-65FD4CF58C4B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AE1DF8B9-9FAB-4E20-8AC6-FF316882222F}
