@@ -12,6 +12,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.Messages", "winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj", "{001601DE-B7AB-41D1-81B7-40286B139841}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback", "winrt-endpoint-loopback\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.vcxproj", "{D3B84D5D-8BED-4CB7-B430-B0BF1E46F3A1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{001601DE-B7AB-41D1-81B7-40286B139841} = {001601DE-B7AB-41D1-81B7-40286B139841}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual", "winrt-endpoint-virtual\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.vcxproj", "{9B93146C-4D9D-4915-BECB-5227DF2667E2}"
 EndProject

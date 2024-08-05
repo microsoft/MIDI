@@ -96,8 +96,7 @@
 
                 <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader"/>
 
-                <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SetupViewModel"
-                                    >
+                <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SetupViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe838;"/>
                     </NavigationViewItem.Icon>
@@ -106,9 +105,14 @@
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
                     </NavigationViewItem.Icon>
-                </NavigationViewItem>                
-                
-                
+                </NavigationViewItem>
+                <NavigationViewItem x:Uid="Shell_Routes" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.RoutesViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef90;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+
                 <NavigationViewItemHeader x:Uid="Shell_ManagementNavHeader"/>
 
 

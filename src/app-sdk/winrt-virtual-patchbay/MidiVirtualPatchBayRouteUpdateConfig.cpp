@@ -7,20 +7,20 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiVirtualPatchBayRouteRemovalConfig.h"
-#include "MidiVirtualPatchBayRouteRemovalConfig.g.cpp"
+#include "MidiVirtualPatchBayRouteUpdateConfig.h"
+#include "MidiVirtualPatchBayRouteUpdateConfig.g.cpp"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
     _Use_decl_annotations_
-    MidiVirtualPatchBayRouteRemovalConfig::MidiVirtualPatchBayRouteRemovalConfig(
+    MidiVirtualPatchBayRouteUpdateConfig::MidiVirtualPatchBayRouteUpdateConfig(
         winrt::guid const& routeId)
     {
         m_routeId = routeId;
 
     }
 
-    winrt::hstring MidiVirtualPatchBayRouteRemovalConfig::GetConfigJson()
+    winrt::hstring MidiVirtualPatchBayRouteUpdateConfig::GetConfigJson()
     {
         throw hresult_not_implemented();
     }

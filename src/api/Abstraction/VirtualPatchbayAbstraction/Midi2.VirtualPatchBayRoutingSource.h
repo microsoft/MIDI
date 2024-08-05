@@ -20,7 +20,8 @@ public:
 
     STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT length, _In_ LONGLONG position, _In_ LONGLONG context);
 
-    STDMETHOD(AddIncludedGroups)(_In_ std::vector<uint8_t> groupIndexes);
+    STDMETHOD(SetIncludedGroups)(_In_ std::vector<uint8_t> groupIndexes);
+    STDMETHOD(SetIncludedMessageTypes)(_In_ std::vector<uint8_t> messageTypes);
     STDMETHOD(SetEndpointCallback)(_In_ LPCWSTR resolvedEndpointDeviceInterfaceId, _In_ IMidiCallback* sourceEndpointCallback);
 
     STDMETHOD(Cleanup)();
@@ -29,13 +30,15 @@ private:
     CMidi2VirtualPatchBayRoutingEntry* m_router;
 
     std::wstring m_matchJson{ };
+
+    GUID m_endpointAbstractionId{ };
     std::wstring m_resolvedEndpointDeviceInterfaceId{ };
 
-
-    bool m_includeGrouplessMessages{ false };
+    // array of booleans indexed by message type. If true, the type is included
+    std::array<bool, 16> m_includedMessageTypes{ true };
     
     // array of booleans. If an index is true, it is included
-    bool m_includedGroupIndexes[16]{ false };
+    std::array<bool, 16> m_includedGroupIndexes{ true };
 
 
     wil::com_ptr<IMidiBiDi> m_sourceEndpointBiDi{ nullptr };

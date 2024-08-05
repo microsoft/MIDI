@@ -24,11 +24,11 @@ namespace Microsoft.Midi.Settings.Helpers
 
                 switch (val)
                 {
-                    case MidiEndpointNativeDataFormat.UniversalMidiPacket:
+                    case MidiEndpointNativeDataFormat.UniversalMidiPacketFormat:
                         return "MIDI 2.0 Universal MIDI Packet (UMP) format";
 
-                    case MidiEndpointNativeDataFormat.ByteStream:
-                        return "MIDI 1.0 byte stream format";
+                    case MidiEndpointNativeDataFormat.Midi1ByteFormat:
+                        return "MIDI 1.0 byte format";
 
 
                     default:

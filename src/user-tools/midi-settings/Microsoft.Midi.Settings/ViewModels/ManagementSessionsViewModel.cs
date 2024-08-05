@@ -6,6 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 
+using Microsoft.Windows.Devices.Midi2.Diagnostics;
+
+
 namespace Microsoft.Midi.Settings.ViewModels
 {
     public class ManagementSessionsViewModel : ObservableRecipient
@@ -23,7 +26,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             Sessions.Clear();
 
-            var sessions = MidiService.GetActiveSessions();
+            var sessions = MidiReporting.GetActiveSessions();
 
             foreach (var session in sessions) 
             {

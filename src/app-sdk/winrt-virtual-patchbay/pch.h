@@ -97,14 +97,18 @@ namespace svc = ::winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 // Project-local ------------------------------------------------
 
-namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback {};
-namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implementation {};
-namespace loop = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback;
-namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implementation;
+namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay {};
+namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation {};
+namespace local = ::winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay;
+namespace implementation = ::winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation;
 
 //#include "resource.h"
 
+#include "MidiVirtualPatchBaySourceDefinition.h"
+#include "MidiVirtualPatchBayDestinationDefinition.h"
+
 #include "MidiVirtualPatchBayRouteCreationConfig.h"
 #include "MidiVirtualPatchBayRouteRemovalConfig.h"
+#include "MidiVirtualPatchBayRouteUpdateConfig.h"
 
 #include "MidiVirtualPatchBayManager.h"

@@ -6,23 +6,20 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiVirtualPatchBaySourceDefinition.idl";
-import "MidiVirtualPatchBayDestinationDefinition.idl";
+
+import "MidiVirtualPatchBayRouteDefinition.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [default_interface]
-    runtimeclass MidiVirtualPatchBayRouteDefinition
+    runtimeclass MidiVirtualPatchBayRouteUpdateConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
-        MidiVirtualPatchBayRouteDefinition();
+        MidiVirtualPatchBayRouteUpdateConfig();
 
-        Boolean IsEnabled;
+        MidiVirtualPatchBayRouteUpdateConfig(
+            Guid routeId
+        );
 
-        IVector<MidiVirtualPatchBaySourceDefinition> Sources;
-        IVector<MidiVirtualPatchBayDestinationDefinition> Destinations;
-
-        static MidiVirtualPatchBayRouteDefinition CreateFromConfigJson(String jsonSection);
-
-        String GetConfigJson();
+        Guid RouteId;
     }
 }

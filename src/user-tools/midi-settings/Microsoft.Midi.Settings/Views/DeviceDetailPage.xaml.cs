@@ -53,10 +53,17 @@ namespace Microsoft.Midi.Settings.Views
  
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.UserMetadata.Name = ViewModel.DeviceInformation!.UserSuppliedName;
-            ViewModel.UserMetadata.Description = ViewModel.DeviceInformation.UserSuppliedDescription;
-            ViewModel.UserMetadata.LargeImagePath = ViewModel.DeviceInformation.UserSuppliedLargeImagePath;
-            ViewModel.UserMetadata.SmallImagePath = ViewModel.DeviceInformation.UserSuppliedSmallImagePath;
+            if (ViewModel.DeviceInformation == null)
+            {
+                return;
+            }
+
+            var userSuppliedInfo = ViewModel.DeviceInformation.GetUserSuppliedInfo();
+
+            ViewModel.UserMetadata.Name = userSuppliedInfo.Name;
+            ViewModel.UserMetadata.Description = userSuppliedInfo.Description;
+            ViewModel.UserMetadata.LargeImagePath = userSuppliedInfo.LargeImagePath;
+            ViewModel.UserMetadata.SmallImagePath = userSuppliedInfo.SmallImagePath;
 
             editUserDefinedPropertiesDialog.Width = this.Width / 3;
 

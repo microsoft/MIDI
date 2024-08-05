@@ -260,38 +260,66 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-      <ClInclude Include="MidiVirtualPatchBayManager.h">
-          <DependentUpon>MidiVirtualPatchBayManager.idl</DependentUpon>
+      <ClInclude Include="MidiVirtualPatchBayDestinationDefinition.h">
+          <DependentUpon>MidiVirtualPatchBayDestinationDefinition.idl</DependentUpon>
       </ClInclude>
-      <ClInclude Include="MidiVirtualPatchBayRouteCreationConfig.h">
-          <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
+    <ClInclude Include="MidiVirtualPatchBayManager.h">
+      <DependentUpon>MidiVirtualPatchBayManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiVirtualPatchBayRouteCreationConfig.h">
+      <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
+    </ClInclude>
+      <ClInclude Include="MidiVirtualPatchBayRouteDefinition.h">
+          <DependentUpon>MidiVirtualPatchBayRouteDefinition.idl</DependentUpon>
       </ClInclude>
-      <ClInclude Include="MidiVirtualPatchBayRouteRemovalConfig.h">
-          <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
+    <ClInclude Include="MidiVirtualPatchBayRouteRemovalConfig.h">
+      <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
+    </ClInclude>
+      <ClInclude Include="MidiVirtualPatchBayRouteUpdateConfig.h">
+          <DependentUpon>MidiVirtualPatchBayRouteUpdateConfig.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiVirtualPatchBaySourceDefinition.h">
+          <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
       </ClInclude>
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
-      <ClCompile Include="MidiVirtualPatchBayManager.cpp">
-          <DependentUpon>MidiVirtualPatchBayManager.idl</DependentUpon>
+      <ClCompile Include="MidiVirtualPatchBayDestinationDefinition.cpp">
+          <DependentUpon>MidiVirtualPatchBayDestinationDefinition.idl</DependentUpon>
       </ClCompile>
-      <ClCompile Include="MidiVirtualPatchBayRouteCreationConfig.cpp">
-          <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
+    <ClCompile Include="MidiVirtualPatchBayManager.cpp">
+      <DependentUpon>MidiVirtualPatchBayManager.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualPatchBayRouteCreationConfig.cpp">
+      <DependentUpon>MidiVirtualPatchBayRouteCreationConfig.idl</DependentUpon>
+    </ClCompile>
+      <ClCompile Include="MidiVirtualPatchBayRouteDefinition.cpp">
+          <DependentUpon>MidiVirtualPatchBayRouteDefinition.idl</DependentUpon>
       </ClCompile>
-      <ClCompile Include="MidiVirtualPatchBayRouteRemovalConfig.cpp">
-          <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
+    <ClCompile Include="MidiVirtualPatchBayRouteRemovalConfig.cpp">
+      <DependentUpon>MidiVirtualPatchBayRouteRemovalConfig.idl</DependentUpon>
+    </ClCompile>
+      <ClCompile Include="MidiVirtualPatchBayRouteUpdateConfig.cpp">
+          <DependentUpon>MidiVirtualPatchBayRouteUpdateConfig.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiVirtualPatchBaySourceDefinition.cpp">
+          <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
       </ClCompile>
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="MidiVirtualPatchBayDestinationDefinition.idl" />
     <Midl Include="MidiVirtualPatchBayManager.idl" />
     <Midl Include="MidiVirtualPatchBayRouteCreationResult.idl" />
     <Midl Include="MidiVirtualPatchBayRouteDefinition.idl" />
     <Midl Include="MidiVirtualPatchBayRouteCreationConfig.idl" />
     <Midl Include="MidiVirtualPatchBayRouteRemovalConfig.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl" />
+    <Midl Include="MidiVirtualPatchBaySourceDefinition.idl" />
+    <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-sdk.def" />

@@ -32,6 +32,7 @@ private:
     CMidi2VirtualPatchBayRoutingEntry* m_router;
 
     std::wstring m_matchJson{ };
+    GUID m_endpointAbstractionId{ };
     std::wstring m_resolvedEndpointDeviceInterfaceId{ };
 
     wil::com_ptr_nothrow<IMidiBiDi> m_endpointBiDi{ nullptr };
@@ -39,6 +40,6 @@ private:
     // each entry in this array is the destination group. Index is the source group
     // all values in this array must be valid. Multiple source groups can map to the 
     // same destination group, but not the other way around.
-    uint8_t m_groupTransformMap[16]{ };
+    std::array<uint8_t, 16> m_groupTransformMap{ };
 
 };

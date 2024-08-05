@@ -164,6 +164,37 @@
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
     </file>
 
+    <file name="Microsoft.Windows.Devices.Midi2.VirtualPatchBay.dll">
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.VirtualPatchBay.MidiVirtualPatchBayRouteCreationConfig"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.VirtualPatchBay.MidiVirtualPatchBayRouteRemovalConfig"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.VirtualPatchBay.MidiVirtualPatchBayRouteUpdateConfig"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.VirtualPatchBay.MidiVirtualPatchBayDestinationDefinition"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.VirtualPatchBay.MidiVirtualPatchBayRouteDefinition"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.VirtualPatchBay.MidiVirtualPatchBaySourceDefinition"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.VirtualPatchBay.MidiVirtualPatchBayManager"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>    
+    
     
 </assembly>
 

@@ -6,23 +6,22 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiVirtualPatchBaySourceDefinition.idl";
-import "MidiVirtualPatchBayDestinationDefinition.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [default_interface]
-    runtimeclass MidiVirtualPatchBayRouteDefinition
+    runtimeclass MidiVirtualPatchBaySourceDefinition
     {
-        MidiVirtualPatchBayRouteDefinition();
+        MidiVirtualPatchBaySourceDefinition();
 
         Boolean IsEnabled;
 
-        IVector<MidiVirtualPatchBaySourceDefinition> Sources;
-        IVector<MidiVirtualPatchBayDestinationDefinition> Destinations;
+        String EndpointDeviceId;            // TODO: May want to have fuzzy match here
 
-        static MidiVirtualPatchBayRouteDefinition CreateFromConfigJson(String jsonSection);
+        // message types to include. If empty, all types are included.
+        IVector<Microsoft.Windows.Devices.Midi2.MidiMessageType> IncludedMessageTypes;
 
-        String GetConfigJson();
+        // only for messages with groups. If this is empty, all groups are included.
+        IVector<Microsoft.Windows.Devices.Midi2.MidiGroup> IncludedGroups;
     }
 }

@@ -32,9 +32,6 @@
     <Midl Include="MidiVirtualPatchBayRouteCreationConfig.idl">
       <Filter>SDK\Configuration</Filter>
     </Midl>
-    <Midl Include="MidiVirtualPatchBayRouteDefinition.idl">
-      <Filter>SDK\Configuration</Filter>
-    </Midl>
     <Midl Include="MidiVirtualPatchBayRouteRemovalConfig.idl">
       <Filter>SDK\Configuration</Filter>
     </Midl>
@@ -42,6 +39,21 @@
       <Filter>SDK\Management</Filter>
     </Midl>
     <Midl Include="MidiVirtualPatchBayRouteCreationResult.idl">
+      <Filter>SDK\Management</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayDestinationDefinition.idl">
+      <Filter>SDK\Definitions</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBaySourceDefinition.idl">
+      <Filter>SDK\Definitions</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl">
+      <Filter>SDK\Configuration</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteDefinition.idl">
+      <Filter>SDK\Definitions</Filter>
+    </Midl>
+    <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl">
       <Filter>SDK\Management</Filter>
     </Midl>
   </ItemGroup>
@@ -59,6 +71,9 @@
     </Filter>
     <Filter Include="SDK\Management">
       <UniqueIdentifier>{656ea1ee-7afd-4546-89aa-1e2ed9d80f83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Definitions">
+      <UniqueIdentifier>{1d805a69-c470-459d-be7d-59011bb9d8d9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

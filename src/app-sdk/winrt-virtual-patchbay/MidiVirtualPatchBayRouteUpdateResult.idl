@@ -7,21 +7,14 @@
 // ============================================================================
 
 
-import "MidiVirtualPatchBayRouteDefinition.idl";
-
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
-    [default_interface]
-    runtimeclass MidiVirtualPatchBayRouteCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    struct MidiVirtualPatchBayRouteUpdateResult
     {
-        MidiVirtualPatchBayRouteCreationConfig();
-
-        MidiVirtualPatchBayRouteCreationConfig(
-            Guid routeId
-        );
+        Boolean Success;
 
         Guid RouteId;
 
-    }
-}
 
+    };
+}

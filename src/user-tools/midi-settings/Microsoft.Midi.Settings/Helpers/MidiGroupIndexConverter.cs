@@ -21,7 +21,7 @@ namespace Microsoft.Midi.Settings.Helpers
                 var val = (byte)value;
 
                 // todo: localize
-                return $"{MidiGroup.LabelFull} {(val + 1)} (Index {val})";
+                return $"{MidiGroup.LongLabel} {(val + 1)} (Index {val})";
             }
             else
             {

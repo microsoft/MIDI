@@ -5,14 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Data.Json;
 
+using Microsoft.Windows.Devices.Midi2.ServiceConfig;
 
 namespace Microsoft.Midi.Settings.Config
 {
-    internal class EndpointConfigMetadataPayload : IMidiServiceTransportPluginConfiguration
+    internal class EndpointConfigMetadataPayload : IMidiServiceTransportPluginConfig
     {
-        public bool IsFromConfigurationFile => true;
+        public bool IsFromCurrentConfigFile => true;
 
-        public JsonObject? SettingsJson { get; private set; }
 
         public Guid TransportId { get; private set; }
 
@@ -51,9 +51,20 @@ namespace Microsoft.Midi.Settings.Config
         //   }
         // }
 
-        public void BuildJson()
+
+        public string GetConfigJson()
         {
 
+            // TODO
+
+
+
+
+
+
+
+            return string.Empty;
         }
+
     }
 }

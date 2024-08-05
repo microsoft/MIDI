@@ -7,14 +7,14 @@
 // ============================================================================
 
 #pragma once
-#include "MidiVirtualPatchBayRouteRemovalConfig.g.h"
+#include "MidiVirtualPatchBayRouteUpdateConfig.g.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
-    struct MidiVirtualPatchBayRouteRemovalConfig : MidiVirtualPatchBayRouteRemovalConfigT<MidiVirtualPatchBayRouteRemovalConfig>
+    struct MidiVirtualPatchBayRouteUpdateConfig : MidiVirtualPatchBayRouteUpdateConfigT<MidiVirtualPatchBayRouteUpdateConfig>
     {
-        MidiVirtualPatchBayRouteRemovalConfig() = default;
-        MidiVirtualPatchBayRouteRemovalConfig(_In_ winrt::guid const& routeId);
+        MidiVirtualPatchBayRouteUpdateConfig() = default;
+        MidiVirtualPatchBayRouteUpdateConfig(_In_ winrt::guid const& routeId);
 
         winrt::guid RouteId() { return m_routeId; }
         void RouteId(_In_ winrt::guid const& value) { m_routeId = value; }
@@ -27,11 +27,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
         winrt::guid m_routeId{};
         winrt::guid m_transportId{};
         bool m_isFromCurrentConfigFile{ false };
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::factory_implementation
 {
-    struct MidiVirtualPatchBayRouteRemovalConfig : MidiVirtualPatchBayRouteRemovalConfigT<MidiVirtualPatchBayRouteRemovalConfig, implementation::MidiVirtualPatchBayRouteRemovalConfig>
+    struct MidiVirtualPatchBayRouteUpdateConfig : MidiVirtualPatchBayRouteUpdateConfigT<MidiVirtualPatchBayRouteUpdateConfig, implementation::MidiVirtualPatchBayRouteUpdateConfig>
     {
     };
 }
