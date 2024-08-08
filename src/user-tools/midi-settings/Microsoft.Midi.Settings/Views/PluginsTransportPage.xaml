@@ -9,7 +9,7 @@
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:mididiag="using:Microsoft.Windows.Devices.Midi2.Diagnostics"
-    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:controls="using:CommunityToolkit.Labs.WinUI"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"

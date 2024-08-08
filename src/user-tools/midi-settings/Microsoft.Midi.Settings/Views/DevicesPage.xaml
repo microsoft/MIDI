@@ -9,7 +9,7 @@
     xmlns:views="using:Microsoft.Midi.Settings.Views"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
-    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:controls="using:CommunityToolkit.Labs.WinUI"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -55,8 +55,8 @@
                                     </StackPanel>
                                 </controls:SettingsExpander.Header>
 
-                                <!--<controls:SettingsExpander.ItemTemplate>
-                                    <DataTemplate x:DataType="midi2:MidiEndpointTransportSuppliedInfo">
+                                <controls:SettingsExpander.ItemTemplate>
+                                    <DataTemplate x:DataType="local:MidiEndpointDeviceListItem">
                                         <controls:SettingsCard IsClickEnabled="True"
                                                                CommandParameter="{ x:Bind }"
                                                                Loaded="EndpointSettingsCard_Loaded">
@@ -65,8 +65,8 @@
                                             </controls:SettingsCard.Header>
                                             <controls:SettingsCard.Description>
                                                 <StackPanel Orientation="Vertical">
-                                                    <TextBlock Text="{x:Bind MidiEndpointTransportSuppliedInfo.Description}" Style="{StaticResource SmallPlainPropertyValue}"/>
-                                                    <TextBlock Text="{x:Bind MidiUserSuppliedInfo.Description}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                    <TextBlock Text="{x:Bind TransportSuppliedDescription}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                    <TextBlock Text="{x:Bind UserSuppliedDescription}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                                 </StackPanel>
                                             </controls:SettingsCard.Description>
 
@@ -85,14 +85,13 @@
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
 
-                                                
+                                                <!--
                                                 <TextBlock Grid.Row="0" Grid.Column="0" 
                                                            Text="Native Format" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
                                                 <TextBlock Grid.Row="0" Grid.Column="1" 
                                                            Text="{x:Bind NativeDataFormat, Converter={StaticResource MidiEndpointNativeDataFormatConverter}}" 
                                                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                                
                                                 
                                                 
                                                 <TextBlock Grid.Row="0" Grid.Column="2" 
@@ -107,8 +106,6 @@
                                                            Text="{x:Bind SupportsMidi20Protocol, Converter={StaticResource BooleanToEmojiCheckConverter}}"
                                                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                                
-                                                
                                                 
                                                 <TextBlock Grid.Row="0" Grid.Column="4" 
                                                            Text="Unique Id?" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
@@ -127,11 +124,12 @@
                                                            Text="{x:Bind SupportsMultiClient, Converter={StaticResource BooleanToEmojiCheckConverter}}"
                                                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
+                                                -->
                                             </Grid>
                                             
                                         </controls:SettingsCard>
                                     </DataTemplate>
-                                </controls:SettingsExpander.ItemTemplate>-->
+                                </controls:SettingsExpander.ItemTemplate>
                                 
                             </controls:SettingsExpander>
                             

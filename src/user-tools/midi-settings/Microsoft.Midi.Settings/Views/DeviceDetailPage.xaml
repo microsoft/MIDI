@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
-    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:controls="using:CommunityToolkit.Labs.WinUI"
     xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"

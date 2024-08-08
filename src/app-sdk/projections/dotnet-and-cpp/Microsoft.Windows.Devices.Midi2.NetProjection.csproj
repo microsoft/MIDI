@@ -30,9 +30,10 @@
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<AssemblyName>Microsoft.Windows.Devices.Midi2.NetProjection</AssemblyName>
 		<PackageOutputPath>$(SolutionDir)vsfiles\PublishedNuGet\</PackageOutputPath>
-		<SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion>10.0.20348.00</SupportedOSPlatformVersion>
 		<BaseOutputPath>$(SolutionDir)vsfiles\NetProjections\</BaseOutputPath>
-	</PropertyGroup>
+        <WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion>
+    </PropertyGroup>
 
     <PropertyGroup>
         <!-- Workaround for MSB3271 error on processor architecture mismatch -->
@@ -45,7 +46,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.Targets" Version="6.0.0-preview.4.21253.7" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.8" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.1" />
   </ItemGroup>
 
   <ItemGroup>

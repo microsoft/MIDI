@@ -52,10 +52,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ObservableCollection<MidiEndpointDevicesByTransport> MidiEndpointDevicesByTransport { get; } = [];
 
 
-        // CollectionViewSource grouped by transport
-
-
-
         public void RefreshDeviceCollection(bool showDiagnosticsEndpoints = false)
         {
             _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
@@ -88,7 +84,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     // add this device to the transport's collection
                     if (parentTransport != null)
                     {
-                        parentTransport.EndpointDevices.Add(endpointDevice);
+                        parentTransport.EndpointDevices.Add(new MidiEndpointDeviceListItem(endpointDevice));
                     }
 
                 }
@@ -101,8 +97,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 foreach (var item in tempCollection.OrderBy(x => x.Transport.Name))
                 {
-                    // TODO: this is a hack. Probably shouldn't be using the mnemonic directly
-                    // Instead, need a transport properly for purpose like we have with endpoints
+                    // TODO: this is a hack. Probably shouldn't be using the transport code directly
+                    // Instead, need a transport property for purpose like we have with endpoints
                     if (item.Transport.TransportCode == "DIAG")
                     {
                         if (showDiagnosticsEndpoints)
@@ -134,7 +130,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            //RefreshDeviceCollection();
+            RefreshDeviceCollection();
         }
     }
 }
