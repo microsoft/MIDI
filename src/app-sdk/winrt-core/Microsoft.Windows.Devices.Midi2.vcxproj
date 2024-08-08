@@ -180,17 +180,17 @@
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -233,9 +233,9 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -441,6 +441,7 @@
     <Midl Include="MidiMessage96.idl" />
     <Midl Include="MidiMessageTypeEnum.idl" />
     <Midl Include="MidiPacketTypeEnum.idl" />
+    <Midl Include="MidiSystemTimerSettings.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

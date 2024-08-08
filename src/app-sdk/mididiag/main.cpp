@@ -606,6 +606,11 @@ int __cdecl main()
     {
         DoSectionSystemInfo(verbose);
 
+        if (midiClock)
+        {
+            if (!DoSectionClock(verbose)) RETURN_FAIL;
+        }
+
         if (!DoSectionServiceStatus(verbose)) RETURN_FAIL;
 
         auto transportsWorked = DoSectionTransports(verbose);
@@ -617,10 +622,6 @@ int __cdecl main()
 
         DoSectionMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 
-        if (midiClock)
-        {
-            if (!DoSectionClock(verbose)) RETURN_FAIL;
-        }
 
         if (transportsWorked)
         {

@@ -96,6 +96,7 @@ bool MidiSrvManager::AttemptToStartService()
 
     // TODO: Need to wait here until the service is started
 
+    const uint32_t sleepBetweenAttemptsMS = 250;
     uint32_t attempts = 0;              // usually only needs 1-2 attempts to start service.
     const uint32_t maxAttempts = 40;    // apx 10 seconds max wait. 
 
@@ -121,7 +122,7 @@ bool MidiSrvManager::AttemptToStartService()
             else
             {
                 // sleep for a quarter of a second and try again
-                Sleep(250);
+                Sleep(sleepBetweenAttemptsMS);
             }
         }
         else

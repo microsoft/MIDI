@@ -23,6 +23,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         static Windows.Foundation.Uri GetLatestRuntimeReleaseInstallerUri();
         static Windows.Foundation.Uri GetLatestSettingsAppReleaseInstallerUri();
         static Windows.Foundation.Uri GetLatestConsoleAppReleaseInstallerUri();
+
     }
 }
 

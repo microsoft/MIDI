@@ -12,6 +12,11 @@
 #include "MidiClock.g.cpp"
 
 
+#include <mmsystem.h>
+#include <timeapi.h>
+#include <winternl.h>
+
+using namespace std::chrono_literals;
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
@@ -111,5 +116,69 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         return internal::ConvertTimestampToFractionalSeconds(timestampValue, TimestampFrequency());
     }
+
+
+
+    midi2::MidiSystemTimerSettings MidiClock::GetCurrentSystemTimerInfo()
+    {
+        ULONG minResolution{ 0 };
+        ULONG maxResolution{ 0 };
+        ULONG curResolution{ 0 };
+
+        auto queryResult = ::NtQueryTimerResolution(&maxResolution, &minResolution, &curResolution);
+
+        midi2::MidiSystemTimerSettings timerSettings{};
+
+        if (queryResult == STATUS_SUCCESS)
+        {
+            // we convert everything to ticks to make it more usable with the rest of MIDI
+
+            auto minResolutionTicks = (uint64_t)(((uint64_t)minResolution * m_timerResolutionFrequency) / TimestampFrequency());
+            auto maxResolutionTicks = (uint64_t)(((uint64_t)maxResolution * m_timerResolutionFrequency) / TimestampFrequency());
+            auto curResolutionTicks = (uint64_t)(((uint64_t)curResolution * m_timerResolutionFrequency) / TimestampFrequency());
+
+            timerSettings.MinimumIntervalTicks = minResolutionTicks;
+            timerSettings.MaximumIntervalTicks = maxResolutionTicks;
+            timerSettings.CurrentIntervalTicks = curResolutionTicks;
+        }
+        else
+        {
+            // blank struct is returned
+        }
+
+        return timerSettings;
+
+    }
+
+    //_Use_decl_annotations_
+    //bool MidiClock::SetSystemTimerResolutionMilliseconds(uint32_t targetIntervalMilliseconds)
+    //{
+    //    auto timerInfo = GetCurrentSystemTimerInfo();
+
+    //    if (targetIntervalMilliseconds > ConvertTimestampTicksToMilliseconds(timerInfo.MaximumIntervalTicks)) return false;
+    //    if (targetIntervalMilliseconds < ConvertTimestampTicksToMilliseconds(timerInfo.MinimumIntervalTicks)) return false;
+
+    //    //auto newTimerValue = targetIntervalTicks * TimestampFrequency() / m_timerResolutionFrequency;
+    //    auto newTimerValue = ConvertTimestampTicksToMilliseconds(targetIntervalMilliseconds);
+
+    //    // TODO: Call API to set the new timer value
+    //    // NtSetTimerResolution exists but isn't coming up in the user-mode headers.
+    //    // there are also the mmsystem API calls we can use
+    //    
+    //    auto configResult = timeBeginPeriod(targetIntervalMilliseconds);
+
+    //    if (configResult == TIMERR_NOERROR)
+    //    {
+    //        return true;
+    //    }
+    //    else
+    //    {
+    //        return false;
+    //    }
+
+    //}
+
+
+
 
 }

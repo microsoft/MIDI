@@ -45,7 +45,7 @@
     <ClCompile Include="Midi2.MidiSrvSessionTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiSrvManager.cpp">
+    <ClCompile Include="Midi2.MidiSrvManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -94,7 +94,7 @@
     <ClInclude Include="Midi2.MidiSrvSessionTracker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiSrvManager.h">
+    <ClInclude Include="Midi2.MidiSrvManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

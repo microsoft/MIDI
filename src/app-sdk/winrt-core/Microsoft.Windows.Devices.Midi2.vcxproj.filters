@@ -142,6 +142,9 @@
     <Midl Include="MidiEndpointDeviceInformationSortOrderEnum.idl">
       <Filter>SDK\Enumeration\Device\Device Info</Filter>
     </Midl>
+    <Midl Include="MidiSystemTimerSettings.idl">
+      <Filter>SDK\Common</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />

@@ -10,7 +10,6 @@
 #pragma once
 #include "MidiClock.g.h"
 
-//#include <midi_timestamp.h>
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
@@ -45,8 +44,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         static double ConvertTimestampTicksToMilliseconds(_In_ internal::MidiTimestamp const timestampValue);
         static double ConvertTimestampTicksToSeconds(_In_ internal::MidiTimestamp const timestampValue);
 
+
+        static midi2::MidiSystemTimerSettings GetCurrentSystemTimerInfo();
+    //    static bool SetSystemTimerResolutionMilliseconds(_In_ uint32_t targetIntervalMilliseconds);
+
     private:
         static uint64_t m_timestampFrequency;
+
+        static const uint64_t m_timerResolutionFrequency{ 10'000'000 };    // 100ns fixed units for timer API calls we use
+
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation

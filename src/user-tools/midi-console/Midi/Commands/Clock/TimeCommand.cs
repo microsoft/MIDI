@@ -39,7 +39,11 @@ namespace Microsoft.Midi.ConsoleApp
                 units = "ms";
             }
 
-            AnsiConsole.MarkupLine("The Windows MIDI Services MIDI Clock is a high-resolution 64 bit system timestamp that is reset when the computer is rebooted. See [darkslategray1]https://aka.ms/miditimestamp[/] for more information.");
+
+            // TODO: Should right justify and align the numbers shown here
+
+            AnsiConsole.MarkupLine("The Windows MIDI Services MIDI Clock is a high-resolution 64 bit system timestamp that is reset when the computer is rebooted.");
+            AnsiConsole.MarkupLine("See [darkslategray1]https://aka.ms/miditimestamp[/] for more information.");
             AnsiConsole.WriteLine();
 
             AnsiConsole.MarkupLine($"Timestamp resolution: [deepskyblue1]{MidiClock.TimestampFrequency.ToString("N0")}[/] ticks per second ([deepskyblue1]{convertedFrequency.ToString("N2")} {units}[/] per tick)");
@@ -50,7 +54,7 @@ namespace Microsoft.Midi.ConsoleApp
             AnsiConsole.WriteLine();
 
             var now = MidiClock.Now;
-            var ticksUntilWrap = Int64.MaxValue - now;  // turns out, QPC LARGE_INTEGER is signed, not unsigned.
+            var ticksUntilWrap = Int64.MaxValue - now;  // turns out, QPC LARGE_INTEGER is signed, not unsigned so Int64, not UInt64.
             double tickWrapTime = 0.0;
             string tickWrapLabel = string.Empty;
 
@@ -59,6 +63,24 @@ namespace Microsoft.Midi.ConsoleApp
             AnsiConsole.MarkupLine($"Current timestamp: {AnsiMarkupFormatter.FormatTimestamp(now)} ticks");
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine($"Time until the MIDI Clock wraps back around to zero is {AnsiMarkupFormatter.FormatTimestamp(ticksUntilWrap)} ticks or [deepskyblue1]{tickWrapTime.ToString("N2")} {tickWrapLabel}[/].");
+
+            var timerInfo = MidiClock.GetCurrentSystemTimerInfo();
+
+            AnsiConsole.WriteLine();
+
+            if (timerInfo.MaximumIntervalTicks > 0)
+            {
+                AnsiConsole.MarkupLine($"Windows Timer Intervals (for thread sleep, for example)");
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine($"➡️ Minimum:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.MinimumIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MinimumIntervalTicks).ToString("N3")}[/]) milliseconds");
+                AnsiConsole.MarkupLine($"➡️ Maximum:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.MaximumIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MaximumIntervalTicks).ToString("N3")}[/]) milliseconds");
+                AnsiConsole.MarkupLine($"➡️ Current:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.CurrentIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.CurrentIntervalTicks).ToString("N3")}[/]) milliseconds");
+                AnsiConsole.WriteLine();
+            }
+            else
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Windows Timer Intervals (for thread sleep, for example)"));
+            }
 
             return (int)MidiConsoleReturnCode.Success;
         }

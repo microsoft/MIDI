@@ -297,7 +297,6 @@ namespace Microsoft.Midi.ConsoleApp
 
                     var messageListener = new Thread(() =>
                     {
-
                         UInt64 lastMessageTimestamp = 0;
 
                         UInt32 lastReceivedDebugWord = 0;
@@ -523,7 +522,7 @@ namespace Microsoft.Midi.ConsoleApp
                                     WriteMessageToFile(settings, captureWriter, message);
                                 }
 
-                                //Thread.Sleep(0);
+                                Thread.Sleep(0);
                             }
                         });
                         messageFileWriter.Start();
