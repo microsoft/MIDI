@@ -20,6 +20,11 @@ using namespace std::chrono_literals;
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+    UINT MidiClock::m_lastTimeBeginPeriodValue{};
+    bool MidiClock::m_inLowLatencyPeriod{ false };
+
+
+
     uint64_t MidiClock::m_timestampFrequency{ 0 };
 
     internal::MidiTimestamp MidiClock::Now() 
@@ -149,6 +154,42 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         return timerSettings;
 
     }
+
+
+    bool MidiClock::BeginLowLatencySystemTimerPeriod()
+    {
+        if (m_inLowLatencyPeriod) return false;
+
+        TIMECAPS caps{};
+
+        auto timecapsResult = timeGetDevCaps(&caps, sizeof(caps));
+
+        if (timecapsResult != MMSYSERR_NOERROR) return false;
+
+        auto result = timeBeginPeriod(caps.wPeriodMin);
+
+        if (result != MMSYSERR_NOERROR) return false;
+
+        m_inLowLatencyPeriod = true;
+        m_lastTimeBeginPeriodValue = caps.wPeriodMin;
+
+        return true;
+    }
+
+    bool MidiClock::EndLowLatencySystemTimerPeriod()
+    {
+        if (!m_inLowLatencyPeriod) return false;
+
+        auto result = timeEndPeriod(m_lastTimeBeginPeriodValue);
+
+        if (result != MMSYSERR_NOERROR) return false;
+
+        m_inLowLatencyPeriod = false;
+        m_lastTimeBeginPeriodValue = 0;
+
+        return true;
+    }
+
 
     //_Use_decl_annotations_
     //bool MidiClock::SetSystemTimerResolutionMilliseconds(uint32_t targetIntervalMilliseconds)

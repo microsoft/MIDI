@@ -54,9 +54,10 @@ namespace Microsoft.Midi.Settings.Views
 
         private void DevicesPage_Loaded(object sender, RoutedEventArgs e)
         {
+            ViewModel.DispatcherQueue = this.DispatcherQueue;
+
             ViewModel.RefreshDeviceCollection();
         }
-
 
 
         // work around WinUI binding bug

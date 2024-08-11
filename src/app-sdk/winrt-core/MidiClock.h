@@ -46,10 +46,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
 
         static midi2::MidiSystemTimerSettings GetCurrentSystemTimerInfo();
-    //    static bool SetSystemTimerResolutionMilliseconds(_In_ uint32_t targetIntervalMilliseconds);
+
+        static bool BeginLowLatencySystemTimerPeriod();
+        static bool EndLowLatencySystemTimerPeriod();
 
     private:
         static uint64_t m_timestampFrequency;
+
+        static UINT m_lastTimeBeginPeriodValue;
+        static bool m_inLowLatencyPeriod;
 
         static const uint64_t m_timerResolutionFrequency{ 10'000'000 };    // 100ns fixed units for timer API calls we use
 

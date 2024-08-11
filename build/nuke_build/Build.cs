@@ -445,9 +445,114 @@ class Build : NukeBuild
         .DependsOn(BuildUserToolsSharedComponents)
         .Executes(() =>
         {
-            // update nuget packages
+            //var solution = MidiSettingsSolutionFolder / "midi-settings.sln";
 
-            // build x64 and Arm64
+            //// for the MIDI nuget package
+            //NuGetTasks.NuGetInstall(_ => _
+            //    .SetProcessWorkingDirectory(MidiSettingsSolutionFolder)
+            //    .SetPreRelease(true)
+            //    .SetSource(AppSdkNugetOutputFolder)
+            //    .SetPackageID(NugetFullPackageId)
+            //);
+
+            //NuGetTasks.NuGetRestore(_ => _
+            //    .SetProcessWorkingDirectory(MidiSettingsSolutionFolder)
+            //    .SetSolutionDirectory(MidiSettingsSolutionFolder)
+            //    .SetSource(AppSdkNugetOutputFolder)
+            //);
+
+            //// build x64 and Arm64, no Arm64EC
+            //foreach (var platform in OutOfProcPlatforms)
+            //{
+            //    string solutionDir = MidiSettingsSolutionFolder.ToString() + @"\";
+
+            //    string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
+
+
+            //    //DotNetTasks.DotNetBuild(_ => _
+            //    //    .SetProjectFile(MidiSettingsSolutionFolder / "Microsoft.Devices.Midi2.Tools.Shared" / "Microsoft.Devices.Midi2.Tools.Shared.csproj")
+            //    //    .SetConfiguration(Configuration.Release)
+            //    //    .SetPublishSingleFile(false)
+            //    //    .SetPublishTrimmed(false)
+            //    //    .SetSelfContained(false)
+            //    //    .SetRuntime(rid)
+            //    //);
+
+            //    DotNetTasks.DotNetBuild(_ => _
+            //        .SetProjectFile(MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "Microsoft.Midi.Settings.csproj")
+            //        .SetConfiguration(Configuration.Release)
+            //        .SetPublishSingleFile(false)
+            //        .SetPublishTrimmed(false)
+            //        .SetSelfContained(false)
+            //        .SetRuntime(rid)
+            //    );
+
+            //    // copy output to staging folder
+
+            //    // TODO: This doesn't deal with any localization content
+
+            //    var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / "net8.0-windows10.0.20348.0" / rid;
+            //    //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
+            //    var runtimesFolder = consoleOutputFolder;
+
+            //    var stagingFolder = MidiConsoleStagingFolder / platform;
+
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.exe", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.deps.json", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.runtimeconfig.json", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.exe.manifest", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "WinRT.Runtime.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.SDK.NET.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Spectre.Console.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Spectre.Console.Cli.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.CodeDom.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Diagnostics.EventLog.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Diagnostics.EventLog.Messages.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Management.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.ServiceProcess.ServiceController.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Utilities.SysEx.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.VirtualPatchBay.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.VirtualPatchBay.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Utilities.SysEx.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Messages.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Initialization.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            //}
+
         });
 
     Target BuildConsoleApp => _ => _

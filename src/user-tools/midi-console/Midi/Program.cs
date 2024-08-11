@@ -233,4 +233,11 @@ if (args.Length == 0)
     AnsiConsole.WriteLine();
 }
 
-return app.Run(args);
+
+MidiClock.BeginLowLatencySystemTimerPeriod();
+
+var result = app.Run(args);
+
+MidiClock.EndLowLatencySystemTimerPeriod();
+
+return result;

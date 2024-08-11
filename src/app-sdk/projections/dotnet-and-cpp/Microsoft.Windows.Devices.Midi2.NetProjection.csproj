@@ -18,6 +18,8 @@
             Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
             Microsoft.Windows.Devices.Midi2.Messages
             Microsoft.Windows.Devices.Midi2.ServiceConfig
+            Microsoft.Windows.Devices.Midi2.Utilities.SysEx
+            Microsoft.Windows.Devices.Midi2.VirtualPatchBay
             Microsoft.Windows.Devices.Midi2.Initializer
         </CsWinRTIncludes>
 		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>

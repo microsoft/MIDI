@@ -72,14 +72,14 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 AnsiConsole.MarkupLine($"Windows Timer Intervals (for thread sleep, for example)");
                 AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine($"➡️ Current:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.CurrentIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.CurrentIntervalTicks).ToString("N3")}[/]) milliseconds");
                 AnsiConsole.MarkupLine($"➡️ Minimum:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.MinimumIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MinimumIntervalTicks).ToString("N3")}[/]) milliseconds");
                 AnsiConsole.MarkupLine($"➡️ Maximum:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.MaximumIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MaximumIntervalTicks).ToString("N3")}[/]) milliseconds");
-                AnsiConsole.MarkupLine($"➡️ Current:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.CurrentIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.CurrentIntervalTicks).ToString("N3")}[/]) milliseconds");
                 AnsiConsole.WriteLine();
             }
             else
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Windows Timer Intervals (for thread sleep, for example)"));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Unable to query system timer intervals."));
             }
 
             return (int)MidiConsoleReturnCode.Success;

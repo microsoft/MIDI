@@ -44,5 +44,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public bool SupportsMultiClient => _transportSuppliedInfo.SupportsMultiClient;
 
+        public MidiEndpointDeviceInformation DeviceInformation => _deviceInformation;
+
     }
 }

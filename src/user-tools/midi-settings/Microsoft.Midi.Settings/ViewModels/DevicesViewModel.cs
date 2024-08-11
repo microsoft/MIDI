@@ -22,10 +22,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public class DevicesViewModel : ObservableRecipient, INavigationAware
     {
-
-        private readonly DispatcherQueue _dispatcherQueue;
-
-
         private readonly INavigationService _navigationService;
 
         public ICommand ViewDeviceDetailsCommand
@@ -33,11 +29,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public DispatcherQueue? DispatcherQueue { get; set; }
+
         public DevicesViewModel(INavigationService navigationService)
         {
             _navigationService = navigationService;
-
-            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointDeviceInformation>(
                 (param) =>
@@ -54,7 +50,9 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void RefreshDeviceCollection(bool showDiagnosticsEndpoints = false)
         {
-            _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            if (DispatcherQueue == null) return;
+
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
                 System.Diagnostics.Debug.WriteLine("Begin RefreshDeviceCollection");
 
@@ -75,18 +73,21 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 foreach (var endpointDevice in AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values)
                 {
-                    // Get the transport
-
-                    var transportId = endpointDevice.GetTransportSuppliedInfo().TransportId;
-
-                    var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
-
-                    // add this device to the transport's collection
-                    if (parentTransport != null)
+                    if (endpointDevice != null)
                     {
-                        parentTransport.EndpointDevices.Add(new MidiEndpointDeviceListItem(endpointDevice));
-                    }
+                        // Get the transport
 
+                        var transportInfo = endpointDevice.GetTransportSuppliedInfo();
+                        var transportId = transportInfo.TransportId;
+
+                        var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
+
+                        // add this device to the transport's collection
+                        if (parentTransport != null)
+                        {
+                            parentTransport.EndpointDevices.Add(new MidiEndpointDeviceListItem(endpointDevice));
+                        }
+                    }
                 }
 
 
@@ -130,7 +131,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            RefreshDeviceCollection();
         }
     }
 }

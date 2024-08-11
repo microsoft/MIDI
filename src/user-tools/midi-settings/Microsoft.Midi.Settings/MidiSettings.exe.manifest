@@ -53,6 +53,22 @@
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
 
         <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiEndpointTransportSuppliedInfo"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiEndpointUserSuppliedInfo"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.MidiDeclaredEndpointInfo"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+
+        
+        <activatableClass
             name="Microsoft.Windows.Devices.Midi2.MidiMessage32"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />

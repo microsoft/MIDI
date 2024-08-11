@@ -33,7 +33,9 @@ namespace Microsoft.Windows.Devices.Midi2
 
 
         static MidiSystemTimerSettings GetCurrentSystemTimerInfo();
- //       static Boolean SetSystemTimerResolutionMilliseconds(UInt32 targetIntervalTicks);
-    }
+
+        static Boolean BeginLowLatencySystemTimerPeriod();
+        static Boolean EndLowLatencySystemTimerPeriod();
+}
 }
 
