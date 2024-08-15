@@ -42,8 +42,8 @@ namespace Microsoft.Midi.ConsoleApp
 
             // TODO: Should right justify and align the numbers shown here
 
-            AnsiConsole.MarkupLine("The Windows MIDI Services MIDI Clock is a high-resolution 64 bit system timestamp that is reset when the computer is rebooted.");
-            AnsiConsole.MarkupLine("See [darkslategray1]https://aka.ms/miditimestamp[/] for more information.");
+            AnsiConsole.MarkupLine("The Windows MIDI Services MIDI Clock is a high-resolution 64 bit system timestamp that is reset when");
+            AnsiConsole.MarkupLine("the computer is rebooted. See [darkslategray1]https://aka.ms/miditimestamp[/] for more information.");
             AnsiConsole.WriteLine();
 
             AnsiConsole.MarkupLine($"Timestamp resolution: [deepskyblue1]{MidiClock.TimestampFrequency.ToString("N0")}[/] ticks per second ([deepskyblue1]{convertedFrequency.ToString("N2")} {units}[/] per tick)");
@@ -70,7 +70,8 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (timerInfo.MaximumIntervalTicks > 0)
             {
-                AnsiConsole.MarkupLine($"Windows Timer Intervals (for thread sleep, for example)");
+                AnsiConsole.MarkupLine($"[deepskyblue2]Windows Timer Intervals (for thread sleep, for example)[/]");
+                AnsiConsole.MarkupLine($"Applications can set whole millisecond resolution. Only kernel drivers can select non-whole values like 0.5ms.");
                 AnsiConsole.WriteLine();
                 AnsiConsole.MarkupLine($"➡️ Current:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.CurrentIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.CurrentIntervalTicks).ToString("N3")}[/]) milliseconds");
                 AnsiConsole.MarkupLine($"➡️ Minimum:       {AnsiMarkupFormatter.FormatTimestamp(timerInfo.MinimumIntervalTicks)} ticks, ([deepskyblue1]{MidiClock.ConvertTimestampTicksToMilliseconds(timerInfo.MinimumIntervalTicks).ToString("N3")}[/]) milliseconds");
@@ -84,7 +85,6 @@ namespace Microsoft.Midi.ConsoleApp
 
             return (int)MidiConsoleReturnCode.Success;
         }
-
 
     }
 }

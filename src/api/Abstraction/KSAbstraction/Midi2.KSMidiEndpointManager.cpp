@@ -232,48 +232,48 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                     &groupTerminalBlockDataSize),
                 HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            //// Get the serial number
-            //LOG_IF_FAILED_WITH_EXPECTED(
-            //    PinPropertyAllocate(hPin.get(),
-            //        i,
-            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //        KSPROPERTY_MIDI2_SERIAL_NUMBER,
-            //        (PVOID*)&serialNumberData,
-            //        &serialNumberDataSize),
-            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            // Get the serial number
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertyAllocate(hPin.get(),
+                    i,
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+                    KSPROPERTY_MIDI2_SERIAL_NUMBER,
+                    (PVOID*)&serialNumberData,
+                    &serialNumberDataSize),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
 
-            //// Get the manufacturer name
-            //LOG_IF_FAILED_WITH_EXPECTED(
-            //    PinPropertyAllocate(hPin.get(),
-            //        i,
-            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //        KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
-            //        (PVOID*)&manufacturerNameData,
-            //        &manufacturerNameDataSize),
-            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            // Get the manufacturer name
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertyAllocate(hPin.get(),
+                    i,
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+                    KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
+                    (PVOID*)&manufacturerNameData,
+                    &manufacturerNameDataSize),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            //// VID iVendor
-            //LOG_IF_FAILED_WITH_EXPECTED(
-            //    PinPropertySimple(hPin.get(),
-            //        i,
-            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //        KSPROPERTY_MIDI2_DEVICE_VID,
-            //        &deviceVID,
-            //        sizeof(deviceVID)),
-            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            // VID iVendor
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertySimple(hPin.get(),
+                    i,
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+                    KSPROPERTY_MIDI2_DEVICE_VID,
+                    &deviceVID,
+                    sizeof(deviceVID)),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            //// PID iProduct
-            //LOG_IF_FAILED_WITH_EXPECTED(
-            //    PinPropertySimple(hPin.get(),
-            //        i,
-            //        KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-            //        KSPROPERTY_MIDI2_DEVICE_PID,
-            //        &devicePID,
-            //        sizeof(devicePID)),
-            //    HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
+            // PID iProduct
+            LOG_IF_FAILED_WITH_EXPECTED(
+                PinPropertySimple(hPin.get(),
+                    i,
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+                    KSPROPERTY_MIDI2_DEVICE_PID,
+                    &devicePID,
+                    sizeof(devicePID)),
+                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            //hPin.reset();
+            hPin.reset();
         }
 
         // if this pin supports nothing, then it's not a streaming pin,
