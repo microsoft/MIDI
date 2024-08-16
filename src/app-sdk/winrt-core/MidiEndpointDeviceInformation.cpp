@@ -74,8 +74,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                             {
                                 L"System.Devices.Parent",
                                 L"System.Devices.DeviceManufacturer",
+                                L"System.Devices.Manufacturer"
                                 L"System.Devices.ModelName",
+                                L"System.Devices.ModelNumber",
+                                L"System.Devices.ModelId",
                                 L"System.Devices.HardwareIds",
+                                L"System.Devices.Paired",
+                                L"System.Devices.Present",
+                                L"System.Devices.Connected",
+                                L"System.Devices.Category",
+                                L"System.Devices.ClassGuid",
+                                L"System.Devices.DeviceHasProblem",
                                 L"System.Devices.InterfaceClassGuid"
                             },
                             winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
@@ -143,7 +152,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
         additionalProperties.Append(STRING_PKEY_MIDI_UsbVID);
         additionalProperties.Append(STRING_PKEY_MIDI_UsbPID);
-        
+
 
         // Major Known Endpoint Types ========================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);

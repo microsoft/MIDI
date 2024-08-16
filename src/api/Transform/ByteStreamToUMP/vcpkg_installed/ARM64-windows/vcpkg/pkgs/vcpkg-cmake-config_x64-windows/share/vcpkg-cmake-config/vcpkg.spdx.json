@@ -3,13 +3,13 @@
   "spdxVersion": "SPDX-2.2",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "documentNamespace": "https://spdx.org/spdxdocs/vcpkg-cmake-config-x64-windows-2022-02-06#1-65ef782e-1282-4073-8153-8fcfd88dbdf3",
-  "name": "vcpkg-cmake-config:x64-windows@2022-02-06#1 6047560c3a5451e843f52549883681ede192473a2296b34af5f7668bd67ec87f",
+  "documentNamespace": "https://spdx.org/spdxdocs/vcpkg-cmake-config-x64-windows-2024-05-23-614fb083-2f61-42b0-a6a8-37df96141f56",
+  "name": "vcpkg-cmake-config:x64-windows@2024-05-23 b70faed95f5b752c3c894191a84d7f46544d048d95cabe9e89acdf4e05263411",
   "creationInfo": {
     "creators": [
-      "Tool: vcpkg-d6945642ee5c3076addd1a42c331bbf4cfc97457"
+      "Tool: vcpkg-2024-07-10-d2dfc73769081bdd9b782d08d27794780b7a99b9"
     ],
-    "created": "2024-06-21T00:04:13Z"
+    "created": "2024-08-16T17:58:25Z"
   },
   "relationships": [
     {
@@ -77,8 +77,8 @@
     {
       "name": "vcpkg-cmake-config",
       "SPDXID": "SPDXRef-port",
-      "versionInfo": "2022-02-06#1",
-      "downloadLocation": "git+https://github.com/microsoft/vcpkg@8d54cc4f487d51b655abec5f9c9c3f86ca83311f",
+      "versionInfo": "2024-05-23",
+      "downloadLocation": "git+https://github.com/microsoft/vcpkg@97a63e4bc1a17422ffe4eff71da53b4b561a7841",
       "licenseConcluded": "MIT",
       "licenseDeclared": "NOASSERTION",
       "copyrightText": "NOASSERTION",
@@ -87,7 +87,7 @@
     {
       "name": "vcpkg-cmake-config:x64-windows",
       "SPDXID": "SPDXRef-binary",
-      "versionInfo": "6047560c3a5451e843f52549883681ede192473a2296b34af5f7668bd67ec87f",
+      "versionInfo": "b70faed95f5b752c3c894191a84d7f46544d048d95cabe9e89acdf4e05263411",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "NOASSERTION",
@@ -97,7 +97,7 @@
   ],
   "files": [
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/8d54cc4f487d51b655abec5f9c9c3f86ca83311f/copyright",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/97a63e4bc1a17422ffe4eff71da53b4b561a7841/copyright",
       "SPDXID": "SPDXRef-file-0",
       "checksums": [
         {
@@ -109,7 +109,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/8d54cc4f487d51b655abec5f9c9c3f86ca83311f/portfile.cmake",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/97a63e4bc1a17422ffe4eff71da53b4b561a7841/portfile.cmake",
       "SPDXID": "SPDXRef-file-1",
       "checksums": [
         {
@@ -121,7 +121,7 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/8d54cc4f487d51b655abec5f9c9c3f86ca83311f/vcpkg-port-config.cmake",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/97a63e4bc1a17422ffe4eff71da53b4b561a7841/vcpkg-port-config.cmake",
       "SPDXID": "SPDXRef-file-2",
       "checksums": [
         {
@@ -133,24 +133,24 @@
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/8d54cc4f487d51b655abec5f9c9c3f86ca83311f/vcpkg.json",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/97a63e4bc1a17422ffe4eff71da53b4b561a7841/vcpkg.json",
       "SPDXID": "SPDXRef-file-3",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "4ffbabc2feab69abd21267f57669ef5e404bcbfa5ab6d93234374d98f5ff1864"
+          "checksumValue": "3964c3d0e6b39c7f42cebd5949cccdc7eb6feb83ee434fe73756c954b173c5c2"
         }
       ],
       "licenseConcluded": "NOASSERTION",
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/8d54cc4f487d51b655abec5f9c9c3f86ca83311f/vcpkg_cmake_config_fixup.cmake",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/97a63e4bc1a17422ffe4eff71da53b4b561a7841/vcpkg_cmake_config_fixup.cmake",
       "SPDXID": "SPDXRef-file-4",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "f92905382d90e37fa2addd96becce31f5075175196b117de6dd997a4ac1d6d06"
+          "checksumValue": "f3880578674f1bdbc54b67c5fc3787aaab8ee8bcf4e3e6e008204bf4ab67aa0b"
         }
       ],
       "licenseConcluded": "NOASSERTION",

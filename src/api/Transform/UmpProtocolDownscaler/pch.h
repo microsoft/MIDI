@@ -1,4 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
 #pragma once
 
@@ -40,9 +46,10 @@
 
 #include "mididefs.h"
 
-#include <libmidi2/utils.h>              // AM_MIDI2
-#include <libmidi2/umpMessageCreate.h>   // AM_MIDI2
-#include <libmidi2/umpToMIDI1Protocol.h>
+#include <libmidi2/utils.h>                 // AM_MIDI2
+#include <libmidi2/umpMessageCreate.h>      // AM_MIDI2
+#include <libmidi2/umpToMIDI1Protocol.h>    // AM_MIDI2
+//#include <libmidi2/>
 
 #include "ump_helpers.h"        // internal helpers
 #include "wstring_util.h"

@@ -3,13 +3,13 @@
   "spdxVersion": "SPDX-2.2",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-arm64-windows-0.10-ab22e0f4-4fe8-4374-a9e2-6dd1dc23c17c",
-  "name": "libmidi2:arm64-windows@0.10 8c2bcfbfc643abf44c95fc907ebb17e5d8d74dec95d4ad37a306d962a6d20088",
+  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-arm64-windows-0.11-3b0f14ba-e7d3-4a36-bcfc-fe9f6333918e",
+  "name": "libmidi2:arm64-windows@0.11 0fb88aedffc5fecc45cc621e668efe1f22d10d0a0f3bc2fe77078a9b5a3b4d92",
   "creationInfo": {
     "creators": [
-      "Tool: vcpkg-d6945642ee5c3076addd1a42c331bbf4cfc97457"
+      "Tool: vcpkg-2024-07-10-d2dfc73769081bdd9b782d08d27794780b7a99b9"
     ],
-    "created": "2024-06-21T00:04:20Z"
+    "created": "2024-08-16T18:10:28Z"
   },
   "relationships": [
     {
@@ -47,8 +47,8 @@
     {
       "name": "libmidi2",
       "SPDXID": "SPDXRef-port",
-      "versionInfo": "0.10",
-      "downloadLocation": "git+https://github.com/microsoft/vcpkg@3a8e774a8ec628d02f193004a97f2b6b3b331825",
+      "versionInfo": "0.11",
+      "downloadLocation": "git+https://github.com/microsoft/vcpkg@9d219bec0af1a8ba6c018a3d27c12060001b8246",
       "homepage": "https://github.com/midi2-dev/AM_MIDI2.0Lib",
       "licenseConcluded": "MIT",
       "licenseDeclared": "NOASSERTION",
@@ -59,7 +59,7 @@
     {
       "name": "libmidi2:arm64-windows",
       "SPDXID": "SPDXRef-binary",
-      "versionInfo": "8c2bcfbfc643abf44c95fc907ebb17e5d8d74dec95d4ad37a306d962a6d20088",
+      "versionInfo": "0fb88aedffc5fecc45cc621e668efe1f22d10d0a0f3bc2fe77078a9b5a3b4d92",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "NOASSERTION",
@@ -69,38 +69,38 @@
     {
       "SPDXID": "SPDXRef-resource-1",
       "name": "midi2-dev/AM_MIDI2.0Lib",
-      "downloadLocation": "git+https://github.com/midi2-dev/AM_MIDI2.0Lib@v0.10",
+      "downloadLocation": "git+https://github.com/midi2-dev/AM_MIDI2.0Lib@v0.11",
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "copyrightText": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA512",
-          "checksumValue": "ff925aff38adfbeff4bae6c211d18e6a59e97f11d11af7616f3386208d1a0d30e64b60ba74f604d75c8da50f57f320f86a4f09bf292bb587be837bdda91f7110"
+          "checksumValue": "bcff7e1360d18f1e5cf5c89eda3cd8c3ff33605063bd12def1ddd6ecede950e8653ff8279f05f4f29a8a8f13c24cf31d3199c09b14db5cf37febb49c4b14ea67"
         }
       ]
     }
   ],
   "files": [
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/3a8e774a8ec628d02f193004a97f2b6b3b331825/portfile.cmake",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/9d219bec0af1a8ba6c018a3d27c12060001b8246/portfile.cmake",
       "SPDXID": "SPDXRef-file-0",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "87d785552ed7b5e9246a61bb763946ba1ad6972f0ba4d4bae603b116c69852a2"
+          "checksumValue": "9e055475efaa96f4d2ed152382a0136ee71fda49c06e58a2b9011dea0546c8e3"
         }
       ],
       "licenseConcluded": "NOASSERTION",
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/3a8e774a8ec628d02f193004a97f2b6b3b331825/vcpkg.json",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/9d219bec0af1a8ba6c018a3d27c12060001b8246/vcpkg.json",
       "SPDXID": "SPDXRef-file-1",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "30f3d4bd1d077e3281594b2d016c621db780386332a195362ee43cd35a9ce8c0"
+          "checksumValue": "fa86eb55317b9a12fa89c100dbf30b6a2ad567798558bee6e886a33db15f1c6b"
         }
       ],
       "licenseConcluded": "NOASSERTION",

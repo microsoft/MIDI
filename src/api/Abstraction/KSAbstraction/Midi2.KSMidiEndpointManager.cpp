@@ -393,15 +393,28 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         midiPin->InstanceId = MIDI_KS_INSTANCE_ID_PREFIX;
         midiPin->InstanceId += (midiPin->Flow == MidiFlowOut) ? L"OUT_" : L"IN_";
-        
-        if (midiPin->SerialNumber.empty())
-        {
+
+        // serial# alone is not enough because it isn't unique. Need to also have VID and PID
+        // but this is a problem when a serial number is reused by the manufacturer, which
+        // happens all too often. So we'll just use the hash of the parent device instance id
+        // and let Windows create the unique id. Need to test to see if iSerialNumber really
+        // is working in this case.
+        // 
+        // TODO: We may want to actually check and see if there are others already with 
+        // this id, and simply add an index to the generated instance id. We need to 
+        // optimize for well-behaved devices and just not break for others.
+
+        //if (midiPin->VID > 0 && midiPin->PID > 0 && !midiPin->SerialNumber.empty())
+        //{
+        //    midiPin->InstanceId +=
+        //        L"V_" + std::to_wstring(midiPin->VID) +
+        //        L"P_" + std::to_wstring(midiPin->PID) +
+        //        L"S_" + midiPin->SerialNumber;
+        //}
+        //else
+        //{
             midiPin->InstanceId += hash;
-        }
-        else
-        {
-            midiPin->InstanceId += midiPin->SerialNumber;
-        }
+       // }
 
         midiPin->InstanceId += L"_PIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);
