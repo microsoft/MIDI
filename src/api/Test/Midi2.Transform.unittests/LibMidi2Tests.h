@@ -33,13 +33,18 @@ public:
         //TEST_METHOD_CLEANUP(TestCleanup);
 
         TEST_METHOD(TestTranslateFromBytesWithSysEx7);
+        TEST_METHOD(TestTranslateFromBytesWithSysEx7AndNonZeroGroup);    
         TEST_METHOD(TestTranslateFromBytesWithEmbeddedStartStopSysEx7);
         TEST_METHOD(TestTranslateFromBytesWithEmbeddedRealTimeAndSysEx7);
         TEST_METHOD(TestTranslateFromBytesWithEmptySysEx7);
         TEST_METHOD(TestTranslateFromBytesWithShortSysEx7);
         TEST_METHOD(TestTranslateFromBytesWithLongSysEx7);
 
-    void InternalTestSysEx(_In_ uint8_t const sysexBytes[], _In_ uint32_t const byteCount, _In_ std::vector<uint32_t> const expectedWords);
+    void InternalTestSysEx(
+        _In_ uint8_t const groupIndex, 
+        _In_ uint8_t const sysexBytes[], 
+        _In_ uint32_t const byteCount, 
+        _In_ std::vector<uint32_t> const expectedWords);
 
 private:
 

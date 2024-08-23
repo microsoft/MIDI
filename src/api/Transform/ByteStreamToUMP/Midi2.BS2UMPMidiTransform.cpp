@@ -63,11 +63,21 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     LONGLONG Position
 )
 {
+
     // Send the bytestream byte(s) to the parser
     BYTE *data = (BYTE *)Data;
     for (UINT i = 0; i < Length; i++)
     {
         m_BS2UMP.bytestreamParse(data[i]);
+
+
+        // TODO: We need to change the approach here because
+        // the UMP buffer in BS2UMP is quite small. So we need to feed
+        // this one byte at a time and check for available words after 
+        // each byte.
+
+
+
     }
 
     // retrieve the UMP(s) from the parser
