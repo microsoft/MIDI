@@ -12,8 +12,8 @@ namespace Microsoft.Midi.ConsoleApp
 {
     internal class UmpEndpointPickerEntry : IComparable<UmpEndpointPickerEntry>
     {
-        public string Name { get; init; }
-        public string EndpointDeviceId { get; init; }
+        public string Name { get; private set; }
+        public string EndpointDeviceId { get; private set; }
 
         public UmpEndpointPickerEntry(string name, string endpointDeviceId)
         {
@@ -40,6 +40,8 @@ namespace Microsoft.Midi.ConsoleApp
     {
         private static void LoadChoices(List<UmpEndpointPickerEntry> choices)
         {
+           // Console.WriteLine("DEBUG: LoadChoices");
+
             var endpoints = MidiEndpointDeviceInformation.FindAll(
                 MidiEndpointDeviceInformationSortOrder.Name, 
                 MidiEndpointDeviceInformationFilters.StandardNativeMidi1ByteFormat | 
@@ -48,13 +50,29 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (endpoints != null)
             {
+             //   Console.WriteLine("DEBUG: endpoint list returned");
+
                 foreach (var endpoint in endpoints)
                 {
-                    choices.Add(new UmpEndpointPickerEntry(
-                        AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " + 
-                        (endpoint.Name + " [grey35](" + endpoint.GetParentDeviceInformation().Name + ")[/]").PadRight(80), 
-                        endpoint.EndpointDeviceId));
+                    var parent = endpoint.GetParentDeviceInformation();
+
+                    if (parent != null)
+                    {
+                        choices.Add(new UmpEndpointPickerEntry(
+                            AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " +
+                            (endpoint.Name + " [grey35](" + endpoint.GetParentDeviceInformation().Name + ")[/]").PadRight(80),
+                            endpoint.EndpointDeviceId));
+                    }
+                    else
+                    {
+                        choices.Add(new UmpEndpointPickerEntry(
+                            AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " +
+                            (endpoint.Name).PadRight(80),
+                            endpoint.EndpointDeviceId));
+                    }
                 }
+
+              //  Console.WriteLine("DEBUG: sorting");
 
                 choices.Sort();
 
@@ -67,15 +85,18 @@ namespace Microsoft.Midi.ConsoleApp
 
         public static string PickEndpoint()
         {
+            Console.WriteLine("DEBUG: PickEndpoint");
+
             var choices = new List<UmpEndpointPickerEntry>();
 
             LoadChoices(choices);
 
             if (choices.Count > 0)
             {
+                Console.WriteLine("DEBUG: prompt");
+
                 //var selectionStyle = new Style(null, null, Decoration.Invert, null);
                 var selectionStyle = new Style(Color.White, Color.DeepSkyBlue3, null, null);
-
 
                 var result = AnsiConsole.Prompt(
                     new SelectionPrompt<UmpEndpointPickerEntry>()

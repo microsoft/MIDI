@@ -179,14 +179,14 @@ namespace NodeRTLib
             return destinationFolder;
         }
 
-        private static string CreateNpmPackageName(String namepsace, String npmScope)
+        private static string CreateNpmPackageName(String ns, String npmScope)
         {
             if (String.IsNullOrWhiteSpace(npmScope))
             {
-                return namepsace.ToLowerInvariant();
+                return ns.ToLowerInvariant();
             }
 
-            return String.Format("@{0}/{1}", npmScope, namepsace.ToLowerInvariant());
+            return String.Format("@{0}/{1}", npmScope, ns.ToLowerInvariant());
         }
 
         protected void ResolveWinrtDirsAndCompiler(StringBuilder bindingFileText, string winrtFile)

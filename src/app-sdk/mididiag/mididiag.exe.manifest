@@ -63,16 +63,12 @@
             name="Microsoft.Windows.Devices.Midi2.MidiSession"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.MidiUniqueId"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.ClientPlugins.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.ClientPlugins.MidiChannelEndpointListener"
             threadingModel="both"
@@ -85,9 +81,7 @@
             name="Microsoft.Windows.Devices.Midi2.ClientPlugins.MidiMessageTypeEndpointListener"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.Diagnostics.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.Diagnostics.MidiDiagnostics"
             threadingModel="both"
@@ -96,9 +90,7 @@
             name="Microsoft.Windows.Devices.Midi2.Diagnostics.MidiReporting"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.Messages.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.Messages.MidiMessageBuilder"
             threadingModel="both"
@@ -115,16 +107,12 @@
             name="Microsoft.Windows.Devices.Midi2.Messages.MidiStreamMessageBuilder"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.ServiceConfig.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfig"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig"
             threadingModel="both"
@@ -137,9 +125,7 @@
             name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.MidiVirtualDeviceCreationConfig"
             threadingModel="both"

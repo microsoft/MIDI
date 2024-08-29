@@ -15,6 +15,7 @@
 #include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Reporting.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
@@ -25,6 +26,7 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;

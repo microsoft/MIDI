@@ -7,6 +7,7 @@
 // ============================================================================
 
 using Microsoft.Windows.Devices.Midi2.Initialization;
+using Microsoft.Windows.Devices.Midi2.Reporting;
 
 namespace Microsoft.Midi.ConsoleApp
 {

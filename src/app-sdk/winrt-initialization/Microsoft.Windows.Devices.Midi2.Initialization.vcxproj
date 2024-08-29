@@ -3,7 +3,7 @@
   <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Microsoft.Windows.Devices.Midi2.Initialization</ProjectName>
-    <RootNamespace>$(ProjectName)</RootNamespace>
+    <RootNamespace>Microsoft.Windows.Devices.Midi2.Initialization</RootNamespace>
     <ProjectGuid>{0CA9273A-0BAE-4AC4-8290-A72A985DD264}</ProjectGuid>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>

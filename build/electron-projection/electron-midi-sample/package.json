@@ -1,0 +1,16 @@
+{
+  "name": "electron-midi",
+  "version": "1.0.0",
+  "description": "Windows MIDI Services electron sample",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Microsoft",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "electron": "^27.3.11",
+    "electron-rebuild": "^3.2.9"
+  }
+}

@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-using Microsoft.Windows.Devices.Midi2.Utilities.SysEx;
+using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 
 namespace Microsoft.Midi.ConsoleApp
 {

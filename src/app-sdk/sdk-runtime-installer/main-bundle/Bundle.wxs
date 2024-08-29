@@ -64,6 +64,7 @@
 
             <!-- Removed DetectCondition="VCRuntimeInstalled" because the redist does its own checking -->
             <ExePackage
+                Vital="false"
                 DisplayName="Microsoft Visual C++ Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
                 Compressed="yes"

@@ -4,7 +4,7 @@
 		<id>$id$</id>
 		<version>$version$</version>
 		<authors>Microsoft</authors>
-		<description>Windows MIDI Services SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
+		<description>Windows MIDI Services App SDK. Minimum package necessary to use Windows MIDI Services from an app on a PC that has Windows MIDI Services installed.</description>
 		<license type="expression">MIT</license>
 		<projectUrl>https://aka.ms/midi</projectUrl>
 		<readme>README.md</readme>
@@ -42,8 +42,8 @@
 
         <!-- Reference winmds -->
         
-        <file target="ref\uap10.0\"                     src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="ref\native\"                      src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="ref\uap10.0\" src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
+        <file target="ref\native\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
         <file target="ref\net6.0\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
         <file target="ref\net7.0\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
         <file target="ref\net8.0\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
@@ -76,8 +76,8 @@
         <file target="runtimes\win-x64\native"       src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.pri" />
         <file target="runtimes\win-x64\native"       src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.dll" />
 
-        <file target="runtimes\win-x64\lib\net6.0"       src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-x64\lib\net6.0"       src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.dll" />
+        <file target="runtimes\win-x64\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.pri" />
+        <file target="runtimes\win-x64\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.dll" />
 
 
         <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->

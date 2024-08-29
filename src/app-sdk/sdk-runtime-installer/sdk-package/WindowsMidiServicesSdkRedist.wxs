@@ -32,6 +32,7 @@
                    Bitness="always64"
                    Directory="SDK_x64_INSTALLFOLDER"
                    Guid="7016a59d-d844-4984-93e8-fa53f279abb4">
+
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.winmd" />
@@ -40,129 +41,37 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
 
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.ClientPlugins.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.ClientPlugins.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Diagnostics.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Diagnostics.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Messages.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Messages.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Messages.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.ServiceConfig.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.ServiceConfig.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
-
         </Component>
 
         <Component Id="WindowsAppSDKArm64"
                    Bitness="always64"
                    Directory="SDK_Arm64_INSTALLFOLDER"
                    Guid="e14e94ef-1974-43b5-a587-b07ef930143d">
+            
+            
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.pri" />
-
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.winmd" />
+            
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.ClientPlugins.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.ClientPlugins.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Diagnostics.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Diagnostics.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Messages.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Messages.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Messages.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.ServiceConfig.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.ServiceConfig.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
-
+            
         </Component>
 
         <Component Id="WindowsAppSDKArm64EC"
                    Bitness="always64"
                    Directory="SDK_Arm64EC_INSTALLFOLDER"
                    Guid="7ce28fd9-252d-4ae7-ad9e-7de049ab6c94">
+
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.winmd" />
-
+            
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.ClientPlugins.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.ClientPlugins.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Diagnostics.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Diagnostics.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Messages.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Messages.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Messages.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.ServiceConfig.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.ServiceConfig.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Utilities.Sysex.winmd" />
-
+            
         </Component>
 
         <!-- Install MIDI Diag Utility -->
@@ -178,9 +87,6 @@
 
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Diagnostics.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Diagnostics.pri" />
 
             <!-- Add folder to path -->
             <Environment Id="AddMidiDiagUtilityToSystemPath"

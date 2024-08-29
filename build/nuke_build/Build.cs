@@ -12,6 +12,7 @@ using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
 using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Tools.MSBuild;
+using Nuke.Common.Tools.Npm;
 using Nuke.Common.Tools.NuGet;
 using Nuke.Common.Utilities.Collections;
 using static Nuke.Common.EnvironmentInfo;
@@ -28,7 +29,6 @@ class Build : NukeBuild
 
 
     // ===========================================================
-
     //[GitVersion]
     //readonly GitVersion MasterBuildVersion;
 
@@ -49,12 +49,18 @@ class Build : NukeBuild
     AbsolutePath _thisReleaseFolder;
 
 
-    // ===========================================================
+    string[] AppSdkAssemblies => new string[] {
+        "Microsoft.Windows.Devices.Midi2",
+        "Microsoft.Windows.Devices.Midi2.Initialization"
+    };
 
+
+    // ===========================================================
     // directories
 
     AbsolutePath BuildRootFolder => NukeBuild.RootDirectory / "build";
 
+    AbsolutePath ElectronProjectionRootFolder => BuildRootFolder / "electron-projection";
 
     AbsolutePath StagingRootFolder => BuildRootFolder / "staging";
     AbsolutePath AppSdkStagingFolder => StagingRootFolder / "app-sdk";
@@ -254,19 +260,7 @@ class Build : NukeBuild
             {
                 var sdkBinaries = new List<AbsolutePath>();
 
-                foreach (var ns in new string[] {
-                    "Microsoft.Windows.Devices.Midi2",
-                    "Microsoft.Windows.Devices.Midi2.ServiceConfig",
-                    "Microsoft.Windows.Devices.Midi2.CapabilityInquiry",
-                    "Microsoft.Windows.Devices.Midi2.ClientPlugins",
-                    "Microsoft.Windows.Devices.Midi2.Diagnostics",
-                    "Microsoft.Windows.Devices.Midi2.Messages",
-                    "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback",
-                    "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual",
-                    "Microsoft.Windows.Devices.Midi2.Utilities.SysEx",
-                    "Microsoft.Windows.Devices.Midi2.VirtualPatchBay",
-                    "Microsoft.Windows.Devices.Midi2.Initialization"           // this last one gets packed 100% in the nuget, including the impl
-                })
+                foreach (var ns in AppSdkAssemblies)
                 {
                     sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / platform / Configuration.Release / $"{ns}.winmd");
                     sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / platform / Configuration.Release / $"{ns}.dll");
@@ -318,7 +312,7 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / sourcePlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
 
                 // sample manifest
-                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "MyMidiApp.exe.manifest", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
 
             }
 
@@ -637,39 +631,13 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Management.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.ServiceProcess.ServiceController.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
 
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Utilities.SysEx.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.VirtualPatchBay.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
 
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.VirtualPatchBay.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Utilities.SysEx.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Messages.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Initialization.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                foreach (var ns in AppSdkAssemblies)
+                {
+                    FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                    FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                    //FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                }
 
             }
 
@@ -796,6 +764,208 @@ class Build : NukeBuild
         });
 
 
+    // hard-coded paths to just get around some runtime limitations. This should
+    // be re-done to make this build more portable
+
+    [LocalPath(@"g:\github\microsoft\midi\build\electron-projection\nodert\src\NodeRtCmd\bin\Debug\NodeRtCmd.exe")]
+    readonly Tool NodeRT;
+
+
+    [LocalPath(@"C:\Users\peteb\AppData\Roaming\npm\node-gyp.cmd")]
+    readonly Tool NodeGyp;
+
+
+    Target BuildAndPackageElectronProjection => _ => _
+        .DependsOn(BuildAndPackAllAppSDKs)
+        //.DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
+        .Executes(() =>
+    {
+        var projectionOutputRoot = ElectronProjectionRootFolder / "projection";
+        projectionOutputRoot.CreateOrCleanDirectory();
+
+        var projectionReleaseRoot = ElectronProjectionRootFolder / "projection_release";
+        projectionReleaseRoot.CreateOrCleanDirectory();
+
+
+        foreach (var platform in OutOfProcPlatforms)
+        {
+            var platformOutputRootFolder = projectionOutputRoot / platform;
+            platformOutputRootFolder.CreateDirectory();
+
+            // copy all winmds to the parent folder before we process any of them
+            //foreach (var ns in AppSdkNamespaces)
+            //{
+            //    FileSystemTasks.CopyFileToDirectory(
+            //        AppSdkStagingFolder / platform / ns + ".winmd",
+            //        platformOutputRootFolder,
+            //        FileExistsPolicy.Overwrite, true);
+            //}
+
+            // main windows metadata file
+            FileSystemTasks.CopyFileToDirectory(
+                @"C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd",
+                platformOutputRootFolder,
+                FileExistsPolicy.Overwrite, true);
+
+            foreach (var ns in AppSdkAssemblies)
+            {
+                var nsRootFolder = platformOutputRootFolder / ns.ToLower();
+                nsRootFolder.CreateDirectory();
+
+                var namespaceBuildFolder = nsRootFolder / "build";
+                namespaceBuildFolder.CreateOrCleanDirectory();
+
+                // the winmd files are in the parent folder
+                //NodeRT($"--winmd {AppSdkStagingFolder / platform / ns + ".winmd"} --outdir {platformOutputRootFolder} --verbose");
+                NodeRT($"--winmd {AppSdkStagingFolder / platform / ns + ".winmd"} --outdir {platformOutputRootFolder}");
+
+                // todo: need to capture return code
+            }
+
+            // the NodeRt tool creates folders for each namespace, not for 
+            // each winmd, so we then need to loop through and compile the
+            // dll for each namespace.
+
+            var namespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder, "microsoft.windows.devices.midi2*");
+            //var namespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder);
+
+            foreach (var nsFolder in namespaceFolders)
+            {
+                // build the projection
+                Console.Out.WriteLine("--------------");
+                Console.Out.WriteLine($"Rebuilding: {nsFolder}");
+
+                //NodeGyp(
+                //    arguments: $"rebuild --msvs_version=2022",
+                //    workingDirectory: nsFolder,
+                //    logOutput: false
+                //    );
+
+                // node-gyp rebuild --target=32.0.0 --arch=x64 --dist-url=https://electronjs.org/headers
+
+                //NpmTasks.Npm(
+                //    "install electron --save-dev",
+                //    nsFolder);
+
+
+                //NodeGyp(
+                //    arguments: $"configure" +
+                //        $" --node_use_v8_platform=false " +
+                //        $" --node_use_bundled_v8=false" +
+                //        $" --msvs_version=2022" +
+                //        $" --target=32.0.0" +
+                //        $" --dist-url=https://electronjs.org/headers" +
+                //        
+                //    workingDirectory: nsFolder,
+                //    logOutput: false
+                //    );
+
+                NodeGyp(
+                    arguments: $"rebuild" +
+                        $" --openssl_fips=X" +
+                        $" --arch={platform.ToLower()}" +
+                        $" --msvs_version=2022",
+                    workingDirectory: nsFolder,
+                    logOutput: true
+                    );
+
+
+
+
+                // todo: need to capture return code
+
+                //NpmTasks.Npm(
+                //    "install --save-dev @electron/rebuild",
+                //    nsFolder);
+
+                // Next step is to execute the electron-rebuild.cmd
+                // .\node_modules\.bin\electron-rebuild.cmd
+                // but that path is different for each one, and nuke
+                // doesn't seem to support that.
+
+
+                // now copy the output files
+
+                //var nsReleaseRootFolder = projectionReleaseRoot / platform / nsFolder.Name.ToLower();
+                //nsReleaseRootFolder.CreateDirectory();
+
+                //binding.node is the binary
+
+                // Because of electron versioning vs node versioning, it's easier for the
+                // consumer if we just ship all the source, as crazy as that is for this.
+
+                FileSystemTasks.CopyDirectoryRecursively(
+                    nsFolder,
+                    projectionReleaseRoot / platform,
+                    DirectoryExistsPolicy.Fail
+                    );
+
+
+
+
+                var sourceBinFolder = nsFolder / "build" / "Release";
+
+                //FileSystemTasks.CopyFileToDirectory(
+                //    sourceBinFolder / "binding.node",
+                //    nsReleaseRootFolder / "build" / "Release",
+                //    FileExistsPolicy.Overwrite, true);
+
+                //// we also want the three files in the lib folder
+
+                //var sourceLibFolder = nsFolder / "lib";
+
+                //var libFiles = sourceLibFolder.GlobFiles("*.js", "*.ts");
+
+                //foreach (var libFile in libFiles)
+                //{
+                //    //Console.WriteLine($"Copying Projection File: {libFile}");
+
+                //    FileSystemTasks.CopyFileToDirectory(
+                //        libFile,
+                //        nsReleaseRootFolder / "lib",
+                //        FileExistsPolicy.Overwrite, true);
+                //}
+
+                //FileSystemTasks.CopyFileToDirectory(
+                //    nsFolder / "package.json",
+                //    nsReleaseRootFolder,
+                //    FileExistsPolicy.Overwrite, true);
+
+
+            }
+
+            // copy the example manifest from staging
+            // copy the winmd and impl libs from staging
+
+            var sdkFiles = (AppSdkStagingFolder / platform).GlobFiles("*.dll", "*.winmd", "*.pri");
+
+            foreach (var sdkFile in sdkFiles)
+            {
+                FileSystemTasks.CopyFileToDirectory(
+                    sdkFile,
+                    projectionReleaseRoot / platform,
+                    FileExistsPolicy.Overwrite, true);
+            }
+
+            // copy the manifest over and name it the default for electron apps
+            FileSystemTasks.CopyFile(
+                AppSdkStagingFolder / platform / "ExampleMidiApp.exe.manifest",
+                projectionReleaseRoot / platform / "electron.exe.manifest" ,
+                FileExistsPolicy.Overwrite, true);
+
+            // now, we zip it all up and put it over into the release folder
+
+            (projectionReleaseRoot / platform).ZipTo(ThisReleaseFolder / $"electron-projection-{platform.ToLower()}.zip");
+
+
+        }
+
+    });
+
+
+
+
+
 
     Target BuildAndPublishAll => _ => _
         .DependsOn(Prerequisites)
@@ -806,6 +976,7 @@ class Build : NukeBuild
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
         .DependsOn(BuildCppSamples)
+        .DependsOn(BuildAndPackageElectronProjection)
         .Executes(() =>
         {
         });

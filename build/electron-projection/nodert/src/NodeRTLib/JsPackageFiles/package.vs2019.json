@@ -1,7 +1,7 @@
 {
   "name": "{PackageName}",
   "version": "{PackageVersion}",
-  "description": "Use the {Namespace} UWP API directly from Node.js",
+  "description": "Use the {Namespace} WinRT API directly from Node.js",
   "main": "lib/main.js",
   "keywords": [
     {Keywords},

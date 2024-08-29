@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiMessage64.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
+{
+    static runtimeclass MidiSystemExclusiveMessageHelper
+    {
+        // System Exclusive 7 handling
+        static IVector<UInt8> GetDataBytesFromMultipleSystemExclusive7Messages(IIterable<Microsoft.Windows.Devices.Midi2.MidiMessage64> messages);
+
+        static IVector<UInt8> GetDataBytesFromSingleSystemExclusive7Message(Microsoft.Windows.Devices.Midi2.MidiMessage64 message);
+        static IVector<UInt8> GetDataBytesFromSingleSystemExclusive7Message(UInt32 word0, UInt32 word1);
+
+        static UInt8 AppendDataBytesFromSingleSystemExclusive7Message(Microsoft.Windows.Devices.Midi2.MidiMessage64 message, IVector<UInt8> dataBytesToAppendTo);
+        static UInt8 AppendDataBytesFromSingleSystemExclusive7Message(UInt32 word0, UInt32 word1, IVector<UInt8> dataBytesToAppendTo);
+
+        static UInt8 GetDataByteCountFromSystemExclusive7MessageFirstWord(UInt32 word0);
+        static Boolean MessageIsSystemExclusive7Message(UInt32 word0);
+
+        // System Exclusive 8 handling
+
+
+    };
+}

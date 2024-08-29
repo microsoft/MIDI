@@ -12,12 +12,20 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Reporting.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
 
 using namespace winrt::Microsoft::Windows::Devices::Midi2;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
+using namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include <iostream>

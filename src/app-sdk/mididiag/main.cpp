@@ -194,7 +194,7 @@ bool DoSectionTransports(_In_ bool const verbose)
     {
         OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_TRANSPORTS);
 
-        auto transports = diag::MidiReporting::GetInstalledTransportPlugins();
+        auto transports = rept::MidiReporting::GetInstalledTransportPlugins();
 
         if (transports != nullptr && transports.Size() > 0)
         {

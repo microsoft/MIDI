@@ -35,12 +35,19 @@ namespace collections = winrt::Windows::Foundation::Collections;
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Reporting.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.h>
+#include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
 
 namespace midi2 = winrt::Microsoft::Windows::Devices::Midi2;
 namespace init = winrt::Microsoft::Windows::Devices::Midi2::Initialization;
 namespace diag = winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
+namespace rept = winrt::Microsoft::Windows::Devices::Midi2::Reporting;
 namespace svc = winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include "combaseapi.h"
