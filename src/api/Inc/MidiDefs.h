@@ -42,9 +42,10 @@
 #define MINIMUM_LOOPED_DATASIZE 1
 
 // largest UMP is 16 bytes
-// we'll reuse that for the largest bytestream
-#define MAXIMUM_LOOPED_DATASIZE 16
+#define MAXIMUM_LOOPED_UMP_DATASIZE 16
 
+// largest supported bytestream is 2048
+#define MAXIMUM_LOOPED_BYTESTREAM_DATASIZE 2048
 
 #define MIDI_TIMESTAMP_SEND_IMMEDIATELY 0
 
@@ -182,6 +183,11 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 14);     // DEVPR
 #define STRING_PKEY_MIDI_TransportSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"15"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 15);     // DEVPROP_TYPE_STRING
 
+#define STRING_PKEY_MIDI_UserSuppliedPortNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"16"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedPortNumber, 16);     // DEVPROP_TYPE_STRING
+
+#define STRING_PKEY_MIDI_ServiceAssignedPortNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"17"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ServiceAssignedPortNumber, 17);     // DEVPROP_TYPE_STRING
 
 
 // USB / KS Properties ============================================================================

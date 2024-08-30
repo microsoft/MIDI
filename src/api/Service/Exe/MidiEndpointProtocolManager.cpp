@@ -45,18 +45,14 @@ CMidiEndpointProtocolManager::Initialize(
     m_clientManager = ClientManager;
     m_deviceManager = DeviceManager;
     m_sessionTracker = SessionTracker;
+    wil::unique_handle processHandle(GetCurrentProcess);
 
-    // log a an active session so a user can figure out which
-    // processes have any given device open.
-    auto pid = GetCurrentProcessId();
-
-    LOG_IF_FAILED(m_sessionTracker->AddClientSessionInternal(
+    LOG_IF_FAILED(m_sessionTracker->AddClientSession(
         m_sessionId,
         MIDI_PROTOCOL_MANAGER_SESSION_NAME,
-        pid,
-        MIDI_PROTOCOL_MANAGER_PROCESS_NAME,
+        GetCurrentProcessId(),
+        processHandle,
         nullptr));
-
 
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
@@ -254,7 +250,9 @@ CMidiEndpointProtocolManager::Cleanup()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_sessionTracker->RemoveClientSession(m_sessionId);
+    // log a an active session so a user can figure out which
+    // processes have any given device open.
+    m_sessionTracker->RemoveClientSession(m_sessionId, GetCurrentProcessId());
 
     for (auto& [key, val] : m_endpointWorkers)
     {

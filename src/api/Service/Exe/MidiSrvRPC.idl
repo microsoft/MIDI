@@ -55,7 +55,9 @@ typedef struct MIDISRV_CLIENTCREATION_PARAMS
 typedef struct MIDISRV_CLIENT
 {
     CP_EVENT_HANDLE MidiInWriteEvent;
+    CP_EVENT_HANDLE MidiInReadEvent;
     CP_EVENT_HANDLE MidiOutWriteEvent;
+    CP_EVENT_HANDLE MidiOutReadEvent;
 
     CP_MMAP_HANDLE MidiInDataFileMapping;
     CP_MMAP_HANDLE MidiInRegisterFileMapping;
@@ -73,25 +75,15 @@ typedef struct MIDISRV_CLIENT
 [
     uuid(64839251-9daf-4e79-aa4e-9771c86ffbc1),
     version(1.0),
-    pointer_default(unique),
-    endpoint("ncalrpc:[MidiSrv]")
+    pointer_default(unique)
 ]
 interface MidiSrvRPC
 {
-    // Temporary test RPC, to be removed
-    HRESULT MidiSrvTestRpc(
-        [in] handle_t BindingHandle, 
-        [in, string] LPCWSTR Identifier, 
-        [in] PREQUESTED_SETTINGS RequestedSettings, 
-        [out] PALLOCATED_SETTINGS *AllocatedSettings);
-
-
     HRESULT MidiSrvCreateClient(
         [in] handle_t BindingHandle, 
         [in, string] LPCWSTR MidiDevice, 
         [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, 
         [in] GUID SessionId, 
-        [in] DWORD ClientProcessId,
         [out] PMIDISRV_CLIENT *Client);
 
     HRESULT MidiSrvDestroyClient(
@@ -114,8 +106,6 @@ interface MidiSrvRPC
         [in] handle_t BindingHandle, 
         [in] GUID SessionId,
         [in, string] LPCWSTR SessionName,
-        [in] DWORD ProcessId,
-        [in] LPCWSTR ProcessName,
         [in,out] PMIDISRV_CONTEXT_HANDLE *ContextHandle
     );
 
@@ -123,8 +113,7 @@ interface MidiSrvRPC
         [in] handle_t BindingHandle,
         [in] PMIDISRV_CONTEXT_HANDLE ContextHandle,
         [in] GUID SessionId,
-        [in, string] LPCWSTR SessionName,
-        [in] DWORD ProcessId
+        [in, string] LPCWSTR SessionName
     );
 
     HRESULT MidiSrvDeregisterSession(

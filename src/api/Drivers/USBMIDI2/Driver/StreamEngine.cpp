@@ -55,13 +55,6 @@ StreamEngine::StreamEngine(
     ) : m_Pin(Pin)
 {
     PAGED_CODE();
-
-    // TODO: should this be config? do we support standard?
-    m_IsLooped = TRUE;
-
-    // When used for loopback "standard" streaming,
-    // we use a list_entry structure to store the loopback messages
-    InitializeListHead(&m_LoopbackMessageQueue);
 }
 
 _Use_decl_annotations_
@@ -71,7 +64,6 @@ StreamEngine::~StreamEngine()
     Cleanup();
 }
 
-_Use_decl_annotations_
 NTSTATUS
 StreamEngine::Cleanup()
 {
@@ -108,12 +100,11 @@ StreamEngine::Cleanup()
         m_WriteEvent = nullptr;
     }
 
-    // For standard streaming loopback, we have a list of the messages
-    // being looped back, if it's not empty, free any remaining messages.
-    while(!IsListEmpty(&m_LoopbackMessageQueue))
+    // clean up the read event that was provided to us by user mode.
+    if (m_ReadEvent)
     {
-        PLOOPBACK_MESSAGE message = (PLOOPBACK_MESSAGE) RemoveHeadList(&m_LoopbackMessageQueue);
-        ExFreePoolWithTag(message, USBMIDI_POOLTAG);
+        ObDereferenceObject(m_ReadEvent);
+        m_ReadEvent = nullptr;
     }
 
     if (m_Process)
@@ -129,13 +120,13 @@ _Use_decl_annotations_
 void
 StreamEngine::WorkerThread(
     PVOID context
-    ){
+    )
+{
     PAGED_CODE();
     auto streamEngine = reinterpret_cast<StreamEngine*>(context);
     streamEngine->HandleIo();
 }
 
-_Use_decl_annotations_
 void
 StreamEngine::HandleIo()
 {
@@ -245,6 +236,7 @@ StreamEngine::HandleIo()
 
                     // advance our read position
                     InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
+                    KeSetEvent(m_ReadEvent, 0, 0);
                 }while(true);
             }
             else
@@ -257,8 +249,6 @@ StreamEngine::HandleIo()
                 "%!FUNC! thread event end with status: %!STATUS!", status);
         }while(true);
     }
-    // else, this is a midi in pin, nothing to do for this worker thread that is just
-    // looping the midi out data back to midi in.
 
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
@@ -299,76 +289,84 @@ Return Value:
     // Current mechanism to determine if currently processing data is that
     // the StreamEngine is not null. TBD this mechanism needs to be fixed.
     //auto lock = m_MidiInLock.acquire();
-
-    if (m_IsRunning)
+    bool retry {false};
+    do
     {
-        // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
-        // and read position is empty. (read position is their last read position, write position is our last written).
-        // retrieve our write position first since we know it won't be changing, and their read position second,
-        // so we can have as much free space as possible.
-        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
-        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
+        // unless we explicitly have to retry, do not repeat the loop
+        retry = false;
 
-        // Check enough space to write into
-        ULONG bytesAvailable = 0;
-
-        // Now we need to calculate the available space, taking into account the looping
-        // buffer.
-        if (midiInReadPosition <= midiInWritePosition)
+        if (m_IsRunning)
         {
-            // if the read position is less than the write position, then the difference between
-            // the read and write position is the buffer in use, same as above. So, the total
-            // buffer size minus the used buffer gives us the available space.
-            bytesAvailable = m_BufferSize - (midiInWritePosition - midiInReadPosition);
+            KeResetEvent(m_ReadEvent);
+
+            // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
+            // and read position is empty. (read position is their last read position, write position is our last written).
+            // retrieve our write position first since we know it won't be changing, and their read position second,
+            // so we can have as much free space as possible.
+            ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
+            ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
+
+            // Check enough space to write into
+            ULONG bytesAvailable = 0;
+
+            // Now we need to calculate the available space, taking into account the looping
+            // buffer.
+            if (midiInReadPosition <= midiInWritePosition)
+            {
+                // if the read position is less than the write position, then the difference between
+                // the read and write position is the buffer in use, same as above. So, the total
+                // buffer size minus the used buffer gives us the available space.
+                bytesAvailable = m_BufferSize - (midiInWritePosition - midiInReadPosition);
+            }
+            else
+            {
+                // we looped around, the write position is behind the read position.
+                // The difference between the read position and the write position
+                // is the available space, which is exactly what we want.
+                bytesAvailable = midiInReadPosition - midiInWritePosition;
+            }
+            if (bufferSize > bytesAvailable)
+            {
+                PVOID midiInWaitObjects[] = { m_ThreadExitEvent.get(), m_ReadEvent };
+                
+                // Wait for either room in the output buffer, or thread exit.
+                NTSTATUS status = KeWaitForMultipleObjects(2, midiInWaitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+                if (STATUS_WAIT_1 == status)
+                {
+                    // we have space available from the client, try again.
+                    retry = true;
+                    continue;
+                }
+                break;
+            }
+
+            // There's enough space available, calculate our write position
+            PVOID startingWriteAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
+
+            // Copy the data
+            RtlCopyMemory(
+                (PVOID)startingWriteAddress,
+                (PVOID)pBuffer,
+                bufferSize
+            );
+
+            // now calculate the new position that the buffer has been written up to.
+            // this will be the original write position, plus the bytes copied, again modululs
+            // the buffer size to take into account the loop.
+            ULONG finalWritePosition = (midiInWritePosition + bufferSize) % m_BufferSize;
+
+            // finalize by advancing the registers and setting the write event
+
+            // advance the write position and signal that there's data available
+            InterlockedExchange((LONG*)m_WriteRegister, finalWritePosition);
+            KeSetEvent(m_WriteEvent, 0, 0);
         }
         else
         {
-            // we looped around, the write position is behind the read position.
-            // The difference between the read position and the write position
-            // is the available space, which is exactly what we want.
-            bytesAvailable = midiInReadPosition - midiInWritePosition;
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit with data dropped.");
+            return true;    // just drop the data
         }
-        if (bufferSize > bytesAvailable)
-        {
-            // We have a problem. We have data to move, but there
-            // isn't enough buffer available to do it. The client is not reading data,
-            // or not reading it fast enough.
-
-            // TBD: need to log a glitch event if this happens, so we can
-            // track it.
-
-            // Two options, either retry, or drop the data.
-            // We will drop this data but request to handle existing data for next call
-            KeSetEvent(m_WriteEvent, 0, 0);
-            return false;
-        }
-
-        // There's enough space available, calculate our write position
-        PVOID startingWriteAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
-
-        // Copy the data
-        RtlCopyMemory(
-            (PVOID)startingWriteAddress,
-            (PVOID)pBuffer,
-            bufferSize
-        );
-
-        // now calculate the new position that the buffer has been written up to.
-        // this will be the original write position, plus the bytes copied, again modululs
-        // the buffer size to take into account the loop.
-        ULONG finalWritePosition = (midiInWritePosition + bufferSize) % m_BufferSize;
-
-        // finalize by advancing the registers and setting the write event
-
-        // advance the write position for the loopback and signal that there's data available
-        InterlockedExchange((LONG*)m_WriteRegister, finalWritePosition);
-        KeSetEvent(m_WriteEvent, 0, 0);
-    }
-    else
-    {
-        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit with data dropped.");
-        return true;    // just drop the data
-    }
+    }while (retry);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -469,19 +467,12 @@ StreamEngine::Pause()
     // transition from run to paused
     if (AcxPinGetId(m_Pin) == MidiPinTypeMidiOut)
     {
-        // Midi out
-        if (m_IsLooped)
-        {
-            // This is only applicable for looped cyclic buffer,
-            // standard doesn't use the worker thread.
-    
-            // shut down and clean up the worker thread.
-            m_ThreadExitEvent.set();
-            m_ThreadExitedEvent.wait();
-            KeWaitForSingleObject(m_WorkerThread, Executive, KernelMode, FALSE, nullptr);
-            ObDereferenceObject(m_WorkerThread);
-            m_WorkerThread = nullptr;
-        }
+        // shut down and clean up the worker thread.
+        m_ThreadExitEvent.set();
+        m_ThreadExitedEvent.wait();
+        KeWaitForSingleObject(m_WorkerThread, Executive, KernelMode, FALSE, nullptr);
+        ObDereferenceObject(m_WorkerThread);
+        m_WorkerThread = nullptr;
     }
     else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
@@ -491,6 +482,11 @@ StreamEngine::Pause()
 
         // Make sure we are not trying to change state while processing
         auto lock = m_MidiInLock.acquire();
+
+        // If m_IsRunning true, the midi out worker thread will send data.
+        // If it is false, the midi out worker will throw the data away.
+        m_IsRunning = false;
+        m_ThreadExitEvent.set();
 
         if (pDevCtx)
         {
@@ -503,10 +499,6 @@ StreamEngine::Pause()
             TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
                 "%!FUNC! Could not start interrupt pipe as no MidiInPipe");
         }
-
-        // If m_IsRunning true, the midi out worker thread will loopback.
-        // If it is false, the midi out worker will throw the data away.
-        m_IsRunning = false;
     }
     else
     {
@@ -553,27 +545,23 @@ StreamEngine::Run()
     // transition from paused to run
     if (AcxPinGetId(m_Pin) == MidiPinTypeMidiOut)
     {
-        // midi out
-        if (m_IsLooped)
-        {
-            // Create and start the midi out worker thread for the cyclic buffer.
-            HANDLE handle = nullptr;
-            NT_RETURN_IF_NTSTATUS_FAILED(PsCreateSystemThread(&handle, THREAD_ALL_ACCESS, 0, 0, 0, StreamEngine::WorkerThread, this));
-    
-            // we use the handle from ObReferenceObjectByHandleWithTag, so we can close this handle
-            // when this goes out of scope.
-            auto closeHandle = wil::scope_exit([&handle]() {
-                    ZwClose(handle);
-                });
-    
-            // reference the thread using our pooltag, for easier diagnostics later on in the event of
-            // a leak.
-            NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandleWithTag(handle, THREAD_ALL_ACCESS, nullptr, KernelMode, USBMIDI_POOLTAG, (PVOID*)&m_WorkerThread, nullptr));
+        // Create and start the midi out worker thread for the cyclic buffer.
+        HANDLE handle = nullptr;
+        NT_RETURN_IF_NTSTATUS_FAILED(PsCreateSystemThread(&handle, THREAD_ALL_ACCESS, 0, 0, 0, StreamEngine::WorkerThread, this));
 
-            // boost the worker thread priority, to ensure that the write events are handled as
-            // timely as possible.
-            KeSetPriorityThread(m_WorkerThread, HIGH_PRIORITY);
-        }
+        // we use the handle from ObReferenceObjectByHandleWithTag, so we can close this handle
+        // when this goes out of scope.
+        auto closeHandle = wil::scope_exit([&handle]() {
+                ZwClose(handle);
+            });
+
+        // reference the thread using our pooltag, for easier diagnostics later on in the event of
+        // a leak.
+        NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandleWithTag(handle, THREAD_ALL_ACCESS, nullptr, KernelMode, USBMIDI_POOLTAG, (PVOID*)&m_WorkerThread, nullptr));
+
+        // boost the worker thread priority, to ensure that the write events are handled as
+        // timely as possible.
+        KeSetPriorityThread(m_WorkerThread, HIGH_PRIORITY);
     }
     else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
@@ -951,9 +939,6 @@ StreamEngine::GetLoopedStreamingBuffer(
     // by avstream, so no additional handling is required.
     PAGED_CODE();
 
-    // this is only applicable if this is a looped pin instance.
-    NT_RETURN_NTSTATUS_IF(STATUS_NOT_IMPLEMENTED, FALSE == m_IsLooped);
-
     // In the event of failure, be sure to clean up anything
     // allocated during this call.
     auto cleanupOnFailure = wil::scope_exit([&]() {
@@ -1013,9 +998,6 @@ StreamEngine::GetLoopedStreamingRegisters(
 
     ASSERT(m_Process == IoGetCurrentProcess());
 
-    // this is only applicable if this is a looped pin instance.
-    NT_RETURN_NTSTATUS_IF(STATUS_NOT_IMPLEMENTED, FALSE == m_IsLooped);
-
     // in the event of failure, clean up any partial mappings.
     auto cleanupOnFailure = wil::scope_exit([&]() {
             CleanupSingleBufferMapping(&m_Registers);
@@ -1044,7 +1026,7 @@ StreamEngine::GetLoopedStreamingRegisters(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::SetLoopedStreamingNotificationEvent(
-    PKSMIDILOOPED_EVENT    Buffer
+    PKSMIDILOOPED_EVENT2   Buffer
     )
 {
     // handle incoming property call to set the looped streaming events.
@@ -1057,9 +1039,6 @@ StreamEngine::SetLoopedStreamingNotificationEvent(
 
     ASSERT(m_Process == IoGetCurrentProcess());
 
-    // this is only applicable if this is a looped pin instance.
-    NT_RETURN_NTSTATUS_IF(STATUS_NOT_IMPLEMENTED, FALSE == m_IsLooped);
-
     // reference the notification event provided by the client,
     // For midi out will use this event as the signal that midi out data has been written,
     // For midi in this will be the signal that we will set when midi in data has been
@@ -1070,6 +1049,18 @@ StreamEngine::SetLoopedStreamingNotificationEvent(
                                               ExGetPreviousMode(),
                                               (PVOID*)&m_WriteEvent,
                                               nullptr));
+
+    // reference the notification event provided by the client,
+    // For midi out will use this event as the signal that midi out data has been read from the buffer,
+    // For midi in this will be the signal that space is available for additional data to be
+    // written.
+    NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(Buffer->ReadEvent,
+                                              EVENT_MODIFY_STATE,
+                                              *ExEventObjectType,
+                                              ExGetPreviousMode(),
+                                              (PVOID*)&m_ReadEvent,
+                                              nullptr));
+
 
     return STATUS_SUCCESS;
 }

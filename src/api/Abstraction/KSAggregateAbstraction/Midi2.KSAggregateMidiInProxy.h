@@ -25,7 +25,7 @@ public:
         _In_ LONGLONG Context,
         _In_ BYTE Group);
 
-    HRESULT Callback(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
+    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
 
     HRESULT Cleanup();
 

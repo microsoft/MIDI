@@ -31,7 +31,7 @@ static ACX_PROPERTY_ITEM MidiStreamProperties[] =
         EvtMidiSetLoopedStreamingNotificationEventCallback,
         0,
         0,
-        sizeof(KSMIDILOOPED_EVENT)
+        sizeof(KSMIDILOOPED_EVENT2)
     },
 };
 
@@ -396,7 +396,7 @@ EvtMidiSetLoopedStreamingNotificationEventCallback(
     PMIDI_STREAM_CONTEXT        streamCtx = nullptr;
     ACX_REQUEST_PARAMETERS      params;
     ULONG_PTR                   outDataCb = 0;
-    KSMIDILOOPED_EVENT *        value;
+    KSMIDILOOPED_EVENT2*        value;
     ULONG                       minValueSize;
     KAPC_STATE                  processApcState = {0};
     BOOLEAN                     processAttached = FALSE;
@@ -417,7 +417,7 @@ EvtMidiSetLoopedStreamingNotificationEventCallback(
     ASSERT(params.Parameters.Property.Control == nullptr);
     ASSERT(params.Parameters.Property.ControlCb == 0);
     ASSERT(params.Parameters.Property.Value != nullptr);
-    ASSERT(params.Parameters.Property.ValueCb == sizeof(KSMIDILOOPED_EVENT));
+    ASSERT(params.Parameters.Property.ValueCb == sizeof(KSMIDILOOPED_EVENT2));
 
     //
     // Basic validation (ACX validated this already).
@@ -425,7 +425,7 @@ EvtMidiSetLoopedStreamingNotificationEventCallback(
     if (nullptr != params.Parameters.Property.Control ||
         params.Parameters.Property.ControlCb != 0 ||
         nullptr == params.Parameters.Property.Value ||
-        params.Parameters.Property.ValueCb < sizeof(KSMIDILOOPED_EVENT) ||
+        params.Parameters.Property.ValueCb < sizeof(KSMIDILOOPED_EVENT2) ||
         nullptr == streamCtx->StreamEngine)
     {
         ASSERT(FALSE);
@@ -434,8 +434,8 @@ EvtMidiSetLoopedStreamingNotificationEventCallback(
         goto exit;
     }
 
-    minValueSize = sizeof(KSMIDILOOPED_EVENT);
-    value = (KSMIDILOOPED_EVENT*)params.Parameters.Property.Value;
+    minValueSize = sizeof(KSMIDILOOPED_EVENT2);
+    value = (KSMIDILOOPED_EVENT2*)params.Parameters.Property.Value;
 
     //
     // Make sure we are running in the caller original process.

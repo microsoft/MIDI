@@ -95,35 +95,44 @@
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;WDMAUD2_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>winmmdrv.def</ModuleDefinitionFile>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);winmm.lib</AdditionalDependencies>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;WDMAUD2_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>winmmdrv.def</ModuleDefinitionFile>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);winmm.lib</AdditionalDependencies>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;WDMAUD2_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -132,14 +141,17 @@
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>winmmdrv.def</ModuleDefinitionFile>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);winmm.lib</AdditionalDependencies>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;WDMAUD2_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -148,19 +160,35 @@
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>winmmdrv.def</ModuleDefinitionFile>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);winmm.lib</AdditionalDependencies>
-      <RegisterOutput>true</RegisterOutput>
+      <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MidiSrvPort.cpp" />
+    <ClCompile Include="MidiSrvPorts.cpp" />
+    <ClCompile Include="pch.cpp" />
     <ClCompile Include="winmmdrv.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MidiSrvPort.h" />
+    <ClInclude Include="MidiSrvPorts.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="winmmdrv.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+  </Target>
 </Project>

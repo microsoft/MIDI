@@ -370,7 +370,7 @@ CMidi2KSAggregateMidi::SendMidiMessage(
                 // and send it on
                 while (m_UMP2BS.availableBS())
                 {
-                    BYTE byteStream[MAXIMUM_LOOPED_DATASIZE];
+                    BYTE byteStream[MAXIMUM_LOOPED_BYTESTREAM_DATASIZE];
                     UINT byteCount;
                     for (byteCount = 0; byteCount < _countof(byteStream) && m_UMP2BS.availableBS(); byteCount++)
                     {
@@ -471,6 +471,7 @@ CMidi2KSAggregateMidi::SendMidiMessage(
         return E_INVALID_PROTOCOL_FORMAT;   // reusing this. Probably should just be E_FAIL
     }
 
-    return E_ABORT;
+// unreachable
+//    return E_ABORT;
 }
 

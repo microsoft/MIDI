@@ -35,13 +35,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Midi2.UMP2BSTransform.rgs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Midi2.UMP2BSTransform.def">
       <Filter>Source files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

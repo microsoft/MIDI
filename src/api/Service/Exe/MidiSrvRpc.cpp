@@ -8,8 +8,6 @@
 
 #include "stdafx.h"
 
-
-
 _Use_decl_annotations_
 void *midl_user_allocate(size_t size)
 {
@@ -21,49 +19,6 @@ void midl_user_free(void* p)
 {
     delete[] (BYTE*)p;
 }
-
-// To be removed
-// Simple test RPC to validate calling into the service and getting a service allocated
-// structure returned to the client with valid contents. Simple POC of the midisrv RPC implementation.
-HRESULT MidiSrvTestRpc(
-    /* [in] */ handle_t /* BindingHandle */,
-    /* [string][in] */ __RPC__in_string LPCWSTR Identifier,
-    /* [in] */ __RPC__in PREQUESTED_SETTINGS RequestedSettings,
-    /* [out] */ __RPC__deref_out_opt PALLOCATED_SETTINGS* AllocatedSettings)
-{
-    PALLOCATED_SETTINGS allocatedSettings = nullptr;
-    GUID identifierGuid{0};
-
-    // retrieve a shared pointer to the device manager, to confirm
-    // that it can be retrieved.
-    std::shared_ptr<CMidiDeviceManager> manager;
-
-    auto cleanupOnExit = wil::scope_exit([&]() {
-        if (allocatedSettings)
-        {
-            MIDL_user_free(allocatedSettings);
-        }
-    });
-
-    RETURN_IF_FAILED(g_MidiService->GetDeviceManager(manager));
-
-    // allocate our return structure
-    allocatedSettings = (PALLOCATED_SETTINGS) MIDL_user_allocate(sizeof(ALLOCATED_SETTINGS));
-    RETURN_IF_NULL_ALLOC(allocatedSettings);
-
-    // fill in the return structure
-    RETURN_IF_FAILED(CLSIDFromString(Identifier, &(allocatedSettings->Identifier)));
-    allocatedSettings->Flag = RequestedSettings->Flag;
-    allocatedSettings->Request = RequestedSettings->Request;
-    RETURN_HR_IF(E_FAIL, RequestedSettings->Identifier != allocatedSettings->Identifier);
-
-    // transfer the allocation
-    *AllocatedSettings = allocatedSettings;
-    allocatedSettings = nullptr;
-
-    return S_OK;
-}
-
 
 HRESULT MidiSrvVerifyConnectivity(
     handle_t /*BindingHandle*/)
@@ -90,7 +45,6 @@ HRESULT MidiSrvCreateClient(
     /* [string][in] */ __RPC__in_string LPCWSTR MidiDevice,
     /* [in] */ __RPC__in PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     /* [in] */ __RPC__in GUID SessionId,
-    /* [in] */ __RPC__in DWORD ClientProcessId,
     /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *Client
     )
 {
@@ -119,11 +73,22 @@ HRESULT MidiSrvCreateClient(
 
     ZeroMemory(createdClient, sizeof(MIDISRV_CLIENT));
 
-    
+    DWORD clientProcessId{0};
+    wil::unique_handle clientProcessHandle;
+
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
+
+    // get the client PID, impersonate the client to get the client process handle, and then
+    // revert back to self.
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(BindingHandle)));
+    clientProcessHandle.reset(OpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, clientProcessId));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcRevertToSelf()));
+
+    RETURN_LAST_ERROR_IF_NULL(clientProcessHandle);
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, ClientProcessId, CreationParams, createdClient, false));
+    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, clientProcessId, clientProcessHandle, CreationParams, createdClient, false));
 
     // Success, transfer the MIDISRV_CLIENT data to the caller.
     *Client = createdClient;
@@ -150,11 +115,6 @@ HRESULT MidiSrvDestroyClient(
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
     RETURN_IF_FAILED(clientManager->DestroyMidiClient(BindingHandle, ClientHandle));
-
-
-
-
-
 
     return S_OK;
 }
@@ -251,13 +211,9 @@ MidiSrvRegisterSession(
     /* [in] */ handle_t BindingHandle,
     __RPC__in GUID SessionId,
     __RPC__in_string LPCWSTR SessionName,
-    __RPC__in DWORD ProcessId,
-    __RPC__in_string LPCWSTR ProcessName,
     __RPC__deref_out_opt PMIDISRV_CONTEXT_HANDLE* ContextHandle
 )
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
-
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -269,10 +225,17 @@ MidiSrvRegisterSession(
     std::shared_ptr<CMidiSessionTracker> sessionTracker;
 
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+    DWORD clientProcessId{0};
+    wil::unique_handle clientProcessHandle;
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(sessionTracker->AddClientSessionInternal(SessionId, SessionName, ProcessId, ProcessName, ContextHandle));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(BindingHandle)));
+    clientProcessHandle.reset(OpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, clientProcessId));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcRevertToSelf()));
+
+    RETURN_IF_FAILED(sessionTracker->AddClientSession(SessionId, SessionName, clientProcessId, clientProcessHandle, ContextHandle));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -290,11 +253,9 @@ MidiSrvUpdateSessionName(
     /* [in] */ handle_t BindingHandle,
     __RPC__in PMIDISRV_CONTEXT_HANDLE ContextHandle,
     __RPC__in GUID SessionId,
-    __RPC__in_string LPCWSTR SessionName,
-    __RPC__in DWORD ProcessId
+    __RPC__in_string LPCWSTR SessionName
 )
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
     UNREFERENCED_PARAMETER(ContextHandle);
 
     TraceLoggingWrite(
@@ -311,7 +272,10 @@ MidiSrvUpdateSessionName(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(sessionTracker->UpdateClientSessionName(SessionId, SessionName, ProcessId));
+    DWORD clientProcessId{0};
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
+
+    RETURN_IF_FAILED(sessionTracker->UpdateClientSessionName(SessionId, SessionName, clientProcessId));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -331,7 +295,6 @@ MidiSrvDeregisterSession(
     __RPC__in GUID SessionId
 )
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
     UNREFERENCED_PARAMETER(ContextHandle);
 
     TraceLoggingWrite(
@@ -348,7 +311,10 @@ MidiSrvDeregisterSession(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(sessionTracker->RemoveClientSession(SessionId));
+    DWORD clientProcessId{0};
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
+
+    RETURN_IF_FAILED(sessionTracker->RemoveClientSession(SessionId, clientProcessId));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -392,11 +358,6 @@ __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
 
 }
 
-
-
-
-
-
 HRESULT
 MidiSrvGetSessionList(
     /* [in] */ handle_t BindingHandle,
@@ -437,8 +398,6 @@ MidiSrvGetSessionList(
     return S_OK;
 
 }
-
-
 
 HRESULT 
 MidiSrvGetAbstractionList(
@@ -532,13 +491,7 @@ MidiSrvGetTransformList(
         TraceLoggingWideString(L"Enter")
     );
 
-
-
-
     // TODO
-
-
-
 
     return S_OK;
 }

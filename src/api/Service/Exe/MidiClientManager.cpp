@@ -656,7 +656,7 @@ CMidiClientManager::GetMidiTransform(
             );
 
             // unknown transform
-            RETURN_IF_FAILED(ERROR_UNSUPPORTED_TYPE);
+            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE));
         }
 
         // create the transform
@@ -892,6 +892,7 @@ CMidiClientManager::CreateMidiClient(
     LPCWSTR MidiDevice,
     GUID SessionId,
     DWORD ClientProcessId,
+    wil::unique_handle& ClientProcessHandle,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     BOOL InternalProtocolNegotiationUseOnly
@@ -912,6 +913,8 @@ CMidiClientManager::CreateMidiClient(
     auto sessionCheckHR = m_SessionTracker->IsValidSession(SessionId, ClientProcessId);
     if (FAILED(sessionCheckHR))
     {
+        // This session id already exists, but is for a different process and cannot create a default
+        // session for this process, fail client creation.
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
@@ -926,8 +929,6 @@ CMidiClientManager::CreateMidiClient(
 
         RETURN_IF_FAILED(sessionCheckHR);
     }
-
-
 
     //if (InternalProtocolNegotiationUseOnly && Client->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
     //{
@@ -979,13 +980,9 @@ CMidiClientManager::CreateMidiClient(
 
     auto lock = m_ClientManagerLock.lock();
 
-    DWORD clientProcessId{0};
-    wil::unique_handle clientProcessHandle;
     wil::com_ptr_nothrow<CMidiPipe> clientPipe;
     wil::com_ptr_nothrow<CMidiPipe> devicePipe;
     wil::com_ptr_nothrow<CMidiPipe> clientConnectionPipe;
-
-    wil::com_ptr_nothrow<CMidiPipe> newClientConnectionPipe{ nullptr };
 
     unique_mmcss_handle MmcssHandle;
     std::wstring midiDevice;
@@ -995,15 +992,6 @@ CMidiClientManager::CreateMidiClient(
 
     if (!InternalProtocolNegotiationUseOnly)
     {
-        // get the client PID, impersonate the client to get the client process handle, and then
-        // revert back to self.
-        RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
-        RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(BindingHandle)));
-        clientProcessHandle.reset(OpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, clientProcessId));
-        RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcRevertToSelf()));
-
-        RETURN_LAST_ERROR_IF_NULL(clientProcessHandle);
-
         // pre-populate our mmcss task id so we have a known task id
         // to provide and use for all other tasks related to this pipe
         // retain the MMCSS configuration until after the client and device
@@ -1030,13 +1018,13 @@ CMidiClientManager::CreateMidiClient(
         // we add one if otherwise eligible. 
         //RETURN_IF_FAILED(GetEndpointShouldHaveMetadataHandler(midiDevice, addMetadataListenerToIncomingStream, CreationParams->Flow));
 
-        RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), SessionId, CreationParams, Client, clientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
+        RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), SessionId, CreationParams, Client, ClientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
     }
     else
     {
         // for protocol negotiation / metadata capture only. BindingHandle here is going to be invalid
         // NOTE: clientProcessHandle here is invalid
-        RETURN_IF_FAILED(GetMidiClient(BindingHandle, MidiDevice, SessionId, CreationParams, Client, clientProcessHandle, clientPipe, false));
+        RETURN_IF_FAILED(GetMidiClient(BindingHandle, MidiDevice, SessionId, CreationParams, Client, ClientProcessHandle, clientPipe, false));
     }
 
     auto cleanupOnFailure = wil::scope_exit([&]()
@@ -1055,52 +1043,46 @@ CMidiClientManager::CreateMidiClient(
     // so we register the clientPipe to receive the callbacks from the clientConnectionPipe.
     if (clientPipe->IsFlowSupported(MidiFlowIn))
     {
-        // If the client supports the same format that the device pipe supports,
-        // or if the client supports any format, then connect directly to
-        // the device.
-        if (clientPipe->IsFormatSupportedIn(devicePipe->DataFormatIn()))
+        // Assume direct connection to the device
+        clientConnectionPipe = devicePipe;
+
+        if (!clientPipe->IsFormatSupportedIn(clientConnectionPipe->DataFormatIn()))
         {
-            clientConnectionPipe = devicePipe;
-        }
-        else
-        {
+            wil::com_ptr_nothrow<CMidiPipe> newClientConnectionPipe;
+
             // client requires a specific format, retrieve the transform required for that format.
             RETURN_IF_FAILED(GetMidiTransform(
-                BindingHandle, 
-                MidiFlowIn, 
-                devicePipe->DataFormatIn(), 
-                clientPipe->DataFormatIn(), 
-                devicePipe, 
-                clientConnectionPipe)); // clientConnectionPipe is the plugin
+                BindingHandle,
+                MidiFlowIn,
+                clientConnectionPipe->DataFormatIn(),
+                clientPipe->DataFormatIn(),
+                clientConnectionPipe,
+                newClientConnectionPipe)); // clientConnectionPipe is the plugin
 
-            clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+            newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+            clientConnectionPipe = newClientConnectionPipe;
         }
-        newClientConnectionPipe = clientConnectionPipe;
 
-
+        // newClientConnectionPipe = clientConnectionPipe;
         //// Metadata Listener ----------------------------------------------------------------
         //// We should check protocol, not just data format here because we're putting this on
         //// MIDI 1.0 devices that use the new driver, and there's no reason to do that.
         //if (addMetadataListenerToIncomingStream && devicePipe->IsFormatSupportedIn(MidiDataFormat::MidiDataFormat_UMP))
         //{
+        //    wil::com_ptr_nothrow<CMidiPipe> newClientConnectionPipe;
         //    // Our clientConnectionPipe is now the Scheduler
         //    RETURN_IF_FAILED(GetMidiEndpointMetadataHandler(
         //        BindingHandle,
         //        MidiFlowIn,
         //        devicePipe,
-        //        newClientConnectionPipe,
-        //        clientConnectionPipe)); // clientConnectionPipe is the plugin
+        //        clientConnectionPipe,
+        //        newClientConnectionPipe)); // clientConnectionPipe is the plugin
 
-        //    clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+        //    newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+        //    clientConnectionPipe = newClientConnectionPipe;
         //}
-        //newClientConnectionPipe = clientConnectionPipe;
 
-
-        // no more transforms to add
-        clientConnectionPipe = newClientConnectionPipe;
-
-
-        RETURN_IF_FAILED(clientPipe->SetDataFormatIn(clientConnectionPipe->DataFormatIn()));
+        RETURN_IF_FAILED(clientPipe->SetDataFormatIn(clientConnectionPipe->DataFormatOut()));
         Client->DataFormat = clientPipe->DataFormatIn();
         RETURN_IF_FAILED(clientConnectionPipe->AddConnectedPipe(clientPipe));
         clientConnectionPipe.reset();
@@ -1110,53 +1092,11 @@ CMidiClientManager::CreateMidiClient(
     // so we register the clientConnectionPipe to receive the callbacks from the clientPipe.
     if (clientPipe->IsFlowSupported(MidiFlowOut))
     {
-        // our initial state is straight through to the device pipe
+        // assume direct connection to device pipe
         clientConnectionPipe = devicePipe;
-        newClientConnectionPipe = devicePipe;
 
         if (!InternalProtocolNegotiationUseOnly)
         {
-            // TODO: This needs to work with both bytestream and UMP clients, so this logic needs to change
-
-                // Data Format Translator ---------------------------------------------------
-            if (!clientPipe->IsFormatSupportedOut(newClientConnectionPipe->DataFormatOut()))
-            {
-                // Format is not supported, so we need to transform
-                // client requires a specific format, retrieve the transform required for that format.
-                // Our clientConnectionPipe is now the format translator
-
-                RETURN_IF_FAILED(GetMidiTransform(
-                    BindingHandle,
-                    MidiFlowOut,
-                    clientPipe->DataFormatOut(),
-                    newClientConnectionPipe->DataFormatOut(),
-                    devicePipe,
-                    clientConnectionPipe)); // clientConnectionPipe is the plugin
-
-                clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
-
-                newClientConnectionPipe = clientConnectionPipe;
-            }
-
-            // Scheduler ----------------------------------------------------------------
-            // for now, the scheduler is only going to work with UMP, so we hope
-            // any required translation is done BEFORE we add this.
-            if (clientConnectionPipe->IsFormatSupportedOut(MidiDataFormat::MidiDataFormat_UMP))
-            {
-                // Our clientConnectionPipe is now the Scheduler
-                RETURN_IF_FAILED(GetMidiScheduler(
-                    BindingHandle,
-                    MidiFlowOut,
-                    devicePipe,
-                    newClientConnectionPipe,
-                    clientConnectionPipe)); // clientConnectionPipe is the plugin
-
-                clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
-
-                newClientConnectionPipe = clientConnectionPipe;
-            }
-
-
             // Protocol Translator ----------------------------------------------------------------
             // This translates MT4 to MT2 for MIDI 1.0 devices connected through the new driver.
             // For devices connected directly to the service via the old driver, we don't have to
@@ -1173,16 +1113,60 @@ CMidiClientManager::CreateMidiClient(
 
             if (addProtocolDownscalerForMidi1DeviceWithUmpDriver)
             {
+                wil::com_ptr_nothrow<CMidiPipe> newClientConnectionPipe;
+
                 RETURN_IF_FAILED(GetMidiProtocolDownscalerTransform(
                     BindingHandle,
                     MidiFlowOut,
                     devicePipe,
-                    newClientConnectionPipe,
-                    clientConnectionPipe)); // clientConnectionPipe is the plugin
+                    clientConnectionPipe,
+                    newClientConnectionPipe));
 
-                clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+                newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+                clientConnectionPipe = newClientConnectionPipe;
+            }
 
-                newClientConnectionPipe = clientConnectionPipe;
+            // Data Format Translator, performed after the MT4 to MT2 translation,
+            // if that was required.
+            if (!clientPipe->IsFormatSupportedOut(clientConnectionPipe->DataFormatOut()))
+            {
+                wil::com_ptr_nothrow<CMidiPipe> newClientConnectionPipe;
+
+                // Format is not supported, so we need to transform
+                // client requires a specific format, retrieve the transform required for that format.
+                // Our clientConnectionPipe is now the format translator
+
+                RETURN_IF_FAILED(GetMidiTransform(
+                    BindingHandle,
+                    MidiFlowOut,
+                    clientPipe->DataFormatOut(),
+                    clientConnectionPipe->DataFormatOut(),
+                    clientConnectionPipe,
+                    newClientConnectionPipe)); // clientConnectionPipe is the plugin
+
+                newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+                clientConnectionPipe = newClientConnectionPipe;
+            }
+
+            // Scheduler ----------------------------------------------------------------
+            // for now, the scheduler is only going to work with UMP, so we hope
+            // any required translation is done BEFORE we add this.
+            // We need to check what format gets sent out of the transform and into the
+            // next pipe, so check the input of that pipe for UWP support.
+            if (clientConnectionPipe->IsFormatSupportedIn(MidiDataFormat::MidiDataFormat_UMP))
+            {
+                wil::com_ptr_nothrow<CMidiPipe> newClientConnectionPipe;
+
+                // Our clientConnectionPipe is now the Scheduler
+                RETURN_IF_FAILED(GetMidiScheduler(
+                    BindingHandle,
+                    MidiFlowOut,
+                    devicePipe,
+                    clientConnectionPipe,
+                    newClientConnectionPipe));
+
+                newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+                clientConnectionPipe = newClientConnectionPipe;
             }
         }
         else
@@ -1190,18 +1174,10 @@ CMidiClientManager::CreateMidiClient(
             // for protocol negotiation use only, so no translator, scheduler, or downscaler
         }
 
-
-        // no more transforms to add
-        clientConnectionPipe = newClientConnectionPipe;
-
-        //clientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
-
-        RETURN_IF_FAILED(clientPipe->SetDataFormatOut(clientConnectionPipe->DataFormatOut()));
+        RETURN_IF_FAILED(clientPipe->SetDataFormatOut(clientConnectionPipe->DataFormatIn()));
         Client->DataFormat = clientPipe->DataFormatOut();
         RETURN_IF_FAILED(clientPipe->AddConnectedPipe(clientConnectionPipe));
-
         clientConnectionPipe.reset();
-        newClientConnectionPipe.reset();
     }
 
     m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice, Client->ClientHandle);

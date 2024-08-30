@@ -95,7 +95,7 @@ public:
     PAGED_CODE_SEG
     NTSTATUS
     SetLoopedStreamingNotificationEvent(
-        _In_ PKSMIDILOOPED_EVENT    Buffer
+        _In_ PKSMIDILOOPED_EVENT2   Buffer
         );
 
 private:
@@ -180,6 +180,7 @@ private:
     // data is written into the cyclic buffer by either the driver
     // sending to user mode, or user mode sending to the driver
     PKEVENT     m_WriteEvent {nullptr};
+    PKEVENT     m_ReadEvent {nullptr};
 
     // worker thread that handles IO across the shared memory
     PKTHREAD    m_WorkerThread {nullptr};

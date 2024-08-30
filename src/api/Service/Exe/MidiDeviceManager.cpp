@@ -8,8 +8,10 @@
 
 #include "stdafx.h"
 
+using namespace winrt::Windows::Devices::Enumeration;
 
-
+const WCHAR driver32Path[]    = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
+const WCHAR midisrvTransferComplete[] =  L"MidisrvTransferComplete";
 
 _Use_decl_annotations_
 HRESULT
@@ -18,6 +20,9 @@ CMidiDeviceManager::Initialize(
     std::shared_ptr<CMidiEndpointProtocolManager>& EndpointProtocolManager,
     std::shared_ptr<CMidiConfigurationManager>& configurationManager)
 {
+    DWORD transferState = 0;
+    DWORD dataSize = sizeof(DWORD);
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -28,6 +33,23 @@ CMidiDeviceManager::Initialize(
 
     m_ConfigurationManager = configurationManager;
 
+    // query for midisrv control keys
+    if (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, driver32Path, midisrvTransferComplete, RRF_RT_DWORD, NULL, &transferState, &dataSize) && 
+        transferState != 1)
+    {
+        // This assumes that AudioEndpointBuilder state is cycled after MidiSrv is installed, before MidiSrv starts.
+        // Should we instead coordinate endpoint builder and midisrv via named events or WNF, so endpoint builder is aware when
+        // midisrv starts for the first time, and midisrv is notified once endpoint builder completes the transition of control?
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"AudioEndpointBuilder retains control of Midi port registration, unable to take exclusive control of midi ports.")
+        );
+    }
 
     //wil::com_ptr_nothrow<IMidiServiceConfigurationManagerInterface> serviceConfigManagerInterface;
     //RETURN_IF_FAILED(configurationManager->QueryInterface(__uuidof(IMidiServiceConfigurationManagerInterface), (void**)&serviceConfigManagerInterface));
@@ -78,81 +100,14 @@ CMidiDeviceManager::Initialize(
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating abstraction layer IMidiEndpointManager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
-                );
-
-                LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
-
-                if (endpointManager != nullptr)
-                {
-                    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
-
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Initializing abstraction layer Midi Endpoint Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
-                    );
-
-                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get());
-
-                    if (SUCCEEDED(initializeResult))
-                    {
-                        m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
-
-                        TraceLoggingWrite(
-                            MidiSrvTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Midi Endpoint Manager initialized", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
-                        );
-                    }
-                    else
-                    {
-                        TraceLoggingWrite(
-                            MidiSrvTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_ERROR,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Transport abstraction initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
-                        );
-                    }
-
-                }
-                else
-                {
-                    TraceLoggingWrite(
-                        MidiSrvTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Transport abstraction endpoint manager initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
-                    );
-
-                }
-
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Activating abstraction configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                 );
 
                 // we only log. This interface is optional
+                // If present, an abstraction device manager may make use of its configuration manager, so activate
+                // and initialize the configuration manager before activating the device manager so that configuration
+                // is present.
                 auto configHR = midiAbstraction->Activate(__uuidof(IMidiAbstractionConfigurationManager), (void**)&abstractionConfigurationManager);
                 if (SUCCEEDED(configHR))
                 {
@@ -280,6 +235,76 @@ CMidiDeviceManager::Initialize(
                         TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                     );
                 }
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Activating abstraction layer IMidiEndpointManager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                );
+
+                LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
+
+                if (endpointManager != nullptr)
+                {
+                    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
+
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Initializing abstraction layer Midi Endpoint Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                    );
+
+                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get());
+
+                    if (SUCCEEDED(initializeResult))
+                    {
+                        m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Midi Endpoint Manager initialized", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                        );
+                    }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            MidiSrvTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Transport abstraction initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                        );
+                    }
+
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Transport abstraction endpoint manager initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                    );
+
+                }
             }
             else
             {
@@ -405,11 +430,6 @@ void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationRes
             creationContext->InterfaceDevProperties,
             TRUE,
             wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
-
-        // TODO: Is the string output parameter here leaking? Docs say you need
-        // to free it using SwMemFree. Makes me thing we should copy it and then
-        // free it up.
-
     }
 
     if (SUCCEEDED(creationContext->MidiPort->hr))
@@ -568,7 +588,7 @@ CMidiDeviceManager::ActivateEndpoint
 (
     PCWSTR ParentInstanceId,
     BOOL UMPOnly,
-    MidiFlow MidiFlow,
+    MidiFlow Flow,
     PMIDIENDPOINTCOMMONPROPERTIES CommonProperties,
     ULONG IntPropertyCount,
     ULONG DevPropertyCount,
@@ -878,6 +898,12 @@ CMidiDeviceManager::ActivateEndpoint
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)(CommonProperties->SupportsMultiClient ? &devPropTrue : &devPropFalse) });
+        
+            if (CommonProperties->UserSuppliedEndpointPortNumber > 0)
+            {
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(CommonProperties->UserSuppliedEndpointPortNumber)) });
+            }
         }
         else
         {
@@ -995,7 +1021,7 @@ CMidiDeviceManager::ActivateEndpoint
             ParentInstanceId, 
             nullptr, 
             FALSE, 
-            MidiFlow, 
+            Flow, 
             (ULONG)allInterfaceProperties.size(),
             DevPropertyCount, 
             (DEVPROPERTY*)(allInterfaceProperties.data()),
@@ -1023,7 +1049,7 @@ CMidiDeviceManager::ActivateEndpoint
         if (!UMPOnly)
         {
             // now activate the midi 1 SWD's for this endpoint
-            if (MidiFlow == MidiFlowBidirectional)
+            if (Flow == MidiFlowBidirectional)
             {
                 // This logic will need to change. We need one endpoint for each group, but we
                 // don't know that until we get the function blocks. We know a little due to
@@ -1065,7 +1091,7 @@ CMidiDeviceManager::ActivateEndpoint
                     ParentInstanceId, 
                     deviceInterfaceId.c_str(), 
                     TRUE, 
-                    MidiFlow, 
+                    Flow, 
                     (ULONG)allInterfaceProperties.size(),
                     DevPropertyCount,
                     (DEVPROPERTY*)(allInterfaceProperties.data()),
@@ -1096,9 +1122,9 @@ HRESULT
 CMidiDeviceManager::ActivateEndpointInternal
 (
     PCWSTR ParentInstanceId,
-    PCWSTR AssociatedInstanceId,
+    PCWSTR AssociatedInterfaceId,
     BOOL MidiOne,
-    MidiFlow MidiFlow,
+    MidiFlow Flow,
     ULONG IntPropertyCount,
     ULONG DevPropertyCount,
     DEVPROPERTY *InterfaceDevProperties,
@@ -1117,7 +1143,7 @@ CMidiDeviceManager::ActivateEndpointInternal
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(ParentInstanceId, "parent instance id"),
-        TraceLoggingWideString(AssociatedInstanceId, "associated instance id"),
+        TraceLoggingWideString(AssociatedInterfaceId, "associated interface id"),
         TraceLoggingBool(MidiOne, "midi 1"),
         TraceLoggingULong(IntPropertyCount, "interface prop count"),
         TraceLoggingULong(DevPropertyCount, "device prop count")
@@ -1139,11 +1165,11 @@ CMidiDeviceManager::ActivateEndpointInternal
         interfaceProperties = existingInterfaceProperties;
     }
 
-    if (AssociatedInstanceId != nullptr && wcslen(AssociatedInstanceId) > 0)
+    if (AssociatedInterfaceId != nullptr && wcslen(AssociatedInterfaceId) > 0)
     {
         // add any additional required items to the vector
         interfaceProperties.push_back({ {PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
-                   DEVPROP_TYPE_STRING, static_cast<ULONG>((wcslen(AssociatedInstanceId) + 1) * sizeof(WCHAR)), (PVOID)AssociatedInstanceId });
+                   DEVPROP_TYPE_STRING, static_cast<ULONG>((wcslen(AssociatedInterfaceId) + 1) * sizeof(WCHAR)), (PVOID)AssociatedInterfaceId });
     }
     else
     {
@@ -1161,18 +1187,23 @@ CMidiDeviceManager::ActivateEndpointInternal
     interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-
     midiPort->InstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(CreateInfo->pszInstanceId);
-    midiPort->MidiFlow = MidiFlow;
+    midiPort->Flow = Flow;
     midiPort->Enumerator = MidiOne ? AUDIO_DEVICE_ENUMERATOR : MIDI_DEVICE_ENUMERATOR;
+    midiPort->MidiOne = MidiOne;
+
+    if (AssociatedInterfaceId)
+    {
+        midiPort->AssociatedInterfaceId = AssociatedInterfaceId;
+    }
 
     if (MidiOne)
     {
-        if (MidiFlow == MidiFlow::MidiFlowOut)
+        if (Flow == MidiFlowOut)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_MIDI_OUTPUT;
         }
-        else if (MidiFlow == MidiFlow::MidiFlowIn)
+        else if (Flow == MidiFlowIn)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_MIDI_INPUT;
         }
@@ -1183,15 +1214,15 @@ CMidiDeviceManager::ActivateEndpointInternal
     }
     else
     {
-        if (MidiFlow == MidiFlow::MidiFlowOut)
+        if (Flow == MidiFlowOut)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT;
         }
-        else if (MidiFlow == MidiFlow::MidiFlowIn)
+        else if (Flow == MidiFlowIn)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT;
         }
-        else if (MidiFlow == MidiFlow::MidiFlowBidirectional)
+        else if (Flow == MidiFlowBidirectional)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI;
         }
@@ -1254,6 +1285,7 @@ CMidiDeviceManager::ActivateEndpointInternal
 
         if (item != m_MidiPorts.end())
         {
+            midiPort->SwDevice = item->get()->SwDevice;
             SwMidiPortCreateCallback(item->get()->SwDevice.get(), S_OK, &creationContext, nullptr);
         }
     }
@@ -1303,6 +1335,19 @@ CMidiDeviceManager::ActivateEndpointInternal
         );
     }
     RETURN_HR_IF(E_FAIL, midiPort->SwDeviceState != SWDEVICESTATE::Created);
+
+    if (MidiOne)
+    {
+        // Assign the port number for this midi port
+        RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), Flow));
+    }
+
+    // Activate the SWD just created, it's created in the disabled state to allow for assigning
+    // the port prior to activating it.
+    RETURN_IF_FAILED(SwDeviceInterfaceSetState(
+        midiPort->SwDevice.get(),
+        midiPort->DeviceInterfaceId.get(),
+        TRUE));
 
     if (DeviceInterfaceId)
     {
@@ -1398,6 +1443,16 @@ CMidiDeviceManager::UpdateEndpointProperties
                 TraceLoggingWideString(requestedInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                 TraceLoggingULong(IntPropertyCount, "property count")
             );
+
+            // update/refresh the port numbers for all affected midi1 ports
+            for (auto const& MidiPort : m_MidiPorts)
+            {
+                if (MidiPort->AssociatedInterfaceId == requestedInterfaceId &&
+                    MidiPort->MidiOne)
+                {
+                    RETURN_IF_FAILED(AssignPortNumber(MidiPort->SwDevice.get(), MidiPort->DeviceInterfaceId.get(), MidiPort->Flow));
+                }
+            }
 
             return S_OK;
         }
@@ -1619,8 +1674,254 @@ CMidiDeviceManager::Cleanup()
     return S_OK;
 }
 
+#define MIDI1_OUTPUT_DEVICES \
+    L"System.Devices.InterfaceClassGuid:=\"{6DC23320-AB33-4CE4-80D4-BBB3EBBF2814}\""
 
+#define MIDI1_INPUT_DEVICES \
+    L"System.Devices.InterfaceClassGuid:=\"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}\""
 
+typedef struct _PORT_INFO
+{
+    bool inUse {false};
+    bool isEnabled {false};
+    bool hasUserSuppliedPortNumber{false};
+    UINT32 userSuppliedPortNumber {0};
+    std::wstring interfaceId;
+} PORT_INFO;
 
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::AssignPortNumber(
+    HSWDEVICE SwDevice,
+    PWSTR DeviceInterfaceId,
+    MidiFlow Flow
+)
+{
+    auto deviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(DeviceInterfaceId);
 
+    std::map<UINT32, PORT_INFO> portInfo;
+
+    bool hasServiceAssignedPortNumber {false};
+    UINT32 serviceAssignedPortNumber {0};
+    bool hasUserSuppliedPortNumber {false};
+    UINT32 userSuppliedPortNumber {0};
+    bool interfaceEnabled {false};
+
+    winrt::hstring deviceSelector(Flow == MidiFlowOut?MIDI1_OUTPUT_DEVICES:MIDI1_INPUT_DEVICES);
+    wil::unique_event enumerationCompleted{wil::EventOptions::None};
+
+    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
+    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_UserSuppliedPortNumber));
+
+    auto watcher = DeviceInformation::CreateWatcher(deviceSelector, additionalProperties);
+
+    auto deviceAddedHandler = watcher.Added(winrt::auto_revoke, [&](DeviceWatcher watcher, DeviceInformation device)
+    {
+        bool servicePortNumValid {false};
+        UINT32 servicePortNum {0};
+        bool userPortNumValid {false};
+        UINT32 userPortNum {0};
+
+        auto processingInterface = internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str());
+
+        // all others with a service assigned port number goes into the portInfo structure for processing.
+        auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
+        if (prop)
+        {
+            servicePortNum = winrt::unbox_value<UINT32>(prop);
+            servicePortNumValid = true;
+        }
+
+        prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_UserSuppliedPortNumber));
+        if (prop)
+        {
+            userPortNum = winrt::unbox_value<UINT32>(prop);
+            userPortNumValid = true;
+        }
+
+        // if this is the interface we are processing, do not add it to the list, we want to determine if
+        // there are any others using the requested port(s).
+        if (processingInterface == deviceInterfaceId)
+        {
+            interfaceEnabled = device.IsEnabled();
+            hasUserSuppliedPortNumber = userPortNumValid;
+            userSuppliedPortNumber = userPortNum;
+            hasServiceAssignedPortNumber = servicePortNumValid;
+            serviceAssignedPortNumber = servicePortNum;
+        }
+        else if (servicePortNumValid)
+        {
+            // we track for any port usage at all for assigning a new port number, avoiding 
+            // ports that are in use even if inactive to prevent future conflicts.
+            // There may be inactive users on the same port as an active user, so prefer to track
+            // the currently active user of a given port in case we need to move them.
+            if (!portInfo[servicePortNum].inUse || (!portInfo[servicePortNum].isEnabled && device.IsEnabled()))
+            {
+                portInfo[servicePortNum].inUse = true;
+                portInfo[servicePortNum].isEnabled = device.IsEnabled();
+                portInfo[servicePortNum].interfaceId = processingInterface;
+                portInfo[servicePortNum].hasUserSuppliedPortNumber = userPortNumValid;
+                portInfo[servicePortNum].userSuppliedPortNumber = userPortNum;
+            }
+        }
+    });
+
+    auto deviceStoppedHandler = watcher.Stopped(winrt::auto_revoke, [&](DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+    {
+        enumerationCompleted.SetEvent();
+        return S_OK;
+    });
+
+    auto enumerationCompletedHandler = watcher.EnumerationCompleted(winrt::auto_revoke, [&](DeviceWatcher , winrt::Windows::Foundation::IInspectable)
+    {
+        enumerationCompleted.SetEvent();
+        return S_OK;
+    });
+
+    watcher.Start();
+    enumerationCompleted.wait();
+    watcher.Stop();
+    enumerationCompleted.wait();
+
+    deviceAddedHandler.revoke();
+    deviceStoppedHandler.revoke();
+    enumerationCompletedHandler.revoke();
+
+    // if we have a service assiged port number, but that number is already in use
+    // by either and active port, or an inactive port and we're currently active (meaning this port
+    // was requested to relocate), move this port somewhere else.
+    bool serviceAssignedPortInUse = (hasServiceAssignedPortNumber &&
+                                        portInfo[serviceAssignedPortNumber].inUse && 
+                                        (interfaceEnabled || portInfo[serviceAssignedPortNumber].isEnabled));
+
+    // if this port is already enabled, but not on it's ideal user assigned endpoint,
+    // then an update to our user assigned port is desired (but not guaranteed).
+    bool configUpdateDesired = (interfaceEnabled && 
+                                hasUserSuppliedPortNumber && 
+                                hasServiceAssignedPortNumber && 
+                                serviceAssignedPortNumber != userSuppliedPortNumber);
+
+    // if no one is using the user assigned port number, or there is someone but they 
+    // can be moved to some other port, then our optimal port is available to us.
+    // This logic ensures that we do not take a user assigned port number from an enabled port
+    // that was also assigned this same port number, otherwise we would end up in a recursion
+    // loop with each port reassigning the other.
+    bool optimalPortAvailable = (hasUserSuppliedPortNumber &&
+                                    (!portInfo[userSuppliedPortNumber].inUse || 
+                                    !portInfo[userSuppliedPortNumber].isEnabled ||
+                                    !portInfo[userSuppliedPortNumber].hasUserSuppliedPortNumber ||
+                                    portInfo[userSuppliedPortNumber].userSuppliedPortNumber != userSuppliedPortNumber));
+
+    bool interfaceDeactivated{false};
+    auto restoreInterfaceStateOnExit = wil::scope_exit([&]()
+    {
+        // if this interface was deactivated for a change, restore
+        // the state to active before returning.
+        if (interfaceDeactivated)
+        {
+            SwDeviceInterfaceSetState(SwDevice, DeviceInterfaceId, TRUE);
+        }
+    });
+
+    // if either the assigned port is already in use, or we're trying to move
+    // this endpoint to its preferred user specified port number, move it.
+    if (serviceAssignedPortInUse || (configUpdateDesired && optimalPortAvailable))
+    {
+        if (interfaceEnabled)
+        {
+            // first, disable the interface if it's currently active, because
+            // we're going to be changing the port number for it and it can't be
+            // active when we do that.
+            SwDeviceInterfaceSetState(SwDevice, DeviceInterfaceId, FALSE);
+            interfaceDeactivated = true;
+        }
+
+        // clear the existing service assigned port number for this endpoint so that a new port
+        // number will be assigned
+        std::vector<DEVPROPERTY> newProperties{};
+        newProperties.push_back({{ PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_EMPTY, 0, NULL });
+        RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+            SwDevice,
+            DeviceInterfaceId,
+            1,
+            (const DEVPROPERTY*)newProperties.data()));
+
+        hasServiceAssignedPortNumber = false;
+    }
+
+    // no service assigned port number on this endpoint, assign one, preferring the user
+    // assigned port number, if it's available.
+    if (!hasServiceAssignedPortNumber)
+    {
+        UINT32 firstAvailablePortNumber = 0;
+        UINT32 assignedPortNumber = 0;
+        std::vector<DEVPROPERTY> newProperties{};
+
+        // first we figure out what the default new port number will be, assuming the first available,
+        // this will be our fallback in the event of any errors or the user assigned port isn't available.
+        for(firstAvailablePortNumber = 1; portInfo[firstAvailablePortNumber].inUse;firstAvailablePortNumber++);
+        assignedPortNumber = firstAvailablePortNumber;
+
+        auto cleanupOnFailure = wil::scope_exit([&]()
+        {
+            // in the event that something fails with reassigning the old port, we want to fall back to a safe
+            // unused  port number.
+            newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(firstAvailablePortNumber)) });
+            SwDeviceInterfacePropertySet(
+                SwDevice,
+                DeviceInterfaceId,
+                1,
+                (const DEVPROPERTY*)newProperties.data());
+            newProperties.clear();
+        });
+
+        // if we previously determined that the optimal (user specified)
+        // port number is available for this endpoint, we want to use it.
+        if (optimalPortAvailable)
+        {
+            assignedPortNumber = userSuppliedPortNumber;   
+        }
+
+        // we've decided what the new port will be for this endpoint, lock it in.
+        newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(assignedPortNumber)) });
+        RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+            SwDevice,
+            DeviceInterfaceId,
+            1,
+            (const DEVPROPERTY*)newProperties.data()));
+        newProperties.clear();
+
+        // Following from the logic above, we need to determine if the user assigned port number that was 
+        // assigned to this port was in use by an enabled port and needs to have a previous user reassigned.
+        if (hasUserSuppliedPortNumber && 
+            assignedPortNumber == userSuppliedPortNumber &&
+            portInfo[userSuppliedPortNumber].inUse &&
+            portInfo[userSuppliedPortNumber].isEnabled)
+        {
+            // First, we need to locate the MIDIPORT for the current user of this port, so we have the SW handle,
+            // the MIDIPORT should exist, since the port is active.
+            // If the MIDIPORT does not exist, then we can not move the conflicting port, exit with failure and fall back to the
+            // next available for the assigning port.
+            auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(portInfo[userSuppliedPortNumber].interfaceId);
+            auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+            {
+                auto portInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Port->DeviceInterfaceId.get());
+                return (portInterfaceId == requestedInterfaceId);
+            });
+
+            RETURN_HR_IF(E_ABORT, item != m_MidiPorts.end());
+            
+            // Recursive call, assign a new port number to this port.
+            RETURN_IF_FAILED(AssignPortNumber(item->get()->SwDevice.get(), item->get()->DeviceInterfaceId.get(), Flow));
+        }
+
+        cleanupOnFailure.release();
+    }
+
+    return S_OK;
+}
 

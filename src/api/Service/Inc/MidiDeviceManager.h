@@ -12,9 +12,6 @@
 #define MIDI_DEVICE_ENUMERATOR L"MIDISRV"
 #define MIDI_SWD_VIRTUAL_PARENT_ROOT L"HTREE\\ROOT\\0"
 
-
-
-
 // ----------------------------------------------------------------------
 //
 //  MIDIPORT
@@ -39,26 +36,29 @@ struct GUIDCompare
 };
 
 using unique_hswdevice = wil::unique_any<HSWDEVICE, decltype(&::SwDeviceClose), ::SwDeviceClose>;
+using shared_hswdevice = wil::shared_any<unique_hswdevice>;
 using unique_swd_string = wil::unique_any<PWSTR, decltype(&::SwMemFree), ::SwMemFree>;
 
 typedef struct _MIDIPORT
 {
-    MidiFlow MidiFlow{ MidiFlowIn };
+    MidiFlow Flow{ MidiFlowIn };
     const GUID* InterfaceCategory{ nullptr };
     SWDEVICESTATE SwDeviceState{ CreatePending };         // SWD creation state
-    unique_hswdevice SwDevice;           // Handle to the SWD created for the MIDI port
+    shared_hswdevice SwDevice;           // Handle to the SWD created for the MIDI port
     unique_swd_string DeviceInterfaceId; // SWD interface ID for the MIDI port
     std::wstring InstanceId;
     std::wstring Enumerator;
+    UINT32 UserAssignedPortNumber {0};
+    UINT32 ServiceAssignedPortNumber {0};
     HRESULT hr{ S_OK };
+    bool MidiOne {false};
+    std::wstring AssociatedInterfaceId;
 } MIDIPORT, *PMIDIPORT;
-
-
 
 typedef struct _MIDIPARENTDEVICE
 {
     SWDEVICESTATE SwDeviceState{ SWDEVICESTATE::NotCreated };   // SWD creation state
-    unique_hswdevice SwDevice{};                                // Handle to the SWD created for the MIDI parent device
+    shared_hswdevice SwDevice;                                  // Handle to the SWD created for the MIDI parent device
     unique_swd_string DeviceId{};                               // SWD device ID for this MIDI parent device
     std::wstring InstanceId{};                                  // created instance id
     //std::wstring Name{};                                      // friendly name for this device
@@ -156,6 +156,12 @@ private:
         _In_ DEVPROPERTY*,
         _In_ SW_DEVICE_CREATE_INFO*,
         _In_opt_ std::wstring*
+    );
+
+    HRESULT AssignPortNumber(
+        _In_ HSWDEVICE,
+        _In_ PWSTR,
+        _In_ MidiFlow
     );
 
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;

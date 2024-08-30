@@ -38,8 +38,5 @@ public:
 private:
     wil::com_ptr_nothrow<IMidiDataTransform> m_MidiDataTransform;
     winrt::guid m_TransformGuid{};
-    MidiDataFormat m_DataFormatIn{};
-    MidiDataFormat m_DataFormatOut{};
-    MidiFlow m_Flow{};
 };
 

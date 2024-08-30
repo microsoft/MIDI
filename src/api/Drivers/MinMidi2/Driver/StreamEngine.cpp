@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 #include "Pch.h"
 
+#include "Trace.h"
+#include "StreamEngine.tmh"
+
 // The same filter instance may not be used for both midi
 // pin instances, so storing the pins on the filter for the
 // pins to share will not work.
@@ -78,6 +81,13 @@ StreamEngine::Cleanup()
         m_WriteEvent = nullptr;
     }
 
+    // clean up the read event that was provided to us by user mode.
+    if (m_ReadEvent)
+    {
+        ObDereferenceObject(m_ReadEvent);
+        m_ReadEvent = nullptr;
+    }
+
     // For standard streaming loopback, we have a list of the messages
     // being looped back, if it's not empty, free any remaining messages.
     while(!IsListEmpty(&m_LoopbackMessageQueue))
@@ -98,7 +108,7 @@ StreamEngine::Cleanup()
 _Use_decl_annotations_
 void
 StreamEngine::WorkerThread(
-    _In_ PVOID context
+    PVOID context
     )
 {
     PAGED_CODE();
@@ -109,6 +119,8 @@ StreamEngine::WorkerThread(
 void
 StreamEngine::HandleIo()
 {
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
     // This function handles both sending and receiving midi messages
     // when cyclic buffering is being used.
     // This implememtation loops the midi out data back to midi in.
@@ -128,6 +140,10 @@ StreamEngine::HandleIo()
             // run until we get a thread exit event.
             // wait for either a write event indicating data is ready to move, or thread exit.
             status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! thread event with status: %!STATUS!", status);
+
             if (STATUS_WAIT_1 == status)
             {
                 do
@@ -205,6 +221,9 @@ StreamEngine::HandleIo()
                             break;
                         }
 
+                        // reset the client read event, in case we find out later the buffer is full.
+                        KeResetEvent(g_MidiInStreamEngine->m_ReadEvent);
+
                         // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
                         // and read position is empty. (read position is their last read position, write position is our last written).
                         // retrieve our write position first since we know it won't be changing, and their read position second,
@@ -241,17 +260,16 @@ StreamEngine::HandleIo()
 
                         if (bytesToCopy > bytesAvailable)
                         {
-                            // We have a problem. We have data to move, but there
-                            // isn't enough buffer available to do it. The client is not reading data,
-                            // or not reading it fast enough.
+                            PVOID midiInWaitObjects[] = { m_ThreadExitEvent.get(), g_MidiInStreamEngine->m_ReadEvent };
 
-                            // TBD: need to log a glitch event if this happens, so we can
-                            // track it.
-
-                            // Two options, either retry, or drop the data.
-                            // For reliability purposes of testing, retry.
-                            KeSetEvent(m_WriteEvent, 0, 0);
-                            // InterlockedExchange((LONG*)m_ReadRegister, finalReadPosition);
+                            // Wait for either room in the output buffer, or thread exit.
+                            status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+                            if (STATUS_WAIT_1 == status)
+                            {
+                                // we have room in the input pin buffer, set the write event and break
+                                // to go back to the start of processing this output message.
+                                KeSetEvent(m_WriteEvent, 0, 0);
+                            }
                             break;
                         }
 
@@ -281,6 +299,10 @@ StreamEngine::HandleIo()
                         // advance our read position
                         InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
 
+                        // signal that we've read the data, in case a client is waiting for buffer space to
+                        // come available.
+                        KeSetEvent(m_ReadEvent, 0, 0);
+
                         // advance the write position for the loopback and signal that there's data available
                         InterlockedExchange((LONG *)g_MidiInStreamEngine->m_WriteRegister, finalWritePosition);
                         KeSetEvent(g_MidiInStreamEngine->m_WriteEvent, 0, 0);
@@ -298,8 +320,11 @@ StreamEngine::HandleIo()
             else
             {
                 // exit event or failure, exit the loop to terminate the thread.
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! thread terminated with status: %!STATUS!", status);
                 break;
             }
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "%!FUNC! thread event end with status: %!STATUS!", status);
         }while(true);
     }
     // else, this is a midi in pin, nothing to do for this worker thread that is just
@@ -307,9 +332,10 @@ StreamEngine::HandleIo()
 
     m_ThreadExitedEvent.set();
     PsTerminateSystemThread(status);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 }
 
-_Use_decl_annotations_
 NTSTATUS
 StreamEngine::PrepareHardware()
 {
@@ -384,6 +410,8 @@ StreamEngine::Pause()
 
     PAGED_CODE();
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
     if (m_StreamState == AcxStreamStatePause)
     {
         // Nothing to do.
@@ -415,7 +443,7 @@ StreamEngine::Pause()
             m_WorkerThread = nullptr;
         }
     }
-    else
+    else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
         // If g_MidiInStreamEngine is available, the midi out worker thread will loopback.
         // If it isn't available, the midi out worker will throw the data away.
@@ -424,6 +452,12 @@ StreamEngine::Pause()
         // flowing.
         auto lock = g_MidiInLock->acquire();
         g_MidiInStreamEngine = nullptr;
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! Invalid device request, Pin type not valid.");
+        status = STATUS_INVALID_DEVICE_REQUEST;
     }
 
     //
@@ -434,6 +468,7 @@ StreamEngine::Pause()
     status = STATUS_SUCCESS;
 
 exit:
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
     return status;
 }
 
@@ -444,6 +479,8 @@ StreamEngine::Run()
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     if (m_StreamState == AcxStreamStateRun)
     {
@@ -483,7 +520,7 @@ StreamEngine::Run()
             KeSetPriorityThread(m_WorkerThread, HIGH_PRIORITY);
         }
     }
-    else
+    else if (AcxPinGetId(m_Pin) == MidiPinTypeMidiIn)
     {
         // If g_MidiInStreamEngine is available, the midi out worker thread will loopback.
         // If it isn't available, the midi out worker will throw the data away.
@@ -493,11 +530,20 @@ StreamEngine::Run()
         auto lock = g_MidiInLock->acquire();
         g_MidiInStreamEngine = this;
     }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "%!FUNC! Invalid device request, Pin type not valid.");
+        status = STATUS_INVALID_DEVICE_REQUEST;
+    }
 
     //
     // Pause to Run.
     //
     m_StreamState = AcxStreamStateRun;
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
     status = STATUS_SUCCESS;
 
 exit:
@@ -507,11 +553,11 @@ exit:
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetSingleBufferMapping(
-    _In_ UINT32 BufferSize,
-    _In_ KPROCESSOR_MODE Mode,
-    _In_ BOOL LockPages,
-    _In_opt_ PSINGLE_BUFFER_MAPPING BaseMapping,
-    _Inout_ PSINGLE_BUFFER_MAPPING Mapping
+    UINT32 BufferSize,
+    KPROCESSOR_MODE Mode,
+    BOOL LockPages,
+    PSINGLE_BUFFER_MAPPING BaseMapping,
+    PSINGLE_BUFFER_MAPPING Mapping
     )
 {
     PAGED_CODE();
@@ -578,7 +624,7 @@ StreamEngine::GetSingleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::CleanupSingleBufferMapping(
-    _Inout_ PSINGLE_BUFFER_MAPPING Mapping
+    PSINGLE_BUFFER_MAPPING Mapping
     )
 {
     PAGED_CODE();
@@ -631,10 +677,10 @@ StreamEngine::CleanupSingleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetDoubleBufferMapping(
-    _In_ UINT32 BufferSize,
-    _In_ KPROCESSOR_MODE Mode,
-    _In_opt_ PSINGLE_BUFFER_MAPPING BaseMapping,
-    _Inout_ PDOUBLE_BUFFER_MAPPING Mapping
+    UINT32 BufferSize,
+    KPROCESSOR_MODE Mode,
+    PSINGLE_BUFFER_MAPPING BaseMapping,
+    PDOUBLE_BUFFER_MAPPING Mapping
     )
 {
 
@@ -813,8 +859,8 @@ StreamEngine::CleanupDoubleBufferMapping(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetLoopedStreamingBuffer(
-    _In_ ULONG BufferSize,
-    _Inout_ PKSMIDILOOPED_BUFFER  Buffer
+    ULONG BufferSize,
+    PKSMIDILOOPED_BUFFER  Buffer
     )
 {
     // handle incoming property call to retrieve the looped streaming buffer.
@@ -873,7 +919,7 @@ StreamEngine::GetLoopedStreamingBuffer(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::GetLoopedStreamingRegisters(
-    _Inout_ PKSMIDILOOPED_REGISTERS   Buffer
+    PKSMIDILOOPED_REGISTERS   Buffer
     )
 {
     // handle incoming property call to retrieve the looped streaming registers.
@@ -917,7 +963,7 @@ StreamEngine::GetLoopedStreamingRegisters(
 _Use_decl_annotations_
 NTSTATUS
 StreamEngine::SetLoopedStreamingNotificationEvent(
-    _In_ PKSMIDILOOPED_EVENT    Buffer
+    PKSMIDILOOPED_EVENT2   Buffer
     )
 {
     // handle incoming property call to set the looped streaming events.
@@ -942,6 +988,17 @@ StreamEngine::SetLoopedStreamingNotificationEvent(
                                               *ExEventObjectType,
                                               ExGetPreviousMode(),
                                               (PVOID*)&m_WriteEvent,
+                                              nullptr));
+
+    // reference the notification event provided by the client,
+    // For midi out will use this event as the signal that midi out data has been read from the buffer,
+    // For midi in this will be the signal that space is available for additional data to be
+    // written.
+    NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(Buffer->ReadEvent,
+                                              EVENT_MODIFY_STATE,
+                                              *ExEventObjectType,
+                                              ExGetPreviousMode(),
+                                              (PVOID*)&m_ReadEvent,
                                               nullptr));
 
     return STATUS_SUCCESS;

@@ -45,9 +45,11 @@ CMidi2MidiSrv::Initialize(
             SAFE_CLOSEHANDLE(client->MidiInDataFileMapping);
             SAFE_CLOSEHANDLE(client->MidiInRegisterFileMapping);
             SAFE_CLOSEHANDLE(client->MidiInWriteEvent);
+            SAFE_CLOSEHANDLE(client->MidiInReadEvent);
             SAFE_CLOSEHANDLE(client->MidiOutDataFileMapping);
             SAFE_CLOSEHANDLE(client->MidiOutRegisterFileMapping);
             SAFE_CLOSEHANDLE(client->MidiOutWriteEvent);
+            SAFE_CLOSEHANDLE(client->MidiOutReadEvent);
 
             MIDL_user_free(client);
             client = nullptr;
@@ -64,21 +66,13 @@ CMidi2MidiSrv::Initialize(
     //creationParams.BufferSize = 512;    // Set this for debugging see https://aka.ms/midiissues/182 for all the drama :)
     creationParams.BufferSize = PAGE_SIZE * 2;
 
-
-    // Get process id 
-    DWORD clientProcessId = GetCurrentProcessId();
-
-    // Get process name
-
-
-
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
     RETURN_IF_FAILED([&]()
     {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, SessionId, clientProcessId, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, SessionId, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;
@@ -94,6 +88,7 @@ CMidi2MidiSrv::Initialize(
     {
         midiInPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(midiInPipe);
+        midiInPipe->DataFormat = client->DataFormat;
         midiInPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
         RETURN_IF_NULL_ALLOC(midiInPipe->DataBuffer);
         midiInPipe->RegistersBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
@@ -104,6 +99,8 @@ CMidi2MidiSrv::Initialize(
         client->MidiInRegisterFileMapping = NULL;
         midiInPipe->WriteEvent.reset(client->MidiInWriteEvent);
         client->MidiInWriteEvent = NULL;
+        midiInPipe->ReadEvent.reset(client->MidiInReadEvent);
+        client->MidiInReadEvent = NULL;
         midiInPipe->Data.BufferSize = client->MidiInBufferSize;
         RETURN_IF_FAILED(CreateMappedDataBuffer(0, midiInPipe->DataBuffer.get(), &midiInPipe->Data));
         RETURN_IF_FAILED(CreateMappedRegisters(midiInPipe->RegistersBuffer.get(), &midiInPipe->Registers));
@@ -113,6 +110,7 @@ CMidi2MidiSrv::Initialize(
     {
         midiOutPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(midiOutPipe);
+        midiOutPipe->DataFormat = client->DataFormat;
         midiOutPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
         RETURN_IF_NULL_ALLOC(midiOutPipe->DataBuffer);
         midiOutPipe->RegistersBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
@@ -123,6 +121,8 @@ CMidi2MidiSrv::Initialize(
         client->MidiOutRegisterFileMapping = NULL;
         midiOutPipe->WriteEvent.reset(client->MidiOutWriteEvent);
         client->MidiOutWriteEvent = NULL;
+        midiOutPipe->ReadEvent.reset(client->MidiOutReadEvent);
+        client->MidiOutReadEvent = NULL;
         midiOutPipe->Data.BufferSize = client->MidiOutBufferSize;
         // Midi out controls, buffering, and eventing
         RETURN_IF_FAILED(CreateMappedDataBuffer(0, midiOutPipe->DataBuffer.get(), &midiOutPipe->Data));

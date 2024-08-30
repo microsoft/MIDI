@@ -125,7 +125,7 @@ public:
     (
         _In_ PIRP                   Irp,
         _In_ PKSPROPERTY            Request,
-        _In_ PKSMIDILOOPED_EVENT    Buffer
+        _In_ PKSMIDILOOPED_EVENT2   Buffer
     );
 
 private:
@@ -211,6 +211,11 @@ private:
     // data is written into the cyclic buffer by either the driver
     // sending to user mode, or user mode sending to the driver
     PKEVENT m_WriteEvent {nullptr};
+
+    // event shared with user mode that is signaled whenever
+    // data is read from the cyclic buffer by either the driver
+    // receiving from user mode, or user mode receiving from the driver
+    PKEVENT m_ReadEvent {nullptr};
 
     // worker thread that handles IO across the shared memory
     PKTHREAD m_WorkerThread {nullptr};

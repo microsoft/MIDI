@@ -119,7 +119,7 @@ CMidi2KSAggregateMidiInProxy::Callback(
     // and sent it on
     while (m_BS2UMP.availableUMP())
     {
-        uint32_t umpMessage[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
+        uint32_t umpMessage[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
         UINT wordCount;
         for (wordCount = 0; wordCount < _countof(umpMessage) && m_BS2UMP.availableUMP(); wordCount++)
         {

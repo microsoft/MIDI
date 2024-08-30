@@ -23,8 +23,8 @@ CMidi2BS2UMPMidiTransform::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, CreationParams->DataFormatIn != MidiDataFormat_ByteStream);
-    RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, CreationParams->DataFormatOut != MidiDataFormat_UMP);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatIn != MidiDataFormat_ByteStream);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatOut != MidiDataFormat_UMP);
 
     m_Device = Device;
     m_Callback = Callback;
@@ -74,7 +74,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     // and sent it on
     while (m_BS2UMP.availableUMP())
     {
-        uint32_t umpMessage[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
+        uint32_t umpMessage[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
 
         // we need to send only a single message at a time. the library 
         // converts to a stream of words which may be multiple UMPs. So we 

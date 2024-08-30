@@ -46,7 +46,7 @@ HRESULT GetMidiSrvBindingHandle(handle_t* BindingHandle)
         nullptr,
         (RPC_WSTR)MIDISRV_LRPC_PROTOCOL,
         nullptr,
-        (RPC_WSTR)MIDISRV_ENDPOINT,
+        nullptr,
         nullptr,
         &stringBinding));
 
@@ -55,51 +55,6 @@ HRESULT GetMidiSrvBindingHandle(handle_t* BindingHandle)
         BindingHandle));
 
     return S_OK;
-}
-
-void Midi2ServiceTests::TestMidiServiceRPC()
-{
-    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
-
-    static const GUID identifierGuid = {0x4c4c29c3, 0xee6a, 0x4195, {0xb5, 0x56, 0xec, 0xda, 0x8f, 0x5e, 0x87, 0x2b}};
-    LPCWSTR endpointIdentifier{L"{4C4C29C3-EE6A-4195-B556-ECDA8F5E872B}"};
-    REQUESTED_SETTINGS requestedSettings{0};
-    PALLOCATED_SETTINGS allocatedSettings{nullptr};
-    wil::unique_rpc_binding bindingHandle;
-
-    requestedSettings.Flag = TRUE;
-    requestedSettings.Request = RequestEntry1;
-    requestedSettings.Identifier = identifierGuid;
-
-    auto cleanupOnExit = wil::scope_exit([&]() {
-        if (allocatedSettings)
-        {
-            LOG_OUTPUT(L"Freeing allocated memory");
-            MIDL_user_free(allocatedSettings);
-        }
-    });
-
-    LOG_OUTPUT(L"Retrieving binding handle");
-    VERIFY_SUCCEEDED(GetMidiSrvBindingHandle(&bindingHandle));
-
-    VERIFY_SUCCEEDED([&]() {
-        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
-        // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvTestRpc(bindingHandle.get(), endpointIdentifier, &requestedSettings, &allocatedSettings));
-        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
-        RpcEndExcept
-        return S_OK;
-    }());
-
-    LOG_OUTPUT(L"Validating RPC call return values");
-    VERIFY_IS_TRUE(allocatedSettings != nullptr);
-
-    if (allocatedSettings != nullptr)
-    {
-        VERIFY_IS_TRUE(allocatedSettings->Identifier == identifierGuid);
-        VERIFY_IS_TRUE(allocatedSettings->Flag == TRUE);
-        VERIFY_IS_TRUE(allocatedSettings->Request == RequestEntry1);
-    }
 }
 
 void Midi2ServiceTests::TestMidiServiceClientRPC()
@@ -112,6 +67,25 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     MidiClientHandle clientHandle{ 0 };
     std::unique_ptr<CMidiXProc> midiPump;
     DWORD MmCssTaskId{ 0 };
+
+    // create the client session on the service before calling EnumerateDevices, which will kickstart
+    // the service if it's not already running.
+    LOG_OUTPUT(L"Retrieving binding handle");
+    VERIFY_SUCCEEDED(GetMidiSrvBindingHandle(&bindingHandle));
+
+    GUID dummySessionId{};
+    PVOID contextHandle{ nullptr };
+
+    VERIFY_SUCCEEDED([&](){
+        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+        // with structured exception handling.
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), dummySessionId, L"ServiceTest", &contextHandle));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+    LOG_OUTPUT(L"Enumerating devices");
 
     std::vector<std::unique_ptr<MIDIU_DEVICE>> testDevices;
     VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(testDevices, [&](PMIDIU_DEVICE device)
@@ -151,9 +125,11 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
             SAFE_CLOSEHANDLE(client->MidiInDataFileMapping);
             SAFE_CLOSEHANDLE(client->MidiInRegisterFileMapping);
             SAFE_CLOSEHANDLE(client->MidiInWriteEvent);
+            SAFE_CLOSEHANDLE(client->MidiInReadEvent);
             SAFE_CLOSEHANDLE(client->MidiOutDataFileMapping);
             SAFE_CLOSEHANDLE(client->MidiOutRegisterFileMapping);
             SAFE_CLOSEHANDLE(client->MidiOutWriteEvent);
+            SAFE_CLOSEHANDLE(client->MidiOutReadEvent);
 
             MIDL_user_free(client);
             client = nullptr;
@@ -182,18 +158,10 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     creationParams.Flow = MidiFlowBidirectional;
     creationParams.BufferSize = PAGE_SIZE;
 
-    LOG_OUTPUT(L"Retrieving binding handle");
-    VERIFY_SUCCEEDED(GetMidiSrvBindingHandle(&bindingHandle));
-
-    GUID DummySessionId{};
-
-    // Get process id 
-    DWORD clientProcessId = GetCurrentProcessId();
-
     VERIFY_SUCCEEDED([&]() {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParams, DummySessionId, clientProcessId, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParams, dummySessionId, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;
@@ -207,11 +175,15 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     std::unique_ptr <MEMORY_MAPPED_PIPE> midiOutPipe = std::unique_ptr<MEMORY_MAPPED_PIPE>(new (std::nothrow) MEMORY_MAPPED_PIPE);
     VERIFY_IS_TRUE(nullptr != midiOutPipe);
 
+    midiInPipe->DataFormat = creationParams.DataFormat;
+
     midiInPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
     VERIFY_IS_TRUE(nullptr != midiInPipe->DataBuffer);
 
     midiInPipe->RegistersBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
     VERIFY_IS_TRUE(nullptr != midiInPipe->RegistersBuffer);
+
+    midiOutPipe->DataFormat = creationParams.DataFormat;
 
     midiOutPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
     VERIFY_IS_TRUE(nullptr != midiOutPipe->DataBuffer);
@@ -226,6 +198,8 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     client->MidiInRegisterFileMapping = NULL;
     midiInPipe->WriteEvent.reset(client->MidiInWriteEvent);
     client->MidiInWriteEvent = NULL;
+    midiInPipe->ReadEvent.reset(client->MidiInReadEvent);
+    client->MidiInReadEvent = NULL;
     midiInPipe->Data.BufferSize = client->MidiInBufferSize;
     midiOutPipe->DataBuffer->FileMapping.reset(client->MidiOutDataFileMapping);
     client->MidiOutDataFileMapping = NULL;
@@ -233,6 +207,8 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     client->MidiOutRegisterFileMapping = NULL;
     midiOutPipe->WriteEvent.reset(client->MidiOutWriteEvent);
     client->MidiOutWriteEvent = NULL;
+    midiOutPipe->ReadEvent.reset(client->MidiOutReadEvent);
+    client->MidiOutReadEvent = NULL;
     midiOutPipe->Data.BufferSize = client->MidiOutBufferSize;
 
     MIDL_user_free(client);
