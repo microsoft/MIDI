@@ -21,6 +21,7 @@ using namespace Microsoft::WRL::Wrappers;
 // for pairs of midi in & out endpoints on the same filter.
 
 #define CREATE_KS_BIDI_SWDS
+#define BIDI_REPLACES_INOUT_SWDS
 
 _Use_decl_annotations_
 HRESULT
@@ -62,7 +63,10 @@ CMidi2KSMidiEndpointManager::Initialize(
     m_DeviceEnumerationCompleted = m_Watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
 
     m_Watcher.Start();
-    
+
+    // Wait for everything to be created so that they're available immediately after service start.
+    m_EnumerationCompleted.wait();
+
     return S_OK;
 }
 

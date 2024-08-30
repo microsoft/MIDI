@@ -50,13 +50,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
     <None Include="Midi2.VirtualPatchBayAbstraction.def">
       <Filter>Source Files</Filter>
     </None>
     <None Include="Midi2.VirtualPatchBayAbstraction.rgs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h">

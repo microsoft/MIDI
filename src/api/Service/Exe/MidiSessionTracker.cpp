@@ -7,7 +7,7 @@
 // ============================================================================
 
 #include "stdafx.h"
-
+#include <filesystem>
 
 _Use_decl_annotations_
 HRESULT
@@ -18,10 +18,6 @@ CMidiSessionTracker::Initialize(std::shared_ptr<CMidiClientManager>& clientManag
     return S_OK;
 }
 
-
-
-
-
 HRESULT
 CMidiSessionTracker::VerifyConnectivity()
 {
@@ -31,14 +27,50 @@ CMidiSessionTracker::VerifyConnectivity()
 
 _Use_decl_annotations_
 HRESULT
-CMidiSessionTracker::AddClientSessionInternal(
+CMidiSessionTracker::AddClientSession(
     GUID SessionId,
     LPCWSTR SessionName,
     DWORD ClientProcessId,
-    LPCWSTR ClientProcessName,
+    wil::unique_handle& ClientProcessHandle,
     PVOID* ContextHandle
 )
 {
+    std::wstring clientProcessName{};
+    std::wstring modulePath{ 0 };
+    modulePath.resize(MAX_PATH+1);
+
+
+    if (auto session = m_sessions.find(SessionId); session != m_sessions.end())
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingWideString(L"Session already exists", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        RETURN_IF_FAILED(E_INVALIDARG);
+    }
+
+
+    auto numPathCharacters = GetModuleFileNameEx(ClientProcessHandle.get(), NULL, modulePath.data(), (DWORD)modulePath.capacity());
+    if (numPathCharacters > 0)
+    {
+        clientProcessName = (std::filesystem::path(modulePath).filename()).c_str();
+    }
+    else
+    {
+        // couldn't get the current process name
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingWideString(L"Unable to get current process name", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+    }
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -47,7 +79,7 @@ CMidiSessionTracker::AddClientSessionInternal(
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(SessionId),
         TraceLoggingWideString(SessionName),
-        TraceLoggingWideString(ClientProcessName)
+        TraceLoggingWideString(clientProcessName.c_str())
         );
 
     MidiSessionEntry entry;
@@ -61,9 +93,9 @@ CMidiSessionTracker::AddClientSessionInternal(
 
     entry.ClientProcessId = ClientProcessId;
 
-    if (ClientProcessName != nullptr)
+    if (clientProcessName.c_str() != nullptr)
     {
-        entry.ProcessName = ClientProcessName;
+        entry.ProcessName = clientProcessName.c_str();
     }
 
     entry.StartTime = std::chrono::system_clock::now();
@@ -92,26 +124,6 @@ CMidiSessionTracker::AddClientSessionInternal(
     return S_OK;
 }
 
-
-_Use_decl_annotations_
-HRESULT
-CMidiSessionTracker::AddClientSession(
-    GUID SessionId,
-    LPCWSTR SessionName
-)
-{
-    UNREFERENCED_PARAMETER(SessionId);
-    UNREFERENCED_PARAMETER(SessionName);
-
-    // we don't implement this here. It's required for the abstraction.
-    return E_NOTIMPL;
-}
-
-
-// TODO: I don't like how this can be called from any process
-// So really should have PID verification, some shared key, or
-// other security to tie these calls and their calling context
-// to the specific app. 
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::UpdateClientSessionName(
@@ -141,8 +153,6 @@ CMidiSessionTracker::UpdateClientSessionName(
             if (session->second.ClientProcessId == ClientProcessId)
             {
                 m_sessions[SessionId].SessionName = newName;
-
-                return S_OK;
             }
             else
             {
@@ -157,7 +167,7 @@ CMidiSessionTracker::UpdateClientSessionName(
                     TraceLoggingWideString(SessionName)
                     );
 
-                return E_NOTFOUND;
+                RETURN_IF_FAILED(E_NOTFOUND);
             }
         }
         else
@@ -173,7 +183,7 @@ CMidiSessionTracker::UpdateClientSessionName(
                 TraceLoggingWideString(SessionName)
             );
 
-            return E_NOTFOUND;
+            RETURN_IF_FAILED(E_NOTFOUND);
         }
     }
     else
@@ -189,16 +199,18 @@ CMidiSessionTracker::UpdateClientSessionName(
             TraceLoggingWideString(SessionName)
         );
 
-        return E_INVALIDARG;
+        RETURN_IF_FAILED(E_INVALIDARG);
     }
 
+    return S_OK;
 }
 
 
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::RemoveClientSession(
-    GUID SessionId
+    GUID SessionId,
+    DWORD ClientProcessId
 )
 {
     TraceLoggingWrite(
@@ -210,9 +222,16 @@ CMidiSessionTracker::RemoveClientSession(
         TraceLoggingGuid(SessionId)
     );
 
-    if (m_sessions.find(SessionId) != m_sessions.end())
+    if (auto session = m_sessions.find(SessionId); session != m_sessions.end())
     {
-        m_sessions.erase(SessionId);
+        if (session->second.ClientProcessId == ClientProcessId)
+        {
+            m_sessions.erase(SessionId);
+        }
+        else
+        {            
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
     }
 
     return S_OK;
@@ -266,10 +285,6 @@ CMidiSessionTracker::RemoveClientSessionInternal(
     return S_OK;
 }
 
-
-
-
-
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::IsValidSession(
@@ -284,12 +299,18 @@ CMidiSessionTracker::IsValidSession(
         {
             return S_OK;
         }
+        else
+        {
+            // Session exists, but with for a different PID,
+            // so the process id parameter is invalid.
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
     }
 
+    // session is not present in the list, this is an expected
+    // error for some situations
     return E_NOTFOUND;
 }
-
-
 
 _Use_decl_annotations_
 HRESULT
@@ -347,7 +368,7 @@ CMidiSessionTracker::AddClientEndpointConnection(
             TraceLoggingWideString(L"No valid session found. Returning E_NOTFOUND.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-        return E_NOTFOUND;
+        RETURN_IF_FAILED(E_NOTFOUND);
     }
 
     return S_OK;

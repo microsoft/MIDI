@@ -42,14 +42,6 @@ Environment:
 
 class StreamEngine;
 
-// LOOPBACK_MESSAGE is only used for standard streaming loopback messages
-typedef struct _LOOPBACK_MESSAGE 
-{
-    LIST_ENTRY ListEntry;
-    ULONG Size;
-    UINT8 Buffer[1];
-} LOOPBACK_MESSAGE, *PLOOPBACK_MESSAGE;
-
 typedef struct _SINGLE_BUFFER_MAPPING
 {
     // address of the memory alloation
@@ -134,7 +126,7 @@ public:
     PAGED_CODE_SEG
     NTSTATUS
     SetLoopedStreamingNotificationEvent(
-        _In_ PKSMIDILOOPED_EVENT    Buffer
+        _In_ PKSMIDILOOPED_EVENT2   Buffer
         );
 
     _Must_inspect_result_
@@ -205,9 +197,6 @@ private:
     ACXPIN      m_Pin {nullptr};
     ACX_STREAM_STATE m_StreamState {AcxStreamStateStop};
 
-    // true for cyclic, false for standard
-    BOOL        m_IsLooped {FALSE};
-
     // The process which acquired the buffer, the user
     // mode buffer is mapped into this processes address space.
     PEPROCESS   m_Process {nullptr};
@@ -230,12 +219,16 @@ private:
     // sending to user mode, or user mode sending to the driver
     PKEVENT     m_WriteEvent {nullptr};
 
+    // event shared with user mode that is signaled whenever
+    // data is read from the cyclic buffer by either the driver
+    // receiving from user mode, or user mode receiving from the driver
+    PKEVENT     m_ReadEvent {nullptr};
+
     // worker thread that handles IO across the shared memory
     PKTHREAD    m_WorkerThread {nullptr};
     wil::kernel_event_auto_reset   m_ThreadExitEvent;
     wil::kernel_event_manual_reset m_ThreadExitedEvent {true};
 
-    // for standard streaming of loopback messages
+    // for standard streaming of messages
     wil::fast_mutex_with_critical_region m_MidiInLock;
-    LIST_ENTRY  m_LoopbackMessageQueue {nullptr};
 };

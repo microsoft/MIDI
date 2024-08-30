@@ -36,30 +36,22 @@ CMidi2MidiSrvSessionTracker::VerifyConnectivity()
 
     if (MidiSrvManager::IsServiceInstalled())
     {
-        if (MidiSrvManager::AttemptToStartService())
-        {
-            wil::unique_rpc_binding bindingHandle;
+        wil::unique_rpc_binding bindingHandle;
 
-            RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
+        RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
-            RETURN_IF_FAILED([&]()
-                {
-                    // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
-                    // with structured exception handling.
-                    RpcTryExcept RETURN_IF_FAILED(MidiSrvVerifyConnectivity(bindingHandle.get()));
-                    RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
-                    RpcEndExcept
+        RETURN_IF_FAILED([&]()
+            {
+                // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+                // with structured exception handling.
+                RpcTryExcept RETURN_IF_FAILED(MidiSrvVerifyConnectivity(bindingHandle.get()));
+                RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+                RpcEndExcept
 
-                        return S_OK;
-                }());
+                    return S_OK;
+            }());
 
-            return S_OK;
-        }
-        else
-        {
-            // couldn't start service
-            return E_FAIL;
-        }
+        return S_OK;
     }
     else
     {
@@ -86,34 +78,6 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
 
     wil::unique_rpc_binding bindingHandle;
 
-    // get process id and name
-    DWORD clientProcessId = GetCurrentProcessId();
-
-    std::wstring modulePath{ 0 };
-    modulePath.resize(2048);   // MAX_PATH is almost never big enough. This is a wild shot. Not going to allocate 32k chars for this but I know this will bite me some day
-
-    auto numPathCharacters = GetModuleFileName(NULL, modulePath.data(), (DWORD)modulePath.capacity());
-
-    std::wstring clientProcessName{};
-
-    if (numPathCharacters > 0)
-    {
-        clientProcessName = (std::filesystem::path(modulePath).filename()).c_str();
-    }
-    else
-    {
-        // couldn't get the current process name
-        TraceLoggingWrite(
-            MidiSrvAbstractionTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to get current process name", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-    }
-
-
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
     RETURN_HR_IF_NULL(E_INVALIDARG, SessionName);
 
@@ -121,7 +85,7 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, SessionName, clientProcessId, clientProcessName.c_str(), &m_contextHandle));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, SessionName, &m_contextHandle));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             
@@ -135,8 +99,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::UpdateClientSessionName(
     GUID SessionId,
-    LPCWSTR SessionName,
-    DWORD ClientProcessId
+    LPCWSTR SessionName
 )
 {
     TraceLoggingWrite(
@@ -156,7 +119,7 @@ CMidi2MidiSrvSessionTracker::UpdateClientSessionName(
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateSessionName(bindingHandle.get(), m_contextHandle, SessionId, SessionName, ClientProcessId));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateSessionName(bindingHandle.get(), m_contextHandle, SessionId, SessionName));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
 

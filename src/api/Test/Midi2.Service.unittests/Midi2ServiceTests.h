@@ -32,8 +32,6 @@ public:
     TEST_METHOD_CLEANUP(TestCleanup);
 
     //Generic Tests
-    TEST_METHOD(TestMidiServiceRPC);
-
     TEST_METHOD(TestMidiServiceClientRPC);
 
     Midi2ServiceTests()

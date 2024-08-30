@@ -138,6 +138,26 @@ CMidiSrv::Initialize()
                 )
             )
         );                 
+
+        m_RpcRegistered = true;
+
+        RETURN_IF_FAILED(
+            HRESULT_FROM_RPCSTATUS(
+                RpcServerInqBindings(&m_RpcBindingVector)
+            )
+        );
+
+        RETURN_IF_FAILED(
+            HRESULT_FROM_RPCSTATUS(
+                RpcEpRegisterW(MidiSrvRPC_v1_0_s_ifspec,
+                    m_RpcBindingVector.get(),
+                    NULL,
+                    NULL
+                )
+            )
+        );
+
+        m_RpcBound = true;
     }
     else
     {
@@ -166,6 +186,23 @@ CMidiSrv::Cleanup()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
+
+    if (m_RpcBound)
+    {
+        LOG_IF_WIN32_ERROR(::RpcEpUnregister(MidiSrvRPC_v1_0_s_ifspec, m_RpcBindingVector.get(), nullptr));
+        m_RpcBound = false;
+    }
+    
+    if (m_RpcRegistered)
+    {
+        LOG_IF_WIN32_ERROR(::RpcServerUnregisterIfEx(MidiSrvRPC_v1_0_s_ifspec, nullptr, 1));
+        m_RpcRegistered = false;
+    }
+    
+    if (m_RpcBindingVector)
+    {
+        m_RpcBindingVector.reset();
+    }
 
     if (m_ClientManager)
     {

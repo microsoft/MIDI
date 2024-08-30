@@ -73,7 +73,10 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     m_DeviceEnumerationCompleted = m_Watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
 
     m_Watcher.Start();
-    
+
+    // Wait for everything to be created so that they're available immediately after service start.
+    m_EnumerationCompleted.wait();
+
     return S_OK;
 }
 

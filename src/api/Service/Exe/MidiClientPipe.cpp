@@ -71,15 +71,19 @@ CMidiClientPipe::Initialize(
         SAFE_CLOSEHANDLE(Client->MidiInDataFileMapping);
         SAFE_CLOSEHANDLE(Client->MidiInRegisterFileMapping);
         SAFE_CLOSEHANDLE(Client->MidiInWriteEvent);
+        SAFE_CLOSEHANDLE(Client->MidiInReadEvent);
         SAFE_CLOSEHANDLE(Client->MidiOutDataFileMapping);
         SAFE_CLOSEHANDLE(Client->MidiOutRegisterFileMapping);
         SAFE_CLOSEHANDLE(Client->MidiOutWriteEvent);
+        SAFE_CLOSEHANDLE(Client->MidiOutReadEvent);
     });
 
     if (IsFlowSupported(MidiFlowIn))
     {
         midiInPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE );
         RETURN_IF_NULL_ALLOC(midiInPipe);
+
+        midiInPipe->DataFormat = CreationParams->DataFormat;
 
         midiInPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
         RETURN_IF_NULL_ALLOC(midiInPipe->DataBuffer);
@@ -91,10 +95,12 @@ CMidiClientPipe::Initialize(
         RETURN_IF_FAILED(CreateMappedDataBuffer(CreationParams->BufferSize, midiInPipe->DataBuffer.get(), &midiInPipe->Data));
         RETURN_IF_FAILED(CreateMappedRegisters(midiInPipe->RegistersBuffer.get(), &midiInPipe->Registers));
         midiInPipe->WriteEvent.create(wil::EventOptions::ManualReset);
+        midiInPipe->ReadEvent.create(wil::EventOptions::ManualReset);
 
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiInPipe->DataBuffer->FileMapping.get(), GetCurrentProcess(), &(Client->MidiInDataFileMapping), DUPLICATE_SAME_ACCESS, TRUE, 0));
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiInPipe->RegistersBuffer->FileMapping.get(), GetCurrentProcess(), &(Client->MidiInRegisterFileMapping), DUPLICATE_SAME_ACCESS, TRUE, 0));
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiInPipe->WriteEvent.get(), GetCurrentProcess(), &(Client->MidiInWriteEvent), EVENT_ALL_ACCESS, TRUE, 0));
+        RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiInPipe->ReadEvent.get(), GetCurrentProcess(), &(Client->MidiInReadEvent), EVENT_ALL_ACCESS, TRUE, 0));
         Client->MidiInBufferSize = midiInPipe->Data.BufferSize;
     }
 
@@ -102,6 +108,8 @@ CMidiClientPipe::Initialize(
     {
         midiOutPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE );
         RETURN_IF_NULL_ALLOC(midiOutPipe);
+
+        midiOutPipe->DataFormat = CreationParams->DataFormat;
 
         midiOutPipe->DataBuffer.reset(new (std::nothrow) MEMORY_MAPPED_BUFFER);
         RETURN_IF_NULL_ALLOC(midiOutPipe->DataBuffer);
@@ -113,10 +121,12 @@ CMidiClientPipe::Initialize(
         RETURN_IF_FAILED(CreateMappedDataBuffer(CreationParams->BufferSize, midiOutPipe->DataBuffer.get(), &midiOutPipe->Data));
         RETURN_IF_FAILED(CreateMappedRegisters(midiOutPipe->RegistersBuffer.get(), &midiOutPipe->Registers));
         midiOutPipe->WriteEvent.create(wil::EventOptions::ManualReset);
+        midiOutPipe->ReadEvent.create(wil::EventOptions::ManualReset);
 
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiOutPipe->DataBuffer->FileMapping.get(), GetCurrentProcess(), &(Client->MidiOutDataFileMapping), DUPLICATE_SAME_ACCESS, FALSE, 0));
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiOutPipe->RegistersBuffer->FileMapping.get(), GetCurrentProcess(), &(Client->MidiOutRegisterFileMapping), DUPLICATE_SAME_ACCESS, FALSE, 0));
         RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiOutPipe->WriteEvent.get(), GetCurrentProcess(), &(Client->MidiOutWriteEvent), EVENT_ALL_ACCESS, TRUE, 0));
+        RETURN_LAST_ERROR_IF(FALSE == DuplicateHandle(GetCurrentProcess(), midiOutPipe->ReadEvent.get(), GetCurrentProcess(), &(Client->MidiOutReadEvent), EVENT_ALL_ACCESS, TRUE, 0));
         Client->MidiOutBufferSize = midiOutPipe->Data.BufferSize;
     }
 

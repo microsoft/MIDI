@@ -33,17 +33,19 @@ CMidiTransformPipe::Initialize(
     TRANSFORMCREATIONPARAMS creationParams {};
 
     m_TransformGuid = CreationParams->TransformGuid;
-    m_DataFormatIn = CreationParams->DataFormatIn;
-    m_DataFormatOut = CreationParams->DataFormatOut;
-    m_Flow = CreationParams->Flow;
 
-    RETURN_IF_FAILED(CMidiPipe::Initialize(Device, m_Flow));
+    // Transforms are "bidirectional" from the midi pipes perspective,
+    // so we always initialize the pipe as bidirectional.
+    RETURN_IF_FAILED(CMidiPipe::Initialize(Device, MidiFlowBidirectional));
+
+    RETURN_IF_FAILED(SetDataFormatIn(CreationParams->DataFormatIn));
+    RETURN_IF_FAILED(SetDataFormatOut(CreationParams->DataFormatOut));
 
     RETURN_IF_FAILED(CoCreateInstance(m_TransformGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransform)));
     RETURN_IF_FAILED(midiTransform->Activate(__uuidof(IMidiDataTransform), (void**)&m_MidiDataTransform));
 
-    creationParams.DataFormatIn = m_DataFormatIn;
-    creationParams.DataFormatOut = m_DataFormatOut;
+    creationParams.DataFormatIn = DataFormatIn();
+    creationParams.DataFormatOut = DataFormatOut();
     RETURN_IF_FAILED(m_MidiDataTransform->Initialize(Device, &creationParams, MmcssTaskId, this, 0, MidiDeviceManager));
 
     TraceLoggingWrite(

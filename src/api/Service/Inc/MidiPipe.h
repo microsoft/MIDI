@@ -98,14 +98,14 @@ public:
 
     virtual HRESULT SetDataFormatIn(MidiDataFormat DataFormat)
     {
-        RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, !IsFormatSupportedIn(DataFormat));
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), !IsFormatSupportedIn(DataFormat));
         m_DataFormatIn = DataFormat;
         return S_OK;
     }
 
     virtual HRESULT SetDataFormatOut(MidiDataFormat DataFormat)
     {
-        RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, !IsFormatSupportedOut(DataFormat));
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), !IsFormatSupportedOut(DataFormat));
         m_DataFormatOut = DataFormat;
         return S_OK;
     }

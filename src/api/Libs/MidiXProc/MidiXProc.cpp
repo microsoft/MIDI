@@ -212,13 +212,26 @@ CMidiXProc::Initialize(DWORD* MmcssTaskId,
     RETURN_HR_IF(E_INVALIDARG, !MidiIn && !MidiOut);
     RETURN_HR_IF(E_INVALIDARG, MidiIn && !MidiInCallback);
 
+    // validate that the provided data format is valid
+    if (MidiIn)
+    {
+        RETURN_HR_IF(E_INVALIDARG, (MidiIn->DataFormat != MidiDataFormat_ByteStream) && 
+            (MidiIn->DataFormat != MidiDataFormat_UMP) && 
+            (MidiIn->DataFormat != MidiDataFormat_Any));
+    }
+
+    if (MidiOut)
+    {
+        RETURN_HR_IF(E_INVALIDARG, (MidiOut->DataFormat != MidiDataFormat_ByteStream) && 
+            (MidiOut->DataFormat != MidiDataFormat_UMP) &&
+            (MidiOut->DataFormat != MidiDataFormat_Any));
+    }
+
     m_MidiInCallback = MidiInCallback;
     m_MidiInCallbackContext = Context;
     m_ThreadTerminateEvent.create();
     m_ThreadStartedEvent.create();
     m_MmcssTaskId = *MmcssTaskId;
-
-
 
     // now that we know we will succeed, take ownership of the
     // mapped pipes.
@@ -282,18 +295,34 @@ CMidiXProc::SendMidiMessage(
     LONGLONG Position
 )
 {
-    BOOL bufferSent {FALSE};
+    bool bufferSent{false};
     UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + Length;
-    UINT maxRetries{ 10000 };
 
     RETURN_HR_IF(E_UNEXPECTED, !m_MidiOut);
-    RETURN_HR_IF(E_INVALIDARG, Length > MAXIMUM_LOOPED_DATASIZE);
     RETURN_HR_IF(E_INVALIDARG, Length < MINIMUM_LOOPED_DATASIZE);
+    RETURN_HR_IF(E_INVALIDARG, (m_MidiOut->DataFormat != MidiDataFormat_ByteStream) && 
+                                (m_MidiOut->DataFormat != MidiDataFormat_UMP));
+
+    if (m_MidiOut->DataFormat == MidiDataFormat_ByteStream)
+    {
+        RETURN_HR_IF(E_INVALIDARG, Length > MAXIMUM_LOOPED_BYTESTREAM_DATASIZE);
+    }
+    else
+    {
+        RETURN_HR_IF(E_INVALIDARG, Length > MAXIMUM_LOOPED_UMP_DATASIZE);
+    }
 
     PMEMORY_MAPPED_REGISTERS Registers = &(m_MidiOut->Registers);
     PMEMORY_MAPPED_DATA Data = &(m_MidiOut->Data);
+    bool retry {false};
 
     do{
+        retry = false;
+
+        // reset the read event, so we will know when the client reads data in the event
+        // that the buffer is full
+        m_MidiOut->ReadEvent.ResetEvent();
+
         // the write position is the last position we have written,
         // the read position is the last position the driver has read from
         ULONG writePosition = InterlockedCompareExchange((LONG*)Registers->WritePosition, 0, 0);
@@ -345,27 +374,22 @@ CMidiXProc::SendMidiMessage(
             InterlockedExchange((LONG*)Registers->WritePosition, newWritePosition);
             RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
 
-            //if (!SetEvent(m_MidiOut->WriteEvent.get()))
-            //{
-            //    LOG_LAST_ERROR();
-            //    RETURN_LAST_ERROR_IF(true);
-            //}
-
-            bufferSent = TRUE;
+            bufferSent = true;
         }
         else
         {
-            // relinquish the remainder of this processing slice and try again on the next
-            //Sleep(0);
-            
-            // if you remove this line, you will get additional send *and* receive failures
-            // if you set it to Sleep(0), you will end up with missing messages if we're 
-            // spammed heavily
-            // If you set it to Sleep(1), there's more jitter, but all messages arrive.
-            Sleep(1);
+            // Buffer is full, wait for the client to read some data out of the buffer to
+            // make space
+            HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
+            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+            if (ret == (WAIT_OBJECT_0 + 1))
+            {
+                // space has been made, try again.
+                retry = 1;
+                continue;
+            }
         }
-
-    }while (!bufferSent && --maxRetries > 0);
+    }while (retry);
 
     // Failed to send the buffer due to insufficient space,
     // fail.
@@ -452,6 +476,7 @@ CMidiXProc::ProcessMidiIn()
                 // advance to the next midi packet, we loop processing them one at a time
                 // until we have processed all that is available for this pass.
                 InterlockedExchange((LONG*) Registers->ReadPosition, newReadPosition);
+                RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiIn->ReadEvent.get()));
             } while(TRUE);
         }
         else

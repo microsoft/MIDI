@@ -74,5 +74,10 @@ private:
     std::shared_ptr<CMidiEndpointProtocolManager> m_EndpointProtocolManager;
 
     std::shared_ptr<CMidiSessionTracker> m_SessionTracker;
+
+    bool m_RpcRegistered {false};
+    bool m_RpcBound {false};
+    wil::unique_rpc_binding_vector  m_RpcBindingVector;
+
 };
 

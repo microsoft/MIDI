@@ -23,8 +23,8 @@ CMidi2UMP2BSMidiTransform::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, CreationParams->DataFormatIn != MidiDataFormat_UMP);
-    RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, CreationParams->DataFormatOut != MidiDataFormat_ByteStream);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatIn != MidiDataFormat_UMP);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatOut != MidiDataFormat_ByteStream);
 
     m_Device = Device;
     m_Callback = Callback;
@@ -66,7 +66,7 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
     // and send it on
     while (m_UMP2BS.availableBS())
     {
-        BYTE byteStream[MAXIMUM_LOOPED_DATASIZE];
+        BYTE byteStream[MAXIMUM_LOOPED_BYTESTREAM_DATASIZE];
         UINT byteCount;
         for(byteCount = 0; byteCount < _countof(byteStream) && m_UMP2BS.availableBS(); byteCount++)
         {
