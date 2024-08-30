@@ -10,7 +10,6 @@
                     'VCCLCompilerTool': {
                         'ExceptionHandling': 1, # /EHsc,
                         'RuntimeLibrary': '3', # /MDd
-                        "AdditionalOptions": ["/std:c++17" ],
                     }
                 }
 		    },
@@ -19,7 +18,6 @@
                     'VCCLCompilerTool': {
                         'ExceptionHandling': 1, # /EHsc,
                         'RuntimeLibrary': '2', # /MD
-                        "AdditionalOptions": ["/std:c++17" ],
                     }
                 }
             }

@@ -864,6 +864,7 @@ class Build : NukeBuild
                     arguments: $"rebuild" +
                         $" --openssl_fips=X" +
                         $" --arch={platform.ToLower()}" +
+                        $" --verbose" +
                         $" --msvs_version=2022",
                     workingDirectory: nsFolder,
                     logOutput: true

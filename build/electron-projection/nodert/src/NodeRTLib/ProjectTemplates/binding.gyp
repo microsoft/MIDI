@@ -6,6 +6,7 @@
   "includes": ["common.gypi"],
   "targets": [{
     "target_name": "binding",
+    "cflags_cc":[ "-std=c++17" ]
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"
@@ -73,8 +74,8 @@
     ],
     "msvs_settings": {
       "VCCLCompilerTool": {
-        "AdditionalOptions": ["/ZW"],
-        "DisableSpecificWarnings": [4609]
+        "AdditionalOptions": ["/ZW", "/std:c++17"],
+        "DisableSpecificWarnings": [4609],
       }
     }
   }]
