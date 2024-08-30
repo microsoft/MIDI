@@ -1,21 +1,20 @@
-#if 0
-Copyright (c) 1999-2004 Microsoft Corporation. All Rights Reserved
-#endif
+//
+//    Copyright (C) Microsoft.  All rights reserved.
+//
 
-#include "windows.h"
+#include <windows.h>
 #include <ntverp.h>
-#define VER_FILETYPE                    VFT_DLL
-#define VER_FILESUBTYPE                 VFT2_DRV_SOUND
-#define VER_FILEDESCRIPTION_STR         "Winmm  audio system driver"
-#define VER_INTERNALNAME_STR            "wdmaud.drv"
-#define VER_ORIGINALFILENAME_STR        "wdmaud.drv"
-#include <Common.ver>
-
-// local resources
 #include "resource.h"
 
-// Localize:
-STRINGTABLE 
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows MIDI 2 wdmaud2 driver"
+#define VER_INTERNALNAME_STR        "wdmaud2.drv"
+#define VER_ORIGINALFILENAME_STR    "wdmaud2.drv"
+
+#include "common.ver"
+
+STRINGTABLE
 BEGIN
     // default name of mixer line
     IDS_DEFAULT_LINENAME_UNNAMED    "Unnamed"
@@ -31,3 +30,4 @@ BEGIN
     IDS_SUBMIXER_MUTE_SHORT         "Mute"
     IDS_SUBMIXER_MUTE_LONG          "Mute"
 END
+

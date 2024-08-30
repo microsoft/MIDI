@@ -78,10 +78,6 @@ typedef struct {
 } KSMIDILOOPED_REGISTERS, *PKSMIDILOOPED_REGISTERS;
 
 typedef struct {
-    HANDLE WriteEvent;
-} KSMIDILOOPED_EVENT, *PKSMIDILOOPED_EVENT;
-
-typedef struct {
     KSPROPERTY  Property;
     ULONG       RequestedBufferSize;
 } KSMIDILOOPED_BUFFER_PROPERTY, *PKSMIDILOOPED_BUFFER_PROPERTY;
@@ -91,6 +87,14 @@ typedef struct {
     LONGLONG Position;
     ULONG   ByteCount;
 } UMPDATAFORMAT, *PUMPDATAFORMAT;
+#endif
+
+#ifndef MIDILOOPED_EVENT2
+#define MIDILOOPED_EVENT2
+typedef struct {
+    HANDLE WriteEvent;
+    HANDLE ReadEvent;
+} KSMIDILOOPED_EVENT2, *PKSMIDILOOPED_EVENT2;
 #endif
 
 #ifndef LOOPEDDATAFORMAT

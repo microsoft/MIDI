@@ -103,6 +103,8 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
+    
     DWORD mmcssTaskId {0};
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
@@ -122,10 +124,19 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
         {
             midiInDevice->Cleanup();
         }
+
+        if (midiSessionTracker.get() != nullptr)
+        {
+            midiSessionTracker->RemoveClientSession(m_SessionId);
+        }
     });
 
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiIn), (void **) &midiInDevice));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiOut), (void **) &midiOutDevice));
+
+    // may fail, depending on abstraction layer support, currently only midisrv abstraction supports
+    // the session tracker.
+    midiAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
@@ -139,6 +150,13 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
     };
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        // create the client session on the service before calling GetEndpoints, which will kickstart
+        // the service if it's not already running.
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiAbstraction"));
+    }
 
     if (!GetEndpoints(abstractionCreationParams.DataFormat, MidiOneInterface, midiInInstanceId, midiOutInstanceId))
     {
@@ -182,6 +200,11 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
     cleanupOnFailure.release();
     VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
     VERIFY_SUCCEEDED(midiInDevice->Cleanup());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(m_SessionId));
+    }
 }
 
 // NOTE: activation with a MidiOne interface does not apply to the KS abstraction
@@ -236,6 +259,7 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId {0};
     DWORD mmcssTaskIdIn {0};
     DWORD mmcssTaskIdOut {0};
@@ -255,7 +279,16 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
         {
             midiInDevice->Cleanup();
         }
+
+        if (midiSessionTracker.get() != nullptr)
+        {
+            midiSessionTracker->RemoveClientSession(m_SessionId);
+        }
     });
+
+    // may fail, depending on abstraction layer support, currently only midisrv abstraction supports
+    // the session tracker.
+    midiAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
 
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiIn), (void **) &midiInDevice));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiOut), (void **) &midiOutDevice));
@@ -267,6 +300,13 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     // enable mmcss for our test thread, to ensure that components only
     // manage mmcss for their own workers.
     VERIFY_SUCCEEDED(EnableMmcss(mmcssHandle, mmcssTaskId));
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        // create the client session on the service before calling GetEndpoints, which will kickstart
+        // the service if it's not already running.
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiAbstractionCreationOrder"));
+    }
 
     if (!GetEndpoints(abstractionCreationParams.DataFormat, MidiOneInterface, midiInInstanceId, midiOutInstanceId))
     {
@@ -333,6 +373,11 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
 
+    if (midiSessionTracker.get() != nullptr)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(m_SessionId));
+    }
+
     cleanupOnFailure.release();
     VERIFY_SUCCEEDED(midiInDevice->Cleanup());
     VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
@@ -384,6 +429,7 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
 
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiBiDi> midiBiDiDevice;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId {0};
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
@@ -398,8 +444,16 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
         {
             midiBiDiDevice->Cleanup();
         }
+
+        if (midiSessionTracker.get() != nullptr)
+        {
+            midiSessionTracker->RemoveClientSession(m_SessionId);
+        }
     });
 
+    // may fail, depending on abstraction layer support, currently only midisrv abstraction supports
+    // the session tracker.
+    midiAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void **) &midiBiDiDevice));
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
@@ -415,11 +469,18 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
 
+    if (midiSessionTracker.get() != nullptr)
+    {
+        // create the client session on the service before calling GetEndpoints, which will kickstart
+        // the service if it's not already running.
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiAbstractionBiDi"));
+    }
+
     if (!GetBiDiEndpoint(abstractionCreationParams.DataFormat, midiBiDirectionalInstanceId))
     {
         return;
     }
-    
+
     LOG_OUTPUT(L"Initializing midi BiDi");
     VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, m_SessionId));
 
@@ -454,6 +515,11 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
 
     cleanupOnFailure.release();
     VERIFY_SUCCEEDED(midiBiDiDevice->Cleanup());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(m_SessionId));
+    }
 }
 
 void MidiAbstractionTests::TestMidiKSAbstractionBiDi_UMP()
@@ -491,6 +557,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
 
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
     wil::com_ptr_nothrow<IMidiBiDi> midiBiDiDevice;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId{0};
     wil::unique_event_nothrow allMessagesReceived;
     UINT expectedMessageCount = DelayedMessages ? (3000 / messageDelay) : 100000;
@@ -531,7 +598,16 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
         {
             midiBiDiDevice->Cleanup();
         }
+
+        if (midiSessionTracker.get() != nullptr)
+        {
+            midiSessionTracker->RemoveClientSession(m_SessionId);
+        }
     });
+
+    // may fail, depending on abstraction layer support, currently only midisrv abstraction supports
+    // the session tracker.
+    midiAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
 
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&midiBiDiDevice));
 
@@ -609,6 +685,13 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
 
+    if (midiSessionTracker.get() != nullptr)
+    {
+        // create the client session on the service before calling GetEndpoints, which will kickstart
+        // the service if it's not already running.
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiIO_Latency"));
+    }
+
     if (!GetBiDiEndpoint(abstractionCreationParams.DataFormat, midiBiDirectionalInstanceId))
     {
         return;
@@ -679,11 +762,25 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
         }
     }
 
-    // wait for up to 30 seconds for all the messages
-    if (!allMessagesReceived.wait(5000))
+    LOG_OUTPUT(L"Waiting For Messages...");
+
+    bool continueWaiting {false};
+    UINT lastReceivedMessageCount {0};
+    do
     {
-        LOG_OUTPUT(L"Failure waiting for messages, timed out.");
-    }
+        continueWaiting = false;
+        if(!allMessagesReceived.wait(30000))
+        {
+            // timeout, see if we're still advancing
+            if (lastReceivedMessageCount != midiMessagesReceived)
+            {
+                // we're advancing, so we can continue waiting.
+                continueWaiting = true;
+                lastReceivedMessageCount = midiMessagesReceived;
+                LOG_OUTPUT(L"%d messages recieved so far, still waiting...", lastReceivedMessageCount);
+            }
+        }
+    } while(continueWaiting);
 
     // wait to see if any additional messages come in (there shouldn't be any)
     Sleep(100);
@@ -745,6 +842,11 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
 
     cleanupOnFailure.release();
     VERIFY_SUCCEEDED(midiBiDiDevice->Cleanup());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(m_SessionId));
+    }
 }
 
 void MidiAbstractionTests::TestMidiKSIO_Latency_UMP()
@@ -796,6 +898,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice1;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice1;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice2;
@@ -822,11 +925,6 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
-    if (!GetEndpoints(DataFormat1, MidiOneInterface, midiInInstanceId, midiOutInstanceId))
-    {
-        return;
-    }
-
     VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
@@ -846,10 +944,19 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
         {
             midiInDevice2->Cleanup();
         }
+
+        if (midiSessionTracker.get() != nullptr)
+        {
+            midiSessionTracker->RemoveClientSession(m_SessionId);
+        }
     });
 
     LONGLONG context1 = 1;
     LONGLONG context2 = 2;
+
+    // may fail, depending on abstraction layer support, currently only midisrv abstraction supports
+    // the session tracker.
+    midiAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
 
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&midiInDevice1));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&midiInDevice2));
@@ -882,6 +989,18 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     };
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        // create the client session on the service before calling GetEndpoints, which will kickstart
+        // the service if it's not already running.
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiSrvMultiClient"));
+    }
+
+    if (!GetEndpoints(DataFormat1, MidiOneInterface, midiInInstanceId, midiOutInstanceId))
+    {
+        return;
+    }
 
     LOG_OUTPUT(L"Initializing midi in 1");
     VERIFY_SUCCEEDED(midiInDevice1->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams1, &mmcssTaskId, this, context1, m_SessionId));
@@ -967,6 +1086,11 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     VERIFY_SUCCEEDED(midiOutDevice2->Cleanup());
     VERIFY_SUCCEEDED(midiInDevice1->Cleanup());
     VERIFY_SUCCEEDED(midiInDevice2->Cleanup());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(m_SessionId));
+    }
 }
 
 void MidiAbstractionTests::TestMidiSrvMultiClient_UMP_UMP()
@@ -1048,6 +1172,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     wil::com_ptr_nothrow<IMidiBiDi> midiDevice1;
     wil::com_ptr_nothrow<IMidiBiDi> midiDevice2;
     DWORD mmcssTaskId{ 0 };
@@ -1070,11 +1195,6 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     ABSTRACTIONCREATIONPARAMS abstractionCreationParams2 { DataFormat2 };
     std::wstring midiInstanceId;
 
-    if (!GetBiDiEndpoint(DataFormat1, midiInstanceId))
-    {
-        return;
-    }
-
     VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
@@ -1086,6 +1206,11 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
         {
             midiDevice2->Cleanup();
         }
+
+        if (midiSessionTracker.get() != nullptr)
+        {
+            midiSessionTracker->RemoveClientSession(m_SessionId);
+        }
     });
 
     LONGLONG context1 = 1;
@@ -1093,6 +1218,10 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
 
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&midiDevice1));
     VERIFY_SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&midiDevice2));
+
+    // may fail, depending on abstraction layer support, currently only midisrv abstraction supports
+    // the session tracker.
+    midiAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG context)
     {
@@ -1120,6 +1249,18 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     };
 
     VERIFY_SUCCEEDED(allMessagesReceived.create());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        // create the client session on the service before calling GetEndpoints, which will kickstart
+        // the service if it's not already running.
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiSrvMultiClientBiDi"));
+    }
+
+    if (!GetBiDiEndpoint(DataFormat1, midiInstanceId))
+    {
+        return;
+    }
 
     LOG_OUTPUT(L"Initializing midi in 1");
     VERIFY_SUCCEEDED(midiDevice1->Initialize(midiInstanceId.c_str(), &abstractionCreationParams1, &mmcssTaskId, this, context1, m_SessionId));
@@ -1193,6 +1334,11 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     cleanupOnFailure.release();
     VERIFY_SUCCEEDED(midiDevice1->Cleanup());
     VERIFY_SUCCEEDED(midiDevice2->Cleanup());
+
+    if (midiSessionTracker.get() != nullptr)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(m_SessionId));
+    }
 }
 
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_UMP_UMP()

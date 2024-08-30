@@ -235,6 +235,7 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                         std::wstring userSuppliedEndpointDescription{};
                         std::wstring userSuppliedSmallImagePath{};
                         std::wstring userSuppliedLargeImagePath{};
+                        UINT32 userSuppliedPortNumber{0};
 
                         // get the device id, Right now, the SWD is the only way to id the item. We're changing that
                         // but when the update is sent at runtime, that's the only value that's useful anyway
@@ -377,6 +378,40 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                             {
                                 // delete any existing property value, because it is no longer in the config
                                 endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                                        DEVPROP_TYPE_EMPTY, 0, nullptr });
+                            }
+
+                            // user-supplied name
+                            if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_PORT_NUMBER))
+                            {
+                                userSuppliedPortNumber = (UINT32) updateObject.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_PORT_NUMBER, 0);
+
+                                if (userSuppliedPortNumber != 0)
+                                {
+                                    endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                                            DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&userSuppliedPortNumber) });
+
+                                    TraceLoggingWrite(
+                                        MidiKSAbstractionTelemetryProvider::Provider(),
+                                        MIDI_TRACE_EVENT_INFO,
+                                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                        TraceLoggingPointer(this, "this"),
+                                        TraceLoggingWideString(swdId.c_str(), "swd"),
+                                        TraceLoggingUInt32(userSuppliedPortNumber, "port number")
+                                    );
+                                }
+                                else
+                                {
+                                    // delete any existing property value, because it is blank in the config
+                                    endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                                            DEVPROP_TYPE_EMPTY, 0, nullptr });
+                                }
+                            }
+                            else
+                            {
+                                // delete any existing property value, because it is no longer in the config
+                                endpointProperties.push_back({ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
                                         DEVPROP_TYPE_EMPTY, 0, nullptr });
                             }
 

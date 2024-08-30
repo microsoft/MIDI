@@ -76,10 +76,12 @@ KSMidiDevice::OpenStream(ULONG& BufferSize
         m_MidiPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(m_MidiPipe);
 
+        m_MidiPipe->DataFormat = (m_Transport == MidiTransport_CyclicByteStream)?MidiDataFormat_ByteStream:MidiDataFormat_UMP;
         m_CrossProcessMidiPump.reset(new (std::nothrow) CMidiXProc());
         RETURN_IF_NULL_ALLOC(m_CrossProcessMidiPump);
 
         m_MidiPipe->WriteEvent.create(wil::EventOptions::ManualReset);
+        m_MidiPipe->ReadEvent.create(wil::EventOptions::ManualReset);
 
         // if we're looped (cyclic buffer), we need to
         // configure the buffer, registers, and event.
@@ -219,9 +221,10 @@ KSMidiDevice::ConfigureLoopedEvent()
 {
     KSPROPERTY property {0};
     ULONG propertySize {sizeof(property)};
-    KSMIDILOOPED_EVENT LoopedEvent {0};
+    KSMIDILOOPED_EVENT2 LoopedEvent {0};
 
     LoopedEvent.WriteEvent = m_MidiPipe->WriteEvent.get();
+    LoopedEvent.ReadEvent = m_MidiPipe->ReadEvent.get();
 
     property.Set    = KSPROPSETID_MidiLoopedStreaming; 
     property.Id     = KSPROPERTY_MIDILOOPEDSTREAMING_NOTIFICATION_EVENT;       

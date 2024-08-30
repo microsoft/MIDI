@@ -32,8 +32,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
     );
 
     // this only converts UMP to UMP
-    RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, CreationParams->DataFormatIn != MidiDataFormat_UMP);
-    RETURN_HR_IF(ERROR_UNSUPPORTED_TYPE, CreationParams->DataFormatOut != MidiDataFormat_UMP);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatIn != MidiDataFormat_UMP);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatOut != MidiDataFormat_UMP);
 
     m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(Device);
     m_Callback = Callback;
@@ -235,8 +235,12 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     {
         RETURN_IF_FAILED(m_Callback->Callback(Data, Length, Timestamp, m_Context));
 
-        return S_OK;
-    }
+        // retrieve the message from the parser
+        // and send it on
+        while (m_umpToMidi1.availableUMP())
+        {
+            uint32_t words[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
+            UINT wordCount{ 0 };
 
 
     if (m_downscalingRequiredForEndpoint)

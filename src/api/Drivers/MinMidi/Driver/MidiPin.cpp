@@ -17,11 +17,14 @@ wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
 MidiPin* g_MidiInPin {nullptr};
 
 // smallest UMP is 4 bytes, smallest bytestream is 3 bytes
-#define MINIMUM_LOOPED_DATASIZE 3
+#define MINIMUM_LOOPED_DATASIZE 1
 
 // largest UMP is 16 bytes
-// we'll reuse that for the largest bytestream
-#define MAXIMUM_LOOPED_DATASIZE 16
+#define MAXIMUM_LOOPED_UMP_DATASIZE 16
+
+// largest supported bytestream is 2048
+#define MAXIMUM_LOOPED_BYTESTREAM_DATASIZE 2048
+
 
 static const
 KSDATARANGE_MUSIC g_MidiStreamDataRangeUMP =
@@ -149,7 +152,7 @@ DEFINE_KSPROPERTY_TABLE(g_LoopedStreamingProperties)
         KSPROPERTY_MIDILOOPEDSTREAMING_NOTIFICATION_EVENT, // idProperty
         NULL,                                              // pfnGetHandler
         sizeof(KSPROPERTY),                                // cbMinPropertyInput
-        sizeof(KSMIDILOOPED_EVENT),                        // cbMinDataInput
+        sizeof(KSMIDILOOPED_EVENT2),                        // cbMinDataInput
         MidiPin::SetLoopedStreamingNotificationEvent,      // pfnSetHandler
         0,                                                 // Values
         0,                                                 // RelationsCount
@@ -357,6 +360,12 @@ MidiPin::Cleanup()
     {
         ObDereferenceObject(m_WriteEvent);
         m_WriteEvent = nullptr;
+    }
+
+    if (m_ReadEvent)
+    {
+        ObDereferenceObject(m_ReadEvent);
+        m_ReadEvent = nullptr;
     }
 
     // For standard streaming loopback, we have a list of the messages
@@ -657,7 +666,7 @@ MidiPin::HandleIo()
                         PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(startingReadAddress);
                         UINT32 dataSize = header->ByteCount;
 
-                        if (dataSize < MINIMUM_LOOPED_DATASIZE || dataSize > MAXIMUM_LOOPED_DATASIZE)
+                        if (dataSize < MINIMUM_LOOPED_DATASIZE || (m_IsByteStream?(dataSize > MAXIMUM_LOOPED_BYTESTREAM_DATASIZE):(dataSize > MAXIMUM_LOOPED_UMP_DATASIZE)))
                         {
                             // TBD: need to log an abort
 
@@ -675,6 +684,9 @@ MidiPin::HandleIo()
                             // Client will set an event when the write position advances.
                             break;
                         }
+
+                        // reset the client read event, in case we find out later the buffer is full.
+                        KeResetEvent(g_MidiInPin->m_ReadEvent);
 
                         // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
                         // and read position is empty. (read position is their last read position, write position is our last written).
@@ -712,17 +724,15 @@ MidiPin::HandleIo()
 
                         if (bytesToCopy > bytesAvailable)
                         {
-                            // We have a problem. We have data to move, but there
-                            // isn't enough buffer available to do it. The client is not reading data,
-                            // or not reading it fast enough.
+                            PVOID midiInWaitObjects[] = { m_ThreadExitEvent.get(), g_MidiInPin->m_ReadEvent };
 
-                            // TBD: need to log a glitch event if this happens, so we can
-                            // track it.
-
-                            // Two options, either retry, or drop the data.
-                            // For reliability purposes of testing, retry.
-                            KeSetEvent(m_WriteEvent, 0, 0);
-                            // InterlockedExchange((LONG*)m_ReadRegister, finalReadPosition);
+                            // Wait for either room in the output buffer, or thread exit.
+                            status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+                            if (STATUS_WAIT_1 == status)
+                            {
+                                // we have room, retry writing this pass
+                                continue;
+                            }
                             break;
                         }
 
@@ -751,6 +761,10 @@ MidiPin::HandleIo()
 
                         // advance our read position
                         InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
+
+                        // signal that we've read the data, in case a client is waiting for buffer space to
+                        // come available.
+                        KeSetEvent(m_ReadEvent, 0, 0);
 
                         // advance the write position for the loopback and signal that there's data available
                         InterlockedExchange((LONG *)g_MidiInPin->m_WriteRegister, finalWritePosition);
@@ -1411,7 +1425,7 @@ MidiPin::SetLoopedStreamingNotificationEvent
 (
     PIRP                   Irp,
     PKSPROPERTY            Request,
-    PKSMIDILOOPED_EVENT    Buffer
+    PKSMIDILOOPED_EVENT2   Buffer
 )
 {
     // handle incoming property call to set the looped streaming events.
@@ -1434,6 +1448,7 @@ MidiPin::SetLoopedStreamingNotificationEvent
 
     // event already registered, can't register again.
     NT_RETURN_NTSTATUS_IF(STATUS_ALREADY_INITIALIZED, nullptr != This->m_WriteEvent);
+    NT_RETURN_NTSTATUS_IF(STATUS_ALREADY_INITIALIZED, nullptr != This->m_ReadEvent);
 
     // a different process created the buffer mapping, the event must come from the
     // same process
@@ -1451,6 +1466,13 @@ MidiPin::SetLoopedStreamingNotificationEvent
                                               *ExEventObjectType,
                                               ExGetPreviousMode(),
                                               (PVOID*)&This->m_WriteEvent,
+                                              NULL));
+
+    NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(Buffer->ReadEvent,
+                                              EVENT_MODIFY_STATE,
+                                              *ExEventObjectType,
+                                              ExGetPreviousMode(),
+                                              (PVOID*)&This->m_ReadEvent,
                                               NULL));
 
     return STATUS_SUCCESS;

@@ -32,12 +32,15 @@ typedef struct MEMORY_MAPPED_REGISTERS
 
 typedef struct MEMORY_MAPPED_PIPE
 {
+    MidiDataFormat DataFormat {MidiDataFormat_Invalid};
+
     std::unique_ptr<MEMORY_MAPPED_BUFFER> DataBuffer;
     std::unique_ptr<MEMORY_MAPPED_BUFFER> RegistersBuffer;
 
     MEMORY_MAPPED_DATA Data;
     MEMORY_MAPPED_REGISTERS Registers;
     wil::unique_event_nothrow WriteEvent;
+    wil::unique_event_nothrow ReadEvent;
 } MEMORY_MAPPED_PIPE, *PMEMORY_MAPPED_PIPE;
 
 HRESULT GetRequiredBufferSize(_In_ ULONG&);
@@ -72,6 +75,20 @@ public:
                           _In_ BOOL);
 
     HRESULT Cleanup();
+
+    HRESULT
+    SetDataFormatIn(MidiDataFormat DataFormat)
+    {
+        m_MidiIn->DataFormat = DataFormat;
+        return S_OK;
+    }
+
+    HRESULT
+    SetDataFormatOut(MidiDataFormat DataFormat)
+    {
+        m_MidiOut->DataFormat = DataFormat;
+        return S_OK;
+    }
 
     HRESULT SendMidiMessage(
         _In_ void *,

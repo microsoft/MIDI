@@ -143,8 +143,6 @@ BOOL SvcUpdateDescription(
 // to automatic start, so I'll put an option in the settings app to enable that
 // for them. Otherwise, there's a delay between the service spinning up and all
 // devices being enumerated (and protocol negotiation complete)
-
-
 BOOL SvcSetStartTriggerRpc(
     _In_ wil::unique_schandle& service
 )
@@ -156,27 +154,10 @@ BOOL SvcSetStartTriggerRpc(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO)
     );
 
-    SERVICE_TRIGGER_INFO triggerInfo{ 0 };
-    SERVICE_TRIGGER trigger{ 0 };
-    SERVICE_TRIGGER_SPECIFIC_DATA_ITEM triggerData{ 0 };
-
-    // Set the RPC call to triggers waking up this service
-    std::wstring rpcGuidString{ L"64839251-9daf-4e79-aa4e-9771c86ffbc1" }; // RPC Interface. should use __uuidof
-
-    triggerData.dwDataType = SERVICE_TRIGGER_DATA_TYPE_STRING;
-    triggerData.pData = (PBYTE)(rpcGuidString.c_str());
-    triggerData.cbData = (DWORD)(rpcGuidString.length() + 1) * sizeof(wchar_t);
-
-    auto triggerSubType = RPC_INTERFACE_EVENT_GUID;
-
-    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
-    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_NETWORK_ENDPOINT;
-    trigger.pTriggerSubtype = (LPGUID)&triggerSubType;
-    trigger.pDataItems = &triggerData;
-    trigger.cDataItems = 1;
-
-    triggerInfo.pTriggers = &trigger;
-    triggerInfo.cTriggers = 1;
+    WCHAR rpcGuidString[] {L"64839251-9daf-4e79-aa4e-9771c86ffbc1"};
+    SERVICE_TRIGGER_SPECIFIC_DATA_ITEM rpcTriggerData{ SERVICE_TRIGGER_DATA_TYPE_STRING, static_cast<DWORD>((wcslen(rpcGuidString) + 1 ) * sizeof(WCHAR)), reinterpret_cast<PBYTE>(rpcGuidString)};
+    SERVICE_TRIGGER trigger{ SERVICE_TRIGGER_TYPE_NETWORK_ENDPOINT, SERVICE_TRIGGER_ACTION_SERVICE_START, const_cast<GUID*>(&RPC_INTERFACE_EVENT_GUID), 1, &rpcTriggerData};
+    SERVICE_TRIGGER_INFO triggerInfo{ 1, &trigger, nullptr };
 
     if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_TRIGGER_INFO, &triggerInfo))
     {
@@ -323,7 +304,7 @@ VOID SvcInstall()
         NULL,
         NULL,
         NULL,
-        NULL,
+        L"LocalSystem",
         NULL));
 
     if (!service)
@@ -343,13 +324,11 @@ VOID SvcInstall()
 
     SvcUpdateDescription(service);
 
-#ifdef USE_RPC_DEMAND_TRIGGER
     // tried the RPC trigger and just couldn't get it to work
     if (!SvcSetStartTriggerRpc(service))
     {
         return;
     }
-#endif
 
     // ETW-based trigger which starts the service when any ETW event
     // from MidiSrvAbstraction is sent

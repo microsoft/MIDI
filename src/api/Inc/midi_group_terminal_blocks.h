@@ -93,7 +93,7 @@ namespace WindowsMidiServicesInternal
 
     // used by the API
     inline std::vector<GroupTerminalBlockInternal> ReadGroupTerminalBlocksFromPropertyData(
-        _In_ uint8_t* ksMultipleItemsDataPointer,
+        _In_reads_bytes_(dataSize) uint8_t* ksMultipleItemsDataPointer,
         _In_ uint32_t const dataSize
     ) noexcept
     {

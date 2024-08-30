@@ -932,7 +932,10 @@ CMidiEndpointProtocolWorker::Cleanup()
 
     m_negotiationCompleteCallback = nullptr;
 
-    LOG_IF_FAILED(m_sessionTracker->RemoveClientEndpointConnection(m_sessionId, m_deviceInterfaceId.c_str(), (MidiClientHandle)nullptr));
+    if (m_sessionTracker)
+    {
+        LOG_IF_FAILED(m_sessionTracker->RemoveClientEndpointConnection(m_sessionId, m_deviceInterfaceId.c_str(), (MidiClientHandle)nullptr));
+    }
 
     return S_OK;
 }

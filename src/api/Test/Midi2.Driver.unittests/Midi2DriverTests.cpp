@@ -235,11 +235,25 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport Transport)
         }
     }
 
-    // wait for up to 30 seconds for all the messages
-    if(!allMessagesReceived.wait(30000))
+    LOG_OUTPUT(L"Waiting For Messages...");
+
+    bool continueWaiting {false};
+    UINT lastReceivedMessageCount {0};
+    do
     {
-        LOG_OUTPUT(L"Failure waiting for messages, timed out.");
-    }
+        continueWaiting = false;
+        if(!allMessagesReceived.wait(30000))
+        {
+            // timeout, see if we're still advancing
+            if (lastReceivedMessageCount != midiMessagesReceived)
+            {
+                // we're advancing, so we can continue waiting.
+                continueWaiting = true;
+                lastReceivedMessageCount = midiMessagesReceived;
+                LOG_OUTPUT(L"%d messages recieved so far, still waiting...", lastReceivedMessageCount);
+            }
+        }
+    } while(continueWaiting);
 
     // wait to see if any additional messages come in (there shouldn't be any)
     Sleep(500);
@@ -460,11 +474,25 @@ void Midi2DriverTests::TestMidiIO_Latency(MidiTransport Transport, BOOL DelayedM
         }
     }
 
-    // wait for up to 30 seconds for all the messages
-    if(!allMessagesReceived.wait(5000))
+    LOG_OUTPUT(L"Waiting For Messages...");
+
+    bool continueWaiting {false};
+    UINT lastReceivedMessageCount {0};
+    do
     {
-        LOG_OUTPUT(L"Failure waiting for messages, timed out.");
-    }
+        continueWaiting = false;
+        if(!allMessagesReceived.wait(30000))
+        {
+            // timeout, see if we're still advancing
+            if (lastReceivedMessageCount != midiMessagesReceived)
+            {
+                // we're advancing, so we can continue waiting.
+                continueWaiting = true;
+                lastReceivedMessageCount = midiMessagesReceived;
+                LOG_OUTPUT(L"%d messages recieved so far, still waiting...", lastReceivedMessageCount);
+            }
+        }
+    } while(continueWaiting);
 
     // wait to see if any additional messages come in (there shouldn't be any)
     Sleep(100);
