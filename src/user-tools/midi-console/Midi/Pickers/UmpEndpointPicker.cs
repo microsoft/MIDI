@@ -85,7 +85,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public static string PickEndpoint()
         {
-            Console.WriteLine("DEBUG: PickEndpoint");
+            //Console.WriteLine("DEBUG: PickEndpoint");
 
             var choices = new List<UmpEndpointPickerEntry>();
 
@@ -93,7 +93,7 @@ namespace Microsoft.Midi.ConsoleApp
 
             if (choices.Count > 0)
             {
-                Console.WriteLine("DEBUG: prompt");
+                //Console.WriteLine("DEBUG: prompt");
 
                 //var selectionStyle = new Style(null, null, Decoration.Invert, null);
                 var selectionStyle = new Style(Color.White, Color.DeepSkyBlue3, null, null);

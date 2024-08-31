@@ -332,10 +332,10 @@ VOID SvcInstall()
 
     // ETW-based trigger which starts the service when any ETW event
     // from MidiSrvAbstraction is sent
-    if (!SvcSetStartTriggerEtw(service))
-    {
-        return;
-    }
+    //if (!SvcSetStartTriggerEtw(service))
+    //{
+    //    return;
+    //}
 
     //if (!StartService(service.get(), 0, nullptr))
     //{

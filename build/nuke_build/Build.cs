@@ -180,6 +180,8 @@ class Build : NukeBuild
 
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.SchedulerTransform.dll");
 
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"wdmaud2.drv");
+
             foreach (var file in stagingFiles)
             {
                 FileSystemTasks.CopyFileToDirectory(file, ApiStagingFolder / platform, FileExistsPolicy.Overwrite, true);
@@ -977,7 +979,7 @@ class Build : NukeBuild
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
         .DependsOn(BuildCppSamples)
-        .DependsOn(BuildAndPackageElectronProjection)
+        //.DependsOn(BuildAndPackageElectronProjection)
         .Executes(() =>
         {
         });

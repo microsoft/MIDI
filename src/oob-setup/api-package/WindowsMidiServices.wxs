@@ -62,6 +62,14 @@
 
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />          
        </Component>
+        
+        <Component Id="WinMMAPIRedirectDriver"
+                   Bitness="always64"
+                   Directory="System64Folder"
+                   Guid="8b7aef76-de74-4a61-8c76-d5315f5a60c9"
+                   >
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\wdmaud2.drv"                     Vital="true" />
+        </Component>
 
         <Component Id="WindowsService"
                    Bitness="always64"
@@ -145,6 +153,8 @@
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceAbstractions"/>
             <ComponentRef Id="WindowsService"/>
+
+            <ComponentRef Id="WinMMAPIRedirectDriver"/>
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>
             

@@ -847,6 +847,7 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0006_00
     LPCWSTR TransportSuppliedEndpointDescription;
     LPCWSTR UserSuppliedEndpointName;
     LPCWSTR UserSuppliedEndpointDescription;
+    UINT32 UserSuppliedEndpointPortNumber;
     LPCWSTR UniqueIdentifier;
     LPCWSTR ManufacturerName;
     MidiDataFormat SupportedDataFormats;
@@ -2141,8 +2142,7 @@ EXTERN_C const IID IID_IMidiSessionTracker;
         
         virtual HRESULT STDMETHODCALLTYPE UpdateClientSessionName( 
             /* [in] */ GUID SessionId,
-            /* [in] */ LPCWSTR SessionName,
-            /* [in] */ DWORD ClientProcessId) = 0;
+            /* [in] */ LPCWSTR SessionName) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE RemoveClientSession( 
             /* [in] */ GUID SessionId) = 0;
@@ -2192,8 +2192,7 @@ EXTERN_C const IID IID_IMidiSessionTracker;
         HRESULT ( STDMETHODCALLTYPE *UpdateClientSessionName )( 
             IMidiSessionTracker * This,
             /* [in] */ GUID SessionId,
-            /* [in] */ LPCWSTR SessionName,
-            /* [in] */ DWORD ClientProcessId);
+            /* [in] */ LPCWSTR SessionName);
         
         DECLSPEC_XFGVIRT(IMidiSessionTracker, RemoveClientSession)
         HRESULT ( STDMETHODCALLTYPE *RemoveClientSession )( 
@@ -2242,8 +2241,8 @@ EXTERN_C const IID IID_IMidiSessionTracker;
 #define IMidiSessionTracker_AddClientSession(This,SessionId,SessionName)	\
     ( (This)->lpVtbl -> AddClientSession(This,SessionId,SessionName) ) 
 
-#define IMidiSessionTracker_UpdateClientSessionName(This,SessionId,SessionName,ClientProcessId)	\
-    ( (This)->lpVtbl -> UpdateClientSessionName(This,SessionId,SessionName,ClientProcessId) ) 
+#define IMidiSessionTracker_UpdateClientSessionName(This,SessionId,SessionName)	\
+    ( (This)->lpVtbl -> UpdateClientSessionName(This,SessionId,SessionName) ) 
 
 #define IMidiSessionTracker_RemoveClientSession(This,SessionId)	\
     ( (This)->lpVtbl -> RemoveClientSession(This,SessionId) ) 

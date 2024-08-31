@@ -234,16 +234,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     if (!m_downscalingRequiredForEndpoint && !m_upscalingRequiredForEndpoint)
     {
         RETURN_IF_FAILED(m_Callback->Callback(Data, Length, Timestamp, m_Context));
-
-        // retrieve the message from the parser
-        // and send it on
-        while (m_umpToMidi1.availableUMP())
-        {
-            uint32_t words[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
-            UINT wordCount{ 0 };
-
-
-    if (m_downscalingRequiredForEndpoint)
+    }
+    else if (m_downscalingRequiredForEndpoint)
     {
         if (Length >= sizeof(uint32_t))
         {
@@ -258,7 +250,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
             // and send it on
             while (m_umpToMidi1.availableUMP())
             {
-                uint32_t words[MAXIMUM_LOOPED_DATASIZE / sizeof(uint32_t)];
+                uint32_t words[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
                 UINT wordCount{ 0 };
 
                 for (wordCount = 0; wordCount < _countof(words) && m_umpToMidi1.availableUMP(); wordCount++)

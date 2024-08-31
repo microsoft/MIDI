@@ -7,7 +7,7 @@ events:
       - "C:/Users/peteb/AppData/Local/vcpkg/downloads/tools/cmake-3.29.2-windows/cmake-3.29.2-windows-i386/share/cmake-3.29/Modules/CMakeDetermineSystem.cmake:205 (message)"
       - "CMakeLists.txt:2 (project)"
     message: |
-      The system is: Windows - 10.0.26257 - AMD64
+      The system is: Windows - 10.0.27686 - AMD64
   -
     kind: "message-v1"
     backtrace:

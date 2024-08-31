@@ -207,9 +207,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         // this can be called only if we've already initialized the session tracker
         if (m_sessionTracker)
         {
-            DWORD clientProcessId = GetCurrentProcessId();
-
-            auto hr = m_sessionTracker->UpdateClientSessionName(m_id, cleanName.c_str(), clientProcessId);
+            auto hr = m_sessionTracker->UpdateClientSessionName(m_id, cleanName.c_str());
 
             if (SUCCEEDED(hr))
             {
