@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Helpers
 {
-    public class MidiGroupIndexConverter : IValueConverter
+    public partial class MidiGroupIndexConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

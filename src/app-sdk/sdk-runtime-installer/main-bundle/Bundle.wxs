@@ -65,14 +65,16 @@
             <!-- Removed DetectCondition="VCRuntimeInstalled" because the redist does its own checking -->
             <ExePackage
                 Vital="false"
+                Permanent="true"
                 DisplayName="Microsoft Visual C++ Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
                 Compressed="yes"
                 InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
-                Permanent="true"
                 />
 
             <ExePackage
+                Vital="true"
+                Permanent="true"
                 DisplayName="Microsoft .NET 8 Desktop Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\windowsdesktop-runtime-8.0.8-win-$(var.Platform).exe"
                 Compressed="yes"
@@ -80,6 +82,15 @@
                 InstallArguments="/install /passive /norestart /log midi_dotnet8_install_log.txt"
                 UninstallArguments="/uninstall /passive /norestart /quiet"
                 />
+
+            <ExePackage
+                Vital="true"
+                Permanent="true"
+                DisplayName="Microsoft Windows App Runtime"
+                SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\WindowsAppRuntimeInstall-$(var.Platform).exe"
+                Compressed="yes"
+                />
+            
             
         </PackageGroup>
         
@@ -98,6 +109,14 @@
                 Permanent="no"
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesConsoleStandAloneSetup.msi">
+            </MsiPackage>
+
+            <MsiPackage
+                Id="MidiServicesSettingsSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMIDIServicesSettingsAppStandAloneSetup.msi">
             </MsiPackage>
 
         </PackageGroup>

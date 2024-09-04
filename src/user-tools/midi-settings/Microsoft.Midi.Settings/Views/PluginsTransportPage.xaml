@@ -9,7 +9,8 @@
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:mididiag="using:Microsoft.Windows.Devices.Midi2.Diagnostics"
-    xmlns:controls="using:CommunityToolkit.Labs.WinUI"
+    xmlns:midirept="using:Microsoft.Windows.Devices.Midi2.Reporting"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -34,9 +35,9 @@
             <Grid Margin="0,0,8,0">
 
 
-                <ItemsControl ItemsSource="{x:Bind ViewModel.Plugins}">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Plugins, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="mididiag:MidiServiceTransportPluginInfo">
+                        <DataTemplate x:DataType="midirept:MidiServiceTransportPluginInfo">
                            
                             <controls:SettingsCard IsClickEnabled="False" Margin="3">
                                 <controls:SettingsCard.Header>

@@ -41,8 +41,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         winrt::hstring EndpointDeviceId() const noexcept { return m_id; }
 
-        winrt::guid ContainerId() const noexcept { return GetGuidProperty(L"System.Devices.ContainerId", winrt::guid{}); }
-        winrt::hstring DeviceInstanceId() const noexcept { return GetStringProperty(L"System.Devices.DeviceInstanceId", L"");}
+        winrt::guid ContainerId() const noexcept { return GetProperty<winrt::guid>(L"System.Devices.ContainerId", winrt::guid{}); }
+        winrt::hstring DeviceInstanceId() const noexcept { return GetProperty<winrt::hstring>(L"System.Devices.DeviceInstanceId", L"");}
 
         winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation() const noexcept;
         winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerDeviceInformation() const noexcept;
@@ -87,56 +87,63 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
 
     private:
-        winrt::hstring GetStringProperty(
-            _In_ winrt::hstring key,
-            _In_ winrt::hstring defaultValue) const noexcept;
 
-        winrt::guid GetGuidProperty(
-            _In_ winrt::hstring key,
-            _In_ winrt::guid defaultValue) const noexcept;
-
-        winrt::hstring GetGuidPropertyAsString(
-            _In_ winrt::hstring key,
-            _In_ winrt::hstring defaultValue) const noexcept;
 
         foundation::DateTime GetDateTimeProperty(
             _In_ winrt::hstring key,
             _In_ foundation::DateTime defaultValue) const noexcept;
 
-
-        uint8_t GetByteProperty(
+        
+        template<typename T>
+        T GetProperty(
             _In_ winrt::hstring key,
-            _In_ uint8_t defaultValue) const noexcept;
+            _In_ T defaultValue) const noexcept;
 
-        uint64_t GetUInt64Property(
-            _In_ winrt::hstring key,
-            _In_ uint64_t defaultValue) const noexcept;
+        //winrt::hstring GetStringProperty(
+        //    _In_ winrt::hstring key,
+        //    _In_ winrt::hstring defaultValue) const noexcept;
 
-        uint32_t GetUInt32Property(
-            _In_ winrt::hstring key,
-            _In_ uint32_t defaultValue) const noexcept;
+        //winrt::guid GetGuidProperty(
+        //    _In_ winrt::hstring key,
+        //    _In_ winrt::guid defaultValue) const noexcept;
 
-        uint16_t GetUInt16Property(
-            _In_ winrt::hstring key,
-            _In_ uint16_t defaultValue) const noexcept;
+        //winrt::hstring GetGuidPropertyAsString(
+        //    _In_ winrt::hstring key,
+        //    _In_ winrt::hstring defaultValue) const noexcept;
+
+        //uint8_t GetByteProperty(
+        //    _In_ winrt::hstring key,
+        //    _In_ uint8_t defaultValue) const noexcept;
+
+        //uint64_t GetUInt64Property(
+        //    _In_ winrt::hstring key,
+        //    _In_ uint64_t defaultValue) const noexcept;
+
+        //uint32_t GetUInt32Property(
+        //    _In_ winrt::hstring key,
+        //    _In_ uint32_t defaultValue) const noexcept;
+
+        //uint16_t GetUInt16Property(
+        //    _In_ winrt::hstring key,
+        //    _In_ uint16_t defaultValue) const noexcept;
 
 
-        int64_t GetInt64Property(
-            _In_ winrt::hstring key,
-            _In_ int64_t defaultValue) const noexcept;
+        //int64_t GetInt64Property(
+        //    _In_ winrt::hstring key,
+        //    _In_ int64_t defaultValue) const noexcept;
 
-        int32_t GetInt32Property(
-            _In_ winrt::hstring key,
-            _In_ int32_t defaultValue) const noexcept;
+        //int32_t GetInt32Property(
+        //    _In_ winrt::hstring key,
+        //    _In_ int32_t defaultValue) const noexcept;
 
-        int16_t GetInt16Property(
-            _In_ winrt::hstring key,
-            _In_ int16_t defaultValue) const noexcept;
+        //int16_t GetInt16Property(
+        //    _In_ winrt::hstring key,
+        //    _In_ int16_t defaultValue) const noexcept;
 
 
-        bool GetBoolProperty(
-            _In_ winrt::hstring key,
-            _In_ bool defaultValue) const noexcept;
+        //bool GetBoolProperty(
+        //    _In_ winrt::hstring key,
+        //    _In_ bool defaultValue) const noexcept;
 
         foundation::IReferenceArray<uint8_t> GetBinaryProperty(
             _In_ winrt::hstring key) const noexcept;
@@ -156,11 +163,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         //MidiDeviceIdentityProperty m_deviceIdentity;
 
         //void ReadDeviceIdentity();
-        void ReadFunctionBlocks();
+        //void ReadFunctionBlocks();
         void ReadGroupTerminalBlocks();
 
 
-        void AddOrUpdateFunctionBlock(_In_ foundation::IReferenceArray<uint8_t> refArray);
+        //void AddOrUpdateFunctionBlock(_In_ foundation::IReferenceArray<uint8_t> refArray);
 
 
     };

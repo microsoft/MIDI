@@ -2,6 +2,8 @@
 
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
+    
+    
     <Package
           Name="Windows MIDI Services (App SDK Runtime) $(var.Platform)"
           Manufacturer="Microsoft Corporation"

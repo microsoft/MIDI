@@ -5,8 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
-    xmlns:controls="using:CommunityToolkit.Labs.WinUI"
-    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -19,6 +19,8 @@
         <helpers:MidiGroupIndexConverter x:Key="MidiGroupIndexConverter"/>
         <helpers:MidiFunctionBlockSysEx8FormatConverter x:Key="MidiFunctionBlockSysEx8FormatConverter" />
         <helpers:MidiFunctionBlockMidi10Converter x:Key="MidiFunctionBlockMidi10Converter" />
+        <helpers:MidiFunctionBlockDirectionConverter x:Key="MidiFunctionBlockDirectionConverter" />
+        <helpers:MidiFunctionBlockUIHintConverter x:Key="MidiFunctionBlockUIHintConverter" />
     </Page.Resources>
     
     <Grid HorizontalAlignment="Stretch">
@@ -60,7 +62,7 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Column="0" Grid.Row="0" Text="Manufacturer" Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName }" 
+                <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName}" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                 <TextBlock Grid.Column="0" Grid.Row="1" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
@@ -77,7 +79,7 @@
 
                 <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport" Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode }" 
-                           Style="{StaticResource SmallEmphasizedPropertyValue}" /> <!-- Needs a format converter -->
+                           Style="{StaticResource SmallEmphasizedPropertyValue}" />
             </Grid>
             
         </Grid>
@@ -166,7 +168,10 @@
 
                 <!-- Only visible if a UMP/MIDI 2.0 device -->
 
-                <controls:SettingsExpander Header="MIDI 2.0 In-protocol-discovered Information" IsExpanded="True">
+                <controls:SettingsExpander 
+                    Header="MIDI 2.0 In-protocol-discovered Information" 
+                    IsExpanded="True"
+                    >
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
@@ -205,13 +210,10 @@
                 </controls:SettingsExpander>
 
 
-
-
-
-
                 <!-- Function Blocks -->
                 <controls:SettingsExpander Header="Function Blocks" 
                                            ItemsSource="{x:Bind ViewModel.FunctionBlocks}"
+                                           Visibility="{x:Bind ViewModel.HasFunctionBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
                                            IsExpanded="True">
                     <controls:SettingsExpander.ItemTemplate>
                         <DataTemplate x:DataType="midi2:MidiFunctionBlock">
@@ -251,7 +253,8 @@
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
                                                    Text="Active?" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind IsActive }" 
+                                            <TextBlock Grid.Column="1" Grid.Row="1" 
+                                                   Text="{x:Bind IsActive }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
@@ -294,29 +297,29 @@
                                                        Text="Direction" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                       Text="{x:Bind Direction }" 
-                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" /> <!-- Needs converter -->
+                                                       Text="{x:Bind Direction, Converter={StaticResource MidiFunctionBlockDirectionConverter} }" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
                                                        Text="UI Hint" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
-                                                       Text="{x:Bind UIHint }" 
-                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" /> <!-- Needs converter -->
+                                                       Text="{x:Bind UIHint, Converter={StaticResource MidiFunctionBlockUIHintConverter} }" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                        Text="MIDI 1.0" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
                                                        Text="{x:Bind RepresentsMidi10Connection, Converter={StaticResource MidiFunctionBlockMidi10Converter} }" 
-                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" /> <!-- Needs converter -->
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                        Text="MIDI CI" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
                                                        Text="{x:Bind MidiCIMessageVersionFormat }" 
-                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" /> <!-- Needs converter -->
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
 
                                         </Grid>
@@ -326,10 +329,13 @@
                             </controls:SettingsCard>
                         </DataTemplate>
                     </controls:SettingsExpander.ItemTemplate>
-
                 </controls:SettingsExpander>
+                
+                
 
-                <controls:SettingsExpander Header="Parent Device" IsExpanded="True" Margin="0,0,0,20">
+                <controls:SettingsExpander 
+                    Header="Parent Device" IsExpanded="True" Margin="0,0,0,20"
+                    Visibility="{x:Bind ViewModel.HasParent, Converter={StaticResource BoolToVisibilityConverter}}">
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>

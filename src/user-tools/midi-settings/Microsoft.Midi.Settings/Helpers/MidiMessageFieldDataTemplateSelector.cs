@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Microsoft.Midi.Settings.Helpers;
-public class MidiMessageFieldDataTemplateSelector : DataTemplateSelector
+public partial class MidiMessageFieldDataTemplateSelector : DataTemplateSelector
 
 {
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Helpers
 {
-    public partial class MidiEndpointNativeDataFormatConverter : IValueConverter
+    public partial class MidiFunctionBlockDirectionConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -16,20 +16,19 @@ namespace Microsoft.Midi.Settings.Helpers
                 return string.Empty;
             }
 
-            if (value is MidiEndpointNativeDataFormat)
+            if (value is MidiFunctionBlockDirection)
             {
-                var val = (MidiEndpointNativeDataFormat)value;
+                var val = (MidiFunctionBlockDirection)value;
 
                 // TODO: Localize
 
                 switch (val)
                 {
-                    case MidiEndpointNativeDataFormat.UniversalMidiPacketFormat:
-                        return "MIDI 2.0 Universal MIDI Packet (UMP) format";
+                    case MidiFunctionBlockDirection.BlockInput:
+                        return "Message Destination";
 
-                    case MidiEndpointNativeDataFormat.Midi1ByteFormat:
-                        return "MIDI 1.0 byte format";
-
+                    case MidiFunctionBlockDirection.BlockOutput:
+                        return "Message Source";
 
                     default:
                         return "Unknown";

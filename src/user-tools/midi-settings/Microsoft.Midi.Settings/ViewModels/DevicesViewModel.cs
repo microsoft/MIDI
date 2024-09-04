@@ -71,7 +71,9 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // now get all the endpoint devices and put them in groups by transport
 
-                foreach (var endpointDevice in AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values)
+                var enumeratedDevices = AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices;
+
+                foreach (var endpointDevice in enumeratedDevices.Values)
                 {
                     if (endpointDevice != null)
                     {

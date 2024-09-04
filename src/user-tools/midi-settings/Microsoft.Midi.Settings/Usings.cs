@@ -4,4 +4,6 @@ global using Microsoft.Windows.Devices.Midi2;
 global using Microsoft.Windows.Devices.Midi2.Initialization;
 global using Microsoft.Windows.Devices.Midi2.Messages;
 global using Microsoft.Windows.Devices.Midi2.Diagnostics;
+global using Microsoft.Windows.Devices.Midi2.Reporting;
 global using Microsoft.Windows.Devices.Midi2.ServiceConfig;
+

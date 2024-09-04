@@ -79,6 +79,8 @@ class Build : NukeBuild
     AbsolutePath AppSdkSolutionFolder => SourceRootFolder / "app-sdk";
     AbsolutePath ApiSolutionFolder => SourceRootFolder / "api";
 
+    AbsolutePath AppSdkSetupSolutionFolder => AppSdkSolutionFolder / "sdk-runtime-installer";
+
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
 
     AbsolutePath ApiReferenceFolder => SourceRootFolder / "shared" / "api-ref";
@@ -94,7 +96,7 @@ class Build : NukeBuild
 
     AbsolutePath MidiSettingsSolutionFolder => UserToolsRootFolder / "midi-settings";
     AbsolutePath MidiSettingsStagingFolder => StagingRootFolder / "midi-settings";
-    AbsolutePath MidiSettingsSetupSolutionFolder => UserToolsRootFolder / "midi-settings-setup";
+   // AbsolutePath MidiSettingsSetupSolutionFolder => UserToolsRootFolder / "midi-settings-setup";
 
     //    AbsolutePath RustWinRTSamplesRootFolder => SamplesRootFolder / "rust-winrt";
     //    AbsolutePath ElectronJSSamplesRootFolder => SamplesRootFolder / "electron-js";
@@ -346,10 +348,10 @@ class Build : NukeBuild
                 Console.Out.WriteLine($"SolutionDir: {solutionDir}");
                 Console.Out.WriteLine($"Platform:    {platform}");
 
-                var setupSolutionFolder = AppSdkSolutionFolder / "sdk-runtime-installer";
+                //var setupSolutionFolder = AppSdkSolutionFolder / "sdk-runtime-installer";
 
                 MSBuildTasks.MSBuild(_ => _
-                    .SetTargetPath(setupSolutionFolder / "midi-services-app-sdk-runtime-setup.sln")
+                    .SetTargetPath(AppSdkSetupSolutionFolder / "midi-services-app-sdk-runtime-setup.sln")
                     .SetMaxCpuCount(14)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
@@ -363,7 +365,7 @@ class Build : NukeBuild
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
 
                 FileSystemTasks.CopyFile(
-                    setupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
+                    AppSdkSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
                     ThisReleaseFolder / $"Windows MIDI Services (Tools and SDKs) {fullSetupVersionString}-{platform.ToLower()}.exe");
 
             }
@@ -441,113 +443,207 @@ class Build : NukeBuild
         .DependsOn(BuildUserToolsSharedComponents)
         .Executes(() =>
         {
-            //var solution = MidiSettingsSolutionFolder / "midi-settings.sln";
+            var solution = MidiSettingsSolutionFolder / "midi-settings.sln";
 
-            //// for the MIDI nuget package
-            //NuGetTasks.NuGetInstall(_ => _
-            //    .SetProcessWorkingDirectory(MidiSettingsSolutionFolder)
-            //    .SetPreRelease(true)
-            //    .SetSource(AppSdkNugetOutputFolder)
-            //    .SetPackageID(NugetFullPackageId)
-            //);
+            // for the MIDI nuget package
+            NuGetTasks.NuGetInstall(_ => _
+                .SetProcessWorkingDirectory(MidiSettingsSolutionFolder)
+                .SetPreRelease(true)
+                .SetSource(AppSdkNugetOutputFolder)
+                .SetPackageID(NugetFullPackageId)
+            );
 
-            //NuGetTasks.NuGetRestore(_ => _
-            //    .SetProcessWorkingDirectory(MidiSettingsSolutionFolder)
-            //    .SetSolutionDirectory(MidiSettingsSolutionFolder)
-            //    .SetSource(AppSdkNugetOutputFolder)
-            //);
+            NuGetTasks.NuGetRestore(_ => _
+                .SetProcessWorkingDirectory(MidiSettingsSolutionFolder)
+                .SetSolutionDirectory(MidiSettingsSolutionFolder)
+                .SetSource(AppSdkNugetOutputFolder)
+            );
 
-            //// build x64 and Arm64, no Arm64EC
-            //foreach (var platform in OutOfProcPlatforms)
-            //{
-            //    string solutionDir = MidiSettingsSolutionFolder.ToString() + @"\";
+            bool wxsWritten = false;
 
-            //    string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
+            // build x64 and Arm64, no Arm64EC
+            foreach (var platform in OutOfProcPlatforms)
+            {
+                string solutionDir = MidiSettingsSolutionFolder.ToString() + @"\";
+
+                string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
 
 
-            //    //DotNetTasks.DotNetBuild(_ => _
-            //    //    .SetProjectFile(MidiSettingsSolutionFolder / "Microsoft.Devices.Midi2.Tools.Shared" / "Microsoft.Devices.Midi2.Tools.Shared.csproj")
-            //    //    .SetConfiguration(Configuration.Release)
-            //    //    .SetPublishSingleFile(false)
-            //    //    .SetPublishTrimmed(false)
-            //    //    .SetSelfContained(false)
-            //    //    .SetRuntime(rid)
-            //    //);
+                //var msbuildProperties = new Dictionary<string, object>();
+                //msbuildProperties.Add("Platform", platform);
+                //msbuildProperties.Add("SolutionDir", solutionDir);          // to include trailing slash
+                //msbuildProperties.Add("RuntimeIdentifier", rid);          
+                ////msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
 
-            //    DotNetTasks.DotNetBuild(_ => _
-            //        .SetProjectFile(MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "Microsoft.Midi.Settings.csproj")
-            //        .SetConfiguration(Configuration.Release)
-            //        .SetPublishSingleFile(false)
-            //        .SetPublishTrimmed(false)
-            //        .SetSelfContained(false)
-            //        .SetRuntime(rid)
-            //    );
+                //Console.Out.WriteLine($"----------------------------------------------------------------------");
+                //Console.Out.WriteLine($"Solution:    {solution}");
+                //Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+                //Console.Out.WriteLine($"Platform:    {platform}");
+                //Console.Out.WriteLine($"RID:         {rid}");
 
-            //    // copy output to staging folder
 
-            //    // TODO: This doesn't deal with any localization content
+                DotNetTasks.DotNetBuild(_ => _
+                    .SetProjectFile(MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "Microsoft.Midi.Settings.csproj")
+                    .SetConfiguration(Configuration.Release)
+                    .SetPublishSingleFile(false)
+                    .SetPublishTrimmed(false)
+                    .SetSelfContained(false)
+                    .SetRuntime(rid)
+                    .AddNoWarns(618) // ignore CS0618 which I have no control over because it's in projection assemblies 
+                );
 
-            //    var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / "net8.0-windows10.0.20348.0" / rid;
-            //    //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
-            //    var runtimesFolder = consoleOutputFolder;
+                // This just doesn't work. Even in Visual Studio, publishing the WinAppSdk app just fails for "unknown" reasons.
+                //DotNetTasks.DotNetPublish(_ => _
+                //    .SetProjectFile(MidiSettingsSolutionFolder / "Microsoft.Midi.Settings.csproj" / "Microsoft.Midi.Settings.csproj")
+                //    .SetConfiguration(Configuration.Release)
+                //    .SetPublishSingleFile(false)
+                //    .SetPublishTrimmed(false)
+                //    .SetSelfContained(false)
+                //    .SetRuntime(rid)
+                //);
+                // folder is bin\rid\publish\
 
-            //    var stagingFolder = MidiConsoleStagingFolder / platform;
+                var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / "net8.0-windows10.0.22621.0" / rid;
+                var stagingFolder = MidiSettingsStagingFolder / platform;
 
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.exe", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.deps.json", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.runtimeconfig.json", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "midi.exe.manifest", stagingFolder, FileExistsPolicy.Overwrite, true);
+                stagingFolder.CreateOrCleanDirectory();
 
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "WinRT.Runtime.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
 
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.SDK.NET.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                // get all the community toolkit files
+                var toolkitFiles = Globbing.GlobFiles(settingsOutputFolder, "CommunityToolkit*.dll");
+                var msftExtensionsFiles = Globbing.GlobFiles(settingsOutputFolder, "Microsoft.Extensions*.dll");
+                var midiSdkFiles = Globbing.GlobFiles(
+                    settingsOutputFolder, 
+                    "Microsoft.Windows.Devices.Midi2*.dll",
+                    "Microsoft.Windows.Devices.Midi2*.winmd",
+                    "Microsoft.Windows.Devices.Midi2*.pri"
+                    );
 
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Spectre.Console.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Spectre.Console.Cli.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                List<AbsolutePath> paths = new List<AbsolutePath>(toolkitFiles.Count + msftExtensionsFiles.Count + midiSdkFiles.Count + 40);
+                paths.AddRange(toolkitFiles);
+                paths.AddRange(msftExtensionsFiles);
+                paths.AddRange(midiSdkFiles);
 
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.CodeDom.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Diagnostics.EventLog.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Diagnostics.EventLog.Messages.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.Management.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.ServiceProcess.ServiceController.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
 
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Utilities.SysEx.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.VirtualPatchBay.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                // copy output to staging folder
 
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Messages.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.VirtualPatchBay.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Utilities.SysEx.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                paths.Add(settingsOutputFolder / "MidiSettings.exe");
+                paths.Add(settingsOutputFolder / "MidiSettings.dll");
+                paths.Add(settingsOutputFolder / "MidiSettings.exe.manifest");
+                paths.Add(settingsOutputFolder / "MidiSettings.deps.json");
+                paths.Add(settingsOutputFolder / "MidiSettings.runtimeconfig.json");
 
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Diagnostics.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Messages.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-            //    //FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "Microsoft.Windows.Devices.Midi2.Initialization.winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+                paths.Add(settingsOutputFolder / "resources.pri");
 
-            //}
+                paths.Add(settingsOutputFolder / "Microsoft.Midi.Settings.Core.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Devices.Midi2.Tools.Shared.dll");
+
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.SDK.NET.dll");
+
+                //paths.Add(settingsOutputFolder / "ColorCode.Core.dll");
+                //paths.Add(settingsOutputFolder / "ColorCode.WinUI.dll");
+
+
+                paths.Add(settingsOutputFolder / "Microsoft.InteractiveExperiences.Projection.dll");
+
+                paths.Add(settingsOutputFolder / "Newtonsoft.Json.dll");
+
+                //paths.Add(settingsOutputFolder / "System.CodeDom.dll");
+                paths.Add(settingsOutputFolder / "System.Diagnostics.EventLog.dll");
+                paths.Add(settingsOutputFolder / "System.Diagnostics.EventLog.Messages.dll");
+                paths.Add(settingsOutputFolder / "System.Management.dll");
+                paths.Add(settingsOutputFolder / "System.ServiceProcess.ServiceController.dll");
+
+                paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.Projection.dll");
+                paths.Add(settingsOutputFolder / "WebView2Loader.dll");
+
+                paths.Add(settingsOutputFolder / "WinRT.Runtime.dll");
+
+                paths.Add(settingsOutputFolder / "Microsoft.WindowsAppRuntime.Bootstrap.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.WindowsAppRuntime.Bootstrap.Net.dll");
+
+                paths.Add(settingsOutputFolder / "Microsoft.WinUI.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Xaml.Interactions.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Xaml.Interactivity.dll");
+
+                paths.Add(settingsOutputFolder / "WinUIEx.dll");
+
+
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.ApplicationModel.Resources.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.AppLifecycle.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.AppNotifications.Builder.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.AppNotifications.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.Management.Deployment.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.PushNotifications.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.Security.AccessControl.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.Storage.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.System.Power.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.System.Projection.dll");
+                paths.Add(settingsOutputFolder / "Microsoft.Windows.Widgets.Projection.dll");
+
+
+                // Add Assets folder with app icon. This ends up special-cased
+
+                paths.Add(settingsOutputFolder / "Assets" / "AppIcon.ico");
+                paths.Add(settingsOutputFolder / "Assets" / "AppIcon.png");
+
+
+                // TODO: This doesn't deal with any localization content
+
+
+                // copy all the globbed files
+
+                foreach (var f in paths)
+                {
+                    FileSystemTasks.CopyFileToDirectory(f, stagingFolder, FileExistsPolicy.Overwrite);
+                }
+
+                // also write lines to the setup include file
+
+                if (!wxsWritten)
+                {
+                    AbsolutePath SettingsAppFileListIncludeFile = AppSdkSetupSolutionFolder / "settings-package" / "_SetupFiles.wxs";
+
+                    using (StreamWriter writer = System.IO.File.CreateText(SettingsAppFileListIncludeFile))
+                    {
+                        writer.WriteLine("<!-- This file was generated by a tool, and will be overwritten -->");
+                        writer.WriteLine();
+                        writer.WriteLine("<Wix xmlns=\"http://wixtoolset.org/schemas/v4/wxs\">");
+                        writer.WriteLine();
+                        writer.WriteLine("  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\\staging ?>");
+                        writer.WriteLine();
+                        writer.WriteLine("  <Fragment>");
+                        writer.WriteLine("    <Component Id=\"SettingsAppExe\" Bitness=\"always64\" Directory=\"SETTINGSAPP_INSTALLFOLDER\" Guid =\"de6c83ee-2d1d-4b21-a098-e4a4079b6872\">");
+
+                        foreach (var f in paths)
+                        {
+                            if (f.ToString().ToLower().Contains("assets"))
+                            {
+                                // we don't create entries for assets files. They are also special-cased in the setup
+                            }
+                            else if (f.ToString().ToLower().EndsWith("midisettings.exe"))
+                            {
+                                // settings app exe so we can use to create icon
+                                writer.WriteLine($"      <File Id=\"ShortcutTargetExe\" Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\{f.Name}\" /> ");
+                            }
+                            else
+                            {
+                                // normal file
+                                writer.WriteLine($"      <File Source=\"$(StagingSourceRootFolder)\\midi-settings\\$(var.Platform)\\{f.Name}\" /> ");
+                            }
+                        }
+
+                        writer.WriteLine("    </Component>");
+                        writer.WriteLine("  </Fragment>");
+                        writer.WriteLine("</Wix>");
+                    }
+
+                    wxsWritten = true;
+                }
+            }
 
         });
 

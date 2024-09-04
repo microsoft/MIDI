@@ -50,21 +50,36 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             // TODO: This approach needs to be verified with USB.
 
 
-            auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
-                L"System.Devices.ContainerId:=\"" + container.Id() + L"\" AND System.Devices.DeviceInstanceId:=\"" + DeviceInstanceId() + L"\"",
+            //auto devices = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
+            //    L"System.Devices.ContainerId:=\"" + container.Id() +  L"\"" + 
+            //    L" AND System.Devices.DeviceInstanceId:=\"" + DeviceInstanceId() + L"\"",
+            //    {
+            //        MIDI_DEVICE_PARENT_PROPERTY_KEY
+            //    },
+            //    winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device
+            //).get();
+
+
+            auto myDevice = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+                DeviceInstanceId(),
                 {
-                    MIDI_DEVICE_PARENT_PROPERTY_KEY
+                    MIDI_DEVICE_PARENT_PROPERTY_KEY,
+                    L"System.Devices.DeviceManufacturer",
+                    L"System.Devices.ModelName",
+                    L"System.Devices.HardwareIds",
+                    L"System.Devices.InterfaceClassGuid",
                 },
                 winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device
             ).get();
 
-            if (devices != nullptr && devices.Size() == 1)
-            {
-                auto myDevice = devices.GetAt(0);
 
-                if (devices.GetAt(0).Properties().HasKey(MIDI_DEVICE_PARENT_PROPERTY_KEY))
+            if (myDevice != nullptr)
+            {
+                //auto parentDevice = devices.GetAt(0);
+
+                if (myDevice.Properties().HasKey(MIDI_DEVICE_PARENT_PROPERTY_KEY))
                 {
-                    auto parentId = winrt::unbox_value<winrt::hstring>(devices.GetAt(0).Properties().Lookup(MIDI_DEVICE_PARENT_PROPERTY_KEY));
+                    auto parentId = winrt::unbox_value<winrt::hstring>(myDevice.Properties().Lookup(MIDI_DEVICE_PARENT_PROPERTY_KEY));
 
                     // if the parent is the system root, don't bother trying to resolve that 
                     if (parentId != rootParent)
@@ -72,20 +87,20 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         auto parents = winrt::Windows::Devices::Enumeration::DeviceInformation::FindAllAsync(
                             L"System.Devices.DeviceInstanceId:=\"" + parentId + L"\"",
                             {
-                                L"System.Devices.Parent",
+                                MIDI_DEVICE_PARENT_PROPERTY_KEY,
                                 L"System.Devices.DeviceManufacturer",
-                                L"System.Devices.Manufacturer"
                                 L"System.Devices.ModelName",
+                                L"System.Devices.HardwareIds",
+                                L"System.Devices.InterfaceClassGuid",
+                                /*L"System.Devices.Manufacturer"
                                 L"System.Devices.ModelNumber",
                                 L"System.Devices.ModelId",
-                                L"System.Devices.HardwareIds",
                                 L"System.Devices.Paired",
                                 L"System.Devices.Present",
                                 L"System.Devices.Connected",
                                 L"System.Devices.Category",
                                 L"System.Devices.ClassGuid",
-                                L"System.Devices.DeviceHasProblem",
-                                L"System.Devices.InterfaceClassGuid"
+                                L"System.Devices.DeviceHasProblem",*/
                             },
                             winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
 
@@ -94,6 +109,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                             return parents.GetAt(0);
                         }
                     }
+                }
+                else
+                {
+                    // for USB, and some other types, the actual device is the correct parent
+                    return myDevice;
                 }
 
             }
@@ -513,22 +533,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     }
 
 
-    _Use_decl_annotations_
-    winrt::hstring MidiEndpointDeviceInformation::GetStringProperty(
-        winrt::hstring key,
-        winrt::hstring defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
 
-        try
-        {
-            return winrt::unbox_value<winrt::hstring>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
 
     _Use_decl_annotations_
     foundation::DateTime MidiEndpointDeviceInformation::GetDateTimeProperty(
@@ -536,6 +541,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         foundation::DateTime defaultValue) const noexcept
     {
         if (!m_properties.HasKey(key)) return defaultValue;
+        if (m_properties.Lookup(key) == nullptr) return defaultValue;
 
         try
         {
@@ -562,189 +568,26 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     }
 
-
-
-    _Use_decl_annotations_
-    winrt::guid MidiEndpointDeviceInformation::GetGuidProperty(
+    template<typename T>
+    T MidiEndpointDeviceInformation::GetProperty(
         winrt::hstring key,
-        winrt::guid defaultValue) const noexcept
+        T defaultValue
+    ) const noexcept
     {
         if (!m_properties.HasKey(key)) return defaultValue;
-        try
-        {
-            return winrt::unbox_value<winrt::guid>(m_properties.Lookup(key));
-        }
-        catch (...)
+        if (m_properties.Lookup(key) == nullptr) return defaultValue;
+
+        std::optional<T> opt = m_properties.Lookup(key).try_as<T>();
+
+        if (opt == std::nullopt)
         {
             return defaultValue;
         }
-    }
-
-    _Use_decl_annotations_
-    winrt::hstring MidiEndpointDeviceInformation::GetGuidPropertyAsString(
-        winrt::hstring key,
-        winrt::hstring defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
+        else
         {
-            auto guid = winrt::unbox_value<winrt::guid>(m_properties.Lookup(key));
-
-            auto s = internal::GuidToString(guid);
-
-            return winrt::hstring(s);
-
-        }
-        catch (...)
-        {
-            return defaultValue;
+            return opt.value();
         }
     }
-
-
-    _Use_decl_annotations_
-    uint8_t MidiEndpointDeviceInformation::GetByteProperty(
-        winrt::hstring key,
-        uint8_t defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
-        {
-            return winrt::unbox_value<uint8_t>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
-
-    _Use_decl_annotations_
-    uint64_t MidiEndpointDeviceInformation::GetUInt64Property(
-        winrt::hstring key,
-        uint64_t defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
-        {
-            return winrt::unbox_value<uint64_t>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
-
-    _Use_decl_annotations_
-    uint32_t MidiEndpointDeviceInformation::GetUInt32Property(
-        winrt::hstring key,
-        uint32_t defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
-        {
-            return winrt::unbox_value<uint32_t>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
-
-    _Use_decl_annotations_
-    uint16_t MidiEndpointDeviceInformation::GetUInt16Property(
-        winrt::hstring key,
-        uint16_t defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
-        {
-            return winrt::unbox_value<uint16_t>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
-
-
-
-    _Use_decl_annotations_
-    int64_t MidiEndpointDeviceInformation::GetInt64Property(
-        winrt::hstring key,
-        int64_t defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
-        {
-            return winrt::unbox_value<int64_t>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
-
-    _Use_decl_annotations_
-    int32_t MidiEndpointDeviceInformation::GetInt32Property(
-        winrt::hstring key,
-        int32_t defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
-        {
-            return winrt::unbox_value<int32_t>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
-
-    _Use_decl_annotations_
-    int16_t MidiEndpointDeviceInformation::GetInt16Property(
-        winrt::hstring key,
-        int16_t defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
-        {
-            return winrt::unbox_value<int16_t>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
-
-
-
-
-
-    _Use_decl_annotations_
-    bool MidiEndpointDeviceInformation::GetBoolProperty(
-        winrt::hstring key,
-        bool defaultValue) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-
-        try
-        {
-            return winrt::unbox_value<bool>(m_properties.Lookup(key));
-        }
-        catch (...)
-        {
-            return defaultValue;
-        }
-    }
-
 
 
 
@@ -759,7 +602,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         // transport-supplied name is last
         if (GetTransportSuppliedInfo().Name != L"") return GetTransportSuppliedInfo().Name;
 
-        return GetStringProperty(L"System.ItemNameDisplay", L"(Unknown)");
+        return GetProperty<winrt::hstring>(L"System.ItemNameDisplay", L"(Unknown)");
     }
 
     midi2::MidiEndpointDevicePurpose MidiEndpointDeviceInformation::EndpointPurpose() const noexcept
@@ -767,7 +610,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         // This assumes we're keeping things in sync with the service
         // like we should be
 
-        return (midi2::MidiEndpointDevicePurpose)GetUInt32Property(STRING_PKEY_MIDI_EndpointDevicePurpose, 0);
+        return (midi2::MidiEndpointDevicePurpose)GetProperty<uint32_t>(STRING_PKEY_MIDI_EndpointDevicePurpose, 0);
     }
 
 
@@ -776,30 +619,51 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         auto blocks = winrt::single_threaded_vector<midi2::MidiFunctionBlock>();
 
-        for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < GetDeclaredEndpointInfo().DeclaredFunctionBlockCount; fb++)
+        try
         {
-            winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
-            winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
+            auto functionBlockCount = GetDeclaredEndpointInfo().DeclaredFunctionBlockCount;
 
-            if (auto refArray = GetBinaryProperty(functionBlockProperty); refArray != nullptr)
+            for (uint8_t fb = 0; fb < MIDI_MAX_FUNCTION_BLOCKS && fb < functionBlockCount; fb++)
             {
-                auto data = refArray.Value();
-                auto arraySize = data.size();
+                winrt::hstring functionBlockProperty = internal::BuildFunctionBlockPropertyKey(fb);
+                winrt::hstring functionBlockNameProperty = internal::BuildFunctionBlockNamePropertyKey(fb);
 
-                auto block = winrt::make_self<midi2::implementation::MidiFunctionBlock>();
-
-                if (arraySize == sizeof(MidiFunctionBlockProperty))
+                if (auto refArray = GetBinaryProperty(functionBlockProperty); refArray != nullptr)
                 {
-                    MidiFunctionBlockProperty prop;
+                    auto data = refArray.Value();
+                    auto arraySize = data.size();
 
-                    memcpy(&prop, data.data(), arraySize);
+                    auto block = winrt::make_self<midi2::implementation::MidiFunctionBlock>();
 
-                    block->UpdateFromDevPropertyStruct(prop);
-                    block->InternalSetName(GetStringProperty(functionBlockNameProperty, L""));
+                    if (arraySize == sizeof(MidiFunctionBlockProperty))
+                    {
+                        MidiFunctionBlockProperty prop;
+
+                        memcpy(&prop, data.data(), arraySize);
+
+                        block->UpdateFromDevPropertyStruct(prop);
+                        block->InternalSetName(GetProperty<winrt::hstring>(functionBlockNameProperty, L""));
+                    }
+
+                    blocks.Append(*block);
                 }
-
-                blocks.Append(*block);
             }
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception reading function blocks.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+            );
+
+            // we let the blocks get returned outside the handler
         }
 
         return blocks.GetView();
@@ -816,15 +680,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiEndpointUserSuppliedInfo info{};
 
-        info.Name = GetStringProperty(STRING_PKEY_MIDI_UserSuppliedEndpointName, L"");
-        info.Description = GetStringProperty(STRING_PKEY_MIDI_UserSuppliedDescription, L"");
+        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_UserSuppliedEndpointName, L"");
+        info.Description = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_UserSuppliedDescription, L"");
         
-        info.LargeImagePath = GetStringProperty(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L"");
-        info.SmallImagePath = GetStringProperty(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L"");
+        info.LargeImagePath = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L"");
+        info.SmallImagePath = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L"");
 
-        info.RequiresNoteOffTranslation = GetBoolProperty(STRING_PKEY_MIDI_RequiresNoteOffTranslation, false);
-        info.SupportsMidiPolyphonicExpression = GetBoolProperty(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false);
-        info.RecommendedControlChangeAutomationIntervalMilliseconds = GetUInt16Property(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0);
+        info.RequiresNoteOffTranslation = GetProperty<bool>(STRING_PKEY_MIDI_RequiresNoteOffTranslation, false);
+        info.SupportsMidiPolyphonicExpression = GetProperty<bool>(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false);
+        info.RecommendedControlChangeAutomationIntervalMilliseconds = GetProperty<uint16_t>(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0);
 
         return info;
     }
@@ -833,22 +697,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiEndpointTransportSuppliedInfo info{};
 
-        info.Name = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedEndpointName, L"");
-        info.Description = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedDescription, L"");
+        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_TransportSuppliedEndpointName, L"");
+        info.Description = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_TransportSuppliedDescription, L"");
 
 //        info.LargeImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedLargeImagePath, L"");
 //        info.SmallImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedSmallImagePath, L"");
 
-        info.TransportId = GetGuidProperty(STRING_PKEY_MIDI_AbstractionLayer, winrt::guid{});
-        info.TransportCode = GetStringProperty(STRING_PKEY_MIDI_TransportCode, L"");
-        info.SupportsMultiClient = GetBoolProperty(STRING_PKEY_MIDI_SupportsMulticlient, true);
+        info.TransportId = GetProperty<winrt::guid>(STRING_PKEY_MIDI_AbstractionLayer, winrt::guid{});
+        info.TransportCode = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_TransportCode, L"");
+        info.SupportsMultiClient = GetProperty<bool>(STRING_PKEY_MIDI_SupportsMulticlient, true);
 
-        info.VendorId = GetUInt16Property(STRING_PKEY_MIDI_UsbVID, 0);
-        info.ProductId = GetUInt16Property(STRING_PKEY_MIDI_UsbPID, 0);
-        info.SerialNumber = GetStringProperty(STRING_PKEY_MIDI_SerialNumber, L"");
-        info.ManufacturerName = GetStringProperty(STRING_PKEY_MIDI_ManufacturerName, L"");
+        info.VendorId = GetProperty<uint16_t>(STRING_PKEY_MIDI_UsbVID, 0);
+        info.ProductId = GetProperty<uint16_t>(STRING_PKEY_MIDI_UsbPID, 0);
+        info.SerialNumber = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_SerialNumber, L"");
+        info.ManufacturerName = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_ManufacturerName, L"");
 
-        auto formatProperty = GetByteProperty(STRING_PKEY_MIDI_NativeDataFormat, 0);
+        auto formatProperty = GetProperty<uint8_t>(STRING_PKEY_MIDI_NativeDataFormat, 0);
 
         if (formatProperty == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
             info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::Midi1ByteFormat;
@@ -864,7 +728,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiDeclaredStreamConfiguration config{};
 
-        auto protocolProperty = GetByteProperty(STRING_PKEY_MIDI_EndpointConfiguredProtocol, (uint8_t)MidiProtocol::Default);
+        auto protocolProperty = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointConfiguredProtocol, (uint8_t)MidiProtocol::Default);
 
         if (protocolProperty == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1)
             config.Protocol = midi2::MidiProtocol::Midi1;
@@ -873,8 +737,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         else
             config.Protocol = midi2::MidiProtocol::Default;
 
-        config.ReceiveJitterReductionTimestamps = GetBoolProperty(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, false);
-        config.SendJitterReductionTimestamps = GetBoolProperty(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, false);
+        config.ReceiveJitterReductionTimestamps = GetProperty<bool>(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, false);
+        config.SendJitterReductionTimestamps = GetProperty<bool>(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, false);
 
         return config;
     }
@@ -942,19 +806,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiDeclaredEndpointInfo info;
 
-        info.Name = GetStringProperty(STRING_PKEY_MIDI_EndpointProvidedName, L"");
-        info.ProductInstanceId = GetStringProperty(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId, L"");
+        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_EndpointProvidedName, L"");
+        info.ProductInstanceId = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId, L"");
 
-        info.SupportsMidi10Protocol = GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol, false);
-        info.SupportsMidi20Protocol = GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol, false);
-        info.SupportsReceivingJitterReductionTimestamps = GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false);
-        info.SupportsSendingJitterReductionTimestamps = GetBoolProperty(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false);
+        info.SupportsMidi10Protocol = GetProperty<bool>(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol, false);
+        info.SupportsMidi20Protocol = GetProperty<bool>(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol, false);
+        info.SupportsReceivingJitterReductionTimestamps = GetProperty<bool>(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false);
+        info.SupportsSendingJitterReductionTimestamps = GetProperty<bool>(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false);
 
-        info.SpecificationVersionMajor = GetByteProperty(STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0);
-        info.SpecificationVersionMinor = GetByteProperty(STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0);
+        info.SpecificationVersionMajor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0);
+        info.SpecificationVersionMinor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0);
 
-        info.HasStaticFunctionBlocks = GetBoolProperty(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
-        info.DeclaredFunctionBlockCount = GetByteProperty(STRING_PKEY_MIDI_FunctionBlockCount, (uint8_t)0);
+        info.HasStaticFunctionBlocks = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
+        info.DeclaredFunctionBlockCount = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlockCount, (uint8_t)0);
 
         return info;
     }
@@ -1033,54 +897,44 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     foundation::IReferenceArray<uint8_t> MidiEndpointDeviceInformation::GetBinaryProperty(winrt::hstring key) const noexcept
     {
-        if (m_properties.HasKey(key))
+        try
         {
-            auto value = m_properties.Lookup(key).as<winrt::Windows::Foundation::IPropertyValue>();
+            if (!m_properties.HasKey(key)) return nullptr;
+            if (m_properties.Lookup(key) == nullptr) return nullptr;
 
-            if (value != nullptr)
+            auto value = m_properties.Lookup(key).as<foundation::IPropertyValue>();
+
+            auto t = value.Type();
+
+            if (t == foundation::PropertyType::UInt8Array)
             {
-                auto t = value.Type();
+                auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(m_properties.Lookup(key));
 
-                if (t == foundation::PropertyType::UInt8Array)
-                {
-                    auto refArray = winrt::unbox_value<foundation::IReferenceArray<uint8_t>>(m_properties.Lookup(key));
+                return refArray;
+            }
+            else
+            {
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
-                    return refArray;
-                }
-                else
-                {
-                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Value type is something unexpected.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                    TraceLoggingWideString(key.c_str(), MIDI_SDK_TRACE_PROPERTY_KEY_FIELD)
+                );
 
-                    TraceLoggingWrite(
-                        Midi2SdkTelemetryProvider::Provider(),
-                        MIDI_SDK_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Value type is something unexpected.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                        TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
-                        TraceLoggingWideString(key.c_str(), MIDI_SDK_TRACE_PROPERTY_KEY_FIELD)
-                    );
-                }
+                return nullptr;
             }
         }
-        else
+        catch (...)
         {
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Property key not present.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingWideString(m_id.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
-                TraceLoggingWideString(key.c_str(), MIDI_SDK_TRACE_PROPERTY_KEY_FIELD)
-            );
+            return nullptr;
         }
-
-        return nullptr;
+        
     }
 
 

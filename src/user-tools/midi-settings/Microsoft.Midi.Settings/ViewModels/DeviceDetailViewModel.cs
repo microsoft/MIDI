@@ -13,28 +13,57 @@ using Windows.Devices.Enumeration;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class DeviceDetailViewModel : ObservableRecipient, INavigationAware
+    public partial class DeviceDetailViewModel : ObservableRecipient, INavigationAware
     {
         public EndpointUserMetadata UserMetadata { get; private set; } = new EndpointUserMetadata();
 
-        public MidiEndpointDeviceInformation DeviceInformation
+        [ObservableProperty]
+        public bool hasFunctionBlocks;
+
+        [ObservableProperty]
+        public bool hasParent;
+
+        [ObservableProperty]
+        public MidiEndpointDeviceInformation deviceInformation;
+
+        [ObservableProperty]
+        public IReadOnlyList<MidiFunctionBlock> functionBlocks;
+
+        [ObservableProperty]
+        public MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
+
+        [ObservableProperty]
+        public MidiEndpointUserSuppliedInfo userSuppliedInfo;
+
+        [ObservableProperty]
+        public MidiDeclaredDeviceIdentity deviceIdentity;
+
+        [ObservableProperty]
+        public MidiDeclaredStreamConfiguration streamConfiguration;
+
+        [ObservableProperty]
+        public MidiDeclaredEndpointInfo endpointInfo;
+
+        [ObservableProperty]
+        public DeviceInformation parentDeviceInformation;
+
+        public DeviceDetailViewModel()
         {
-            get; private set;
+            FunctionBlocks = new List<MidiFunctionBlock>(); // to prevent null binding
+
+            // ugly, but there to prevent binding errors. Making everything nullable
+            // bleeds over into the xaml, requires converters, etc. messy AF.
+
+            this.TransportSuppliedInfo = new MidiEndpointTransportSuppliedInfo();
+            this.UserSuppliedInfo = new MidiEndpointUserSuppliedInfo();
+            this.DeviceIdentity = new MidiDeclaredDeviceIdentity();
+            this.StreamConfiguration = new MidiDeclaredStreamConfiguration();
+            this.EndpointInfo = new MidiDeclaredEndpointInfo();
+            this.ParentDeviceInformation = null;
+
+            this.HasParent = false;
+            this.HasFunctionBlocks = false;
         }
-        public IReadOnlyList<MidiFunctionBlock> FunctionBlocks => DeviceInformation.GetDeclaredFunctionBlocks();
-
-        public MidiEndpointTransportSuppliedInfo TransportSuppliedInfo => DeviceInformation.GetTransportSuppliedInfo();
-
-        public MidiEndpointUserSuppliedInfo UserSuppliedInfo => DeviceInformation.GetUserSuppliedInfo();
-
-        public MidiDeclaredDeviceIdentity DeviceIdentity => DeviceInformation.GetDeclaredDeviceIdentity();
-
-        public MidiDeclaredStreamConfiguration StreamConfiguration => DeviceInformation.GetDeclaredStreamConfiguration();
-
-        public MidiDeclaredEndpointInfo EndpointInfo => DeviceInformation.GetDeclaredEndpointInfo();
-
-        public DeviceInformation ParentDeviceInformation => DeviceInformation.GetParentDeviceInformation();
-
 
         public void OnNavigatedFrom()
         {
@@ -43,7 +72,19 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            DeviceInformation = (MidiEndpointDeviceInformation)parameter;
+            this.DeviceInformation = (MidiEndpointDeviceInformation)parameter;
+
+            this.FunctionBlocks = this.DeviceInformation.GetDeclaredFunctionBlocks();
+            this.TransportSuppliedInfo = this.DeviceInformation.GetTransportSuppliedInfo();
+            this.UserSuppliedInfo = this.DeviceInformation.GetUserSuppliedInfo();
+            this.DeviceIdentity = this.DeviceInformation.GetDeclaredDeviceIdentity();
+            this.StreamConfiguration = this.DeviceInformation.GetDeclaredStreamConfiguration();
+            this.EndpointInfo = this.DeviceInformation.GetDeclaredEndpointInfo();
+            this.ParentDeviceInformation = this.DeviceInformation.GetParentDeviceInformation();
+
+            this.HasFunctionBlocks = FunctionBlocks.Count > 0;
+            this.HasParent = this.ParentDeviceInformation != null;
+
         }
     }
 }

@@ -9,7 +9,7 @@ using Microsoft.Windows.Devices.Midi2.ServiceConfig;
 
 namespace Microsoft.Midi.Settings.Config
 {
-    internal class EndpointConfigMetadataPayload : IMidiServiceTransportPluginConfig
+    internal partial class EndpointConfigMetadataPayload : IMidiServiceTransportPluginConfig
     {
         public bool IsFromCurrentConfigFile => true;
 

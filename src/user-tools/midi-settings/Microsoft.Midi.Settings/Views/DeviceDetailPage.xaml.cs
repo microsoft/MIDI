@@ -45,6 +45,7 @@ namespace Microsoft.Midi.Settings.Views
         public DeviceDetailPage()
         {
             ViewModel = App.GetService<DeviceDetailViewModel>();
+
             _loggingService = App.GetService<ILoggingService>();
 
             this.InitializeComponent();

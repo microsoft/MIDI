@@ -21,7 +21,6 @@
                 <Directory Id="API_INSTALLFOLDER" Name="API" />
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
-                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
                 </Directory>
             </Directory>
         </StandardDirectory>

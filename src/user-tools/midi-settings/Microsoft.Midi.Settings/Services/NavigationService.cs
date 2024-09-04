@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-using CommunityToolkit.WinUI.UI.Animations;
+using CommunityToolkit.WinUI.Animations;
+using CommunityToolkit.WinUI;
 
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
@@ -125,5 +126,5 @@ public class NavigationService : INavigationService
         }
     }
 
-    public void SetListDataItemForNextConnectedAnimation(object item) => Frame.SetListDataItemForNextConnectedAnimation(item);
+    public void SetListDataItemForNextConnectedAnimation(object item) => Frame!.SetListDataItemForNextConnectedAnimation(item);
 }

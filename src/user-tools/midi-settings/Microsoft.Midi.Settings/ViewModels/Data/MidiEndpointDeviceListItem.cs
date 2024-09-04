@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,45 +7,48 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class MidiEndpointDeviceListItem
+    public partial class MidiEndpointDeviceListItem : ObservableRecipient
     {
-        private MidiEndpointDeviceInformation _deviceInformation;
+        [ObservableProperty]
+        public MidiEndpointDeviceInformation deviceInformation;
 
-        private MidiEndpointTransportSuppliedInfo _transportSuppliedInfo;
+        [ObservableProperty]
+        public MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
 
-        private MidiEndpointUserSuppliedInfo _userSuppliedInfo;
+        [ObservableProperty]
+        public MidiEndpointUserSuppliedInfo userSuppliedInfo;
 
-        private MidiDeclaredEndpointInfo _declaredEndpointInfo;
+        [ObservableProperty]
+        public MidiDeclaredEndpointInfo declaredEndpointInfo;
 
         public MidiEndpointDeviceListItem(MidiEndpointDeviceInformation deviceInformation)
         { 
-            _deviceInformation = deviceInformation;
+            DeviceInformation = deviceInformation;
 
-            _transportSuppliedInfo = deviceInformation.GetTransportSuppliedInfo();
-            _userSuppliedInfo = deviceInformation.GetUserSuppliedInfo();
-            _declaredEndpointInfo = deviceInformation.GetDeclaredEndpointInfo();
+            TransportSuppliedInfo = deviceInformation.GetTransportSuppliedInfo();
+            UserSuppliedInfo = deviceInformation.GetUserSuppliedInfo();
+            DeclaredEndpointInfo = deviceInformation.GetDeclaredEndpointInfo();
         }
 
 
-        public string Name => _deviceInformation.Name;
+        public string Name => DeviceInformation.Name;
 
-        public string EndpointDeviceId => _deviceInformation.EndpointDeviceId;
+        public string EndpointDeviceId => DeviceInformation.EndpointDeviceId;
 
-        public string UserSuppliedDescription => _userSuppliedInfo.Description;
+        public string UserSuppliedDescription => UserSuppliedInfo.Description;
 
-        public MidiEndpointNativeDataFormat NativeDataFormat => _transportSuppliedInfo.NativeDataFormat;
+        public MidiEndpointNativeDataFormat NativeDataFormat => TransportSuppliedInfo.NativeDataFormat;
 
-        public bool SupportsMidi10Protocol => _declaredEndpointInfo.SupportsMidi10Protocol;
-        public bool SupportsMidi20Protocol => _declaredEndpointInfo.SupportsMidi10Protocol;
+        public bool SupportsMidi10Protocol => DeclaredEndpointInfo.SupportsMidi10Protocol;
+        public bool SupportsMidi20Protocol => DeclaredEndpointInfo.SupportsMidi10Protocol;
 
 
-        public string TransportSuppliedDescription => _transportSuppliedInfo.Description;
+        public string TransportSuppliedDescription => TransportSuppliedInfo.Description;
 
-        public string TransportSuppliedSerialNumber => _transportSuppliedInfo.SerialNumber;
+        public string TransportSuppliedSerialNumber => TransportSuppliedInfo.SerialNumber;
 
-        public bool SupportsMultiClient => _transportSuppliedInfo.SupportsMultiClient;
+        public bool SupportsMultiClient => TransportSuppliedInfo.SupportsMultiClient;
 
-        public MidiEndpointDeviceInformation DeviceInformation => _deviceInformation;
 
     }
 }

@@ -19,7 +19,7 @@ using Microsoft.Midi.Settings.ViewModels;
 //using Microsoft.Midi.Settings.SdkMock;
 //using Microsoft.Midi.Settings.SdkMock.TransportClientSdk;
 using Microsoft.Midi.Settings.Models;
-using CommunityToolkit.Labs.WinUI;
+using CommunityToolkit.WinUI.Controls;
 using Microsoft.Midi.Settings.Contracts.Services;
 
 
