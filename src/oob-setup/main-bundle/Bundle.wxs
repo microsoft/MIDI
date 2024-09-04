@@ -43,7 +43,8 @@
         <PackageGroup Id="Prerequisites">
 
             <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
-            <ExePackage
+            <ExePackage 
+                Vital="false"
                 DisplayName="Microsoft Visual C++ Runtime"
                 SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
                 Compressed="yes"
@@ -57,7 +58,7 @@
         <PackageGroup Id="MidiServicesPackages">
             <MsiPackage
                 Id="WindowsMIDIServicesCoreSetup"
-                Vital="yes"
+                Vital="true"
                 Permanent="no"
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesCoreSetup.msi">

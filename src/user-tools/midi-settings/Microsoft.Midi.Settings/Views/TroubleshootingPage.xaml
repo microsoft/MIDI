@@ -8,8 +8,7 @@
     xmlns:local="using:Microsoft.Midi.Settings.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:labs="using:CommunityToolkit.Labs.WinUI"
-    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"    
     mc:Ignorable="d">
@@ -64,33 +63,33 @@
                 <TextBlock Text="If you are not sure that a device is working" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
 
-                <labs:SettingsExpander x:Name="SendTestNotesSettingsExpander"
+                <controls:SettingsExpander x:Name="SendTestNotesSettingsExpander"
                                    Description="Select a MIDI endpoint from the list and then a group and channel. Click the button to start sending note on and note off messages to that group. Most MIDI devices will have an indicator light or other visual way of showing you that it is receiving MIDI data."
                                    Header="Send test notes in a loop"
                                    IsExpanded="False"
                                    IsEnabled="True" >
-                    <labs:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE91B;" />
-                    </labs:SettingsExpander.HeaderIcon>
+                    </controls:SettingsExpander.HeaderIcon>
 
-                    <labs:SettingsExpander.Items>
-                        <labs:SettingsCard >
+                    <controls:SettingsExpander.Items>
+                        <controls:SettingsCard >
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <ComboBox Width="300" Header="UMP Endpoint"/>
                                 <ComboBox Width="60" Header="Group"/>
                                 <ComboBox Width="60" Header="Channel"/>
                                 <Button Content="Start"/>
                             </StackPanel>
-                        </labs:SettingsCard>
-                    </labs:SettingsExpander.Items>
-                </labs:SettingsExpander>
+                        </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
 
 
 
 
                 <TextBlock Text="If you have an unknown issue" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
-                <labs:SettingsCard Header="Restart Windows MIDI Services"
+                <controls:SettingsCard Header="Restart Windows MIDI Services"
                            Description="Hopefully it doesn't come to this, but if something is stuck in the service, you can restart it here.">
                     <StackPanel>
                         <Button Content="Restart MIDI Service"
@@ -99,22 +98,22 @@
                         <TextBlock Text="You must run this application as Administrator to manage the Windows service." 
                                    Visibility="{x:Bind ViewModel.IsUserRunningAsAdmin, Converter={StaticResource BooleanToInverseVisibilityConverter}}" />
                     </StackPanel>
-                </labs:SettingsCard>
+                </controls:SettingsCard>
 
                 <TextBlock Text="If you're working with support" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
-                <labs:SettingsCard Header="Report MIDI System Information"
+                <controls:SettingsCard Header="Report MIDI System Information"
                                    Description="If you're working with technical support for an app or piece of hardware, they may ask you to capture MIDI system information to a file and send it to them. You will be able to view the information captured before you send to your support contact.">
                     <Button Content="Save MIDI System Information"/>
-                </labs:SettingsCard>
+                </controls:SettingsCard>
 
 
                 <TextBlock Text="If you've found a bug" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}"/>
 
-                <labs:SettingsCard Header="Report a Bug to Microsoft"
+                <controls:SettingsCard Header="Report a Bug to Microsoft"
                                    Description="If you've run across something which may be a bug in Windows MIDI Services, you can report it here.">
                     <Button Content="Open Feedback Hub"/>
-                </labs:SettingsCard>
+                </controls:SettingsCard>
             </StackPanel>
         </ScrollViewer>
     </Grid>

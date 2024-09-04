@@ -85,8 +85,11 @@ unzip them, copy to appropriate folders under node_modules, and then make these 
 copy windows.devices.midi2 folder from projection to node_modules in sample
 
 To deal with mismatch node_module versions:
+https://www.electronjs.org/docs/latest/tutorial/using-native-node-modules
 
-in projection windows.devices.midi2 folder:
+in projection microsoft.windows.devices.midi2 and all similar folders:
+
+in electron sample folder
 npm install --save-dev electron
 npm install --save-dev @electron/rebuild
 node_modules\.bin\electron-rebuild

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Data;
 
 namespace Microsoft.Midi.Settings.Helpers;
-public class FieldUnsignedNumericDecimalFormatConverter : IValueConverter
+public partial class FieldUnsignedNumericDecimalFormatConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {

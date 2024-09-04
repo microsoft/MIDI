@@ -27,8 +27,8 @@
             AfterTargets="AfterBuild;AfterRebuild">
 
         <ItemGroup>
-            <MidiInitializationLibFiles Include="$(NugetRoot)runtimes\win-$(Platform)\native\Microsoft.Windows.Devices.Midi2.*.dll" />
-            <MidiInitializationLibFiles Include="$(NugetRoot)runtimes\win-$(Platform)\native\Microsoft.Windows.Devices.Midi2.*.pri" />
+            <MidiInitializationLibFiles Include="$(NugetRoot)runtimes\win-$(Platform)\native\Microsoft.Windows.Devices.Midi2*.dll" />
+            <MidiInitializationLibFiles Include="$(NugetRoot)runtimes\win-$(Platform)\native\Microsoft.Windows.Devices.Midi2*.pri" />
         </ItemGroup>
 
         <Message Text="Copying Windows MIDI Services SDK initialization dll" Importance="high"/>

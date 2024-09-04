@@ -1,11 +1,12 @@
 {
   "variables": {
     "WIN_VER": "{WinVer}",
-    "USE_ADDITIONAL_WINMD": "{UseAdditionalWinmd}"
+    "USE_ADDITIONAL_WINMD": "{UseAdditionalWinmd}",
   },
   "includes": ["common.gypi"],
   "targets": [{
     "target_name": "binding",
+    "cflags_cc":[ "-std=c++17" ]
     "sources": [],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"
@@ -54,7 +55,9 @@
               "%ProgramFiles%/Microsoft Visual Studio 14.0/VC/lib/store/references",
               "%ProgramFiles(x86)%/Windows Kits/10/UnionMetadata/10.0.20348.0",
               "$(VCToolsInstallDir)/lib/x86/store/references",
-              "%MIDI_REPO_ROOT%/build/release/api/"
+              "%midi_repo_root%/build/staging/app-sdk/x64",
+              "%midi_repo_root%/build/staging/app-sdk/Arm64",
+              "%midi_repo_root%/build/staging/app-sdk/Arm64EC"
             ]
           }
         }
@@ -71,8 +74,8 @@
     ],
     "msvs_settings": {
       "VCCLCompilerTool": {
-        "AdditionalOptions": ["/ZW"],
-        "DisableSpecificWarnings": [4609]
+        "AdditionalOptions": ["/ZW", "/std:c++17"],
+        "DisableSpecificWarnings": [4609],
       }
     }
   }]

@@ -47,6 +47,7 @@ namespace collections = ::winrt::Windows::Foundation::Collections;
 #include <format>
 #include <filesystem>
 
+#include <chrono>
 
 // pre-declare namespaces
 

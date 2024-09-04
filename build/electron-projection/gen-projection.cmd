@@ -1,26 +1,38 @@
 @echo off
 
+
+set sdk_bin_folder_x64=%midi_repo_root%\src\app-sdk\vsfiles\out\coalesce\x64\Release\
+
+
 echo this will fail if you aren't on the right drive already
 cd %midi_repo_root%
-cd "build\release\electron-projection"
+cd "build\electron-projection"
 
-mkdir projection\windows.devices.midi2\build
+pushd
 
-rmdir /S /Q ./projection2
+set ns_name=microsoft.windows.devices.midi2
+set projection_root=projection
 
+rmdir /S /Q %projection_root%
 
-echo STEP 1: copy the current Windows.Devices.Midi2.winmd metadata to the electron build folder
-copy /Y %midi_repo_root%\build\release\api\Microsoft.Windows.Devices.Midi2*.winmd .\projection\microsoft.windows.devices.midi2\build
+mkdir %projection_root%
+mkdir %projection_root%\%ns_name%
+mkdir %projection_root%\%ns_name%\build
 
-echo STEP 1.2: copy Windows.winmd metadata to the same folder
-copy /Y "C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd" .\projection\microsoft.windows.devices.midi2\build
+echo STEP 1: copy the current %ns_name%.winmd metadata to the electron build folder
+copy /Y %sdk_bin_folder_x64%\%ns_name%.winmd .\projection\%ns_name%\build
 
-echo STEP 2: This will fail to build the project. Needs to be done from inside Visual Studio
-nodert\src\NodeRTCmd\bin\Debug\NodeRTCmd.exe --winmd .\projection\windows.devices.midi2\build\Microsoft.Windows.Devices.Midi2*.winmd --outdir .\projection2 --verbose
+echo STEP 2: copy Windows.winmd metadata to the same folder
+copy /Y "C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd" .\%projection_root%\%ns_name%\build
 
-echo STEP 3: If it was generated, open projection2\microsoft.windows.devices.midi2\build\binding.sln and recompile. If not, you need to debug. It may be the projection2 folder was in use.
+echo STEP 3: Generate the projection
+nodert\src\NodeRTCmd\bin\Debug\NodeRTCmd.exe --winmd .\%projection_root%\%ns_name%\build\%ns_name%.winmd --outdir .\%projection_root% --verbose
 
-echo STEP 4: need to deal with SendMessageStruct by removing it from the C++ source _nodert_generated.cpp. Remove all references to SendMessageStruct and FillMessageStruct and rebuild.
+echo STEP 3: Compile the projection. This doesn't work inside NodeRT for some reason
+cd %projection_root%
+cd %ns_name%
+node-gyp rebuild --msvs_version=2022
 
-echo STEP 5: need to run node-modules\.bin\electron-rebuild
+echo STEP 4: need to install and run node-modules\.bin\electron-rebuild to actually use this. This is not automatic
 
+popd

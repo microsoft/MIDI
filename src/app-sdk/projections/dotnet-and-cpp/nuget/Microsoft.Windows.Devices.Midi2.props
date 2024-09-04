@@ -14,39 +14,12 @@
 		</Reference>
 			-->	   
 
-		<Reference Include="Microsoft.Windows.Devices.Midi2">
+		<Reference Include="WindowsMidiServicesAppSDK">
 			<HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.winmd</HintPath>
 		</Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.Messages">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Messages.winmd</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.ServiceConfig">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.ServiceConfig.winmd</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.winmd</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback">
-            <HintPath>$$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.winmd</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.Diagnostics">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Diagnostics.winmd</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.ClientPlugins">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.ClientPlugins.winmd</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.CapabilityInquiry">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.winmd</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.Utilities.SysEx">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.winmd</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Windows.Devices.Midi2.VirtualPatchBay">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.VirtualPatchBay.winmd</HintPath>
-        </Reference>
 
-        <Reference Include="Microsoft.Windows.Devices.Midi2.Initialization">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Initialization.winmd</HintPath>
+        <Reference Include="WindowsMidiServicesAppSDKInitialization">
+            <HintPath>$(NugetRoot)\ref\native\WMicrosoft.Windows.Devices.Midi2.Initialization.winmd</HintPath>
         </Reference>
         
         

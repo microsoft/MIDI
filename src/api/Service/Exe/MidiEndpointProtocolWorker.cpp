@@ -154,6 +154,7 @@ CMidiEndpointProtocolWorker::Start(
 
     m_negotiationCompleteCallback = NegotiationCompleteCallback;
 
+    // these are defaults, but discovery will tell us what we can really do here.
     m_preferToSendJRTimestampsToEndpoint = NegotiationParams.PreferToSendJRTimestampsToEndpoint;
     m_preferToReceiveJRTimestampsFromEndpoint = NegotiationParams.PreferToReceiveJRTimestampsFromEndpoint;
     m_preferredMidiProtocol = NegotiationParams.PreferredMidiProtocol;
@@ -572,7 +573,43 @@ CMidiEndpointProtocolWorker::ProcessStreamMessage(internal::PackedUmp128 ump)
         m_declaredFunctionBlockCount = internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(ump.word1);
         m_functionBlocksAreStatic = internal::GetEndpointInfoNotificationStaticFunctionBlocksFlagFromSecondWord(ump.word1);
 
+        // check protocol
+        auto supportsMidi2 = internal::GetEndpointInfoNotificationMidi2ProtocolCapabilityFromSecondWord(ump.word1);
+        auto supportsMidi1 = internal::GetEndpointInfoNotificationMidi1ProtocolCapabilityFromSecondWord(ump.word1);
+
+        // first check to see if we're trying to negotiate MIDI 1
+        if (!supportsMidi1 && m_preferredMidiProtocol == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1)
+        {
+            // endpoint doesn't support MIDI 1 protocol, so we will only negotiate MIDI 2
+            m_preferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
+        }
+
+        // this check is second so we fall back to MIDI 1 protocol if MIDI 2 isn't supported
+        if (!supportsMidi2 && m_preferredMidiProtocol == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2)
+        {
+            // endpoint doesn't support MIDI 2 protocol, so we will only negotiate MIDI 1
+            m_preferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1;
+        }
+
+        // JR timestamp preferences
+        auto endpointTransmitsJR = internal::GetEndpointInfoNotificationTransmitJRTimestampCapabilityFromSecondWord(ump.word1);
+        auto endpointReceivesJR = internal::GetEndpointInfoNotificationReceiveJRTimestampCapabilityFromSecondWord(ump.word1);
+
+        if (!endpointTransmitsJR && m_preferToReceiveJRTimestampsFromEndpoint)
+        {
+            // endpoint doesn't transmit JR, so we won't request it
+            m_preferToReceiveJRTimestampsFromEndpoint = false;
+        }
+
+        if (!endpointReceivesJR && m_preferToSendJRTimestampsToEndpoint)
+        {
+            // endpoint doesn't receive JR, so we won't request it
+            m_preferToSendJRTimestampsToEndpoint = false;
+        }
+
         // TODO: Update other internal values as needed
+
+
 
         LOG_IF_FAILED(RequestAllFunctionBlocks());
     }

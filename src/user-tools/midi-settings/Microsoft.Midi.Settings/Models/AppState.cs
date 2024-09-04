@@ -20,6 +20,8 @@ public class AppState
 
     private AppState()
     {
+        MidiServicesInitializer.EnsureServiceAvailable();
+
         StartDeviceWatcher(true);
     }
 

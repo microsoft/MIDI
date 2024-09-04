@@ -22,10 +22,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public class DevicesViewModel : ObservableRecipient, INavigationAware
     {
-
-        private readonly DispatcherQueue _dispatcherQueue;
-
-
         private readonly INavigationService _navigationService;
 
         public ICommand ViewDeviceDetailsCommand
@@ -33,11 +29,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public DispatcherQueue? DispatcherQueue { get; set; }
+
         public DevicesViewModel(INavigationService navigationService)
         {
             _navigationService = navigationService;
-
-            _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointDeviceInformation>(
                 (param) =>
@@ -52,13 +48,11 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ObservableCollection<MidiEndpointDevicesByTransport> MidiEndpointDevicesByTransport { get; } = [];
 
 
-        // CollectionViewSource grouped by transport
-
-
-
         public void RefreshDeviceCollection(bool showDiagnosticsEndpoints = false)
         {
-            _dispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            if (DispatcherQueue == null) return;
+
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
                 System.Diagnostics.Debug.WriteLine("Begin RefreshDeviceCollection");
 
@@ -77,20 +71,25 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // now get all the endpoint devices and put them in groups by transport
 
-                foreach (var endpointDevice in AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values)
+                var enumeratedDevices = AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices;
+
+                foreach (var endpointDevice in enumeratedDevices.Values)
                 {
-                    // Get the transport
-
-                    var transportId = endpointDevice.GetTransportSuppliedInfo().TransportId;
-
-                    var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
-
-                    // add this device to the transport's collection
-                    if (parentTransport != null)
+                    if (endpointDevice != null)
                     {
-                        parentTransport.EndpointDevices.Add(endpointDevice);
-                    }
+                        // Get the transport
 
+                        var transportInfo = endpointDevice.GetTransportSuppliedInfo();
+                        var transportId = transportInfo.TransportId;
+
+                        var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
+
+                        // add this device to the transport's collection
+                        if (parentTransport != null)
+                        {
+                            parentTransport.EndpointDevices.Add(new MidiEndpointDeviceListItem(endpointDevice));
+                        }
+                    }
                 }
 
 
@@ -101,8 +100,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 foreach (var item in tempCollection.OrderBy(x => x.Transport.Name))
                 {
-                    // TODO: this is a hack. Probably shouldn't be using the mnemonic directly
-                    // Instead, need a transport properly for purpose like we have with endpoints
+                    // TODO: this is a hack. Probably shouldn't be using the transport code directly
+                    // Instead, need a transport property for purpose like we have with endpoints
                     if (item.Transport.TransportCode == "DIAG")
                     {
                         if (showDiagnosticsEndpoints)
@@ -134,7 +133,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            //RefreshDeviceCollection();
         }
     }
 }

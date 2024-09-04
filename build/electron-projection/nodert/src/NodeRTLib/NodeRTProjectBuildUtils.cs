@@ -21,7 +21,8 @@ namespace NodeRTLib
     // Provides helper methods for compiling the genrated projects and copying the needed files for a package to an output directory
     public class NodeRTProjectBuildUtils
     {
-        private const string NODE_GYP_CMD_TEMPLATE = "\"cd \"{0}\" & npm install --ignore-scripts & node-gyp rebuild --msvs_version={1}\"";
+        private const string NODE_NPM_INSTALL_CMD_TEMPLATE = "\"cd \"{0}\" & npm install --ignore-scripts\"";
+        private const string NODE_GYP_REBUILD_CMD_TEMPLATE = "\"cd \"{0}\" & node-gyp rebuild --msvs_version={1}\"";
 
         // Builds the given project/sln for the given platforms and copies the output & package file to the output directory
         public static void BuildWithNodeGyp(string moduleDirectory, VsVersions vsVersion, bool verbose = false)
@@ -57,12 +58,22 @@ namespace NodeRTLib
                     throw new Exception("Unknown VS Version");
             }
 
-            string buildCmd = String.Format(NODE_GYP_CMD_TEMPLATE, moduleDirectory, versionString);
+            string buildCmd = String.Format(NODE_GYP_REBUILD_CMD_TEMPLATE, moduleDirectory, versionString);
 
-            Console.WriteLine("Build Command: " + buildCmd);
+            Console.WriteLine("Node-Gyp Build Command: " + buildCmd);
 
             return buildCmd;
         }
+
+        private static string CreateNpmInstallCmd(string moduleDirectory, VsVersions vsVersion)
+        {
+            string cmd = String.Format(NODE_NPM_INSTALL_CMD_TEMPLATE, moduleDirectory);
+
+            Console.WriteLine("NPM Install Command: " + cmd);
+
+            return cmd;
+        }
+
 
         private static void BuildModule(string moduleDirectory, VsVersions vsVersion, bool verbose)
         {
@@ -70,11 +81,17 @@ namespace NodeRTLib
             Console.WriteLine("BuildModule: vsVersion:       " + vsVersion.ToString());
             Console.WriteLine("BuildModule: verbose:         " + verbose.ToString());
 
-            string cmd = CreateBuildCmd(moduleDirectory, vsVersion);
-            bool result = ExecuteCommand(cmd, verbose);
+            string installCmd = CreateNpmInstallCmd(moduleDirectory, vsVersion);
+            bool installResult = ExecuteCommand(installCmd, verbose);
 
-            if (!result)
-                throw new Exception("Failed to build project. Command returned false.");
+            if (!installResult)
+                throw new Exception("Failed to build project. NPM Install Command returned false.");
+
+            string buildCmd = CreateBuildCmd(moduleDirectory, vsVersion);
+            bool buildResult = ExecuteCommand(installCmd, verbose);
+
+            if (!buildResult)
+                throw new Exception("Failed to build project. Rebuild Command returned false.");
         }
 
         private static bool ExecuteCommand(string cmd, bool verbose)

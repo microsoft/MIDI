@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Helpers
 {
-    public class MidiFunctionBlockSysEx8FormatConverter : IValueConverter
+    public partial class MidiFunctionBlockSysEx8FormatConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {

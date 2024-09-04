@@ -30,6 +30,8 @@ namespace NodeRTLib
     using System.Runtime.InteropServices.WindowsRuntime;
 
     using RazorTemplates.Core;
+    using System.Configuration.Assemblies;
+    using System.Runtime.InteropServices;
 
     public class Reflector
     {
@@ -60,16 +62,62 @@ namespace NodeRTLib
 
         public static IEnumerable<string> GetNamespaces(string winmdFile, string baseWinMDDir)
         {
+            Console.WriteLine();
+            Console.WriteLine("Projection WinMD:    " + winmdFile);
+
             BaseWindMDDir = baseWinMDDir;
-            var assembly = Assembly.ReflectionOnlyLoadFrom(winmdFile);
-            if (!assembly.FullName.Contains("WindowsRuntime"))
+
+            try
             {
+                var assembly = Assembly.ReflectionOnlyLoadFrom(winmdFile);
+
+                foreach (var assemblyName in assembly.GetReferencedAssemblies())
+                {
+                    Console.Write(" - Referenced WinMD: " + assemblyName);
+
+                    // base windows dependencies are handled separately.
+                    if (!assemblyName.Name.Contains("Microsoft.Windows.Devices.Midi2")
+                        )
+                    {
+                        Console.WriteLine(" (Skipped)");
+                        continue;
+                    }
+
+
+                    try
+                    {
+                        Console.WriteLine(" (Attempting to Resolve via Path)");
+
+                        Assembly.ReflectionOnlyLoadFrom(Path.Combine(Path.GetDirectoryName(winmdFile), assemblyName.Name + ".winmd"));
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            Console.WriteLine(" (Attempting to Resolve Normally)");
+
+                            Assembly.ReflectionOnlyLoad(assemblyName.FullName);
+                        }
+                        catch
+                        {
+                            Console.WriteLine("--- Unable to load referenced assembly");
+                        }
+                    }
+                }
+
+                var namespaces = from t in assembly.ExportedTypes select t.Namespace;
+
+                Console.WriteLine("Assemblies resolved and namespaces enumerated.");
+
+                return namespaces.Distinct();
+
+            }
+            catch
+            {
+                Console.WriteLine("--- Unable to load assembly");
+
                 return new string[0];
             }
-
-            var namespaces = from t in assembly.ExportedTypes select t.Namespace;
-
-            return namespaces.Distinct();
         }
 
         public static dynamic GenerateModel(string winmdFile, string winRTNamespace, string baseWinMDDir)
@@ -98,7 +146,15 @@ namespace NodeRTLib
 
         public static IList<Type> GetTypesForNamespace(Assembly assembly, string winRTNamespace)
         {
-            IList<Type> types = (from t in assembly.ExportedTypes where t.Namespace.Equals(winRTNamespace, StringComparison.InvariantCultureIgnoreCase) && !t.IsValueType && !t.IsGenericType && t.BaseType != typeof(Delegate) && t.BaseType != typeof(MulticastDelegate) select t).ToList();
+            IList<Type> types = (
+                from t in assembly.ExportedTypes 
+                where t.Namespace.Equals(winRTNamespace, StringComparison.InvariantCultureIgnoreCase) && 
+                !t.IsValueType && 
+                !t.IsGenericType &&
+                t.Name.IndexOf("MessageStruct") == -1 && // HACK that is Midi2-specific. The generator breaks with the struct references and the easiest way to deal with this is to filter out the struct entirely.
+                t.Name.IndexOf("MessagesStruct") == -1 &&
+                t.BaseType != typeof(Delegate) && 
+                t.BaseType != typeof(MulticastDelegate) select t).ToList();
 
             IList<TypeInfo> hiddenTypes = GetHiddenTypesForNamespace(assembly, winRTNamespace);
 
@@ -123,6 +179,29 @@ namespace NodeRTLib
             return false;
         }
 
+
+        private static bool MidiTypeIsValidForNodeJs(Type t)
+        {
+            // HACK that is Midi2-specific. The generator breaks with the struct references
+            // and the easiest way to deal with this is to filter out the struct entirely.
+
+            return
+                (t.Name.IndexOf("MessageStruct", StringComparison.InvariantCultureIgnoreCase) == -1 &&
+                 t.Name.IndexOf("MessagesStruct", StringComparison.InvariantCultureIgnoreCase) == -1);
+        }
+
+        private static bool MidiMethodIsValidForNodeJs(MethodInfo t)
+        {
+            // HACK that is Midi2-specific. The generator breaks with the struct references
+            // and the easiest way to deal with this is to filter out the struct entirely.
+
+            return
+                (t.Name.IndexOf("MessageStruct", StringComparison.InvariantCultureIgnoreCase) == -1 &&
+                 t.Name.IndexOf("MessagesStruct", StringComparison.InvariantCultureIgnoreCase) == -1 &&
+                 t.Name.IndexOf("FromStruct", StringComparison.InvariantCultureIgnoreCase) == -1);
+        }
+
+
         public static dynamic GenerateModel(Assembly assembly, string winRTNamespace)
         {
             if (!VerifyNamespaceInAssembly(assembly, winRTNamespace))
@@ -146,19 +225,32 @@ namespace NodeRTLib
 
             var filteredTypes = GetTypesForNamespace(assembly, winRTNamespace);
 
-            mainModel.Enums = (from t in assembly.ExportedTypes where t.Namespace.Equals(winRTNamespace, StringComparison.InvariantCultureIgnoreCase) && t.IsEnum select t).ToArray();
-            mainModel.ValueTypes = (from t in assembly.ExportedTypes where t.Namespace.Equals(winRTNamespace, StringComparison.InvariantCultureIgnoreCase) && t.IsValueType && !t.IsEnum select t).ToArray();
+            mainModel.Enums = 
+                (from t in assembly.ExportedTypes 
+                 where t.Namespace.Equals(winRTNamespace, StringComparison.InvariantCultureIgnoreCase) 
+                    && t.IsEnum 
+                 select t).ToArray();
+
+            mainModel.ValueTypes = 
+                (from t in assembly.ExportedTypes 
+                 where t.Namespace.Equals(winRTNamespace, StringComparison.InvariantCultureIgnoreCase) 
+                    && t.IsValueType && 
+                    !t.IsEnum && 
+                    MidiTypeIsValidForNodeJs(t) 
+                 select t).ToArray();
 
             // use this container to aggregate value types which are not in the namespace
             // we will need to generate converter methods for those types
             mainModel.ExternalReferencedValueTypes = new List<Type>();
 
-            // use this container to aggreate other namesapces which are references from this namespaces
-            // we will need to create a dependancy list from these namespaces
+            // use this container to aggregate other namespaces which are referenced from this namespaces
+            // we will need to create a dependency list from these namespaces
             mainModel.ExternalReferencedNamespaces = new List<String>();
 
             foreach (var t in filteredTypes)
             {
+                if (!MidiTypeIsValidForNodeJs(t)) continue;
+
                 dynamic typeDefinition = new DynamicDictionary();
                 types.Add(t, typeDefinition);
                 typeDefinition.Name = t.Name;
@@ -200,7 +292,8 @@ namespace NodeRTLib
                            !methodInfo.Name.StartsWith("get_") &&
                            !methodInfo.Name.StartsWith("put_") &&
                            !methodInfo.IsStatic &&
-                           !TX.ShouldIgnoreMethod(methodInfo);
+                           !TX.ShouldIgnoreMethod(methodInfo) &&
+                           MidiMethodIsValidForNodeJs(methodInfo);
                 }).GroupBy(methodInfo => methodInfo.Name).Select(method =>
                 {
                     dynamic dict = new DynamicDictionary();
@@ -228,7 +321,8 @@ namespace NodeRTLib
                         !methodInfo.Name.StartsWith("get_") &&
                         !methodInfo.Name.StartsWith("put_") &&
                         methodInfo.IsStatic &&
-                        !TX.ShouldIgnoreMethod(methodInfo);
+                        !TX.ShouldIgnoreMethod(methodInfo) &&
+                        MidiMethodIsValidForNodeJs(methodInfo);
                 }).GroupBy(methodInfo => methodInfo.Name).Select(method =>
                 {
                     dynamic dict = new DynamicDictionary();
@@ -274,11 +368,13 @@ namespace NodeRTLib
             return winRTNamespace;
         }
 
-        public static string GenerateProject(string winmdFile, string winRTNamespace, string destinationFolder, NodeRTProjectGenerator generator,
+        public static string GenerateProject(
+            string winmdFile, string winRTNamespace, string destinationFolder, NodeRTProjectGenerator generator,
             string npmPackageVersion, string npmScope, string baseWinMDDir)
         {
             string ns = ResolveNamespaceCasing(winmdFile, winRTNamespace, baseWinMDDir);
             var mainModel = GenerateModel(winmdFile, ns, baseWinMDDir);
+
             return generator.GenerateProject(ns, destinationFolder, winmdFile, npmPackageVersion, npmScope, mainModel);
         }
     }
@@ -371,7 +467,19 @@ namespace NodeRTLib
 
         private static string GetTypeFullName(Type type)
         {
-            return (type.Namespace + "." + type.Name).Replace("`1", "");
+            string cleanName = string.Empty;
+
+            // hack for MidiMessageStruct& parameter
+            if (type.Name.EndsWith("&"))
+            {
+                cleanName = type.Name.Substring(0, type.Name.Length - 1);
+            }
+            else
+            {
+                cleanName = type.Name;
+            }
+
+            return (type.Namespace + "." + cleanName).Replace("`1", "");
         }
 
         public static string GetParamsFromJsMethodForDefinitions(dynamic method, bool isAsync = false)
@@ -443,6 +551,8 @@ namespace NodeRTLib
             {
                 return "void";
             }
+
+            //Console.WriteLine(type.Name);
 
             string fullName = GetTypeFullName(type);
             var sb = new StringBuilder();

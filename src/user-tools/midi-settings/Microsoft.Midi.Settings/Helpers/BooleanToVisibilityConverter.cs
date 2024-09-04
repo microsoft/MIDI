@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Data;
 
 namespace Microsoft.Midi.Settings.Helpers;
 
-public class BooleanToVisibilityConverter : IValueConverter
+public partial class BooleanToVisibilityConverter : IValueConverter
 {
     public BooleanToVisibilityConverter()
     {

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.ViewModels.Data
 {
-    public partial class EndpointUserMetadata : ObservableObject
+    public partial class EndpointUserMetadata : ObservableRecipient
     {
         [ObservableProperty]
         private string name = string.Empty;

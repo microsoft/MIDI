@@ -7,7 +7,7 @@
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:behaviors="using:Microsoft.Midi.Settings.Behaviors"
     xmlns:i="using:Microsoft.Xaml.Interactivity"
-    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     Typography.Kerning="True"
     Typography.StylisticSet20="True"
     Typography.DiscretionaryLigatures="True"

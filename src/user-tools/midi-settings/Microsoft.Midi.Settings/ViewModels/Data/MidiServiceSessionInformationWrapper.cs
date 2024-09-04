@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -7,9 +8,10 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class MidiServiceSessionInformationWrapper
+    public partial class MidiServiceSessionInformationWrapper : ObservableRecipient
     {
-        public MidiServiceSessionInfo? SessionInfo { get; set; }
+        [ObservableProperty]
+        public MidiServiceSessionInfo? sessionInfo;
 
         public ObservableCollection<MidiServiceSessionConnectionInfo> SessionConnections { get; } = [];
     }

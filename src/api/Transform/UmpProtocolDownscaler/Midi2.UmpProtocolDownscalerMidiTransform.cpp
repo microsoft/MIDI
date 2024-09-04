@@ -1,4 +1,10 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
 #include "pch.h"
 //#include "bytestreamToUMP.h"
@@ -33,8 +39,162 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
     m_Callback = Callback;
     m_Context = Context;
 
+
+    // get the deviceinstanceid and also the support for m1 and m2
+
+    auto dev = DeviceInformation::CreateFromIdAsync(Device, 
+        {
+            STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol,
+            STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol,
+        }
+    ).get();
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, dev);
+
+    auto m1Prop = dev.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol));
+    RETURN_HR_IF_NULL(E_INVALIDARG, m1Prop);
+    m_endpointSupportsMidi1Protocol = winrt::unbox_value<bool>(m1Prop);
+
+    auto m2Prop = dev.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol));
+    RETURN_HR_IF_NULL(E_INVALIDARG, m1Prop);
+    m_endpointSupportsMidi2Protocol = winrt::unbox_value<bool>(m2Prop);
+
+    winrt::hstring deviceInstanceId;
+
+    // retrieve the device instance id from the DeviceInformation property store
+    auto devInstanceIdProp = dev.Properties().Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
+    RETURN_HR_IF_NULL(E_INVALIDARG, devInstanceIdProp);
+    deviceInstanceId = winrt::unbox_value<winrt::hstring>(devInstanceIdProp).c_str();
+
+    winrt::hstring deviceSelector(
+        L"System.Devices.DeviceInstanceId:=\"" + deviceInstanceId + L"\" AND " +
+        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " +
+        L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
+
+    // Set up device watcher to check properties to catch when a new protocol is negotiated
+    // See issue #380 in github repo
+
+    m_Watcher = DeviceInformation::CreateWatcher(deviceSelector, 
+        { 
+            STRING_PKEY_MIDI_EndpointConfiguredProtocol,
+            STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol,
+            STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol,
+        },
+        DeviceInformationKind::DeviceInterface
+    );
+
+    auto deviceAddedHandler = winrt::Windows::Foundation::TypedEventHandler<DeviceWatcher, DeviceInformation>(
+        this, &CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceAdded);
+    auto deviceRemovedHandler = winrt::Windows::Foundation::TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(
+        this, &CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceRemoved);
+    auto deviceUpdatedHandler = winrt::Windows::Foundation::TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(
+        this, &CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceUpdated);
+
+    m_DeviceAdded = m_Watcher.Added(winrt::auto_revoke, deviceAddedHandler);
+    m_DeviceRemoved = m_Watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
+    m_DeviceUpdated = m_Watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
+
+    m_Watcher.Start();
+
     return S_OK;
 }
+
+
+_Use_decl_annotations_
+HRESULT 
+CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceAdded(DeviceWatcher, DeviceInformation)
+{
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate update)
+{
+    if (update.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredProtocol))
+    {
+        TraceLoggingWrite(
+            MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Configured Protocol has changed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+        // retrieve the device instance id from the DeviceInformation property store
+        auto prop = update.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointConfiguredProtocol));
+        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
+        byte newVal = winrt::unbox_value<uint8_t>(prop);
+
+        // TODO: We should also upscale if the endpoint supports MIDI 2 but not MIDI 1
+
+        if (newVal == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1)
+        {
+            TraceLoggingWrite(
+                MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"New protocol is MIDI 1.0. Downscaling enabled", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+
+            m_downscalingRequiredForEndpoint = true;
+            m_upscalingRequiredForEndpoint = false;
+            
+        }
+        else if(newVal == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2)
+        {
+            m_downscalingRequiredForEndpoint = false;
+
+            if (m_endpointSupportsMidi1Protocol && m_endpointSupportsMidi2Protocol)
+            {
+                TraceLoggingWrite(
+                    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"New protocol is MIDI 2.0. Downscaling disabled. Upscaling is not required because endpoint supports MIDI 1 protocol as well", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+
+                // endpoint supports both MIDI 1 and MIDI 2 protocols, so we don't upscale MIDI 1 messages
+                // and instead prefer to retain their original form.
+                m_upscalingRequiredForEndpoint = false;
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"New protocol is MIDI 2.0. Endpoint doesn't declare MIDI 1 support, so we will upscale MIDI 1 protocol messages.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+
+                // endpoint declares it supports only MIDI 2 protocol, so we also need to upscale MIDI 1 messages
+                m_upscalingRequiredForEndpoint = true;
+            }
+        }
+    }
+
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceRemoved(DeviceWatcher, DeviceInformationUpdate)
+{
+    return S_OK;
+}
+
 
 HRESULT
 CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
@@ -52,26 +212,6 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
     return S_OK;
 }
 
-#define USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
-
-#ifndef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
-
-#define SCALE_DOWN_FROM_16_BIT_VALUE    16
-#define SCALE_DOWN_FROM_32_BIT_VALUE    32
-#define SCALE_TO_7_BIT_VALUE            7
-#define SCALE_TO_14_BIT_VALUE           14
-
-#endif
-
-//// TEMP due to missing libmidi2 function impl
-//void umpToMIDI1Protocol::increaseWrite()
-//{
-//    bufferLength++;
-//    writeIndex++;
-//    if (writeIndex == UMPTOPROTO1_BUFFER) {
-//        writeIndex = 0;
-//    }
-//}
 
 _Use_decl_annotations_
 HRESULT
@@ -90,288 +230,69 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     //);
 
 
-    if (Length >= sizeof(uint32_t))
+    // if downscaling and upscaling aren't required, quickly move on
+    if (!m_downscalingRequiredForEndpoint && !m_upscalingRequiredForEndpoint)
     {
-#ifdef USE_LIBMIDI2_FOR_UMP_TO_MIDI1_PROTOCOL
-        // Send the UMP(s) to the parser
-        uint32_t* data = (uint32_t*)Data;
-        for (UINT i = 0; i < (Length / sizeof(uint32_t)); i++)
+        RETURN_IF_FAILED(m_Callback->Callback(Data, Length, Timestamp, m_Context));
+    }
+    else if (m_downscalingRequiredForEndpoint)
+    {
+        if (Length >= sizeof(uint32_t))
         {
-            m_umpToMidi1.UMPStreamParse(data[i]);
-        }
-
-        // retrieve the message from the parser
-        // and send it on
-        while (m_umpToMidi1.availableUMP())
-        {
-            uint32_t words[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
-            UINT wordCount{ 0 };
-
-            for (wordCount = 0; wordCount < _countof(words) && m_umpToMidi1.availableUMP(); wordCount++)
+            // Send the UMP(s) to the parser
+            uint32_t* data = (uint32_t*)Data;
+            for (UINT i = 0; i < (Length / sizeof(uint32_t)); i++)
             {
-                words[wordCount] = m_umpToMidi1.readUMP();
+                m_umpToMidi1.UMPStreamParse(data[i]);
             }
 
-            if (wordCount > 0)
+            // retrieve the message from the parser
+            // and send it on
+            while (m_umpToMidi1.availableUMP())
             {
-                // we use return here instead of log, because the number of UMPs created should be no more than 1
-                RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), Timestamp, m_Context));
-            }
-        }
-#else
-        // this section was due to some bugs in libmidi2.
+                uint32_t words[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
+                UINT wordCount{ 0 };
 
-        auto originalWord0 = internal::MidiWord0FromVoidMessageDataPointer(Data);
-
-        // only translate MT4 to MT2 (MIDI 2.0 protocol to MIDI 1.0 protocol)
-        if (internal::GetUmpMessageTypeFromFirstWord(originalWord0) == MIDI_UMP_MESSAGE_TYPE_MIDI2_CHANNEL_VOICE_64)
-        {
-            // downscale MIDI 2 to MIDI 1. Note that we treat the note index as a note number no matter 
-            // what. There was quite a bit of discussion about this, and the main architects in the MIDI
-            // association felt that a wrong note is better than no note. So in cases where the note number
-            // is an index and exact pitch is specified, this will send an incorrect note. This is by
-            // consensus and therefore by design.
-
-            //uint8_t* incomingDataPointer = (uint8_t*)Data;
-
-            auto originalWord1 = internal::MidiWord1FromVoidMessageDataPointer(((uint8_t*)Data) + sizeof(uint32_t));
-
-            uint8_t groupIndex = internal::GetGroupIndexFromFirstWord(originalWord0);
-            uint8_t channelIndex = internal::GetChannelIndexFromFirstWord(originalWord0);
-            uint8_t status = internal::GetStatusFromChannelVoiceMessage(originalWord0);
-
-            // converting only to 32 bit messages, but some MIDI 2.0 messages convert into multiple MIDI 1.0 messages
-            // a stack reference here is ok because none of these callbacks are async in any way. It's a chain.
-
-            // first we check for messages that return more than one resulting translated message
-            if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PROGRAM_CHANGE ||
-                status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_REG_CONTROLLER ||
-                status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_ASSIGN_CONTROLLER)
-            {
-                uint32_t resultingMessages[4];
-                uint32_t resultingMessageCount{ 0 };
-
-                if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PROGRAM_CHANGE)
+                for (wordCount = 0; wordCount < _countof(words) && m_umpToMidi1.availableUMP(); wordCount++)
                 {
-                    // this one needs to create three separate messages so we special case here
-                    uint8_t program = MIDIWORDBYTE1(originalWord1);
-
-                    // the bank is valid if the least significant bit in word 0 is set
-                    bool bankValid = (originalWord0 & (uint32_t)0x1) == 0x1;
-
-                    resultingMessageCount = 0;
-
-                    if (bankValid)
-                    {
-                        uint8_t bankMsb = MIDIWORDBYTE3(originalWord1);
-                        uint8_t bankLsb = MIDIWORDBYTE4(originalWord1);
-
-                        resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_UMP_MIDI1_BANK_SELECT_MSB_CC_INDEX, bankMsb);
-                        resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_UMP_MIDI1_BANK_SELECT_LSB_CC_INDEX, bankLsb);;
-                    }
-
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2ProgramChange(groupIndex, channelIndex, program);
-                }
-                else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_REG_CONTROLLER)
-                {
-                    // RPN - converts to four MIDI 1.0 messages
-
-                    uint8_t bank = internal::CleanupByte7(MIDIWORDBYTE3(originalWord0));
-                    uint8_t index = internal::CleanupByte7(MIDIWORDBYTE4(originalWord0));
-
-                    uint8_t coarse = internal::CleanupByte7(MIDIWORDBYTE1(originalWord1));
-                    uint8_t fine = internal::CleanupByte7(MIDIWORDBYTE2(originalWord1));
-
-                    resultingMessageCount = 0;
-
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_RPN_CC_NUMBER_BANK, bank);
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_RPN_CC_NUMBER_INDEX, index);
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_RPN_CC_NUMBER_DATA_COARSE, coarse);
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_RPN_CC_NUMBER_DATA_FINE, fine);
-                }
-                else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_ASSIGN_CONTROLLER)
-                {
-                    // NRPN - converts to four MIDI 1.0 messages
-
-                    uint8_t bank = MIDIWORDBYTE3(originalWord0);
-                    uint8_t index = MIDIWORDBYTE4(originalWord0);
-
-                    uint8_t coarse = internal::CleanupByte7(MIDIWORDBYTE1(originalWord1));
-                    uint8_t fine = internal::CleanupByte7(MIDIWORDBYTE2(originalWord1));
-
-                    resultingMessageCount = 0;
-
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_NRPN_CC_NUMBER_BANK, bank);
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_NRPN_CC_NUMBER_INDEX, index);
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_NRPN_CC_NUMBER_DATA_COARSE, coarse);
-                    resultingMessages[resultingMessageCount++] = UMPMessage::mt2CC(groupIndex, channelIndex, MIDI_NRPN_CC_NUMBER_DATA_FINE, fine);
+                    words[wordCount] = m_umpToMidi1.readUMP();
                 }
 
-                // send all the generated messages in order
-                if (resultingMessageCount > 0 && m_Callback != nullptr)
+                if (wordCount > 0)
                 {
-                    for (uint32_t i = 0; i < resultingMessageCount; i++)
-                    {
-                        RETURN_IF_FAILED(m_Callback->Callback(&resultingMessages[i], sizeof(uint32_t), Timestamp + i, m_Context));
-                    }
+                    // we use return here instead of log, because the number of UMPs created should be no more than 1
+                    RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), Timestamp, m_Context));
                 }
-            }
-            else
-            {
-                // these messages all result in a single new message to send.
-                // the one exception is the fall-through which just passes along the original data. 
-
-                uint32_t newWord0;
-                PVOID newData{ nullptr };
-                UINT newLength{ 0 };
-
-                if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_NOTE_OFF)
-                {
-                    //TraceLoggingWrite(
-                    //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                    //    __FUNCTION__,
-                    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    //    TraceLoggingPointer(this, "this"),
-                    //    TraceLoggingWideString(L"Downscaling Note Off", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    //);
-
-                    // note number / index is third byte
-                    uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
-                    uint8_t newVelocity = (uint8_t)(M2Utils::scaleDown(MIDIWORDSHORT1(originalWord1), SCALE_DOWN_FROM_16_BIT_VALUE, SCALE_TO_7_BIT_VALUE));
-                    newWord0 = UMPMessage::mt2NoteOff(groupIndex, channelIndex, noteNumber, newVelocity);
-                    newData = &newWord0;
-                    newLength = sizeof(uint32_t);
-                }
-
-                else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_NOTE_ON)
-                {
-                    //TraceLoggingWrite(
-                    //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                    //    __FUNCTION__,
-                    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    //    TraceLoggingPointer(this, "this"),
-                    //    TraceLoggingWideString(L"Downscaling Note On", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                    //);
-
-                    uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
-                    uint8_t newVelocity = (uint8_t)(M2Utils::scaleDown(MIDIWORDSHORT1(originalWord1), SCALE_DOWN_FROM_16_BIT_VALUE, SCALE_TO_7_BIT_VALUE));
-
-                    if (newVelocity == 0)
-                    {
-                        // MIDI 2.0 to MIDI 1.0 conversion rules
-                        newVelocity = 1;
-                    }
-
-                    newWord0 = UMPMessage::mt2NoteOn(groupIndex, channelIndex, noteNumber, newVelocity);
-                    newData = &newWord0;
-                    newLength = sizeof(uint32_t);
-                }
-
-                else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_POLY_PRESSURE)
-                {
-                    uint8_t noteNumber = MIDIWORDBYTE3(originalWord0);
-                    // pressure is entire second word
-                    uint8_t newPressure = (uint8_t)(M2Utils::scaleDown(originalWord1, SCALE_DOWN_FROM_32_BIT_VALUE, SCALE_TO_7_BIT_VALUE));
-                    newWord0 = UMPMessage::mt2PolyPressure(groupIndex, channelIndex, noteNumber, newPressure);
-
-                    newData = &newWord0;
-                    newLength = sizeof(uint32_t);
-                }
-
-                else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_CONTROL_CHANGE)
-                {
-                    uint8_t controlIndex = MIDIWORDBYTE3(originalWord0);
-                    // value is entire second word
-                    uint8_t newValue = (uint8_t)(M2Utils::scaleDown(originalWord1, SCALE_DOWN_FROM_32_BIT_VALUE, SCALE_TO_7_BIT_VALUE));
-                    newWord0 = UMPMessage::mt2CC(groupIndex, channelIndex, controlIndex, newValue);
-
-                    newData = &newWord0;
-                    newLength = sizeof(uint32_t);
-                }
-
-                else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_CHANNEL_PRESSURE)
-                {
-                    // the pressure data value is the entire second word
-                    uint8_t pressureData = (uint8_t)(M2Utils::scaleDown(originalWord1, SCALE_DOWN_FROM_32_BIT_VALUE, SCALE_TO_7_BIT_VALUE));
-
-                    newWord0 = UMPMessage::mt2ChannelPressure(groupIndex, channelIndex, pressureData);
-
-                    newData = &newWord0;
-                    newLength = sizeof(uint32_t);
-                }
-
-                else if (status == MIDI_UMP_MIDI2_CHANNEL_VOICE_STATUS_PITCH_BEND)
-                {
-                    // the bend value is the entire second word
-                    uint16_t bend = (uint16_t)M2Utils::scaleDown(originalWord1, SCALE_DOWN_FROM_32_BIT_VALUE, SCALE_TO_14_BIT_VALUE);
-
-                    newWord0 = UMPMessage::mt2PitchBend(groupIndex, channelIndex, bend);
-
-                    newData = &newWord0;
-                    newLength = sizeof(uint32_t);
-                }
-
-                else
-                {
-                    // just pass it through without any processing. We don't have a specific conversion for this CV message
-                    newData = Data;
-                    newLength = Length;
-                }
-
-                //TraceLoggingWrite(
-                //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-                //    __FUNCTION__,
-                //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                //    TraceLoggingPointer(this, "this"),
-                //    TraceLoggingWideString(L"Sending single new message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                //);
-
-                if (m_Callback != nullptr && newLength > 0 && newData != nullptr)
-                {
-                    return m_Callback->Callback(newData, newLength, Timestamp, m_Context);
-                }
-
             }
         }
         else
         {
-            // pass through because it's not a message type we handle
+            // not a valid UMP
 
-            //TraceLoggingWrite(
-            //    MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-            //    __FUNCTION__,
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Not a message type we recognize. No downscaling applied", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingUInt32(originalWord0, "Word 0")
-            //);
-
-
-            if (m_Callback != nullptr)
-            {
-                return m_Callback->Callback(Data, Length, Timestamp, m_Context);
-            }
+            TraceLoggingWrite(
+                MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Invalid UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingUInt32(Length, "Message Length in Bytes"),
+                TraceLoggingUInt64(Timestamp, "Message Timestamp")
+            );
         }
 
-
-#endif
-
     }
-    else
+    else if (m_upscalingRequiredForEndpoint)
     {
-        // not a valid UMP
+        // Endpoint requires upscaling, but libmidi2 doesn't currently do upscaling, so we will
+        // just send the original message along. This branch and the detection is to enable
+        // easy addition of this in the future when libmidi2 supports protocol upscaling
+        // https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/25
 
-        TraceLoggingWrite(
-            MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Invalid UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingUInt32(Length, "Message Length in Bytes"),
-            TraceLoggingUInt64(Timestamp, "Message Timestamp")
-            );
+        RETURN_IF_FAILED(m_Callback->Callback(Data, Length, Timestamp, m_Context));
+
+        return S_OK;
     }
 
     return S_OK;

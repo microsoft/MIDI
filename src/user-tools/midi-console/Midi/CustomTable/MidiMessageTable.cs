@@ -9,7 +9,7 @@
 
 
 using Microsoft.Windows.Devices.Midi2.Messages;
-using Microsoft.Windows.Devices.Midi2.Utilities.SysEx;
+using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 
 namespace Microsoft.Midi.ConsoleApp
 {

@@ -194,7 +194,7 @@ bool DoSectionTransports(_In_ bool const verbose)
     {
         OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_TRANSPORTS);
 
-        auto transports = diag::MidiReporting::GetInstalledTransportPlugins();
+        auto transports = rept::MidiReporting::GetInstalledTransportPlugins();
 
         if (transports != nullptr && transports.Size() > 0)
         {
@@ -606,6 +606,11 @@ int __cdecl main()
     {
         DoSectionSystemInfo(verbose);
 
+        if (midiClock)
+        {
+            if (!DoSectionClock(verbose)) RETURN_FAIL;
+        }
+
         if (!DoSectionServiceStatus(verbose)) RETURN_FAIL;
 
         auto transportsWorked = DoSectionTransports(verbose);
@@ -617,10 +622,6 @@ int __cdecl main()
 
         DoSectionMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 
-        if (midiClock)
-        {
-            if (!DoSectionClock(verbose)) RETURN_FAIL;
-        }
 
         if (transportsWorked)
         {

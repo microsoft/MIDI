@@ -21,7 +21,6 @@
                 <Directory Id="API_INSTALLFOLDER" Name="API" />
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
-                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
                 </Directory>
             </Directory>
         </StandardDirectory>
@@ -46,14 +45,6 @@
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.ServiceConfig.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.ClientPlugins.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Diagnostics.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Messages.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Utilities.SysEx.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
 
 

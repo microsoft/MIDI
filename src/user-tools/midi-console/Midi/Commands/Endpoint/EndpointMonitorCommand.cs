@@ -10,7 +10,7 @@
 
 using Microsoft.Windows.Devices.Midi2.Initialization;
 using Microsoft.Windows.Devices.Midi2.Messages;
-using Microsoft.Windows.Devices.Midi2.Utilities.SysEx;
+using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 
 namespace Microsoft.Midi.ConsoleApp
 {
@@ -297,7 +297,6 @@ namespace Microsoft.Midi.ConsoleApp
 
                     var messageListener = new Thread(() =>
                     {
-
                         UInt64 lastMessageTimestamp = 0;
 
                         UInt32 lastReceivedDebugWord = 0;
@@ -523,7 +522,7 @@ namespace Microsoft.Midi.ConsoleApp
                                     WriteMessageToFile(settings, captureWriter, message);
                                 }
 
-                                //Thread.Sleep(0);
+                                Thread.Sleep(0);
                             }
                         });
                         messageFileWriter.Start();

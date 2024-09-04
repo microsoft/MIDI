@@ -34,7 +34,7 @@ private:
         _In_ LONGLONG Timestamp);
 
     HRESULT SendMidiMessageNow(
-        _In_ ScheduledUmpMessage const message);
+        _In_ ScheduledUmpMessage const& message);
 
     // priority queue with comparison set up to compare the timestamps and to preserve order.
     // We want the smallest timestamp as front/top of the queue. In the case of duplicate timestamps
@@ -80,7 +80,7 @@ private:
 
     std::mutex m_queueMutex;
 
-    std::atomic<uint64_t> m_currentReceivedIndex{ 0 };
+    std::atomic<uint32_t> m_currentReceivedIndex{ 0 };
 
     //std::atomic<bool> m_continueProcessing{ true };
     std::jthread m_queueWorkerThread;

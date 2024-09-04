@@ -64,6 +64,7 @@
           "items": {
             "type": "string",
             "enum": [
+              "BuildAndPackageElectronProjection",
               "BuildAndPackAllAppSDKs",
               "BuildAndPublishAll",
               "BuildAppSdkRuntimeAndToolsInstaller",
@@ -83,6 +84,7 @@
           "items": {
             "type": "string",
             "enum": [
+              "BuildAndPackageElectronProjection",
               "BuildAndPackAllAppSDKs",
               "BuildAndPublishAll",
               "BuildAppSdkRuntimeAndToolsInstaller",

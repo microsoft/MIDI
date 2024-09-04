@@ -58,6 +58,7 @@ endif()
 add_library(libmidi2::libmidi2 STATIC IMPORTED)
 
 set_target_properties(libmidi2::libmidi2 PROPERTIES
+  INTERFACE_COMPILE_FEATURES "cxx_std_11"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 )
 

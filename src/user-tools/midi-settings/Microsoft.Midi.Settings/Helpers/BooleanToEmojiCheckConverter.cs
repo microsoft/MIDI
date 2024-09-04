@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Data;
 
 namespace Microsoft.Midi.Settings.Helpers;
 
-public class BooleanToEmojiCheckConverter : IValueConverter
+public partial class BooleanToEmojiCheckConverter : IValueConverter
 {
     public BooleanToEmojiCheckConverter()
     {

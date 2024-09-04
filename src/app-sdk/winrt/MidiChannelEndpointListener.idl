@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiGroup.idl";
+import "MidiChannel.idl";
+
+import "IMidiEndpointMessageProcessingPlugin.idl";
+import "IMidiMessageReceivedEventSource.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.ClientPlugins
+{
+    [default_interface]
+    runtimeclass MidiChannelEndpointListener : Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, 
+                                               Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
+    {
+        MidiChannelEndpointListener();
+
+        Microsoft.Windows.Devices.Midi2.MidiGroup IncludedGroup;
+
+        IVector<Microsoft.Windows.Devices.Midi2.MidiChannel> IncludedChannels{ get; };
+
+        Boolean PreventCallingFurtherListeners;
+        Boolean PreventFiringMainMessageReceivedEvent;
+    }
+}

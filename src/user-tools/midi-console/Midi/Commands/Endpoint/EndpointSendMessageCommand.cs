@@ -149,6 +149,9 @@ namespace Microsoft.Midi.ConsoleApp
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
             }
 
+            // we'll use this info when sleeping
+            var systemTimerInfo = MidiClock.GetCurrentSystemTimerInfo();
+
 
             string endpointId = string.Empty;
 
@@ -289,7 +292,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                     while (messagesAttempted < 1)
                     {
-                        Thread.Sleep(100);
+                        Thread.Sleep(1);
                     }
                 }
                 else
@@ -333,7 +336,7 @@ namespace Microsoft.Midi.ConsoleApp
                                 sendTask.Value = messagesSent;
                                 ctx.Refresh();
 
-                                if (stillSending) Thread.Sleep(100);
+                                if (stillSending) Thread.Sleep(1);
                             }
 
                             sendTask.Value = messagesSent;
@@ -353,11 +356,13 @@ namespace Microsoft.Midi.ConsoleApp
                         // todo: localize
                         if (settings.DelayBetweenMessages > 0)
                         {
-                            AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s) with a delay of approximately [steelblue1]{settings.DelayBetweenMessages.ToString("N0")} ms[/] between each.");
+                            double actualDelayMilliseconds = Math.Max((double)settings.DelayBetweenMessages, MidiClock.ConvertTimestampTicksToMilliseconds(systemTimerInfo.CurrentIntervalTicks));
+
+                            AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s) with a delay of approximately [steelblue1]{actualDelayMilliseconds.ToString("N2")} ms[/] between each.");
                         }
                         else
                         {
-                            AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s).");
+                            AnsiConsole.MarkupLine($"Sent [steelblue1]{messagesSent.ToString("N0")}[/] message(s) as fast as possible.");
                         }
                     }
                     else

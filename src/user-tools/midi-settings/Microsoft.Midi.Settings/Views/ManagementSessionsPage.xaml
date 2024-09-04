@@ -9,6 +9,7 @@
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:mididiag="using:Microsoft.Windows.Devices.Midi2.Diagnostics"
+    xmlns:midirept="using:Microsoft.Windows.Devices.Midi2.Reporting"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -26,7 +27,7 @@
         <ScrollViewer Grid.Row="1">
             <Grid Margin="0,0,8,0">
 
-                <ItemsControl ItemsSource="{x:Bind ViewModel.Sessions}">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Sessions, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="local:MidiServiceSessionInformationWrapper">
 
@@ -45,7 +46,7 @@
                                 </controls:SettingsExpander.Header>
 
                                 <controls:SettingsExpander.ItemTemplate>
-                                    <DataTemplate x:DataType="mididiag:MidiServiceSessionConnectionInfo">
+                                    <DataTemplate x:DataType="midirept:MidiServiceSessionConnectionInfo">
                                         <controls:SettingsCard IsClickEnabled="False">
                                             <controls:SettingsCard.Header>
                                                 <StackPanel>

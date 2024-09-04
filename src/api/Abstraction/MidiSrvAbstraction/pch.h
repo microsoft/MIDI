@@ -65,5 +65,5 @@ class MidiSrvManager;
 #include "Midi2.MidiSrvConfigurationManager.h"
 #include "Midi2.MidiSrvSessionTracker.h"
 
-#include "MidiSrvManager.h"
+#include "Midi2.MidiSrvManager.h"
 

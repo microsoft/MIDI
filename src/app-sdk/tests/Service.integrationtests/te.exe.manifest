@@ -5,10 +5,9 @@
 <assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
     <assemblyIdentity version="1.0.0.0" name="MyApplication.app"/>
 
-
     <file name="Microsoft.Windows.Devices.Midi2.Initialization.dll">
         <activatableClass
-            name="Microsoft.Windows.Devices.Midi2.Initialization.MidiServiceInitializer"
+            name="Microsoft.Windows.Devices.Midi2.Initialization.MidiServicesInitializer"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
     </file>
@@ -66,16 +65,11 @@
             name="Microsoft.Windows.Devices.Midi2.MidiSession"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
-
-    <file name="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.CapabilityInquiry.MidiUniqueId"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.ClientPlugins.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.ClientPlugins.MidiChannelEndpointListener"
             threadingModel="both"
@@ -88,20 +82,14 @@
             name="Microsoft.Windows.Devices.Midi2.ClientPlugins.MidiMessageTypeEndpointListener"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
-
-    <file name="Microsoft.Windows.Devices.Midi2.Diagnostics.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.Diagnostics.MidiDiagnostics"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
         <activatableClass
-            name="Microsoft.Windows.Devices.Midi2.Diagnostics.MidiReporting"
+            name="Microsoft.Windows.Devices.Midi2.Reporting.MidiReporting"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
-
-    <file name="Microsoft.Windows.Devices.Midi2.Messages.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.Messages.MidiMessageBuilder"
             threadingModel="both"
@@ -118,16 +106,12 @@
             name="Microsoft.Windows.Devices.Midi2.Messages.MidiStreamMessageBuilder"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.ServiceConfig.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfig"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig"
             threadingModel="both"
@@ -140,9 +124,7 @@
             name="Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
-    <file name="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.dll">
         <activatableClass
             name="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.MidiVirtualDeviceCreationConfig"
             threadingModel="both"
@@ -151,8 +133,16 @@
             name="Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.MidiVirtualDeviceManager"
             threadingModel="both"
             xmlns="urn:schemas-microsoft-com:winrt.v1" />
-    </file>
 
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+        <activatableClass
+            name="Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer.MidiSystemExclusiveSender"
+            threadingModel="both"
+            xmlns="urn:schemas-microsoft-com:winrt.v1" />
+    </file>
 
 </assembly>
 

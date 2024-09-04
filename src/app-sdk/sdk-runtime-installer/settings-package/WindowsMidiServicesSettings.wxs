@@ -1,0 +1,70 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+
+    <Package  
+          Name="Windows MIDI Services (Settings App) $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="1.0.0.0"
+          UpgradeCode="6f21054a-1905-4aae-869f-46554de9ea98"
+          Scope="perMachine"
+          Compressed="true"
+          
+          >
+       
+        <MediaTemplate EmbedCab="yes" />
+
+        
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="API_INSTALLFOLDER" Name="API" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings">
+                        <Directory Id="SETTINGSAPP_ASSETS_FOLDER" Name="Assets" />
+                    </Directory>
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+
+
+<!--        <Component Id="SettingsAppExe"
+                   Bitness="always64"
+                   Directory="SETTINGSAPP_INSTALLFOLDER"
+                   Guid="de6c83ee-2d1d-4b21-a098-e4a4079b6872"> -->
+
+
+            <!-- Add folder to path -->
+            
+            <!-- TODO: Pin Icon -->
+<!--            <Environment Id="AddSettingsAppToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes"
+                            Value="[SETTINGSAPP_INSTALLFOLDER]" Permanent="no"/> -->
+<!--        </Component> -->
+
+
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Component Id="SettingsAppShortcut" Guid="c71be7ba-f0b6-483e-a409-e40985e90117">
+                <Shortcut Id="ApplicationStartMenuShortcut"
+                          Name="MIDI Settings"
+                          Description="Windows MIDI Services Settings and Tools"
+                          Target="[#ShortcutTargetExe]"
+                          WorkingDirectory="SETTINGSAPP_INSTALLFOLDER" />
+            </Component>
+        </StandardDirectory>
+
+        <Component Id="SettingsAppAssets"
+                    Bitness="always64"
+                    Directory="SETTINGSAPP_ASSETS_FOLDER"
+                    Guid="f4f2b375-347b-413c-b81d-e900f392f786">
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.ico" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.png" />
+        </Component>
+        
+        <Feature Id="WindowsMidiServicesSettings">
+            <ComponentRef Id="SettingsAppExe"/>
+            <ComponentRef Id="SettingsAppShortcut"/>
+            <ComponentRef Id="SettingsAppAssets"/>
+        </Feature>
+    </Package>
+</Wix>

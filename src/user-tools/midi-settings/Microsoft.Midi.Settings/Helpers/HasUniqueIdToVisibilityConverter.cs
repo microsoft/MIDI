@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Data;
 
 namespace Microsoft.Midi.Settings.Helpers;
 
-public class HasUniqueIdToVisibilityConverter : IValueConverter
+public partial class HasUniqueIdToVisibilityConverter : IValueConverter
 {
     public HasUniqueIdToVisibilityConverter()
     {

@@ -12,10 +12,6 @@
 
 
 
-#define MIDI_SCHEDULER_MINIMUM_EVENT_SLEEP_TIME_MS 2000
-#define MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS 60000
-
-
 
 
 _Use_decl_annotations_
@@ -110,6 +106,7 @@ CMidi2SchedulerMidiTransform::Cleanup()
         uint16_t cleanupAttempts{ 0 };
         while (!m_queueWorkerThreadCleanlyExited && cleanupAttempts < 100)
         {
+            // note: with typical settings, thread will sleep for 15.625ms minimum
             std::this_thread::sleep_for(10ms);
             cleanupAttempts++;
         }
@@ -238,7 +235,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
 _Use_decl_annotations_
 HRESULT 
 CMidi2SchedulerMidiTransform::SendMidiMessageNow(
-    ScheduledUmpMessage const message)
+    ScheduledUmpMessage const& message)
 {
     if (m_queueWorkerThreadStopToken.stop_requested()) return S_OK;
 
@@ -271,35 +268,37 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
     if (m_queueWorkerThreadStopToken.stop_requested()) return S_OK;
 
+    // check to see if we're bypassing scheduling by sending a zero timestamp
+    if (timestamp == 0)
+    {
+        // bypass scheduling logic completely
+        auto hr = SendMidiMessageNow(data, size, timestamp);
+
+        if (SUCCEEDED(hr))
+        {
+            return HR_S_MIDI_SENDMSG_IMMEDIATE;
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSchedulerTransformTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Error sending MIDI Message now (bypass queue)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+            );
+
+            return hr;
+        }
+    }
+
+
     try
     {
-        // check to see if we're bypassing scheduling by sending a zero timestamp
-        if (timestamp == 0)
-        {
-            // bypass scheduling logic completely
-            auto hr = SendMidiMessageNow(data, size, timestamp);
-
-            if (SUCCEEDED(hr))
-            {
-                return HR_S_MIDI_SENDMSG_IMMEDIATE;
-            }
-            else
-            {
-                TraceLoggingWrite(
-                    MidiSchedulerTransformTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Error sending MIDI Message now (bypass queue)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
-                );
-
-                return hr;
-            }
-        }
-        else if (internal::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
+        if (internal::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
         {
             // timestamp is in the past or within our tick window: so send now
             auto hr = SendMidiMessageNow(data, size, timestamp);
@@ -330,8 +329,6 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
             if (size >= MINIMUM_UMP_DATASIZE && size <= MAXIMUM_UMP_DATASIZE)
             {
-
-
                 // schedule the message for sending in the future
 
                 if (m_messageQueue.size() < MIDI_OUTGOING_MESSAGE_QUEUE_MAX_MESSAGE_COUNT)
@@ -748,7 +745,8 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
                         if (!m_queueWorkerThreadStopToken.stop_requested() && 
                             SUCCEEDED(CalculateSafeSleepTime(nextMessageSendTime, sleepTime)))
                         {
-                            if (sleepTime > 0)
+                            // system timers are, by default, good only to about 15.625ms
+                            if (sleepTime > 15)
                             {
 #ifdef MIDI_DETAILED_TRACING
                                 TraceLoggingWrite(

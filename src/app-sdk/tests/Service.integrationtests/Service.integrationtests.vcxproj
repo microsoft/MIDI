@@ -181,73 +181,29 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\projections\dotnet-and-cpp\Microsoft.Windows.Devices.Midi2.NetProjection.csproj">
-      <Project>{25f09b3a-0d97-4245-8591-262a0dff4320}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-ci\Microsoft.Windows.Devices.Midi2.CapabilityInquiry.vcxproj">
-      <Project>{38e2cbfd-6c7a-45fb-b162-6bcc1734a0a1}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-client-plugins\Microsoft.Windows.Devices.Midi2.Plugins.vcxproj">
-      <Project>{3d2bc934-cdc7-4dc7-b7fc-f34b755bf726}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-core\Microsoft.Windows.Devices.Midi2.vcxproj">
-      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-diagnostics\Microsoft.Windows.Devices.Midi2.Diagnostics.vcxproj">
-      <Project>{05796b3c-25ff-4ac2-999b-edefb773393c}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-endpoint-loopback\Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.vcxproj">
-      <Project>{d3b84d5d-8bed-4cb7-b430-b0bf1e46f3a1}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-endpoint-virtual\Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.vcxproj">
-      <Project>{9b93146c-4d9d-4915-becb-5227df2667e2}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj">
-      <Project>{0ca9273a-0bae-4ac4-8290-a72a985dd264}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-messages\Microsoft.Windows.Devices.Midi2.Messages.vcxproj">
-      <Project>{001601de-b7ab-41d1-81b7-40286b139841}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-    <ProjectReference Include="..\..\winrt-service-config\Microsoft.Windows.Devices.Midi2.ServiceConfig.vcxproj">
-      <Project>{72d1a831-0492-41cc-aa58-bdd05c1099f7}</Project>
-      <Private>true</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Manifest Include="te.exe.manifest">
       <DeploymentContent>true</DeploymentContent>
     </Manifest>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj">
+      <Project>{0ca9273a-0bae-4ac4-8290-a72a985dd264}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\winrt\Microsoft.Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
     <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
 </Project>

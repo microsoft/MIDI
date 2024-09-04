@@ -1,23 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-	    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+	    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
         <TargetPlatformVersion>10.0.22621.0</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+        <WindowsSDKPackageVersion>10.0.22621.38</WindowsSDKPackageVersion>
+
         <Nullable>enable</Nullable>
         <RootNamespace>Microsoft.Midi.Settings</RootNamespace>
         
         <ApplicationIcon>Assets/AppIcon.ico</ApplicationIcon>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationManifest>MidiSettings.exe.manifest</ApplicationManifest>
 		<Platforms>x64;arm64</Platforms>
 		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
 	    <ImplicitUsings>enable</ImplicitUsings>
-	    
-        <UseWinUI>true</UseWinUI>
+        <PublishAot>false</PublishAot>
+
+        <!-- Thee two settings (MRT tooling and MSIX tooling) must go together, even for an unpackaged app -->
+        <EnableCoreMrtTooling>true</EnableCoreMrtTooling>
         <EnableMsixTooling>true</EnableMsixTooling>
-        <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+
+        
+        <UseWinUI>true</UseWinUI>
+        <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
         <PublishProfile>Properties\PublishProfiles\win10-$(Platform).pubxml</PublishProfile>
-        <!--<WindowsPackageType>None</WindowsPackageType>-->
+        <WindowsPackageType>None</WindowsPackageType>
+
+        <WindowsAppSdkUndockedRegFreeWinRTInitialize>true</WindowsAppSdkUndockedRegFreeWinRTInitialize>
 		
 		<PackageCertificateThumbprint>DAC77297934678914CC6B107CE26743135B68C64</PackageCertificateThumbprint>
 	    <PackageCertificateKeyFile>Microsoft.Midi.Settings_TemporaryKey.pfx</PackageCertificateKeyFile>
@@ -31,13 +40,16 @@
 
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
+
+
         <!--<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>-->
 	
 	    <!--<WindowsSdkPackageVersion>10.0.20348.28</WindowsSdkPackageVersion>-->
 	    <!--<WindowsSdkPackageVersion>10.0.22621.29</WindowsSdkPackageVersion>-->
 	</PropertyGroup>
 
-	<PropertyGroup><!--<CsWinRTIncludes>Microsoft.Devices.Midi2</CsWinRTIncludes>-->
+	<PropertyGroup>
+        <!--<CsWinRTIncludes>Microsoft.Devices.Midi2</CsWinRTIncludes>-->
 		<!--<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>-->
 		<!--<CsWinRTExcludes></CsWinRTExcludes> -->
 		<!--<CsWinRTExcludesPrivate></CsWinRTExcludesPrivate> -->
@@ -78,32 +90,41 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.0.240109" />
+    <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.1.240821" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.1.240821" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.1.240821" />
+    <PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.1.240821" />
+    <PackageReference Include="CommunityToolkit.WinUI.Extensions" Version="8.1.240821" />
+    <PackageReference Include="CommunityToolkit.WinUI.Helpers" Version="8.1.240821" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.TraceSource" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24215.1710-preview.7" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240404000" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.1" />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24248.1621-preview.7" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240821007-preview2" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
       
       <PackageReference Include="System.Management" Version="8.0.0" />
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+      <PackageReference Include="System.Text.Json" Version="8.0.4" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 
       <PackageReference Include="WinUIEx" Version="2.3.4" />
 
 	  
-    <PackageReference Include="CommunityToolkit.Common" Version="8.2.2" />
-	<PackageReference Include="CommunityToolkit.Labs.WinUI.SettingsControls" Version="0.0.18" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Animations" Version="7.1.2" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26031-preview" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.3.0" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\shared\Microsoft.Devices.Midi2.Tools.Shared\Microsoft.Devices.Midi2.Tools.Shared.csproj" />
-    <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj" />
+    <ProjectReference Include="..\..\shared\Microsoft.Devices.Midi2.Tools.Shared\Microsoft.Devices.Midi2.Tools.Shared.csproj">
+      <Private>True</Private>
+      <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.Midi.Settings.Core\Microsoft.Midi.Settings.Core.csproj">
+      <Private>True</Private>
+      <CopyLocalSatelliteAssemblies>True</CopyLocalSatelliteAssemblies>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -113,6 +134,9 @@
   </ItemGroup>
 	
   <ItemGroup>
+    <None Update="MidiSettings.exe.manifest">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -217,6 +241,8 @@
     <ItemGroup>
       <PRIResource Update="Strings\en-us\Resources.resw">
         <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+        <CustomToolNamespace>Microsoft.Midi.Settings.Strings.en_us</CustomToolNamespace>
       </PRIResource>
     </ItemGroup>
 

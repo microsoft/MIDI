@@ -49,7 +49,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementat
 
     bool MidiServicesInitializer::IsOperatingSystemSupported()
     {
-        // get location of runtime. If the reg key isn't present, return failure
 
         // TODO
 

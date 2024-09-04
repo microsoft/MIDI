@@ -9,8 +9,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:model="using:Microsoft.Midi.Settings.Core.Models"
-    xmlns:toolkit="using:CommunityToolkit.WinUI.UI.Controls"
-    xmlns:converters="using:CommunityToolkit.WinUI.UI.Converters"
+    xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
+    xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     mc:Ignorable="d">
 

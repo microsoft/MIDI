@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="using:Microsoft.Midi.Settings.Views"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
-    xmlns:midi2="using:Windows.Devices.Midi2"
+    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -44,8 +44,8 @@
                 <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
                     <controls:SettingsExpander.Header>
                         <StackPanel>
-                            <TextBlock Text="Recommended settings" Style="{StaticResource HomeCardHeaderTitleStyle}" />
-                            <TextBlock Text="foo bar baz " Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                            <TextBlock Text="Highlighted settings" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                            <TextBlock Text="Commonly used settings for Windows MIDI Services" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
                         </StackPanel>
                     </controls:SettingsExpander.Header>
                     <controls:SettingsExpander.Items>
@@ -57,7 +57,6 @@
                             <controls:SettingsCard.HeaderIcon>
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
                             </controls:SettingsCard.HeaderIcon>
-
                         </controls:SettingsCard>
 
                         <controls:SettingsCard IsClickEnabled="True">
@@ -94,10 +93,106 @@
             <!-- Right Column -->
             <StackPanel Grid.Column="1">
 
-                
-                
-                
+                <!-- Timer and clock info -->
+                <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                    <controls:SettingsExpander.Header>
+                        <StackPanel>
+                            <TextBlock Text="System information" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                            <TextBlock Text="General information about the MIDI System on your Windows PC." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                        </StackPanel>
+                    </controls:SettingsExpander.Header>
+
+                    <controls:SettingsExpander.Items>
+                        
+                        <controls:SettingsCard IsClickEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="MIDI Message Clock" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xedb3;"/>
+                            </controls:SettingsCard.HeaderIcon>
+
+                            <controls:SettingsCard.Content>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="Resolution" 
+                                               Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.MidiClockResolutionFormattedNanoseconds}" 
+                                               HorizontalAlignment="Right"
+                                               Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                </Grid>
+                            </controls:SettingsCard.Content>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="System Timer Resolution" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe916;"/>
+                            </controls:SettingsCard.HeaderIcon>
+
+                            <controls:SettingsCard.Content>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="0" 
+                                               Text="Current" 
+                                               Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="0" 
+                                               Text="{x:Bind ViewModel.SystemTimerCurrentResolutionFormattedMilliseconds}"
+                                               HorizontalAlignment="Right"
+                                               Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="1" 
+                                               Text="Minimum" 
+                                               Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="1" 
+                                               Text="{x:Bind ViewModel.SystemTimerMinResolutionFormattedMilliseconds}" 
+                                               HorizontalAlignment="Right"
+                                               Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="2" 
+                                               Text="Maximum" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="2" 
+                                               Text="{x:Bind ViewModel.SystemTimerMaxResolutionFormattedMilliseconds}" 
+                                               HorizontalAlignment="Right"
+                                               Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                </Grid>
+                            </controls:SettingsCard.Content>
+                        </controls:SettingsCard>
+
+
+
+
+
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+
                 <!-- Link to troubleshooting page -->
+
+
+
 
             </StackPanel>
 

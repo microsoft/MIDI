@@ -10,8 +10,4 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\midi-console\Midi\Midi.csproj" />
-    <ProjectReference Include="..\..\shared\Microsoft.Devices.Midi2.Tools.Shared\Microsoft.Devices.Midi2.Tools.Shared.csproj" />
-  </ItemGroup>
 </Project>

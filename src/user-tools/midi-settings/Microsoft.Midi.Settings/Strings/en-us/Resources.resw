@@ -300,4 +300,7 @@
   <data name="Shell_Routes.Content" xml:space="preserve">
     <value>Routing</value>
   </data>
+  <data name="Shell_SystemInfo.Content" xml:space="preserve">
+    <value>System Information</value>
+  </data>
 </root>
