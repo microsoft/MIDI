@@ -65,7 +65,7 @@ CMidi2KSMidiEndpointManager::Initialize(
     m_Watcher.Start();
 
     // Wait for everything to be created so that they're available immediately after service start.
-    m_EnumerationCompleted.wait();
+    m_EnumerationCompleted.wait(10000);
 
     return S_OK;
 }
@@ -418,7 +418,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         //else
         //{
             midiPin->InstanceId += hash;
-       // }
+        // }
 
         midiPin->InstanceId += L"_PIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);

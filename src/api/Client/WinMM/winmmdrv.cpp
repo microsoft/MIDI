@@ -5,24 +5,24 @@
 bool g_ProcessIsTerminating {false};
 
 
-MMRESULT MMRESULT_FROM_HRESULT(HRESULT hResult)
+MMRESULT MMRESULT_FROM_HRESULT(HRESULT HResult)
 {
     MMRESULT mmResult = MMSYSERR_NOERROR;
 
-    if (FAILED(hResult))
+    if (FAILED(HResult))
     {
         // If this was an error that we mapped to an hresult for passing through,
         // map it back to the mmResult
-        if (HRESULT_FACILITY(hResult) == FACILITY_ITF)
+        if (HRESULT_FACILITY(HResult) == FACILITY_ITF)
         {
-            mmResult = HRESULT_CODE(hResult);
+            mmResult = HRESULT_CODE(HResult);
         }
         else
         {
-            switch(hResult)
+            switch(HResult)
             {
                 case HRESULT_FROM_WIN32(ERROR_NO_SYSTEM_RESOURCES):
-                    hResult = MMSYSERR_NOMEM;
+                    mmResult = MMSYSERR_NOMEM;
                     break;
                 case E_HANDLE:
                 case E_INVALIDARG:
@@ -51,14 +51,14 @@ wil::com_ptr_nothrow<CMidiPorts> g_MidiPorts;
 
 LRESULT CALLBACK DriverProc
 (
-    DWORD           id,
-    HDRVR           hDriver,
-    WORD            msg,
-    LPARAM          lParam1,
-    LPARAM          lParam2
+    DWORD           Id,
+    HDRVR           HDriver,
+    WORD            Msg,
+    LPARAM          Param1,
+    LPARAM          Param2
 )
 {
-    switch (msg)
+    switch (Msg)
     {
         case DRV_LOAD:
         case DRV_FREE:
@@ -74,19 +74,39 @@ LRESULT CALLBACK DriverProc
             return DRV_CANCEL;
     }
 
-    return DefDriverProc( id, hDriver, msg, lParam1, lParam2 ) ;
+    return DefDriverProc( Id, HDriver, Msg, Param1, Param2 ) ;
 }
 
-DWORD APIENTRY midMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+DWORD APIENTRY midMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1, DWORD_PTR Param2)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingValue(DeviceID, "DeviceID"),
+        TraceLoggingValue(Msg, "Msg"),
+        TraceLoggingValue(User, "User"),
+        TraceLoggingValue(Param1, "Param1"),
+        TraceLoggingValue(Param2, "Param2"));
+
     // Forward the command to the global MidiPorts singleton
-    return g_MidiPorts->MidMessage(uDeviceID, uMsg, dwUser, dwParam1, dwParam2);
+    return g_MidiPorts->MidMessage(DeviceID, Msg, User, Param1, Param2);
 }
 
-DWORD APIENTRY modMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+DWORD APIENTRY modMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1, DWORD_PTR Param2)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingValue(DeviceID, "DeviceID"),
+        TraceLoggingValue(Msg, "Msg"),
+        TraceLoggingValue(User, "User"),
+        TraceLoggingValue(Param1, "Param1"),
+        TraceLoggingValue(Param2, "Param2"));
+
     // Forward the command to the global MidiPorts singleton
-    return g_MidiPorts->ModMessage(uDeviceID, uMsg, dwUser, dwParam1, dwParam2);
+    return g_MidiPorts->ModMessage(DeviceID, Msg, User, Param1, Param2);
 }
 
 BOOL WINAPI DllMain
@@ -96,6 +116,14 @@ BOOL WINAPI DllMain
     LPVOID    Reserved
 )
 {
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingValue(Reason, "Reason"),
+        TraceLoggingValue(Reserved, "Reserved"));
+
     if (DLL_PROCESS_ATTACH == Reason)
     {
         // Create the MidiPorts singleton, this assumes that DLL_PROCESS_ATTACH calls are serialized.
@@ -105,6 +133,8 @@ BOOL WINAPI DllMain
             {
                 return FALSE;
             }
+
+            wil::SetResultTelemetryFallback(WdmAud2TelemetryProvider::FallbackTelemetryCallback);
         }
     }
     else if ((DLL_PROCESS_DETACH == Reason) && ( NULL != Reserved))

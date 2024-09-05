@@ -18,6 +18,7 @@ using namespace winrt;
 
 #include <mmsystem.h>
 #include <mmddk.h>
+#include <mmreg.h>
 #include <strsafe.h>
 
 #include <SDKDDKVer.h>
@@ -47,6 +48,18 @@ using namespace winrt;
 #include "WindowsMidiServices_i.c"
 
 #include "Midi2MidiSrvAbstraction.h"
+
+class WdmAud2TelemetryProvider : public wil::TraceLoggingProvider
+{
+    IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
+        WdmAud2TelemetryProvider,
+        "Microsoft.Windows.Midi2.WdmAud2",
+        // {e6443bc1-e9c5-5a3f-cfb6-abcd62e52e41}
+        (0xe6443bc1,0xe9c5,0x5a3f,0xcf,0xb6,0xab,0xcd,0x62,0xe5,0x2e,0x41));
+
+public:
+};
+
 
 #define HRESULT_FROM_MMRESULT(x) (x == MMSYSERR_NOERROR ? S_OK : MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, x))
 
