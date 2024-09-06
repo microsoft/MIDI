@@ -7,10 +7,24 @@ using namespace winrt::Windows::Devices::Enumeration;
 
 CMidiPorts::CMidiPorts()
 {
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"));
 }
 
 CMidiPorts::~CMidiPorts()
 {
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(g_ProcessIsTerminating, "ProcessIsTerminating"));
+
     if (!g_ProcessIsTerminating)
     {
         Cleanup();
@@ -26,6 +40,13 @@ CMidiPorts::~CMidiPorts()
 HRESULT
 CMidiPorts::RuntimeClassInitialize()
 {
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"));
+
     RETURN_IF_FAILED(CoCreateGuid(&m_SessionId));
     RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidisrvAbstraction)));
     RETURN_IF_FAILED(m_MidisrvAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &m_MidiSessionTracker));
@@ -37,6 +58,13 @@ CMidiPorts::RuntimeClassInitialize()
 HRESULT
 CMidiPorts::Cleanup()
 {
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"));
+
     auto lock = m_Lock.lock();
 
     m_MidiPortInfo[MidiFlowIn].clear();
@@ -59,11 +87,22 @@ CMidiPorts::Cleanup()
 
 _Use_decl_annotations_
 DWORD APIENTRY 
-CMidiPorts::MidMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+CMidiPorts::MidMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1, DWORD_PTR Param2)
 {
     HRESULT hr = S_OK;
 
-    switch(uMsg)
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(DeviceID, "DeviceID"),
+        TraceLoggingValue(Msg, "Msg"),
+        TraceLoggingValue(User, "User"),
+        TraceLoggingValue(Param1, "Param1"),
+        TraceLoggingValue(Param2, "Param2"));
+
+    switch(Msg)
     {
         case MIDM_GETNUMDEVS:
             {
@@ -76,21 +115,21 @@ CMidiPorts::MidMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw
             }
             break;
         case MIDM_GETDEVCAPS:
-            hr = GetDevCaps(MidiFlowIn, uDeviceID, dwParam1);
+            hr = GetDevCaps(MidiFlowIn, DeviceID, Param1);
             break;
         case MIDM_OPEN:
-            hr = Open(MidiFlowIn, uDeviceID, (MIDIOPENDESC *) dwParam1, dwParam2, (MidiPortHandle*) dwUser);
+            hr = Open(MidiFlowIn, DeviceID, (MIDIOPENDESC *) Param1, Param2, (MidiPortHandle*) User);
             break;
         case MIDM_CLOSE:
             // Forward the message to the open port, if one exists, giving the port an opportunity to
             // communicate that it can not be closed.
-            if (SUCCEEDED(hr = ForwardMidMessage(uMsg, (MidiPortHandle) dwUser, dwParam1, dwParam2)))
+            if (SUCCEEDED(hr = ForwardMidMessage(Msg, (MidiPortHandle) User, Param1, Param2)))
             {
-                hr = Close(MidiFlowIn, (MidiPortHandle) dwUser);
+                hr = Close(MidiFlowIn, (MidiPortHandle) User);
             }
             break;
         default:
-            hr = ForwardMidMessage(uMsg, (MidiPortHandle) dwUser, dwParam1, dwParam2);
+            hr = ForwardMidMessage(Msg, (MidiPortHandle) User, Param1, Param2);
     }
 
     return MMRESULT_FROM_HRESULT(hr);
@@ -98,11 +137,22 @@ CMidiPorts::MidMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw
 
 _Use_decl_annotations_
 DWORD APIENTRY
-CMidiPorts::ModMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+CMidiPorts::ModMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1, DWORD_PTR Param2)
 {
     HRESULT hr = S_OK;
 
-    switch(uMsg)
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(DeviceID, "DeviceID"),
+        TraceLoggingValue(Msg, "Msg"),
+        TraceLoggingValue(User, "User"),
+        TraceLoggingValue(Param1, "Param1"),
+        TraceLoggingValue(Param2, "Param2"));
+
+    switch(Msg)
     {
         case MODM_GETNUMDEVS:
             {
@@ -115,21 +165,21 @@ CMidiPorts::ModMessage(UINT uDeviceID, UINT uMsg, DWORD_PTR dwUser, DWORD_PTR dw
             }
             break;
         case MODM_GETDEVCAPS:
-            hr = GetDevCaps(MidiFlowOut, uDeviceID, dwParam1);
+            hr = GetDevCaps(MidiFlowOut, DeviceID, Param1);
             break;
         case MODM_OPEN:
-            hr = Open(MidiFlowOut, uDeviceID, (MIDIOPENDESC *) dwParam1, dwParam2, (MidiPortHandle*) dwUser);
+            hr = Open(MidiFlowOut, DeviceID, (MIDIOPENDESC *) Param1, Param2, (MidiPortHandle*) User);
             break;
         case MODM_CLOSE:
             // Forward the message to the open port, if one exists, giving the port an opportunity to
             // communicate that it can not be closed.
-            if (SUCCEEDED(hr = ForwardModMessage(uMsg, (MidiPortHandle) dwUser, dwParam1, dwParam2)))
+            if (SUCCEEDED(hr = ForwardModMessage(Msg, (MidiPortHandle) User, Param1, Param2)))
             {
-                hr = Close(MidiFlowOut, (MidiPortHandle) dwUser);
+                hr = Close(MidiFlowOut, (MidiPortHandle) User);
             }
             break;
         default:
-            hr = ForwardModMessage(uMsg, (MidiPortHandle) dwUser, dwParam1, dwParam2);
+            hr = ForwardModMessage(Msg, (MidiPortHandle) User, Param1, Param2);
     }
 
     return MMRESULT_FROM_HRESULT(hr);
@@ -147,6 +197,13 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::GetMidiDeviceCount(MidiFlow Flow, UINT32& Count)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)Flow, "MidiFlow"));
+
     auto lock = m_Lock.lock();
 
     // We return the largest valid port number here, the client
@@ -202,15 +259,15 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow Flow, UINT32& Count)
             {
                 MIDIOUTCAPSW *caps = &(m_MidiPortInfo[Flow][servicePortNum].MidiOutCaps);
 
-                caps->wMid = 1;
-                caps->wPid = 0;
+                caps->wMid = MM_MICROSOFT;
+                caps->wPid = MM_MSFT_GENERIC_MIDIOUT;
                 caps->vDriverVersion = 0x0100;
 
                 if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv output device %d"), servicePortNum)))
                 {
                     return;
                 }
-                
+
                 caps->wTechnology = MOD_MIDIPORT;
                 caps->wVoices = 0;
                 caps->wNotes = 0;
@@ -221,8 +278,8 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow Flow, UINT32& Count)
             {
                 MIDIINCAPSW *caps = &(m_MidiPortInfo[Flow][servicePortNum].MidiInCaps);
 
-                caps->wMid = 1;
-                caps->wPid = 0;
+                caps->wMid = MM_MICROSOFT;
+                caps->wPid = MM_MSFT_GENERIC_MIDIIN;
                 caps->vDriverVersion = 0x0100;
 
                 if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv input device %d"), servicePortNum)))
@@ -257,6 +314,15 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow Flow, UINT32& Count)
     enumerationCompletedHandler.revoke();
 
     Count = highestPortNumber;
+
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)Flow, "MidiFlow"),
+        TraceLoggingValue(Count, "Count"));
+
     return S_OK;
 }
 
@@ -264,6 +330,15 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::GetDevCaps(MidiFlow Flow, UINT PortNumber, DWORD_PTR MidiCaps)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)Flow, "MidiFlow"),
+        TraceLoggingValue(PortNumber, "PortNumber"),
+        TraceLoggingValue(MidiCaps, "MidiCaps"));
+
     RETURN_HR_IF(E_INVALIDARG, Flow != MidiFlowIn && Flow != MidiFlowOut);
 
     auto lock = m_Lock.lock();
@@ -312,6 +387,15 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::Open(MidiFlow Flow, UINT PortNumber, MIDIOPENDESC* MidiOpenDesc, DWORD_PTR Flags, MidiPortHandle* OpenedPort)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)Flow, "MidiFlow"),
+        TraceLoggingValue(PortNumber, "PortNumber"),
+        TraceLoggingValue(Flags, "Flags"));
+
     auto lock = m_Lock.lock();
 
     wil::com_ptr_nothrow<CMidiPort> midiPort;
@@ -334,6 +418,16 @@ CMidiPorts::Open(MidiFlow Flow, UINT PortNumber, MIDIOPENDESC* MidiOpenDesc, DWO
 
     m_OpenPorts.emplace(*OpenedPort, std::move(midiPort));
 
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)Flow, "MidiFlow"),
+        TraceLoggingValue(PortNumber, "PortNumber"),
+        TraceLoggingValue(Flags, "Flags"),
+        TraceLoggingValue(*OpenedPort, "MidiPortHandle"));
+
     return S_OK;
 }
 
@@ -341,6 +435,14 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::Close(MidiFlow Flow, MidiPortHandle PortHandle)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)Flow, "MidiFlow"),
+        TraceLoggingValue(PortHandle, "MidiPortHandle"));
+
     auto lock = m_Lock.lock();
 
     auto port = m_OpenPorts.find(PortHandle);
@@ -356,23 +458,43 @@ CMidiPorts::Close(MidiFlow Flow, MidiPortHandle PortHandle)
 
 _Use_decl_annotations_
 HRESULT
-CMidiPorts::ForwardMidMessage(UINT uMsg, MidiPortHandle PortHandle, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+CMidiPorts::ForwardMidMessage(UINT Msg, MidiPortHandle PortHandle, DWORD_PTR Param1, DWORD_PTR Param2)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(Msg, "Msg"),
+        TraceLoggingValue(PortHandle, "MidiPortHandle"),
+        TraceLoggingValue(Param1, "Param1"),
+        TraceLoggingValue(Param2, "Param2"));
+
     wil::com_ptr_nothrow<CMidiPort> port;
 
     RETURN_IF_FAILED(GetOpenedPort(MidiFlowIn, PortHandle, port));
-    RETURN_IF_FAILED(port->MidMessage(uMsg, dwParam1, dwParam2));
+    RETURN_IF_FAILED(port->MidMessage(Msg, Param1, Param2));
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidiPorts::ForwardModMessage(UINT uMsg, MidiPortHandle PortHandle, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+CMidiPorts::ForwardModMessage(UINT Msg, MidiPortHandle PortHandle, DWORD_PTR Param1, DWORD_PTR Param2)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(Msg, "Msg"),
+        TraceLoggingValue(PortHandle, "MidiPortHandle"),
+        TraceLoggingValue(Param1, "Param1"),
+        TraceLoggingValue(Param2, "Param2"));
+
     wil::com_ptr_nothrow<CMidiPort> port;
 
     RETURN_IF_FAILED(GetOpenedPort(MidiFlowOut, PortHandle, port));
-    RETURN_IF_FAILED(port->ModMessage(uMsg, dwParam1, dwParam2));
+    RETURN_IF_FAILED(port->ModMessage(Msg, Param1, Param2));
     return S_OK;
 }
 

@@ -44,7 +44,13 @@
 // largest UMP is 16 bytes
 #define MAXIMUM_LOOPED_UMP_DATASIZE 16
 
+// Libmidi2 chunks UMP to bytestream sysex messages with a max size of 20 bytes
+// per message
+#define MAXIMUM_LIBMIDI2_BYTESTREAM_DATASIZE 20
+
 // largest supported bytestream is 2048
+// TODO: revisit this, possibly have wdmaud2 chunk down large sysex messages to
+// something more manageable
 #define MAXIMUM_LOOPED_BYTESTREAM_DATASIZE 2048
 
 #define MIDI_TIMESTAMP_SEND_IMMEDIATELY 0

@@ -376,7 +376,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                         DEVPROP_TYPE_EMPTY, 0, nullptr });
                             }
 
-                            // user-supplied name
+                            // user-supplied port number
                             if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_PORT_NUMBER))
                             {
                                 userSuppliedPortNumber = (UINT32) updateObject.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_PORT_NUMBER, 0);

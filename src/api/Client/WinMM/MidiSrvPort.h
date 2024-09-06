@@ -37,26 +37,26 @@ public:
     ~CMidiPort();
     HRESULT RuntimeClassInitialize(_In_ GUID SessionId, _In_ std::wstring& InterfaceId, _In_ MidiFlow Flow, _In_ MIDIOPENDESC* OpenDesc, _In_ DWORD_PTR Flags);
     HRESULT Cleanup();
-    HRESULT MidMessage(_In_ UINT uMsg, _In_  DWORD_PTR dwParam1, _In_ DWORD_PTR dwParam2);
-    HRESULT ModMessage(_In_ UINT uMsg, _In_  DWORD_PTR dwParam1, _In_ DWORD_PTR);
+    HRESULT MidMessage(_In_ UINT Msg, _In_  DWORD_PTR Param1, _In_ DWORD_PTR Param2);
+    HRESULT ModMessage(_In_ UINT Msg, _In_  DWORD_PTR Param1, _In_ DWORD_PTR Param2);
     bool IsFlow(_In_ MidiFlow Flow);
 
 private:
     HRESULT Reset();
-    HRESULT AddBuffer(_In_ LPMIDIHDR Buffer, _In_ DWORD_PTR bufferSize);
+    HRESULT AddBuffer(_In_ LPMIDIHDR Buffer, _In_ DWORD_PTR BufferSize);
     HRESULT Start();
     HRESULT Stop();
     HRESULT Close();
 
     // IMidiCallback, for receiving midi in messages from the service.
-    STDMETHOD(Callback)(_In_ PVOID /*Data*/, _In_ UINT /*Size*/, _In_ LONGLONG /*Position*/, _In_ LONGLONG /*Context*/);
+    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context);
 
     HRESULT SendMidiMessage(_In_ UINT32 MidiMessage);
-    HRESULT SendLongMessage(_In_ LPMIDIHDR buffer);
+    HRESULT SendLongMessage(_In_ LPMIDIHDR Buffer);
 
     HRESULT CompleteLongBuffer(_In_ UINT Message, _In_ LONGLONG Position);
     
-    void WinmmClientCallback(_In_ UINT msg, _In_ DWORD_PTR dw1, _In_ DWORD_PTR dw2);
+    void WinmmClientCallback(_In_ UINT Msg, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
 
     wil::critical_section m_Lock;
 

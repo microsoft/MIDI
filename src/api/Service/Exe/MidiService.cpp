@@ -177,52 +177,6 @@ BOOL SvcSetStartTriggerRpc(
     return true;
 }
 
-BOOL SvcSetStartTriggerEtw(
-    _In_ wil::unique_schandle& service
-)
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
-    );
-
-    SERVICE_TRIGGER_INFO triggerInfo{ 0 };
-    SERVICE_TRIGGER trigger{ 0 };
-    SERVICE_TRIGGER_SPECIFIC_DATA_ITEM triggerData{ 0 };
-
-    // use ETW trigger. This worked right away
-    GUID midiSrvAbstractionEtwProvider{ 0xc3263827, 0x0519, 0x1867, 0x53, 0x09, 0x51, 0x50, 0x19, 0x84, 0xed, 0xed };
-
-    trigger.dwAction = SERVICE_TRIGGER_ACTION_SERVICE_START;
-    trigger.dwTriggerType = SERVICE_TRIGGER_TYPE_CUSTOM;
-    trigger.pTriggerSubtype = (LPGUID)&midiSrvAbstractionEtwProvider;
-    //trigger.pDataItems = &triggerData;
-    trigger.cDataItems = 0;
-
-    triggerInfo.pTriggers = &trigger;
-    triggerInfo.cTriggers = 1;
-
-    if (!ChangeServiceConfig2(service.get(), SERVICE_CONFIG_TRIGGER_INFO, &triggerInfo))
-    {
-        LOG_LAST_ERROR_MSG("Changing service trigger to ETW event failed.");
-
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingWideString(L"Changing service trigger to ETW event failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-
-        return false;
-    }
-
-    return true;
-}
-
-
 //
 // Purpose: 
 //   Installs a service in the SCM database
@@ -329,13 +283,6 @@ VOID SvcInstall()
     {
         return;
     }
-
-    // ETW-based trigger which starts the service when any ETW event
-    // from MidiSrvAbstraction is sent
-    //if (!SvcSetStartTriggerEtw(service))
-    //{
-    //    return;
-    //}
 
     //if (!StartService(service.get(), 0, nullptr))
     //{

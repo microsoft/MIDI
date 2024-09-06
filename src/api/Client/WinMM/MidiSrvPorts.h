@@ -29,16 +29,16 @@ public:
 
     HRESULT RuntimeClassInitialize();
     HRESULT Cleanup();
-    DWORD APIENTRY MidMessage(_In_ UINT uDeviceID, _In_ UINT uMsg, _In_ DWORD_PTR dwUser, _In_ DWORD_PTR dwParam1, _In_ DWORD_PTR dwParam2);
-    DWORD APIENTRY ModMessage(_In_ UINT uDeviceID, _In_ UINT uMsg, _In_ DWORD_PTR dwUser, _In_ DWORD_PTR dwParam1, _In_ DWORD_PTR dwParam2);
+    DWORD APIENTRY MidMessage(_In_ UINT DeviceID, _In_ UINT Msg, _In_ DWORD_PTR User, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
+    DWORD APIENTRY ModMessage(_In_ UINT DeviceID, _In_ UINT Msg, _In_ DWORD_PTR User, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
 
 private:
-    HRESULT GetMidiDeviceCount(_In_ MidiFlow /*Flow*/, _In_ UINT32& Count);
+    HRESULT GetMidiDeviceCount(_In_ MidiFlow Flow, _In_ UINT32& Count);
     HRESULT GetDevCaps(_In_ MidiFlow Flow, _In_ UINT PortNumber, _In_ DWORD_PTR MidiCaps);
     HRESULT Open(_In_ MidiFlow Flow, _In_ UINT PortNumber, _In_ MIDIOPENDESC* MidiOpenDesc, _In_ DWORD_PTR Flags, _In_ MidiPortHandle* OpenedPort);
     HRESULT Close(_In_ MidiFlow Flow, _In_ MidiPortHandle PortHandle);
-    HRESULT ForwardMidMessage(_In_ UINT uMsg, _In_ MidiPortHandle PortHandle, _In_ DWORD_PTR dwParam1, _In_ DWORD_PTR dwParam2);
-    HRESULT ForwardModMessage(_In_ UINT uMsg, _In_ MidiPortHandle PortHandle, _In_ DWORD_PTR dwParam1, _In_ DWORD_PTR dwParam2);
+    HRESULT ForwardMidMessage(_In_ UINT Msg, _In_ MidiPortHandle PortHandle, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
+    HRESULT ForwardModMessage(_In_ UINT Msg, _In_ MidiPortHandle PortHandle, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
 
     HRESULT GetOpenedPort(_In_ MidiFlow Flow, _In_ MidiPortHandle PortHandle, _In_ wil::com_ptr_nothrow<CMidiPort> &Port);
 

@@ -75,7 +75,7 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     m_Watcher.Start();
 
     // Wait for everything to be created so that they're available immediately after service start.
-    m_EnumerationCompleted.wait();
+    m_EnumerationCompleted.wait(10000);
 
     return S_OK;
 }
@@ -232,7 +232,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     LOG_IF_FAILED(
         swdCreationResult = m_MidiDeviceManager->ActivateEndpoint(
             MasterEndpointDefinition.ParentDeviceInstanceId.c_str(),
-            true,                                   // create UMP only. We handle the MIDI 1.0 compat ports
+            false,                                  // TODO: create UMP only, handle the MIDI 1.0 compat ports
             MidiFlow::MidiFlowBidirectional,        // bidi only for the UMP endpoint
             &commonProperties,
             (ULONG) interfaceDevProperties.size(),
