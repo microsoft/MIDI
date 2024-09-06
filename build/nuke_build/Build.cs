@@ -285,6 +285,7 @@ class Build : NukeBuild
                     .SetOutputDirectory(AppSdkNugetOutputFolder)
                 );
 
+
                 // copy the files over to the reference location
                 foreach (var file in sdkBinaries)
                 {
@@ -293,9 +294,16 @@ class Build : NukeBuild
 
             }
 
+            // copy the NuGet package over to this release
+
+            FileSystemTasks.CopyFileToDirectory(
+                AppSdkNugetOutputFolder /  $"{NugetFullPackageId}.{NugetFullVersionString}.nupkg", 
+                ThisReleaseFolder, 
+                FileExistsPolicy.Overwrite, 
+                true);
 
 
-            foreach(var targetPlatform in InProcPlatforms)
+            foreach (var targetPlatform in InProcPlatforms)
             {
                 string sourcePlatform;
 
@@ -1052,7 +1060,7 @@ class Build : NukeBuild
 
             // now, we zip it all up and put it over into the release folder
 
-            platformOutputRootFolder.ZipTo(ThisReleaseFolder / $"electron-projection-{platform.ToLower()}.zip");
+            platformOutputRootFolder.ZipTo(ThisReleaseFolder / $"electron-node-projection-{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}-{platform.ToLower()}.zip");
 
 
         }
