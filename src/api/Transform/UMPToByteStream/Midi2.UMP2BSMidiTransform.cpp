@@ -66,7 +66,7 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
     // and send it on
     while (m_UMP2BS.availableBS())
     {
-        BYTE byteStream[MAXIMUM_LOOPED_BYTESTREAM_DATASIZE];
+        BYTE byteStream[MAXIMUM_LIBMIDI2_BYTESTREAM_DATASIZE];
         UINT byteCount;
         for(byteCount = 0; byteCount < _countof(byteStream) && m_UMP2BS.availableBS(); byteCount++)
         {
