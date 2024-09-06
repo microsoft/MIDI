@@ -6,8 +6,7 @@
   "includes": ["common.gypi"],
   "targets": [{
     "target_name": "binding",
-    "cflags_cc":[ "-std=c++17" ]
-    "sources": [],
+    "cflags_cc":[ "-std=c++17" ],
     "include_dirs": [
       "<!(node -e \"require('nan')\")"
     ],
@@ -74,9 +73,23 @@
     ],
     "msvs_settings": {
       "VCCLCompilerTool": {
-        "AdditionalOptions": ["/ZW", "/std:c++17"],
+        "AdditionalOptions": ["/ZW", "-std:c++17"],
         "DisableSpecificWarnings": [4609],
       }
+    },
+    "msbuild_settings":{
+        "ClCompile":{
+            "LanguageStandard": "stdcpp17",
+            "AdditionalOptions": "/ZW",
+            "AdditionalUsingDirectories": [
+              "%ProgramFiles(x86)%/Microsoft Visual Studio 14.0/VC/lib/store/references",
+              "%ProgramFiles%/Microsoft Visual Studio 14.0/VC/lib/store/references",
+              "%ProgramFiles(x86)%/Windows Kits/10/UnionMetadata/10.0.20348.0",
+              "$(VCToolsInstallDir)/lib/x86/store/references",
+              "../../",
+            ]
+
+        }
     }
   }]
 }

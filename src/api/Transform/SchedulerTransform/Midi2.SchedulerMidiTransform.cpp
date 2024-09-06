@@ -298,7 +298,9 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
     try
     {
-        if (internal::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
+        // some timestamps are just indexes for debugging, so we need to check for < 0 after the subtraction
+        if ((timestamp <= (LONGLONG)(m_tickWindow + m_deviceLatencyTicks)) ||
+            internal::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
         {
             // timestamp is in the past or within our tick window: so send now
             auto hr = SendMidiMessageNow(data, size, timestamp);

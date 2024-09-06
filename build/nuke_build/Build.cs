@@ -110,8 +110,8 @@ class Build : NukeBuild
     AbsolutePath SamplesCSWinRTSolutionFolder => SamplesRootFolder / "csharp-net";
 
 
-    string[] InProcPlatforms => new string[] { "Arm64", "Arm64EC", "x64" };
-    string[] OutOfProcPlatforms => new string[] { "Arm64", "x64" };
+    string[] InProcPlatforms => new string[] { "x64", "Arm64", "Arm64EC"  };
+    string[] OutOfProcPlatforms => new string[] { "x64", "Arm64" };
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
@@ -285,6 +285,7 @@ class Build : NukeBuild
                     .SetOutputDirectory(AppSdkNugetOutputFolder)
                 );
 
+
                 // copy the files over to the reference location
                 foreach (var file in sdkBinaries)
                 {
@@ -293,9 +294,16 @@ class Build : NukeBuild
 
             }
 
+            // copy the NuGet package over to this release
+
+            FileSystemTasks.CopyFileToDirectory(
+                AppSdkNugetOutputFolder /  $"{NugetFullPackageId}.{NugetFullVersionString}.nupkg", 
+                ThisReleaseFolder, 
+                FileExistsPolicy.Overwrite, 
+                true);
 
 
-            foreach(var targetPlatform in InProcPlatforms)
+            foreach (var targetPlatform in InProcPlatforms)
             {
                 string sourcePlatform;
 
@@ -881,8 +889,8 @@ class Build : NukeBuild
         var projectionOutputRoot = ElectronProjectionRootFolder / "projection";
         projectionOutputRoot.CreateOrCleanDirectory();
 
-        var projectionReleaseRoot = ElectronProjectionRootFolder / "projection_release";
-        projectionReleaseRoot.CreateOrCleanDirectory();
+      //  var projectionReleaseRoot = ElectronProjectionRootFolder / "projection_release";
+      //  projectionReleaseRoot.CreateOrCleanDirectory();
 
 
         foreach (var platform in OutOfProcPlatforms)
@@ -890,20 +898,26 @@ class Build : NukeBuild
             var platformOutputRootFolder = projectionOutputRoot / platform;
             platformOutputRootFolder.CreateDirectory();
 
-            // copy all winmds to the parent folder before we process any of them
-            //foreach (var ns in AppSdkNamespaces)
-            //{
-            //    FileSystemTasks.CopyFileToDirectory(
-            //        AppSdkStagingFolder / platform / ns + ".winmd",
-            //        platformOutputRootFolder,
-            //        FileExistsPolicy.Overwrite, true);
-            //}
+
+            // copy the winmd and impl libs from staging
+
+            var sdkFiles = (AppSdkStagingFolder / platform).GlobFiles("*.dll", "*.winmd", "*.pri");
+
+            foreach (var sdkFile in sdkFiles)
+            {
+                FileSystemTasks.CopyFileToDirectory(
+                    sdkFile,
+                    platformOutputRootFolder,
+                    FileExistsPolicy.Overwrite,
+                    true);
+            }
+
 
             // main windows metadata file
-            FileSystemTasks.CopyFileToDirectory(
-                @"C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd",
-                platformOutputRootFolder,
-                FileExistsPolicy.Overwrite, true);
+            //FileSystemTasks.CopyFileToDirectory(
+            //    @"C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd",
+            //    platformOutputRootFolder,
+            //    FileExistsPolicy.Overwrite, true);
 
             foreach (var ns in AppSdkAssemblies)
             {
@@ -924,18 +938,18 @@ class Build : NukeBuild
             // each winmd, so we then need to loop through and compile the
             // dll for each namespace.
 
-            var namespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder, "microsoft.windows.devices.midi2*");
+            var platformNamespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder, "microsoft.windows.devices.midi2*");
             //var namespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder);
 
-            foreach (var nsFolder in namespaceFolders)
+            foreach (var platformNamespaceFolder in platformNamespaceFolders)
             {
                 // build the projection
                 Console.Out.WriteLine("--------------");
-                Console.Out.WriteLine($"Rebuilding: {nsFolder}");
+                Console.Out.WriteLine($"Rebuilding: {platformNamespaceFolder}");
 
                 //NodeGyp(
                 //    arguments: $"rebuild --msvs_version=2022",
-                //    workingDirectory: nsFolder,
+                //    workingDirectory: platformNamespaceFolder,
                 //    logOutput: false
                 //    );
 
@@ -943,7 +957,7 @@ class Build : NukeBuild
 
                 //NpmTasks.Npm(
                 //    "install electron --save-dev",
-                //    nsFolder);
+                //    platformNamespaceFolder);
 
 
                 //NodeGyp(
@@ -954,7 +968,7 @@ class Build : NukeBuild
                 //        $" --target=32.0.0" +
                 //        $" --dist-url=https://electronjs.org/headers" +
                 //        
-                //    workingDirectory: nsFolder,
+                //    workingDirectory: platformNamespaceFolder,
                 //    logOutput: false
                 //    );
 
@@ -962,9 +976,9 @@ class Build : NukeBuild
                     arguments: $"rebuild" +
                         $" --openssl_fips=X" +
                         $" --arch={platform.ToLower()}" +
-                        $" --verbose" +
+                       /* $" --verbose" + */
                         $" --msvs_version=2022",
-                    workingDirectory: nsFolder,
+                    workingDirectory: platformNamespaceFolder,
                     logOutput: true
                     );
 
@@ -980,7 +994,7 @@ class Build : NukeBuild
                 // Next step is to execute the electron-rebuild.cmd
                 // .\node_modules\.bin\electron-rebuild.cmd
                 // but that path is different for each one, and nuke
-                // doesn't seem to support that.
+                // doesn't seem to support that with their Tools.
 
 
                 // now copy the output files
@@ -993,16 +1007,14 @@ class Build : NukeBuild
                 // Because of electron versioning vs node versioning, it's easier for the
                 // consumer if we just ship all the source, as crazy as that is for this.
 
-                FileSystemTasks.CopyDirectoryRecursively(
-                    nsFolder,
-                    projectionReleaseRoot / platform,
-                    DirectoryExistsPolicy.Fail
-                    );
+                //FileSystemTasks.CopyDirectoryRecursively(
+                //    platformNamespaceFolder,
+                //    projectionReleaseRoot / platform,
+                //    DirectoryExistsPolicy.Merge
+                //    );
 
 
-
-
-                var sourceBinFolder = nsFolder / "build" / "Release";
+                //var sourceBinFolder = platformNamespaceFolder / "build" / "Release";
 
                 //FileSystemTasks.CopyFileToDirectory(
                 //    sourceBinFolder / "binding.node",
@@ -1033,28 +1045,22 @@ class Build : NukeBuild
 
             }
 
-            // copy the example manifest from staging
-            // copy the winmd and impl libs from staging
 
-            var sdkFiles = (AppSdkStagingFolder / platform).GlobFiles("*.dll", "*.winmd", "*.pri");
-
-            foreach (var sdkFile in sdkFiles)
-            {
-                FileSystemTasks.CopyFileToDirectory(
-                    sdkFile,
-                    projectionReleaseRoot / platform,
-                    FileExistsPolicy.Overwrite, true);
-            }
 
             // copy the manifest over and name it the default for electron apps
             FileSystemTasks.CopyFile(
                 AppSdkStagingFolder / platform / "ExampleMidiApp.exe.manifest",
-                projectionReleaseRoot / platform / "electron.exe.manifest" ,
-                FileExistsPolicy.Overwrite, true);
+                platformOutputRootFolder / "electron.exe.manifest" ,
+                FileExistsPolicy.Overwrite, 
+                true);
+
+            // Remove windows.winmd
+
+
 
             // now, we zip it all up and put it over into the release folder
 
-            (projectionReleaseRoot / platform).ZipTo(ThisReleaseFolder / $"electron-projection-{platform.ToLower()}.zip");
+            platformOutputRootFolder.ZipTo(ThisReleaseFolder / $"electron-node-projection-{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}-{platform.ToLower()}.zip");
 
 
         }
@@ -1074,8 +1080,8 @@ class Build : NukeBuild
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
+        .DependsOn(BuildAndPackageElectronProjection)
         .DependsOn(BuildCppSamples)
-        //.DependsOn(BuildAndPackageElectronProjection)
         .Executes(() =>
         {
         });

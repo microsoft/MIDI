@@ -76,6 +76,15 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         // this one byte at a time and check for available words after 
         // each byte.
 
+        // importantly, the bytes that make up a message could span 
+        // calls to this function, so we need to retain a running
+        // status. This could get more complex if we're dealing
+        // with multiple groups worth of data. That would require
+        // keeping buffers for each group.
+        // 
+        // Unfortunately, this function does not have any context 
+        // about the group the data is for. That needs to be 
+        // fixed before this works for anything but group 0
 
 
     }
