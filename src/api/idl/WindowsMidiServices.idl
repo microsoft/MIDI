@@ -378,6 +378,7 @@ typedef struct
     MidiDataFormat DataFormatIn;
     MidiDataFormat DataFormatOut;
     LPCWSTR InstanceConfigurationJsonData;
+    BYTE UmpGroupIndex;
 } TRANSFORMCREATIONPARAMS, * PTRANSFORMCREATIONPARAMS;
 
 // All MidiTransform COM components implement the IMidiTransform interface, which contains

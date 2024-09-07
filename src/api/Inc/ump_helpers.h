@@ -871,6 +871,11 @@ namespace WindowsMidiServicesInternal
     //
     // In a multi-client situation, however, we wouldn't want the UMP from Client A to terminate sysex from Client B.
 
+    inline bool IsSystemRealTimeMessage(_In_ uint32_t const word0) noexcept
+    {
+        return (bool)(GetUmpMessageTypeFromFirstWord(word0) == 0x0);
+    }
+
     inline bool IsMessageOkToSendDuringSysEx7(_In_ uint8_t activeSysExGroupIndex, _In_ uint32_t const word0) noexcept
     {
         uint8_t mt = GetUmpMessageTypeFromFirstWord(word0);
