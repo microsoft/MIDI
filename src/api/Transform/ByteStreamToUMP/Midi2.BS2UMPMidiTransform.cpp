@@ -32,11 +32,10 @@ CMidi2BS2UMPMidiTransform::Initialize(
 
     m_BS2UMP.outputMIDI2 = false;
 
-    // TODO: This group needs to come from a property, not be set to 0. See GH bug #377
-    // This won't impact the aggregated MIDI endpoints but it *will* impact the client-side
-    // MIDI 1.0 APIs
 
-    m_BS2UMP.defaultGroup = 0;
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_INDEX_OUT_OF_BOUNDS), CreationParams->UmpGroupIndex > 15);
+
+    m_BS2UMP.defaultGroup = CreationParams->UmpGroupIndex;
 
     return S_OK;
 }
@@ -63,77 +62,53 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     LONGLONG Position
 )
 {
+    // Note: Group number is set in the initialize function
+     
+    auto data = static_cast<BYTE *>(Data);
 
-    // Send the bytestream byte(s) to the parser
-    BYTE *data = (BYTE *)Data;
     for (UINT i = 0; i < Length; i++)
     {
+        // Send the bytestream byte(s) to the parser. The way the parser works, we need
+        // to check for valid UMP words after each byte is parsed.
         m_BS2UMP.bytestreamParse(data[i]);
 
-
-        // TODO: We need to change the approach here because
-        // the UMP buffer in BS2UMP is quite small. So we need to feed
-        // this one byte at a time and check for available words after 
-        // each byte.
-
-        // importantly, the bytes that make up a message could span 
-        // calls to this function, so we need to retain a running
-        // status. This could get more complex if we're dealing
-        // with multiple groups worth of data. That would require
-        // keeping buffers for each group.
-        // 
-        // Unfortunately, this function does not have any context 
-        // about the group the data is for. That needs to be 
-        // fixed before this works for anything but group 0
-
-
-    }
-
-    // retrieve the UMP(s) from the parser
-    // and sent it on
-    while (m_BS2UMP.availableUMP())
-    {
-        uint32_t umpMessage[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
-
-        // we need to send only a single message at a time. the library 
-        // converts to a stream of words which may be multiple UMPs. So we 
-        // need to walk the data
-
-        umpMessage[0] = m_BS2UMP.readUMP();
-        uint8_t messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(umpMessage[0]);
-        uint8_t messageWordsRead = 1 ;
-
-        if (m_BS2UMP.availableUMP())
+        // retrieve the UMP(s) from the parser
+        // and send it on if we have a full message
+        while (m_BS2UMP.availableUMP())
         {
-            // this starts at 1 because we already read the first word
-            for (uint8_t i = 1; i < messageWordCount && i < _countof(umpMessage) && m_BS2UMP.availableUMP(); i++)
+            m_umpMessageCurrentWordCount++;
+
+            // just to ensure we don't go past the end of the array
+            // TODO: we should clear the parser's byte buffer on error
+            RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_INDEX_OUT_OF_BOUNDS), m_umpMessageCurrentWordCount > _countof(m_umpMessage));
+
+            // we need to send only a single message at a time. the library 
+            // converts to a stream of words which may be multiple UMPs. So we 
+            // need to walk the data
+
+            m_umpMessage[m_umpMessageCurrentWordCount-1] = m_BS2UMP.readUMP();
+
+            auto expectedWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(m_umpMessage[0]);
+
+            // if we have a complete UMP, we send it along
+            if (expectedWordCount == m_umpMessageCurrentWordCount)
             {
-                umpMessage[i] = m_BS2UMP.readUMP();
-                messageWordsRead++;
+                // send the message
+                LOG_IF_FAILED(m_Callback->Callback(
+                    (PVOID)m_umpMessage, 
+                    (UINT)m_umpMessageCurrentWordCount * sizeof(uint32_t), 
+                    Position, 
+                    m_Context));
+
+                m_umpMessageCurrentWordCount = 0;
+                m_umpMessage[0] = m_umpMessage[1] = m_umpMessage[2] = m_umpMessage[3] = { 0 };
             }
+
         }
 
-
-        if (messageWordsRead != messageWordCount)
-        {
-            // we have a problem here. 
-
-            RETURN_IF_FAILED(E_ABORT);
-        }
-        else if (messageWordCount > 0)
-        {
-            // TODO: if this fails, it leaves a bunch of data in the m_BS2UMP cache. Needs
-            // to be drained if we'll return. So change to log, clear, and then return.
-            // Same with the UMP2BS MIDI Transform
-
-            RETURN_IF_FAILED(m_Callback->Callback(&(umpMessage[0]), messageWordCount * sizeof(uint32_t), Position, m_Context));
-        }
-        else
-        {
-            // no data to send
-        }
 
     }
+
 
     return S_OK;
 }

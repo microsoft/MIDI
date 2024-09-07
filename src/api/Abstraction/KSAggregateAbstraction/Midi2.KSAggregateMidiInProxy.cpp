@@ -115,6 +115,11 @@ CMidi2KSAggregateMidiInProxy::Callback(
         m_BS2UMP.bytestreamParse(data[i]);
     }
 
+    // TODO: The above can drop messages when sysex or other large data streams are sent over.
+    // Need to use the bs2ump transform directly, or just completely remove all this code
+    // and handle it elsewhere.
+
+
     // retrieve the UMP(s) from the parser
     // and sent it on
     while (m_BS2UMP.availableUMP())

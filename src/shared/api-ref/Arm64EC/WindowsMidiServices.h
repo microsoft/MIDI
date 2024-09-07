@@ -1338,6 +1338,7 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0009_00
     MidiDataFormat DataFormatIn;
     MidiDataFormat DataFormatOut;
     LPCWSTR InstanceConfigurationJsonData;
+    BYTE UmpGroupIndex;
     } 	TRANSFORMCREATIONPARAMS;
 
 typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0009_0001 *PTRANSFORMCREATIONPARAMS;

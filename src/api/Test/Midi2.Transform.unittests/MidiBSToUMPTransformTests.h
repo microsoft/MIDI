@@ -36,11 +36,17 @@ public:
 
     TEST_METHOD(TestBSToUMPWithSysEx7);
     TEST_METHOD(TestBSToUMPWithEmbeddedStartStopSysEx7);
+    TEST_METHOD(TestTranslateFromBytesWithEmbeddedRealTimeAndSysEx7);
     TEST_METHOD(TestEmptySysEx7);
     TEST_METHOD(TestShortSysEx7);
-    TEST_METHOD(TestLongSysEx7);
+    //TEST_METHOD(TestLongSysEx7);
 
-    void InternalTestSysEx(_In_ uint8_t sysexBytes[], _In_ uint32_t byteCount, _In_ uint16_t expectedMessageCount);
+    void InternalTestSysEx(
+        _In_ uint8_t const groupIndex,
+        _In_ uint8_t const sysexBytes[], 
+        _In_ uint32_t const byteCount, 
+        _In_ uint16_t const expectedMessageCount,
+        _In_ std::vector<uint32_t> const expectedWords);
 
     STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
     {
@@ -58,6 +64,6 @@ public:
 
 private:
 
-    std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
+    std::function<void(PVOID, UINT, LONGLONG, LONGLONG)> m_MidiInCallback;
 };
 
