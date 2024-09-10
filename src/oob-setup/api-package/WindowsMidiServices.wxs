@@ -77,16 +77,26 @@
                    Guid="d2557869-303c-4985-a6be-67feb11a11d9" >
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
 
-        </Component>     
-        
-        <Component Id="ConfigurationRegistryEntries"
+        </Component>
+
+        <Component Id="WinMMCompatRegistryEntries"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="baa5b390-f949-4d92-a1da-42942f199e06"
+                   NeverOverwrite="false">
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32">
+                <RegistryValue Type="integer" Name="MidisrvTransferComplete" Value="0" />
+            </RegistryKey>
+
+        </Component>
+
+
+            <Component Id="ConfigurationRegistryEntries"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="25E35CBB-4C66-4BEB-9B03-BC2E2D99317B"
                    NeverOverwrite="false">
                    
-            <!-- Permanent is set to "yes" because this installer is for dev builds -->
-            
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
@@ -153,6 +163,7 @@
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceAbstractions"/>
             <ComponentRef Id="WindowsService"/>
+            <ComponentRef Id="WinMMCompatRegistryEntries"/>
 
             <ComponentRef Id="WinMMAPIRedirectDriver"/>
 

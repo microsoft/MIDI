@@ -38,6 +38,8 @@ CMidiEndpointProtocolWorker::Initialize(
     m_deviceManager = DeviceManager;
     m_sessionTracker = SessionTracker;
 
+    m_clientProcessId = GetCurrentProcessId();
+
     RETURN_IF_FAILED(m_endProcessing.create(wil::EventOptions::ManualReset));
 
     TraceLoggingWrite(
@@ -934,7 +936,7 @@ CMidiEndpointProtocolWorker::Cleanup()
 
     if (m_sessionTracker)
     {
-        LOG_IF_FAILED(m_sessionTracker->RemoveClientEndpointConnection(m_sessionId, m_deviceInterfaceId.c_str(), (MidiClientHandle)nullptr));
+        LOG_IF_FAILED(m_sessionTracker->RemoveClientEndpointConnection(m_sessionId, m_clientProcessId, m_deviceInterfaceId.c_str(), (MidiClientHandle)nullptr));
     }
 
     return S_OK;

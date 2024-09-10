@@ -9,6 +9,38 @@
 #include "stdafx.h"
 #include <filesystem>
 
+
+_Use_decl_annotations_
+std::vector<MidiSessionEntry>::iterator
+CMidiSessionTracker::FindSession(GUID sessionId, DWORD clientProcessId)
+{
+    auto result = std::find_if(m_sessions.begin(), m_sessions.end(), 
+        [&sessionId, &clientProcessId](const MidiSessionEntry& val)
+        {
+            return
+                val.ClientProcessId == clientProcessId &&
+                val.SessionId == sessionId;
+        });
+
+    return result;
+}
+
+_Use_decl_annotations_
+std::vector<MidiSessionEntry>::iterator
+CMidiSessionTracker::FindSessionForContextHandle(PVOID contextHandle)
+{
+    auto result = std::find_if(m_sessions.begin(), m_sessions.end(),
+        [&contextHandle](const MidiSessionEntry& val)
+        {
+            return val.ContextHandle == contextHandle;
+        });
+
+    return result;
+}
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::Initialize(std::shared_ptr<CMidiClientManager>& clientManager)
@@ -40,7 +72,7 @@ CMidiSessionTracker::AddClientSession(
     modulePath.resize(MAX_PATH+1);
 
 
-    if (auto session = m_sessions.find(SessionId); session != m_sessions.end())
+    if (auto result = FindSession(SessionId, ClientProcessId); result != m_sessions.end())
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -102,23 +134,19 @@ CMidiSessionTracker::AddClientSession(
 
 //    GetSystemTime(&entry.StartTime);
 
-    m_sessions[SessionId] = entry;
 
-    // this can be anything that hangs around.
-    // we should provide something more durable
-    // here in case we ever use the pointer. Map
-    // pointers are not guaranteed to be immutable
-    // as I recall
-
-    // TODO: We could make this number just a hash or something
+    m_sessions.push_back(entry);
 
     if (ContextHandle != nullptr)
     {
-        auto contextHandleValue = &(m_sessions[SessionId]);
+        // we use the pointer to the session entry as the context handle
+
+        auto savedEntryIterator = FindSession(SessionId, ClientProcessId);
+        auto contextHandleValue = &(*(savedEntryIterator));
 
         *ContextHandle = (PVOID)contextHandleValue;
 
-        m_sessionContextHandles[*ContextHandle] = SessionId;
+        savedEntryIterator->ContextHandle = contextHandleValue;
     }
 
     return S_OK;
@@ -148,11 +176,11 @@ CMidiSessionTracker::UpdateClientSessionName(
 
     if (!newName.empty())
     {
-        if (auto session = m_sessions.find(SessionId); session != m_sessions.end())
+        if (auto result = FindSession(SessionId, ClientProcessId); result != m_sessions.end())
         {
-            if (session->second.ClientProcessId == ClientProcessId)
+            if (result->ClientProcessId == ClientProcessId)
             {
-                m_sessions[SessionId].SessionName = newName;
+                result->SessionName = newName;
             }
             else
             {
@@ -222,16 +250,13 @@ CMidiSessionTracker::RemoveClientSession(
         TraceLoggingGuid(SessionId)
     );
 
-    if (auto session = m_sessions.find(SessionId); session != m_sessions.end())
+    if (auto session = FindSession(SessionId, ClientProcessId); session != m_sessions.end())
     {
-        if (session->second.ClientProcessId == ClientProcessId)
-        {
-            m_sessions.erase(SessionId);
-        }
-        else
-        {            
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
+        m_sessions.erase(session);
+    }
+    else
+    {
+        RETURN_IF_FAILED(E_INVALIDARG);
     }
 
     return S_OK;
@@ -258,28 +283,23 @@ CMidiSessionTracker::RemoveClientSessionInternal(
 
     std::shared_ptr<CMidiClientManager> clientManager = m_clientManager.lock();
 
-    auto sessionIdMapEntry = m_sessionContextHandles.find(ContextHandle);
+    auto sessionEntry = FindSessionForContextHandle(ContextHandle);
 
-    if (sessionIdMapEntry != m_sessionContextHandles.end())
+    if (sessionEntry != m_sessions.end())
     {
-        auto sessionEntry = m_sessions.find(sessionIdMapEntry->second);
+        // TODO: Remove each client connection using the MidiClientManager
 
-        if (sessionEntry != m_sessions.end())
+        while (sessionEntry->ClientHandles.size() > 0)
         {
-            // TODO: Remove each client connection using the MidiClientManager
+            auto clientHandle = *(sessionEntry->ClientHandles.begin());
 
-            while (sessionEntry->second.ClientHandles.size() > 0)
-            {
-                auto clientHandle = *(sessionEntry->second.ClientHandles.begin());
+            sessionEntry->ClientHandles.erase(sessionEntry->ClientHandles.begin());
 
-                sessionEntry->second.ClientHandles.erase(sessionEntry->second.ClientHandles.begin());
-
-                clientManager->DestroyMidiClient((handle_t)nullptr, clientHandle);
-            }
-
-            // Remove this session entry
-            m_sessions.erase(sessionEntry);
+            clientManager->DestroyMidiClient((handle_t)nullptr, clientHandle);
         }
+
+        // Remove this session entry
+        m_sessions.erase(sessionEntry);
     }
 
     return S_OK;
@@ -293,29 +313,43 @@ CMidiSessionTracker::IsValidSession(
 )
 {
 
-    if (auto session = m_sessions.find(SessionId); session != m_sessions.end())
+    if (auto session = FindSession(SessionId, ClientProcessId); session != m_sessions.end())
     {
-        if (session->second.ClientProcessId == ClientProcessId)
-        {
-            return S_OK;
-        }
-        else
-        {
-            // Session exists, but with for a different PID,
-            // so the process id parameter is invalid.
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Session Valid. Found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingGuid(SessionId, "Session ID"),
+            TraceLoggingUInt32(ClientProcessId, "Client Process ID")
+        );
+
+        return S_OK;
     }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Session Invalid. NOT found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(SessionId, "Session ID"),
+        TraceLoggingUInt32(ClientProcessId, "Client Process ID")
+    );
 
     // session is not present in the list, this is an expected
     // error for some situations
-    return E_NOTFOUND;
+    RETURN_IF_FAILED(E_NOTFOUND);
 }
 
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::AddClientEndpointConnection(
     GUID SessionId, 
+    DWORD ClientProcessId,
     LPCWSTR ConnectionEndpointInterfaceId,
     MidiClientHandle ClientHandle
     )
@@ -338,20 +372,20 @@ CMidiSessionTracker::AddClientEndpointConnection(
     newConnection.InstanceCount = 1;
     newConnection.EarliestStartTime = std::chrono::system_clock::now();
        
-    if (auto sessionEntry = m_sessions.find(SessionId); sessionEntry != m_sessions.end())
+    if (auto sessionEntry = FindSession(SessionId, ClientProcessId); sessionEntry != m_sessions.end())
     {
-        if (auto connection = sessionEntry->second.Connections.find(cleanEndpointId); connection != sessionEntry->second.Connections.end())
+        if (auto connection = sessionEntry->Connections.find(cleanEndpointId); connection != sessionEntry->Connections.end())
         {
             // connection already exists. Increment it
             connection->second.InstanceCount++;
         }
         else
         {
-            sessionEntry->second.Connections[cleanEndpointId] = newConnection;
+            sessionEntry->Connections[cleanEndpointId] = newConnection;
         }
 
         // need to end up removing these laters
-        sessionEntry->second.ClientHandles.push_back(ClientHandle);
+        sessionEntry->ClientHandles.push_back(ClientHandle);
     }
     else
     {
@@ -378,6 +412,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::RemoveClientEndpointConnection(
     GUID SessionId, 
+    DWORD ClientProcessId,
     LPCWSTR ConnectionEndpointInterfaceId,
     MidiClientHandle /*ClientHandle*/
 )
@@ -394,16 +429,16 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
 
     auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(ConnectionEndpointInterfaceId);
 
-    if (auto sessionEntry = m_sessions.find(SessionId); sessionEntry != m_sessions.end())
+    if (auto sessionEntry = FindSession(SessionId, ClientProcessId); sessionEntry != m_sessions.end())
     {
-        if (auto connection = sessionEntry->second.Connections.find(cleanEndpointId); connection != sessionEntry->second.Connections.end())
+        if (auto connection = sessionEntry->Connections.find(cleanEndpointId); connection != sessionEntry->Connections.end())
         {
             // connection already exists. Decrement it
             connection->second.InstanceCount--;
 
             if (connection->second.InstanceCount <= 0)
             {
-                sessionEntry->second.Connections.erase(cleanEndpointId);
+                sessionEntry->Connections.erase(cleanEndpointId);
             }
         }
     }
@@ -442,17 +477,17 @@ CMidiSessionTracker::GetSessionList(
     {
         json::JsonObject sessionObject;
 
-        internal::JsonSetGuidProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY, sessionIter->second.SessionId);
-        sessionObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, json::JsonValue::CreateStringValue(sessionIter->second.SessionName));
-        sessionObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, json::JsonValue::CreateStringValue(sessionIter->second.ProcessName));
-        sessionObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, json::JsonValue::CreateStringValue(std::to_wstring(sessionIter->second.ClientProcessId)));
-        internal::JsonSetDateTimeProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, sessionIter->second.StartTime);
+        internal::JsonSetGuidProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY, sessionIter->SessionId);
+        sessionObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, json::JsonValue::CreateStringValue(sessionIter->SessionName));
+        sessionObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, json::JsonValue::CreateStringValue(sessionIter->ProcessName));
+        sessionObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, json::JsonValue::CreateStringValue(std::to_wstring(sessionIter->ClientProcessId)));
+        internal::JsonSetDateTimeProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, sessionIter->StartTime);
 
         // now add all the client connections
 
         json::JsonArray connectionsArray{};
 
-        for (auto connectionIter = sessionIter->second.Connections.begin(); connectionIter != sessionIter->second.Connections.end(); connectionIter++)
+        for (auto connectionIter = sessionIter->Connections.begin(); connectionIter != sessionIter->Connections.end(); connectionIter++)
         {
             json::JsonObject connectionObject;
 

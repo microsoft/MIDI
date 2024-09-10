@@ -35,6 +35,7 @@ CMidi2KSAggregateMidi::Initialize(
 )
 {
     RETURN_HR_IF(E_INVALIDARG, Callback == nullptr);
+    RETURN_HR_IF(E_INVALIDARG, MmCssTaskId == nullptr);
     RETURN_HR_IF(E_INVALIDARG, Device == nullptr);
     RETURN_HR_IF(E_INVALIDARG, Flow != MidiFlow::MidiFlowBidirectional);
 

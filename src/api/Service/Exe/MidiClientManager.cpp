@@ -369,6 +369,7 @@ CMidiClientManager::GetMidiClient(
     handle_t BindingHandle,
     LPCWSTR MidiDevice,
     GUID SessionId,
+    DWORD ClientProcessId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     wil::unique_handle& ClientProcessHandle,
@@ -393,7 +394,7 @@ CMidiClientManager::GetMidiClient(
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
 
     // Initialize our client
-    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, SessionId, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
+    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, SessionId, ClientProcessId, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
 
     // Add this client to the client pipes list and set the output client handle
     Client->ClientHandle = (MidiClientHandle)clientPipe.get();
@@ -1018,13 +1019,13 @@ CMidiClientManager::CreateMidiClient(
         // we add one if otherwise eligible. 
         //RETURN_IF_FAILED(GetEndpointShouldHaveMetadataHandler(midiDevice, addMetadataListenerToIncomingStream, CreationParams->Flow));
 
-        RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), SessionId, CreationParams, Client, ClientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
+        RETURN_IF_FAILED(GetMidiClient(BindingHandle, midiDevice.c_str(), SessionId, ClientProcessId, CreationParams, Client, ClientProcessHandle, clientPipe, generateIncomingMessageTimestamps));
     }
     else
     {
         // for protocol negotiation / metadata capture only. BindingHandle here is going to be invalid
         // NOTE: clientProcessHandle here is invalid
-        RETURN_IF_FAILED(GetMidiClient(BindingHandle, MidiDevice, SessionId, CreationParams, Client, ClientProcessHandle, clientPipe, false));
+        RETURN_IF_FAILED(GetMidiClient(BindingHandle, MidiDevice, SessionId, ClientProcessId, CreationParams, Client, ClientProcessHandle, clientPipe, false));
     }
 
     auto cleanupOnFailure = wil::scope_exit([&]()
@@ -1180,7 +1181,7 @@ CMidiClientManager::CreateMidiClient(
         clientConnectionPipe.reset();
     }
 
-    m_SessionTracker->AddClientEndpointConnection(SessionId, MidiDevice, Client->ClientHandle);
+    m_SessionTracker->AddClientEndpointConnection(SessionId, ClientProcessId, MidiDevice, Client->ClientHandle);
 
     cleanupOnFailure.release();
 
@@ -1229,7 +1230,7 @@ CMidiClientManager::DestroyMidiClient(
 
         midiClientPipe->Cleanup();
 
-        m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), client->second->MidiDevice().c_str(), ClientHandle);
+        m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), midiClientPipe->ClientProcessId(), client->second->MidiDevice().c_str(), ClientHandle);
 
         for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
         {

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Windows.Devices.Midi2.1.0.24194.2233-preview.6\build\native\Microsoft.Windows.Devices.Midi2.props" Condition="Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24194.2233-preview.6\build\native\Microsoft.Windows.Devices.Midi2.props')" />
+  <Import Project="..\packages\Microsoft.Windows.Devices.Midi2.1.0.24253.1227-preview.7\build\native\Microsoft.Windows.Devices.Midi2.props" Condition="Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24253.1227-preview.7\build\native\Microsoft.Windows.Devices.Midi2.props')" />
   <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <CppWinRTOptimized>true</CppWinRTOptimized>
@@ -167,7 +167,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" />
-    <Import Project="..\packages\Microsoft.Windows.Devices.Midi2.1.0.24194.2233-preview.6\build\native\Microsoft.Windows.Devices.Midi2.targets" Condition="Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24194.2233-preview.6\build\native\Microsoft.Windows.Devices.Midi2.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.Devices.Midi2.1.0.24253.1227-preview.7\build\native\Microsoft.Windows.Devices.Midi2.targets" Condition="Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24253.1227-preview.7\build\native\Microsoft.Windows.Devices.Midi2.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -175,7 +175,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24194.2233-preview.6\build\native\Microsoft.Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.Devices.Midi2.1.0.24194.2233-preview.6\build\native\Microsoft.Windows.Devices.Midi2.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24194.2233-preview.6\build\native\Microsoft.Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.Devices.Midi2.1.0.24194.2233-preview.6\build\native\Microsoft.Windows.Devices.Midi2.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24253.1227-preview.7\build\native\Microsoft.Windows.Devices.Midi2.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.Devices.Midi2.1.0.24253.1227-preview.7\build\native\Microsoft.Windows.Devices.Midi2.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.Devices.Midi2.1.0.24253.1227-preview.7\build\native\Microsoft.Windows.Devices.Midi2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.Devices.Midi2.1.0.24253.1227-preview.7\build\native\Microsoft.Windows.Devices.Midi2.targets'))" />
   </Target>
 </Project>
