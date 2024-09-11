@@ -263,10 +263,18 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow Flow, UINT32& Count)
                 caps->wPid = MM_MSFT_GENERIC_MIDIOUT;
                 caps->vDriverVersion = 0x0100;
 
-                if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv output device %d"), servicePortNum)))
+                // not good because this could end up > 32 characters
+                std::wstring tempName = std::wstring((std::wstring_view)device.Name()).substr(0,21) + std::wstring(L" (MidiSrv)");
+
+                if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, tempName.c_str())))
                 {
                     return;
                 }
+
+                //if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv output device %d"), servicePortNum)))
+                //{
+                //    return;
+                //}
 
                 caps->wTechnology = MOD_MIDIPORT;
                 caps->wVoices = 0;
@@ -282,10 +290,18 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow Flow, UINT32& Count)
                 caps->wPid = MM_MSFT_GENERIC_MIDIIN;
                 caps->vDriverVersion = 0x0100;
 
-                if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv input device %d"), servicePortNum)))
+                // not good because this could end up > 32 characters
+                std::wstring tempName = std::wstring((std::wstring_view)device.Name()).substr(0, 21) + std::wstring(L" (MidiSrv)");
+
+                if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, tempName.c_str())))
                 {
                     return;
                 }
+
+                //if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv input device %d"), servicePortNum)))
+                //{
+                //    return;
+                //}
 
                 caps->dwSupport = 0;
             }
@@ -349,16 +365,39 @@ CMidiPorts::GetDevCaps(MidiFlow Flow, UINT PortNumber, DWORD_PTR MidiCaps)
     UINT localPortNumber = PortNumber + 1;
     auto port = m_MidiPortInfo[Flow].find(localPortNumber);
 
-    RETURN_HR_IF(E_INVALIDARG, port == m_MidiPortInfo[Flow].end());
+    //RETURN_HR_IF(E_INVALIDARG, port == m_MidiPortInfo[Flow].end());
+    //RETURN_HR_IF(E_HANDLE, port == m_MidiPortInfo[Flow].end());
 
-    if (MidiFlowIn == Flow)
+    if (port == m_MidiPortInfo[Flow].end())
     {
-        memcpy((PVOID) MidiCaps, &(port->second.MidiInCaps), sizeof(port->second.MidiInCaps));
+        // port doesn't exist. We return a zero struct. This is likely
+        // not correct, but doing this for testing
+
+        if (MidiFlowIn == Flow)
+        {
+            MIDIINCAPSW caps{ 0 };
+
+            memcpy((PVOID)MidiCaps, &caps, sizeof(caps));
+        }
+        else
+        {
+            MIDIOUTCAPSW caps{ 0 };
+
+            memcpy((PVOID)MidiCaps, &caps, sizeof(caps));
+        }
     }
     else
     {
-        memcpy((PVOID) MidiCaps, &(port->second.MidiOutCaps), sizeof(port->second.MidiOutCaps));
+        if (MidiFlowIn == Flow)
+        {
+            memcpy((PVOID)MidiCaps, &(port->second.MidiInCaps), sizeof(port->second.MidiInCaps));
+        }
+        else
+        {
+            memcpy((PVOID)MidiCaps, &(port->second.MidiOutCaps), sizeof(port->second.MidiOutCaps));
+        }
     }
+
     
     return S_OK;
 }

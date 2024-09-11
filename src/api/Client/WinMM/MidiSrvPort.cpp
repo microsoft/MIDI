@@ -627,7 +627,7 @@ CMidiPort::SendMidiMessage(UINT32 MidiMessage)
         RETURN_IF_FAILED(m_MidiOut->SendMidiMessage(&MidiMessage, sizeof(MidiMessage), 0));
     }
 
-    // client callback inidcating this message is completed.
+    // client callback indicating this message is completed.
     WinmmClientCallback(MOM_DONE, MidiMessage, 0);
     return S_OK;
 }

@@ -25,6 +25,8 @@ MMRESULT MMRESULT_FROM_HRESULT(HRESULT HResult)
                     mmResult = MMSYSERR_NOMEM;
                     break;
                 case E_HANDLE:
+                    mmResult = MMSYSERR_BADDEVICEID;
+                    break;
                 case E_INVALIDARG:
                 case E_POINTER:
                     mmResult = MMSYSERR_INVALPARAM;
