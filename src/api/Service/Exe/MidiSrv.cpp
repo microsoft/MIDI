@@ -35,7 +35,8 @@ CMidiSrv::Initialize()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt32(GetCurrentProcessId(), "Process Id")
     );
 
     auto cleanupOnError = wil::scope_exit([&]()

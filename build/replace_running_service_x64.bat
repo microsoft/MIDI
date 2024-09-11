@@ -29,17 +29,6 @@ copy /Y %buildoutput%\Midi2.*Transform.dll %servicepath%
 REM copy /Y %buildoutput%\wdmaud2.drv %windir%\system32
 %midi_repo_root%build\sfpcopy %buildoutput%\wdmaud2.drv %windir%\system32\wdmaud2.drv
 
-
-
-REM echo mididmp.exe
-REM copy /Y %buildoutput%\mididmp.exe %dmppath%
-
-REM echo API impl
-REM copy /Y %buildoutput%\*.Devices.Midi2.dll %apipath%
-REM echo API pri
-REM copy /Y %buildoutput%\*.Devices.Midi2.pri %apipath%
-
-
 echo Reinstalling service
 %servicepath%\midisrv.exe install
 

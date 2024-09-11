@@ -45,11 +45,16 @@ CMidiPorts::RuntimeClassInitialize()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"));
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt32(GetCurrentProcessId(), "Process id")
+        );
 
     RETURN_IF_FAILED(CoCreateGuid(&m_SessionId));
     RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidisrvAbstraction)));
     RETURN_IF_FAILED(m_MidisrvAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &m_MidiSessionTracker));
+
+    RETURN_IF_FAILED(m_MidiSessionTracker->VerifyConnectivity());
+
     RETURN_IF_FAILED(m_MidiSessionTracker->AddClientSession(m_SessionId, m_SessionName.c_str()));
 
     return S_OK;        

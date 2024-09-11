@@ -1157,7 +1157,7 @@ CMidiClientManager::CreateMidiClient(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Complete.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingGuid(SessionId, "Session Id"),
         TraceLoggingUInt32(ClientProcessId, "Client Process Id"),
         TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)

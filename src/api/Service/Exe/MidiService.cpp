@@ -48,9 +48,10 @@ VOID ReportSvcStatus(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingUInt32(dwCurrentState, "Current State"),
+        TraceLoggingUInt32(GetCurrentProcessId(), "Process Id")
     );
-
 
     static DWORD checkPoint = 1;
 
@@ -61,6 +62,7 @@ VOID ReportSvcStatus(
 
     if (dwCurrentState == SERVICE_START_PENDING)
     {
+
         g_SvcStatus.dwControlsAccepted = 0;
     }
     else

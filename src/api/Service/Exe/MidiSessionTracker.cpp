@@ -14,15 +14,18 @@ _Use_decl_annotations_
 std::vector<MidiSessionEntry>::iterator
 CMidiSessionTracker::FindSession(GUID sessionId, DWORD clientProcessId)
 {
-    auto result = std::find_if(m_sessions.begin(), m_sessions.end(), 
-        [&sessionId, &clientProcessId](const MidiSessionEntry& val)
+    auto match = std::find_if(m_sessions.begin(), m_sessions.end(),
+        [&sessionId, &clientProcessId](const MidiSessionEntry& entry)
         {
+            //return
+            //    entry.ClientProcessId == clientProcessId &&
+            //    (InlineIsEqualGUID(entry.SessionId, sessionId) != 0);
             return
-                val.ClientProcessId == clientProcessId &&
-                ((BOOL)InlineIsEqualGUID(val.SessionId, sessionId) == TRUE);
+                entry.ClientProcessId == clientProcessId &&
+                entry.SessionId == sessionId;
         });
 
-    return result;
+    return match;
 }
 
 _Use_decl_annotations_
@@ -31,13 +34,13 @@ CMidiSessionTracker::FindSessionForContextHandle(PVOID contextHandle)
 {
     if (contextHandle == nullptr) return m_sessions.end();
 
-    auto result = std::find_if(m_sessions.begin(), m_sessions.end(),
+    auto match = std::find_if(m_sessions.begin(), m_sessions.end(),
         [&contextHandle](const MidiSessionEntry& val)
         {
             return val.ContextHandle == contextHandle;
         });
 
-    return result;
+    return match;
 }
 
 
@@ -69,6 +72,7 @@ CMidiSessionTracker::AddClientSession(
     PVOID* ContextHandle
 )
 {
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -81,9 +85,14 @@ CMidiSessionTracker::AddClientSession(
         TraceLoggingWideString(SessionName)
     );
 
-    auto lock = m_sessionsLock.lock();
+    // context handle can be null for protocol manager
+    //RETURN_HR_IF_NULL(E_INVALIDARG, ContextHandle);
 
-    if (auto result = FindSession(SessionId, ClientProcessId); result != m_sessions.end())
+
+    auto lock = m_sessionsLock.lock();
+    auto result = FindSession(SessionId, ClientProcessId);
+
+    if (result != m_sessions.end())
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -91,7 +100,7 @@ CMidiSessionTracker::AddClientSession(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Session already exists", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Session already exists. Unable to add new.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         RETURN_IF_FAILED(E_INVALIDARG);
@@ -131,7 +140,7 @@ CMidiSessionTracker::AddClientSession(
         TraceLoggingUInt32(ClientProcessId),
         TraceLoggingWideString(SessionName),
         TraceLoggingWideString(clientProcessName.c_str())
-        );
+    );
 
 
     MidiSessionEntry entry{ };
@@ -180,9 +189,7 @@ CMidiSessionTracker::AddClientSession(
         TraceLoggingUInt32(ClientProcessId),
         TraceLoggingWideString(SessionName),
         TraceLoggingWideString(clientProcessName.c_str())
-
     );
-
 
     return S_OK;
 }
@@ -214,9 +221,10 @@ CMidiSessionTracker::UpdateClientSessionName(
     {
         auto lock = m_sessionsLock.lock();
 
-        if (auto result = FindSession(SessionId, ClientProcessId); result != m_sessions.end())
+        auto sess = FindSession(SessionId, ClientProcessId);
+        if (sess != m_sessions.end())
         {
-            result->SessionName = newName;
+            sess->SessionName = newName;
         }
         else
         {
@@ -275,8 +283,9 @@ CMidiSessionTracker::RemoveClientSession(
     );
 
     auto lock = m_sessionsLock.lock();
-
-    if (auto session = FindSession(SessionId, ClientProcessId); session != m_sessions.end())
+    
+    auto session = FindSession(SessionId, ClientProcessId);
+    if (session != m_sessions.end())
     {
         m_sessions.erase(session);
     }
@@ -339,8 +348,9 @@ CMidiSessionTracker::IsValidSession(
 )
 {
     auto lock = m_sessionsLock.lock();
+    auto session = FindSession(SessionId, ClientProcessId);
 
-    if (auto session = FindSession(SessionId, ClientProcessId); session != m_sessions.end())
+    if (session != m_sessions.end())
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -362,9 +372,10 @@ CMidiSessionTracker::IsValidSession(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Session Invalid. NOT found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Session Invalid. NOT found in the tracker", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingGuid(SessionId, "Session ID"),
-        TraceLoggingUInt32(ClientProcessId, "Client Process ID")
+        TraceLoggingUInt32(ClientProcessId, "Client Process ID"),
+        TraceLoggingUInt32(static_cast<uint32_t>(m_sessions.size()), "Total session count")
     );
 
     // session is not present in the list, this is an expected
@@ -402,7 +413,8 @@ CMidiSessionTracker::AddClientEndpointConnection(
        
     auto lock = m_sessionsLock.lock();
 
-    if (auto sessionEntry = FindSession(SessionId, ClientProcessId); sessionEntry != m_sessions.end())
+    auto sessionEntry = FindSession(SessionId, ClientProcessId);
+    if (sessionEntry != m_sessions.end())
     {
         if (auto connection = sessionEntry->Connections.find(cleanEndpointId); connection != sessionEntry->Connections.end())
         {
