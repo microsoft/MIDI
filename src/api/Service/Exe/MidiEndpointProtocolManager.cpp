@@ -31,23 +31,26 @@ CMidiEndpointProtocolManager::Initialize(
     std::shared_ptr<CMidiSessionTracker>& SessionTracker
 )
 {
+    // use our clsid as the session id. 
+    m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingGuid(m_sessionId, "session id")
     );
 
-    // use our clsid as the session id. 
-    m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
 
     m_clientManager = ClientManager;
     m_deviceManager = DeviceManager;
     m_sessionTracker = SessionTracker;
-    wil::unique_handle processHandle(GetCurrentProcess());
 
-    LOG_IF_FAILED(m_sessionTracker->AddClientSession(
+    wil::unique_handle processHandle(GetCurrentProcess());
+    
+    RETURN_IF_FAILED(m_sessionTracker->AddClientSession(
         m_sessionId,
         MIDI_PROTOCOL_MANAGER_SESSION_NAME,
         GetCurrentProcessId(),

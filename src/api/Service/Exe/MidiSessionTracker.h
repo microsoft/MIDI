@@ -78,6 +78,7 @@ private:
 //    std::map<GUID, MidiSessionEntry, GUIDCompare> m_sessions{};
 
     std::vector<MidiSessionEntry> m_sessions{};
+    wil::critical_section m_sessionsLock;
 
  //   std::map<PVOID, GUID> m_sessionContextHandles{};
 

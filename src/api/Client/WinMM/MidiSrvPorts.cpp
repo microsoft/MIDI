@@ -106,7 +106,7 @@ CMidiPorts::MidMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1
     {
         case MIDM_GETNUMDEVS:
             {
-                UINT32 deviceCount;
+                UINT32 deviceCount{ };
                 hr = GetMidiDeviceCount(MidiFlowIn, deviceCount);
                 if (SUCCEEDED(hr))
                 {
@@ -156,7 +156,7 @@ CMidiPorts::ModMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1
     {
         case MODM_GETNUMDEVS:
             {
-                UINT32 deviceCount;
+                UINT32 deviceCount{ };
                 hr = GetMidiDeviceCount(MidiFlowOut, deviceCount);
                 if (SUCCEEDED(hr))
                 {
@@ -406,6 +406,16 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::GetOpenedPort(MidiFlow Flow, MidiPortHandle PortHandle, wil::com_ptr_nothrow<CMidiPort> &Port)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)Flow, "MidiFlow"),
+        TraceLoggingValue(PortHandle, "PortHandle")
+    );
+
+
     auto lock = m_Lock.lock();
     auto portIterator = m_OpenPorts.find(PortHandle);
     // If this is an invalid port handle, fail.

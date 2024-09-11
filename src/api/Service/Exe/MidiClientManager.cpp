@@ -385,7 +385,8 @@ CMidiClientManager::GetMidiClient(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingGuid(SessionId, "Session Id")
+        TraceLoggingGuid(SessionId, "Session Id"),
+        TraceLoggingUInt32(ClientProcessId, "ClientProcessId")
     );
 
     wil::com_ptr_nothrow<CMidiClientPipe> clientPipe;
@@ -906,16 +907,14 @@ CMidiClientManager::CreateMidiClient(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingGuid(SessionId, "Session Id"),
-        TraceLoggingUInt32(ClientProcessId, "Client Process Id")
-    );
+        TraceLoggingUInt32(ClientProcessId, "Client Process Id"),
+        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
 
     auto sessionCheckHR = m_SessionTracker->IsValidSession(SessionId, ClientProcessId);
     if (FAILED(sessionCheckHR))
     {
-        // This session id already exists, but is for a different process and cannot create a default
-        // session for this process, fail client creation.
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
@@ -923,29 +922,13 @@ CMidiClientManager::CreateMidiClient(
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Session is invalid for this client process. Cannot create MIDI client.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
             TraceLoggingGuid(SessionId, "Session Id"),
-            TraceLoggingUInt32(ClientProcessId, "Client Process Id")
+            TraceLoggingUInt32(ClientProcessId, "Client Process Id"),
+            TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         RETURN_IF_FAILED(sessionCheckHR);
     }
-
-    //if (InternalProtocolNegotiationUseOnly && Client->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
-    //{
-    //    TraceLoggingWrite(
-    //        MidiSrvTelemetryProvider::Provider(),
-    //        MIDI_TRACE_EVENT_ERROR,
-    //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-    //        TraceLoggingPointer(this, "this"),
-    //        TraceLoggingWideString(MidiDevice),
-    //        TraceLoggingGuid(SessionId),
-    //        TraceLoggingWideString(L"Called for internal protocol negotiation, but client dataformat is not UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    //    );
-    //        
-    //    return E_UNEXPECTED;
-    //}
 
     if (InternalProtocolNegotiationUseOnly && CreationParams->DataFormat != MidiDataFormat::MidiDataFormat_UMP)
     {
@@ -956,8 +939,9 @@ CMidiClientManager::CreateMidiClient(
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Called for internal protocol negotiation, but creation params dataformat is not UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingGuid(SessionId)
+            TraceLoggingGuid(SessionId, "Session Id"),
+            TraceLoggingUInt32(ClientProcessId, "Client Process Id"),
+            TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         return E_UNEXPECTED;
@@ -972,8 +956,9 @@ CMidiClientManager::CreateMidiClient(
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Called for internal protocol negotiation, but creation params data flow is not Bidirectional", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingGuid(SessionId)
+            TraceLoggingGuid(SessionId, "Session Id"),
+            TraceLoggingUInt32(ClientProcessId, "Client Process Id"),
+            TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         return E_UNEXPECTED;
@@ -1063,25 +1048,6 @@ CMidiClientManager::CreateMidiClient(
             newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
             clientConnectionPipe = newClientConnectionPipe;
         }
-
-        // newClientConnectionPipe = clientConnectionPipe;
-        //// Metadata Listener ----------------------------------------------------------------
-        //// We should check protocol, not just data format here because we're putting this on
-        //// MIDI 1.0 devices that use the new driver, and there's no reason to do that.
-        //if (addMetadataListenerToIncomingStream && devicePipe->IsFormatSupportedIn(MidiDataFormat::MidiDataFormat_UMP))
-        //{
-        //    wil::com_ptr_nothrow<CMidiPipe> newClientConnectionPipe;
-        //    // Our clientConnectionPipe is now the Scheduler
-        //    RETURN_IF_FAILED(GetMidiEndpointMetadataHandler(
-        //        BindingHandle,
-        //        MidiFlowIn,
-        //        devicePipe,
-        //        clientConnectionPipe,
-        //        newClientConnectionPipe)); // clientConnectionPipe is the plugin
-
-        //    newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
-        //    clientConnectionPipe = newClientConnectionPipe;
-        //}
 
         RETURN_IF_FAILED(clientPipe->SetDataFormatIn(clientConnectionPipe->DataFormatOut()));
         Client->DataFormat = clientPipe->DataFormatIn();
@@ -1181,7 +1147,7 @@ CMidiClientManager::CreateMidiClient(
         clientConnectionPipe.reset();
     }
 
-    m_SessionTracker->AddClientEndpointConnection(SessionId, ClientProcessId, MidiDevice, Client->ClientHandle);
+    RETURN_IF_FAILED(m_SessionTracker->AddClientEndpointConnection(SessionId, ClientProcessId, MidiDevice, Client->ClientHandle));
 
     cleanupOnFailure.release();
 
@@ -1192,9 +1158,9 @@ CMidiClientManager::CreateMidiClient(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingGuid(SessionId, "Session Id"),
-        TraceLoggingUInt32(ClientProcessId, "Client Process Id")
+        TraceLoggingUInt32(ClientProcessId, "Client Process Id"),
+        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     return S_OK;
