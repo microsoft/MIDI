@@ -1048,6 +1048,59 @@ CMidiDeviceManager::ActivateEndpoint
 
         if (!UMPOnly)
         {
+            std::wstring friendlyName;
+            std::vector<DEVPROPERTY> midi1OutInterfaceProperties{};
+            std::vector<DEVPROPERTY> midi1InInterfaceProperties{};
+
+            if (CommonProperties->UserSuppliedEndpointName)
+            {
+                friendlyName = CommonProperties->UserSuppliedEndpointName;
+            }
+            else
+            {
+                if (CommonProperties->ManufacturerName)
+                {
+                    friendlyName += CommonProperties->ManufacturerName;
+                    friendlyName += L" ";
+                }
+
+                if (CommonProperties->TransportSuppliedEndpointName)
+                {
+                    friendlyName += CommonProperties->TransportSuppliedEndpointName;
+                }
+            }
+
+            // BUGBUG: temporary hard coded strings, needs to be localized
+            friendlyName += L" Gp 4";
+
+            std::wstring midiOutFriendlyName = friendlyName + L" Out";
+            std::wstring midiInFriendlyName = friendlyName + L" In";
+
+            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(midiOutFriendlyName.c_str()) + 1)), (PVOID)midiOutFriendlyName.c_str() });
+
+            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(midiInFriendlyName.c_str()) + 1)), (PVOID)midiInFriendlyName.c_str() });
+
+            if (CommonProperties->UserSuppliedEndpointPortNumber > 0)
+            {
+                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(CommonProperties->UserSuppliedEndpointPortNumber)) });
+
+                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(CommonProperties->UserSuppliedEndpointPortNumber)) });
+            }
+
+            // BUGBUG: temporary hard coded group index value
+            // group index of 3 is group 4
+            UINT32 groupIndex = 3;
+
+            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(groupIndex)) });
+            
+            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(groupIndex)) });
+
             // now activate the midi 1 SWD's for this endpoint
             if (Flow == MidiFlowBidirectional)
             {
@@ -1059,43 +1112,57 @@ CMidiDeviceManager::ActivateEndpoint
                 // functions when it's ready? That way it can get the info it needs first, and then
                 // create the MIDI 1.0 interfaces. Need to think through that flow.
 
-
                 // if this is a bidirectional endpoint, it gets an in and an out midi 1 swd's.
                 RETURN_IF_FAILED(ActivateEndpointInternal(
-                    ParentInstanceId, 
-                    deviceInterfaceId.c_str(), 
-                    TRUE, 
-                    MidiFlowOut, 
-                    (ULONG)allInterfaceProperties.size(), 
-                    DevPropertyCount, 
-                    (DEVPROPERTY*)(allInterfaceProperties.data()), 
-                    (DEVPROPERTY*)DeviceDevProperties, 
-                    (SW_DEVICE_CREATE_INFO*)CreateInfo, 
+                    ParentInstanceId,
+                    deviceInterfaceId.c_str(),
+                    TRUE,
+                    MidiFlowOut,
+                    (ULONG)midi1OutInterfaceProperties.size(),
+                    0,
+                    (DEVPROPERTY*)(midi1OutInterfaceProperties.data()),
+                    nullptr,
+                    (SW_DEVICE_CREATE_INFO*)CreateInfo,
                     nullptr));
 
                 RETURN_IF_FAILED(ActivateEndpointInternal(
-                    ParentInstanceId, 
-                    deviceInterfaceId.c_str(), 
-                    TRUE, 
-                    MidiFlowIn, 
-                    (ULONG)allInterfaceProperties.size(), 
-                    DevPropertyCount, 
-                    (DEVPROPERTY*)(allInterfaceProperties.data()), 
-                    (DEVPROPERTY*)DeviceDevProperties, 
+                    ParentInstanceId,
+                    deviceInterfaceId.c_str(),
+                    TRUE,
+                    MidiFlowIn,
+                    (ULONG)midi1InInterfaceProperties.size(),
+                    0,
+                    (DEVPROPERTY*)(midi1InInterfaceProperties.data()),
+                    nullptr,
+
                     (SW_DEVICE_CREATE_INFO*)CreateInfo, 
                     nullptr));
             }
-            else
+            else if (Flow == MidiFlowOut)
             {
                 RETURN_IF_FAILED(ActivateEndpointInternal(
-                    ParentInstanceId, 
-                    deviceInterfaceId.c_str(), 
-                    TRUE, 
-                    Flow, 
-                    (ULONG)allInterfaceProperties.size(),
-                    DevPropertyCount,
-                    (DEVPROPERTY*)(allInterfaceProperties.data()),
-                    (DEVPROPERTY*)DeviceDevProperties,
+                    ParentInstanceId,
+                    deviceInterfaceId.c_str(),
+                    TRUE,
+                    MidiFlowOut,
+                    (ULONG)midi1OutInterfaceProperties.size(),
+                    0,
+                    (DEVPROPERTY*)(midi1OutInterfaceProperties.data()),
+                    nullptr,
+                    (SW_DEVICE_CREATE_INFO*)CreateInfo, 
+                    nullptr));
+            }
+            else if (Flow == MidiFlowIn)
+            {
+                RETURN_IF_FAILED(ActivateEndpointInternal(
+                    ParentInstanceId,
+                    deviceInterfaceId.c_str(),
+                    TRUE,
+                    MidiFlowIn,
+                    (ULONG)midi1InInterfaceProperties.size(),
+                    0,
+                    (DEVPROPERTY*)(midi1InInterfaceProperties.data()),
+                    nullptr,
                     (SW_DEVICE_CREATE_INFO*)CreateInfo, 
                     nullptr));
             }

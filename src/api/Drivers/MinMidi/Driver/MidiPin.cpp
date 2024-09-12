@@ -16,7 +16,7 @@
 wil::fast_mutex_with_critical_region *g_MidiInLock {nullptr};
 MidiPin* g_MidiInPin {nullptr};
 
-// smallest UMP is 4 bytes, smallest bytestream is 3 bytes
+// smallest UMP is 4 bytes, smallest bytestream is 1 byte (clock, etc.)
 #define MINIMUM_LOOPED_DATASIZE 1
 
 // largest UMP is 16 bytes

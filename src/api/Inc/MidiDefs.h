@@ -195,6 +195,8 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedPortNumber, 16);     // DEVPROP_TYPE
 #define STRING_PKEY_MIDI_ServiceAssignedPortNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"17"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ServiceAssignedPortNumber, 17);     // DEVPROP_TYPE_STRING
 
+#define STRING_PKEY_MIDI_PortAssignedGroupIndex MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"18"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_PortAssignedGroupIndex, 18);     // DEVPROP_TYPE_STRING
 
 // USB / KS Properties ============================================================================
 // Starts at 50
