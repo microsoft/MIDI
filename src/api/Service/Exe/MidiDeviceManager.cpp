@@ -1258,16 +1258,16 @@ CMidiDeviceManager::ActivateEndpointInternal
     }
     else if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == midiPort->hr)
     {
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Already exists"),
-            TraceLoggingWideString(ParentInstanceId),
-            TraceLoggingBool(MidiOne)
-        );
+        //TraceLoggingWrite(
+        //    MidiSrvTelemetryProvider::Provider(),
+        //    MIDI_TRACE_EVENT_INFO,
+        //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        //    TraceLoggingPointer(this, "this"),
+        //    TraceLoggingWideString(L"Endpoint already exists."),
+        //    TraceLoggingWideString(ParentInstanceId, "parent"),
+        //    TraceLoggingBool(MidiOne)
+        //);
 
         // if the devnode already exists, then we likely only need to create/activate the interface, a previous
         // call created the devnode. First, locate the matching SwDevice handle for the existing devnode.
@@ -1285,8 +1285,32 @@ CMidiDeviceManager::ActivateEndpointInternal
 
         if (item != m_MidiPorts.end())
         {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Activating previously created endpoint."),
+                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingBool(MidiOne)
+            );
+
             midiPort->SwDevice = item->get()->SwDevice;
             SwMidiPortCreateCallback(item->get()->SwDevice.get(), S_OK, &creationContext, nullptr);
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Endpoint exists, but it is not in the MidiDeviceManager store. Is something else creating endpoints?"),
+                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingBool(MidiOne)
+            );
         }
     }
     else

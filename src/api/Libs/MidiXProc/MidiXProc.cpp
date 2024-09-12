@@ -188,8 +188,14 @@ bool CMidiXProc::MMCSSUseEnabled()
     {
         // see if we're going to use MMCSS here.
         DWORD regValueUseMMCSS{ MIDI_USE_MMCSS_REG_DEFAULT_VALUE };
-        wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_USE_MMCSS_REG_VALUE, &regValueUseMMCSS);
-        m_useMMCSS = (bool)(regValueUseMMCSS > 0);
+        if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_USE_MMCSS_REG_VALUE, &regValueUseMMCSS)))
+        {
+            m_useMMCSS = (bool)(regValueUseMMCSS > 0);
+        }
+        else
+        {
+            m_useMMCSS = false;
+        }
 
         m_mmcssSettingRead = true;
     }

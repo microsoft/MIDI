@@ -17,6 +17,7 @@ public:
                             _In_ HANDLE,
                             _In_ LPCWSTR,
                             _In_ GUID,
+                            _In_ DWORD,
                             _In_ PMIDISRV_CLIENTCREATION_PARAMS,
                             _In_ PMIDISRV_CLIENT,
                             _In_ DWORD *,
@@ -67,6 +68,7 @@ public:
     }
 
     GUID SessionId() { return m_sessionId; }
+    DWORD ClientProcessId() { return m_clientProcessId; }
     //LPCWSTR Device() { return m_device.c_str(); }
 
 private:
@@ -77,6 +79,8 @@ private:
     std::unique_ptr<CMidiXProc> m_MidiPump;
 
     GUID m_sessionId{};         // client session id for tracking
+    DWORD m_clientProcessId{};  // also for session tracking
+
     //std::wstring m_device{};    // device id this connects to
 };
 

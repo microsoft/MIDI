@@ -2,18 +2,36 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+    <TargetPlatformMinVersion>10.0.22621.0</TargetPlatformMinVersion>
     <RootNamespace>MidiSample.AppToAppMidi</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x64;ARM64</Platforms>
-    <RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
-    <PublishProfile>win10-$(Platform).pubxml</PublishProfile>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+   <!-- <PublishProfile>win10-$(Platform).pubxml</PublishProfile> -->
     <UseWinUI>true</UseWinUI>
-    <EnableMsixTooling>false</EnableMsixTooling>
-    <SupportedOSPlatformVersion>10.0.20348.0</SupportedOSPlatformVersion>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
     <WindowsPackageType>None</WindowsPackageType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-      <UseRidGraph>true</UseRidGraph>
+      
+      <!-- Use .41 for .NET 8 -->
+    <WindowsSdkPackageVersion>10.0.22621.41</WindowsSdkPackageVersion>
+    <UseRidGraph>true</UseRidGraph>
+
+      <PublishAot>False</PublishAot>
+      <PublishTrimmed>False</PublishTrimmed>
+  </PropertyGroup>
+    
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <IsPublishable>False</IsPublishable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,10 +45,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.0.7" />
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24193.2220-preview.6" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240404000" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26031-preview" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.3" />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24253.1227-preview.7" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240829007" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
     <PackageReference Include="WinUIEx" Version="2.3.4" />
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
@@ -39,6 +57,10 @@
     <None Update="virtual-device-app-winui-cs.exe.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 
 </Project>

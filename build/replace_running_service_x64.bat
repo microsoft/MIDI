@@ -14,26 +14,25 @@ set buildoutput="%midi_repo_root%src\api\VSFiles\x64\Release"
 REM echo Stopping midisrv so we can replace it
 REM sc stop midisrv
 
+
 echo Uninstalling midisrv (if present)
 %servicepath%\midisrv.exe uninstall
 
+echo stopping AEB
+net stop /Y AudioEndpointBuilder
 
+timeout 3
 echo Copying MidiSrv.exe and related dlls
 copy /Y %buildoutput%\MidiSrv.exe %servicepath%
 copy /Y %buildoutput%\Midi2.*Abstraction.dll %servicepath%
 copy /Y %buildoutput%\Midi2.*Transform.dll %servicepath%
 
-
-REM echo mididmp.exe
-REM copy /Y %buildoutput%\mididmp.exe %dmppath%
-
-REM echo API impl
-REM copy /Y %buildoutput%\*.Devices.Midi2.dll %apipath%
-REM echo API pri
-REM copy /Y %buildoutput%\*.Devices.Midi2.pri %apipath%
-
+echo copying of wdmaud2.drv is commented out for now. Uncomment when it's back in the main build.
+REM %midi_repo_root%build\sfpcopy %buildoutput%\wdmaud2.drv %windir%\system32\wdmaud2.drv
 
 echo Reinstalling service
 %servicepath%\midisrv.exe install
+
+net start audiosrv
 
 pause

@@ -749,6 +749,17 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             // don't want to perform this on translated byte stream endpoints
             if (MidiPin->Flow == MidiFlowBidirectional && MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
             {
+                TraceLoggingWrite(
+                    MidiKSAbstractionTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Starting up protocol negotiator for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(newDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                    TraceLoggingWideString(MidiPin->Id.c_str(), "Pin id")
+                );
+
                 // Required MIDI 2.0 Protocol step
                 // Invoke the protocol negotiator to now capture updated endpoint info.
 
@@ -763,7 +774,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                     __uuidof(Midi2KSAbstraction),
                     newDeviceInterfaceId,
                     negotiationParams,
-                    nullptr                 // TODO: Provide callback
+                    nullptr                 // TODO: Provide callback function to get function blocks
                 ));
 
 

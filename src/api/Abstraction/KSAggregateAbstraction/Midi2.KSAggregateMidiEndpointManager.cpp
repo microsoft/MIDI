@@ -21,7 +21,7 @@ using namespace Microsoft::WRL::Wrappers;
 // for pairs of midi in & out endpoints on the same filter.
 // Filters which do not have a a single pair of midi in and out,
 // separate midi in and out SWD's will always be created.
-#define CREATE_KS_BIDI_SWDS
+//#define CREATE_KS_BIDI_SWDS
 
 // If this is defined, we will skip building midi in and midi out
 // SWD's for endpoints where BIDI SWD's are created.

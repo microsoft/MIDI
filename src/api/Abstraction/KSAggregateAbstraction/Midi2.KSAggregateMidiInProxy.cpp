@@ -10,6 +10,8 @@
 
 #include "pch.h"
 
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiInProxy::Initialize(
@@ -77,6 +79,28 @@ CMidi2KSAggregateMidiInProxy::Initialize(
         RETURN_IF_FAILED(initResult);
     }
 
+
+    wil::com_ptr_nothrow<IMidiTransform> transformLib;
+    wil::com_ptr_nothrow<IMidiDataTransform> transform;
+
+    auto iid = __uuidof(Midi2BS2UMPTransform);
+
+    RETURN_IF_FAILED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformLib)));
+
+    RETURN_IF_FAILED(transformLib->Activate(__uuidof(IMidiDataTransform), (void**)(&m_bs2UmpTransform)));
+
+    TRANSFORMCREATIONPARAMS creationParams{};
+    creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_ByteStream;
+    creationParams.DataFormatOut = MidiDataFormat::MidiDataFormat_UMP;
+    creationParams.InstanceConfigurationJsonData = nullptr;
+    creationParams.UmpGroupIndex = GroupIndex;
+
+    DWORD mmcssTaskId{};
+
+    RETURN_IF_FAILED(transform->Initialize(Device, &creationParams, &mmcssTaskId, m_callback, 0, nullptr));
+
+
+
     return S_OK;
 }
 
@@ -86,91 +110,26 @@ CMidi2KSAggregateMidiInProxy::Callback(
     PVOID Data, 
     UINT Length,
     LONGLONG Timestamp,
-    LONGLONG Context
+    LONGLONG /* Context */
 )
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, Data);
     RETURN_HR_IF_NULL(E_POINTER, m_callback);
+    RETURN_HR_IF_NULL(E_POINTER, m_bs2UmpTransform);
 
-    TraceLoggingWrite(
-        MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_VERBOSE,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Callback received from device. Sending data to next callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt32(Length, "data length"),
-        TraceLoggingUInt64(Timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-    );
+    //TraceLoggingWrite(
+    //    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_VERBOSE,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Callback received from device. Sending data to next callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingUInt32(Length, "data length"),
+    //    TraceLoggingUInt64(Timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    //);
 
-    // Translate bytestream to UMP, adding in correct group number, and call m_callback with the result
-
-    // Send the bytestream byte(s) to the parser
-
-    m_BS2UMP.defaultGroup = m_groupIndex;
-
-    BYTE* data = (BYTE*)Data;
-    for (UINT i = 0; i < Length; i++)
-    {
-        m_BS2UMP.bytestreamParse(data[i]);
-    }
-
-    // TODO: The above can drop messages when sysex or other large data streams are sent over.
-    // Need to use the bs2ump transform directly, or just completely remove all this code
-    // and handle it elsewhere.
-
-
-    // retrieve the UMP(s) from the parser
-    // and sent it on
-    while (m_BS2UMP.availableUMP())
-    {
-        uint32_t umpMessage[MAXIMUM_LOOPED_UMP_DATASIZE / sizeof(uint32_t)];
-        UINT wordCount;
-        for (wordCount = 0; wordCount < _countof(umpMessage) && m_BS2UMP.availableUMP(); wordCount++)
-        {
-            umpMessage[wordCount] = m_BS2UMP.readUMP();
-        }
-
-        if (wordCount > 0)
-        {
-            // in case it goes null while we're in the loop
-            RETURN_HR_IF_NULL(E_POINTER, m_callback);
-
-            // there are 4 bytes per each 32 bit UMP returned by the parser.
-            auto hr = m_callback->Callback(&(umpMessage[0]), wordCount * sizeof(uint32_t), Timestamp, Context);
-
-            if (SUCCEEDED(hr))
-            {
-                m_countMidiMessageSent++;
-
-                TraceLoggingWrite(
-                    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_METRICS,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Messages forwarded so far.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingUInt64(m_countMidiMessageSent, "count")
-                );
-            }
-            else
-            {
-                TraceLoggingWrite(
-                    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"HRESULT Error forwarding message to callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
-                );
-
-                LOG_IF_FAILED(hr);
-            }
-        }
-    }
-
-    return S_OK;
+    // the callback for the transform is wired up in initialize
+    return m_bs2UmpTransform->SendMidiMessage(Data, Length, Timestamp);
 }
 
 HRESULT
@@ -189,8 +148,11 @@ CMidi2KSAggregateMidiInProxy::Cleanup()
 
     m_callback = nullptr;
 
+    m_bs2UmpTransform->Cleanup();
+    m_bs2UmpTransform.reset();
+
     m_device->Cleanup();
-    m_device = nullptr;
+    m_device.reset();
 
     return S_OK;
 }

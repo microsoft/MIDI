@@ -44,6 +44,7 @@ private:
         _In_ handle_t,
         _In_ LPCWSTR,
         _In_ GUID,
+        _In_ DWORD,
         _In_ PMIDISRV_CLIENTCREATION_PARAMS,
         _In_ PMIDISRV_CLIENT,
         _In_ wil::unique_handle&,

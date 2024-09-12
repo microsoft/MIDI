@@ -25,6 +25,7 @@ CMidi2KSAggregateMidiBiDi::Initialize(
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
     RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
     RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
 
@@ -104,30 +105,30 @@ CMidi2KSAggregateMidiBiDi::SendMidiMessage(
 {
     if (m_MidiDevice != nullptr)
     {
-        TraceLoggingWrite(
-            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_VERBOSE,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Received MIDI Message. Sending to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt32(Length, "data length"),
-            TraceLoggingUInt64(Timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-        );
+        //TraceLoggingWrite(
+        //    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+        //    MIDI_TRACE_EVENT_VERBOSE,
+        //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        //    TraceLoggingPointer(this, "this"),
+        //    TraceLoggingWideString(L"Received MIDI Message. Sending to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        //    TraceLoggingUInt32(Length, "data length"),
+        //    TraceLoggingUInt64(Timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        //);
 
         RETURN_IF_FAILED(m_MidiDevice->SendMidiMessage(Data, Length, Timestamp));
 
         m_countMidiMessageSent++;
 
-        TraceLoggingWrite(
-            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_METRICS,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Messages sent so far.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt64(m_countMidiMessageSent, "count")
-        );
+        //TraceLoggingWrite(
+        //    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+        //    MIDI_TRACE_EVENT_METRICS,
+        //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        //    TraceLoggingPointer(this, "this"),
+        //    TraceLoggingWideString(L"Messages sent so far.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        //    TraceLoggingUInt64(m_countMidiMessageSent, "count")
+        //);
 
         return S_OK;
     }

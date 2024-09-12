@@ -34,7 +34,6 @@ HRESULT MidiSrvVerifyConnectivity(
 
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
-    // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
     return sessionTracker->VerifyConnectivity();
@@ -234,6 +233,8 @@ MidiSrvRegisterSession(
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(BindingHandle)));
     clientProcessHandle.reset(OpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, clientProcessId));
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcRevertToSelf()));
+
+    RETURN_LAST_ERROR_IF_NULL(clientProcessHandle);
 
     RETURN_IF_FAILED(sessionTracker->AddClientSession(SessionId, SessionName, clientProcessId, clientProcessHandle, ContextHandle));
 

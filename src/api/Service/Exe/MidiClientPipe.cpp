@@ -24,6 +24,7 @@ CMidiClientPipe::Initialize(
     HANDLE /* clientProcess */,     // this isn't used now, but if used in the future, not this will not be set for internal clients like protocol negotiation
     LPCWSTR Device,
     GUID SessionId,
+    DWORD ClientProcessId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
     PMIDISRV_CLIENT Client,
     DWORD* MmcssTaskId,
@@ -42,6 +43,7 @@ CMidiClientPipe::Initialize(
 
     // for tracking the client connection
     m_sessionId = SessionId;
+    m_clientProcessId = ClientProcessId;
     //m_device = internal::NormalizeEndpointInterfaceIdCopy(Device);
 
 

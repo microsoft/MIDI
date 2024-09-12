@@ -42,8 +42,9 @@ public:
 private:
     std::wstring m_deviceInterfaceId;
     //std::wstring m_deviceInstanceId;
-    GUID m_sessionId;
-    GUID m_abstractionGuid;
+    GUID m_sessionId{};
+    DWORD m_clientProcessId{};
+    GUID m_abstractionGuid{};
 
     LONGLONG m_context{ 0 };
 

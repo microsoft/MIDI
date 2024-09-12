@@ -31,23 +31,26 @@ CMidiEndpointProtocolManager::Initialize(
     std::shared_ptr<CMidiSessionTracker>& SessionTracker
 )
 {
+    // use our clsid as the session id. 
+    m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingGuid(m_sessionId, "session id")
     );
 
-    // use our clsid as the session id. 
-    m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
 
     m_clientManager = ClientManager;
     m_deviceManager = DeviceManager;
     m_sessionTracker = SessionTracker;
-    wil::unique_handle processHandle(GetCurrentProcess);
 
-    LOG_IF_FAILED(m_sessionTracker->AddClientSession(
+    wil::unique_handle processHandle(GetCurrentProcess());
+    
+    RETURN_IF_FAILED(m_sessionTracker->AddClientSession(
         m_sessionId,
         MIDI_PROTOCOL_MANAGER_SESSION_NAME,
         GetCurrentProcessId(),
@@ -276,122 +279,4 @@ CMidiEndpointProtocolManager::Cleanup()
 
     return S_OK;
 }
-
-
-//HRESULT
-//CMidiEndpointProtocolManager::ProcessCurrentWorkEntry()
-//{
-//    TraceLoggingWrite(
-//        MidiSrvTelemetryProvider::Provider(),
-//        MIDI_TRACE_EVENT_INFO,
-//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingPointer(this, "this")
-//    );
-//
-//
-//    // by using the existing abstractions and activation methods just 
-//    // like any other client, we will get the transforms, including 
-//    // the metadata listener, for free. So we don't need to duplicate
-//    // metadata capture code here, and we don't need to make any
-//    // explicit call to the metadata capture transform plugin
-//
-//    RETURN_HR_IF_NULL(E_FAIL, m_serviceAbstraction);
-//
-//    RETURN_IF_FAILED(m_serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&(m_currentWorkItem.Endpoint)));
-//
-//    // Create and open a connection to the endpoint, complete with metadata listeners
-//
-//    DWORD mmcssTaskId{};
-//    ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_UMP, nullptr };
-//
-//    RETURN_IF_FAILED(m_currentWorkItem.Endpoint->Initialize(
-//        m_currentWorkItem.EndpointInstanceId.c_str(),
-//        &abstractionCreationParams,
-//        &mmcssTaskId,
-//        (IMidiCallback*)this,
-//        MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT,
-//        m_sessionId
-//    ));
-//
-//
-////    if (m_allMessagesReceived.is_signaled()) m_allMessagesReceived.ResetEvent();
-//
-//    HRESULT hr = S_OK;
-//
-//    //// Send initial discovery request
-//    //// the rest happens in response to messages in the callback
-//    //LOG_IF_FAILED(hr = RequestAllEndpointDiscoveryInformation());
-//
-//    //if (SUCCEEDED(hr))
-//    //{
-//    //    OutputDebugString(__FUNCTION__ L" - Requested discovery information");
-//    //}
-//    //else
-//    //{
-//    //    TraceLoggingWrite(
-//    //        MidiSrvTelemetryProvider::Provider(),
-//    //        __FUNCTION__,
-//    //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-//    //        TraceLoggingPointer(this, "this"),
-//    //        TraceLoggingWideString(L"Failed to request discovery information")
-//    //    );
-//    //}
-//
-//    //if (SUCCEEDED(hr))
-//    //{
-//    //    // Wait until all metadata arrives or we timeout
-//    //    if (!m_allMessagesReceived.wait(m_currentWorkItem.TimeoutMS))
-//    //    {
-//    //        // we didn't receive everything, but that's not a failure condition for this.
-//    //    }
-//    //}
-//
-//    //if (m_allMessagesReceived.is_signaled()) m_allMessagesReceived.ResetEvent();
-//
-//    //m_currentWorkItem.Endpoint->Cleanup();
-//    //m_currentWorkItem.Endpoint = nullptr;
-//
-//    return hr;
-//}
-
-
-//void CMidiEndpointProtocolManager::ThreadWorker()
-//{
-//    TraceLoggingWrite(
-//        MidiSrvTelemetryProvider::Provider(),
-//        MIDI_TRACE_EVENT_INFO,
-//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingPointer(this, "this"),
-//        TraceLoggingWideString(L"Thread worker enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-//    );
-//
-//    while (!m_shutdown)
-//    {
-//        if (m_workQueue.size() > 0)
-//        {
-//            m_queueMutex.lock();
-//            m_currentWorkItem = std::move(m_workQueue.front());
-//            m_workQueue.pop();
-//            m_queueMutex.unlock();
-//
-//            // this will block until completed
-//            LOG_IF_FAILED(ProcessCurrentWorkEntry());
-//        }
-//
-//        // todo: how often do we want to process messages?
-//        Sleep(300);
-//    }
-//
-//    TraceLoggingWrite(
-//        MidiSrvTelemetryProvider::Provider(),
-//        MIDI_TRACE_EVENT_INFO,
-//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingPointer(this, "this"),
-//        TraceLoggingWideString(L"Thread worker exit")
-//    );
-//
-//}
 

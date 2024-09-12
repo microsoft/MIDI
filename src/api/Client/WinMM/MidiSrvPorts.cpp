@@ -45,11 +45,16 @@ CMidiPorts::RuntimeClassInitialize()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"));
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt32(GetCurrentProcessId(), "Process id")
+        );
 
     RETURN_IF_FAILED(CoCreateGuid(&m_SessionId));
     RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidisrvAbstraction)));
     RETURN_IF_FAILED(m_MidisrvAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &m_MidiSessionTracker));
+
+    RETURN_IF_FAILED(m_MidiSessionTracker->VerifyConnectivity());
+
     RETURN_IF_FAILED(m_MidiSessionTracker->AddClientSession(m_SessionId, m_SessionName.c_str()));
 
     return S_OK;        
@@ -106,7 +111,7 @@ CMidiPorts::MidMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1
     {
         case MIDM_GETNUMDEVS:
             {
-                UINT32 deviceCount;
+                UINT32 deviceCount{ };
                 hr = GetMidiDeviceCount(MidiFlowIn, deviceCount);
                 if (SUCCEEDED(hr))
                 {
@@ -156,7 +161,7 @@ CMidiPorts::ModMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1
     {
         case MODM_GETNUMDEVS:
             {
-                UINT32 deviceCount;
+                UINT32 deviceCount{ };
                 hr = GetMidiDeviceCount(MidiFlowOut, deviceCount);
                 if (SUCCEEDED(hr))
                 {
@@ -263,10 +268,18 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow Flow, UINT32& Count)
                 caps->wPid = MM_MSFT_GENERIC_MIDIOUT;
                 caps->vDriverVersion = 0x0100;
 
-                if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv output device %d"), servicePortNum)))
+                // not good because this could end up > 32 characters
+                std::wstring tempName = std::wstring((std::wstring_view)device.Name()).substr(0,21) + std::wstring(L" (MidiSrv)");
+
+                if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, tempName.c_str())))
                 {
                     return;
                 }
+
+                //if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv output device %d"), servicePortNum)))
+                //{
+                //    return;
+                //}
 
                 caps->wTechnology = MOD_MIDIPORT;
                 caps->wVoices = 0;
@@ -282,10 +295,18 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow Flow, UINT32& Count)
                 caps->wPid = MM_MSFT_GENERIC_MIDIIN;
                 caps->vDriverVersion = 0x0100;
 
-                if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv input device %d"), servicePortNum)))
+                // not good because this could end up > 32 characters
+                std::wstring tempName = std::wstring((std::wstring_view)device.Name()).substr(0, 21) + std::wstring(L" (MidiSrv)");
+
+                if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, tempName.c_str())))
                 {
                     return;
                 }
+
+                //if (FAILED(StringCchPrintfW(caps->szPname, MAXPNAMELEN, TEXT("MidiSrv input device %d"), servicePortNum)))
+                //{
+                //    return;
+                //}
 
                 caps->dwSupport = 0;
             }
@@ -349,16 +370,39 @@ CMidiPorts::GetDevCaps(MidiFlow Flow, UINT PortNumber, DWORD_PTR MidiCaps)
     UINT localPortNumber = PortNumber + 1;
     auto port = m_MidiPortInfo[Flow].find(localPortNumber);
 
-    RETURN_HR_IF(E_INVALIDARG, port == m_MidiPortInfo[Flow].end());
+    //RETURN_HR_IF(E_INVALIDARG, port == m_MidiPortInfo[Flow].end());
+    //RETURN_HR_IF(E_HANDLE, port == m_MidiPortInfo[Flow].end());
 
-    if (MidiFlowIn == Flow)
+    if (port == m_MidiPortInfo[Flow].end())
     {
-        memcpy((PVOID) MidiCaps, &(port->second.MidiInCaps), sizeof(port->second.MidiInCaps));
+        // port doesn't exist. We return a zero struct. This is likely
+        // not correct, but doing this for testing
+
+        if (MidiFlowIn == Flow)
+        {
+            MIDIINCAPSW caps{ 0 };
+
+            memcpy((PVOID)MidiCaps, &caps, sizeof(caps));
+        }
+        else
+        {
+            MIDIOUTCAPSW caps{ 0 };
+
+            memcpy((PVOID)MidiCaps, &caps, sizeof(caps));
+        }
     }
     else
     {
-        memcpy((PVOID) MidiCaps, &(port->second.MidiOutCaps), sizeof(port->second.MidiOutCaps));
+        if (MidiFlowIn == Flow)
+        {
+            memcpy((PVOID)MidiCaps, &(port->second.MidiInCaps), sizeof(port->second.MidiInCaps));
+        }
+        else
+        {
+            memcpy((PVOID)MidiCaps, &(port->second.MidiOutCaps), sizeof(port->second.MidiOutCaps));
+        }
     }
+
     
     return S_OK;
 }
@@ -367,6 +411,16 @@ _Use_decl_annotations_
 HRESULT
 CMidiPorts::GetOpenedPort(MidiFlow Flow, MidiPortHandle PortHandle, wil::com_ptr_nothrow<CMidiPort> &Port)
 {
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)Flow, "MidiFlow"),
+        TraceLoggingValue(PortHandle, "PortHandle")
+    );
+
+
     auto lock = m_Lock.lock();
     auto portIterator = m_OpenPorts.find(PortHandle);
     // If this is an invalid port handle, fail.
@@ -409,7 +463,7 @@ CMidiPorts::Open(MidiFlow Flow, UINT PortNumber, MIDIOPENDESC* MidiOpenDesc, DWO
     // should see and port 0 is reserved for the synth.
     UINT localPortNumber = PortNumber + 1;
     auto portInfo = m_MidiPortInfo[Flow].find(localPortNumber);
-    RETURN_HR_IF(E_INVALIDARG, portInfo == m_MidiPortInfo[Flow].end());
+    RETURN_HR_IF(E_HANDLE, portInfo == m_MidiPortInfo[Flow].end());
 
     // create the CMidiPort for this port.
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, portInfo->second.InterfaceId, Flow, MidiOpenDesc, Flags));

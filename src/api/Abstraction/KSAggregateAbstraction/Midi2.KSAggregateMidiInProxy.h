@@ -33,8 +33,9 @@ private:
     std::wstring m_endpointDeviceId{};
     std::atomic<uint64_t> m_countMidiMessageSent{};
 
-    bytestreamToUMP m_BS2UMP;
-        
+ //   bytestreamToUMP m_BS2UMP;
+    wil::com_ptr_nothrow<IMidiDataTransform> m_bs2UmpTransform{ nullptr };
+
     IMidiCallback* m_callback{ nullptr };
 
     std::unique_ptr<KSMidiInDevice> m_device{ nullptr };
