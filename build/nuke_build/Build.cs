@@ -39,7 +39,7 @@ class Build : NukeBuild
     // we set these here, especially the time, so it's the same for all platforms in the single build
     string SetupBuildMajorMinor = "1.0";
     string SetupBuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
-    string SetupBuildTimeNumber = DateTime.Now.ToString("HHmm");       // HHmm
+    string SetupBuildTimeNumber = UInt32.Parse(DateTime.Now.ToString("HHmm")).ToString();     // HHmm
 
 
     string NugetFullVersionString => SetupBuildMajorMinor + "." + SetupBuildDateNumber + "." + SetupBuildTimeNumber + "-" + NuGetVersionName;
@@ -240,10 +240,9 @@ class Build : NukeBuild
                 msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
 
                 Console.Out.WriteLine($"----------------------------------------------------------------------");
-                Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-                Console.Out.WriteLine($"Platform:    {platform}");
+                Console.Out.WriteLine($"SolutionDir:   {solutionDir}");
+                Console.Out.WriteLine($"Platform:      {platform}");
 
-                
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk.sln")
                     .SetMaxCpuCount(14)
@@ -277,6 +276,7 @@ class Build : NukeBuild
                 // todo: it would be better to see if any of the generated winmds have changed and only
                 // do this step if those have changed. Maybe do a before/after date/time check?
 
+                Console.Out.WriteLine($"NuGet Version: {NugetFullVersionString}");
 
                 NuGetTasks.NuGetPack(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "projections" / "dotnet-and-cpp" / "nuget" / "Microsoft.Windows.Devices.Midi2.nuspec")
@@ -1080,7 +1080,7 @@ class Build : NukeBuild
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
-        .DependsOn(BuildAndPackageElectronProjection)
+       // .DependsOn(BuildAndPackageElectronProjection)
       //  .DependsOn(BuildCppSamples)
         .Executes(() =>
         {

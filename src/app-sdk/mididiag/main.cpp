@@ -302,7 +302,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
     return true;
 }
 
-bool DoSectionMidi1ApiEndpoints(_In_ bool const verbose)
+bool DoSectionWinRTMidi1ApiEndpoints(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
@@ -329,7 +329,7 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool const verbose)
     }
     catch (...)
     {
-        OutputError(L"Enumerating MIDI 1.0 devices encountered an exception.");
+        OutputError(L"Enumerating WinRT MIDI 1.0 devices encountered an exception.");
 
         return false;
     }
@@ -356,13 +356,86 @@ bool DoSectionMidi1ApiEndpoints(_In_ bool const verbose)
     }
     catch (...)
     {
-        OutputError(L"Enumerating MIDI 1.0 devices encountered an exception.");
+        OutputError(L"Enumerating WinRT MIDI 1.0 devices encountered an exception.");
 
         return false;
     }
 
     return true;
 }
+
+bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_WINMM_API_INPUT_ENDPOINTS);
+
+    try
+    {
+        // inputs
+
+        auto inputDeviceCount = midiInGetNumDevs();
+
+        for (uint32_t i = 0; i < inputDeviceCount; i++)
+        {
+            MIDIINCAPS inputCaps{};
+
+            auto result = midiInGetDevCaps(i, &inputCaps, sizeof(inputCaps));
+
+            if (result == MMSYSERR_NOERROR)
+            {
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, std::wstring{ inputCaps.szPname });
+            }
+
+            if (i < inputDeviceCount - 1)
+            {
+                OutputItemSeparator();
+            }
+        }
+    }
+    catch (...)
+    {
+        OutputError(L"Enumerating WinMM MIDI 1.0 input devices encountered an exception.");
+
+        return false;
+    }
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_WINMM_API_OUTPUT_ENDPOINTS);
+
+    try
+    {// outputs
+        auto outputDeviceCount = midiOutGetNumDevs();
+
+        for (uint32_t i = 0; i < outputDeviceCount; i++)
+        {
+            MIDIOUTCAPS outputCaps{};
+
+            auto result = midiOutGetDevCaps(i, &outputCaps, sizeof(outputCaps));
+
+            if (result == MMSYSERR_NOERROR)
+            {
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
+                OutputStringField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, std::wstring{ outputCaps.szPname });
+            }
+
+            if (i < outputDeviceCount - 1)
+            {
+                OutputItemSeparator();
+            }
+        }
+
+    }
+    catch (...)
+    {
+        OutputError(L"Enumerating WinMM MIDI 1.0 output devices encountered an exception.");
+
+        return false;
+    }
+
+    return true;
+}
+
 
 bool DoSectionPingTest(_In_ bool const verbose, _In_ uint8_t const pingCount)
 {
@@ -620,7 +693,10 @@ int __cdecl main()
             if (!DoSectionMidi2ApiEndpoints(verbose)) RETURN_FAIL;
         }
 
-        DoSectionMidi1ApiEndpoints(verbose);  // we don't bail if this fails
+        DoSectionWinRTMidi1ApiEndpoints(verbose);  // we don't bail if this fails
+
+        DoSectionWinMMMidi1ApiEndpoints(verbose);  // we don't bail if this fails
+
 
 
         if (transportsWorked)
