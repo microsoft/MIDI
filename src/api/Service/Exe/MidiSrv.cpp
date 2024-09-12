@@ -77,13 +77,16 @@ CMidiSrv::Initialize()
     // NOTE: client manager is not yet initialized when this is called
     RETURN_IF_FAILED(m_SessionTracker->Initialize(m_ClientManager));
 
+    RETURN_IF_FAILED(m_EndpointProtocolManager->Initialize(m_ClientManager, m_DeviceManager, m_SessionTracker));
+
     RETURN_IF_FAILED(m_PerformanceManager->Initialize());
     RETURN_IF_FAILED(m_ProcessManager->Initialize());
     RETURN_IF_FAILED(m_ConfigurationManager->Initialize());
-    RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager, m_EndpointProtocolManager, m_ConfigurationManager));
     RETURN_IF_FAILED(m_ClientManager->Initialize(m_PerformanceManager, m_ProcessManager, m_DeviceManager, m_SessionTracker));
 
-    RETURN_IF_FAILED(m_EndpointProtocolManager->Initialize(m_ClientManager, m_DeviceManager, m_SessionTracker));
+    // initialize this last because it starts enumerating endpoints for all the abstractions
+    RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager, m_EndpointProtocolManager, m_ConfigurationManager));
+
 
 
     wil::unique_hlocal rpcSecurityDescriptor;
@@ -234,6 +237,13 @@ CMidiSrv::Cleanup()
         RETURN_IF_FAILED(m_ConfigurationManager->Cleanup());
         m_ConfigurationManager.reset();
     }
+
+    if (m_SessionTracker)
+    {
+        RETURN_IF_FAILED(m_SessionTracker->Cleanup());
+        m_SessionTracker.reset();
+    }
+
 
     return S_OK;
 }

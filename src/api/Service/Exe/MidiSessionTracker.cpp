@@ -14,6 +14,17 @@ _Use_decl_annotations_
 std::vector<MidiSessionEntry>::iterator
 CMidiSessionTracker::FindSession(GUID sessionId, DWORD clientProcessId)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingGuid(sessionId),
+        TraceLoggingUInt32(clientProcessId),
+        TraceLoggingUInt32((UINT32)m_sessions.size(), "Total session count")
+        );
+
     auto match = std::find_if(m_sessions.begin(), m_sessions.end(),
         [&sessionId, &clientProcessId](const MidiSessionEntry& entry)
         {
@@ -32,6 +43,14 @@ _Use_decl_annotations_
 std::vector<MidiSessionEntry>::iterator
 CMidiSessionTracker::FindSessionForContextHandle(PVOID contextHandle)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     if (contextHandle == nullptr) return m_sessions.end();
 
     auto match = std::find_if(m_sessions.begin(), m_sessions.end(),
@@ -50,6 +69,14 @@ _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::Initialize(std::shared_ptr<CMidiClientManager>& clientManager)
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     m_clientManager = clientManager;
 
     return S_OK;
@@ -58,6 +85,14 @@ CMidiSessionTracker::Initialize(std::shared_ptr<CMidiClientManager>& clientManag
 HRESULT
 CMidiSessionTracker::VerifyConnectivity()
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
     // if this gets called, we have connectivity
     return S_OK;
 }
@@ -96,9 +131,9 @@ CMidiSessionTracker::AddClientSession(
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
+            MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Session already exists. Unable to add new.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );

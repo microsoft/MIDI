@@ -463,7 +463,7 @@ CMidiPorts::Open(MidiFlow Flow, UINT PortNumber, MIDIOPENDESC* MidiOpenDesc, DWO
     // should see and port 0 is reserved for the synth.
     UINT localPortNumber = PortNumber + 1;
     auto portInfo = m_MidiPortInfo[Flow].find(localPortNumber);
-    RETURN_HR_IF(E_INVALIDARG, portInfo == m_MidiPortInfo[Flow].end());
+    RETURN_HR_IF(E_HANDLE, portInfo == m_MidiPortInfo[Flow].end());
 
     // create the CMidiPort for this port.
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPort>(&midiPort, m_SessionId, portInfo->second.InterfaceId, Flow, MidiOpenDesc, Flags));

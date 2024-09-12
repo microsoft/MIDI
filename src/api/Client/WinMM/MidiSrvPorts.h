@@ -50,7 +50,7 @@ private:
     // The session guid created for all ports opened by this client, a single guid is used for all sessions.
     GUID m_SessionId {0};
     // Default session name for winmm clients.
-    std::wstring m_SessionName {L"Winmm client session"};
+    std::wstring m_SessionName { L"WinMM client session" };
 
     // map of midi port information ordered by the port number.
     // For each flow, the port number must be unique, but the port numbers
