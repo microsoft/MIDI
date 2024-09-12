@@ -42,10 +42,17 @@
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ID                    L"parent_id"
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_NAME                  L"parent_name"
 
-#define MIDIDIAG_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS                 L"enum_midi1_api_inputs_endpoints"
+#define MIDIDIAG_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS                 L"enum_midi1_api_input_endpoints"
 #define MIDIDIAG_SECTION_LABEL_MIDI1_API_OUTPUT_ENDPOINTS                L"enum_midi1_api_output_endpoints"
 #define MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_ID                           L"endpoint_device_id"
 #define MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_NAME                         L"name"
+
+
+#define MIDIDIAG_SECTION_LABEL_WINMM_API_INPUT_ENDPOINTS                 L"enum_winmm_api_input_endpoints"
+#define MIDIDIAG_SECTION_LABEL_WINMM_API_OUTPUT_ENDPOINTS                L"enum_winmm_api_output_endpoints"
+#define MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID                           L"endpoint_index"
+#define MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME                         L"name"
+
 
 #define MIDIDIAG_SECTION_LABEL_PING_TEST                                 L"ping_test"
 #define MIDIDIAG_FIELD_LABEL_PING_ATTEMPT_COUNT                          L"ping_attempt_count"
