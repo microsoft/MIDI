@@ -1080,7 +1080,7 @@ class Build : NukeBuild
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
-      //  .DependsOn(BuildAndPackageElectronProjection)
+        .DependsOn(BuildAndPackageElectronProjection)
       //  .DependsOn(BuildCppSamples)
         .Executes(() =>
         {
