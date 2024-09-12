@@ -36,7 +36,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         m_updatedUserMetadata = updatedUserMetadata;
         m_updatedAdditionalCapabilities = updatedAdditionalCapabilities;
 
-        m_endpointDeviceId = endpointDeviceId;
+        m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
         m_deviceInformationUpdate = deviceInformationUpdate;
     }
 
