@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInformationUpdate
     ) noexcept
     {
-        m_removedDeviceId = removedDeviceId;
+        m_removedDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(removedDeviceId);
         m_deviceInformationUpdate = deviceInformationUpdate;
     }
 }
