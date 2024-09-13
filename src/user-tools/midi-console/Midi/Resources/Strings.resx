@@ -121,10 +121,10 @@
     <value>Utility application for interacting with Windows MIDI Services from the command line. Requires that Windows MIDI Services is installed and enabled on the PC.</value>
   </data>
   <data name="AppShortName" xml:space="preserve">
-    <value>MIDI Console</value>
+    <value>MIDI Console (Preview)</value>
   </data>
   <data name="AppTitle" xml:space="preserve">
-    <value>Microsoft Windows MIDI Services Console</value>
+    <value>Microsoft Windows MIDI Services Console (Preview)</value>
   </data>
   <data name="CommandDiagnosticsReportDescription" xml:space="preserve">
     <value>Generate a report, typically for a support request, or for use when filing a bug</value>
@@ -823,5 +823,44 @@ Timestamp</value>
   </data>
   <data name="CommandSendSysExFileDescription" xml:space="preserve">
     <value>Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint.</value>
+  </data>
+  <data name="ErrorMidiServiceNotAvailable" xml:space="preserve">
+    <value>The MIDI Service is not available.</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherStopped" xml:space="preserve">
+    <value>Watcher Stopped</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherInitialEnumerationCompleted" xml:space="preserve">
+    <value>Initial Enumeration Completed</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointRemoved" xml:space="preserve">
+    <value>Endpoint Removed</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdated" xml:space="preserve">
+    <value>Endpoint Updated</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedName" xml:space="preserve">
+    <value>Name Updated</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedEndpointInformation" xml:space="preserve">
+    <value>Endpoint Information Updated</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedStreamConfiguration" xml:space="preserve">
+    <value>Stream Configuration Updated</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedFunctionBlocks" xml:space="preserve">
+    <value>Function Blocks Updated</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedDeviceIdentity" xml:space="preserve">
+    <value>Device Identity Updated</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedUserMetadata" xml:space="preserve">
+    <value>User Metadata Updated</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedAdditionalCapabilities" xml:space="preserve">
+    <value>Additional Capabilities Updated</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointAdded" xml:space="preserve">
+    <value>Endpoint Added</value>
   </data>
 </root>

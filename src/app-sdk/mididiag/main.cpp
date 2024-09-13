@@ -373,8 +373,12 @@ bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
     try
     {
         // inputs
+        uint32_t errorCount{ 0 };
 
         auto inputDeviceCount = midiInGetNumDevs();
+
+        OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_COUNT, inputDeviceCount);
+        OutputItemSeparator();
 
         for (uint32_t i = 0; i < inputDeviceCount; i++)
         {
@@ -386,13 +390,21 @@ bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
             {
                 OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, std::wstring{ inputCaps.szPname });
-            }
 
-            if (i < inputDeviceCount - 1)
+                if (i < inputDeviceCount - 1)
+                {
+                    OutputItemSeparator();
+                }
+            }
+            else
             {
-                OutputItemSeparator();
+                errorCount++;
             }
         }
+
+        OutputItemSeparator();
+        OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ERROR_COUNT, errorCount);
+
     }
     catch (...)
     {
@@ -404,8 +416,14 @@ bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_WINMM_API_OUTPUT_ENDPOINTS);
 
     try
-    {// outputs
+    {
+        // outputs
+        uint32_t errorCount{ 0 };
+
         auto outputDeviceCount = midiOutGetNumDevs();
+
+        OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_COUNT, outputDeviceCount);
+        OutputItemSeparator();
 
         for (uint32_t i = 0; i < outputDeviceCount; i++)
         {
@@ -417,13 +435,20 @@ bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
             {
                 OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
                 OutputStringField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, std::wstring{ outputCaps.szPname });
-            }
 
-            if (i < outputDeviceCount - 1)
+                if (i < outputDeviceCount - 1)
+                {
+                    OutputItemSeparator();
+                }
+            }
+            else
             {
-                OutputItemSeparator();
+                errorCount++;
             }
         }
+
+        OutputItemSeparator();
+        OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ERROR_COUNT, errorCount);
 
     }
     catch (...)

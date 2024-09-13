@@ -234,7 +234,8 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
@@ -281,8 +282,8 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     commonProperties.TransportCode = transportCode.c_str();
     commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
-    commonProperties.UserSuppliedEndpointName = L"";
-    commonProperties.UserSuppliedEndpointDescription = L"";
+    commonProperties.UserSuppliedEndpointName = nullptr;
+    commonProperties.UserSuppliedEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = entry.ShortUniqueId.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
     commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
@@ -295,7 +296,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
-        true,                                                   // UMP-only
+        false,                                                  // UMP-only. When set to false, WinMM-visible ports are created
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
@@ -316,6 +317,15 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     LOG_IF_FAILED(NegotiateAndRequestMetadata(newDeviceInterfaceId));
 
+
+    TraceLoggingWrite(
+        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }

@@ -266,7 +266,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
-        true,                                                   // UMP-only
+        false,                                                  // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),

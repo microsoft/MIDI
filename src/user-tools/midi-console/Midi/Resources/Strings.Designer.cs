@@ -70,7 +70,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MIDI Console.
+        ///   Looks up a localized string similar to MIDI Console (Preview).
         /// </summary>
         internal static string AppShortName {
             get {
@@ -79,7 +79,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Microsoft Windows MIDI Services Console.
+        ///   Looks up a localized string similar to Microsoft Windows MIDI Services Console (Preview).
         /// </summary>
         internal static string AppTitle {
             get {
@@ -421,6 +421,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The MIDI Service is not available..
+        /// </summary>
+        internal static string ErrorMidiServiceNotAvailable {
+            get {
+                return ResourceManager.GetString("ErrorMidiServiceNotAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ping test failed.
         /// </summary>
         internal static string ErrorPingTestFailed {
@@ -642,6 +651,114 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string MonitorSessionNameSuffix {
             get {
                 return ResourceManager.GetString("MonitorSessionNameSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint Added.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointAdded {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointAdded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint Removed.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointRemoved {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointRemoved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint Updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdated {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Additional Capabilities Updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdatedAdditionalCapabilities {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdatedAdditionalCapabilities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Device Identity Updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdatedDeviceIdentity {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdatedDeviceIdentity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint Information Updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdatedEndpointInformation {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdatedEndpointInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Function Blocks Updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdatedFunctionBlocks {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdatedFunctionBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name Updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdatedName {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdatedName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stream Configuration Updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdatedStreamConfiguration {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdatedStreamConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User Metadata Updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdatedUserMetadata {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdatedUserMetadata", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Initial Enumeration Completed.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherInitialEnumerationCompleted {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherInitialEnumerationCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Watcher Stopped.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherStopped {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherStopped", resourceCulture);
             }
         }
         
