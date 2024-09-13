@@ -335,7 +335,10 @@ GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlo
         // flow as requested, or it should be bidi.
         additionalProperties.Clear();
         additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+
         auto aliasedDeviceInfo = DeviceInformation::CreateFromIdAsync(Alias, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+        RETURN_HR_IF_NULL(E_INVALIDARG, aliasedDeviceInfo);
+
         prop = aliasedDeviceInfo.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
         auto interfaceClass = winrt::unbox_value<winrt::guid>(prop);

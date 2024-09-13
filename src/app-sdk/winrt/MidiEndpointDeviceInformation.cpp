@@ -297,6 +297,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             }
         }
 
+
         // check if normal client MIDI 1.0 / bytestream
         else if ((deviceInformation.EndpointPurpose() == MidiEndpointDevicePurpose::NormalMessageEndpoint) &&
             (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat::Midi1ByteFormat))
@@ -884,14 +885,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             }
         }
 
-
         // TODO: need to update the name
 
         return false;
     }
-
-
-
 
 
     _Use_decl_annotations_
