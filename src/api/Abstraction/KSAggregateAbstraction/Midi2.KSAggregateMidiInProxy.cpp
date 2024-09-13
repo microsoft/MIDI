@@ -80,14 +80,13 @@ CMidi2KSAggregateMidiInProxy::Initialize(
     }
 
 
-    wil::com_ptr_nothrow<IMidiTransform> transformLib;
-    wil::com_ptr_nothrow<IMidiDataTransform> transform;
+    wil::com_ptr_nothrow<IMidiTransform> transformPlugin;
 
-    auto iid = __uuidof(Midi2BS2UMPTransform);
+    auto transformId = __uuidof(Midi2BS2UMPTransform);
 
-    RETURN_IF_FAILED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformLib)));
+    RETURN_IF_FAILED(CoCreateInstance(transformId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformPlugin)));
 
-    RETURN_IF_FAILED(transformLib->Activate(__uuidof(IMidiDataTransform), (void**)(&m_bs2UmpTransform)));
+    RETURN_IF_FAILED(transformPlugin->Activate(__uuidof(IMidiDataTransform), (void**)(&m_bs2UmpTransform)));
 
     TRANSFORMCREATIONPARAMS creationParams{};
     creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_ByteStream;
@@ -97,9 +96,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 
     DWORD mmcssTaskId{};
 
-    RETURN_IF_FAILED(transform->Initialize(Device, &creationParams, &mmcssTaskId, m_callback, 0, nullptr));
-
-
+    RETURN_IF_FAILED(m_bs2UmpTransform->Initialize(Device, &creationParams, &mmcssTaskId, m_callback, 0, nullptr));
 
     return S_OK;
 }

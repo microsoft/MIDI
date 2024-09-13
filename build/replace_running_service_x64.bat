@@ -27,8 +27,7 @@ copy /Y %buildoutput%\MidiSrv.exe %servicepath%
 copy /Y %buildoutput%\Midi2.*Abstraction.dll %servicepath%
 copy /Y %buildoutput%\Midi2.*Transform.dll %servicepath%
 
-echo copying of wdmaud2.drv is commented out for now. Uncomment when it's back in the main build.
-REM %midi_repo_root%build\sfpcopy %buildoutput%\wdmaud2.drv %windir%\system32\wdmaud2.drv
+%midi_repo_root%build\sfpcopy %buildoutput%\wdmaud2.drv %windir%\system32\wdmaud2.drv
 
 echo Reinstalling service
 %servicepath%\midisrv.exe install
