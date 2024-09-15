@@ -71,8 +71,12 @@ public partial class App : Application
             services.AddSingleton<IFileService, FileService>();
 
             // Views and ViewModels
-            services.AddTransient<Midi1DevicesViewModel>();
-            services.AddTransient<Midi1DevicesPage>();
+            services.AddTransient<WinRTMidi1DevicesViewModel>();
+            services.AddTransient<WinRTMidi1DevicesPage>();
+
+            services.AddTransient<WinMMMidi1DevicesViewModel>();
+            services.AddTransient<WinMMMidi1DevicesPage>();
+
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<SettingsPage>();
 

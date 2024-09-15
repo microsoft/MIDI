@@ -127,7 +127,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-    bool requiresMetadataHandler = true;
+    //bool requiresMetadataHandler = true;
     bool multiClient = true;
 
     // do not generate incoming (from device) timestamps automatically.
@@ -163,7 +163,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
     commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
     commonProperties.SupportsMultiClient = multiClient;
-    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
     commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
     commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
     commonProperties.SupportsMidi1ProtocolDefaultValue = true;
@@ -250,7 +250,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
     commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
     commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
     commonProperties.SupportsMultiClient = multiClient;
-    commonProperties.RequiresMetadataHandler = false;
+    //commonProperties.RequiresMetadataHandler = false;
     commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
     commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
     commonProperties.SupportsMidi1ProtocolDefaultValue = false;

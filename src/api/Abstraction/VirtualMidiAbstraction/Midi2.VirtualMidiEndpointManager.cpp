@@ -85,13 +85,13 @@ CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortI
                 TraceLoggingWideString(L"could not find instanceId property for client", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
-            return E_FAIL;
+            return E_INVALIDARG;
         }
     }
     else
     {
         // null device manager
-        return E_FAIL;
+        return E_POINTER;
     }
 }
 
@@ -130,13 +130,13 @@ CMidi2VirtualMidiEndpointManager::DeleteDeviceEndpoint(std::wstring deviceShortI
                 TraceLoggingWideString(L"could not find instanceId property for device", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
-            return E_FAIL;
+            return E_INVALIDARG;
         }
     }
     else
     {
         // null device manager
-        return E_FAIL;
+        return E_POINTER;
     }
 }
 
@@ -250,7 +250,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-    bool requiresMetadataHandler = true;
+    //bool requiresMetadataHandler = true;
     bool multiClient = true;
     bool generateIncomingTimestamps = true;
 
@@ -288,15 +288,15 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
     commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
     commonProperties.SupportsMultiClient = multiClient;
-    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
     commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
-    commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
+    commonProperties.ManufacturerName = entry.Manufacturer.c_str();
     commonProperties.SupportsMidi1ProtocolDefaultValue = true;
     commonProperties.SupportsMidi2ProtocolDefaultValue = true;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
-        false,                                                  // UMP-only. When set to false, WinMM-visible ports are created
+        entry.UMPOnly,                                          // UMP-only. When set to false, WinMM-visible ports are created for older apps
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
@@ -310,8 +310,8 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
      // we need this for removal later
     entry.CreatedShortClientInstanceId = instanceId;
-
     entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+    entry.MidiClientBiDi = nullptr;
 
     // time to do protocol negotiation, request endpoint metadata, function blocks, etc.
 
@@ -358,7 +358,7 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-    bool requiresMetadataHandler = false;
+    //bool requiresMetadataHandler = false;
     bool multiClient = false;
     bool generateIncomingTimestamps = true;
 
@@ -397,15 +397,15 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
     commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
     commonProperties.SupportsMultiClient = multiClient;
-    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
     commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
-    commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
+    commonProperties.ManufacturerName = entry.Manufacturer.c_str();
     commonProperties.SupportsMidi1ProtocolDefaultValue = true;
     commonProperties.SupportsMidi2ProtocolDefaultValue = true;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
-        true,                                                   // UMP-only
+        true,                                                   // UMP-only is always true for the device-side
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
@@ -420,8 +420,12 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     // we need this for device removal later
     entry.CreatedShortDeviceInstanceId = instanceId;
     entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+    entry.CreatedClientEndpointId = L"";
+    entry.CreatedShortClientInstanceId = L"";
+    entry.MidiDeviceBiDi = nullptr;
+    entry.MidiClientBiDi = nullptr;
 
-    AbstractionState::Current().GetEndpointTable()->AddCreatedEndpointDevice(entry);
+    RETURN_IF_FAILED(AbstractionState::Current().GetEndpointTable()->AddCreatedEndpointDevice(entry));
 
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),

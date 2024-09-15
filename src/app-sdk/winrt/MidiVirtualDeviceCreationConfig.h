@@ -55,6 +55,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         winrt::hstring Manufacturer() const noexcept { return m_manufacturer; }
         void Manufacturer(_In_ winrt::hstring const& value) noexcept { m_manufacturer = internal::TrimmedHStringCopy(value); }
 
+        bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
+        void CreateOnlyUmpEndpoints(_In_ bool const value) { m_umpOnly = value; }
+
+
         midi2::MidiDeclaredDeviceIdentity DeclaredDeviceIdentity() const noexcept { return m_declaredDeviceIdentity; }
         void DeclaredDeviceIdentity(_In_ midi2::MidiDeclaredDeviceIdentity const& value) noexcept { m_declaredDeviceIdentity = value; }
 
@@ -72,6 +76,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         winrt::hstring m_endpointName{};
         winrt::hstring m_description{};
         winrt::hstring m_manufacturer{};
+
+        bool m_umpOnly{ false };
 
         winrt::guid m_associationId{ foundation::GuidHelper::CreateNewGuid() };
 

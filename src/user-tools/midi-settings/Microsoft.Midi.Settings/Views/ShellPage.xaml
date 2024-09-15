@@ -161,12 +161,17 @@
 
                 <NavigationViewItemHeader x:Uid="Shell_Midi1ApiNavHeader"/>
 
-                <NavigationViewItem x:Uid="Shell_Midi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.Midi1DevicesViewModel">
+                <NavigationViewItem x:Uid="Shell_WinRTMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinRTMidi1DevicesViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
+                <NavigationViewItem x:Uid="Shell_WinMMMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinMMMidi1DevicesViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
 
 
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>

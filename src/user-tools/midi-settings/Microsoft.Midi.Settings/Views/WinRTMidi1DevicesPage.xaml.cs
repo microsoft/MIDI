@@ -4,20 +4,20 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace Microsoft.Midi.Settings.Views;
 
-public sealed partial class Midi1DevicesPage : Page
+public sealed partial class WinRTMidi1DevicesPage : Page
 {
     private ILoggingService _loggingService;
 
-    public Midi1DevicesViewModel ViewModel
+    public WinRTMidi1DevicesViewModel ViewModel
     {
         get;
     }
 
-    public Midi1DevicesPage()
+    public WinRTMidi1DevicesPage()
     {
         _loggingService = App.GetService<ILoggingService>();
 
-        ViewModel = App.GetService<Midi1DevicesViewModel>();
+        ViewModel = App.GetService<WinRTMidi1DevicesViewModel>();
         InitializeComponent();
     }
 }

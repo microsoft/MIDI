@@ -123,11 +123,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         definitionA->EndpointDescription = endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
                         definitionA->EndpointUniqueIdentifier = endpointAObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
                         definitionA->InstanceIdPrefix = instanceIdPrefixA;
+                        definitionA->UMPOnly = endpointAObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
+
 
                         definitionB->EndpointName = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
                         definitionB->EndpointDescription = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
                         definitionB->EndpointUniqueIdentifier = endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
                         definitionB->InstanceIdPrefix = instanceIdPrefixB;
+                        definitionB->UMPOnly = endpointBObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
 
 
                         if (definitionA->EndpointName.empty() || definitionB->EndpointName.empty())

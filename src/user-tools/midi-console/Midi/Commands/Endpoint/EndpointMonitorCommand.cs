@@ -168,7 +168,7 @@ namespace Microsoft.Midi.ConsoleApp
         {
             if (!MidiServicesInitializer.EnsureServiceAvailable())
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
                 return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
             }
 
@@ -274,15 +274,6 @@ namespace Microsoft.Midi.ConsoleApp
                 // we ignore the first two messages for jitter calculation.
                 const int jitterCalcMessageIgnoreCount = 2;
 
-                if (settings.AutoReconnect)
-                {
-                    connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
-                    connection.EndpointDeviceReconnected += Connection_EndpointDeviceReconnected;
-                }
-                else
-                {
-                    MonitorEndpointConnectionStatusInTheBackground(endpointId);
-                }
 
                 bool continueWaiting = true;
                 
@@ -293,6 +284,16 @@ namespace Microsoft.Midi.ConsoleApp
                 // open the connection
                 if (connection.Open())
                 {
+                    if (settings.AutoReconnect)
+                    {
+                        connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
+                        connection.EndpointDeviceReconnected += Connection_EndpointDeviceReconnected;
+                    }
+                    else
+                    {
+                        MonitorEndpointConnectionStatusInTheBackground(endpointId);
+                    }
+
                     // Main message listener background thread ---------------------------------------------------------
 
                     var messageListener = new Thread(() =>
@@ -747,14 +748,16 @@ namespace Microsoft.Midi.ConsoleApp
             return (int)MidiConsoleReturnCode.Success;
         }
 
+        // Auto-reconnect takes care of the internals. We're just reporting here
         private void Connection_EndpointDeviceReconnected(IMidiEndpointConnectionSource sender, object args)
         {
-            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Endpoint device reconnected."));
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.EndpointReconnected));
         }
 
+        // Auto-reconnect takes care of the internals. We're just reporting here
         private void Connection_EndpointDeviceDisconnected(IMidiEndpointConnectionSource sender, object args)
         {
-            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Endpoint device disconnected."));
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
         }
 
         private void WriteMessageToFile(Settings settings, StreamWriter writer, ReceivedMidiMessage message)

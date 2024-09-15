@@ -19,6 +19,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiSession::StartEndpointWatcher() noexcept
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingGuid(m_id, "session id")
+        );
+
         try
         {
             winrt::hstring deviceSelector = midi2::MidiEndpointConnection::GetDeviceSelector();
@@ -38,10 +48,30 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
                 m_autoReconnectDeviceWatcher.Start();
 
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Exit success", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(m_id, "session id")
+                );
+
                 return true;
             }
             else
             {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Device watcher is nullptr", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingGuid(m_id, "session id")
+                );
+
                 return false;
             }
         }
@@ -57,7 +87,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
                 TraceLoggingWideString(L"hresult exception starting device watcher", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
-                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD),
+                TraceLoggingGuid(m_id, "session id")
             );
 
             return false;
@@ -72,7 +103,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception starting device watcher", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Exception starting device watcher", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingGuid(m_id, "session id")
             );
 
             return false;
@@ -82,6 +114,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiSession::StopEndpointWatcher() noexcept
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingGuid(m_id, "session id")
+        );
+
         if (m_autoReconnectDeviceWatcher != nullptr)
         {
             m_autoReconnectDeviceWatcher.Stop();
@@ -105,15 +147,28 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         enumeration::DeviceInformation args
     )
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingGuid(m_id, "session id")
+        );
+
         UNREFERENCED_PARAMETER(source);
 
         auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
         for (auto const& conn : m_connectionsForAutoReconnect)
         {
-            if (id == conn->ConnectedEndpointDeviceId() && conn->InternalWasAlreadyOpened())
+            if (id == conn->ConnectedEndpointDeviceId())
             {
-                conn->InternalOnDeviceReconnect();
+                if (conn->InternalWasAlreadyOpened())
+                {
+                    conn->InternalOnDeviceReconnect();
+                }
             }
         }
 
@@ -138,6 +193,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         enumeration::DeviceInformationUpdate args
     )
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingGuid(m_id, "session id"),
+            TraceLoggingWideString(args.Id().c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+        );
+
         UNREFERENCED_PARAMETER(source);
 
         // Search all connections to see if we're tracking this one.
@@ -155,6 +221,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 conn->InternalOnDeviceDisconnect();
             }
         }
+
     }
 
 

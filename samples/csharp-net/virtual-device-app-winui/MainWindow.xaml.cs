@@ -164,9 +164,9 @@ namespace MidiSample.AppToAppMidi
             string userSuppliedName = "Pad Controller App";
             string userSuppliedDescription = "My favorite demo app for Windows MIDI Services";
 
-            string transportSuppliedName = "Contoso Pad Controller 1.0";
+            string transportSuppliedName = "Pad Controller";
             string transportSuppliedDescription = "A sample app-to-app MIDI virtual device";
-            string transportSuppliedManufacturerName = "Constoso, Inc.";
+            string transportSuppliedManufacturerName = "Constoso";
 
             string endpointSuppliedName = transportSuppliedName;
 
@@ -186,6 +186,7 @@ namespace MidiSample.AppToAppMidi
             declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps = false;
             declaredEndpointInfo.SupportsSendingJitterReductionTimestamps = false;
             declaredEndpointInfo.HasStaticFunctionBlocks = true;
+            
 
             var declaredDeviceIdentity = new MidiDeclaredDeviceIdentity() ;
             // todo: set any device identity values if you want. This is optional
@@ -204,6 +205,9 @@ namespace MidiSample.AppToAppMidi
                 userSuppliedInfo
     
             );
+
+            // if set to true, WinMM / WinRT MIDI 1.0 backwards-compat endpoints won't be created
+            config.CreateOnlyUmpEndpoints = false;
 
             // Function blocks. The MIDI 2 UMP specification covers the meanings
             // of these values

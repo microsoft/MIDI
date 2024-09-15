@@ -36,6 +36,7 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY                                 L"uniqueIdentifier"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY                              L"manufacturer"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENABLED_PROPERTY                                   L"enabled"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY                                  L"umpOnly"
 
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY                                   L"match"

@@ -121,7 +121,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     commonProperties.GenerateIncomingTimestamps = true;
 
     commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM;
-    commonProperties.RequiresMetadataHandler = false;
+    //commonProperties.RequiresMetadataHandler = false;
     commonProperties.SupportsMidi1ProtocolDefaultValue = true;
     commonProperties.SupportsMidi2ProtocolDefaultValue = false;
 

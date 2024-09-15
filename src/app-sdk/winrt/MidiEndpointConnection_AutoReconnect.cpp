@@ -40,6 +40,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         {
             m_endpointDeviceDisconnectedEvent(*this, nullptr);
         }
+
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Exit", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+        );
     }
 
     // Called by the Session class when a device connection notification comes through
@@ -55,6 +66,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
+
+        if (m_endpointAbstraction != nullptr && m_isOpen)
+        {
+            // never disconnected
+            return;
+        }
 
         if (!ActivateMidiStream())
         {

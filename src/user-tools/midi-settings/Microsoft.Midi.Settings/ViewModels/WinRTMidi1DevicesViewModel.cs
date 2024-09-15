@@ -15,9 +15,9 @@ using Windows.Devices.Midi;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class Midi1DevicesViewModel : ObservableRecipient, INavigationAware
+    public class WinRTMidi1DevicesViewModel : ObservableRecipient, INavigationAware
     {
-        public Midi1DevicesViewModel()
+        public WinRTMidi1DevicesViewModel()
         {
 
         }

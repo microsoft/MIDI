@@ -199,7 +199,7 @@
     <value>More</value>
   </data>
   <data name="Shell_Devices.Content" xml:space="preserve">
-    <value>Devices</value>
+    <value>UMP Endpoints</value>
   </data>
   <data name="Shell_Troubleshooting.Content" xml:space="preserve">
     <value>Troubleshooting</value>
@@ -273,11 +273,11 @@
   <data name="ShellPage_SettingsSearchBox.PlaceholderText" xml:space="preserve">
     <value>Find a setting</value>
   </data>
-  <data name="Shell_Midi1ApiDevices.Content" xml:space="preserve">
-    <value>Devices</value>
+  <data name="Shell_WinRTMidi1ApiDevices.Content" xml:space="preserve">
+    <value>WinRT MIDI 1.0 Ports</value>
   </data>
   <data name="Shell_Midi1ApiNavHeader.Content" xml:space="preserve">
-    <value>Legacy MIDI 1.0 API</value>
+    <value>MIDI 1.0 API Compatibility</value>
   </data>
   <data name="Shell_MidiServicesNavHeader.Content" xml:space="preserve">
     <value>Windows MIDI Services</value>
@@ -302,5 +302,8 @@
   </data>
   <data name="Shell_SystemInfo.Content" xml:space="preserve">
     <value>System Information</value>
+  </data>
+  <data name="Shell_WinMMMidi1ApiDevices.Content" xml:space="preserve">
+    <value>WinMM MIDI 1.0 Ports</value>
   </data>
 </root>

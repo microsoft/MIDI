@@ -31,7 +31,8 @@ public class PageService : IPageService
         Configure<ToolsTestViewModel, ToolsTestPage>();
         Configure<TroubleshootingViewModel, TroubleshootingPage>();
 
-        Configure<Midi1DevicesViewModel, Midi1DevicesPage>();
+        Configure<WinRTMidi1DevicesViewModel, WinRTMidi1DevicesPage>();
+        Configure<WinMMMidi1DevicesViewModel, WinMMMidi1DevicesPage>();
 
         Configure<HomeViewModel, HomePage>();
     }

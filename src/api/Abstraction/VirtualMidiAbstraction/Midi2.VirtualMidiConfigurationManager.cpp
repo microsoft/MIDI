@@ -120,6 +120,8 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
             deviceEntry.ShortUniqueId = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY, L"");
             deviceEntry.BaseEndpointName = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L"");
             deviceEntry.Description = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY, L"");
+            deviceEntry.Manufacturer = jsonEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY, L"");
+            deviceEntry.UMPOnly = jsonEntry.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
 
             // If no association id generate one
             if (deviceEntry.VirtualEndpointAssociationId.empty())
@@ -152,8 +154,8 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
                 deviceEntry.ShortUniqueId = deviceEntry.ShortUniqueId.substr(0, MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN);
             }
 
-            // create the device-side endpoint
-            LOG_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateDeviceSideEndpoint(deviceEntry));
+            // create the device-side endpoint. This is a critical step
+            RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateDeviceSideEndpoint(deviceEntry));
 
 
             // TODO: This should have the association Id or something in it for the client to make sense of it

@@ -101,6 +101,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY,
             json::JsonValue::CreateStringValue(m_manufacturer));
 
+        endpointDefinitionObject.SetNamedValue(
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY,
+            json::JsonValue::CreateBooleanValue(m_umpOnly));
+
+
         // TODO: Other props that have to be set at the service level and not in-protocol
 
         virtualDevicesCreationArray.Append(endpointDefinitionObject);

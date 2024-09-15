@@ -21,59 +21,50 @@ public:
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
     STDMETHOD(Cleanup)();
 
-    HRESULT LinkAssociatedBiDi(_In_ wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> biDi)
+    HRESULT LinkAssociatedCallback(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
-        m_linkedBiDiConnections.push_back(biDi);
-
-        //m_linkedBiDi = biDi;
-
-        //RETURN_IF_FAILED(biDi->QueryInterface(__uuidof(IMidiCallback), (void**)&m_linkedBiDiCallback));
-
-        return S_OK;
-    }
-
-    HRESULT UnlinkAllAssociatedBiDi()
-    {
-        m_linkedBiDiConnections.clear();
-
-        return S_OK;
-    }
-
-    HRESULT UnlinkAssociatedBiDi(CMidi2VirtualMidiBiDi* biDiToUnlink)
-    {
-        auto it = std::find_if(m_linkedBiDiConnections.begin(), m_linkedBiDiConnections.end(),
-                    [&](const wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> bidi) { return bidi == biDiToUnlink; });
-
-        if (it != m_linkedBiDiConnections.end())
+        if (m_linkedBiDiCallback != nullptr)
         {
-            it->reset();
-            m_linkedBiDiConnections.erase(it);
+            m_linkedBiDiCallback.reset();
         }
 
-        //m_linkedBiDiCallback = nullptr;
+        m_linkedBiDiCallback = callback;
 
         return S_OK;
     }
 
-    IMidiCallback* GetCallback()
+    HRESULT UnlinkAssociatedCallback()
     {
-        return m_callback.get();
+        if (m_linkedBiDi != nullptr)
+        {
+            m_linkedBiDi.reset();
+        }
+
+        if (m_linkedBiDiCallback != nullptr)
+        {
+            m_linkedBiDiCallback.reset();
+        }
+
+        return S_OK;
     }
 
+    //IMidiCallback* GetCallback()
+    //{
+    //    return m_callback.get();
+    //}
+
 private:
-    //wil::com_ptr_nothrow<IMidiBiDi> m_linkedBiDi;
+    wil::com_ptr_nothrow<IMidiBiDi> m_linkedBiDi;
 
-    std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi>> m_linkedBiDiConnections{};
+    //std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi>> m_linkedBiDiConnections{};
 
-
-    //wil::com_ptr_nothrow<IMidiCallback> m_linkedBiDiCallback;
-    wil::com_ptr_nothrow <IMidiCallback> m_callback;
-
-
+    wil::com_ptr_nothrow<IMidiCallback> m_linkedBiDiCallback;
+    wil::com_ptr_nothrow<IMidiCallback> m_callback;
     LONGLONG m_callbackContext;
 
     std::wstring m_endpointId{};
 
+    GUID m_sessionId{};
 
     bool m_isDeviceSide{ false };
 

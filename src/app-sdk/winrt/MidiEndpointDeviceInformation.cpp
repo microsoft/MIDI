@@ -177,7 +177,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         // Major Known Endpoint Types ========================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointDevicePurpose);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_EndpointRequiresMetadataHandler);
+//        additionalProperties.Append(STRING_PKEY_MIDI_EndpointRequiresMetadataHandler);
 
         // In-protocol Endpoint information ==================================================
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);

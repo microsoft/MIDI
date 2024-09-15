@@ -217,7 +217,7 @@ typedef struct
     BOOL SupportsMidi2ProtocolDefaultValue;
 
     BOOL SupportsMultiClient;
-    BOOL RequiresMetadataHandler;
+    //BOOL RequiresMetadataHandler;
     BOOL GenerateIncomingTimestamps;
 } MIDIENDPOINTCOMMONPROPERTIES, * PMIDIENDPOINTCOMMONPROPERTIES;
 

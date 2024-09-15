@@ -48,40 +48,6 @@
 //
 //
 
-
-
-struct MidiVirtualDeviceEndpointEntry
-{
-    std::wstring VirtualEndpointAssociationId{ L"" };             // how the config entries associate endpoints. Typically a GUID
-    std::wstring BaseEndpointName{ L"" };
-    std::wstring Description{ L"" };
-    std::wstring ShortUniqueId{ L"" };
-
-    std::wstring CreatedDeviceEndpointId{ L"" };              // the device interface id
-    std::wstring CreatedShortDeviceInstanceId{ L"" };
-
-    std::wstring CreatedClientEndpointId{ L"" };
-    std::wstring CreatedShortClientInstanceId{ L"" };
-
-
-    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiDeviceBiDi{ nullptr };
-
-
- //   std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi>> MidiClientConnections{ };
-
-    ~MidiVirtualDeviceEndpointEntry()
-    {
-        //MidiClientConnections.clear();
-
-        if (MidiDeviceBiDi)
-        {
-            MidiDeviceBiDi.reset();
-        }
-
-    }
-};
-
-
 class MidiEndpointTable
 {
 public:
@@ -91,12 +57,13 @@ public:
     HRESULT OnClientConnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi) noexcept;
 
     HRESULT OnDeviceDisconnected(_In_ std::wstring deviceEndpointInterfaceId) noexcept;
-    HRESULT OnClientDisconnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi) noexcept;
+    HRESULT OnClientDisconnected(_In_ std::wstring clientEndpointInterfaceId) noexcept;
 
     HRESULT Cleanup();
 
 private:
-    //void RemoveEndpointPair(_In_ GUID VirtualEndpointAssociationId) noexcept;
+
+    wil::critical_section m_entriesLock;
 
     // key is the association id
     std::map<std::wstring, MidiVirtualDeviceEndpointEntry> m_endpoints;

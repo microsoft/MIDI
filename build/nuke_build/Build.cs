@@ -497,7 +497,7 @@ class Build : NukeBuild
                     .SetPublishTrimmed(false)
                     .SetSelfContained(false)
                     .SetRuntime(rid)
-                    .AddNoWarns(618) // ignore CS0618 which I have no control over because it's in projection assemblies 
+                    .AddNoWarns(8618) // ignore CS8618 which I have no control over because it's in projection assemblies 
                 );
 
                 // This just doesn't work. Even in Visual Studio, publishing the WinAppSdk app just fails for "unknown" reasons.
@@ -1080,7 +1080,7 @@ class Build : NukeBuild
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
-        .DependsOn(BuildAndPackageElectronProjection)
+       // .DependsOn(BuildAndPackageElectronProjection)
       //  .DependsOn(BuildCppSamples)
         .Executes(() =>
         {
