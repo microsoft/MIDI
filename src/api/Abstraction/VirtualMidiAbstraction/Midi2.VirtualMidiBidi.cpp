@@ -169,7 +169,7 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
 
     if (m_linkedBiDiCallback != nullptr)
     {
-        LOG_IF_FAILED(m_linkedBiDiCallback->Callback(Message, Size, Position, m_callbackContext));
+        RETURN_IF_FAILED(m_linkedBiDiCallback->Callback(Message, Size, Position, m_callbackContext));
 
         return S_OK;
     }
@@ -195,7 +195,7 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
         }
         else
         {
-            return E_FAIL;  // but if the client-side is not connected to a device, something is really wrong.
+            RETURN_IF_FAILED(E_POINTER);  // but if the client-side is not connected to a device, something is really wrong.
         }
     }
 }
@@ -227,7 +227,11 @@ CMidi2VirtualMidiBiDi::Callback(
 
     if (m_callback != nullptr)
     {
-        return m_callback->Callback(Message, Size, Position, Context);
+        RETURN_IF_FAILED(m_callback->Callback(Message, Size, Position, Context));
+    }
+    else
+    {
+        RETURN_IF_FAILED(E_POINTER);
     }
 
     return S_OK;

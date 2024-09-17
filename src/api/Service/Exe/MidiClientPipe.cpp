@@ -37,8 +37,9 @@ CMidiClientPipe::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(Device),
-        TraceLoggingGuid(SessionId)
+        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingGuid(SessionId),
+        TraceLoggingUInt32(ClientProcessId, "Client Process")
     );
 
     // for tracking the client connection

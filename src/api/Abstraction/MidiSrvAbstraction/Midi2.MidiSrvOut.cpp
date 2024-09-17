@@ -69,7 +69,10 @@ CMidi2MidiSrvOut::SendMidiMessage(
 {
     if (m_MidiSrv)
     {
-        return m_MidiSrv->SendMidiMessage(Data, Length, Position);
+        auto hr = m_MidiSrv->SendMidiMessage(Data, Length, Position);
+        LOG_IF_FAILED(hr);
+
+        return hr;
     }
 
     return E_ABORT;

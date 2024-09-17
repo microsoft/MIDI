@@ -53,11 +53,13 @@ class MidiEndpointTable
 public:
     HRESULT AddCreatedEndpointDevice(_In_ MidiVirtualDeviceEndpointEntry& entry) noexcept;
  
-    HRESULT OnDeviceConnected(_In_ std::wstring deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi) noexcept;
-    HRESULT OnClientConnected(_In_ std::wstring clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi) noexcept;
+    HRESULT OnDeviceConnected(_In_ std::wstring const deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi) noexcept;
+    HRESULT OnClientConnected(_In_ std::wstring const clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi) noexcept;
 
-    HRESULT OnDeviceDisconnected(_In_ std::wstring deviceEndpointInterfaceId) noexcept;
-    HRESULT OnClientDisconnected(_In_ std::wstring clientEndpointInterfaceId) noexcept;
+    HRESULT OnDeviceDisconnected(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
+    HRESULT OnClientDisconnected(_In_ std::wstring const clientEndpointInterfaceId) noexcept;
+
+    bool IsUniqueIdInUse(_In_ std::wstring const uniqueId) noexcept;
 
     HRESULT Cleanup();
 

@@ -46,16 +46,27 @@ HRESULT MidiEndpointTable::AddCreatedEndpointDevice(MidiVirtualDeviceEndpointEnt
     entry.MidiClientBiDi = nullptr;
     entry.MidiDeviceBiDi = nullptr;
 
-    m_endpoints[cleanId] = entry;
 
-    return S_OK;
+    if (auto endpoint = m_endpoints.find(cleanId); endpoint != m_endpoints.end())
+    {
+        // we already have an endpoint using this association id, so we need to fail
+
+        RETURN_IF_FAILED(E_INVALIDARG);
+    }
+    else
+    {
+        m_endpoints[cleanId] = entry;
+
+        return S_OK;
+    }
+
 }
 
 
 _Use_decl_annotations_
 HRESULT 
 MidiEndpointTable::OnClientConnected(
-    std::wstring clientEndpointInterfaceId, 
+    std::wstring const clientEndpointInterfaceId,
     CMidi2VirtualMidiBiDi* clientBiDi) noexcept
 {
     TraceLoggingWrite(
@@ -128,7 +139,7 @@ MidiEndpointTable::OnClientConnected(
 _Use_decl_annotations_
 HRESULT
 MidiEndpointTable::OnClientDisconnected(
-    std::wstring clientEndpointInterfaceId) noexcept
+    std::wstring const clientEndpointInterfaceId) noexcept
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -204,7 +215,7 @@ MidiEndpointTable::OnClientDisconnected(
 
 _Use_decl_annotations_
 HRESULT MidiEndpointTable::OnDeviceConnected(
-    std::wstring deviceEndpointInterfaceId, 
+    std::wstring const deviceEndpointInterfaceId,
     CMidi2VirtualMidiBiDi* deviceBiDi) noexcept
 {
     TraceLoggingWrite(
@@ -326,7 +337,8 @@ HRESULT MidiEndpointTable::OnDeviceConnected(
 
 // This is called from the BiDi Cleanup when it's the device side BiDi
 _Use_decl_annotations_
-HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInterfaceId) noexcept
+HRESULT MidiEndpointTable::OnDeviceDisconnected(
+    std::wstring const deviceEndpointInterfaceId) noexcept
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -438,6 +450,23 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
     CATCH_LOG();
 
     return S_OK;
+}
+
+
+_Use_decl_annotations_
+bool MidiEndpointTable::IsUniqueIdInUse(std::wstring const uniqueId) noexcept
+{
+    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueId);
+
+    for (auto const& it : m_endpoints)
+    {
+        if (it.second.ShortUniqueId == cleanId)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 

@@ -317,7 +317,7 @@ GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlo
         TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    Alias = MidiDevice;
+    Alias = internal::NormalizeEndpointInterfaceIdWStringCopy(MidiDevice);
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_AssociatedUMP));
@@ -329,7 +329,7 @@ GetEndpointAlias(_In_ LPCWSTR MidiDevice, _In_ std::wstring& Alias, _In_ MidiFlo
     if (prop)
     {
         // this interface is pointing to a UMP interface, so use that instance id.
-        Alias = winrt::unbox_value<winrt::hstring>(prop).c_str();
+        Alias = internal::NormalizeEndpointInterfaceIdWStringCopy(winrt::unbox_value<winrt::hstring>(prop).c_str());
 
         // retrieve the interface class for the aliased device, either it should have the same
         // flow as requested, or it should be bidi.
@@ -394,11 +394,13 @@ CMidiClientManager::GetMidiClient(
 
     wil::com_ptr_nothrow<CMidiClientPipe> clientPipe;
 
+    auto cleanMidiDevice = internal::NormalizeEndpointInterfaceIdWStringCopy(MidiDevice);
+
     // we have either a new device or an existing device, create the client pipe and connect to it.
     RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiClientPipe>(&clientPipe));
 
     // Initialize our client
-    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), MidiDevice, SessionId, ClientProcessId, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
+    RETURN_IF_FAILED(clientPipe->Initialize(BindingHandle, ClientProcessHandle.get(), cleanMidiDevice.c_str(), SessionId, ClientProcessId, CreationParams, Client, &m_MmcssTaskId, OverwriteIncomingZeroTimestamps));
 
     // Add this client to the client pipes list and set the output client handle
     Client->ClientHandle = (MidiClientHandle)clientPipe.get();
@@ -412,7 +414,7 @@ CMidiClientManager::GetMidiClient(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingWideString(cleanMidiDevice.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingGuid(SessionId, "Session Id")
     );
 
@@ -439,8 +441,10 @@ CMidiClientManager::GetMidiDevice(
         TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+    auto cleanMidiDevice = internal::NormalizeEndpointInterfaceIdWStringCopy(MidiDevice);
+
     // Get an existing device pipe if one exists, otherwise create a new pipe
-    auto device = m_DevicePipes.find(MidiDevice);
+    auto device = m_DevicePipes.find(cleanMidiDevice);
     if (device != m_DevicePipes.end())
     {
         RETURN_HR_IF(E_UNEXPECTED, device->second->Flow() != CreationParams->Flow);
@@ -458,16 +462,16 @@ CMidiClientManager::GetMidiDevice(
         // create the device using the device's preferred format.
         // if that mismatches the client capabilities, a transform will be inserted.
         MidiDataFormat dataFormat = MidiDataFormat::MidiDataFormat_Any;
-        LOG_IF_FAILED(GetDeviceSupportedDataFormat(MidiDevice, dataFormat));
+        LOG_IF_FAILED(GetDeviceSupportedDataFormat(cleanMidiDevice.c_str(), dataFormat));
 
         deviceCreationParams.DataFormat = dataFormat;
         deviceCreationParams.Flow = CreationParams->Flow;
 
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiDevicePipe>(&devicePipe));
-        RETURN_IF_FAILED(devicePipe->Initialize(BindingHandle, MidiDevice, &deviceCreationParams, &m_MmcssTaskId));
+        RETURN_IF_FAILED(devicePipe->Initialize(BindingHandle, cleanMidiDevice.c_str(), &deviceCreationParams, &m_MmcssTaskId));
 
         MidiDevicePipe = devicePipe.get();
-        m_DevicePipes.emplace(MidiDevice, std::move(devicePipe));
+        m_DevicePipes.emplace(cleanMidiDevice.c_str(), std::move(devicePipe));
     }
 
     TraceLoggingWrite(
@@ -477,7 +481,7 @@ CMidiClientManager::GetMidiDevice(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(cleanMidiDevice.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     return S_OK;
@@ -947,7 +951,7 @@ CMidiClientManager::CreateMidiClient(
             TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        return E_UNEXPECTED;
+        RETURN_IF_FAILED(E_UNEXPECTED);
     }
 
     if (InternalProtocolNegotiationUseOnly && CreationParams->Flow != MidiFlow::MidiFlowBidirectional)
@@ -964,7 +968,7 @@ CMidiClientManager::CreateMidiClient(
             TraceLoggingWideString(MidiDevice, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        return E_UNEXPECTED;
+        RETURN_IF_FAILED(E_UNEXPECTED);
     }
 
     auto lock = m_ClientManagerLock.lock();
@@ -1020,7 +1024,7 @@ CMidiClientManager::CreateMidiClient(
     {
         // If a new device has been created and added to m_DevicePipes,
         // removing the client will also remove the unused device
-        DestroyMidiClient(BindingHandle, Client->ClientHandle);
+        LOG_IF_FAILED(DestroyMidiClient(BindingHandle, Client->ClientHandle));
         Client->ClientHandle = NULL;
         Client->DataFormat = MidiDataFormat_Invalid;
     });
@@ -1235,7 +1239,7 @@ CMidiClientManager::DestroyMidiClient(
     }
     else
     {
-        return E_INVALIDARG;
+        RETURN_IF_FAILED(E_INVALIDARG);
     }
 
     return S_OK;

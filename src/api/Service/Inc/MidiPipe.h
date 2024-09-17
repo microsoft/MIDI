@@ -84,7 +84,7 @@ public:
 
         for (auto const& Client : m_ConnectedPipes)
         {
-            Client.second->SendMidiMessage(Data, Length, Position);
+            LOG_IF_FAILED(Client.second->SendMidiMessage(Data, Length, Position));
         }
 
         return S_OK;
@@ -157,6 +157,10 @@ public:
         if (client != m_Clients.end())
         {
             m_Clients.erase(client);
+        }
+        else
+        {
+            LOG_IF_FAILED(E_NOTFOUND);
         }
     }
 

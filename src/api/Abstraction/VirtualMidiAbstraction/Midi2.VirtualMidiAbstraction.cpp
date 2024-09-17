@@ -106,7 +106,7 @@ CMidi2VirtualMidiAbstraction::Activate(
 
         );
 
-        return E_NOINTERFACE;
+        RETURN_IF_FAILED(E_NOINTERFACE);
     }
 
     return S_OK;

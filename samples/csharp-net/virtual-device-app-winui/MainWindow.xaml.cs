@@ -150,8 +150,7 @@ namespace MidiSample.AppToAppMidi
 
         private void OnStreamConfigurationRequestReceived(MidiVirtualDevice sender, MidiStreamConfigRequestReceivedEventArgs args)
         {
-
-
+            System.Diagnostics.Debug.WriteLine("Stream configuration request received");
         }
 
 

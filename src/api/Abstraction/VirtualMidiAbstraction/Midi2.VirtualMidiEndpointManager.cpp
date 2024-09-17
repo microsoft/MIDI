@@ -70,9 +70,9 @@ CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortI
         //auto instanceId = GetSwdPropertyInstanceId(clientEndpointInterfaceId);
         auto instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(clientShortInstanceId);
 
-        if (instanceId != L"")
+        if (!instanceId.empty())
         {
-            return m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str());
+            RETURN_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str()));
         }
         else
         {
@@ -85,14 +85,17 @@ CMidi2VirtualMidiEndpointManager::DeleteClientEndpoint(std::wstring clientShortI
                 TraceLoggingWideString(L"could not find instanceId property for client", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
-            return E_INVALIDARG;
+            RETURN_IF_FAILED(E_INVALIDARG);
         }
     }
     else
     {
         // null device manager
-        return E_POINTER;
+        RETURN_IF_FAILED(E_POINTER);
     }
+
+    return S_OK;
+
 }
 
 _Use_decl_annotations_
@@ -115,9 +118,9 @@ CMidi2VirtualMidiEndpointManager::DeleteDeviceEndpoint(std::wstring deviceShortI
         //auto instanceId = GetSwdPropertyInstanceId(clientEndpointInterfaceId);
         auto instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(deviceShortInstanceId);
 
-        if (instanceId != L"")
+        if (!instanceId.empty())
         {
-            return m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str());
+            RETURN_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(instanceId.c_str()));
         }
         else
         {
@@ -130,14 +133,16 @@ CMidi2VirtualMidiEndpointManager::DeleteDeviceEndpoint(std::wstring deviceShortI
                 TraceLoggingWideString(L"could not find instanceId property for device", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
-            return E_INVALIDARG;
+            RETURN_IF_FAILED(E_INVALIDARG);
         }
     }
     else
     {
         // null device manager
-        return E_POINTER;
+        RETURN_IF_FAILED(E_POINTER);
     }
+
+    return S_OK;
 }
 
 
@@ -210,7 +215,7 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
     negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
     negotiationParams.PreferToSendJRTimestampsToEndpoint = false;
     negotiationParams.PreferToReceiveJRTimestampsFromEndpoint = false;
-    negotiationParams.TimeoutMilliseconds = 2000;
+    negotiationParams.TimeoutMilliseconds = 3000;
 
     RETURN_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
         AbstractionLayerGUID,
@@ -240,7 +245,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
-    std::wstring transportCode(TRANSPORT_CODE);
+    std::wstring transportCode{ TRANSPORT_CODE };
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
@@ -347,7 +352,7 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     //put all of the devproperties we want into arrays and pass into ActivateEndpoint:
 
-    std::wstring transportCode(TRANSPORT_CODE);
+    std::wstring transportCode{ TRANSPORT_CODE };
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
