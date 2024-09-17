@@ -223,7 +223,7 @@
     <value>Index</value>
   </data>
   <data name="EndpointDisconnected" xml:space="preserve">
-    <value>Endpoint has been disconnected</value>
+    <value>Endpoint disconnected</value>
   </data>
   <data name="EndpointPickerPleaseSelectEndpoint" xml:space="preserve">
     <value>Please select an endpoint</value>
@@ -862,5 +862,8 @@ Timestamp</value>
   </data>
   <data name="NotificationEndpointDeviceWatcherEndpointAdded" xml:space="preserve">
     <value>Endpoint Added</value>
+  </data>
+  <data name="EndpointReconnected" xml:space="preserve">
+    <value>Endpoint reconnected</value>
   </data>
 </root>

@@ -43,17 +43,30 @@ HRESULT MidiEndpointTable::AddCreatedEndpointDevice(MidiVirtualDeviceEndpointEnt
     // index by the association Id
     std::wstring cleanId = internal::ToUpperTrimmedWStringCopy(entry.VirtualEndpointAssociationId);
     entry.VirtualEndpointAssociationId = cleanId;
+    entry.MidiClientBiDi = nullptr;
+    entry.MidiDeviceBiDi = nullptr;
 
-    m_endpoints[cleanId] = entry;
 
-    return S_OK;
+    if (auto endpoint = m_endpoints.find(cleanId); endpoint != m_endpoints.end())
+    {
+        // we already have an endpoint using this association id, so we need to fail
+
+        RETURN_IF_FAILED(E_INVALIDARG);
+    }
+    else
+    {
+        m_endpoints[cleanId] = entry;
+
+        return S_OK;
+    }
+
 }
 
 
 _Use_decl_annotations_
 HRESULT 
 MidiEndpointTable::OnClientConnected(
-    std::wstring clientEndpointInterfaceId, 
+    std::wstring const clientEndpointInterfaceId,
     CMidi2VirtualMidiBiDi* clientBiDi) noexcept
 {
     TraceLoggingWrite(
@@ -80,6 +93,8 @@ MidiEndpointTable::OnClientConnected(
 
         if (!associationId.empty())
         {
+            auto lock = m_entriesLock.lock();
+
             if (m_endpoints.find(associationId) != m_endpoints.end())
             {
                 // find this id in the table
@@ -89,9 +104,9 @@ MidiEndpointTable::OnClientConnected(
 
                 // add the client
                 //entry.MidiClientConnections.push_back(clientBiDi);
-                entry.MidiDeviceBiDi->LinkAssociatedBiDi(clientBiDi);
-
-                clientBiDi->LinkAssociatedBiDi(entry.MidiDeviceBiDi);
+                entry.MidiClientBiDi = clientBiDi;
+                entry.MidiDeviceBiDi->LinkAssociatedCallback(entry.MidiClientBiDi);
+                entry.MidiClientBiDi->LinkAssociatedCallback(entry.MidiDeviceBiDi);
 
                 m_endpoints[associationId] = entry;
             }
@@ -120,11 +135,11 @@ MidiEndpointTable::OnClientConnected(
 }
 
 
+// This is called from the BiDi Cleanup when it's the client-side BiDi
 _Use_decl_annotations_
 HRESULT
 MidiEndpointTable::OnClientDisconnected(
-    std::wstring clientEndpointInterfaceId, 
-    CMidi2VirtualMidiBiDi* clientBiDi) noexcept
+    std::wstring const clientEndpointInterfaceId) noexcept
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -142,17 +157,25 @@ MidiEndpointTable::OnClientDisconnected(
 
         if (associationId != L"")
         {
+            auto lock = m_entriesLock.lock();
+
             if (m_endpoints.find(associationId) != m_endpoints.end())
             {
                 // find this id in the table and then remove it
                 auto entry = m_endpoints[associationId];
 
-                entry.MidiDeviceBiDi->UnlinkAssociatedBiDi(clientBiDi);
+                // we unlink the two, but only remove the client
+                entry.MidiDeviceBiDi->UnlinkAssociatedCallback();
+                entry.MidiClientBiDi->UnlinkAssociatedCallback();
+                entry.MidiClientBiDi.reset();
+
+                m_endpoints[associationId] = entry;
+
+                return S_OK;
             }
             else
             {
                 // association id isn't present. That's not right.
-
                 TraceLoggingWrite(
                     MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
                     MIDI_TRACE_EVENT_ERROR,
@@ -163,12 +186,12 @@ MidiEndpointTable::OnClientDisconnected(
                     TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                 );
 
+                RETURN_IF_FAILED(E_INVALIDARG);
             }
         }
         else
         {
             // association id is blank, which is also not right
-
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_ERROR,
@@ -179,18 +202,21 @@ MidiEndpointTable::OnClientDisconnected(
                 TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
+            RETURN_IF_FAILED(E_INVALIDARG);
         }
     }
     CATCH_RETURN();
 
 
-    return S_OK;
+    
 }
 
 
 
 _Use_decl_annotations_
-HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfaceId, CMidi2VirtualMidiBiDi* deviceBiDi) noexcept
+HRESULT MidiEndpointTable::OnDeviceConnected(
+    std::wstring const deviceEndpointInterfaceId,
+    CMidi2VirtualMidiBiDi* deviceBiDi) noexcept
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -210,6 +236,8 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
 
         if (!associationId.empty())
         {
+            auto lock = m_entriesLock.lock();
+
             if (m_endpoints.find(associationId) != m_endpoints.end())
             {
                 // find this id in the table
@@ -218,39 +246,36 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
                 if (entry.MidiDeviceBiDi == nullptr)
                 {
                     entry.MidiDeviceBiDi = deviceBiDi;
-                    m_endpoints[associationId] = entry;
+                //    m_endpoints[associationId] = entry;
                 }
                 else
                 {
-                    // already created. Ignore. This happens during protocol negotiation.
+                    LOG_IF_FAILED(E_FAIL);  // cause fallback error to be logged
+
+                    TraceLoggingWrite(
+                        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Device-side was already connected", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                    );
+
+                    return E_FAIL;
                 }
+
 
                 // if we have an endpoint manager, go ahead and create the client endpoint
                 if (AbstractionState::Current().GetEndpointManager())
                 {
                     entry.CreatedClientEndpointId = L"";
                     entry.CreatedShortClientInstanceId = L"";
+                    entry.MidiClientBiDi = nullptr;
 
                     RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateClientVisibleEndpoint(entry));
 
-                    //TraceLoggingWrite(
-                    //    MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-                    //    __FUNCTION__,
-                    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    //    TraceLoggingPointer(this, "this"),
-                    //    TraceLoggingWideString(L"After creating client visible endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    //    TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), "Endpoint interface id"),
-                    //    TraceLoggingWideString(entry.BaseEndpointName.c_str(), "Base endpoint name"),
-                    //    TraceLoggingWideString(entry.CreatedClientEndpointId.c_str(), "Created Client Endpoint Id"),
-                    //    TraceLoggingWideString(entry.CreatedShortClientInstanceId.c_str(), "Created Short Client Instance Id"),
-                    //    TraceLoggingWideString(entry.CreatedDeviceEndpointId.c_str(), "Created Device Endpoint Id"),
-                    //    TraceLoggingWideString(entry.CreatedShortDeviceInstanceId.c_str(), "Created Short Device Instance Id"),
-                    //    TraceLoggingWideString(entry.ShortUniqueId.c_str(), "Short Unique Id"),
-                    //    TraceLoggingWideString(entry.VirtualEndpointAssociationId.c_str(), "Association Id")
-                    //);
-
                     m_endpoints[associationId] = entry;
-
                 }
                 else
                 {
@@ -310,8 +335,10 @@ HRESULT MidiEndpointTable::OnDeviceConnected(std::wstring deviceEndpointInterfac
     return S_OK;
 }
 
+// This is called from the BiDi Cleanup when it's the device side BiDi
 _Use_decl_annotations_
-HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInterfaceId) noexcept
+HRESULT MidiEndpointTable::OnDeviceDisconnected(
+    std::wstring const deviceEndpointInterfaceId) noexcept
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -323,7 +350,6 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
         TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-
     try
     {
         if (AbstractionState::Current().GetEndpointManager() != nullptr)
@@ -332,6 +358,8 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
 
             if (associationId != L"")
             {
+                auto lock = m_entriesLock.lock();
+
                 if (m_endpoints.find(associationId) != m_endpoints.end())
                 {
                     auto entry = m_endpoints[associationId];
@@ -350,23 +378,29 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
 
                         // unlink the bidi devices
                         //entry.MidiDeviceBiDi->UnlinkAssociatedBiDi();
-                        entry.MidiDeviceBiDi->UnlinkAllAssociatedBiDi();
-                        entry.MidiDeviceBiDi = nullptr;
+                        entry.MidiDeviceBiDi->UnlinkAssociatedCallback();
+                        entry.MidiDeviceBiDi.reset();
 
-                        // deactivate the client
-                        LOG_IF_FAILED(AbstractionState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));
+                        entry.MidiClientBiDi->UnlinkAssociatedCallback();
+                        entry.MidiClientBiDi.reset();
+
+                        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));
+
+                        //entry.CreatedClientEndpointId = L"";
+                        //entry.CreatedShortClientInstanceId = L"";
+
+                        //m_endpoints[entry.VirtualEndpointAssociationId] = entry;
 
                         // deactivate the device
-                        LOG_IF_FAILED(AbstractionState::Current().GetEndpointManager()->DeleteDeviceEndpoint(entry.CreatedShortDeviceInstanceId));
-
-                        // when we disconnect the device, we remove the whole entry
+                        // TODO: Should this really be done on device disconnect vs an explicit delete command?
+                        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->DeleteDeviceEndpoint(entry.CreatedShortDeviceInstanceId));
                         m_endpoints.erase(entry.VirtualEndpointAssociationId);
+
+                        return S_OK;
                     }
                 }
                 else
                 {
-                    LOG_IF_FAILED(E_FAIL);  // fallback error
-
                     TraceLoggingWrite(
                         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
                         MIDI_TRACE_EVENT_ERROR,
@@ -377,12 +411,13 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                         TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                     );
 
+                    RETURN_IF_FAILED(E_INVALIDARG);  // fallback error
+
+
                 }
             }
             else
             {
-                LOG_IF_FAILED(E_FAIL);  // fallback error
-
                 TraceLoggingWrite(
                     MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
                     MIDI_TRACE_EVENT_ERROR,
@@ -392,12 +427,12 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                     TraceLoggingWideString(L"Unable to get association id for this endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                 );
+
+                RETURN_IF_FAILED(E_INVALIDARG);  // fallback error
             }
         }
         else
         {
-            LOG_IF_FAILED(E_FAIL);  // fallback error
-
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_ERROR,
@@ -408,11 +443,30 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(std::wstring deviceEndpointInter
                 TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
+            RETURN_IF_FAILED(E_POINTER);  // fallback error
+
         }
     }
     CATCH_LOG();
 
     return S_OK;
+}
+
+
+_Use_decl_annotations_
+bool MidiEndpointTable::IsUniqueIdInUse(std::wstring const uniqueId) noexcept
+{
+    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueId);
+
+    for (auto const& it : m_endpoints)
+    {
+        if (it.second.ShortUniqueId == cleanId)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 

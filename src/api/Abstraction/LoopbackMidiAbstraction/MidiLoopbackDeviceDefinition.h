@@ -25,4 +25,6 @@ struct MidiLoopbackDeviceDefinition
 
     std::wstring CreatedShortClientInstanceId{};
     std::wstring CreatedEndpointInterfaceId{};
+
+    bool UMPOnly{ false };
 };

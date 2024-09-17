@@ -385,7 +385,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Endpoint has been disconnected.
+        ///   Looks up a localized string similar to Endpoint disconnected.
         /// </summary>
         internal static string EndpointDisconnected {
             get {
@@ -399,6 +399,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string EndpointPickerPleaseSelectEndpoint {
             get {
                 return ResourceManager.GetString("EndpointPickerPleaseSelectEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoint reconnected.
+        /// </summary>
+        internal static string EndpointReconnected {
+            get {
+                return ResourceManager.GetString("EndpointReconnected", resourceCulture);
             }
         }
         

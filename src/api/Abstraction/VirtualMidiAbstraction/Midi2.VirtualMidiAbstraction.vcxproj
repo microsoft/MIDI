@@ -302,6 +302,7 @@
     <ClInclude Include="Midi2.VirtualMidiEndpointManager.h" />
     <ClInclude Include="Midi2.VirtualMidiPluginMetadataProvider.h" />
     <ClInclude Include="MidiEndpointTable.h" />
+    <ClInclude Include="MidiVirtualDeviceEndpointEntry.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>

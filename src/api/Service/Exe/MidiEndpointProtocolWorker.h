@@ -55,7 +55,7 @@ private:
     //wil::unique_event_nothrow m_queueWorkerThreadWakeup;
 
     // true if we're closing down
-    bool m_shutdown{ false };
+ //   bool m_shutdown{ false };
 
     //wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
     std::shared_ptr<CMidiClientManager> m_clientManager;

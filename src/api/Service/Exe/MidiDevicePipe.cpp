@@ -24,8 +24,11 @@ CMidiDevicePipe::Initialize(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
+
 
     auto deviceLock = m_DevicePipeLock.lock();
 
@@ -53,6 +56,16 @@ CMidiDevicePipe::Initialize(
 
     if (MidiFlowBidirectional == CreationParams->Flow)
     {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Creating bidirectional flow", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
@@ -61,6 +74,17 @@ CMidiDevicePipe::Initialize(
     }
     else if (MidiFlowIn == CreationParams->Flow)
     {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Creating input flow", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
+
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
@@ -69,6 +93,16 @@ CMidiDevicePipe::Initialize(
     }
     else if (MidiFlowOut == CreationParams->Flow)
     {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Creating output flow", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
@@ -77,7 +111,7 @@ CMidiDevicePipe::Initialize(
     }
     else
     {
-        return E_INVALIDARG;
+        RETURN_IF_FAILED(E_INVALIDARG);
     }
 
     // save the format that was actually used for creation.
@@ -102,6 +136,9 @@ CMidiDevicePipe::Initialize(
         // property to require disconnecting any clients and reconnecting to pick them up. 
         // It's necessary, even
 
+        // default to true for multiclient support
+        m_endpointSupportsMulticlient = true;
+
         if (deviceInfo.Properties().HasKey(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient)))
         {
             auto propMultiClient = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient));
@@ -110,23 +147,20 @@ CMidiDevicePipe::Initialize(
             {
                 m_endpointSupportsMulticlient = winrt::unbox_value<bool>(propMultiClient);
             }
-            else
-            {
-                // default to true for multiclient support
-                m_endpointSupportsMulticlient = true;
-            }
         }
-        else
-        {
-            // no key. we're multi-client by default
-            m_endpointSupportsMulticlient = true;
-        }
+
     }
-    catch (...)
-    {
-        // default to true for multiclient support
-        m_endpointSupportsMulticlient = true;
-    }
+    CATCH_LOG();
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit Success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
 
     return S_OK;
 }
@@ -142,21 +176,20 @@ CMidiDevicePipe::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-
     {
         auto lock = m_DevicePipeLock.lock();
 
         if (m_MidiBiDiDevice)
         {
-            m_MidiBiDiDevice->Cleanup();
+            LOG_IF_FAILED(m_MidiBiDiDevice->Cleanup());
         }
         if (m_MidiInDevice)
         {
-            m_MidiInDevice->Cleanup();
+            LOG_IF_FAILED(m_MidiInDevice->Cleanup());
         }
         if (m_MidiOutDevice)
         {
-            m_MidiOutDevice->Cleanup();
+            LOG_IF_FAILED(m_MidiOutDevice->Cleanup());
         }
 
         m_MidiBiDiDevice.reset();
@@ -200,7 +233,10 @@ CMidiDevicePipe::SendMidiMessage(
     // for jitter calculation. The DevicePipe is the single connection to the device, so
     // we can ensure order there before it goes to the transport.
 
-    return SendMidiMessageNow(Data, Length, Timestamp);
+    auto hr = SendMidiMessageNow(Data, Length, Timestamp);
+    LOG_IF_FAILED(hr);
+
+    return hr;
 }
 
 _Use_decl_annotations_
@@ -220,11 +256,17 @@ CMidiDevicePipe::SendMidiMessageNow(
 
     if (m_MidiBiDiDevice)
     {
-        return m_MidiBiDiDevice->SendMidiMessage(Data, Length, Timestamp);
+        auto hr = m_MidiBiDiDevice->SendMidiMessage(Data, Length, Timestamp);
+        RETURN_IF_FAILED(hr);
+
+        return S_OK;
     }
     else if (m_MidiOutDevice)
     {
-        return m_MidiOutDevice->SendMidiMessage(Data, Length, Timestamp);
+        auto hr = m_MidiOutDevice->SendMidiMessage(Data, Length, Timestamp);
+        RETURN_IF_FAILED(hr);
+
+        return S_OK;
     }
 
     return E_ABORT;

@@ -314,7 +314,6 @@ CMidiSessionTracker::RemoveClientSession(
         TraceLoggingPointer(this, "this"),
         TraceLoggingGuid(SessionId),
         TraceLoggingUInt32(ClientProcessId)
-
     );
 
     auto lock = m_sessionsLock.lock();
@@ -365,7 +364,7 @@ CMidiSessionTracker::RemoveClientSessionInternal(
 
             sessionEntry->ClientHandles.erase(sessionEntry->ClientHandles.begin());
 
-            clientManager->DestroyMidiClient((handle_t)nullptr, clientHandle);
+            LOG_IF_FAILED(clientManager->DestroyMidiClient((handle_t)nullptr, clientHandle));
         }
 
         // Remove this session entry
@@ -521,6 +520,10 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
             {
                 sessionEntry->Connections.erase(cleanEndpointId);
             }
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_NOTFOUND);
         }
     }
 

@@ -139,6 +139,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
@@ -150,61 +151,55 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
     {
         // already exists. We can re-request negotiation from the worker
         worker = m_endpointWorkers[cleanEndpointDeviceInterfaceId].Worker;
-    }
 
-    if (worker == nullptr)
+        // todo: re-request negotiation
+
+    }
+    else if (worker == nullptr)
     {
         // allocate a new worker
         worker = std::make_shared<CMidiEndpointProtocolWorker>();
-
-        if (worker)
-        {
-            auto initializeHR = worker->Initialize(
-                m_sessionId,
-                AbstractionGuid,
-                cleanEndpointDeviceInterfaceId.c_str(),
-                m_clientManager,
-                m_deviceManager,
-                m_sessionTracker
-            );
-
-            if (FAILED(initializeHR))
-            {
-                // TODO: Log
-
-                return E_FAIL;
-            }
-            else
-            {
-                std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
-
-                // create the thread
-
-                ProtocolNegotiationWorkerThreadEntry newEntry{};
-
-                newEntry.Worker = worker;
-
-                newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
-                    NegotiationParams,
-                    NegotiationCompleteCallback);
-
-                // TODO: Need to protect this map
-                m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
-
-                m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();
-            }
-        }
-        else
-        {
-            // TODO: log failed allocation
-
-            return E_FAIL;
-        }
-
-
     }
 
-    // now that we have the worker created, actually start the work. This function blocks for up to TimeoutMilliseconds.
+    RETURN_HR_IF_NULL(E_POINTER, worker);
+
+    auto initializeHR = worker->Initialize(
+        m_sessionId,
+        AbstractionGuid,
+        cleanEndpointDeviceInterfaceId.c_str(),
+        m_clientManager,
+        m_deviceManager,
+        m_sessionTracker
+    );
+
+    RETURN_IF_FAILED(initializeHR);
+
+    {
+        std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
+
+        // create the thread
+
+        ProtocolNegotiationWorkerThreadEntry newEntry{};
+
+        newEntry.Worker = worker;
+
+        newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
+            NegotiationParams,
+            NegotiationCompleteCallback);
+
+        m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
+        m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();
+    }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
 
     return S_OK;
 }
@@ -214,9 +209,19 @@ _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::RemoveWorkerIfPresent(std::wstring endpointInterfaceId)
 {
-    // TODO: Should have a lock on the internal map
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
 
-    auto val = m_endpointWorkers.find(endpointInterfaceId);
+    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointInterfaceId);
+
+    auto val = m_endpointWorkers.find(cleanEndpointId);
 
     if (val != m_endpointWorkers.end())
     {
@@ -234,7 +239,29 @@ CMidiEndpointProtocolManager::RemoveWorkerIfPresent(std::wstring endpointInterfa
         val->second.Worker.reset();
         val->second.Thread.reset();
 
-        m_endpointWorkers.erase(endpointInterfaceId);
+        m_endpointWorkers.erase(cleanEndpointId);
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Worker removed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanEndpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No matching worker present", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(cleanEndpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
     }
 
     return S_OK;
@@ -259,7 +286,7 @@ CMidiEndpointProtocolManager::Cleanup()
 
     for (auto& [key, val] : m_endpointWorkers)
     {
-        RemoveWorkerIfPresent(key);
+        LOG_IF_FAILED(RemoveWorkerIfPresent(key));
     }
 
     m_endpointWorkers.clear();

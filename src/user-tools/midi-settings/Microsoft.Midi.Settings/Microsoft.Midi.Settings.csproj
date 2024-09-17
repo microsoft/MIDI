@@ -82,6 +82,7 @@
     <None Remove="Views\ToolsSysExPage.xaml" />
     <None Remove="Views\ToolsTestPage.xaml" />
     <None Remove="Views\TroubleshootingPage.xaml" />
+    <None Remove="Views\WinMMMidi1DevicesPage.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -100,7 +101,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.TraceSource" Version="8.0.0" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.3" />
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24257.1342-preview.7" />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24259.2038-preview.7" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240829007" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
       
@@ -152,6 +153,9 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\WinMMMidi1DevicesPage.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
     <Page Update="Views\RoutesPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

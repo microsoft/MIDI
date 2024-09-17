@@ -191,7 +191,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
 
-    bool requiresMetadataHandler = false;
+    //bool requiresMetadataHandler = false;
     bool multiClient = true;
     bool generateIncomingTimestamps = true;
 
@@ -258,7 +258,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
     commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
     commonProperties.SupportsMultiClient = multiClient;
-    commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
+    //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
     commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
     commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
     commonProperties.SupportsMidi1ProtocolDefaultValue = true;

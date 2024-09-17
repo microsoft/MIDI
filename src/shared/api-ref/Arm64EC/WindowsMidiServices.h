@@ -855,7 +855,6 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0006_00
     BOOL SupportsMidi1ProtocolDefaultValue;
     BOOL SupportsMidi2ProtocolDefaultValue;
     BOOL SupportsMultiClient;
-    BOOL RequiresMetadataHandler;
     BOOL GenerateIncomingTimestamps;
     } 	MIDIENDPOINTCOMMONPROPERTIES;
 

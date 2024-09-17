@@ -190,13 +190,13 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 14);     // DEVPR
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 15);     // DEVPROP_TYPE_STRING
 
 #define STRING_PKEY_MIDI_UserSuppliedPortNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"16"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedPortNumber, 16);     // DEVPROP_TYPE_STRING
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedPortNumber, 16);     // DEVPROP_TYPE_UINT32
 
 #define STRING_PKEY_MIDI_ServiceAssignedPortNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"17"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ServiceAssignedPortNumber, 17);     // DEVPROP_TYPE_STRING
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ServiceAssignedPortNumber, 17);     // DEVPROP_TYPE_UINT32
 
 #define STRING_PKEY_MIDI_PortAssignedGroupIndex MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"18"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_PortAssignedGroupIndex, 18);     // DEVPROP_TYPE_STRING
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_PortAssignedGroupIndex, 18);     // DEVPROP_TYPE_
 
 // USB / KS Properties ============================================================================
 // Starts at 50
@@ -235,8 +235,8 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointDevicePurpose, 100);     // DEVPROP_TYPE
 
 
 // if this is true or missing, we add an endpoint metadata listener
-#define STRING_PKEY_MIDI_EndpointRequiresMetadataHandler MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"120"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointRequiresMetadataHandler, 120);     // DEVPROP_TYPE_BOOLEAN
+//#define STRING_PKEY_MIDI_EndpointRequiresMetadataHandler MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"120"
+//DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointRequiresMetadataHandler, 120);     // DEVPROP_TYPE_BOOLEAN
 
 
 

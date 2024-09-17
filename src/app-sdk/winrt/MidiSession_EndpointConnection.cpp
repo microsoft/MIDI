@@ -32,16 +32,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             {
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 
-                // if we wnat to automatically reconnect this endpoint, we need to add it
-                // to the reconnect list. That list takes the internal, not projected, type
                 if (autoReconnect)
                 {
-                    m_connectionsForAutoReconnect.push_back(endpointConnection);
-
                     if (m_autoReconnectDeviceWatcher == nullptr)
                     {
                         StartEndpointWatcher();
+
+                        // TODO: Should wait for initial enumeration to complete
+                        // so we don't get bogus reconnections
                     }
+
+                    // if we want to automatically reconnect this endpoint, we need to add it
+                    // to the reconnect list. That list takes the internal, not projected, type
+                    m_connectionsForAutoReconnect.push_back(endpointConnection);
                 }
 
                 return *endpointConnection;

@@ -103,9 +103,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
+
         if (m_endpointAbstraction == nullptr)
         {
-            LOG_IF_FAILED(E_FAIL);  // force reporting of file/line number
+            LOG_IF_FAILED(E_POINTER);  // force reporting of file/line number
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -145,6 +146,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         {
             m_isOpen = true;
             m_closeHasBeenCalled = false;
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"InternalOpen succeeded. Exit.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+            );
+
+            return true;
         }
         else
         {
@@ -158,9 +172,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(result, MIDI_SDK_TRACE_HRESULT_FIELD)
             );
+
+            return false;
         }
 
-        return true;
     }
 
 
@@ -281,6 +296,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     void MidiEndpointConnection::InternalClose()
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+        );
+
         if (m_closeHasBeenCalled) return;
 
         try
@@ -293,6 +319,18 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             // TODO: any event cleanup?
 
             m_closeHasBeenCalled = true;
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exit success", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+            );
+
         }
         catch (...)
         {
@@ -312,15 +350,23 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     MidiEndpointConnection::~MidiEndpointConnection()
     {
-        if (!m_closeHasBeenCalled)
-        {
-            InternalClose();
-        }
+        InternalClose();
     }
 
     _Use_decl_annotations_
     bool MidiEndpointConnection::DeactivateMidiStream(bool const force)
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+        );
+
         if (m_endpointAbstraction != nullptr)
         {
             // todo: some error / hresult handling here
@@ -361,9 +407,20 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::ActivateMidiStream() noexcept
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_SDK_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+            TraceLoggingWideString(L"Enter", MIDI_SDK_TRACE_MESSAGE_FIELD),
+            TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+            TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+        );
+
         if (m_serviceAbstraction == nullptr)
         {
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+            LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
 
             TraceLoggingWrite(
                 Midi2SdkTelemetryProvider::Provider(),
@@ -380,11 +437,31 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         try
         {
-            winrt::check_hresult(m_serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**) &m_endpointAbstraction));
-
-            if (m_endpointAbstraction == nullptr)
+            if (m_endpointAbstraction != nullptr)
             {
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+                m_endpointAbstraction = nullptr;
+            }
+
+            auto result = m_serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**) &m_endpointAbstraction);
+
+            if (SUCCEEDED(result) && m_endpointAbstraction != nullptr)
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Endpoint activated. Exiting.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                    TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
+                );
+
+                return true;
+            }
+            else 
+            {
+                LOG_IF_FAILED(result);   // this also generates a fallback error with file and line number info
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -393,31 +470,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
                     TraceLoggingWideString(L"Endpoint Abstraction failed to Activate and returned null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-                );
+                    TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
+                    TraceLoggingHResult(result, MIDI_SDK_TRACE_HRESULT_FIELD)
+                    );
 
                 return false;
             }
 
-            return true;
-        }
-        catch (winrt::hresult_error const& ex)
-        {
-            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));   // this also generates a fallback error with file and line number info
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception activating stream. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
-                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
-                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
-            );
-
-            return false;
         }
         catch (...)
         {

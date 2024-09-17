@@ -18,7 +18,7 @@ CMidi2VirtualMidiBiDi::Initialize(
     DWORD *,
     IMidiCallback * Callback,
     LONGLONG Context,
-    GUID /* SessionId */
+    GUID SessionId
 )
 {
     TraceLoggingWrite(
@@ -31,7 +31,9 @@ CMidi2VirtualMidiBiDi::Initialize(
         TraceLoggingWideString(endpointId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
+    m_sessionId = SessionId;
     m_callbackContext = Context;
+    m_callback = Callback;
     m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
     //if (Context != MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT)
@@ -49,10 +51,10 @@ CMidi2VirtualMidiBiDi::Initialize(
                 TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Initializing device-side BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingGuid(m_sessionId, "session id")
             );
 
-            m_callback = Callback;
             m_isDeviceSide = true;
 
             LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnDeviceConnected(m_endpointId, this));
@@ -66,10 +68,10 @@ CMidi2VirtualMidiBiDi::Initialize(
                 TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Initializing client-side BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingGuid(m_sessionId, "session id")
             );
 
-            m_callback = Callback;
             m_isDeviceSide = false;
 
             LOG_IF_FAILED(hr = AbstractionState::Current().GetEndpointTable()->OnClientConnected(m_endpointId, this));
@@ -83,12 +85,13 @@ CMidi2VirtualMidiBiDi::Initialize(
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"We don't understand the endpoint Id", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-                );
+                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingGuid(m_sessionId, "session id")
+            );
 
             // we don't understand this endpoint id
 
-            hr = E_FAIL;
+            hr = E_INVALIDARG;
         }
 
         return hr;
@@ -112,21 +115,25 @@ CMidi2VirtualMidiBiDi::Cleanup()
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingBool(m_isDeviceSide, "is device side")
-        );
+        TraceLoggingBool(m_isDeviceSide, "is device side"),
+        TraceLoggingGuid(m_sessionId, "session id")
+    );
 
     m_callback = nullptr;
     m_callbackContext = 0;
 
-    UnlinkAllAssociatedBiDi();
+    //UnlinkAllAssociatedBiDi();
+    m_linkedBiDi = nullptr;
+    m_linkedBiDiCallback = nullptr;
+
 
     if (m_isDeviceSide)
     {
-        LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->OnDeviceDisconnected(m_endpointId));
+        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointTable()->OnDeviceDisconnected(m_endpointId));
     }
     else
     {
-        LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->OnClientDisconnected(m_endpointId, this));
+        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointTable()->OnClientDisconnected(m_endpointId));
     }
 
     return S_OK;
@@ -150,7 +157,8 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
         TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingBool(m_isDeviceSide, "is device side"),
         TraceLoggingUInt32(Size, "bytes"),
-        TraceLoggingUInt64(Position, "timestamp")
+        TraceLoggingUInt64(Position, "timestamp"),
+        TraceLoggingGuid(m_sessionId, "session id")
     );
 
 
@@ -159,17 +167,11 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    if (m_linkedBiDiConnections.size() > 0)
+    if (m_linkedBiDiCallback != nullptr)
     {
-        for (auto connection : m_linkedBiDiConnections)
-        {
-            auto cb = connection->GetCallback();
+        RETURN_IF_FAILED(m_linkedBiDiCallback->Callback(Message, Size, Position, m_callbackContext));
 
-            if (cb != nullptr)
-            {
-                LOG_IF_FAILED(cb->Callback(Message, Size, Position, m_callbackContext));
-            }
-        }
+        return S_OK;
     }
     else
     {
@@ -183,12 +185,19 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
             TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
             TraceLoggingBool(m_isDeviceSide, "is device side"),
             TraceLoggingUInt32(Size, "bytes"),
-            TraceLoggingUInt64(Position, "timestamp")
+            TraceLoggingUInt64(Position, "timestamp"),
+            TraceLoggingGuid(m_sessionId, "session id")
         );
+
+        if (m_isDeviceSide)
+        {
+            return S_OK;    // ok for device side to send when nothing is listening
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_POINTER);  // but if the client-side is not connected to a device, something is really wrong.
+        }
     }
-
-    return S_OK;
-
 }
 
 _Use_decl_annotations_
@@ -210,14 +219,19 @@ CMidi2VirtualMidiBiDi::Callback(
         TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingBool(m_isDeviceSide, "is device side"),
         TraceLoggingUInt32(Size, "bytes"),
-        TraceLoggingUInt64(Position, "timestamp")
+        TraceLoggingUInt64(Position, "timestamp"),
+        TraceLoggingGuid(m_sessionId, "session id")
     );
 
     // message received from the client
 
     if (m_callback != nullptr)
     {
-        return m_callback->Callback(Message, Size, Position, Context);
+        RETURN_IF_FAILED(m_callback->Callback(Message, Size, Position, Context));
+    }
+    else
+    {
+        RETURN_IF_FAILED(E_POINTER);
     }
 
     return S_OK;

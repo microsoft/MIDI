@@ -92,6 +92,7 @@ class CMidi2VirtualMidiEndpointManager;
 class CMidi2VirtualMidiBiDi;
 class AbstractionState;
 
+#include "MidiVirtualDeviceEndpointEntry.h"
 #include "MidiEndpointTable.h"
 
 #include "Midi2.VirtualMidiAbstraction.h"

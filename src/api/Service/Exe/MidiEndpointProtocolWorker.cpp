@@ -51,6 +51,7 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingWideString(L"Initialize complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(EndpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
+
     return S_OK;
 }
 
@@ -169,10 +170,10 @@ CMidiEndpointProtocolWorker::Start(
     try
     {
 
-        // we do this here instead of initialize so this is created on the worker thread
+        // we do this here instead of in initialize so this is created on the worker thread
         if (!m_midiBiDiDevice)
         {
-            wil::com_ptr_nothrow<IMidiAbstraction> serviceAbstraction;
+            wil::com_ptr_nothrow<IMidiAbstraction> serviceAbstraction{ nullptr };
 
             // we only support UMP data format for protocol negotiation
             ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
@@ -186,9 +187,11 @@ CMidiEndpointProtocolWorker::Start(
             // this is not a good idea, but we don't have a reference to the lib here
             GUID midi2MidiSrvAbstractionIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
             RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvAbstractionIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceAbstraction)));
+            RETURN_IF_NULL_ALLOC(serviceAbstraction);
 
             // create the bidi device
             RETURN_IF_FAILED(serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
+            RETURN_IF_NULL_ALLOC(m_midiBiDiDevice);
 
             RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(
                 (LPCWSTR)(m_deviceInterfaceId.c_str()),
@@ -295,7 +298,6 @@ CMidiEndpointProtocolWorker::Start(
         // deals only with the manager. It doesn't work with this worker at all. Important
         // because in the future, this worker may be on another thread etc. It's an internal
         // implementation detail, not a public contract.
-
 
         if (!m_endpointName.empty())
         {
@@ -465,6 +467,16 @@ CMidiEndpointProtocolWorker::Callback(
     LONGLONG Position,
     LONGLONG Context)
 {
+    //TraceLoggingWrite(
+    //    MidiSrvTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_WARNING,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    //);
+
+
     UNREFERENCED_PARAMETER(Position);
     UNREFERENCED_PARAMETER(Context);
 
@@ -521,7 +533,7 @@ CMidiEndpointProtocolWorker::Callback(
                 TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
-            return E_FAIL;
+            RETURN_IF_FAILED(E_FAIL);
         }
     }
     else
@@ -921,18 +933,23 @@ CMidiEndpointProtocolWorker::Cleanup()
         TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+
     // stop worker thread
 
-    m_shutdown = true;
-    //    m_queueWorkerThreadWakeup.SetEvent();
+    EndProcessing();
 
-    //    if (m_queueWorkerThread.joinable())
-    //        m_queueWorkerThread.join();
-
+    //if (m_.joinable())
+    //    m_queueWorkerThread.join();
 
     m_allNegotiationMessagesReceived.reset();
 
     m_negotiationCompleteCallback = nullptr;
+
+    if (m_midiBiDiDevice)
+    {
+        m_midiBiDiDevice->Cleanup();
+        m_midiBiDiDevice.reset();
+    }
 
     if (m_sessionTracker)
     {

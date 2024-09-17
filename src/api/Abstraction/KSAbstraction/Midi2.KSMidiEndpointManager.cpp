@@ -589,7 +589,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 // These properties were originally meant only for the results of protocol negotiation, but they were confusing when not set
 
                 commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-                commonProperties.RequiresMetadataHandler = true;
+                //commonProperties.RequiresMetadataHandler = true;
                 commonProperties.SupportsMidi1ProtocolDefaultValue = true;
                 commonProperties.SupportsMidi2ProtocolDefaultValue = true;
             }
@@ -609,7 +609,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 // These properties were originally meant only for the results of protocol negotiation, but they were confusing when not set
 
                 commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM;
-                commonProperties.RequiresMetadataHandler = false;
+                //commonProperties.RequiresMetadataHandler = false;
                 commonProperties.SupportsMidi1ProtocolDefaultValue = true;
                 commonProperties.SupportsMidi2ProtocolDefaultValue = false;
             }
@@ -840,6 +840,16 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInform
         {
             if (device.Id() == Pin->Id)
             {
+                TraceLoggingWrite(
+                    MidiKSAbstractionTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Removing endpoint / pin entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(device.Id().c_str(), "device id")
+                );
+
                 return true;
             }
 
