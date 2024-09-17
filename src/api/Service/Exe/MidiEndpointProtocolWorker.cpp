@@ -467,14 +467,14 @@ CMidiEndpointProtocolWorker::Callback(
     LONGLONG Position,
     LONGLONG Context)
 {
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_WARNING,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-    );
+    //TraceLoggingWrite(
+    //    MidiSrvTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_WARNING,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    //);
 
 
     UNREFERENCED_PARAMETER(Position);
@@ -533,7 +533,7 @@ CMidiEndpointProtocolWorker::Callback(
                 TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
-            return E_FAIL;
+            RETURN_IF_FAILED(E_FAIL);
         }
     }
     else
