@@ -59,7 +59,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             this.DeviceIdentity = new MidiDeclaredDeviceIdentity();
             this.StreamConfiguration = new MidiDeclaredStreamConfiguration();
             this.EndpointInfo = new MidiDeclaredEndpointInfo();
-            this.ParentDeviceInformation = null;
+           // this.ParentDeviceInformation = null;
 
             this.HasParent = false;
             this.HasFunctionBlocks = false;

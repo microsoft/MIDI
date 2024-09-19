@@ -375,6 +375,11 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
  //   std::vector<std::unique_ptr<MIDI_PIN_INFO>> newMidiPins;
 
+
+    // TODO: There can be a race condition here between this abstraction and the KS abstraction. They really need
+    // to be combined.
+
+
     // instantiate the interface
     RETURN_IF_FAILED(FilterInstantiate(endpointDefinition.FilterDeviceId.c_str(), &hFilter));
     RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins)));
