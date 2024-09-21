@@ -6,20 +6,12 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"
-#include "midi2.NetworkMidiabstraction.h"
 
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiBiDi::Initialize(
-    LPCWSTR,
-    PABSTRACTIONCREATIONPARAMS,
-    DWORD *,
-    IMidiCallback * Callback,
-    LONGLONG Context,
-    GUID /* SessionId */
-)
+
+
+HRESULT 
+MidiNetworkMessageProcessor::Initialize(/* TODO: Callback functions as needed */)
 {
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
@@ -29,14 +21,14 @@ CMidi2NetworkMidiBiDi::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_Callback = Callback;
-    m_Context = Context;
+
 
     return S_OK;
 }
 
-HRESULT
-CMidi2NetworkMidiBiDi::Cleanup()
+
+HRESULT 
+MidiNetworkMessageProcessor::SendUmpWithForwardErrorCorrection()
 {
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
@@ -46,56 +38,40 @@ CMidi2NetworkMidiBiDi::Cleanup()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_Callback = nullptr;
-    m_Context = 0;
+
 
     return S_OK;
 }
 
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiBiDi::SendMidiMessage(
-    PVOID Message,
-    UINT Size,
-    LONGLONG Position
-)
+
+HRESULT 
+MidiNetworkMessageProcessor::Cleanup()
 {
-    if (m_Callback == nullptr)
-    {
-        // TODO log that callback is null
-        return E_FAIL;
-    }
+    TraceLoggingWrite(
+        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
-    if (Message == nullptr)
-    {
-        // TODO log that message was null
-        return E_FAIL;
-    }
 
-    if (Size < sizeof(uint32_t))
-    {
-        // TODO log that data was smaller than minimum UMP size
-        return E_FAIL;
-    }
-
-    m_Callback->Callback(Message, Size, Position, m_Context);
 
     return S_OK;
-
 }
 
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiBiDi::Callback(
-    PVOID,
-    UINT,
-    LONGLONG,
-    LONGLONG
-)
+HRESULT 
+MidiNetworkMessageProcessor::ProcessIncomingPacket()
 {
-    //return E_NOTIMPL;
+    TraceLoggingWrite(
+        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
-    // just eat it for this simple loopback
+
+
     return S_OK;
 }
-

@@ -31,10 +31,10 @@ public:
         return m_configurationManager;
     }
 
-    std::shared_ptr<MidiNetworkDeviceTable> GetEndpointTable()
-    {
-        return m_endpointTable;
-    }
+    //std::shared_ptr<MidiNetworkDeviceTable> GetEndpointTable()
+    //{
+    //    return m_endpointTable;
+    //}
 
 
     HRESULT Cleanup()
@@ -58,5 +58,5 @@ private:
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> m_endpointManager;
     wil::com_ptr<CMidi2NetworkMidiConfigurationManager> m_configurationManager;
 
-    std::shared_ptr<MidiNetworkDeviceTable> m_endpointTable = std::make_shared<MidiNetworkDeviceTable>();
+//    std::shared_ptr<MidiNetworkDeviceTable> m_endpointTable = std::make_shared<MidiNetworkDeviceTable>();
 };

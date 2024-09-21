@@ -26,13 +26,12 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     IUnknown* /*midiEndpointProtocolManager*/
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
@@ -53,10 +52,12 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 {
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
 
     // the parent device parameters are set by the transport (this)
     std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
@@ -82,11 +83,10 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 
     m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
 
-
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(newDeviceId, "New parent device instance id")
     );
@@ -97,25 +97,15 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 
 
 
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiEndpointManager::CreateEndpoint(MidiNetworkDeviceDefinition& deviceEndpointDefinition)
-{
-    UNREFERENCED_PARAMETER(deviceEndpointDefinition);
-
-    // you'll need one or more functions to create endpoint types used in network MIDI.
-    // At the end of the function, after the interface has been created successfully,
-    // you need to initiate discovery and protocol negotiation. For an example of the
-    // calls to make for that, see
-    // CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint()
-    //
-    // note that this function is just a placeholder. you may need more than one
-    // or it may need any number of other parameters. Same with the 
-    // MidiNetworkDeviceDefinition type which will likely need more info for you
-    // to track endpoints created by this abstraction
-
-    return S_OK;
-}
+//_Use_decl_annotations_
+//HRESULT
+//CMidi2NetworkMidiEndpointManager::CreateEndpoint(MidiNetworkDeviceDefinition& deviceEndpointDefinition)
+//{
+//    UNREFERENCED_PARAMETER(deviceEndpointDefinition);
+//
+//
+//    return S_OK;
+//}
 
 
 
@@ -125,9 +115,10 @@ CMidi2NetworkMidiEndpointManager::Cleanup()
 {
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
 

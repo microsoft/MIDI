@@ -14,6 +14,11 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Data.Json.h>
 
+// this mDNS/DNS-SD API is quite a bit easier to use than the win32 version
+#include <winrt/windows.networking.servicediscovery.dnssd.h>
+#include <winrt/windows.networking.sockets.h>
+#include <winrt/windows.networking.h>
+
 namespace json = ::winrt::Windows::Data::Json;
 
 
@@ -55,6 +60,7 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "strsafe.h"
 #include "wstring_util.h"
+#include "hstring_util.h"
 
 #undef GetObject
 #include <winrt/Windows.Data.Json.h>
@@ -86,15 +92,20 @@ class CMidi2NetworkMidiConfigurationManager;
 
 #include "abstraction_defs.h"
 
-#include "MidiNetworkDeviceDefinition.h"
-#include "MidiNetworkDevice.h"
-#include "MidiNetworkDeviceTable.h"
+#include "MidiNetworkEndpointDefinition.h"
+
+#include "MidiNetworkMessages.h"
+#include "MidiNetworkMessageProcessor.h"
+
+#include "MidiNetworkClient.h"
+#include "MidiNetworkClientSession.h"
+
+#include "MidiNetworkHost.h"
+#include "MidiNetworkHostSession.h"
 
 #include "AbstractionState.h"
 
 #include "Midi2.NetworkMidiAbstraction.h"
-#include "Midi2.NetworkMidiIn.h"
-#include "Midi2.NetworkMidiOut.h"
 #include "Midi2.NetworkMidiBiDi.h"
 #include "Midi2.NetworkMidiEndpointManager.h"
 #include "Midi2.NetworkMidiConfigurationManager.h"

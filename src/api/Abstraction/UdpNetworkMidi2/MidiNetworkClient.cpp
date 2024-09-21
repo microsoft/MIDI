@@ -6,20 +6,36 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
+#include "pch.h"
 
-class CMidi2NetworkMidiOut : 
-    public Microsoft::WRL::RuntimeClass<
-        Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiOut>
+
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkClient::Initialize(MidiNetworkUdpClientDefinition& clientDefinition)
 {
-public:
+    UNREFERENCED_PARAMETER(clientDefinition);
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *));
-    STDMETHOD(SendMidiMessage(_In_ PVOID, _In_ UINT, LONGLONG));
-    STDMETHOD(Cleanup)();
+    return S_OK;
+}
 
-private:
-};
+HRESULT 
+MidiNetworkClient::Cleanup()
+{
 
 
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkClient::ProcessIncomingPacket()
+{
+
+    return S_OK;
+}
+
+HRESULT 
+MidiNetworkClient::EstablishNewSession()
+{
+
+    return S_OK;
+}

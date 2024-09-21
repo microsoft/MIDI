@@ -25,7 +25,7 @@ CMidi2NetworkMidiPluginMetadataProvider::GetMetadata(
     RETURN_HR_IF_NULL(E_INVALIDARG, metadata);
 
     metadata->Id = ABSTRACTION_LAYER_GUID;
-    metadata->Mnemonic = TRANSPORT_MNEMONIC;
+    metadata->Mnemonic = TRANSPORT_CODE;
 
     internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_NAME, &metadata->Name);
     internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_DESCRIPTION, &metadata->Description);

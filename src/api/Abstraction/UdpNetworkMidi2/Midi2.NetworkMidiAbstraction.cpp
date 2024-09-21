@@ -16,53 +16,17 @@ CMidi2NetworkMidiAbstraction::Activate(
     void **Interface
 )
 {
-    OutputDebugString(L"" __FUNCTION__ " Enter");
-
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
-   /*if (__uuidof(IMidiIn) == Riid)
+    if (__uuidof(IMidiBiDi) == Riid)
     {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiIn");
-
         TraceLoggingWrite(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi in",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
-
-        wil::com_ptr_nothrow<IMidiIn> midiIn;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiIn>(&midiIn));
-        *Interface = midiIn.detach();
-    }
-    else if (__uuidof(IMidiOut) == Riid)
-    {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiOut");
-       
-       TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- Midi Out",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
-            );
-
-        wil::com_ptr_nothrow<IMidiOut> midiOut;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiOut>(&midiOut));
-        *Interface = midiOut.detach();
-    }
-    else*/ if (__uuidof(IMidiBiDi) == Riid)
-    {
-       OutputDebugString(L"" __FUNCTION__ " Activating IMidiBiDi");
-
-        TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiBiDi",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingWideString(L"IMidiBiDi", "requested interface"),
-            TraceLoggingPointer(this, "this")
-            );
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiBiDi", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+        );
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiBiDi>(&midiBiDi));
@@ -74,10 +38,10 @@ CMidi2NetworkMidiAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiEndpointManager",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingWideString(L"IMidiEndpointManager", "requested interface"),
-            TraceLoggingPointer(this, "this")
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiEndpointManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
@@ -94,10 +58,10 @@ CMidi2NetworkMidiAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", "requested interface"),
-            TraceLoggingPointer(this, "this")
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         // check to see if this is the first time we're creating the configuration manager. If so, create it.
@@ -113,10 +77,10 @@ CMidi2NetworkMidiAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__ "- IMidiServiceAbstractionPluginMetadataProvider",
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingValue(__FUNCTION__),
-            TraceLoggingPointer(this, "this")
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
@@ -128,10 +92,10 @@ CMidi2NetworkMidiAbstraction::Activate(
     {
         TraceLoggingWrite(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-            __FUNCTION__,
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingWideString(L"Unknown or invalid interface request", "message"),
-            TraceLoggingPointer(this, "this")
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unknown Interface", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
         return E_NOINTERFACE;
