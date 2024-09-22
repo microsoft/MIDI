@@ -24,6 +24,7 @@ CMidi2NetworkMidiAbstraction::Activate(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"IMidiBiDi", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
@@ -40,6 +41,7 @@ CMidi2NetworkMidiAbstraction::Activate(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"IMidiEndpointManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
@@ -60,6 +62,7 @@ CMidi2NetworkMidiAbstraction::Activate(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
@@ -79,6 +82,7 @@ CMidi2NetworkMidiAbstraction::Activate(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
@@ -94,6 +98,7 @@ CMidi2NetworkMidiAbstraction::Activate(
             MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Unknown Interface", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );

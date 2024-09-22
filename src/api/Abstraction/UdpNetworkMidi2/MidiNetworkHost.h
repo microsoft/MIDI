@@ -56,8 +56,7 @@ struct MidiNetworkUdpHostDefinition
 
     // generated properties
     winrt::hstring ServiceInstanceName;     // instance name for the PTR record
-    winrt::hstring HostName;                // must include the .local domain
-
+    winrt::hstring HostName;                      // must include the .local domain
 
 };
 
@@ -67,6 +66,8 @@ class MidiNetworkHost
 {
 public:
     HRESULT Initialize(_In_ MidiNetworkUdpHostDefinition& hostDefinition);
+
+    HRESULT Start();
 
     HRESULT Cleanup();
 
@@ -78,11 +79,12 @@ private:
 
     HRESULT EstablishNewSession();
 
+    MidiNetworkUdpHostDefinition m_hostDefinition{};
+
+    std::shared_ptr<MidiNetworkAdvertiser> m_advertiser;
 
     DatagramSocket m_socket;
 
     // TODO: Map of client connections and their sessions
-
-
 
 };

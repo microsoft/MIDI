@@ -8,6 +8,7 @@
 
 #include "pch.h"
 
+#include <chrono>
 
 _Use_decl_annotations_
 HRESULT 
@@ -19,6 +20,7 @@ MidiNetworkHost::Initialize(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
@@ -28,60 +30,75 @@ MidiNetworkHost::Initialize(
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ServiceInstanceName.empty());
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.UmpEndpointName.empty());
 
-    RETURN_HR_IF(E_INVALIDARG, hostDefinition.UmpEndpointName.size() > 98);
-    RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.size() > 42);
+    RETURN_HR_IF(E_INVALIDARG, hostDefinition.UmpEndpointName.size() > MAX_UMP_ENDPOINT_NAME_LENGTH);
+    RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.size() > MAX_UMP_PRODUCT_INSTANCE_ID_LENGTH);
 
+    m_hostDefinition = hostDefinition;
 
-    HostName hostName(hostDefinition.HostName);
+    m_advertiser = std::make_shared<MidiNetworkAdvertiser>();
 
-    DnssdServiceInstance instance(
-        hostDefinition.ServiceInstanceName,
-        hostName,
-        hostDefinition.Port);
+    RETURN_HR_IF_NULL(E_POINTER, m_advertiser);
 
-    // add the txt attributes per the spec
-    instance.TextAttributes().Insert(L"UMPEndpointName", hostDefinition.UmpEndpointName);
-    instance.TextAttributes().Insert(L"ProductInstanceId", hostDefinition.ProductInstanceId);
+    RETURN_IF_FAILED(m_advertiser->Initialize());
 
-
-    // TODO: Should we allow binding to a specific network adapter?
-    auto result = instance.RegisterDatagramSocketAsync(m_socket).get();
-
-    switch (result.Status())
-    {
-        case DnssdRegistrationStatus::Success:
-            return S_OK;
-
-        // The service was not registered because security settings did not allow it.
-        case DnssdRegistrationStatus::SecurityError:
-            RETURN_IF_FAILED(E_ACCESSDENIED);
-            break;
-
-        // The service was not registered because the service name provided is not valid.
-        case DnssdRegistrationStatus::InvalidServiceName:
-            RETURN_IF_FAILED(E_INVALIDARG);
-            break;
-
-        // The service was not registered because of an error on the DNS server.
-        case DnssdRegistrationStatus::ServerError:
-            RETURN_IF_FAILED(E_FAIL);
-            break;
-
-        default:
-            RETURN_IF_FAILED(E_FAIL);
-    }
-
-
+    return S_OK;
 }
 
-
-HRESULT 
-MidiNetworkHost::ProcessIncomingPacket()
+HRESULT
+MidiNetworkHost::Start()
 {
+    winrt::Windows::Foundation::TimeSpan timeout = std::chrono::seconds(5);
+
+    auto status = m_socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).wait_for(timeout);
+
+    if (status != winrt::Windows::Foundation::AsyncStatus::Completed)
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Timed out trying to bind service to socket.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt16(m_hostDefinition.Port, "port")
+        );
+
+        RETURN_IF_FAILED(E_FAIL);
+    }
+
+    HostName hostName(m_hostDefinition.HostName);
+
+    RETURN_IF_FAILED(m_advertiser->Advertise(
+        m_hostDefinition.ServiceInstanceName,
+        hostName,
+        m_socket,
+        m_hostDefinition.Port,
+        m_hostDefinition.UmpEndpointName,
+        m_hostDefinition.ProductInstanceId
+    ));
+
+
+    // start listening on thread.
+
+
+
+    // when done, stop advertising, and unbind the socket
 
 
     return S_OK;
 }
+
+HRESULT 
+MidiNetworkHost::ProcessIncomingPacket()
+{
+    // if the packet is a session packet, route to the appropriate session
+    // otherwise, handle it here
+
+
+
+    return S_OK;
+}
+
 
 HRESULT 
 MidiNetworkHost::EstablishNewSession()
@@ -90,9 +107,14 @@ MidiNetworkHost::EstablishNewSession()
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+
+    // need to add a new session to the session list
+
 
     return S_OK;
 }
@@ -105,9 +127,17 @@ MidiNetworkHost::Cleanup()
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+
+    if (m_advertiser)
+    {
+        m_advertiser->Cleanup();
+    }
+
 
     return S_OK;
 }

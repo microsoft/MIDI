@@ -31,6 +31,9 @@
 #define MIDI_UDP_PAYLOAD_HEADER     0x4D494449              // "MIDI" in ASCII
 
 
+#define MAX_UMP_ENDPOINT_NAME_LENGTH          98
+#define MAX_UMP_PRODUCT_INSTANCE_ID_LENGTH    42
+
 
 // JSON keys. Can move to json_defs when in-box
 
@@ -42,6 +45,8 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_KEY                     L"networkProtocol"
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP               L"udp"                  // UDP is only protocol currently supported
 
+#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY                L"serviceInstanceName"     // just the first part (before the . ) of the host instance name. Defaults to machine name
+
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_KEY                         L"networkPort"
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO                  L"auto"
 
@@ -51,15 +56,15 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_LIST   L"list"
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_RANGE  L"range"
 
-#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_RULES_IPV4_ADDRESSES_KEY      L"addresses"            // list, range . We keep this simple. ANything more complex should be done with the firewall
+#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY     L"addresses"            // list, range . We keep this simple. ANything more complex should be done with the firewall
 
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY                  L"authentication"       // password, user, none
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE           L"none"
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_PASSWORD       L"password"             // global password
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_USER           L"user"                 // user and password
 
-#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_GLOBAL_PASSWORD_KEY  L"globalPassword"       // key to entry in vault
-#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_USER_AUTH_KEY        L"userAuth"             // key to user/password entry in vault
+#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_GLOBAL_PASSWORD_KEY  L"globalPassword"       // credential key to entry in vault
+#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_USER_AUTH_KEY        L"userAuth"             // credential key to user/password entry in vault
 
 
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CLIENT_KEY                               L"client"

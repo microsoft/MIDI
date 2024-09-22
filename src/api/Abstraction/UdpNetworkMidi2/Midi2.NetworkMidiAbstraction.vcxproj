@@ -281,6 +281,7 @@
     <ClCompile Include="Midi2.NetworkMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.NetworkMidiBidi.cpp" />
     <ClCompile Include="Midi2.NetworkMidiPluginMetadataProvider.cpp" />
+    <ClCompile Include="MidiNetworkAdvertiser.cpp" />
     <ClCompile Include="MidiNetworkClient.cpp" />
     <ClCompile Include="MidiNetworkClientSession.cpp" />
     <ClCompile Include="MidiNetworkHost.cpp" />
@@ -305,6 +306,7 @@
     <ClInclude Include="Midi2.NetworkMidiEndpointManager.h" />
     <ClInclude Include="Midi2.NetworkMidiBidi.h" />
     <ClInclude Include="Midi2.NetworkMidiPluginMetadataProvider.h" />
+    <ClInclude Include="MidiNetworkAdvertiser.h" />
     <ClInclude Include="MidiNetworkClient.h" />
     <ClInclude Include="MidiNetworkEndpointDefinition.h" />
     <ClInclude Include="MidiNetworkClientSession.h" />

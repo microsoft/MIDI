@@ -54,6 +54,9 @@
     <ClCompile Include="MidiNetworkMessageProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkAdvertiser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2NetworkMidiAbstraction.idl">
@@ -119,6 +122,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiNetworkMessageProcessor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkAdvertiser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

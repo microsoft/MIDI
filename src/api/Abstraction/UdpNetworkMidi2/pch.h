@@ -89,6 +89,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 class CMidi2NetworkMidiEndpointManager;
 class CMidi2NetworkMidiConfigurationManager;
+class MidiNetworkAdvertiser;
 
 #include "abstraction_defs.h"
 
@@ -102,6 +103,8 @@ class CMidi2NetworkMidiConfigurationManager;
 
 #include "MidiNetworkHost.h"
 #include "MidiNetworkHostSession.h"
+
+#include "MidiNetworkAdvertiser.h"
 
 #include "AbstractionState.h"
 

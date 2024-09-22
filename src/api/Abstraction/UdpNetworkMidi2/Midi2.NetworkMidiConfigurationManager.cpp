@@ -8,6 +8,7 @@
 
 #include "pch.h"
 
+using namespace winrt::Windows::Networking;
 
 _Use_decl_annotations_
 HRESULT
@@ -24,6 +25,7 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
@@ -36,7 +38,9 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
     return S_OK;
 }
 
-MidiNetworkUdpHostAuthentication MidiNetworkUdpHostAuthenticationFromJsonString(_In_ winrt::hstring jsonString)
+
+
+MidiNetworkUdpHostAuthentication MidiNetworkUdpHostAuthenticationFromJsonString(_In_ winrt::hstring const& jsonString)
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
@@ -60,7 +64,7 @@ MidiNetworkUdpHostAuthentication MidiNetworkUdpHostAuthenticationFromJsonString(
 }
 
 
-MidiNetworkUdpHostConnectionPolicy MidiNetworkUdpHostConnectionPolicyFromJsonString(_In_ winrt::hstring jsonString)
+MidiNetworkUdpHostConnectionPolicy MidiNetworkUdpHostConnectionPolicyFromJsonString(_In_ winrt::hstring const& jsonString)
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
@@ -128,7 +132,7 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
     {
         // validate that there is at least one entry
 
-        if (definition.IpAddresses.size() > 0)
+        if (definition.IpAddresses.size() < 1)
         {
             errorMessage = L"Connection policy IP address list needs at least one valid entry.";
             return E_INVALIDARG;
@@ -158,6 +162,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
@@ -183,6 +188,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     //                    {
     //                        "entryIdentifier": "{62153fff-a0d0-4c0a-98ad-09010123d10a}",
     //                        "name" : "my_endpoint",
+    //                        "hostInstanceName" : "windowsproto", 
     //                        "productInstanceId" : "8675309",
     //                        "networkInterface" : "all",
     //                        "networkProtocol" : "udp",
@@ -286,7 +292,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 }
 
-
                 definition.EntryIdentifier = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENTRY_IDENTIFIER_KEY, L""));
 
                 definition.UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
@@ -298,18 +303,61 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 // read the list of ip info
                 if (definition.ConnectionPolicy != MidiNetworkUdpHostConnectionPolicy::AllowAllConnections)
                 {
-                    
+                    auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
+
+                    for (uint32_t j = 0; j < addressArray.Size(); j++)
+                    {
+                        auto addressEntry = addressArray.GetStringAt(j);
+
+                        HostName address(addressEntry);
+
+                        definition.IpAddresses.push_back(address);
+                    }
                 }
 
-                // read authentication infomration
+                // read authentication information
                 if (definition.Authentication != MidiNetworkUdpHostAuthentication::NoAuthentication)
                 {
 
+                    if (definition.Authentication == MidiNetworkUdpHostAuthentication::PasswordAuthentication)
+                    {
+                        // TODO: Read the password vault key
+                    }
+                    else if (definition.Authentication == MidiNetworkUdpHostAuthentication::UserAuthentication)
+                    {
+                        // TODO: Read username/password vault key
+                    }
+                    else
+                    {
+                        // no authentication provided
+                    }
+
                 }
 
-
-
                 // generate host name and other info
+
+                auto serviceInstanceNamePrefix = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
+
+                // if the provided service instance name is empty, default to 
+                // machine name. If that name is already in use, add an additional
+                // disambiguator
+                if (serviceInstanceNamePrefix.empty())
+                {
+                    std::wstring buffer{};
+                    DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
+                    buffer.resize(bufferSize);
+
+                    bool validName = GetComputerName(buffer.data(), &bufferSize);
+                    if (validName)
+                    {
+                        serviceInstanceNamePrefix = buffer;
+                    }
+                }
+
+                definition.ServiceInstanceName = serviceInstanceNamePrefix;
+
+                // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguator number
+
 
 
 
@@ -318,30 +366,17 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 if (SUCCEEDED(ValidateHostDefinition(definition, validationErrorMessage)))
                 {
 
+                    // create the host
+
+
+
+
                 }
                 else
                 {
                     // invalid entry
                 }
 
-                //                        "entryIdentifier": "{62153fff-a0d0-4c0a-98ad-09010123d10a}",
-                //                        "name" : "my_endpoint",
-                //                        "productInstanceId" : "8675309",
-                //                        "networkInterface" : "all",
-                //                        "networkProtocol" : "udp",
-                //                        "networkPort" : "auto",
-                //                        "umpOnly" : true,
-                //                        "enabled" : true,
-                //                        "connectionRulesIpv4" :
-                //                        {
-                //                          "allow" : "list",
-                //                          "addresses" :
-                //                          [
-                //                            "192.168.1.1",
-                //                            "192.168.1.10"
-                //                          ]
-                //                        }
-                //                        "authentication" : "none" 
 
 
             }
@@ -401,6 +436,7 @@ CMidi2NetworkMidiConfigurationManager::Cleanup()
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );

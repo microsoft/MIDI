@@ -13,7 +13,18 @@ _Use_decl_annotations_
 HRESULT 
 MidiNetworkClient::Initialize(MidiNetworkUdpClientDefinition& clientDefinition)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     UNREFERENCED_PARAMETER(clientDefinition);
+
+
 
     return S_OK;
 }
@@ -21,6 +32,15 @@ MidiNetworkClient::Initialize(MidiNetworkUdpClientDefinition& clientDefinition)
 HRESULT 
 MidiNetworkClient::Cleanup()
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
 
 
     return S_OK;
@@ -29,6 +49,16 @@ MidiNetworkClient::Cleanup()
 HRESULT
 MidiNetworkClient::ProcessIncomingPacket()
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
 
     return S_OK;
 }
@@ -36,6 +66,16 @@ MidiNetworkClient::ProcessIncomingPacket()
 HRESULT 
 MidiNetworkClient::EstablishNewSession()
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
 
     return S_OK;
 }
