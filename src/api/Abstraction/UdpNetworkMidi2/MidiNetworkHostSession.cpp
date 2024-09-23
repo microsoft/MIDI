@@ -25,6 +25,34 @@ MidiNetworkHostSession::Initialize()
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkHostSession::ReceiveMidiMessagesFromNetwork(uint16_t const sequenceNumber, std::vector<uint32_t> const& words)
+{
+    UNREFERENCED_PARAMETER(sequenceNumber);
+    UNREFERENCED_PARAMETER(words);
+
+    // receive a block of message data from the network, parse them, and begin sending 
+    // them to the BiDi callback, one message at a time
+
+
+
+    return S_OK;
+}
+
+
+HRESULT 
+MidiNetworkHostSession::SendMidiMessageToNetwork()
+{
+    // we simply enqueue messages so the host can send them
+
+
+
+
+    return S_OK;
+}
+
+
 
 HRESULT 
 MidiNetworkHostSession::Cleanup()

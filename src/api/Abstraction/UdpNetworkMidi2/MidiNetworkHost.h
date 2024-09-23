@@ -12,6 +12,7 @@ using namespace winrt::Windows::Networking;
 using namespace winrt::Windows::Networking::Sockets;
 using namespace winrt::Windows::Networking::ServiceDiscovery::Dnssd;
 
+#include <queue>
 
 enum MidiNetworkUdpHostConnectionPolicy
 {
@@ -75,9 +76,17 @@ private:
     // this will need to take the incoming packet and then route it to the 
     // correct session based on the client IP/Port sending the message, or 
     // start up a new session if appropriate
-    HRESULT ProcessIncomingPacket();
+    HRESULT ProcessIncomingPackets();
+    HRESULT ProcessOutgoingPackets();
 
     HRESULT EstablishNewSession();
+
+    std::queue<MidiNetworkOutOfBandIncomingCommandPacket> m_incomingOutOfBandCommands;
+    std::queue<MidiNetworkOutOfBandOutgoingCommandPacket> m_outgoingOutOfBandCommands;
+
+    void OnUdpPacketReceived(
+        _In_ DatagramSocket const& sender,
+        _In_ DatagramSocketMessageReceivedEventArgs const& args);
 
     MidiNetworkUdpHostDefinition m_hostDefinition{};
 
@@ -85,6 +94,21 @@ private:
 
     DatagramSocket m_socket;
 
-    // TODO: Map of client connections and their sessions
+    std::atomic<bool> m_keepProcessing{ true };
+
+    // Map of MidiNetworkHostSessions and their related remote client addresses
+    std::map<std::string, std::shared_ptr<MidiNetworkHostSession>> m_sessions{ };
+
+    inline std::string CreateSessionMapKey(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
+    {
+        return winrt::to_string(hostName.ToString() + L":" + port);
+    }
+
+    inline bool SessionExists(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
+    {
+        auto key = CreateSessionMapKey(hostName, port);
+
+        return m_sessions.find(key) != m_sessions.end();
+    }
 
 };

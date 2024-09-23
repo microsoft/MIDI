@@ -13,6 +13,7 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Data.Json.h>
+#include <winrt/Windows.Storage.Streams.h>
 
 // this mDNS/DNS-SD API is quite a bit easier to use than the win32 version
 #include <winrt/windows.networking.servicediscovery.dnssd.h>
@@ -90,6 +91,8 @@ namespace internal = ::WindowsMidiServicesInternal;
 class CMidi2NetworkMidiEndpointManager;
 class CMidi2NetworkMidiConfigurationManager;
 class MidiNetworkAdvertiser;
+class MidiNetworkHostSession;
+class MidiNetworkClientSession;
 
 #include "abstraction_defs.h"
 

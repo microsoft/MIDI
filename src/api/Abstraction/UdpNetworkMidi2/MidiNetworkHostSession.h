@@ -24,7 +24,8 @@ class MidiNetworkHostSession
 public:
     HRESULT Initialize(/* TODO: Linked IMidiCallback and IMidiBiDi */);
 
-
+    HRESULT ReceiveMidiMessagesFromNetwork(_In_ uint16_t const sequenceNumber, _In_ std::vector<uint32_t> const& words);
+    HRESULT SendMidiMessageToNetwork();
 
     HRESULT Cleanup();
 
