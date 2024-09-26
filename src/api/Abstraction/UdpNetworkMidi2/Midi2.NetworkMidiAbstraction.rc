@@ -96,8 +96,8 @@ BEGIN
     IDS_PROJNAME                    "Midi2.NetworkMidiAbstraction"
 
     IDS_PLUGIN_METADATA_VERSION         "1.0.0.0"
-    IDS_PLUGIN_METADATA_NAME            "Network MIDI 2.0 (UDP)"
-    IDS_PLUGIN_METADATA_DESCRIPTION     "(Currently in Development) Provides host and client Network MIDI 2.0 (UDP) capabilities"
+    IDS_PLUGIN_METADATA_NAME            "Network MIDI 2.0 (UDP) PROTOTYPE"
+    IDS_PLUGIN_METADATA_DESCRIPTION     "(Prototype) Provides host and client Network MIDI 2.0 (UDP) capabilities"
     IDS_PLUGIN_METADATA_AUTHOR          "Microsoft"
 END
 

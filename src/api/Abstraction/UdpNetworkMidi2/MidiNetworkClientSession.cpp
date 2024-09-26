@@ -6,52 +6,43 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-
 #include "pch.h"
-#include "midi2.NetworkMidiabstraction.h"
 
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiIn::Initialize(
-    LPCWSTR,
-    PABSTRACTIONCREATIONPARAMS,
-    DWORD *,
-    IMidiCallback *,
-    LONGLONG
-)
+
+HRESULT 
+MidiNetworkClientSession::Initialize()
 {
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-        );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
-    return E_NOTIMPL;
+
+
+    return S_OK;
 }
 
-HRESULT
-CMidi2NetworkMidiIn::Cleanup()
+
+
+
+HRESULT 
+MidiNetworkClientSession::Cleanup()
 {
     TraceLoggingWrite(
         MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
-        __FUNCTION__,
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-        );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
-    return E_NOTIMPL;
-}
 
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiIn::Callback(
-    PVOID,
-    UINT,
-    LONGLONG,
-    LONGLONG
-)
-{
-    return E_NOTIMPL;
+
+    return S_OK;
 }
 

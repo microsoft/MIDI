@@ -8,6 +8,8 @@
 
 #pragma once
 
+
+
 class CMidi2NetworkMidiEndpointManager :
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
@@ -19,12 +21,17 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
+    //HRESULT AdvertiseHost();
+    //HRESULT ConnectExternalHost();
+
+
+
     GUID m_containerId{};
     GUID m_transportAbstractionId{};
     std::wstring m_parentDeviceId{};
 
     HRESULT CreateParentDevice();
-    HRESULT CreateEndpoint(_In_ MidiNetworkDeviceDefinition& deviceEndpoint);
+//    HRESULT CreateEndpoint(_In_ MidiNetworkDeviceDefinition& deviceEndpoint);
 
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;

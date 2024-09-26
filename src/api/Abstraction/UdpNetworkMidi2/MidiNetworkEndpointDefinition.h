@@ -6,20 +6,23 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
+
 #pragma once
 
-class CMidi2NetworkMidiOut : 
-    public Microsoft::WRL::RuntimeClass<
-        Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiOut>
+enum MidiNetworkEndpointType
 {
-public:
+    UDP_Host,
+    UDP_Client,
+};
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *));
-    STDMETHOD(SendMidiMessage(_In_ PVOID, _In_ UINT, LONGLONG));
-    STDMETHOD(Cleanup)();
 
-private:
+struct MidiNetworkEndpointDefinition
+{
+    MidiNetworkEndpointType EndpointType;
+
+    std::wstring Name;
+    std::wstring ProductInstanceId;
+
 };
 
 
