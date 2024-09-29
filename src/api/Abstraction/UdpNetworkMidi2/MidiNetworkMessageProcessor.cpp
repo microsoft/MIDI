@@ -14,7 +14,7 @@ HRESULT
 MidiNetworkMessageProcessor::Initialize(/* TODO: Callback functions as needed */)
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingPointer(this, "this"),
@@ -31,7 +31,7 @@ HRESULT
 MidiNetworkMessageProcessor::SendUmpWithForwardErrorCorrection()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingPointer(this, "this"),
@@ -48,7 +48,7 @@ HRESULT
 MidiNetworkMessageProcessor::Cleanup()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -65,7 +65,7 @@ HRESULT
 MidiNetworkMessageProcessor::ProcessIncomingPacket()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),

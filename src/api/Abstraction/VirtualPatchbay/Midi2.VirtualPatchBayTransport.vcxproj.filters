@@ -21,53 +21,39 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.NetworkMidiAbstraction.cpp">
+    <ClCompile Include="MidiPatchBayTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.NetworkMidiEndpointManager.cpp">
+    <ClCompile Include="Midi2.VirtualPatchBayAbstraction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.NetworkMidiBidi.cpp">
+    <ClCompile Include="Midi2.VirtualPatchBayEndpointManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.NetworkMidiConfigurationManager.cpp">
+    <ClCompile Include="Midi2.VirtualPatchBayPluginMetadataProvider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2.VirtualPatchBayConfigurationManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AbstractionState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.NetworkMidiPluginMetadataProvider.cpp">
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingDestination.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHost.cpp">
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkClientSession.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkHostSession.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkClient.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkMessageProcessor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkAdvertiser.cpp">
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingEntry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2NetworkMidiAbstraction.idl">
-      <Filter>Source Files</Filter>
-    </Midl>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Midi2.NetworkMidiAbstraction.def">
+    <None Include="Midi2.VirtualPatchBayAbstraction.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="Midi2.NetworkMidiAbstraction.rgs">
+    <None Include="Midi2.VirtualPatchBayAbstraction.rgs">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="packages.config" />
@@ -82,58 +68,48 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.NetworkMidiAbstraction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Midi2.NetworkMidiEndpointManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Midi2.NetworkMidiBidi.h">
+    <ClInclude Include="MidiPatchBayTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="abstraction_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.NetworkMidiConfigurationManager.h">
+    <ClInclude Include="Midi2.VirtualPatchBayAbstraction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.VirtualPatchBayEndpointManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.VirtualPatchBayPluginMetadataProvider.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.VirtualPatchBayConfigurationManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AbstractionState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Midi2.NetworkMidiPluginMetadataProvider.h">
+    <ClInclude Include="Midi2.VirtualPatchBayRoutingEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiNetworkClientSession.h">
+    <ClInclude Include="Midi2.VirtualPatchBayRoutingSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiNetworkEndpointDefinition.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkMessages.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkHostSession.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkHost.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkClient.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkMessageProcessor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkAdvertiser.h">
+    <ClInclude Include="Midi2.VirtualPatchBayRoutingDestination.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Midi2.NetworkMidiAbstraction.rc">
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Midi2.VirtualPatchBayAbstraction.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Midl Include="Midi2VirtualPatchBayAbstraction.idl">
+      <Filter>Source Files</Filter>
+    </Midl>
   </ItemGroup>
 </Project>

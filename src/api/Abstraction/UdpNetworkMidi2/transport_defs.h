@@ -11,7 +11,7 @@
 // the IDs here aren't the full Ids, just the values we start with
 // The full Id comes back from the swdevicecreate callback
 
-#define ABSTRACTION_LAYER_GUID __uuidof(Midi2NetworkMidiAbstraction);
+#define TRANSPORT_LAYER_GUID __uuidof(Midi2NetworkMidiTransport);
 
 #define TRANSPORT_MANUFACTURER L"Microsoft"
 #define TRANSPORT_CODE L"UDP"

@@ -8,10 +8,10 @@
 
 #pragma once
 
-class MidiNetworkMidiAbstractionTelemetryProvider : public wil::TraceLoggingProvider
+class MidiNetworkMidiTransportTelemetryProvider : public wil::TraceLoggingProvider
 {
     IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
-        MidiNetworkMidiAbstractionTelemetryProvider,
+        MidiNetworkMidiTransportTelemetryProvider,
         "Microsoft.Windows.Midi2.NetworkMidiAbstraction",
         // ee50a899-6caf-526c-e261-1f00403716f3 from hash of name using:
         // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.NetworkMidiAbstraction").Guid
@@ -20,19 +20,19 @@ class MidiNetworkMidiAbstractionTelemetryProvider : public wil::TraceLoggingProv
 
 using namespace ATL;
 
-class ATL_NO_VTABLE CMidi2NetworkMidiAbstraction : 
+class ATL_NO_VTABLE CMidi2NetworkMidiTransport :
     public CComObjectRootEx<CComMultiThreadModel>,
-    public CComCoClass<CMidi2NetworkMidiAbstraction, &CLSID_Midi2NetworkMidiAbstraction>,
+    public CComCoClass<CMidi2NetworkMidiTransport, &CLSID_Midi2NetworkMidiTransport>,
     public IMidiAbstraction
 {
 public:
-    CMidi2NetworkMidiAbstraction()
+    CMidi2NetworkMidiTransport()
     {
     }
 
-    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2NETWORKMIDIABSTRACTION)
+    DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2NETWORKMIDITRANSPORT)
 
-    BEGIN_COM_MAP(CMidi2NetworkMidiAbstraction)
+    BEGIN_COM_MAP(CMidi2NetworkMidiTransport)
         COM_INTERFACE_ENTRY(IMidiAbstraction)
     END_COM_MAP()
 
@@ -42,4 +42,4 @@ public:
 private:
 };
 
-OBJECT_ENTRY_AUTO(__uuidof(Midi2NetworkMidiAbstraction), CMidi2NetworkMidiAbstraction)
+OBJECT_ENTRY_AUTO(__uuidof(Midi2NetworkMidiTransport), CMidi2NetworkMidiTransport)

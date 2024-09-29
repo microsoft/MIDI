@@ -11,17 +11,17 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2NetworkMidiAbstraction::Activate(
-    REFIID Riid,
-    void **Interface
+CMidi2NetworkMidiTransport::Activate(
+    REFIID riid,
+    void **requestedInterface
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == requestedInterface);
 
-    if (__uuidof(IMidiBiDi) == Riid)
+    if (__uuidof(IMidiBiDi) == riid)
     {
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -31,14 +31,14 @@ CMidi2NetworkMidiAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiBiDi>(&midiBiDi));
-        *Interface = midiBiDi.detach();
+        *requestedInterface = midiBiDi.detach();
     }
 
 
-    else if (__uuidof(IMidiEndpointManager) == Riid)
+    else if (__uuidof(IMidiEndpointManager) == riid)
     {
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -47,19 +47,19 @@ CMidi2NetworkMidiAbstraction::Activate(
         );
 
         // check to see if this is the first time we're creating the endpoint manager. If so, create it.
-        if (AbstractionState::Current().GetEndpointManager() == nullptr)
+        if (TransportState::Current().GetEndpointManager() == nullptr)
         {
-            AbstractionState::Current().ConstructEndpointManager();
+            TransportState::Current().ConstructEndpointManager();
         }
 
-        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
+        RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->QueryInterface(riid, requestedInterface));
     }
 
 
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == riid)
     {
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -68,18 +68,18 @@ CMidi2NetworkMidiAbstraction::Activate(
         );
 
         // check to see if this is the first time we're creating the configuration manager. If so, create it.
-        if (AbstractionState::Current().GetConfigurationManager() == nullptr)
+        if (TransportState::Current().GetConfigurationManager() == nullptr)
         {
-            AbstractionState::Current().ConstructConfigurationManager();
+            TransportState::Current().ConstructConfigurationManager();
         }
 
-        RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
+        RETURN_IF_FAILED(TransportState::Current().GetConfigurationManager()->QueryInterface(riid, requestedInterface));
     }
 
-    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == riid)
     {
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -89,13 +89,13 @@ CMidi2NetworkMidiAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiPluginMetadataProvider>(&metadataProvider));
-        *Interface = metadataProvider.detach();
+        *requestedInterface = metadataProvider.detach();
     }
 
     else
     {
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),

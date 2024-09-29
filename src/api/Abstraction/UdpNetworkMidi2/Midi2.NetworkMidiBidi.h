@@ -22,8 +22,8 @@ public:
     STDMETHOD(Cleanup)();
 
 private:
-    IMidiCallback* m_Callback;
-    LONGLONG m_Context;
+    IMidiCallback* m_callback;
+    LONGLONG m_context;
 };
 
 

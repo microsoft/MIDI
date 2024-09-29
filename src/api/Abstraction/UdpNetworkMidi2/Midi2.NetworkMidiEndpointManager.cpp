@@ -8,7 +8,7 @@
 
 
 #include "pch.h"
-#include "midi2.NetworkMidiAbstraction.h"
+#include "midi2.NetworkMidiTransport.h"
 
 using namespace wil;
 using namespace Microsoft::WRL;
@@ -16,18 +16,16 @@ using namespace Microsoft::WRL::Wrappers;
 
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
-GUID AbstractionLayerGUID = __uuidof(Midi2NetworkMidiAbstraction);
-
 
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::Initialize(
-    IUnknown* MidiDeviceManager,
+    IUnknown* midiDeviceManager,
     IUnknown* /*midiEndpointProtocolManager*/
 )
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -35,12 +33,12 @@ CMidi2NetworkMidiEndpointManager::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
 
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
 
-    m_transportAbstractionId = AbstractionLayerGUID;   // this is needed so MidiSrv can instantiate the correct transport
-    m_containerId = m_transportAbstractionId;                           // we use the transport ID as the container ID for convenience
+    m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
+    m_containerId = m_transportId;                           // we use the transport ID as the container ID for convenience
 
     RETURN_IF_FAILED(CreateParentDevice());
 
@@ -52,7 +50,7 @@ HRESULT
 CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -75,7 +73,7 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
     const ULONG deviceIdMaxSize = 255;
     wchar_t newDeviceId[deviceIdMaxSize]{ 0 };
 
-    RETURN_IF_FAILED(m_MidiDeviceManager->ActivateVirtualParentDevice(
+    RETURN_IF_FAILED(m_midiDeviceManager->ActivateVirtualParentDevice(
         0,
         nullptr,
         &createInfo,
@@ -86,7 +84,7 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
     m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
 
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -117,7 +115,7 @@ HRESULT
 CMidi2NetworkMidiEndpointManager::Cleanup()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
