@@ -6,7 +6,9 @@
 
 #include "MidiTestCommon.h"
 
-UMP32 g_MidiTestData_32 = {0x21AA1234 }; // translates to midi 1 message 0xAA 0x12 0x34
+// Default assume group 0 for the messages, tests are responsible for changing the
+// group number of the test message to align to the ports being used for testing.
+UMP32 g_MidiTestData_32 = {0x20AA1234 }; // translates to midi 1 message 0xAA 0x12 0x34
 UMP64 g_MidiTestData_64 = {0x40917000, 0x48000000 }; // note on message that translates to g_MidiTestMessage
 UMP96 g_MidiTestData_96 = {0xb1CC1234, 0xbaadf00d, 0xdeadbeef }; // does not translate to midi 1
 UMP128 g_MidiTestData_128 = {0xF1DD1234, 0xbaadf00d, 0xdeadbeef, 0xd000000d }; // does not translate to midi 1

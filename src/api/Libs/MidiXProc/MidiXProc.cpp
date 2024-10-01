@@ -165,8 +165,8 @@ EnableMmcss(
     }
     else
     {
-        SetPriorityClass(GetCurrentThread(), HIGH_PRIORITY_CLASS);
-        SetPriorityClass(GetCurrentThread(), REALTIME_PRIORITY_CLASS);
+        SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+        SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
         SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
     }
 

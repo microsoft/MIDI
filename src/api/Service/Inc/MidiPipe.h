@@ -75,7 +75,7 @@ public:
     virtual HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG) { return E_NOTIMPL; }
     virtual HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG) { return E_NOTIMPL; }
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Length, _In_ LONGLONG Position, _In_ LONGLONG)
+    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Length, _In_ LONGLONG Position, _In_ LONGLONG Context)
     {
         // need to hold the client pipe lock to ensure that
         // no clients are added or removed while performing the callback
@@ -84,7 +84,21 @@ public:
 
         for (auto const& Client : m_ConnectedPipes)
         {
-            LOG_IF_FAILED(Client.second->SendMidiMessage(Data, Length, Position));
+            // By convention, Context will contain the group index this message is targeting.
+            // If this client is group filtered, and the context is a valid group index, then
+            // filter the messages being sent to this client by the group index.
+            // otherwise, send all messages to the client.
+            if (Client.second->IsGroupFiltered() && IS_VALID_GROUP_INDEX(Context))
+            {
+                if (Client.second->GroupIndex() == (UINT32) Context)
+                {
+                    LOG_IF_FAILED(Client.second->SendMidiMessage(Data, Length, Position));
+                }
+            }
+            else
+            {
+                LOG_IF_FAILED(Client.second->SendMidiMessage(Data, Length, Position));
+            }
         }
 
         return S_OK;
@@ -163,6 +177,10 @@ public:
             LOG_IF_FAILED(E_NOTFOUND);
         }
     }
+
+    // by default, pipes are not group filtered
+    virtual BOOL IsGroupFiltered() { return FALSE; }
+    virtual BYTE GroupIndex() { return INVALID_GROUP_INDEX; }
 
 private:
     std::wstring m_Device;

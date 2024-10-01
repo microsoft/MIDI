@@ -208,6 +208,10 @@ private:
     DOUBLE_BUFFER_MAPPING m_KernelBufferMapping;
     DOUBLE_BUFFER_MAPPING m_ClientBufferMapping;
 
+    ULONG       m_TotalBuffersProcessed {0};
+    ULONG       m_TotalDroppedBuffers {0};
+    ULONG       m_ContiguousDroppedBuffers {0};
+
     // read and write registers which are mapped to the virtual
     // address space for user mode.
     SINGLE_BUFFER_MAPPING m_Registers;

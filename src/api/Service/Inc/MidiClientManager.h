@@ -22,7 +22,6 @@ public:
         _In_ std::shared_ptr<CMidiSessionTracker>& sessionTracker);
 
     HRESULT CreateMidiClient(
-        _In_opt_ handle_t,
         _In_ LPCWSTR,
         _In_ GUID,
         _In_ DWORD,
@@ -32,7 +31,6 @@ public:
         _In_ BOOL);
 
     HRESULT DestroyMidiClient(
-        _In_opt_ handle_t,
         _In_ MidiClientHandle);
 
 
@@ -41,7 +39,7 @@ public:
 
 private:
     HRESULT GetMidiClient(
-        _In_ handle_t,
+        _In_ LPCWSTR,
         _In_ LPCWSTR,
         _In_ GUID,
         _In_ DWORD,
@@ -52,7 +50,6 @@ private:
         _In_ BOOL);
 
     HRESULT GetMidiDevice(
-        _In_ handle_t,
         _In_ LPCWSTR,
         _In_ PMIDISRV_CLIENTCREATION_PARAMS,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&);
@@ -62,7 +59,7 @@ private:
     // transform process work properly
     HRESULT
     GetMidiTransform(
-        _In_ handle_t,
+        _In_ LPCWSTR,
         _In_ MidiFlow,
         _In_ MidiDataFormat,
         _In_ MidiDataFormat,
@@ -71,7 +68,6 @@ private:
 
     HRESULT
     GetMidiProtocolDownscalerTransform(
-        _In_ handle_t,
         _In_ MidiFlow,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&,
@@ -79,7 +75,6 @@ private:
 
     HRESULT
     GetMidiScheduler(
-        _In_ handle_t,
         _In_ MidiFlow,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&,
@@ -87,7 +82,6 @@ private:
 
     //HRESULT
     //GetMidiEndpointMetadataHandler(
-    //    _In_ handle_t,
     //    _In_ MidiFlow,
     //    _In_ wil::com_ptr_nothrow<CMidiPipe>&,
     //    _In_ wil::com_ptr_nothrow<CMidiPipe>&,

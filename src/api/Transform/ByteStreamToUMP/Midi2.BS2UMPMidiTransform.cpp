@@ -11,7 +11,7 @@ CMidi2BS2UMPMidiTransform::Initialize(
     PTRANSFORMCREATIONPARAMS CreationParams,
     DWORD *,
     IMidiCallback * Callback,
-    LONGLONG Context,
+    LONGLONG /*Context*/,
     IUnknown* /*MidiDeviceManager*/
 )
 {
@@ -28,14 +28,13 @@ CMidi2BS2UMPMidiTransform::Initialize(
 
     m_Device = Device;
     m_Callback = Callback;
-    m_Context = Context;
 
     m_BS2UMP.outputMIDI2 = false;
 
-
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_INDEX_OUT_OF_BOUNDS), CreationParams->UmpGroupIndex > 15);
-
-    m_BS2UMP.defaultGroup = CreationParams->UmpGroupIndex;
+    if (IS_VALID_GROUP_INDEX(CreationParams->UmpGroupIndex))
+    {
+        m_BS2UMP.defaultGroup = (uint8_t) CreationParams->UmpGroupIndex;
+    }
 
     return S_OK;
 }
@@ -80,7 +79,12 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
 
             // just to ensure we don't go past the end of the array
             // TODO: we should clear the parser's byte buffer on error
-            RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_INDEX_OUT_OF_BOUNDS), m_umpMessageCurrentWordCount > _countof(m_umpMessage));
+            if (m_umpMessageCurrentWordCount > _countof(m_umpMessage))
+            {
+                // Do this instead of RETURN_HR_IF to keep static analysis happy that
+                // we aren't exceeding m_umpMessage.
+                RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_INDEX_OUT_OF_BOUNDS));
+            }
 
             // we need to send only a single message at a time. the library 
             // converts to a stream of words which may be multiple UMPs. So we 
@@ -94,11 +98,12 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
             if (expectedWordCount == m_umpMessageCurrentWordCount)
             {
                 // send the message
+                // By context, for the conversion transforms the context contains the group index
                 LOG_IF_FAILED(m_Callback->Callback(
                     (PVOID)m_umpMessage, 
                     (UINT)m_umpMessageCurrentWordCount * sizeof(uint32_t), 
                     Position, 
-                    m_Context));
+                    m_BS2UMP.defaultGroup));
 
                 m_umpMessageCurrentWordCount = 0;
                 m_umpMessage[0] = m_umpMessage[1] = m_umpMessage[2] = m_umpMessage[3] = { 0 };

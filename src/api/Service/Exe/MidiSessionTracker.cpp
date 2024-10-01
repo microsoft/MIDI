@@ -364,7 +364,7 @@ CMidiSessionTracker::RemoveClientSessionInternal(
 
             sessionEntry->ClientHandles.erase(sessionEntry->ClientHandles.begin());
 
-            LOG_IF_FAILED(clientManager->DestroyMidiClient((handle_t)nullptr, clientHandle));
+            LOG_IF_FAILED(clientManager->DestroyMidiClient(clientHandle));
         }
 
         // Remove this session entry

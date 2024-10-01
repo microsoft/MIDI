@@ -18,7 +18,6 @@ private:
 
     std::wstring m_Device;
     wil::com_ptr_nothrow<IMidiCallback> m_Callback;
-    LONGLONG m_Context;
 
     umpToBytestream m_UMP2BS;
 };

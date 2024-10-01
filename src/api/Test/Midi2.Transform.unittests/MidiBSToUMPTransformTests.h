@@ -43,7 +43,7 @@ public:
 
     void InternalTestSysEx(
         _In_ uint8_t const groupIndex,
-        _In_ uint8_t const sysexBytes[], 
+        _In_reads_bytes_(byteCount) uint8_t const sysexBytes[], 
         _In_ uint32_t const byteCount, 
         _In_ uint16_t const expectedMessageCount,
         _In_ std::vector<uint32_t> const expectedWords);
