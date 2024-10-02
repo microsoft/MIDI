@@ -1193,6 +1193,11 @@ Return Value:
             pDeviceContext,
             pDeviceContext->MidiInMaxSize);
 
+        // USBMIDI2DriverEvtReadComplete modifies the read and write positions
+        // of the queue, and cannot be called by multiple threads simultaniously.
+        // NumPendingReads of 1 limits the continuous reader to a single execution
+        // of the callback at a time.
+        readerConfig.NumPendingReads = 1;
         readerConfig.EvtUsbTargetPipeReadersFailed = USBMIDI2DriverEvtReadFailed;
 
         status = WdfUsbTargetPipeConfigContinuousReader(
@@ -2065,6 +2070,7 @@ Return Value:
 
 --*/
 {
+    static ULONG        totalBytesProcessed {0};
     PDEVICE_CONTEXT     pDeviceContext = (PDEVICE_CONTEXT)Context;
     NTSTATUS            status;
     PUINT8              pReceivedBuffer;
@@ -2079,9 +2085,10 @@ Return Value:
     } UMP_Packet_Struct;
     static UINT32       wordsRemain = 0;    // To know how many words remaining to process
 
-    Pipe;
+    UNREFERENCED_PARAMETER(Pipe);
 
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+    totalBytesProcessed += static_cast<unsigned long>(NumBytesTransferred);
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry, NumBytesTransferred %lu, TotalBytesProcessed %lu", static_cast<unsigned long>(NumBytesTransferred), totalBytesProcessed);
 
     umpPacket.wordCount = 0;
 
@@ -2328,6 +2335,7 @@ Return Value:Amy
 --*/
 {
     NTSTATUS                status;
+    static ULONG            totalBytesProcessed {0};
     PDEVICE_CONTEXT         pDeviceContext = NULL;
     WDFUSBPIPE              pipe = NULL;
     PUCHAR                  pBuffer;
@@ -2337,7 +2345,9 @@ Return Value:Amy
     bool bEndSysex;
     UINT8 numberBytes;
     UINT8 sysexStatus;
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
+    totalBytesProcessed += static_cast<unsigned long>(numBytes);
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry NumBytesTransferred %lu, TotalBytesProcessed %lu", static_cast<unsigned long>(numBytes), totalBytesProcessed);
 
     pDeviceContext = GetDeviceContext(Device);
 

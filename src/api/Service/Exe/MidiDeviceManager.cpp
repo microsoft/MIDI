@@ -155,12 +155,11 @@ CMidiDeviceManager::Initialize(
                                 );
 
                                 CComBSTR response{};
-                                response.Empty();
 
                                 auto updateConfigHR = abstractionConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), true, &response);
 
                                 // we don't use the response info here.
-                                ::SysFreeString(response);
+                                response.Empty();
 
                                 if (FAILED(updateConfigHR))
                                 {
@@ -1091,8 +1090,8 @@ CMidiDeviceManager::ActivateEndpoint
                 }
             }
 
-            // BUGBUG: temporary hard coded strings, needs to be localized
-            friendlyName += L" Gp 4";
+            // TODO: temporary hard coded strings, needs to be localized
+            friendlyName += L" Gp 0";
 
             std::wstring midiOutFriendlyName = friendlyName + L" Out";
             std::wstring midiInFriendlyName = friendlyName + L" In";
@@ -1132,9 +1131,39 @@ CMidiDeviceManager::ActivateEndpoint
                     DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
-            // BUGBUG: temporary hard coded group index value
-            // group index of 3 is group 4
-            UINT32 groupIndex = 3;
+            // The abstraction layer GUID is required for various tests for targeting the tests on this SWD.
+            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(CommonProperties->AbstractionLayerGuid)) });
+
+            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(CommonProperties->AbstractionLayerGuid)) });
+
+            // The Midi 1 ports are an abstraction generated and handled by Midisrv, as such it can do both bytestream
+            // and UMP.
+            MidiDataFormat supportedDataFormats { MidiDataFormat_Any };
+
+            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(supportedDataFormats)) });
+
+            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(supportedDataFormats)) });
+
+            if (CommonProperties->NativeDataFormat > 0)
+            {
+                // Native data format is used by various tests to determine which messages are valid to send to the device,
+                // copy it over if we have it.
+                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(CommonProperties->NativeDataFormat)) });
+
+                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(CommonProperties->NativeDataFormat)) });
+            }
+
+            // TODO: temporary hard coded group index value
+            // group index of 0 is group 1. Use group 1 so that messages sent through
+            // the usbmidi2 driver to legacy peripherals will loop back correctly for now, until
+            // the real group indexes are plumbed.
+            UINT32 groupIndex = 0;
 
             midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(groupIndex)) });
@@ -1847,6 +1876,16 @@ CMidiDeviceManager::Cleanup()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
+
+    for (auto const& endpointManager : m_MidiEndpointManagers)
+    {
+        endpointManager.second->Cleanup();
+    }
+
+    for (auto const& configurationManager : m_MidiAbstractionConfigurationManagers)
+    {
+        configurationManager.second->Cleanup();
+    }
 
     m_MidiEndpointManagers.clear();
     m_MidiAbstractionConfigurationManagers.clear();

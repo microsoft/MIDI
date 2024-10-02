@@ -32,7 +32,8 @@
 #define MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD   "Device Instance Id"
 
 
-
+#define INVALID_GROUP_INDEX 0xFF
+#define IS_VALID_GROUP_INDEX(Context) (Context >= 0 && Context <= 15)
 
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
@@ -196,7 +197,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedPortNumber, 16);     // DEVPROP_TYPE
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ServiceAssignedPortNumber, 17);     // DEVPROP_TYPE_UINT32
 
 #define STRING_PKEY_MIDI_PortAssignedGroupIndex MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"18"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_PortAssignedGroupIndex, 18);     // DEVPROP_TYPE_
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_PortAssignedGroupIndex, 18);     // DEVPROP_TYPE_UINT32
 
 // USB / KS Properties ============================================================================
 // Starts at 50

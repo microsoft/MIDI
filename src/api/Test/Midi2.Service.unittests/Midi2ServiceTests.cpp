@@ -91,7 +91,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
     VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(testDevices, [&](PMIDIU_DEVICE device)
     {
         if (device->Flow == MidiFlowBidirectional &&
-            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MinMidi") ||
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MINMIDI") ||
             std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
             !device->MidiOne)
         {

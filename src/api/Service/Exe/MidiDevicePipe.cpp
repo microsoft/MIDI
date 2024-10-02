@@ -13,7 +13,6 @@ using namespace winrt::Windows::Devices::Enumeration;
 _Use_decl_annotations_
 HRESULT
 CMidiDevicePipe::Initialize(
-    handle_t /* BindingHandle */,
     LPCWSTR Device,
     PMIDISRV_DEVICECREATION_PARAMS CreationParams,
     DWORD* MmcssTaskId
@@ -70,7 +69,7 @@ CMidiDevicePipe::Initialize(
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
-        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, 0, dummySessionId));
+        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
     }
     else if (MidiFlowIn == CreationParams->Flow)
     {
@@ -89,7 +88,7 @@ CMidiDevicePipe::Initialize(
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&m_MidiInDevice));
-        RETURN_IF_FAILED(m_MidiInDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, 0, dummySessionId));
+        RETURN_IF_FAILED(m_MidiInDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
     }
     else if (MidiFlowOut == CreationParams->Flow)
     {

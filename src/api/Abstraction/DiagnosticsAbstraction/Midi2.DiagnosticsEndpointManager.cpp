@@ -285,5 +285,7 @@ CMidi2DiagnosticsEndpointManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
+    m_MidiDeviceManager.reset();
+
     return S_OK;
 }

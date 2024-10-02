@@ -68,6 +68,16 @@ CMidi2VirtualPatchBayEndpointManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
+    AbstractionState::Current().Cleanup();
+
+    m_MidiDeviceManager.reset();
+    m_MidiProtocolManager.reset();
+    m_DeviceAdded.revoke();
+    m_DeviceRemoved.revoke();
+    m_DeviceUpdated.revoke();
+    m_DeviceStopped.revoke();
+    m_DeviceEnumerationCompleted.revoke();
+
     return S_OK;
 }
 

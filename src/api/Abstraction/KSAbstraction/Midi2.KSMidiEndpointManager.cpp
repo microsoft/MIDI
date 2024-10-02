@@ -906,14 +906,20 @@ CMidi2KSMidiEndpointManager::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    m_EnumerationCompleted.wait();
+    AbstractionState::Current().Cleanup();
+
+    m_AvailableMidiPins.clear();
+
     m_Watcher.Stop();
-    m_EnumerationCompleted.wait();
+    m_EnumerationCompleted.wait(500);
     m_DeviceAdded.revoke();
     m_DeviceRemoved.revoke();
     m_DeviceUpdated.revoke();
     m_DeviceStopped.revoke();
     m_DeviceEnumerationCompleted.revoke();
+
+    m_MidiDeviceManager.reset();
+    m_MidiProtocolManager.reset();
 
     return S_OK;
 }

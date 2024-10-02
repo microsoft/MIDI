@@ -406,6 +406,11 @@ CMidi2LoopbackMidiEndpointManager::Cleanup()
 
 //    LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->Cleanup());
 
+    AbstractionState::Current().Cleanup();
+
+    m_MidiDeviceManager.reset();
+    m_MidiProtocolManager.reset();
+
     return S_OK;
 }
 

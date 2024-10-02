@@ -30,7 +30,8 @@ _Use_decl_annotations_
 STDAPI
 DllCanUnloadNow(void)
 {
-    return _AtlModule.DllCanUnloadNow();
+    auto &module = Microsoft::WRL::Module<Microsoft::WRL::InProc>::GetModule();
+    return module.Terminate() ? _AtlModule.DllCanUnloadNow() : S_FALSE;
 }
 
 _Use_decl_annotations_

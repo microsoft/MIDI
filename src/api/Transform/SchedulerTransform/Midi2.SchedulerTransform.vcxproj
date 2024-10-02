@@ -145,6 +145,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -163,6 +164,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -181,6 +183,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -218,6 +221,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -235,6 +239,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
@@ -262,6 +267,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies)</AdditionalDependencies>

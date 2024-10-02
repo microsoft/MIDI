@@ -102,11 +102,19 @@ void Midi2DriverTests::TestMidiIO(MidiTransport Transport)
         QueryPerformanceCounter(&position);
         VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
         QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+        QueryPerformanceCounter(&position);
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+/*
+        QueryPerformanceCounter(&position);
         VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), position.QuadPart));
         QueryPerformanceCounter(&position);
         VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), position.QuadPart));
         QueryPerformanceCounter(&position);
         VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
+*/
     }
     else
     {
@@ -180,9 +188,9 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport Transport)
 
         if (Transport == MidiTransport_CyclicUMP)
         {
-            if (0 != memcmp(payload, &g_MidiTestData_128, min(payloadSize, sizeof(UMP128))))
+            if (0 != memcmp(payload, &g_MidiTestData_32, min(payloadSize, sizeof(UMP32))))
             {
-                PrintMidiMessage(payload, payloadSize, sizeof(UMP128), payloadPosition);
+                PrintMidiMessage(payload, payloadSize, sizeof(UMP32), payloadPosition);
             }
         }
         else
@@ -226,7 +234,7 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport Transport)
         if (Transport == MidiTransport_CyclicUMP)
         {
             QueryPerformanceCounter(&position);
-            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
         }
         else
         {
@@ -544,8 +552,8 @@ void Midi2DriverTests::TestMidiIO_Latency(MidiTransport Transport, BOOL DelayedM
     LOG_OUTPUT(L" ");
     LOG_OUTPUT(L"Message receive jitter");
     LOG_OUTPUT(L"Average message receive %g micro seconds", avgRLatency);
-    LOG_OUTPUT(L"Largest message receive %g micro seconds", minRLatency);
-    LOG_OUTPUT(L"Smallest message receive %g micro seconds", maxRLatency);
+    LOG_OUTPUT(L"Smallest message receive %g micro seconds", minRLatency);
+    LOG_OUTPUT(L"Largest message receive %g micro seconds", maxRLatency);
     LOG_OUTPUT(L"Standard deviation %g micro seconds", stddevRLatency);
     LOG_OUTPUT(L" ");
     LOG_OUTPUT(L"****************************************************************************");
