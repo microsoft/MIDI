@@ -83,8 +83,8 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiXProc.h"
 
-#include "Midi2NetworkMidiAbstraction_i.c"
-#include "Midi2NetworkMidiAbstraction.h"
+#include "Midi2NetworkMidiTransport_i.c"
+#include "Midi2NetworkMidiTransport.h"
 
 #include "dllmain.h"
 
@@ -94,7 +94,7 @@ class MidiNetworkAdvertiser;
 class MidiNetworkHostSession;
 class MidiNetworkClientSession;
 
-#include "abstraction_defs.h"
+#include "transport_defs.h"
 
 #include "MidiNetworkEndpointDefinition.h"
 
@@ -109,9 +109,9 @@ class MidiNetworkClientSession;
 
 #include "MidiNetworkAdvertiser.h"
 
-#include "AbstractionState.h"
+#include "TransportState.h"
 
-#include "Midi2.NetworkMidiAbstraction.h"
+#include "Midi2.NetworkMidiTransport.h"
 #include "Midi2.NetworkMidiBiDi.h"
 #include "Midi2.NetworkMidiEndpointManager.h"
 #include "Midi2.NetworkMidiConfigurationManager.h"

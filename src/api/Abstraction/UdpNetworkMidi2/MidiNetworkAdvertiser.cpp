@@ -12,7 +12,7 @@ HRESULT
 MidiNetworkAdvertiser::Initialize()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -49,7 +49,7 @@ MidiNetworkAdvertiser::Advertise(
 )
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -79,7 +79,7 @@ MidiNetworkAdvertiser::Advertise(
         // The service was not registered because security settings did not allow it.
     case DnssdRegistrationStatus::SecurityError:
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
@@ -93,7 +93,7 @@ MidiNetworkAdvertiser::Advertise(
         // The service was not registered because the service name provided is not valid.
     case DnssdRegistrationStatus::InvalidServiceName:
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
@@ -107,7 +107,7 @@ MidiNetworkAdvertiser::Advertise(
         // The service was not registered because of an error on the DNS server.
     case DnssdRegistrationStatus::ServerError:
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingPointer(this, "this"),
@@ -119,7 +119,7 @@ MidiNetworkAdvertiser::Advertise(
 
     default:
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
@@ -138,7 +138,7 @@ HRESULT
 MidiNetworkAdvertiser::Cleanup()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),

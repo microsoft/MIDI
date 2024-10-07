@@ -15,7 +15,7 @@ HRESULT
 CMidi2NetworkMidiPluginMetadataProvider::Initialize()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -34,7 +34,7 @@ CMidi2NetworkMidiPluginMetadataProvider::GetMetadata(
     PABSTRACTIONMETADATA metadata)
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -44,7 +44,7 @@ CMidi2NetworkMidiPluginMetadataProvider::GetMetadata(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, metadata);
 
-    metadata->Id = ABSTRACTION_LAYER_GUID;
+    metadata->Id = TRANSPORT_LAYER_GUID;
     metadata->Mnemonic = TRANSPORT_CODE;
 
     internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_NAME, &metadata->Name);
@@ -69,7 +69,7 @@ HRESULT
 CMidi2NetworkMidiPluginMetadataProvider::Cleanup()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),

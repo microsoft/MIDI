@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 
 #define IDS_PROJNAME                    100
-#define IDR_MIDI2NETWORKMIDIABSTRACTION          101
+#define IDR_MIDI2NETWORKMIDITRANSPORT   101
 
 #define IDS_PLUGIN_METADATA_VERSION     500
 #define IDS_PLUGIN_METADATA_NAME        501

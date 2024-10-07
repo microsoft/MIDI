@@ -8,7 +8,7 @@
 
 
 #include "pch.h"
-#include "midi2.NetworkMidiabstraction.h"
+#include "midi2.NetworkMidiTransport.h"
 
 _Use_decl_annotations_
 HRESULT
@@ -16,13 +16,13 @@ CMidi2NetworkMidiBiDi::Initialize(
     LPCWSTR,
     PABSTRACTIONCREATIONPARAMS,
     DWORD *,
-    IMidiCallback * Callback,
-    LONGLONG Context,
+    IMidiCallback * callback,
+    LONGLONG context,
     GUID /* SessionId */
 )
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -30,8 +30,8 @@ CMidi2NetworkMidiBiDi::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_Callback = Callback;
-    m_Context = Context;
+    m_callback = callback;
+    m_context = context;
 
     return S_OK;
 }
@@ -40,7 +40,7 @@ HRESULT
 CMidi2NetworkMidiBiDi::Cleanup()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -48,8 +48,8 @@ CMidi2NetworkMidiBiDi::Cleanup()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_Callback = nullptr;
-    m_Context = 0;
+    m_callback = nullptr;
+    m_context = 0;
 
     return S_OK;
 }
@@ -57,30 +57,30 @@ CMidi2NetworkMidiBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBiDi::SendMidiMessage(
-    PVOID Message,
-    UINT Size,
-    LONGLONG Position
+    PVOID message,
+    UINT size,
+    LONGLONG position
 )
 {
-    if (m_Callback == nullptr)
+    if (m_callback == nullptr)
     {
         // TODO log that callback is null
         return E_FAIL;
     }
 
-    if (Message == nullptr)
+    if (message == nullptr)
     {
         // TODO log that message was null
         return E_FAIL;
     }
 
-    if (Size < sizeof(uint32_t))
+    if (size < sizeof(uint32_t))
     {
         // TODO log that data was smaller than minimum UMP size
         return E_FAIL;
     }
 
-    m_Callback->Callback(Message, Size, Position, m_Context);
+    m_callback->Callback(message, size, position, m_context);
 
     return S_OK;
 

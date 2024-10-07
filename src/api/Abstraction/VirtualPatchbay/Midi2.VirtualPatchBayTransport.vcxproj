@@ -28,7 +28,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{7E618284-6AA0-4FCE-9E4A-D895A5EE8E3C}</ProjectGuid>
+    <ProjectGuid>{7427BC7A-4247-42B0-AC9B-7DA10418AA9D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -96,32 +96,32 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiks\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiks\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration)</LibraryPath>
+    <OutDir>$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
-    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration)</LibraryPath>
+    <OutDir>$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiks\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration)</LibraryPath>
+    <OutDir>$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\AbstractionUtilities\$(Platform)\$(Configuration)\</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -148,11 +148,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.NetworkMidiAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.NetworkMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBay\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -166,11 +166,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.NetworkMidiAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.NetworkMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayTransport\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -184,11 +184,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.NetworkMidiAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.NetworkMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayTransport\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -221,11 +221,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.NetworkMidiAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.NetworkMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayTransport\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -238,11 +238,11 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.NetworkMidiAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.NetworkMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayTransport\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
@@ -265,69 +265,61 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.NetworkMidiAbstraction.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.VirtualPatchBayTransport.def</ModuleDefinitionFile>
     </Link>
     <Midl>
       <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.NetworkMidiabstraction\$(Platform)\$(Configuration)\</OutputDirectory>
+      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\midi2.VirtualPatchBayTransport\$(Platform)\$(Configuration)\</OutputDirectory>
       <HeaderFileName>%(Filename).h</HeaderFileName>
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AbstractionState.cpp" />
+    <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="Midi2.NetworkMidiAbstraction.cpp" />
-    <ClCompile Include="Midi2.NetworkMidiConfigurationManager.cpp" />
-    <ClCompile Include="Midi2.NetworkMidiEndpointManager.cpp" />
-    <ClCompile Include="Midi2.NetworkMidiBidi.cpp" />
-    <ClCompile Include="Midi2.NetworkMidiPluginMetadataProvider.cpp" />
-    <ClCompile Include="MidiNetworkAdvertiser.cpp" />
-    <ClCompile Include="MidiNetworkClient.cpp" />
-    <ClCompile Include="MidiNetworkClientSession.cpp" />
-    <ClCompile Include="MidiNetworkHost.cpp" />
-    <ClCompile Include="MidiNetworkHostSession.cpp" />
-    <ClCompile Include="MidiNetworkMessageProcessor.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayTransport.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayConfigurationManager.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayEndpointManager.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayPluginMetadataProvider.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingDestination.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingEntry.cpp" />
+    <ClCompile Include="Midi2.VirtualPatchBayRoutingSource.cpp" />
+    <ClCompile Include="MidiPatchBayTable.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2NetworkMidiAbstraction.idl" />
+    <Midl Include="Midi2VirtualPatchBayATransport.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Midi2.NetworkMidiAbstraction.def" />
-    <None Include="Midi2.NetworkMidiAbstraction.rgs" />
+    <None Include="Midi2.VirtualPatchBayTransport.def" />
+    <None Include="Midi2.VirtualPatchBayTransport.rgs" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractionState.h" />
-    <ClInclude Include="abstraction_defs.h" />
+    <ClInclude Include="TransportState.h" />
+    <ClInclude Include="transport_defs.h" />
     <ClInclude Include="dllmain.h" />
-    <ClInclude Include="Midi2.NetworkMidiAbstraction.h" />
-    <ClInclude Include="Midi2.NetworkMidiConfigurationManager.h" />
-    <ClInclude Include="Midi2.NetworkMidiEndpointManager.h" />
-    <ClInclude Include="Midi2.NetworkMidiBidi.h" />
-    <ClInclude Include="Midi2.NetworkMidiPluginMetadataProvider.h" />
-    <ClInclude Include="MidiNetworkAdvertiser.h" />
-    <ClInclude Include="MidiNetworkClient.h" />
-    <ClInclude Include="MidiNetworkEndpointDefinition.h" />
-    <ClInclude Include="MidiNetworkClientSession.h" />
-    <ClInclude Include="MidiNetworkHost.h" />
-    <ClInclude Include="MidiNetworkHostSession.h" />
-    <ClInclude Include="MidiNetworkMessageProcessor.h" />
-    <ClInclude Include="MidiNetworkMessages.h" />
+    <ClInclude Include="Midi2.VirtualPatchBayTransport.h" />
+    <ClInclude Include="Midi2.VirtualPatchBayConfigurationManager.h" />
+    <ClInclude Include="Midi2.VirtualPatchBayEndpointManager.h" />
+    <ClInclude Include="Midi2.VirtualPatchBayPluginMetadataProvider.h" />
+    <ClInclude Include="Midi2.VirtualPatchBayRoutingDestination.h" />
+    <ClInclude Include="Midi2.VirtualPatchBayRoutingEntry.h" />
+    <ClInclude Include="Midi2.VirtualPatchBayRoutingSource.h" />
+    <ClInclude Include="MidiPatchBayTable.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Midi2.NetworkMidiAbstraction.rc" />
+    <ResourceCompile Include="Midi2.VirtualPatchBayTransport.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240122.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
 </Project>

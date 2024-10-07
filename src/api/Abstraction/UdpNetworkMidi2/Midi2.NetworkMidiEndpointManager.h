@@ -27,13 +27,13 @@ private:
 
 
     GUID m_containerId{};
-    GUID m_transportAbstractionId{};
+    GUID m_transportId{};
     std::wstring m_parentDeviceId{};
 
     HRESULT CreateParentDevice();
 //    HRESULT CreateEndpoint(_In_ MidiNetworkDeviceDefinition& deviceEndpoint);
 
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
-    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
+    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_midiProtocolManager;
 };

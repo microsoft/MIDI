@@ -10,15 +10,15 @@
 #pragma once
 
 // singleton
-class AbstractionState
+class TransportState
 {
 
 public:
-    static AbstractionState& Current();
+    static TransportState& Current();
 
     // no copying
-    AbstractionState(_In_ const AbstractionState&) = delete;
-    AbstractionState& operator=(_In_ const AbstractionState&) = delete;
+    TransportState(_In_ const TransportState&) = delete;
+    TransportState& operator=(_In_ const TransportState&) = delete;
 
 
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> GetEndpointManager()
@@ -51,8 +51,8 @@ public:
 
 
 private:
-    AbstractionState();
-    ~AbstractionState();
+    TransportState();
+    ~TransportState();
 
 
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> m_endpointManager;

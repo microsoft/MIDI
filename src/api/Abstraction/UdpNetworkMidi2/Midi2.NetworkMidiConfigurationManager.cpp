@@ -13,16 +13,16 @@ using namespace winrt::Windows::Networking;
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::Initialize(
-    GUID AbstractionId,
-    IUnknown* MidiDeviceManager,
-    IUnknown* MidiServiceConfigurationManagerInterface
+    GUID transportId,
+    IUnknown* midiDeviceManager,
+    IUnknown* midiServiceConfigurationManagerInterface
 )
 {
-    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+    UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
 
 
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -30,10 +30,10 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, MidiDeviceManager);
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
 
-    m_abstractionId = AbstractionId;
+    m_transportId = transportId;
 
     return S_OK;
 }
@@ -153,13 +153,13 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
-    LPCWSTR ConfigurationJsonSection,
-    BOOL IsFromConfigurationFile,
-    BSTR* Response
+    LPCWSTR configurationJsonSection,
+    BOOL isFromConfigurationFile,
+    BSTR* response
 )
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -167,10 +167,10 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    UNREFERENCED_PARAMETER(IsFromConfigurationFile);
+    UNREFERENCED_PARAMETER(isFromConfigurationFile);
 
     // if we're passed a null or empty json, we just quietly exit
-    if (ConfigurationJsonSection == nullptr) return S_OK;
+    if (configurationJsonSection == nullptr) return S_OK;
 
     // default to failure
 
@@ -236,19 +236,19 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         jsonFalse);
 
 
-    if (!json::JsonObject::TryParse(winrt::to_hstring(ConfigurationJsonSection), jsonObject))
+    if (!json::JsonObject::TryParse(winrt::to_hstring(configurationJsonSection), jsonObject))
     {
         TraceLoggingWrite(
-            MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(ConfigurationJsonSection, "json")
+            TraceLoggingWideString(configurationJsonSection, "json")
         );
 
-        internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+        internal::JsonStringifyObjectToOutParam(responseObject, &response);
 
         RETURN_IF_FAILED(E_INVALIDARG);
     }
@@ -261,7 +261,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
         // TODO: Set the response to something meaningful here
 
-        internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+        internal::JsonStringifyObjectToOutParam(responseObject, &response);
 
         // once we enable update/delete we need to move this
         return S_OK;
@@ -414,7 +414,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
 
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
@@ -423,7 +423,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     );
 
     // return the json with the information the client will need
-    internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+    internal::JsonStringifyObjectToOutParam(responseObject, &response);
 
     return S_OK;
 }
@@ -433,7 +433,7 @@ HRESULT
 CMidi2NetworkMidiConfigurationManager::Cleanup()
 {
     TraceLoggingWrite(
-        MidiNetworkMidiAbstractionTelemetryProvider::Provider(),
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),

@@ -9,11 +9,11 @@
 
 #pragma once
 
-class CMidi2NetworkMidiAbstractionModule : public ATL::CAtlDllModuleT< CMidi2NetworkMidiAbstractionModule >
+class CMidi2NetworkMidiTransportModule : public ATL::CAtlDllModuleT< CMidi2NetworkMidiTransportModule >
 {
 public :
-    DECLARE_LIBID(LIBID_Midi2NetworkMidiAbstractionLib)
-    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2NETWORKMIDIABSTRACTION, "{4568a471-6f32-4015-b4db-9087bfb60a0b}")
+    DECLARE_LIBID(LIBID_Midi2NetworkMidiTransportLib)
+    DECLARE_REGISTRY_APPID_RESOURCEID(IDR_MIDI2NETWORKMIDITRANSPORT, "{4568a471-6f32-4015-b4db-9087bfb60a0b}")
 };
 
-extern class CMidi2NetworkMidiAbstractionModule _AtlModule;
+extern class CMidi2NetworkMidiTransportModule _AtlModule;

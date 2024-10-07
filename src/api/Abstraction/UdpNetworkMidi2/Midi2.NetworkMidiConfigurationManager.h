@@ -16,15 +16,15 @@ class CMidi2NetworkMidiConfigurationManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IUnknown* MidiDeviceManager, _In_ IUnknown* MidiServiceConfigurationManagerInterface));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* Response));
+    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IUnknown* midiDeviceManager, _In_ IUnknown* midiServiceConfigurationManagerInterface));
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _In_ BOOL isFromConfigurationFile, _Out_ BSTR* Response));
     STDMETHOD(Cleanup)();
 
     STDMETHOD(ValidateHostDefinition(_In_ MidiNetworkUdpHostDefinition& definition, _Out_ winrt::hstring& errorMessage));
 //    STDMETHOD(ValidateClientDefinition(_In_ MidiNetworkUdpClientDefinition& definition));
 
 private:
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
+    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
 
-    GUID m_abstractionId;   // kept for convenience
+    GUID m_transportId;   // kept for convenience
 };
