@@ -2457,6 +2457,7 @@ Return Value:Amy
                 case UMP_SYSTEM_RESET:
                 case UMP_SYSTEM_UNDEFINED_F4:
                 case UMP_SYSTEM_UNDEFINED_F5:
+                case UMP_SYSTEM_UNDEFINED_FD:
                 case UMP_SYSTEM_UNDEFINED_F9:
                     umpWritePacket.umpData.umpBytes[0] = (cbl_num << 4) | MIDI_CIN_SYSEX_END_1BYTE;
                     break;
