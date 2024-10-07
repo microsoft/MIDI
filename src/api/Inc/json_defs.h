@@ -34,7 +34,6 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY                                      L"name"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY                               L"description"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY                                 L"uniqueIdentifier"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_PRODUCT_INSTANCE_ID_PROPERTY                       L"productInstanceId"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY                              L"manufacturer"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENABLED_PROPERTY                                   L"enabled"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY                                  L"umpOnly"
@@ -115,6 +114,7 @@
 #define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY                       L"earliestStartTime"
 #define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY                      L"instanceCount"
 #define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY                L"endpointId"
+
 
 // plugin information reporting 
 

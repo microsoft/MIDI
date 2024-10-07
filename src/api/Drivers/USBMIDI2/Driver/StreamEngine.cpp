@@ -55,6 +55,8 @@ StreamEngine::StreamEngine(
     ) : m_Pin(Pin)
 {
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "%!FUNC! create %p", this);
 }
 
 _Use_decl_annotations_
@@ -68,6 +70,8 @@ NTSTATUS
 StreamEngine::Cleanup()
 {
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "%!FUNC! Entry %p", this);
 
     m_Process = nullptr;
 
@@ -112,6 +116,8 @@ StreamEngine::Cleanup()
         ASSERT(m_Process == IoGetCurrentProcess());
         m_Process = nullptr;
     }
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return STATUS_SUCCESS;
 }
@@ -205,8 +211,7 @@ StreamEngine::HandleIo()
 
                     if (dataSize < MINIMUM_UMP_DATASIZE || dataSize > MAXIMUM_UMP_DATASIZE)
                     {
-                        // TBD: need to log an abort
-
+                        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "%!FUNC! Invalid dataSize, aborting.");
                         // data is malformed, abort.
                         return;
                     }
@@ -219,20 +224,22 @@ StreamEngine::HandleIo()
                         // if the full contents of this buffer isn't yet available,
                         // wait for more data to come in.
                         // Client will set an event when the write position advances.
+                        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Full contents of buffer unavailable");
                         break;
                     }
 
-                    // Send relevant buffer to USB
-                    PUMPDATAFORMAT thisData = (PUMPDATAFORMAT)startingReadAddress;
-                    if (thisData->ByteCount)
-                    {
-                        USBMIDI2DriverIoWrite(
-                            AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)),
-                            (PUCHAR)startingReadAddress + sizeof(UMPDATAFORMAT),
-                            thisData->ByteCount,
-                            (finalReadPosition != midiOutWritePosition) ? TRUE : FALSE  // indicates there is more data in this pass or not
-                        );
-                    }
+                    m_TotalBuffersProcessed++;
+
+                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, 
+                        "%!FUNC! MidiOut processing buffer, total processed: %lu, more data: %s",
+                        m_TotalBuffersProcessed, (finalReadPosition != midiOutWritePosition)?"yes":"no");
+
+                    USBMIDI2DriverIoWrite(
+                        AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin)),
+                        (PUCHAR)startingReadAddress + sizeof(UMPDATAFORMAT),
+                        header->ByteCount,
+                        (finalReadPosition != midiOutWritePosition) ? TRUE : FALSE  // indicates there is more data in this pass or not
+                    );
 
                     // advance our read position
                     InterlockedExchange((LONG *)m_ReadRegister, finalReadPosition);
@@ -245,7 +252,7 @@ StreamEngine::HandleIo()
                 TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! thread terminated with status: %!STATUS!", status);
                 break;
             }
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, 
                 "%!FUNC! thread event end with status: %!STATUS!", status);
         }while(true);
     }
@@ -289,84 +296,91 @@ Return Value:
     // Current mechanism to determine if currently processing data is that
     // the StreamEngine is not null. TBD this mechanism needs to be fixed.
     //auto lock = m_MidiInLock.acquire();
-    bool retry {false};
-    do
+    if (m_IsRunning)
     {
-        // unless we explicitly have to retry, do not repeat the loop
-        retry = false;
+        KeResetEvent(m_ReadEvent);
 
-        if (m_IsRunning)
+        // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
+        // and read position is empty. (read position is their last read position, write position is our last written).
+        // retrieve our write position first since we know it won't be changing, and their read position second,
+        // so we can have as much free space as possible.
+        ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
+        ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
+
+        // Check enough space to write into
+        ULONG bytesAvailable = 0;
+
+        // Now we need to calculate the available space, taking into account the looping
+        // buffer.
+        if (midiInReadPosition <= midiInWritePosition)
         {
-            KeResetEvent(m_ReadEvent);
-
-            // Retrieve the midi in position for the buffer that we are writing to. The data between the write position
-            // and read position is empty. (read position is their last read position, write position is our last written).
-            // retrieve our write position first since we know it won't be changing, and their read position second,
-            // so we can have as much free space as possible.
-            ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
-            ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
-
-            // Check enough space to write into
-            ULONG bytesAvailable = 0;
-
-            // Now we need to calculate the available space, taking into account the looping
-            // buffer.
-            if (midiInReadPosition <= midiInWritePosition)
-            {
-                // if the read position is less than the write position, then the difference between
-                // the read and write position is the buffer in use, same as above. So, the total
-                // buffer size minus the used buffer gives us the available space.
-                bytesAvailable = m_BufferSize - (midiInWritePosition - midiInReadPosition);
-            }
-            else
-            {
-                // we looped around, the write position is behind the read position.
-                // The difference between the read position and the write position
-                // is the available space, which is exactly what we want.
-                bytesAvailable = midiInReadPosition - midiInWritePosition;
-            }
-            if (bufferSize > bytesAvailable)
-            {
-                PVOID midiInWaitObjects[] = { m_ThreadExitEvent.get(), m_ReadEvent };
-                
-                // Wait for either room in the output buffer, or thread exit.
-                NTSTATUS status = KeWaitForMultipleObjects(2, midiInWaitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
-                if (STATUS_WAIT_1 == status)
-                {
-                    // we have space available from the client, try again.
-                    retry = true;
-                    continue;
-                }
-                break;
-            }
-
-            // There's enough space available, calculate our write position
-            PVOID startingWriteAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
-
-            // Copy the data
-            RtlCopyMemory(
-                (PVOID)startingWriteAddress,
-                (PVOID)pBuffer,
-                bufferSize
-            );
-
-            // now calculate the new position that the buffer has been written up to.
-            // this will be the original write position, plus the bytes copied, again modululs
-            // the buffer size to take into account the loop.
-            ULONG finalWritePosition = (midiInWritePosition + bufferSize) % m_BufferSize;
-
-            // finalize by advancing the registers and setting the write event
-
-            // advance the write position and signal that there's data available
-            InterlockedExchange((LONG*)m_WriteRegister, finalWritePosition);
-            KeSetEvent(m_WriteEvent, 0, 0);
+            // if the read position is less than the write position, then the difference between
+            // the read and write position is the buffer in use, same as above. So, the total
+            // buffer size minus the used buffer gives us the available space.
+            bytesAvailable = m_BufferSize - (midiInWritePosition - midiInReadPosition);
         }
         else
         {
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit with data dropped.");
-            return true;    // just drop the data
+            // we looped around, the write position is behind the read position.
+            // The difference between the read position and the write position
+            // is the available space, which is exactly what we want.
+            bytesAvailable = midiInReadPosition - midiInWritePosition;
         }
-    }while (retry);
+
+        // Note, if we fill the buffer up 100%, then write position == read position,
+        // which is the same as when the buffer is empty and everything in the buffer
+        // would be lost.
+        // Reserve 1 byte so that when the buffer is full the write position will trail
+        // the read position.
+        // Because of this reserve, and the above calculation, the true bytesAvailable 
+        // count can never be 0.
+        ASSERT(bytesAvailable != 0);
+        bytesAvailable--;
+
+        if (bufferSize > bytesAvailable)
+        {
+            // Because this thread is called at >= DISPATCH_LEVEL, we can not make use of the read event
+            // to wait for space to come available.
+
+            // We will drop this data but request to handle existing data for next call
+            m_TotalDroppedBuffers++;
+            m_ContiguousDroppedBuffers++;
+            KeSetEvent(m_WriteEvent, 0, 0);
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Insufficient buffer, data dropped, total dropped: %lu, contiguous dropped: %lu", m_TotalDroppedBuffers, m_ContiguousDroppedBuffers);
+            return true;
+        }
+
+        m_TotalBuffersProcessed++;
+        m_ContiguousDroppedBuffers = 0;
+
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! MidiIn processing buffer, total processed: %lu", m_TotalBuffersProcessed);
+
+        // There's enough space available, calculate our write position
+        PVOID startingWriteAddress = (PVOID)(((PBYTE)m_KernelBufferMapping.Buffer1.m_BufferClientAddress) + midiInWritePosition);
+
+        // Copy the data
+        RtlCopyMemory(
+            (PVOID)startingWriteAddress,
+            (PVOID)pBuffer,
+            bufferSize
+        );
+
+        // now calculate the new position that the buffer has been written up to.
+        // this will be the original write position, plus the bytes copied, again modululs
+        // the buffer size to take into account the loop.
+        ULONG finalWritePosition = (midiInWritePosition + bufferSize) % m_BufferSize;
+
+        // finalize by advancing the registers and setting the write event
+
+        // advance the write position and signal that there's data available
+        InterlockedExchange((LONG*)m_WriteRegister, finalWritePosition);
+        KeSetEvent(m_WriteEvent, 0, 0);
+    }
+    else
+    {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit with data dropped.");
+        return true;    // just drop the data
+    }        
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
@@ -380,6 +394,8 @@ StreamEngine::PrepareHardware()
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     //
     // If already in this state, do nothing.
@@ -406,6 +422,7 @@ StreamEngine::PrepareHardware()
     status = STATUS_SUCCESS;
 
 exit:
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
     return status;
 }
 
@@ -414,6 +431,8 @@ NTSTATUS
 StreamEngine::ReleaseHardware()
 {
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     //
     // If already in this state, do nothing.
@@ -437,6 +456,7 @@ StreamEngine::ReleaseHardware()
     m_StreamState = AcxStreamStateStop;
 
 exit:
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
     return STATUS_SUCCESS;
 }
 
@@ -487,6 +507,9 @@ StreamEngine::Pause()
         // If it is false, the midi out worker will throw the data away.
         m_IsRunning = false;
         m_ThreadExitEvent.set();
+        m_TotalDroppedBuffers = 0;
+        m_ContiguousDroppedBuffers = 0;
+        m_TotalBuffersProcessed = 0;
 
         if (pDevCtx)
         {
@@ -631,6 +654,8 @@ StreamEngine::GetSingleBufferMapping(
 {
     PAGED_CODE();
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
     // The allocation must be a multiple of the page size,
     // as entire pages are mapped.
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, (BufferSize % PAGE_SIZE) != 0);
@@ -687,6 +712,8 @@ StreamEngine::GetSingleBufferMapping(
     // success, so do not perform a failure clean up when the function exits.
     cleanupOnFailure.release();
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
     return STATUS_SUCCESS;
 }
 
@@ -697,6 +724,8 @@ StreamEngine::CleanupSingleBufferMapping(
     )
 {
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     // having a client address means it has been mapped,
     // so unmap it.
@@ -740,6 +769,8 @@ StreamEngine::CleanupSingleBufferMapping(
     Mapping->m_BufferAddress = nullptr;
     Mapping->m_OwnsAllocation = FALSE;
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
     return STATUS_SUCCESS;
 }
 
@@ -760,6 +791,8 @@ StreamEngine::GetDoubleBufferMapping(
     // of the buffer. We can read/write past by up to 1 bufferSize.
 
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     // In the event of failure, be sure to clean up anything
     // allocated during this call.
@@ -905,6 +938,8 @@ StreamEngine::GetDoubleBufferMapping(
     // success, so do not perform a failure clean up when the function exits.
     cleanupOnFailure.release();
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
     return STATUS_SUCCESS;
 }
 
@@ -916,11 +951,15 @@ StreamEngine::CleanupDoubleBufferMapping(
 {
     PAGED_CODE();
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+
     // Buffer 1 typically owns the memory, so unmap
     // and remove idl's in the opposite order of creation,
     // buffer 2 and then buffer 1.
     CleanupSingleBufferMapping(&Mapping->Buffer2);
     CleanupSingleBufferMapping(&Mapping->Buffer1);
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return STATUS_SUCCESS;
 }
@@ -932,6 +971,8 @@ StreamEngine::GetLoopedStreamingBuffer(
     PKSMIDILOOPED_BUFFER  Buffer
     )
 {
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry requested %lu for %s", BufferSize, AcxPinGetId(m_Pin) == MidiPinTypeMidiIn?"MidiIn":"MidiOut");
+
     // handle incoming property call to retrieve the looped streaming buffer.
     // this is registered as a get handler in the ksproperty table.
     // The incoming property and outgoing buffer sizes were also specified,
@@ -965,6 +1006,8 @@ StreamEngine::GetLoopedStreamingBuffer(
     // round to the nearest page
     bufferSize = ROUND_TO_PAGES(bufferSize);
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Allocating %lu for %s", bufferSize, AcxPinGetId(m_Pin) == MidiPinTypeMidiIn?"MidiIn":"MidiOut");
+
     // Create our mapping to user mode w/ the double buffer.
     NT_RETURN_IF_NTSTATUS_FAILED(GetDoubleBufferMapping(bufferSize, UserMode, nullptr, &m_ClientBufferMapping));
 
@@ -976,8 +1019,12 @@ StreamEngine::GetLoopedStreamingBuffer(
     m_BufferSize = Buffer->ActualBufferSize = bufferSize;
     Buffer->BufferAddress = m_ClientBufferMapping.Buffer1.m_BufferClientAddress;
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Allocated %lu for %s", bufferSize, AcxPinGetId(m_Pin) == MidiPinTypeMidiIn?"MidiIn":"MidiOut");
+
     // success, so do not perform a failure clean up when the function exits.
     cleanupOnFailure.release();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return STATUS_SUCCESS;
 }
@@ -995,6 +1042,8 @@ StreamEngine::GetLoopedStreamingRegisters(
     // by avstream, so no additional handling is required.
 
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     ASSERT(m_Process == IoGetCurrentProcess());
 
@@ -1020,6 +1069,8 @@ StreamEngine::GetLoopedStreamingRegisters(
     // success, so do not perform a failure clean up when the function exits.
     cleanupOnFailure.release();
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
+
     return STATUS_SUCCESS;
 }
 
@@ -1036,6 +1087,8 @@ StreamEngine::SetLoopedStreamingNotificationEvent(
     // by avstream, so no additional handling is required.
 
     PAGED_CODE();
+
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     ASSERT(m_Process == IoGetCurrentProcess());
 
@@ -1061,6 +1114,7 @@ StreamEngine::SetLoopedStreamingNotificationEvent(
                                               (PVOID*)&m_ReadEvent,
                                               nullptr));
 
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return STATUS_SUCCESS;
 }

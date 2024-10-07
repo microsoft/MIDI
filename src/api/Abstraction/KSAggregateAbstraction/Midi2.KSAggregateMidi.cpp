@@ -302,16 +302,16 @@ CMidi2KSAggregateMidi::Cleanup()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-    for (auto it = m_midiInDeviceGroupMap.begin(); it != m_midiInDeviceGroupMap.end(); it++)
+    for (auto it = m_midiInDeviceGroupMap.begin(); it != m_midiInDeviceGroupMap.end();)
     {
         LOG_IF_FAILED(it->second->Cleanup());
-        m_midiInDeviceGroupMap.erase(it);
+        it = m_midiInDeviceGroupMap.erase(it);
     }
 
-    for (auto it = m_midiOutDeviceGroupMap.begin(); it != m_midiOutDeviceGroupMap.end(); it++)
+    for (auto it = m_midiOutDeviceGroupMap.begin(); it != m_midiOutDeviceGroupMap.end();)
     {
         LOG_IF_FAILED(it->second->Cleanup());
-        m_midiOutDeviceGroupMap.erase(it);
+        it = m_midiOutDeviceGroupMap.erase(it);
     }
 
     return S_OK;

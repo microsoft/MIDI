@@ -16,14 +16,14 @@ typedef struct MIDISRV_TRANSFORMCREATION_PARAMS
     MidiDataFormat DataFormatIn;
     MidiDataFormat DataFormatOut;
     MidiFlow Flow;
+    BYTE UmpGroupIndex;
 } MIDISRV_TRANSFORMCREATION_PARAMS, *PMIDISRV_TRANSFORMCREATION_PARAMS;
 
 class CMidiTransformPipe : public CMidiPipe
 {
 public:
     
-    HRESULT Initialize(_In_ handle_t,
-                            _In_ LPCWSTR, // device it's associated to
+    HRESULT Initialize(_In_ LPCWSTR, // device it's associated to
                             _In_ PMIDISRV_TRANSFORMCREATION_PARAMS, // what transform to create
                             _In_ DWORD *, // mmcss
                             _In_ IUnknown* // MidiDeviceManager to provide to transforms that need to update device properties

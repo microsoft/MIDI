@@ -87,7 +87,7 @@ HRESULT MidiSrvCreateClient(
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->CreateMidiClient(BindingHandle, MidiDevice, SessionId, clientProcessId, clientProcessHandle, CreationParams, createdClient, false));
+    RETURN_IF_FAILED(clientManager->CreateMidiClient(MidiDevice, SessionId, clientProcessId, clientProcessHandle, CreationParams, createdClient, false));
 
     // Success, transfer the MIDISRV_CLIENT data to the caller.
     *Client = createdClient;
@@ -97,7 +97,7 @@ HRESULT MidiSrvCreateClient(
 }
 
 HRESULT MidiSrvDestroyClient(
-    /* [in] */ handle_t BindingHandle,
+    /* [in] */ handle_t /* BindingHandle */,
     /* [in] */ __RPC__in MidiClientHandle ClientHandle)
 {
     TraceLoggingWrite(
@@ -113,7 +113,7 @@ HRESULT MidiSrvDestroyClient(
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->DestroyMidiClient(BindingHandle, ClientHandle));
+    RETURN_IF_FAILED(clientManager->DestroyMidiClient(ClientHandle));
 
     return S_OK;
 }

@@ -587,6 +587,10 @@ CMidi2KSMidiConfigurationManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
+    AbstractionState::Current().Cleanup();
+
+    m_MidiServiceConfigurationManagerInterface.reset();
+    m_MidiDeviceManager.reset();
 
     return S_OK;
 }

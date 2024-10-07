@@ -128,17 +128,33 @@ CMidi2KSMidi::Initialize(
     {
         prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-        inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
+        inPinId = winrt::unbox_value<uint32_t>(prop);
 
         prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-        outPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
+        outPinId = winrt::unbox_value<uint32_t>(prop);
     }
     else
     {
+        // first check for the legacy pin id, if that's not present then look for the newer in/out
+        // pin id's that is on bidi endpoints, which can be activated separately in and out.
         prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsPinId));
-        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-        inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
+        if (prop)
+        {
+            inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
+        }
+        else if (Flow == MidiFlowIn)
+        {
+            prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
+            RETURN_HR_IF_NULL(E_INVALIDARG, prop);
+            inPinId = winrt::unbox_value<uint32_t>(prop);
+        }
+        else
+        {
+            prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
+            RETURN_HR_IF_NULL(E_INVALIDARG, prop);
+            outPinId = winrt::unbox_value<uint32_t>(prop);
+        }
     }
 
     if (Flow == MidiFlowIn || Flow == MidiFlowBidirectional)

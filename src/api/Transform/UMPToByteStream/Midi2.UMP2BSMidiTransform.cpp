@@ -11,7 +11,7 @@ CMidi2UMP2BSMidiTransform::Initialize(
     PTRANSFORMCREATIONPARAMS CreationParams,
     DWORD *,
     IMidiCallback *Callback,
-    LONGLONG Context,
+    LONGLONG /*Context*/,
     IUnknown* /*MidiDeviceManager*/
 )
 {
@@ -28,7 +28,6 @@ CMidi2UMP2BSMidiTransform::Initialize(
 
     m_Device = Device;
     m_Callback = Callback;
-    m_Context = Context;
 
     return S_OK;
 }
@@ -78,7 +77,8 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
             // TODO: If this fails, it leaves a bunch of stuff in the m_UMP2BS that will get sent next time
             // around. Should likely drain that before moving on
 
-            RETURN_IF_FAILED(m_Callback->Callback(&(byteStream[0]), byteCount, Position, m_Context));
+            // For transforms, by convention the context contains the group index.
+            RETURN_IF_FAILED(m_Callback->Callback(&(byteStream[0]), byteCount, Position, m_UMP2BS.group));
         }
     }
 

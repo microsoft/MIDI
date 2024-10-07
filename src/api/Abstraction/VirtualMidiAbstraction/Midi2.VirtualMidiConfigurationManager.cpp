@@ -239,8 +239,9 @@ CMidi2VirtualMidiConfigurationManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
+    AbstractionState::Current().Cleanup();
 
-
+    m_MidiDeviceManager.reset();
 
     return S_OK;
 }

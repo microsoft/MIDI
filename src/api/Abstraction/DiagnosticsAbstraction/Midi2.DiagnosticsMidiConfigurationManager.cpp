@@ -70,6 +70,7 @@ CMidi2DiagnosticsMidiConfigurationManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
+    m_MidiDeviceManager.reset();
 
     return S_OK;
 }

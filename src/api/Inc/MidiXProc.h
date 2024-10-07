@@ -79,14 +79,20 @@ public:
     HRESULT
     SetDataFormatIn(MidiDataFormat DataFormat)
     {
-        m_MidiIn->DataFormat = DataFormat;
+        if (m_MidiIn)
+        {
+            m_MidiIn->DataFormat = DataFormat;
+        }
         return S_OK;
     }
 
     HRESULT
     SetDataFormatOut(MidiDataFormat DataFormat)
     {
-        m_MidiOut->DataFormat = DataFormat;
+        if (m_MidiOut)
+        {
+            m_MidiOut->DataFormat = DataFormat;
+        }
         return S_OK;
     }
 

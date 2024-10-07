@@ -457,10 +457,13 @@ CMidi2VirtualMidiEndpointManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-
     // destroy and release all the devices we have created
 
     LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->Cleanup());
+    AbstractionState::Current().Cleanup();
+
+    m_MidiDeviceManager.reset();
+    m_MidiProtocolManager.reset();
 
     return S_OK;
 }

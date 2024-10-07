@@ -20,9 +20,9 @@ CMidiClientPipe::AdjustForBufferingRequirements(PMIDISRV_CLIENTCREATION_PARAMS C
 _Use_decl_annotations_
 HRESULT
 CMidiClientPipe::Initialize(
-    handle_t /* BindingHandle */,   // this isn't used now, but if used in the future, not this will not be set for internal clients like protocol negotiation
     HANDLE /* clientProcess */,     // this isn't used now, but if used in the future, not this will not be set for internal clients like protocol negotiation
     LPCWSTR Device,
+    BYTE GroupIndex,
     GUID SessionId,
     DWORD ClientProcessId,
     PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
@@ -47,6 +47,14 @@ CMidiClientPipe::Initialize(
     m_clientProcessId = ClientProcessId;
     //m_device = internal::NormalizeEndpointInterfaceIdCopy(Device);
 
+    // If this is a bytestream client and we were provided a valid group
+    // index, then enable filtering messages to that group.
+    if (CreationParams->DataFormat == MidiDataFormat_ByteStream && 
+        IS_VALID_GROUP_INDEX(GroupIndex))
+    {
+        m_GroupIndex = GroupIndex;
+        m_GroupFiltered = TRUE;
+    }
 
     auto lock = m_ClientPipeLock.lock();
 
@@ -143,7 +151,8 @@ CMidiClientPipe::Initialize(
     // Thus, the pump is initialized with midiOutPipe for input and midiInPipe for output,
     // which appears backwards if you inspect the function prototype, but is correct for the connection
     // from the client to the server.
-    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiOutPipe, midiInPipe, thisCallback.get(), 0, OverwriteZeroTimestamps));
+    // Set our callback context to our group index (if supplied), so proper filtering is applied.
+    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiOutPipe, midiInPipe, thisCallback.get(), GroupIndex, OverwriteZeroTimestamps));
 
     cleanupOnFailure.release();
 

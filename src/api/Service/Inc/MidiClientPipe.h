@@ -13,9 +13,9 @@
 class CMidiClientPipe : public CMidiPipe
 {
 public:
-    HRESULT Initialize(   _In_ handle_t BindingHandle,
-                            _In_ HANDLE,
+    HRESULT Initialize(   _In_ HANDLE,
                             _In_ LPCWSTR,
+                            _In_ BYTE,
                             _In_ GUID,
                             _In_ DWORD,
                             _In_ PMIDISRV_CLIENTCREATION_PARAMS,
@@ -71,6 +71,9 @@ public:
     DWORD ClientProcessId() { return m_clientProcessId; }
     //LPCWSTR Device() { return m_device.c_str(); }
 
+    virtual BOOL IsGroupFiltered() { return m_GroupFiltered; }
+    virtual BYTE GroupIndex() { return m_GroupIndex; }
+
 private:
     HRESULT AdjustForBufferingRequirements(_In_ PMIDISRV_CLIENTCREATION_PARAMS CreationParams);
 
@@ -81,6 +84,7 @@ private:
     GUID m_sessionId{};         // client session id for tracking
     DWORD m_clientProcessId{};  // also for session tracking
 
-    //std::wstring m_device{};    // device id this connects to
+    BOOL m_GroupFiltered{FALSE};
+    BYTE m_GroupIndex{0};
 };
 

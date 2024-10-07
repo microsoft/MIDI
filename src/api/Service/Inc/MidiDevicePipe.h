@@ -21,8 +21,7 @@ class CMidiDevicePipe : public CMidiPipe
 {
 public:
     
-    HRESULT Initialize(_In_ handle_t BindingHandle,
-                       _In_ LPCWSTR,
+    HRESULT Initialize(_In_ LPCWSTR,
                        _In_ PMIDISRV_DEVICECREATION_PARAMS,
                        _In_ DWORD *);
     HRESULT Cleanup();

@@ -11,7 +11,6 @@
 _Use_decl_annotations_
 HRESULT
 CMidiTransformPipe::Initialize(
-    handle_t /* BindingHandle */,
     LPCWSTR Device,
     PMIDISRV_TRANSFORMCREATION_PARAMS CreationParams,
     DWORD* MmcssTaskId,
@@ -46,7 +45,10 @@ CMidiTransformPipe::Initialize(
 
     creationParams.DataFormatIn = DataFormatIn();
     creationParams.DataFormatOut = DataFormatOut();
-    RETURN_IF_FAILED(m_MidiDataTransform->Initialize(Device, &creationParams, MmcssTaskId, this, 0, MidiDeviceManager));
+    creationParams.UmpGroupIndex = CreationParams->UmpGroupIndex;
+
+    // transforms are initialized with the group index as the context.
+    RETURN_IF_FAILED(m_MidiDataTransform->Initialize(Device, &creationParams, MmcssTaskId, this, CreationParams->UmpGroupIndex, MidiDeviceManager));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
