@@ -395,6 +395,27 @@ CMidiEndpointProtocolWorker::Start(
             // add the function blocks now they are fully valid
             m_mostRecentResults.DiscoveredFunctionBlocks = m_discoveredFunctionBlocks.data();
             m_mostRecentResults.CountFunctionBlocksReceived = (BYTE)m_discoveredFunctionBlocks.size();
+
+            // warning in case we get some inconsistent results
+            if (m_mostRecentResults.CountFunctionBlocksDeclared != m_mostRecentResults.CountFunctionBlocksReceived)
+            {
+                // We did not receive the correct number of function blocks. This is a failure
+                // condition.
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Incorrect function block count received", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                    TraceLoggingUInt8(m_mostRecentResults.CountFunctionBlocksDeclared, "Declared FB Count"),
+                    TraceLoggingUInt8(m_mostRecentResults.CountFunctionBlocksReceived, "Received FB Count")
+                );
+
+                m_mostRecentResults.AllEndpointInformationReceived = false;
+            }
         }
         else
         {
@@ -410,6 +431,7 @@ CMidiEndpointProtocolWorker::Start(
 
             m_mostRecentResults.DiscoveredFunctionBlocks = nullptr;
             m_mostRecentResults.CountFunctionBlocksReceived = 0;
+            m_mostRecentResults.AllEndpointInformationReceived = false;
         }
        
         // Call callback
