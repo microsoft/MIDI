@@ -86,7 +86,7 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
-    KsAggregateEndpointDefinition& MasterEndpointDefinition
+    KsAggregateEndpointDefinition& masterEndpointDefinition
 )
 {
     TraceLoggingWrite(
@@ -96,21 +96,21 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Creating aggregate UMP endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(MasterEndpointDefinition.EndpointName.c_str(), "name")
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
     );
 
 
     // we require at least one valid pin
-    RETURN_HR_IF(E_INVALIDARG, MasterEndpointDefinition.Pins.size() < 1);
+    RETURN_HR_IF(E_INVALIDARG, masterEndpointDefinition.Pins.size() < 1);
 
     std::vector<DEVPROPERTY> interfaceDevProperties;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
-    commonProperties.FriendlyName = MasterEndpointDefinition.EndpointName.c_str();
+    commonProperties.FriendlyName = masterEndpointDefinition.EndpointName.c_str();
     commonProperties.TransportCode = TRANSPORT_CODE;
-    commonProperties.TransportSuppliedEndpointName = MasterEndpointDefinition.FilterName.c_str();
+    commonProperties.TransportSuppliedEndpointName = masterEndpointDefinition.FilterName.c_str();
     commonProperties.TransportSuppliedEndpointDescription = nullptr;
     commonProperties.UserSuppliedEndpointName = nullptr;
     commonProperties.UserSuppliedEndpointDescription = nullptr;
@@ -126,10 +126,10 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     commonProperties.SupportsMidi2ProtocolDefaultValue = false;
 
     interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, static_cast<ULONG>((MasterEndpointDefinition.FilterDeviceId.length() + 1) * sizeof(WCHAR)), (PVOID)MasterEndpointDefinition.FilterDeviceId.c_str() });
+        DEVPROP_TYPE_STRING, static_cast<ULONG>((masterEndpointDefinition.FilterDeviceId.length() + 1) * sizeof(WCHAR)), (PVOID)masterEndpointDefinition.FilterDeviceId.c_str() });
 
     interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
-        DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&MasterEndpointDefinition.TransportCapability });
+        DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&masterEndpointDefinition.TransportCapability });
 
     // create group terminal blocks and the pin map
 
@@ -140,7 +140,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     KSMIDI_PIN_MAP pinMap{ };
     std::vector<internal::GroupTerminalBlockInternal> blocks;
 
-    for (auto const& pin : MasterEndpointDefinition.Pins)
+    for (auto const& pin : masterEndpointDefinition.Pins)
     {
         internal::GroupTerminalBlockInternal gtb;
 
@@ -218,9 +218,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     SW_DEVICE_CREATE_INFO createInfo{ };
 
     createInfo.cbSize = sizeof(createInfo);
-    createInfo.pszInstanceId = MasterEndpointDefinition.EndpointDeviceInstanceId.c_str();
+    createInfo.pszInstanceId = masterEndpointDefinition.EndpointDeviceInstanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = MasterEndpointDefinition.EndpointName.c_str();
+    createInfo.pszDeviceDescription = masterEndpointDefinition.EndpointName.c_str();
 
     // Call the device manager and finish the creation
 
@@ -231,7 +231,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
     LOG_IF_FAILED(
         swdCreationResult = m_MidiDeviceManager->ActivateEndpoint(
-            MasterEndpointDefinition.ParentDeviceInstanceId.c_str(),
+            masterEndpointDefinition.ParentDeviceInstanceId.c_str(),
             false,                                  // TODO: create UMP only, handle the MIDI 1.0 compat ports
             MidiFlow::MidiFlowBidirectional,        // bidi only for the UMP endpoint
             &commonProperties,
@@ -254,13 +254,18 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Aggregate UMP endpoint created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(MasterEndpointDefinition.EndpointName.c_str(), "name"),
+            TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name"),
             TraceLoggingWideString(newDeviceInterfaceId, "endpoint id")
         );
 
-        // TODO: Add to internal endpoint manager, and also return the device interface id
+        // todo: return new device interface id
 
-        return swdCreationResult;   // TODO change this to account for other steps 
+
+
+        // Add to internal endpoint manager
+        m_availableEndpointDefinitions.push_back(std::move(masterEndpointDefinition));
+
+        return swdCreationResult; 
     }
     else
     {
@@ -271,7 +276,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Aggregate UMP endpoint creation failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(MasterEndpointDefinition.EndpointName.c_str(), "name"),
+            TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name"),
             TraceLoggingHResult(swdCreationResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
         );
 
@@ -588,39 +593,34 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
     );
 
 
-    // TODO
-
-
-
-
     // the interface is no longer active, search through our m_AvailableMidiPins to identify
     // every entry with this filter interface id, and remove the SWD and remove the pin(s) from
     // the m_AvailableMidiPins list.
-    //do
-    //{
-    //    auto item = std::find_if(m_AvailableMidiPins.begin(), m_AvailableMidiPins.end(), [&](const std::unique_ptr<MIDI_PIN_INFO>& Pin)
-    //    {
-    //        // if this interface id already activated, then we cannot activate/create a second time,
-    //        if (device.Id() == Pin->Id)
-    //        {
-    //            return true;
-    //        }
+    do
+    {
+        auto item = std::find_if(m_availableEndpointDefinitions.begin(), m_availableEndpointDefinitions.end(), [&](const KsAggregateEndpointDefinition& endpointDefinition)
+        {
+            if (device.Id() == endpointDefinition.ParentDeviceInstanceId)
+            {
+                return true;
+            }
 
-    //        return false;
-    //    });
+            return false;
+        });
 
-    //    if (item == m_AvailableMidiPins.end())
-    //    {
-    //        break;
-    //    }
 
-    //    // notify the device manager using the InstanceId for this midi device
-    //    LOG_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(item->get()->InstanceId.c_str()));
+        if (item == m_availableEndpointDefinitions.end())
+        {
+            break;
+        }
 
-    //    // remove the MIDI_PIN_INFO from the list
-    //    m_AvailableMidiPins.erase(item);
-    //}
-    //while (TRUE);
+        // notify the device manager using the InstanceId for this midi device
+        LOG_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(device.Id().c_str()));
+
+        // remove the MIDI_PIN_INFO from the list
+        m_availableEndpointDefinitions.erase(item);
+    }
+    while (TRUE);
 
     return S_OK;
 }
