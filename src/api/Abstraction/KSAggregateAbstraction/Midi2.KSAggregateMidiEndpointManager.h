@@ -30,7 +30,6 @@ struct KsAggregateEndpointDefinition
 
     MidiTransport TransportCapability;
 
-
     std::vector<KsAggregateEndpointPinDefinition> Pins;
 };
 
@@ -59,7 +58,7 @@ private:
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
 
-    //std::vector<std::unique_ptr<MIDI_PIN_INFO>> m_AvailableMidiPins;
+    std::vector<KsAggregateEndpointDefinition> m_availableEndpointDefinitions;
     
     DeviceWatcher m_Watcher{0};
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_DeviceAdded;
