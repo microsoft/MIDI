@@ -42,12 +42,16 @@ public:
         m_endpointManager.reset();
         m_configurationManager.reset();
 
+        // TODO: Iterate through hosts and clients and call Cleanup()
+
         return S_OK;
     }
 
 
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
+
+    HRESULT AddHost(MidiNetworkHost* host);
 
 
 private:
@@ -58,5 +62,7 @@ private:
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> m_endpointManager;
     wil::com_ptr<CMidi2NetworkMidiConfigurationManager> m_configurationManager;
 
-//    std::shared_ptr<MidiNetworkDeviceTable> m_endpointTable = std::make_shared<MidiNetworkDeviceTable>();
+    // key is the host identifier
+    std::map<winrt::hstring, std::shared_ptr<MidiNetworkHost>> m_hosts;
+
 };

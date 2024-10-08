@@ -39,3 +39,11 @@ TransportState::ConstructConfigurationManager()
 
     return S_OK;
 }
+
+
+HRESULT 
+TransportState::AddHost(MidiNetworkHost* host)
+{
+
+    return S_OK;
+}
