@@ -246,6 +246,20 @@ CMidiEndpointProtocolWorker::Start(
             TraceLoggingWideString(m_deviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
+
+        // Partner device-compatibility requirement. May be able to remove this in the future
+        // but needed for now for their USB device to work properly. Given when this is called, 
+        // and that it is on a worker thread, it doesn't really negatively impact any other 
+        // devices or initial enumeration.
+        // Search for "#midisrv#midiu_ks_" is to restrict this to just USB devices using the 
+        // USB MIDI 2.0 driver, so network and other MIDI 2.0 transports are unaffected
+        if (auto index = internal::NormalizeEndpointInterfaceIdWStringCopy(m_deviceInterfaceId).find(L"#midisrv#midiu_ks_"); index != std::wstring::npos)
+        {
+            Sleep(500);
+        }
+        // End partner compatibility mitigation added 2024-10-08
+
+
         // start initial negotiation. Return when timed out or when we have all the requested info.
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
