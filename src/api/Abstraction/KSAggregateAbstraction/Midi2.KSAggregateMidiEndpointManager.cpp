@@ -46,7 +46,8 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"), 
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
@@ -96,8 +97,11 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Creating aggregate UMP endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
-    );
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name"),
+        TraceLoggingWideString(masterEndpointDefinition.EndpointDeviceInstanceId.c_str(), "Endpoint Device Instance Id"),
+        TraceLoggingWideString(masterEndpointDefinition.FilterDeviceId.c_str(), "Filter Device Id"),
+        TraceLoggingWideString(masterEndpointDefinition.ParentDeviceInstanceId.c_str(), "Parent Device Instance Id")
+        );
 
 
     // we require at least one valid pin
@@ -255,7 +259,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Aggregate UMP endpoint created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name"),
-            TraceLoggingWideString(newDeviceInterfaceId, "endpoint id")
+            TraceLoggingWideString(newDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         // todo: return new device interface id
@@ -363,7 +367,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     auto prop = properties.Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     endpointDefinition.ParentDeviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
-    endpointDefinition.FilterDeviceId = device.Id().c_str();
+    endpointDefinition.FilterDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(device.Id().c_str());
 
     // get the parent device
     auto parentDeviceInfo = DeviceInformation::CreateFromIdAsync(endpointDefinition.ParentDeviceInstanceId,
@@ -589,18 +593,21 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(device.Id().c_str(), "device id")
     );
 
+    auto cleanDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(device.Id().c_str());
 
     // the interface is no longer active, search through our m_AvailableMidiPins to identify
     // every entry with this filter interface id, and remove the SWD and remove the pin(s) from
     // the m_AvailableMidiPins list.
     do
     {
-        auto item = std::find_if(m_availableEndpointDefinitions.begin(), m_availableEndpointDefinitions.end(), [&](const KsAggregateEndpointDefinition& endpointDefinition)
+        auto item = std::find_if(m_availableEndpointDefinitions.begin(), 
+            m_availableEndpointDefinitions.end(), [&](const KsAggregateEndpointDefinition& endpointDefinition)
         {
-            if (device.Id() == endpointDefinition.ParentDeviceInstanceId)
+            if (endpointDefinition.FilterDeviceId == cleanDeviceId)
             {
                 return true;
             }
@@ -613,6 +620,16 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
         {
             break;
         }
+
+        TraceLoggingWrite(
+            MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Found device to remove", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(device.Id().c_str(), "device id")
+        );
 
         // notify the device manager using the InstanceId for this midi device
         LOG_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(device.Id().c_str()));
