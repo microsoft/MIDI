@@ -24,7 +24,7 @@ CMidiProcessManager::Initialize()
 }
 
 HRESULT
-CMidiProcessManager::Cleanup()
+CMidiProcessManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

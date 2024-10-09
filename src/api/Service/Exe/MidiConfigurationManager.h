@@ -65,7 +65,7 @@ public:
     // TODO: the endpoint lookup table should be maintained in memory here, and can be updated/reloaded
     // We don't want to pass a gigantic string back and forth each time, so need to just keep it live
 
-    HRESULT Cleanup() noexcept;
+    HRESULT Shutdown() noexcept;
 
 
 

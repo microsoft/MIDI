@@ -12,12 +12,12 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiConfigurationManager::Initialize(
-    GUID AbstractionId, 
-    IUnknown* MidiDeviceManager,
-    IUnknown* MidiServiceConfigurationManagerInterface
+    GUID abstractionId, 
+    IMidiDeviceManagerInterface* midiDeviceManager,
+    IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface
 )
 {
-    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
+    UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
 
 
     TraceLoggingWrite(
@@ -28,10 +28,10 @@ CMidi2VirtualMidiConfigurationManager::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, MidiDeviceManager);
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
-    m_abstractionId = AbstractionId;
+    m_abstractionId = abstractionId;
 
     return S_OK;
 }
@@ -39,9 +39,9 @@ CMidi2VirtualMidiConfigurationManager::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
-    LPCWSTR ConfigurationJsonSection, 
-    BOOL IsFromConfigurationFile,
-    BSTR* Response
+    LPCWSTR configurationJsonSection, 
+    BOOL isFromConfigurationFile,
+    BSTR* response
 )
 {
     TraceLoggingWrite(
@@ -50,7 +50,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(ConfigurationJsonSection, "json")
+        TraceLoggingWideString(configurationJsonSection, "json")
     );
 
     json::JsonObject jsonObject;
@@ -69,7 +69,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
     // This abstraction doesn't support creating endpoints from the configuration file.
     // They are for runtime creation only.
-    if (IsFromConfigurationFile)
+    if (isFromConfigurationFile)
     {
         TraceLoggingWrite(
             MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -83,15 +83,15 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
         // we return S_OK here because this can happen at service startup, and no reason to log an error here
         return S_OK;
     }
-    else if (ConfigurationJsonSection == nullptr)
+    else if (configurationJsonSection == nullptr)
     {
-        internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+        internal::JsonStringifyObjectToOutParam(responseObject, &response);
 
         RETURN_IF_FAILED(E_INVALIDARG);
     }
     else
     {
-        if (!json::JsonObject::TryParse(winrt::to_hstring(ConfigurationJsonSection), jsonObject))
+        if (!json::JsonObject::TryParse(winrt::to_hstring(configurationJsonSection), jsonObject))
         {
             TraceLoggingWrite(
                 MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -100,10 +100,10 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Failed to parse Configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(ConfigurationJsonSection, "json")
+                TraceLoggingWideString(configurationJsonSection, "json")
             );
 
-            internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+            internal::JsonStringifyObjectToOutParam(responseObject, &response);
 
             RETURN_IF_FAILED(E_INVALIDARG);
         }
@@ -116,7 +116,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
             // TODO: Set the response to something meaningful here
 
-            internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+            internal::JsonStringifyObjectToOutParam(responseObject, &response);
 
             return S_OK;
         }
@@ -184,7 +184,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
                 }
 
-                internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+                internal::JsonStringifyObjectToOutParam(responseObject, &response);
 
                 // create the device-side endpoint. This is a critical step
                 RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateDeviceSideEndpoint(deviceEntry));
@@ -222,14 +222,14 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
     );
 
     // return the json with the information the client will need
-    internal::JsonStringifyObjectToOutParam(responseObject, &Response);
+    internal::JsonStringifyObjectToOutParam(responseObject, &response);
 
     return S_OK;
 }
 
 
 HRESULT
-CMidi2VirtualMidiConfigurationManager::Cleanup()
+CMidi2VirtualMidiConfigurationManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -239,7 +239,7 @@ CMidi2VirtualMidiConfigurationManager::Cleanup()
         TraceLoggingPointer(this, "this")
     );
 
-    AbstractionState::Current().Cleanup();
+    AbstractionState::Current().Shutdown();
 
     m_MidiDeviceManager.reset();
 

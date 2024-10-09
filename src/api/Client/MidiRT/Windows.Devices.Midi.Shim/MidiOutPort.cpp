@@ -32,7 +32,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
             if (SUCCEEDED(serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&endpoint)))
             {
                 DWORD mmcssTaskId{};
-                ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormat_ByteStream };
+                ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ MidiDataFormats_ByteStream };
 
                 // this should be set some way to a meaningful per-process value
                 GUID dummySessionId{};
@@ -95,7 +95,7 @@ namespace winrt::MIDI_ROOT_NAMESPACE_CPP::implementation
     {
         if (m_endpoint != nullptr)
         {
-            m_endpoint->Cleanup();
+            m_endpoint->Shutdown();
             m_endpoint = nullptr;
         }
     }

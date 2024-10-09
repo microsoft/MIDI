@@ -37,8 +37,8 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager::Initialize(
-    IUnknown* midiDeviceManager,
-    IUnknown* midiEndpointProtocolManager
+    IMidiDeviceManagerInterface* midiDeviceManager,
+    IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
@@ -97,10 +97,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Creating aggregate UMP endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name"),
-        TraceLoggingWideString(masterEndpointDefinition.EndpointDeviceInstanceId.c_str(), "Endpoint Device Instance Id"),
-        TraceLoggingWideString(masterEndpointDefinition.FilterDeviceId.c_str(), "Filter Device Id"),
-        TraceLoggingWideString(masterEndpointDefinition.ParentDeviceInstanceId.c_str(), "Parent Device Instance Id")
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
         );
 
 
@@ -111,23 +108,23 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
-    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
+    commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = masterEndpointDefinition.EndpointName.c_str();
     commonProperties.TransportCode = TRANSPORT_CODE;
-    commonProperties.TransportSuppliedEndpointName = masterEndpointDefinition.FilterName.c_str();
-    commonProperties.TransportSuppliedEndpointDescription = nullptr;
-    commonProperties.UserSuppliedEndpointName = nullptr;
-    commonProperties.UserSuppliedEndpointDescription = nullptr;
+    commonProperties.EndpointName = masterEndpointDefinition.FilterName.c_str();
+    commonProperties.EndpointDescription = nullptr;
+    commonProperties.CustomEndpointName = nullptr;
+    commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = nullptr;
     commonProperties.ManufacturerName = nullptr;
-    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
-    commonProperties.SupportsMultiClient = true;
-    commonProperties.GenerateIncomingTimestamps = true;
-
-    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM;
-    //commonProperties.RequiresMetadataHandler = false;
-    commonProperties.SupportsMidi1ProtocolDefaultValue = true;
-    commonProperties.SupportsMidi2ProtocolDefaultValue = false;
+    commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
+    commonProperties.NativeDataFormat = MidiDataFormats_ByteStream;
+    
+    UINT32 capabilities {0};
+    capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
+    capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
+    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+    commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
     interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_STRING, static_cast<ULONG>((masterEndpointDefinition.FilterDeviceId.length() + 1) * sizeof(WCHAR)), (PVOID)masterEndpointDefinition.FilterDeviceId.c_str() });
@@ -229,8 +226,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     // Call the device manager and finish the creation
 
     HRESULT swdCreationResult;
-    const ULONG deviceInterfaceIdMaxSize = 255;
-    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+    wil::unique_cotaskmem_string newDeviceInterfaceId;
 
 
     LOG_IF_FAILED(
@@ -241,12 +237,10 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             &commonProperties,
             (ULONG) interfaceDevProperties.size(),
             (ULONG)0,
-            (PVOID)interfaceDevProperties.data(),
-            (PVOID)nullptr,
-            (PVOID)&createInfo,
-            (LPWSTR)&newDeviceInterfaceId,
-            deviceInterfaceIdMaxSize
-        )
+            interfaceDevProperties.data(),
+            nullptr,
+            &createInfo,
+            &newDeviceInterfaceId)
     );
 
     if (SUCCEEDED(swdCreationResult))
@@ -291,7 +285,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager::CreateMidiBytestreamEndpoints(
-    KsAggregateEndpointDefinition& /*MasterEndpointDefinition*/
+    KsAggregateEndpointDefinition& /*masterEndpointDefinition*/
 )
 {
 
@@ -393,7 +387,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
         wil::unique_handle hPin;
         KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
         //MidiTransport transportCapability { MidiTransport_Invalid };
-        //MidiDataFormat dataFormatCapability { MidiDataFormat_Invalid };
+        //MidiDataFormats dataFormatCapability { MidiDataFormats_Invalid };
         KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
         GUID nativeDataFormat{ 0 };
 
@@ -666,7 +660,7 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted(DeviceWatch
 
 
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::Cleanup()
+CMidi2KSAggregateMidiEndpointManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -676,7 +670,7 @@ CMidi2KSAggregateMidiEndpointManager::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    AbstractionState::Current().Cleanup();
+    AbstractionState::Current().Shutdown();
 
     m_Watcher.Stop();
     m_EnumerationCompleted.wait(500);

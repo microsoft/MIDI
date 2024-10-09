@@ -17,11 +17,11 @@
 using namespace winrt::Windows::Devices::Enumeration;
 
 HRESULT
-GetEndpointNativeDataFormat(_In_ std::wstring MidiDevice, _Inout_ BYTE& NativeDataFormat)
+GetEndpointNativeDataFormat(_In_ std::wstring midiDevice, _Inout_ BYTE& nativeDataFormat)
 {
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_NativeDataFormat));
-    auto deviceInfo = DeviceInformation::CreateFromIdAsync(MidiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(midiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
     auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_NativeDataFormat));
     if (prop)
@@ -29,15 +29,15 @@ GetEndpointNativeDataFormat(_In_ std::wstring MidiDevice, _Inout_ BYTE& NativeDa
         try
         {
             // If a group index is provided by this device, it must be valid.
-            NativeDataFormat = (BYTE) winrt::unbox_value<uint8_t>(prop);
+            nativeDataFormat = (BYTE) winrt::unbox_value<uint8_t>(prop);
 
             // minmidi doesn't specify a native data format, for the purposes of this test it's UMP.
-            if (NativeDataFormat == 0)
+            if (nativeDataFormat == 0)
             {
-                NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
+                nativeDataFormat = MidiDataFormats_UMP;
             }
 
-            RETURN_HR_IF(E_UNEXPECTED, NativeDataFormat != MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM && NativeDataFormat != MIDI_PROP_NATIVEDATAFORMAT_UMP);
+            RETURN_HR_IF(E_UNEXPECTED, nativeDataFormat != MidiDataFormats_ByteStream && nativeDataFormat != MidiDataFormats_UMP);
         }
         CATCH_LOG();
     }
@@ -46,11 +46,11 @@ GetEndpointNativeDataFormat(_In_ std::wstring MidiDevice, _Inout_ BYTE& NativeDa
 }
 
 HRESULT
-GetEndpointGroupIndex(_In_ std::wstring MidiDevice, _Inout_ DWORD& GroupIndex)
+GetEndpointGroupIndex(_In_ std::wstring midiDevice, _Inout_ DWORD& groupIndex)
 {
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_PortAssignedGroupIndex));
-    auto deviceInfo = DeviceInformation::CreateFromIdAsync(MidiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(midiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
     auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_PortAssignedGroupIndex));
     if (prop)
@@ -58,8 +58,8 @@ GetEndpointGroupIndex(_In_ std::wstring MidiDevice, _Inout_ DWORD& GroupIndex)
         try
         {
             // If a group index is provided by this device, it must be valid.
-            GroupIndex = (DWORD) winrt::unbox_value<UINT32>(prop);
-            RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_INDEX_OUT_OF_BOUNDS), GroupIndex > 15);
+            groupIndex = (DWORD) winrt::unbox_value<UINT32>(prop);
+            RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_INDEX_OUT_OF_BOUNDS), groupIndex > 15);
         }
         CATCH_LOG();
     }
@@ -67,7 +67,7 @@ GetEndpointGroupIndex(_In_ std::wstring MidiDevice, _Inout_ DWORD& GroupIndex)
     return S_OK;
 }
 
-BOOL GetBiDiEndpoint(MidiDataFormat DataFormat, BOOL MidiSrv, std::wstring& MidiBiDiInstanceId)
+BOOL GetBiDiEndpoint(MidiDataFormats dataFormat, BOOL midiSrv, std::wstring& midiBiDiInstanceId)
 {
     std::vector<std::unique_ptr<MIDIU_DEVICE>> midiBiDiDevices;
     VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiBiDiDevices, [&](PMIDIU_DEVICE device)
@@ -75,12 +75,12 @@ BOOL GetBiDiEndpoint(MidiDataFormat DataFormat, BOOL MidiSrv, std::wstring& Midi
         // When testing directly against the KS abstraction, we're limited to endpoints created by
         // KS abstraction, and supporting the format we wish to test.
         // When testing against midisrv, we can be more flexible.
-        if ((MidiSrv || device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction)) &&
+        if ((midiSrv || device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction)) &&
             device->Flow == MidiFlowBidirectional &&
             (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MINMIDI") ||
             std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02") ||
             std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_0582&PID_0168&MI_00")) &&  // Roland UM_ONE, easy to loop back to itself for testing.
-            (MidiSrv || (0 != ((DWORD) device->SupportedDataFormats & (DWORD) DataFormat))))
+            (midiSrv || (0 != ((DWORD) device->SupportedDataFormats & (DWORD) dataFormat))))
         {
             return true;
         }
@@ -96,25 +96,25 @@ BOOL GetBiDiEndpoint(MidiDataFormat DataFormat, BOOL MidiSrv, std::wstring& Midi
         return FALSE;
     }
 
-    MidiBiDiInstanceId = midiBiDiDevices[0]->DeviceId;
+    midiBiDiInstanceId = midiBiDiDevices[0]->DeviceId;
 
     return TRUE;
 }
 
-BOOL GetEndpoints(MidiDataFormat DataFormat, BOOL MidiOneInterface, BOOL MidiSrv, std::wstring& MidiInInstanceId, std::wstring& MidiOutInstanceId)
+BOOL GetEndpoints(MidiDataFormats dataFormat, BOOL midiOneInterface, BOOL midiSrv, std::wstring& midiInInstanceId, std::wstring& midiOutInstanceId)
 {
     std::vector<std::unique_ptr<MIDIU_DEVICE>> midiInDevices;
     std::vector<std::unique_ptr<MIDIU_DEVICE>> midiOutDevices;
 
     VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiInDevices, [&](PMIDIU_DEVICE device)
     {
-        if ((MidiSrv || device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction)) &&
+        if ((midiSrv || device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction)) &&
             (device->Flow == MidiFlowIn || device->Flow == MidiFlowBidirectional) &&
             (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MINMIDI") ||
             std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02") ||
             std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_0582&PID_0168&MI_00")) &&
-            (MidiOneInterface == device->MidiOne) &&
-            (MidiSrv || (0 != ((DWORD) device->SupportedDataFormats & (DWORD) DataFormat))))
+            (midiOneInterface == device->MidiOne) &&
+            (midiSrv || (0 != ((DWORD) device->SupportedDataFormats & (DWORD) dataFormat))))
         {
             return true;
         }
@@ -126,13 +126,13 @@ BOOL GetEndpoints(MidiDataFormat DataFormat, BOOL MidiOneInterface, BOOL MidiSrv
 
     VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiOutDevices, [&](PMIDIU_DEVICE device)
     {
-        if ((MidiSrv || device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction)) &&
+        if ((midiSrv || device->AbstractionLayer == (GUID) __uuidof(Midi2KSAbstraction)) &&
             (device->Flow == MidiFlowIn || device->Flow == MidiFlowBidirectional) &&
             (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MINMIDI") ||
             std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02") ||
             std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_0582&PID_0168&MI_00")) &&
-            (MidiOneInterface == device->MidiOne) &&
-            (MidiSrv || (0 != ((DWORD) device->SupportedDataFormats & (DWORD) DataFormat))))
+            (midiOneInterface == device->MidiOne) &&
+            (midiSrv || (0 != ((DWORD) device->SupportedDataFormats & (DWORD) dataFormat))))
         {
             return true;
         }
@@ -148,14 +148,14 @@ BOOL GetEndpoints(MidiDataFormat DataFormat, BOOL MidiOneInterface, BOOL MidiSrv
         return FALSE;
     }
 
-    MidiInInstanceId = midiInDevices[0]->DeviceId;
-    MidiOutInstanceId = midiOutDevices[0]->DeviceId;
+    midiInInstanceId = midiInDevices[0]->DeviceId;
+    midiOutInstanceId = midiOutDevices[0]->DeviceId;
 
     return TRUE;
 }
 
 _Use_decl_annotations_
-void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFormat, BOOL MidiOneInterface)
+void MidiAbstractionTests::TestMidiAbstraction(REFIID iid, MidiDataFormats dataFormat, BOOL midiOneInterface)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -168,20 +168,20 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { DataFormat };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { dataFormat };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
-    VERIFY_SUCCEEDED(CoCreateInstance(Iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
         if (midiOutDevice.get())
         {
-            midiOutDevice->Cleanup();
+            midiOutDevice->Shutdown();
         }
         if (midiInDevice.get())
         {
-            midiInDevice->Cleanup();
+            midiInDevice->Shutdown();
         }
 
         if (midiSessionTracker.get() != nullptr)
@@ -199,7 +199,7 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
-        PrintMidiMessage(payload, payloadSize, (abstractionCreationParams.DataFormat == MidiDataFormat_UMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
+        PrintMidiMessage(payload, payloadSize, (abstractionCreationParams.DataFormat == MidiDataFormats_UMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
 
         midiMessagesReceived++;
         if (midiMessagesReceived == expectedMessageCount)
@@ -217,7 +217,7 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiAbstraction"));
     }
 
-    if (!GetEndpoints(abstractionCreationParams.DataFormat, MidiOneInterface, __uuidof(Midi2MidiSrvAbstraction) == Iid, midiInInstanceId, midiOutInstanceId))
+    if (!GetEndpoints(abstractionCreationParams.DataFormat, midiOneInterface, __uuidof(Midi2MidiSrvAbstraction) == iid, midiInInstanceId, midiOutInstanceId))
     {
         return;
     }
@@ -228,7 +228,7 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
     LOG_OUTPUT(L"Initializing midi out");
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, m_SessionId));
 
-    VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormat_UMP || abstractionCreationParams.DataFormat == MidiDataFormat_ByteStream);
+    VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormats_UMP || abstractionCreationParams.DataFormat == MidiDataFormats_ByteStream);
 
     UMP32 midiTestData_32 = g_MidiTestData_32;
     UMP64 midiTestData_64 = g_MidiTestData_64;
@@ -237,7 +237,7 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
 
     // if we're using midi 1 interfaces, then we need to ensure that the group index
     // on the messages going out will not cause them to be filtered/mistargeted.
-    if (MidiOneInterface)
+    if (midiOneInterface)
     {
         DWORD midiInGroupIndex = 0;
         DWORD midiOutGroupIndex = 0;
@@ -256,7 +256,7 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
     }
 
     LOG_OUTPUT(L"Writing midi data");
-    if (abstractionCreationParams.DataFormat == MidiDataFormat_UMP)
+    if (abstractionCreationParams.DataFormat == MidiDataFormats_UMP)
     {
         BYTE nativeInDataFormat {0};
         BYTE nativeOutDataFormat {0};
@@ -265,8 +265,8 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
 
         // if the peripheral native data format is bytestream, limit to 32 bit messages
         // that will roundtrip, the others will get dropped.
-        if (nativeInDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM || 
-            nativeOutDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
+        if (nativeInDataFormat == MidiDataFormats_ByteStream || 
+            nativeOutDataFormat == MidiDataFormats_ByteStream)
         {
             VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_32, sizeof(UMP32), 0));
             VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_32, sizeof(UMP32), 0));
@@ -300,8 +300,8 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
 
     LOG_OUTPUT(L"Done, cleaning up");
     cleanupOnFailure.release();
-    VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
-    VERIFY_SUCCEEDED(midiInDevice->Cleanup());
+    VERIFY_SUCCEEDED(midiOutDevice->Shutdown());
+    VERIFY_SUCCEEDED(midiInDevice->Shutdown());
 
     if (midiSessionTracker.get() != nullptr)
     {
@@ -315,46 +315,46 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID Iid, MidiDataFormat DataFo
 void MidiAbstractionTests::TestMidiKSAbstraction_UMP()
 {
     // UMP endpoint activated via midi 2 swd
-    TestMidiAbstraction(__uuidof(Midi2KSAbstraction), MidiDataFormat_UMP, FALSE);
+    TestMidiAbstraction(__uuidof(Midi2KSAbstraction), MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiKSAbstraction_ByteStream()
 {
     // ByteStream endpoint activated via midi 2 swd
-    TestMidiAbstraction(__uuidof(Midi2KSAbstraction), MidiDataFormat_ByteStream, FALSE);
+    TestMidiAbstraction(__uuidof(Midi2KSAbstraction), MidiDataFormats_ByteStream, FALSE);
 }
 void MidiAbstractionTests::TestMidiKSAbstraction_Any()
 {
     // ByteStream endpoint activated via midi 2 swd
-    TestMidiAbstraction(__uuidof(Midi2KSAbstraction), MidiDataFormat_Any, FALSE);
+    TestMidiAbstraction(__uuidof(Midi2KSAbstraction), MidiDataFormats_Any, FALSE);
 }
 
 void MidiAbstractionTests::TestMidiSrvAbstraction_UMP()
 {
-    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_UMP, FALSE);
+    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstraction_ByteStream()
 {
-    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_ByteStream, FALSE);
+    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_ByteStream, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstraction_Any()
 {
-    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_Any, FALSE);
+    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_Any, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstraction_UMP_MidiOne()
 {
-    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_UMP, TRUE);
+    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_UMP, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstraction_ByteStream_MidiOne()
 {
-    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_ByteStream, TRUE);
+    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_ByteStream, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstraction_Any_MidiOne()
 {
-    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_Any, TRUE);
+    TestMidiAbstraction(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_Any, TRUE);
 }
 
 _Use_decl_annotations_
-void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ MidiDataFormat DataFormat, BOOL MidiOneInterface)
+void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID iid, _In_ MidiDataFormats dataFormat, BOOL midiOneInterface)
 {
 //    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -366,20 +366,20 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     DWORD mmcssTaskIdIn {0};
     DWORD mmcssTaskIdOut {0};
     unique_mmcss_handle mmcssHandle;
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { DataFormat };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { dataFormat };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
-    VERIFY_SUCCEEDED(CoCreateInstance(Iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
         if (midiOutDevice.get())
         {
-            midiOutDevice->Cleanup();
+            midiOutDevice->Shutdown();
         }
         if (midiInDevice.get())
         {
-            midiInDevice->Cleanup();
+            midiInDevice->Shutdown();
         }
 
         if (midiSessionTracker.get() != nullptr)
@@ -410,7 +410,7 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiAbstractionCreationOrder"));
     }
 
-    if (!GetEndpoints(abstractionCreationParams.DataFormat, MidiOneInterface, __uuidof(Midi2MidiSrvAbstraction) == Iid, midiInInstanceId, midiOutInstanceId))
+    if (!GetEndpoints(abstractionCreationParams.DataFormat, midiOneInterface, __uuidof(Midi2MidiSrvAbstraction) == iid, midiInInstanceId, midiOutInstanceId))
     {
         return;
     }
@@ -420,31 +420,31 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     // doesn't matter.
     LOG_OUTPUT(L"Initializing midi out");
     mmcssTaskIdOut = mmcssTaskId;
-    abstractionCreationParams.DataFormat = DataFormat;
+    abstractionCreationParams.DataFormat = dataFormat;
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut, m_SessionId));
     mmcssTaskIdIn = mmcssTaskIdOut;
-    abstractionCreationParams.DataFormat = DataFormat;
+    abstractionCreationParams.DataFormat = dataFormat;
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0, m_SessionId));
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
-    VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
-    VERIFY_SUCCEEDED(midiInDevice->Cleanup());
+    VERIFY_SUCCEEDED(midiOutDevice->Shutdown());
+    VERIFY_SUCCEEDED(midiInDevice->Shutdown());
     LOG_OUTPUT(L"Zeroing task id");
     mmcssTaskIdIn = 0;
     mmcssTaskIdOut = 0;
     LOG_OUTPUT(L"Initializing midi in");
     mmcssTaskIdIn = mmcssTaskId;
-    abstractionCreationParams.DataFormat = DataFormat;
+    abstractionCreationParams.DataFormat = dataFormat;
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0, m_SessionId));
     mmcssTaskIdOut = mmcssTaskIdIn;
-    abstractionCreationParams.DataFormat = DataFormat;
+    abstractionCreationParams.DataFormat = dataFormat;
     LOG_OUTPUT(L"Initializing midi out");
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut, m_SessionId));
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
-    VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
-    VERIFY_SUCCEEDED(midiInDevice->Cleanup());
+    VERIFY_SUCCEEDED(midiOutDevice->Shutdown());
+    VERIFY_SUCCEEDED(midiInDevice->Shutdown());
 
     mmcssHandle.reset();
     VERIFY_SUCCEEDED(EnableMmcss(mmcssHandle, mmcssTaskId));
@@ -454,22 +454,22 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     // then repeat again in the opposite order with reversed cleanup order.
     LOG_OUTPUT(L"Initializing midi out");
     mmcssTaskIdOut = mmcssTaskId;
-    abstractionCreationParams.DataFormat = DataFormat;
+    abstractionCreationParams.DataFormat = dataFormat;
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut, m_SessionId));
     mmcssTaskIdIn = mmcssTaskIdOut;
-    abstractionCreationParams.DataFormat = DataFormat;
+    abstractionCreationParams.DataFormat = dataFormat;
     LOG_OUTPUT(L"Initializing midi in");
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0, m_SessionId));
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
     VERIFY_IS_TRUE(mmcssTaskIdIn == mmcssTaskIdOut);
-    VERIFY_SUCCEEDED(midiInDevice->Cleanup());
-    VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
+    VERIFY_SUCCEEDED(midiInDevice->Shutdown());
+    VERIFY_SUCCEEDED(midiOutDevice->Shutdown());
     LOG_OUTPUT(L"Initializing midi in");
     mmcssTaskIdIn = mmcssTaskId;
-    abstractionCreationParams.DataFormat = DataFormat;
+    abstractionCreationParams.DataFormat = dataFormat;
     VERIFY_SUCCEEDED(midiInDevice->Initialize(midiInInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdIn, this, 0, m_SessionId));
     mmcssTaskIdOut = mmcssTaskIdIn;
-    abstractionCreationParams.DataFormat = DataFormat;
+    abstractionCreationParams.DataFormat = dataFormat;
     LOG_OUTPUT(L"Initializing midi out");
     VERIFY_SUCCEEDED(midiOutDevice->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskIdOut, m_SessionId));
     VERIFY_IS_TRUE(mmcssTaskId == mmcssTaskIdOut);
@@ -481,51 +481,51 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID Iid, _In_ Mid
     }
 
     cleanupOnFailure.release();
-    VERIFY_SUCCEEDED(midiInDevice->Cleanup());
-    VERIFY_SUCCEEDED(midiOutDevice->Cleanup());
+    VERIFY_SUCCEEDED(midiInDevice->Shutdown());
+    VERIFY_SUCCEEDED(midiOutDevice->Shutdown());
 }
 
 void MidiAbstractionTests::TestMidiKSAbstractionCreationOrder_UMP()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2KSAbstraction), MidiDataFormat_UMP, FALSE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2KSAbstraction), MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiKSAbstractionCreationOrder_ByteStream()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2KSAbstraction), MidiDataFormat_ByteStream, FALSE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2KSAbstraction), MidiDataFormats_ByteStream, FALSE);
 }
 void MidiAbstractionTests::TestMidiKSAbstractionCreationOrder_Any()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2KSAbstraction), MidiDataFormat_Any, FALSE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2KSAbstraction), MidiDataFormats_Any, FALSE);
 }
 
 
 void MidiAbstractionTests::TestMidiSrvAbstractionCreationOrder_UMP()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_UMP, FALSE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstractionCreationOrder_ByteStream()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_ByteStream, FALSE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_ByteStream, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstractionCreationOrder_Any()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_Any, FALSE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_Any, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstractionCreationOrder_UMP_MidiOne()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_UMP, TRUE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_UMP, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstractionCreationOrder_ByteStream_MidiOne()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_ByteStream, TRUE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_ByteStream, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvAbstractionCreationOrder_Any_MidiOne()
 {
-    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_Any, TRUE);
+    TestMidiAbstractionCreationOrder(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_Any, TRUE);
 }
 
 _Use_decl_annotations_
-void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat DataFormat)
+void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID iid, MidiDataFormats dataFormat)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -536,15 +536,15 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { DataFormat };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { dataFormat };
     std::wstring midiBiDirectionalInstanceId;
 
-    VERIFY_SUCCEEDED(CoCreateInstance(Iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
         if (midiBiDiDevice.get())
         {
-            midiBiDiDevice->Cleanup();
+            midiBiDiDevice->Shutdown();
         }
 
         if (midiSessionTracker.get() != nullptr)
@@ -560,7 +560,7 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
-        PrintMidiMessage(payload, payloadSize, (abstractionCreationParams.DataFormat == MidiDataFormat_UMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
+        PrintMidiMessage(payload, payloadSize, (abstractionCreationParams.DataFormat == MidiDataFormats_UMP)?sizeof(UMP32):sizeof(MIDI_MESSAGE), payloadPosition);
 
         midiMessagesReceived++;
         if (midiMessagesReceived == expectedMessageCount)
@@ -578,7 +578,7 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiAbstractionBiDi"));
     }
 
-    if (!GetBiDiEndpoint(abstractionCreationParams.DataFormat, __uuidof(Midi2MidiSrvAbstraction) == Iid, midiBiDirectionalInstanceId))
+    if (!GetBiDiEndpoint(abstractionCreationParams.DataFormat, __uuidof(Midi2MidiSrvAbstraction) == iid, midiBiDirectionalInstanceId))
     {
         return;
     }
@@ -586,17 +586,17 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
     LOG_OUTPUT(L"Initializing midi BiDi");
     VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, m_SessionId));
 
-    VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormat_UMP || abstractionCreationParams.DataFormat == MidiDataFormat_ByteStream);
+    VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormats_UMP || abstractionCreationParams.DataFormat == MidiDataFormats_ByteStream);
 
     LOG_OUTPUT(L"Writing midi data");
-    if (abstractionCreationParams.DataFormat == MidiDataFormat_UMP)
+    if (abstractionCreationParams.DataFormat == MidiDataFormats_UMP)
     {
         BYTE nativeDataFormat {0};
         VERIFY_SUCCEEDED(GetEndpointNativeDataFormat(midiBiDirectionalInstanceId.c_str(), nativeDataFormat));
 
         // if the peripheral native data format is bytestream, limit to 32 bit messages
         // that will roundtrip, the others will get dropped.
-        if (nativeDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
+        if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
             VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
             VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
@@ -631,7 +631,7 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
     LOG_OUTPUT(L"Done, cleaning up");
 
     cleanupOnFailure.release();
-    VERIFY_SUCCEEDED(midiBiDiDevice->Cleanup());
+    VERIFY_SUCCEEDED(midiBiDiDevice->Shutdown());
 
     if (midiSessionTracker.get() != nullptr)
     {
@@ -641,32 +641,32 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID Iid, MidiDataFormat Da
 
 void MidiAbstractionTests::TestMidiKSAbstractionBiDi_UMP()
 {
-    TestMidiAbstractionBiDi(__uuidof(Midi2KSAbstraction), MidiDataFormat_UMP);
+    TestMidiAbstractionBiDi(__uuidof(Midi2KSAbstraction), MidiDataFormats_UMP);
 }
 void MidiAbstractionTests::TestMidiKSAbstractionBiDi_ByteStream()
 {
-    TestMidiAbstractionBiDi(__uuidof(Midi2KSAbstraction), MidiDataFormat_ByteStream);
+    TestMidiAbstractionBiDi(__uuidof(Midi2KSAbstraction), MidiDataFormats_ByteStream);
 }
 void MidiAbstractionTests::TestMidiKSAbstractionBiDi_Any()
 {
-    TestMidiAbstractionBiDi(__uuidof(Midi2KSAbstraction), MidiDataFormat_Any);
+    TestMidiAbstractionBiDi(__uuidof(Midi2KSAbstraction), MidiDataFormats_Any);
 }
 
 void MidiAbstractionTests::TestMidiSrvAbstractionBiDi_UMP()
 {
-    TestMidiAbstractionBiDi(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_UMP);
+    TestMidiAbstractionBiDi(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_UMP);
 }
 void MidiAbstractionTests::TestMidiSrvAbstractionBiDi_ByteStream()
 {
-    TestMidiAbstractionBiDi(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_ByteStream);
+    TestMidiAbstractionBiDi(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_ByteStream);
 }
 void MidiAbstractionTests::TestMidiSrvAbstractionBiDi_Any()
 {
-    TestMidiAbstractionBiDi(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_Any);
+    TestMidiAbstractionBiDi(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_Any);
 }
 
 _Use_decl_annotations_
-void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFormat, BOOL DelayedMessages)
+void MidiAbstractionTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataFormat, BOOL delayedMessages)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -677,7 +677,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId{0};
     wil::unique_event_nothrow allMessagesReceived;
-    UINT expectedMessageCount = DelayedMessages ? (3000 / messageDelay) : 100000;
+    UINT expectedMessageCount = delayedMessages ? (3000 / messageDelay) : 100000;
 
     LARGE_INTEGER performanceFrequency{ 0 };
     LARGE_INTEGER firstSend{ 0 };
@@ -699,7 +699,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
     LONGLONG previousReceive{ 0 };
 
     long double qpcPerMs = 0;
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { DataFormat };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { dataFormat };
     std::wstring midiBiDirectionalInstanceId;
 
     QueryPerformanceFrequency(&performanceFrequency);
@@ -708,12 +708,12 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
 
     UINT midiMessagesReceived = 0;
 
-    VERIFY_SUCCEEDED(CoCreateInstance(Iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+    VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
         if (midiBiDiDevice.get())
         {
-            midiBiDiDevice->Cleanup();
+            midiBiDiDevice->Shutdown();
         }
 
         if (midiSessionTracker.get() != nullptr)
@@ -809,7 +809,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiIO_Latency"));
     }
 
-    if (!GetBiDiEndpoint(abstractionCreationParams.DataFormat, __uuidof(Midi2MidiSrvAbstraction) == Iid, midiBiDirectionalInstanceId))
+    if (!GetBiDiEndpoint(abstractionCreationParams.DataFormat, __uuidof(Midi2MidiSrvAbstraction) == iid, midiBiDirectionalInstanceId))
     {
         return;
     }
@@ -817,7 +817,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
     LOG_OUTPUT(L"Initializing midi BiDi");
     VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, m_SessionId));
 
-    VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormat_UMP || abstractionCreationParams.DataFormat == MidiDataFormat_ByteStream);
+    VERIFY_IS_TRUE(abstractionCreationParams.DataFormat == MidiDataFormats_UMP || abstractionCreationParams.DataFormat == MidiDataFormats_ByteStream);
 
     LOG_OUTPUT(L"Writing midi data");
 
@@ -830,7 +830,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
 
     for (UINT i = 0; i < expectedMessageCount; i++)
     {
-        if (DelayedMessages)
+        if (delayedMessages)
         {
             Sleep(messageDelay);
         }
@@ -840,7 +840,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
         LONGLONG sendLatency{0};
 
         QueryPerformanceCounter(&qpcBefore);
-        if (abstractionCreationParams.DataFormat == MidiDataFormat_UMP)
+        if (abstractionCreationParams.DataFormat == MidiDataFormats_UMP)
         {
             VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
         }
@@ -958,7 +958,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
     LOG_OUTPUT(L"Done, cleaning up");
 
     cleanupOnFailure.release();
-    VERIFY_SUCCEEDED(midiBiDiDevice->Cleanup());
+    VERIFY_SUCCEEDED(midiBiDiDevice->Shutdown());
 
     if (midiSessionTracker.get() != nullptr)
     {
@@ -968,38 +968,38 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID Iid, MidiDataFormat DataFor
 
 void MidiAbstractionTests::TestMidiKSIO_Latency_UMP()
 {
-    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction), MidiDataFormat_UMP, FALSE);
+    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction), MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiKSIO_Latency_ByteStream()
 {
-    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction), MidiDataFormat_ByteStream, FALSE);
+    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction), MidiDataFormats_ByteStream, FALSE);
 }
 
 void MidiAbstractionTests::TestMidiSrvIO_Latency_UMP()
 {
-    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_UMP, FALSE);
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvIO_Latency_ByteStream()
 {
-    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_ByteStream, FALSE);
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_ByteStream, FALSE);
 }
 
 void MidiAbstractionTests::TestMidiKSIOSlowMessages_Latency_UMP()
 {
-    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction), MidiDataFormat_UMP, TRUE);
+    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction), MidiDataFormats_UMP, TRUE);
 }
 void MidiAbstractionTests::TestMidiKSIOSlowMessages_Latency_ByteStream()
 {
-    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction), MidiDataFormat_ByteStream, TRUE);
+    TestMidiIO_Latency(__uuidof(Midi2KSAbstraction), MidiDataFormats_ByteStream, TRUE);
 }
 
 void MidiAbstractionTests::TestMidiSrvIOSlowMessages_Latency_UMP()
 {
-    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_UMP, TRUE);
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_UMP, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvIOSlowMessages_Latency_ByteStream()
 {
-    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormat_ByteStream, TRUE);
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvAbstraction), MidiDataFormats_ByteStream, TRUE);
 }
 
 UMP32 g_MidiTestData2_32 = {0x20A04321 };
@@ -1010,7 +1010,7 @@ UMP128 g_MidiTestData2_128 = {0xF1D04321, 0xbaadf00d, 0xdeadbeef, 0xd000000d };
 MIDI_MESSAGE g_MidiTestMessage2 = { 0x91, 0x70, 0x24 };
 
 _Use_decl_annotations_
-void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, MidiDataFormat DataFormat2, BOOL MidiOneInterface)
+void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormats dataFormat1, MidiDataFormats dataFormat2, BOOL midiOneInterface)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -1036,8 +1036,8 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams1 { DataFormat1 };
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams2 { DataFormat2 };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams1 { dataFormat1 };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams2 { dataFormat2 };
 
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
@@ -1047,19 +1047,19 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     auto cleanupOnFailure = wil::scope_exit([&]() {
         if (midiOutDevice1.get())
         {
-            midiOutDevice1->Cleanup();
+            midiOutDevice1->Shutdown();
         }
         if (midiOutDevice2.get())
         {
-            midiOutDevice2->Cleanup();
+            midiOutDevice2->Shutdown();
         }
         if (midiInDevice1.get())
         {
-            midiInDevice1->Cleanup();
+            midiInDevice1->Shutdown();
         }
         if (midiInDevice2.get())
         {
-            midiInDevice2->Cleanup();
+            midiInDevice2->Shutdown();
         }
 
         if (midiSessionTracker.get() != nullptr)
@@ -1114,7 +1114,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiSrvMultiClient"));
     }
 
-    if (!GetEndpoints(DataFormat1, MidiOneInterface, TRUE, midiInInstanceId, midiOutInstanceId))
+    if (!GetEndpoints(dataFormat1, midiOneInterface, TRUE, midiInInstanceId, midiOutInstanceId))
     {
         return;
     }
@@ -1129,7 +1129,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     UMP96 midiTestData2_96 = g_MidiTestData2_96;
     UMP128 midiTestData2_128 = g_MidiTestData2_128;
 
-    if (MidiOneInterface)
+    if (midiOneInterface)
     {
         DWORD midiInGroupIndex = 0;
         DWORD midiOutGroupIndex = 0;
@@ -1163,8 +1163,8 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     LOG_OUTPUT(L"Initializing midi out 2");
     VERIFY_SUCCEEDED(midiOutDevice2->Initialize(midiOutInstanceId.c_str(), &abstractionCreationParams2, &mmcssTaskId, m_SessionId));
 
-    VERIFY_IS_TRUE(abstractionCreationParams1.DataFormat == MidiDataFormat_UMP || abstractionCreationParams1.DataFormat == MidiDataFormat_ByteStream);
-    VERIFY_IS_TRUE(abstractionCreationParams2.DataFormat == MidiDataFormat_UMP || abstractionCreationParams2.DataFormat == MidiDataFormat_ByteStream);
+    VERIFY_IS_TRUE(abstractionCreationParams1.DataFormat == MidiDataFormats_UMP || abstractionCreationParams1.DataFormat == MidiDataFormats_ByteStream);
+    VERIFY_IS_TRUE(abstractionCreationParams2.DataFormat == MidiDataFormats_UMP || abstractionCreationParams2.DataFormat == MidiDataFormats_ByteStream);
 
     BYTE nativeInDataFormat {0};
     BYTE nativeOutDataFormat {0};
@@ -1173,12 +1173,12 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
 
     LOG_OUTPUT(L"Writing midi data");
 
-    if (abstractionCreationParams1.DataFormat == MidiDataFormat_UMP)
+    if (abstractionCreationParams1.DataFormat == MidiDataFormats_UMP)
     {
         // if the peripheral native data format is bytestream, limit to 32 bit messages
         // that will roundtrip, the others will get dropped.
-        if (nativeInDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM || 
-            nativeOutDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
+        if (nativeInDataFormat == MidiDataFormats_ByteStream || 
+            nativeOutDataFormat == MidiDataFormats_ByteStream)
         {
             VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_32, sizeof(UMP32), 29));
             VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_32, sizeof(UMP32), 30));
@@ -1189,7 +1189,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
         {
             VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_32, sizeof(UMP32), 11));
             VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_64, sizeof(UMP64), 12));
-            if (abstractionCreationParams2.DataFormat == MidiDataFormat_UMP)
+            if (abstractionCreationParams2.DataFormat == MidiDataFormats_UMP)
             {
                 // if communicating UMP to UMP, we can send 96 and 128 messages
                 VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_96, sizeof(UMP96), 13));
@@ -1211,12 +1211,12 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
         VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 18));
     }
 
-    if (abstractionCreationParams2.DataFormat == MidiDataFormat_UMP)
+    if (abstractionCreationParams2.DataFormat == MidiDataFormats_UMP)
     {
         // if the peripheral native data format is bytestream, limit to 32 bit messages
         // that will roundtrip, the others will get dropped.
-        if (nativeInDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM || 
-            nativeOutDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
+        if (nativeInDataFormat == MidiDataFormats_ByteStream || 
+            nativeOutDataFormat == MidiDataFormats_ByteStream)
         {
             VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData2_32, sizeof(UMP32), 33));
             VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData2_32, sizeof(UMP32), 34));
@@ -1227,7 +1227,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
         {
             VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_32, sizeof(UMP32), 21));
             VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_64, sizeof(UMP64), 22));
-            if (abstractionCreationParams1.DataFormat == MidiDataFormat_UMP)
+            if (abstractionCreationParams1.DataFormat == MidiDataFormats_UMP)
             {
                 VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_96, sizeof(UMP96), 23));
                 VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_128, sizeof(UMP128), 24));
@@ -1261,10 +1261,10 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
     LOG_OUTPUT(L"Done, cleaning up");
 
     cleanupOnFailure.release();
-    VERIFY_SUCCEEDED(midiOutDevice1->Cleanup());
-    VERIFY_SUCCEEDED(midiOutDevice2->Cleanup());
-    VERIFY_SUCCEEDED(midiInDevice1->Cleanup());
-    VERIFY_SUCCEEDED(midiInDevice2->Cleanup());
+    VERIFY_SUCCEEDED(midiOutDevice1->Shutdown());
+    VERIFY_SUCCEEDED(midiOutDevice2->Shutdown());
+    VERIFY_SUCCEEDED(midiInDevice1->Shutdown());
+    VERIFY_SUCCEEDED(midiInDevice2->Shutdown());
 
     if (midiSessionTracker.get() != nullptr)
     {
@@ -1274,79 +1274,79 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormat DataFormat1, Mi
 
 void MidiAbstractionTests::TestMidiSrvMultiClient_UMP_UMP()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_UMP, MidiDataFormat_UMP, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_UMP, MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_ByteStream_ByteStream()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_ByteStream, MidiDataFormat_ByteStream, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_ByteStream, MidiDataFormats_ByteStream, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_Any_Any()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_Any, MidiDataFormat_Any, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_Any, MidiDataFormats_Any, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_UMP_ByteStream()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_UMP, MidiDataFormat_ByteStream, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_UMP, MidiDataFormats_ByteStream, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_ByteStream_UMP()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_ByteStream, MidiDataFormat_UMP, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_ByteStream, MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_Any_ByteStream()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_Any, MidiDataFormat_ByteStream, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_Any, MidiDataFormats_ByteStream, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_ByteStream_Any()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_ByteStream, MidiDataFormat_Any, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_ByteStream, MidiDataFormats_Any, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_Any_UMP()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_Any, MidiDataFormat_UMP, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_Any, MidiDataFormats_UMP, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_UMP_Any()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_UMP, MidiDataFormat_Any, FALSE);
+    TestMidiSrvMultiClient(MidiDataFormats_UMP, MidiDataFormats_Any, FALSE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_UMP_UMP_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_UMP, MidiDataFormat_UMP, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_UMP, MidiDataFormats_UMP, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_ByteStream_ByteStream_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_ByteStream, MidiDataFormat_ByteStream, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_ByteStream, MidiDataFormats_ByteStream, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_Any_Any_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_Any, MidiDataFormat_Any, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_Any, MidiDataFormats_Any, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_UMP_ByteStream_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_UMP, MidiDataFormat_ByteStream, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_UMP, MidiDataFormats_ByteStream, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_ByteStream_UMP_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_ByteStream, MidiDataFormat_UMP, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_ByteStream, MidiDataFormats_UMP, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_Any_ByteStream_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_Any, MidiDataFormat_ByteStream, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_Any, MidiDataFormats_ByteStream, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_ByteStream_Any_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_ByteStream, MidiDataFormat_Any, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_ByteStream, MidiDataFormats_Any, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_Any_UMP_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_Any, MidiDataFormat_UMP, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_Any, MidiDataFormats_UMP, TRUE);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClient_UMP_Any_MidiOne()
 {
-    TestMidiSrvMultiClient(MidiDataFormat_UMP, MidiDataFormat_Any, TRUE);
+    TestMidiSrvMultiClient(MidiDataFormats_UMP, MidiDataFormats_Any, TRUE);
 }
 
 _Use_decl_annotations_
-void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1, MidiDataFormat DataFormat2)
+void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat1, MidiDataFormats dataFormat2)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -1370,8 +1370,8 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams1 { DataFormat1 };
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams2 { DataFormat2 };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams1 { dataFormat1 };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams2 { dataFormat2 };
     std::wstring midiInstanceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
@@ -1379,11 +1379,11 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     auto cleanupOnFailure = wil::scope_exit([&]() {
         if (midiDevice1.get())
         {
-            midiDevice1->Cleanup();
+            midiDevice1->Shutdown();
         }
         if (midiDevice2.get())
         {
-            midiDevice2->Cleanup();
+            midiDevice2->Shutdown();
         }
 
         if (midiSessionTracker.get() != nullptr)
@@ -1436,7 +1436,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiSrvMultiClientBiDi"));
     }
 
-    if (!GetBiDiEndpoint(DataFormat1, TRUE, midiInstanceId))
+    if (!GetBiDiEndpoint(dataFormat1, TRUE, midiInstanceId))
     {
         return;
     }
@@ -1447,18 +1447,18 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     LOG_OUTPUT(L"Initializing midi in 2");
     VERIFY_SUCCEEDED(midiDevice2->Initialize(midiInstanceId.c_str(), &abstractionCreationParams2, &mmcssTaskId, this, context2, m_SessionId));
 
-    VERIFY_IS_TRUE(abstractionCreationParams1.DataFormat == MidiDataFormat_UMP || abstractionCreationParams1.DataFormat == MidiDataFormat_ByteStream);
-    VERIFY_IS_TRUE(abstractionCreationParams2.DataFormat == MidiDataFormat_UMP || abstractionCreationParams2.DataFormat == MidiDataFormat_ByteStream);
+    VERIFY_IS_TRUE(abstractionCreationParams1.DataFormat == MidiDataFormats_UMP || abstractionCreationParams1.DataFormat == MidiDataFormats_ByteStream);
+    VERIFY_IS_TRUE(abstractionCreationParams2.DataFormat == MidiDataFormats_UMP || abstractionCreationParams2.DataFormat == MidiDataFormats_ByteStream);
 
     BYTE nativeDataFormat {0};
     VERIFY_SUCCEEDED(GetEndpointNativeDataFormat(midiInstanceId.c_str(), nativeDataFormat));
 
     LOG_OUTPUT(L"Writing midi data");
-    if (abstractionCreationParams1.DataFormat == MidiDataFormat_UMP)
+    if (abstractionCreationParams1.DataFormat == MidiDataFormats_UMP)
     {
         // if the peripheral native data format is bytestream, limit to 32 bit messages
         // that will roundtrip, the others will get dropped.
-        if (nativeDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
+        if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
             VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 33));
             VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 34));
@@ -1469,7 +1469,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
         {
             VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 11));
             VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_64, sizeof(UMP64), 12));
-            if (abstractionCreationParams2.DataFormat == MidiDataFormat_UMP)
+            if (abstractionCreationParams2.DataFormat == MidiDataFormats_UMP)
             {
                 VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_96, sizeof(UMP96), 13));
                 VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_128, sizeof(UMP128), 14));
@@ -1489,11 +1489,11 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
         VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 18));
     }
 
-    if (abstractionCreationParams2.DataFormat == MidiDataFormat_UMP)
+    if (abstractionCreationParams2.DataFormat == MidiDataFormats_UMP)
     {
         // if the peripheral native data format is bytestream, limit to 32 bit messages
         // that will roundtrip, the others will get dropped.
-        if (nativeDataFormat == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
+        if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
             VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 33));
             VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 34));
@@ -1504,7 +1504,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
         {
             VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 21));
             VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_64, sizeof(UMP64), 22));
-            if (abstractionCreationParams1.DataFormat == MidiDataFormat_UMP)
+            if (abstractionCreationParams1.DataFormat == MidiDataFormats_UMP)
             {
                 VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_96, sizeof(UMP96), 23));
                 VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_128, sizeof(UMP128), 24));
@@ -1538,8 +1538,8 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
     LOG_OUTPUT(L"Done, cleaning up");
 
     cleanupOnFailure.release();
-    VERIFY_SUCCEEDED(midiDevice1->Cleanup());
-    VERIFY_SUCCEEDED(midiDevice2->Cleanup());
+    VERIFY_SUCCEEDED(midiDevice1->Shutdown());
+    VERIFY_SUCCEEDED(midiDevice2->Shutdown());
 
     if (midiSessionTracker.get() != nullptr)
     {
@@ -1549,39 +1549,39 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormat DataFormat1
 
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_UMP_UMP()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_UMP, MidiDataFormat_UMP);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_UMP, MidiDataFormats_UMP);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_ByteStream_ByteStream()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_ByteStream, MidiDataFormat_ByteStream);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_ByteStream, MidiDataFormats_ByteStream);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_Any_Any()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_Any, MidiDataFormat_Any);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_Any, MidiDataFormats_Any);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_UMP_ByteStream()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_UMP, MidiDataFormat_ByteStream);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_UMP, MidiDataFormats_ByteStream);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_ByteStream_UMP()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_ByteStream, MidiDataFormat_UMP);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_ByteStream, MidiDataFormats_UMP);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_Any_ByteStream()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_Any, MidiDataFormat_ByteStream);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_Any, MidiDataFormats_ByteStream);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_ByteStream_Any()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_ByteStream, MidiDataFormat_Any);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_ByteStream, MidiDataFormats_Any);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_Any_UMP()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_Any, MidiDataFormat_UMP);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_Any, MidiDataFormats_UMP);
 }
 void MidiAbstractionTests::TestMidiSrvMultiClientBiDi_UMP_Any()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormat_UMP, MidiDataFormat_Any);
+    TestMidiSrvMultiClientBiDi(MidiDataFormats_UMP, MidiDataFormats_Any);
 }
 
 bool MidiAbstractionTests::TestSetup()

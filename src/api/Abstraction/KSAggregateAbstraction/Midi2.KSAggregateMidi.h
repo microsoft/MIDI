@@ -32,7 +32,7 @@ public:
 
     HRESULT Initialize(_In_ LPCWSTR, _In_ MidiFlow, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG);
     HRESULT SendMidiMessage(_In_ PVOID , _In_ UINT , _In_ LONGLONG);
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
  //   HRESULT HandleCallback(_In_ uint8_t, _In_ PVOID, _In_ UINT, _In_ LONGLONG);
 

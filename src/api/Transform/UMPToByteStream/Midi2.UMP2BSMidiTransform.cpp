@@ -7,12 +7,12 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2UMP2BSMidiTransform::Initialize(
-    LPCWSTR Device,
-    PTRANSFORMCREATIONPARAMS CreationParams,
+    LPCWSTR device,
+    PTRANSFORMCREATIONPARAMS creationParams,
     DWORD *,
-    IMidiCallback *Callback,
-    LONGLONG /*Context*/,
-    IUnknown* /*MidiDeviceManager*/
+    IMidiCallback *callback,
+    LONGLONG /*context*/,
+    IMidiDeviceManagerInterface* /*midiDeviceManager*/
 )
 {
     TraceLoggingWrite(
@@ -23,17 +23,17 @@ CMidi2UMP2BSMidiTransform::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatIn != MidiDataFormat_UMP);
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatOut != MidiDataFormat_ByteStream);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), creationParams->DataFormatIn != MidiDataFormats_UMP);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), creationParams->DataFormatOut != MidiDataFormats_ByteStream);
 
-    m_Device = Device;
-    m_Callback = Callback;
+    m_Device = device;
+    m_Callback = callback;
 
     return S_OK;
 }
 
 HRESULT
-CMidi2UMP2BSMidiTransform::Cleanup()
+CMidi2UMP2BSMidiTransform::Shutdown()
 {
     TraceLoggingWrite(
         MidiUMP2BSTransformTelemetryProvider::Provider(),
@@ -49,14 +49,14 @@ CMidi2UMP2BSMidiTransform::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2UMP2BSMidiTransform::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
+    PVOID inputData,
+    UINT length,
+    LONGLONG position
 )
 {
     // Send the UMP(s) to the parser
-    uint32_t *data = (uint32_t *)Data;
-    for (UINT i = 0; i < (Length / 4); i++)
+    uint32_t *data = (uint32_t *)inputData;
+    for (UINT i = 0; i < (length / 4); i++)
     {
         m_UMP2BS.UMPStreamParse(data[i]);
     }
@@ -78,7 +78,7 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
             // around. Should likely drain that before moving on
 
             // For transforms, by convention the context contains the group index.
-            RETURN_IF_FAILED(m_Callback->Callback(&(byteStream[0]), byteCount, Position, m_UMP2BS.group));
+            RETURN_IF_FAILED(m_Callback->Callback(&(byteStream[0]), byteCount, position, m_UMP2BS.group));
         }
     }
 

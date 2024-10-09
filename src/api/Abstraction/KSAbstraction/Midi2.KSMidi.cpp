@@ -15,19 +15,19 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidi::Initialize(
-    LPCWSTR Device,
-    MidiFlow Flow,
-    PABSTRACTIONCREATIONPARAMS CreationParams,
-    DWORD * MmCssTaskId,
-    IMidiCallback * Callback,
-    LONGLONG Context
+    LPCWSTR device,
+    MidiFlow flow,
+    PABSTRACTIONCREATIONPARAMS creationParams,
+    DWORD * mmcssTaskId,
+    IMidiCallback * callback,
+    LONGLONG context
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, Flow == MidiFlowIn && nullptr == Callback);
-    RETURN_HR_IF(E_INVALIDARG, Flow == MidiFlowBidirectional && nullptr == Callback);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
+    RETURN_HR_IF(E_INVALIDARG, flow == MidiFlowIn && nullptr == callback);
+    RETURN_HR_IF(E_INVALIDARG, flow == MidiFlowBidirectional && nullptr == callback);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == device);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == mmcssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == creationParams);
 
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -35,11 +35,11 @@ CMidi2KSMidi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingHexUInt32(CreationParams->DataFormat, "MidiDataFormat"),
-        TraceLoggingHexUInt32(Flow, "MidiFlow"),
-        TraceLoggingHexUInt32(*MmCssTaskId, "MmCssTaskId"),
-        TraceLoggingPointer(Callback, "callback")
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingHexUInt32(creationParams->DataFormat, "MidiDataFormats"),
+        TraceLoggingHexUInt32(flow, "MidiFlow"),
+        TraceLoggingHexUInt32(*mmcssTaskId, "mmcssTaskId"),
+        TraceLoggingPointer(callback, "callback")
         );
 
     wil::unique_handle filter;
@@ -62,7 +62,7 @@ CMidi2KSMidi::Initialize(
     additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsTransport));
     additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
 
-    auto deviceInfo = DeviceInformation::CreateFromIdAsync(Device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
     auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
@@ -81,36 +81,36 @@ CMidi2KSMidi::Initialize(
 
     // if creation params specifies that bytestream is requested, then
     // limit the transport to bytestream
-    if (CreationParams->DataFormat == MidiDataFormat_ByteStream)
+    if (creationParams->DataFormat == MidiDataFormats_ByteStream)
     {
         transportCapabilities = (MidiTransport) ((DWORD) transportCapabilities & (DWORD) MidiTransport_StandardAndCyclicByteStream);
     }
     // if creation params specifies that UMP is requested, then
     // limit the transport to UMP
-    else if (CreationParams->DataFormat == MidiDataFormat_UMP)
+    else if (creationParams->DataFormat == MidiDataFormats_UMP)
     {
         transportCapabilities = (MidiTransport) ((DWORD) transportCapabilities & (DWORD) MidiTransport_CyclicUMP);
     }
 
     // choose the best available transport among the available transports.
-    // fill in the MidiDataFormat that is going to be used for the caller.
+    // fill in the MidiDataFormats that is going to be used for the caller.
     if (0 != ((DWORD) transportCapabilities & (DWORD) MidiTransport_CyclicUMP))
     {
         // Cyclic UMP is available, that's the most preferred transport.
         transport = MidiTransport_CyclicUMP;
-        CreationParams->DataFormat = MidiDataFormat_UMP;
+        creationParams->DataFormat = MidiDataFormats_UMP;
     }
     else if (0 != ((DWORD) transportCapabilities & (DWORD) MidiTransport_CyclicByteStream))
     {
         // Cyclic bytestream is available, that's the next preferred transport.
         transport = MidiTransport_CyclicByteStream;
-        CreationParams->DataFormat = MidiDataFormat_ByteStream;
+        creationParams->DataFormat = MidiDataFormats_ByteStream;
     }
     else if (0 != ((DWORD) transportCapabilities & (DWORD) MidiTransport_StandardByteStream))
     {
         // Standard bytestream is available, that's the least transport.
         transport = MidiTransport_StandardByteStream;
-        CreationParams->DataFormat = MidiDataFormat_ByteStream;
+        creationParams->DataFormat = MidiDataFormats_ByteStream;
     }
     else
     {
@@ -124,7 +124,7 @@ CMidi2KSMidi::Initialize(
     RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
 
 
-    if (Flow == MidiFlowBidirectional)
+    if (flow == MidiFlowBidirectional)
     {
         prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
@@ -143,7 +143,7 @@ CMidi2KSMidi::Initialize(
         {
             inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
         }
-        else if (Flow == MidiFlowIn)
+        else if (flow == MidiFlowIn)
         {
             prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
             RETURN_HR_IF_NULL(E_INVALIDARG, prop);
@@ -157,19 +157,19 @@ CMidi2KSMidi::Initialize(
         }
     }
 
-    if (Flow == MidiFlowIn || Flow == MidiFlowBidirectional)
+    if (flow == MidiFlowIn || flow == MidiFlowBidirectional)
     {
         midiInDevice.reset(new (std::nothrow) KSMidiInDevice());
         RETURN_IF_NULL_ALLOC(midiInDevice);
-        RETURN_IF_FAILED(midiInDevice->Initialize(Device, filter.get(), inPinId, transport, requestedBufferSize, MmCssTaskId, Callback, Context));
+        RETURN_IF_FAILED(midiInDevice->Initialize(device, filter.get(), inPinId, transport, requestedBufferSize, mmcssTaskId, callback, context));
         m_MidiInDevice = std::move(midiInDevice);
     }
 
-    if (Flow == MidiFlowOut || Flow == MidiFlowBidirectional)
+    if (flow == MidiFlowOut || flow == MidiFlowBidirectional)
     {
         midiOutDevice.reset(new (std::nothrow) KSMidiOutDevice());
         RETURN_IF_NULL_ALLOC(midiOutDevice);
-        RETURN_IF_FAILED(midiOutDevice->Initialize(Device, filter.get(), outPinId, transport, requestedBufferSize, MmCssTaskId));
+        RETURN_IF_FAILED(midiOutDevice->Initialize(device, filter.get(), outPinId, transport, requestedBufferSize, mmcssTaskId));
         m_MidiOutDevice = std::move(midiOutDevice);
     }
 
@@ -177,7 +177,7 @@ CMidi2KSMidi::Initialize(
 }
 
 HRESULT
-CMidi2KSMidi::Cleanup()
+CMidi2KSMidi::Shutdown()
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -189,12 +189,12 @@ CMidi2KSMidi::Cleanup()
 
     if (m_MidiOutDevice)
     {
-        m_MidiOutDevice->Cleanup();
+        m_MidiOutDevice->Shutdown();
         m_MidiOutDevice.reset();
     }
     if (m_MidiInDevice)
     {
-        m_MidiInDevice->Cleanup();
+        m_MidiInDevice->Shutdown();
         m_MidiInDevice.reset();
     }
 
@@ -204,14 +204,14 @@ CMidi2KSMidi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidi::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
+    PVOID data,
+    UINT length,
+    LONGLONG position
 )
 {
     if (m_MidiOutDevice)
     {
-        return m_MidiOutDevice->SendMidiMessage(Data, Length, Position);
+        return m_MidiOutDevice->SendMidiMessage(data, length, position);
     }
 
     return E_ABORT;

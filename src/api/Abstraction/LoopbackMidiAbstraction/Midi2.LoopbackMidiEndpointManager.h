@@ -16,8 +16,8 @@ class CMidi2LoopbackMidiEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
+    STDMETHOD(Shutdown)();
 
     //STDMETHOD(ApplyConfiguration(
     //    _In_ LPCWSTR configurationJson,

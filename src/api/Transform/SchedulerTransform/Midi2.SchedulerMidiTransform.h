@@ -15,9 +15,9 @@ class CMidi2SchedulerMidiTransform :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSFORMCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ IUnknown*));
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSFORMCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ IMidiDeviceManagerInterface*));
     STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
 

@@ -17,25 +17,25 @@ class CMidi2DiagnosticsEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
+    STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
     //STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
     GUID m_ContainerId{};
     GUID m_TransportAbstractionId{ __uuidof(Midi2DiagnosticsAbstraction) };
 
     HRESULT CreateLoopbackEndpoint(
-        _In_ std::wstring const InstanceId,
-        _In_ std::wstring const UniqueId,
-        _In_ std::wstring const Name,
-        _In_ MidiFlow const Flow);
+        _In_ std::wstring const instanceId,
+        _In_ std::wstring const uniqueId,
+        _In_ std::wstring const name,
+        _In_ MidiFlow const flow);
 
     HRESULT CreatePingEndpoint(
-        _In_ std::wstring const InstanceId,
-        _In_ std::wstring const UniqueId,
-        _In_ std::wstring const Name,
-        _In_ MidiFlow const Flow);
+        _In_ std::wstring const instanceId,
+        _In_ std::wstring const uniqueId,
+        _In_ std::wstring const name,
+        _In_ MidiFlow const flow);
 
     HRESULT CreateParentDevice();
 

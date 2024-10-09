@@ -149,11 +149,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AbstractionLayer, 1); // DEVPROP_TYPE_GUID
 #define STRING_PKEY_MIDI_TransportCode MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"2"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportCode, 2);     // DEVPROP_TYPE_STRING
 
-// Match MidiDataFormat defined in MidiDeviceManagerInterface.idl
-// TODO: Can these be converged to use the same enum?
-#define MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM (uint8_t)0x01
-#define MIDI_PROP_NATIVEDATAFORMAT_UMP (uint8_t)0x02
-
 // The data format that the connected device uses to talk to the abstraction layer
 // For a MIDI 1 device, it is MIDI_NATIVEDATAFORMAT_BYTESTREAM
 // For a MIDI 2 device, it is MIDI_NATIVEDATAFORMAT_UMP
@@ -168,9 +163,6 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NativeDataFormat, 3);     // DEVPROP_TYPE_BYTE u
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportsMulticlient, 5);     // DEVPROP_TYPE_BOOLEAN
 
 // A bitmask of the data format(s) the abstraction layer can use to talk to the system
-// For a MIDI 1 device, it can support MIDI_NATIVEDATAFORMAT_UMP or MIDI_NATIVEDATAFORMAT_BYTESTREAM
-// For a MIDI 2 device, it will support MIDI_NATIVEDATAFORMAT_UMP
-// NOTE: These are actually in the MidiDataFormat enum, slightly different than the defines mentioned above.
 #define STRING_PKEY_MIDI_SupportedDataFormats MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"6"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportedDataFormats, 6);     // DEVPROP_TYPE_UINT32
 
@@ -184,14 +176,14 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_GenerateIncomingTimestamp, 10);     // DEVPROP_T
 
 // this is the device-supplied name in the case of device-based transports
 // we have a copy here because we may rewrite FriendlyName
-#define STRING_PKEY_MIDI_TransportSuppliedEndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"14"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedEndpointName, 14);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_EndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"14"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointName, 14);     // DEVPROP_TYPE_STRING
 
-#define STRING_PKEY_MIDI_TransportSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"15"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportSuppliedDescription, 15);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_Description MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"15"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Description, 15);     // DEVPROP_TYPE_STRING
 
-#define STRING_PKEY_MIDI_UserSuppliedPortNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"16"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedPortNumber, 16);     // DEVPROP_TYPE_UINT32
+#define STRING_PKEY_MIDI_CustomPortNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"16"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomPortNumber, 16);     // DEVPROP_TYPE_UINT32
 
 #define STRING_PKEY_MIDI_ServiceAssignedPortNumber MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"17"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ServiceAssignedPortNumber, 17);     // DEVPROP_TYPE_UINT32
@@ -555,19 +547,19 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointConfigurationLastUpdateTime, 407);     /
 // User-supplied metadata ==================================================================
 // Starts at 500
 
-#define STRING_PKEY_MIDI_UserSuppliedEndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"500"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedEndpointName, 500);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_CustomEndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"500"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomEndpointName, 500);     // DEVPROP_TYPE_STRING
 
 // large image of most any size. Mostly used just by the settings app
-#define STRING_PKEY_MIDI_UserSuppliedLargeImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"501"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedLargeImagePath, 501);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_CustomLargeImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"501"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomLargeImagePath, 501);     // DEVPROP_TYPE_STRING
 
 // 32x32 image
-#define STRING_PKEY_MIDI_UserSuppliedSmallImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"502"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedSmallImagePath, 502);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_CustomSmallImagePath MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"502"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomSmallImagePath, 502);     // DEVPROP_TYPE_STRING
 
-#define STRING_PKEY_MIDI_UserSuppliedDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"503"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UserSuppliedDescription, 503);     // DEVPROP_TYPE_STRING
+#define STRING_PKEY_MIDI_CustomDescription MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"503"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomDescription, 503);     // DEVPROP_TYPE_STRING
 
 
 
@@ -603,8 +595,8 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportsMidiPolyphonicExpression, 612);     // D
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutCalculatedLatencyTicks, 800);     // DEVPROP_TYPE_UINT64
 
 // user-supplied latency ticks for a device
-#define STRING_PKEY_MIDI_MidiOutUserSuppliedLatencyTicks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"801"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutUserSuppliedLatencyTicks, 801);     // DEVPROP_TYPE_UINT64
+#define STRING_PKEY_MIDI_MidiOutCustomLatencyTicks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"801"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutCustomLatencyTicks, 801);     // DEVPROP_TYPE_UINT64
 
 // true if we should use the user-supplied latency instead of the calculated latency
 #define STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"802"

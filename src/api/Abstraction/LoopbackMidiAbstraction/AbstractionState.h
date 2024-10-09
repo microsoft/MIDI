@@ -37,7 +37,7 @@ public:
     }
 
 
-    HRESULT Cleanup()
+    HRESULT Shutdown()
     {
         m_endpointManager.reset();
         m_configurationManager.reset();

@@ -22,8 +22,8 @@ GUID AbstractionLayerGUID = ABSTRACTION_LAYER_GUID;
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiEndpointManager::Initialize(
-    IUnknown* MidiDeviceManager, 
-    IUnknown* MidiEndpointProtocolManager
+    IMidiDeviceManagerInterface* midiDeviceManager, 
+    IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
@@ -34,11 +34,11 @@ CMidi2LoopbackMidiEndpointManager::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiEndpointProtocolManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
-    RETURN_IF_FAILED(MidiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
 
 
     m_TransportAbstractionId = AbstractionLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport
@@ -73,18 +73,16 @@ CMidi2LoopbackMidiEndpointManager::CreateParentDevice()
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
     createInfo.pContainerId = &m_ContainerId;
 
-    const ULONG deviceIdMaxSize = 255;
-    wchar_t newDeviceId[deviceIdMaxSize]{ 0 };
+    wil::unique_cotaskmem_string newDeviceId;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateVirtualParentDevice(
         0,
         nullptr,
         &createInfo,
-        (PWSTR)newDeviceId,
-        deviceIdMaxSize
+        &newDeviceId
     ));
 
-    m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
+    m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId.get());
 
 
     TraceLoggingWrite(
@@ -93,7 +91,7 @@ CMidi2LoopbackMidiEndpointManager::CreateParentDevice()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(newDeviceId, "New parent device instance id")
+        TraceLoggingWideString(newDeviceId.get(), "New parent device instance id")
     );
 
     return S_OK;
@@ -191,11 +189,6 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
 
-    //bool requiresMetadataHandler = false;
-    bool multiClient = true;
-    bool generateIncomingTimestamps = true;
-
-
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -229,9 +222,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = friendlyName.c_str();
 
-
-    const ULONG deviceInterfaceIdMaxSize = 255;
-    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+    wil::unique_cotaskmem_string newDeviceInterfaceId;
 
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
@@ -247,22 +238,23 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
-    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
+    commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
-    commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
-    commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
-    commonProperties.UserSuppliedEndpointName = nullptr;
-    commonProperties.UserSuppliedEndpointDescription = nullptr;
+    commonProperties.EndpointName = endpointName.c_str();
+    commonProperties.EndpointDescription = endpointDescription.c_str();
+    commonProperties.CustomEndpointName = nullptr;
+    commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = definition->EndpointUniqueIdentifier.c_str();
-    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
-    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    commonProperties.SupportsMultiClient = multiClient;
-    //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
-    commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
-    commonProperties.ManufacturerName = TRANSPORT_MANUFACTURER;
-    commonProperties.SupportsMidi1ProtocolDefaultValue = true;
-    commonProperties.SupportsMidi2ProtocolDefaultValue = true;
+    commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
+    commonProperties.NativeDataFormat = MidiDataFormats_UMP;
+
+    UINT32 capabilities {0};
+    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+    capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
+    capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
+    capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
+    commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
@@ -271,11 +263,10 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
         (ULONG)0,
-        (PVOID)interfaceDeviceProperties.data(),
-        (PVOID)nullptr,
-        (PVOID)&createInfo,
-        (LPWSTR)&newDeviceInterfaceId,
-        deviceInterfaceIdMaxSize));
+        interfaceDeviceProperties.data(),
+        nullptr,
+        &createInfo,
+        &newDeviceInterfaceId));
 
 
     TraceLoggingWrite(
@@ -286,14 +277,14 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
-        TraceLoggingWideString(newDeviceInterfaceId, "new device interface id"),
+        TraceLoggingWideString(newDeviceInterfaceId.get(), "new device interface id"),
         TraceLoggingWideString(L"Endpoint activated")
     );
 
 
     // we need this for removal later
     definition->CreatedShortClientInstanceId = instanceId;
-    definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+    definition->CreatedEndpointInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
 
     //MidiEndpointTable::Current().AddCreatedEndpointDevice(entry);
     //MidiEndpointTable::Current().AddCreatedClient(entry.VirtualEndpointAssociationId, entry.CreatedClientEndpointId);
@@ -391,7 +382,7 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
 
 
 HRESULT
-CMidi2LoopbackMidiEndpointManager::Cleanup()
+CMidi2LoopbackMidiEndpointManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
@@ -404,9 +395,14 @@ CMidi2LoopbackMidiEndpointManager::Cleanup()
 
     // destroy and release all the devices we have created
 
-//    LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->Cleanup());
+//    LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->Shutdown());
 
-    AbstractionState::Current().Cleanup();
+    AbstractionState::Current().Shutdown();
+
+    m_MidiDeviceManager.reset();
+    m_MidiProtocolManager.reset();
+
+    AbstractionState::Current().Shutdown();
 
     m_MidiDeviceManager.reset();
     m_MidiProtocolManager.reset();

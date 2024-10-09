@@ -38,8 +38,8 @@ using namespace winrt::Windows::Devices::Enumeration;
 _Use_decl_annotations_
 HRESULT
 MidiSWDeviceEnum::EnumerateDevices(
-    std::vector<std::unique_ptr<MIDIU_DEVICE>>& Devices,
-    std::function<bool(PMIDIU_DEVICE)>&& Predicate
+    std::vector<std::unique_ptr<MIDIU_DEVICE>>& devices,
+    std::function<bool(PMIDIU_DEVICE)>&& predicate
 )
 {
     winrt::hstring deviceSelector(MIDI_DEVICE_SELECTOR);
@@ -59,7 +59,7 @@ MidiSWDeviceEnum::EnumerateDevices(
         auto deviceId = device.Id();
         winrt::guid abstractionGuid;
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-        MidiDataFormat supportedDataFormats { MidiDataFormat_Invalid };
+        MidiDataFormats supportedDataFormats { MidiDataFormats_Invalid };
 
         auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
         if (prop)
@@ -75,7 +75,7 @@ MidiSWDeviceEnum::EnumerateDevices(
 
         prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-        supportedDataFormats = (MidiDataFormat) winrt::unbox_value<UINT32>(prop);
+        supportedDataFormats = (MidiDataFormats) winrt::unbox_value<UINT32>(prop);
 
         prop = device.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
@@ -133,9 +133,9 @@ MidiSWDeviceEnum::EnumerateDevices(
         std::wstring parentDeviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
         midiDevice->ParentDeviceInstanceId = WindowsMidiServicesInternal::NormalizeDeviceInstanceIdWStringCopy(parentDeviceInstanceId);
 
-        if (Predicate(midiDevice.get()))
+        if (predicate(midiDevice.get()))
         {
-            Devices.push_back(std::move(midiDevice));
+            devices.push_back(std::move(midiDevice));
         }
 
         return S_OK;
