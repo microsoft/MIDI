@@ -419,7 +419,7 @@ CMidiXProc::ProcessMidiIn()
         if (ret == (WAIT_OBJECT_0 + 1))
         {
             PMEMORY_MAPPED_REGISTERS registers = &(m_MidiIn->Registers);
-            PMEMORY_MAPPED_DATA data = &(m_MidiIn->Data);
+            PMEMORY_MAPPED_DATA mappedData = &(m_MidiIn->Data);
 
             do
             {
@@ -429,9 +429,9 @@ CMidiXProc::ProcessMidiIn()
 
                 // the read position is the last position we have read,
                 // the write position is the last position written to
-                ULONG readPosition = InterlockedCompareExchange((LONG*) registers->ReadPosition, 0, 0);
-                ULONG writePosition = InterlockedCompareExchange((LONG*) registers->WritePosition, 0, 0);
-                ULONG bytesAvailable {0};
+                ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
+                ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
+                ULONG bytesAvailable{ 0 };
 
                 if (readPosition <= writePosition)
                 {
@@ -439,7 +439,7 @@ CMidiXProc::ProcessMidiIn()
                 }
                 else
                 {
-                    bytesAvailable = data->BufferSize - (readPosition - writePosition);
+                    bytesAvailable = mappedData->BufferSize - (readPosition - writePosition);
                 }
 
                 if (0 == bytesAvailable ||
@@ -451,10 +451,10 @@ CMidiXProc::ProcessMidiIn()
                     break;
                 }
 
-                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT) (((BYTE *) data->BufferAddress) + readPosition);
+                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + readPosition);
                 UINT32 dataSize = header->ByteCount;
                 UINT32 totalSize = dataSize + sizeof(LOOPEDDATAFORMAT);
-                ULONG newReadPosition = (readPosition + totalSize) % data->BufferSize;
+                ULONG newReadPosition = (readPosition + totalSize) % mappedData->BufferSize;
 
                 if (bytesAvailable < totalSize)
                 {
@@ -464,7 +464,7 @@ CMidiXProc::ProcessMidiIn()
                     break;
                 }
 
-                PVOID data = (PVOID) (((BYTE *) header) + sizeof(LOOPEDDATAFORMAT));
+                PVOID data = (PVOID)(((BYTE*)header) + sizeof(LOOPEDDATAFORMAT));
 
                 if (m_MidiInCallback)
                 {
@@ -481,16 +481,16 @@ CMidiXProc::ProcessMidiIn()
 
                 // advance to the next midi packet, we loop processing them one at a time
                 // until we have processed all that is available for this pass.
-                InterlockedExchange((LONG*) registers->ReadPosition, newReadPosition);
+                InterlockedExchange((LONG*)registers->ReadPosition, newReadPosition);
                 RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiIn->ReadEvent.get()));
-            } while(TRUE);
+            } while (TRUE);
         }
         else
         {
             // exit event or wait failed, exit the thread.
             break;
         }
-    }while (TRUE);
+    } while (TRUE);
 
     return S_OK;
 }

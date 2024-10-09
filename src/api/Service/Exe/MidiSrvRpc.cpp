@@ -130,7 +130,7 @@ MidiSrvUpdateConfiguration(
     /* [in] */ handle_t bindingHandle,
     /*[in, string]*/ __RPC__in_string LPCWSTR configurationJson,
     __RPC__in BOOL isFromConfigurationFile,
-    __RPC__out BSTR* response)
+    __RPC__out BSTR* responseOut)
 {
     UNREFERENCED_PARAMETER(bindingHandle);
 
@@ -143,7 +143,7 @@ MidiSrvUpdateConfiguration(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
-    RETURN_HR_IF_NULL(E_INVALIDARG, response);
+    RETURN_HR_IF_NULL(E_INVALIDARG, responseOut);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -195,7 +195,7 @@ MidiSrvUpdateConfiguration(
         ::SysFreeString(response);
     }
 
-    RETURN_IF_FAILED(combinedResponse.CopyTo(response));
+    RETURN_IF_FAILED(combinedResponse.CopyTo(responseOut));
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
 
