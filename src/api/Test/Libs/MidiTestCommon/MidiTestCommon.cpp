@@ -17,38 +17,38 @@ UMP128 g_MidiTestData_128 = {0xF1DD1234, 0xbaadf00d, 0xdeadbeef, 0xd000000d }; /
 MIDI_MESSAGE g_MidiTestMessage = { 0x91, 0x70, 0x42 }; // translates to UMP 0x40917000, 0x48000000
 
 _Use_decl_annotations_
-void PrintMidiMessage(PVOID Payload, UINT32 PayloadSize, UINT32 ExpectedPayloadSize, LONGLONG PayloadPosition)
+void PrintMidiMessage(PVOID payload, UINT32 payloadSize, UINT32 expectedPayloadSize, LONGLONG payloadPosition)
 {
-    if (PayloadSize < ExpectedPayloadSize)
+    if (payloadSize < expectedPayloadSize)
     {
-        LOG_OUTPUT(L"INCOMING: PayloadSize %d < ExpectedPayloadSize %d", PayloadSize, ExpectedPayloadSize);
+        LOG_OUTPUT(L"INCOMING: PayloadSize %d < ExpectedPayloadSize %d", payloadSize, expectedPayloadSize);
     }
     
-    LOG_OUTPUT(L"Payload position is %I64d", PayloadPosition);
+    LOG_OUTPUT(L"Payload position is %I64d", payloadPosition);
 
-    if (PayloadSize == sizeof(MIDI_MESSAGE))
+    if (payloadSize == sizeof(MIDI_MESSAGE))
     {
         // if it's bytestream, print it
-        MIDI_MESSAGE *data = (MIDI_MESSAGE *) Payload;
-        LOG_OUTPUT(L"INCOMING: status 0x%hx data1 0x%hx data2 0x%hx - size 0x%08x", data->status, data->data1, data->data2, PayloadSize);
+        MIDI_MESSAGE *data = (MIDI_MESSAGE *) payload;
+        LOG_OUTPUT(L"INCOMING: status 0x%hx data1 0x%hx data2 0x%hx - size 0x%08x", data->status, data->data1, data->data2, payloadSize);
     }
-    else if (PayloadSize >= sizeof(UMP32))
+    else if (payloadSize >= sizeof(UMP32))
     {
         // if it's UMP
-        UMP128 *data = (UMP128 *) Payload;
-        LOG_OUTPUT(L"INCOMING: data 1 0x%08x - size 0x%08x", data->data1, PayloadSize);
-        if (PayloadSize >= sizeof(UMP64))
+        UMP128 *data = (UMP128 *) payload;
+        LOG_OUTPUT(L"INCOMING: data 1 0x%08x - size 0x%08x", data->data1, payloadSize);
+        if (payloadSize >= sizeof(UMP64))
         {
             LOG_OUTPUT(L"INCOMING: data 2 0x%08x", data->data2);
-            if (PayloadSize >= sizeof(UMP96))
+            if (payloadSize >= sizeof(UMP96))
             {
                 LOG_OUTPUT(L"INCOMING: data 3 0x%08x", data->data3);
-                if (PayloadSize >= sizeof(UMP128))
+                if (payloadSize >= sizeof(UMP128))
                 {
                     LOG_OUTPUT(L"INCOMING: data 4 0x%08x", data->data4);
-                    if (PayloadSize > sizeof(UMP128))
+                    if (payloadSize > sizeof(UMP128))
                     {
-                        LOG_OUTPUT(L"INCOMING: Buffer contains additional 0x%08x bytes of data", (UINT32) (PayloadSize - sizeof(UMP128)));
+                        LOG_OUTPUT(L"INCOMING: Buffer contains additional 0x%08x bytes of data", (UINT32) (payloadSize - sizeof(UMP128)));
                     }
                 }
             }

@@ -23,7 +23,7 @@ KSMidiDeviceEnum::KSMidiDeviceEnum()
 
 KSMidiDeviceEnum::~KSMidiDeviceEnum()
 {
-    Cleanup();
+    Shutdown();
 }
 
 HRESULT
@@ -143,7 +143,7 @@ KSMidiDeviceEnum::EnumerateFilters()
 }
 
 HRESULT
-KSMidiDeviceEnum::Cleanup()
+KSMidiDeviceEnum::Shutdown()
 {
     return S_OK;
 }

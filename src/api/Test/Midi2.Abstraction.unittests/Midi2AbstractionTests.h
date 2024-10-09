@@ -93,11 +93,11 @@ public:
     TEST_METHOD(TestMidiSrvMultiClientBiDi_Any_UMP);
     TEST_METHOD(TestMidiSrvMultiClientBiDi_UMP_Any);
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
+    STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
     {
         if (m_MidiInCallback)
         {
-            m_MidiInCallback(Data, Size, Position, Context);
+            m_MidiInCallback(data, size, position, context);
         }
         return S_OK;
     }
@@ -108,12 +108,12 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    void TestMidiAbstraction(_In_ REFIID, _In_ MidiDataFormat, _In_ BOOL);
-    void TestMidiAbstractionCreationOrder(_In_ REFIID, _In_ MidiDataFormat, _In_ BOOL);
-    void TestMidiAbstractionBiDi(_In_ REFIID, _In_ MidiDataFormat);
-    void TestMidiIO_Latency(_In_ REFIID, _In_ MidiDataFormat, _In_ BOOL);
-    void TestMidiSrvMultiClient(_In_ MidiDataFormat, _In_ MidiDataFormat, _In_ BOOL);
-    void TestMidiSrvMultiClientBiDi(_In_ MidiDataFormat, _In_ MidiDataFormat);
+    void TestMidiAbstraction(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
+    void TestMidiAbstractionCreationOrder(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
+    void TestMidiAbstractionBiDi(_In_ REFIID, _In_ MidiDataFormats);
+    void TestMidiIO_Latency(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
+    void TestMidiSrvMultiClient(_In_ MidiDataFormats, _In_ MidiDataFormats, _In_ BOOL);
+    void TestMidiSrvMultiClientBiDi(_In_ MidiDataFormats, _In_ MidiDataFormats);
 
     std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
 

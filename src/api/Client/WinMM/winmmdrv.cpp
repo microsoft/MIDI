@@ -5,21 +5,21 @@
 bool g_ProcessIsTerminating {false};
 
 
-MMRESULT MMRESULT_FROM_HRESULT(HRESULT HResult)
+MMRESULT MMRESULT_FROM_HRESULT(HRESULT hResult)
 {
     MMRESULT mmResult = MMSYSERR_NOERROR;
 
-    if (FAILED(HResult))
+    if (FAILED(hResult))
     {
         // If this was an error that we mapped to an hresult for passing through,
         // map it back to the mmResult
-        if (HRESULT_FACILITY(HResult) == FACILITY_ITF)
+        if (HRESULT_FACILITY(hResult) == FACILITY_ITF)
         {
-            mmResult = HRESULT_CODE(HResult);
+            mmResult = HRESULT_CODE(hResult);
         }
         else
         {
-            switch(HResult)
+            switch(hResult)
             {
                 case HRESULT_FROM_WIN32(ERROR_NO_SYSTEM_RESOURCES):
                     mmResult = MMSYSERR_NOMEM;
@@ -53,14 +53,14 @@ wil::com_ptr_nothrow<CMidiPorts> g_MidiPorts;
 
 LRESULT CALLBACK DriverProc
 (
-    DWORD           Id,
-    HDRVR           HDriver,
-    WORD            Msg,
-    LPARAM          Param1,
-    LPARAM          Param2
+    DWORD           id,
+    HDRVR           hDriver,
+    WORD            msg,
+    LPARAM          param1,
+    LPARAM          param2
 )
 {
-    switch (Msg)
+    switch (msg)
     {
         case DRV_LOAD:
         case DRV_FREE:
@@ -76,46 +76,46 @@ LRESULT CALLBACK DriverProc
             return DRV_CANCEL;
     }
 
-    return DefDriverProc( Id, HDriver, Msg, Param1, Param2 ) ;
+    return DefDriverProc( id, hDriver, msg, param1, param2 ) ;
 }
 
-DWORD APIENTRY midMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1, DWORD_PTR Param2)
+DWORD APIENTRY midMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1, DWORD_PTR param2)
 {
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingValue(DeviceID, "DeviceID"),
-        TraceLoggingValue(Msg, "Msg"),
-        TraceLoggingValue(User, "User"),
-        TraceLoggingValue(Param1, "Param1"),
-        TraceLoggingValue(Param2, "Param2"));
+        TraceLoggingValue(deviceID, "deviceID"),
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(user, "user"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
 
     // Forward the command to the global MidiPorts singleton
-    return g_MidiPorts->MidMessage(DeviceID, Msg, User, Param1, Param2);
+    return g_MidiPorts->MidMessage(deviceID, msg, user, param1, param2);
 }
 
-DWORD APIENTRY modMessage(UINT DeviceID, UINT Msg, DWORD_PTR User, DWORD_PTR Param1, DWORD_PTR Param2)
+DWORD APIENTRY modMessage(UINT deviceId, UINT msg, DWORD_PTR user, DWORD_PTR param1, DWORD_PTR param2)
 {
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingValue(DeviceID, "DeviceID"),
-        TraceLoggingValue(Msg, "Msg"),
-        TraceLoggingValue(User, "User"),
-        TraceLoggingValue(Param1, "Param1"),
-        TraceLoggingValue(Param2, "Param2"));
+        TraceLoggingValue(deviceId, "deviceId"),
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(user, "user"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
 
     // Forward the command to the global MidiPorts singleton
-    return g_MidiPorts->ModMessage(DeviceID, Msg, User, Param1, Param2);
+    return g_MidiPorts->ModMessage(deviceId, msg, user, param1, param2);
 }
 
 BOOL WINAPI DllMain
 (
     HINSTANCE,
-    DWORD     Reason,
-    LPVOID    Reserved
+    DWORD     reason,
+    LPVOID    reserved
 )
 {
     TraceLoggingWrite(
@@ -123,10 +123,10 @@ BOOL WINAPI DllMain
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingValue(Reason, "Reason"),
-        TraceLoggingValue(Reserved, "Reserved"));
+        TraceLoggingValue(reason, "reason"),
+        TraceLoggingValue(reserved, "reserved"));
 
-    if (DLL_PROCESS_ATTACH == Reason)
+    if (DLL_PROCESS_ATTACH == reason)
     {
         // Create the MidiPorts singleton, this assumes that DLL_PROCESS_ATTACH calls are serialized.
         if (nullptr == g_MidiPorts)
@@ -139,16 +139,16 @@ BOOL WINAPI DllMain
             wil::SetResultTelemetryFallback(WdmAud2TelemetryProvider::FallbackTelemetryCallback);
         }
     }
-    else if ((DLL_PROCESS_DETACH == Reason) && ( NULL != Reserved))
+    else if ((DLL_PROCESS_DETACH == reason) && ( NULL != reserved))
     {
         g_ProcessIsTerminating = true;
     }
-    else if ((DLL_PROCESS_DETACH == Reason) && ( NULL == Reserved))
+    else if ((DLL_PROCESS_DETACH == reason) && ( NULL == reserved))
     {
         // if present, clean up and release the global MidiPorts singleton
         if (nullptr != g_MidiPorts)
         {
-            if (FAILED(g_MidiPorts->Cleanup()))
+            if (FAILED(g_MidiPorts->Shutdown()))
             {
                 return FALSE;
             }

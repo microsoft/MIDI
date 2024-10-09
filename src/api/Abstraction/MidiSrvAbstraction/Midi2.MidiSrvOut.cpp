@@ -12,15 +12,15 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvOut::Initialize(
-    LPCWSTR Device,
-    PABSTRACTIONCREATIONPARAMS CreationParams,
-    DWORD * MmcssTaskId,
-    GUID SessionId
+    LPCWSTR device,
+    PABSTRACTIONCREATIONPARAMS creationParams,
+    DWORD * mmcssTaskId,
+    GUID sessionId
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmcssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == device);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == mmcssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == creationParams);
 
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -33,14 +33,14 @@ CMidi2MidiSrvOut::Initialize(
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
 
-    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowOut, CreationParams, MmcssTaskId, nullptr, 0, SessionId));
+    RETURN_IF_FAILED(midiSrv->Initialize(device, MidiFlowOut, creationParams, mmcssTaskId, nullptr, 0, sessionId));
     m_MidiSrv = std::move(midiSrv);
 
     return S_OK;
 }
 
 HRESULT
-CMidi2MidiSrvOut::Cleanup()
+CMidi2MidiSrvOut::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -52,7 +52,7 @@ CMidi2MidiSrvOut::Cleanup()
 
     if (m_MidiSrv)
     {
-        RETURN_IF_FAILED(m_MidiSrv->Cleanup());
+        RETURN_IF_FAILED(m_MidiSrv->Shutdown());
         m_MidiSrv.reset();
     }
 
@@ -62,14 +62,14 @@ CMidi2MidiSrvOut::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvOut::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
+    PVOID data,
+    UINT length,
+    LONGLONG position
 )
 {
     if (m_MidiSrv)
     {
-        auto hr = m_MidiSrv->SendMidiMessage(Data, Length, Position);
+        auto hr = m_MidiSrv->SendMidiMessage(data, length, position);
         LOG_IF_FAILED(hr);
 
         return hr;

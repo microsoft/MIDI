@@ -27,7 +27,7 @@ public:
 
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
     std::wstring m_endpointDeviceId{};

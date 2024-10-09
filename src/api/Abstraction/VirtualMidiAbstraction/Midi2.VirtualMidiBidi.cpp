@@ -16,9 +16,9 @@ CMidi2VirtualMidiBiDi::Initialize(
     LPCWSTR endpointId,
     PABSTRACTIONCREATIONPARAMS,
     DWORD *,
-    IMidiCallback * Callback,
-    LONGLONG Context,
-    GUID SessionId
+    IMidiCallback * callback,
+    LONGLONG context,
+    GUID sessionId
 )
 {
     TraceLoggingWrite(
@@ -31,12 +31,12 @@ CMidi2VirtualMidiBiDi::Initialize(
         TraceLoggingWideString(endpointId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-    m_sessionId = SessionId;
-    m_callbackContext = Context;
-    m_callback = Callback;
+    m_sessionId = sessionId;
+    m_callbackContext = context;
+    m_callback = callback;
     m_endpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointId);
   
-    //if (Context != MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT)
+    //if (context != MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT)
     {
         HRESULT hr = S_OK;
 
@@ -105,7 +105,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2VirtualMidiBiDi::Cleanup()
+CMidi2VirtualMidiBiDi::Shutdown()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -206,7 +206,7 @@ CMidi2VirtualMidiBiDi::Callback(
     PVOID Message,
     UINT Size,
     LONGLONG Position,
-    LONGLONG Context
+    LONGLONG context
 )
 {
     TraceLoggingWrite(
@@ -227,7 +227,7 @@ CMidi2VirtualMidiBiDi::Callback(
 
     if (m_callback != nullptr)
     {
-        RETURN_IF_FAILED(m_callback->Callback(Message, Size, Position, Context));
+        RETURN_IF_FAILED(m_callback->Callback(Message, Size, Position, context));
     }
     else
     {

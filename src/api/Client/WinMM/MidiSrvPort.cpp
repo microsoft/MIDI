@@ -25,7 +25,7 @@ CMidiPort::~CMidiPort()
 
     if (!g_ProcessIsTerminating)
     {
-        Cleanup();
+        Shutdown();
     }
     else
     {
@@ -38,7 +38,7 @@ CMidiPort::~CMidiPort()
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::RuntimeClassInitialize(GUID SessionId, std::wstring& InterfaceId, MidiFlow Flow, MIDIOPENDESC* OpenDesc, DWORD_PTR Flags)
+CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, MidiFlow flow, const MIDIOPENDESC* openDesc, DWORD_PTR flags)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -46,34 +46,34 @@ CMidiPort::RuntimeClassInitialize(GUID SessionId, std::wstring& InterfaceId, Mid
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(SessionId, "SessionId"),
-        TraceLoggingWideString(InterfaceId.c_str(), "InterfaceId"),
-        TraceLoggingValue((int)Flow, "MidiFlow"),
-        TraceLoggingValue(Flags, "Flags"));
+        TraceLoggingGuid(sessionId, "sessionId"),
+        TraceLoggingWideString(interfaceId.c_str(), "interfaceId"),
+        TraceLoggingValue((int)flow, "MidiFlow"),
+        TraceLoggingValue(flags, "flags"));
 
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { MidiDataFormat_ByteStream };
+    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { MidiDataFormats_ByteStream };
     DWORD mmcssTaskId {0};
     LARGE_INTEGER qpc{ 0 };
     
     QueryPerformanceFrequency(&qpc);
     m_qpcFrequency = qpc.QuadPart;
 
-    m_Flow = Flow,
-    memcpy(&m_OpenDesc, OpenDesc, sizeof(m_OpenDesc));
-    m_Flags = Flags;
-    m_InterfaceId = InterfaceId;
+    m_Flow = flow,
+    memcpy(&m_OpenDesc, openDesc, sizeof(m_OpenDesc));
+    m_Flags = flags;
+    m_InterfaceId = interfaceId;
 
     RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidiAbstraction)));
 
-    if (Flow == MidiFlowIn)
+    if (flow == MidiFlowIn)
     {
         RETURN_IF_FAILED(m_MidiAbstraction->Activate(__uuidof(IMidiIn), (void **) &m_MidiIn));
-        RETURN_IF_FAILED(m_MidiIn->Initialize(m_InterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, SessionId));
+        RETURN_IF_FAILED(m_MidiIn->Initialize(m_InterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, sessionId));
     }
     else
     {
         RETURN_IF_FAILED(m_MidiAbstraction->Activate(__uuidof(IMidiOut), (void **) &m_MidiOut));
-        RETURN_IF_FAILED(m_MidiOut->Initialize(m_InterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, SessionId));
+        RETURN_IF_FAILED(m_MidiOut->Initialize(m_InterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, sessionId));
     }
 
     WinmmClientCallback(m_Flow == MidiFlowIn?MIM_OPEN:MOM_OPEN, 0, 0);
@@ -81,7 +81,7 @@ CMidiPort::RuntimeClassInitialize(GUID SessionId, std::wstring& InterfaceId, Mid
 }
 
 HRESULT
-CMidiPort::Cleanup()
+CMidiPort::Shutdown()
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -106,7 +106,7 @@ CMidiPort::Cleanup()
         std::swap(m_InBuffers, emptyQueue);
         m_InterfaceId.clear();
 
-        // OpenDesc and flags are used for the Winmm client callback,
+        // openDesc and flags are used for the Winmm client callback,
         // safe to clear now that callback is completed.
         memset(&m_OpenDesc, 0, sizeof(m_OpenDesc));
         m_Flags = 0;
@@ -118,11 +118,11 @@ CMidiPort::Cleanup()
     // the lock, because they will block for worker thread cleanup
     if (m_MidiIn)
     {
-        RETURN_IF_FAILED(m_MidiIn->Cleanup());
+        RETURN_IF_FAILED(m_MidiIn->Shutdown());
     }
     else if (m_MidiOut)
     {
-        RETURN_IF_FAILED(m_MidiOut->Cleanup());
+        RETURN_IF_FAILED(m_MidiOut->Shutdown());
     }
 
     // successful cleanup, send MIM/MOM_CLOSE to the client
@@ -133,7 +133,7 @@ CMidiPort::Cleanup()
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::MidMessage(UINT Msg, DWORD_PTR Param1, DWORD_PTR Param2)
+CMidiPort::MidMessage(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -141,14 +141,14 @@ CMidiPort::MidMessage(UINT Msg, DWORD_PTR Param1, DWORD_PTR Param2)
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingValue(Msg, "Msg"),
-        TraceLoggingValue(Param1, "Param1"),
-        TraceLoggingValue(Param2, "Param2"));
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
 
-    switch(Msg)
+    switch(msg)
     {
         case MIDM_ADDBUFFER:
-            RETURN_IF_FAILED(AddBuffer((LPMIDIHDR) Param1, Param2));
+            RETURN_IF_FAILED(AddBuffer((LPMIDIHDR) param1, param2));
             break;
         case MIDM_START:
             RETURN_IF_FAILED(Start());
@@ -171,7 +171,7 @@ CMidiPort::MidMessage(UINT Msg, DWORD_PTR Param1, DWORD_PTR Param2)
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::ModMessage(UINT Msg, DWORD_PTR Param1, DWORD_PTR Param2)
+CMidiPort::ModMessage(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -179,17 +179,17 @@ CMidiPort::ModMessage(UINT Msg, DWORD_PTR Param1, DWORD_PTR Param2)
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingValue(Msg, "Msg"),
-        TraceLoggingValue(Param1, "Param1"),
-        TraceLoggingValue(Param2, "Param2"));
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
 
-    switch(Msg)
+    switch(msg)
     {
         case MODM_LONGDATA:
-            RETURN_IF_FAILED(SendLongMessage(reinterpret_cast<MIDIHDR*>(Param1)));
+            RETURN_IF_FAILED(SendLongMessage(reinterpret_cast<MIDIHDR*>(param1)));
             break;
         case MODM_DATA:
-            RETURN_IF_FAILED(SendMidiMessage(static_cast<UINT32>(Param1)));
+            RETURN_IF_FAILED(SendMidiMessage(static_cast<UINT32>(param1)));
             break;
         case MODM_RESET:
             RETURN_IF_FAILED(Reset());
@@ -206,10 +206,10 @@ CMidiPort::ModMessage(UINT Msg, DWORD_PTR Param1, DWORD_PTR Param2)
 
 _Use_decl_annotations_
 bool 
-CMidiPort::IsFlow(MidiFlow Flow)
+CMidiPort::IsFlow(MidiFlow flow)
 {
     auto lock = m_Lock.lock();
-    return (m_Flow == Flow);
+    return (m_Flow == flow);
 }
 
 
@@ -266,7 +266,7 @@ CMidiPort::Close()
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::AddBuffer(LPMIDIHDR Buffer, DWORD_PTR BufferSize)
+CMidiPort::AddBuffer(LPMIDIHDR buffer, DWORD_PTR bufferSize)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -274,17 +274,17 @@ CMidiPort::AddBuffer(LPMIDIHDR Buffer, DWORD_PTR BufferSize)
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingPointer(Buffer, "Buffer"),
-        TraceLoggingValue(BufferSize, "BufferSize"));
+        TraceLoggingPointer(buffer, "buffer"),
+        TraceLoggingValue(bufferSize, "bufferSize"));
 
-    RETURN_HR_IF(E_INVALIDARG, BufferSize < sizeof(MIDIHDR));
+    RETURN_HR_IF(E_INVALIDARG, bufferSize < sizeof(MIDIHDR));
 
-    Buffer->dwFlags &= (~MHDR_DONE);
-    Buffer->dwFlags |= MHDR_INQUEUE;
-    Buffer->dwBytesRecorded = 0;
+    buffer->dwFlags &= (~MHDR_DONE);
+    buffer->dwFlags |= MHDR_INQUEUE;
+    buffer->dwBytesRecorded = 0;
 
     auto lock = m_BuffersLock.lock();
-    m_InBuffers.push(Buffer);
+    m_InBuffers.push(buffer);
     m_BuffersAdded.SetEvent();
 
     return S_OK;
@@ -357,7 +357,7 @@ CMidiPort::Stop()
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::CompleteLongBuffer(UINT Message, LONGLONG Position)
+CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -365,8 +365,8 @@ CMidiPort::CompleteLongBuffer(UINT Message, LONGLONG Position)
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingValue(Message, "Message"),
-        TraceLoggingValue(Position, "Position"));
+        TraceLoggingValue(message, "message"),
+        TraceLoggingValue(position, "position"));
 
     LPMIDIHDR buffer {nullptr};
 
@@ -378,26 +378,26 @@ CMidiPort::CompleteLongBuffer(UINT Message, LONGLONG Position)
     }
 
     // calculate the timestamp for the message
-    DWORD ticks = (DWORD) (((Position - m_StartTime) / m_qpcFrequency) * 1000.0);
+    DWORD ticks = (DWORD) (((position - m_StartTime) / m_qpcFrequency) * 1000.0);
 
     // mark it completed
     buffer->dwFlags &= (~MHDR_INQUEUE);
     buffer->dwFlags |= MHDR_DONE;
 
-    if((Message == MIM_LONGERROR) && (buffer->dwBytesRecorded == 0))
+    if((message == MIM_LONGERROR) && (buffer->dwBytesRecorded == 0))
     {
         // if no bytes recorded, its not really an error
-        Message = MIM_LONGDATA;
+        message = MIM_LONGDATA;
     }
 
-    WinmmClientCallback(Message, reinterpret_cast<DWORD_PTR>(buffer), ticks);
+    WinmmClientCallback(message, reinterpret_cast<DWORD_PTR>(buffer), ticks);
 
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
+CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -406,10 +406,10 @@ CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LON
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingPointer(Data, "Data"),
-        TraceLoggingValue(Size, "Size"),
-        TraceLoggingValue(Position, "Position"),
-        TraceLoggingValue(Context, "Context"));
+        TraceLoggingPointer(data, "data"),
+        TraceLoggingValue(size, "size"),
+        TraceLoggingValue(position, "position"),
+        TraceLoggingValue(context, "context"));
 
     bool started {FALSE};
     LONGLONG startTime {0};
@@ -431,10 +431,10 @@ CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LON
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingPointer(Data, "Data"),
-            TraceLoggingValue(Size, "Size"),
-            TraceLoggingValue(Position, "Position"),
-            TraceLoggingValue(Context, "Context"));
+            TraceLoggingPointer(data, "data"),
+            TraceLoggingValue(size, "size"),
+            TraceLoggingValue(position, "position"),
+            TraceLoggingValue(context, "context"));
 
         auto lock = m_Lock.lock();
         m_ExitCallback.SetEvent();
@@ -443,11 +443,11 @@ CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LON
 
     // if we're running, and this message was generated after we started,
     // deliver it to the client.
-    if (started && Position >= startTime)
+    if (started && position >= startTime)
     {
         // The amount of data left for this callback, and the current data position
-        DWORD callbackDataRemaining {Size};
-        BYTE *callbackData = (BYTE *)Data;
+        DWORD callbackDataRemaining {size};
+        BYTE *callbackData = (BYTE *)data;
 
         // keep processing until we run out of callback data
         while (callbackDataRemaining > 0 && started)
@@ -497,7 +497,7 @@ CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LON
                             if(MIDI_EOX != *callbackData && 
                                (*callbackData & MIDI_STATUSBYTEFILTER) < MIDI_SYSEX)
                             {
-                                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, Position));
+                                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
                                 m_IsInSysex = false;
                                 break;
                             }
@@ -509,7 +509,7 @@ CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LON
 
                                 // we have a valid end of sys-ex byte, so turn off
                                 // m_bIsInSysEx
-                                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, Position));
+                                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
                                 m_IsInSysex = false;
                                 break;
                             }
@@ -530,7 +530,7 @@ CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LON
                     if (buffer->dwBufferLength == buffer->dwBytesRecorded)
                     {
 
-                        RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, Position));
+                        RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
                     }
                 }
                 // we have remaining callback data, but no buffer available, wait for either a buffer
@@ -573,7 +573,7 @@ CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LON
                 }
 
                 // Convert from the QPC time to the number of ticks elapsed from the start time.
-                DWORD ticks = (DWORD) (((Position - startTime) / m_qpcFrequency) * 1000.0);
+                DWORD ticks = (DWORD) (((position - startTime) / m_qpcFrequency) * 1000.0);
                 UINT32 midiMessage = status | (data1 << 8) | (data2 << 16);
                 WinmmClientCallback(MIM_DATA, midiMessage, ticks);
                 callbackData+=3;
@@ -595,7 +595,7 @@ CMidiPort::Callback(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LON
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::SendMidiMessage(UINT32 MidiMessage)
+CMidiPort::SendMidiMessage(UINT32 midiMessage)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -624,7 +624,7 @@ CMidiPort::SendMidiMessage(UINT32 MidiMessage)
 
         // send the message to the abstraction
         // pass a timestamp of 0 to bypass scheduler
-        RETURN_IF_FAILED(m_MidiOut->SendMidiMessage(&MidiMessage, sizeof(MidiMessage), 0));
+        RETURN_IF_FAILED(m_MidiOut->SendMidiMessage(&midiMessage, sizeof(midiMessage), 0));
     }
 
     return S_OK;
@@ -632,7 +632,7 @@ CMidiPort::SendMidiMessage(UINT32 MidiMessage)
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::SendLongMessage(LPMIDIHDR Buffer)
+CMidiPort::SendLongMessage(LPMIDIHDR buffer)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -641,7 +641,7 @@ CMidiPort::SendLongMessage(LPMIDIHDR Buffer)
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingPointer(Buffer, "Buffer"));
+        TraceLoggingPointer(buffer, "buffer"));
 
     auto exitCallback = wil::scope_exit([&]()
     {
@@ -652,7 +652,7 @@ CMidiPort::SendLongMessage(LPMIDIHDR Buffer)
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingPointer(Buffer, "Buffer"));
+            TraceLoggingPointer(buffer, "buffer"));
     });
 
     {
@@ -662,27 +662,27 @@ CMidiPort::SendLongMessage(LPMIDIHDR Buffer)
         RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidiOut);
 
         // The buffer provided must be valid
-        RETURN_HR_IF(E_INVALIDARG, nullptr == Buffer);
-        RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_INVALFLAG), !(Buffer->dwFlags & MHDR_PREPARED));
+        RETURN_HR_IF(E_INVALIDARG, nullptr == buffer);
+        RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_INVALFLAG), !(buffer->dwFlags & MHDR_PREPARED));
 
         // send the message to the abstraction
         // pass a timestamp of 0 to bypass scheduler
         // TODO: based on the buffer length, this message may require chunking into smaller
         // pieces to ensure it fits into the cross process queue.
-        RETURN_IF_FAILED(m_MidiOut->SendMidiMessage(Buffer->lpData, Buffer->dwBufferLength, 0));
+        RETURN_IF_FAILED(m_MidiOut->SendMidiMessage(buffer->lpData, buffer->dwBufferLength, 0));
     }
 
     // mark the buffer as completed
-    Buffer->dwFlags |= MHDR_DONE;
+    buffer->dwFlags |= MHDR_DONE;
 
     // client callback indicating this buffer is completed.
-    WinmmClientCallback(MOM_DONE, (DWORD_PTR) Buffer, 0);
+    WinmmClientCallback(MOM_DONE, (DWORD_PTR) buffer, 0);
     return S_OK;
 }
 
 _Use_decl_annotations_
 void
-CMidiPort::WinmmClientCallback(UINT Msg, DWORD_PTR Param1, DWORD_PTR Param2)
+CMidiPort::WinmmClientCallback(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -690,15 +690,15 @@ CMidiPort::WinmmClientCallback(UINT Msg, DWORD_PTR Param1, DWORD_PTR Param2)
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingValue(Msg, "msg"),
-        TraceLoggingValue(Param1, "Param1"),
-        TraceLoggingValue(Param2, "Param2"));
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
 
     DriverCallback(m_OpenDesc.dwCallback,
                     HIWORD(m_Flags),
                     (HDRVR) m_OpenDesc.hMidi,
-                    Msg,
+                    msg,
                     m_OpenDesc.dwInstance,
-                    Param1,
-                    Param2);
+                    param1,
+                    param2);
 }

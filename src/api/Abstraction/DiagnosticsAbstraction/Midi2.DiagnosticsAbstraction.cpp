@@ -12,13 +12,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsAbstraction::Activate(
-    REFIID Riid,
-    void **Interface
+    REFIID riid,
+    void **activatedInterface
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == activatedInterface);
 
-    if (__uuidof(IMidiBiDi) == Riid)
+    if (__uuidof(IMidiBiDi) == riid)
     {
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
@@ -31,9 +31,9 @@ CMidi2DiagnosticsAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2LoopbackMidiBiDi>(&midiBiDi));
-        *Interface = midiBiDi.detach();
+        *activatedInterface = midiBiDi.detach();
     }
-    else if (__uuidof(IMidiEndpointManager) == Riid)
+    else if (__uuidof(IMidiEndpointManager) == riid)
     {
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
@@ -47,9 +47,9 @@ CMidi2DiagnosticsAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiEndpointManager> midiEndpointManager;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsEndpointManager>(&midiEndpointManager));
-        *Interface = midiEndpointManager.detach();
+        *activatedInterface = midiEndpointManager.detach();
     }
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == riid)
     {
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
@@ -63,10 +63,10 @@ CMidi2DiagnosticsAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> midiConfigurationManager;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsMidiConfigurationManager>(&midiConfigurationManager));
-        *Interface = midiConfigurationManager.detach();
+        *activatedInterface = midiConfigurationManager.detach();
     }
 
-    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == riid)
     {
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
@@ -80,7 +80,7 @@ CMidi2DiagnosticsAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsPluginMetadataProvider>(&metadataProvider));
-        *Interface = metadataProvider.detach();
+        *activatedInterface = metadataProvider.detach();
     }
 
     else

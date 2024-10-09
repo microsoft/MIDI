@@ -22,7 +22,7 @@ CMidi2SchedulerMidiTransform::Initialize(
     DWORD * mmcssTaskId,
     IMidiCallback * callback,
     LONGLONG context,
-    IUnknown* /*MidiDeviceManager*/
+    IMidiDeviceManagerInterface* /*MidiDeviceManager*/
 )
 {
     UNREFERENCED_PARAMETER(creationParams);
@@ -71,7 +71,7 @@ CMidi2SchedulerMidiTransform::Initialize(
 }
 
 HRESULT
-CMidi2SchedulerMidiTransform::Cleanup()
+CMidi2SchedulerMidiTransform::Shutdown()
 {
     TraceLoggingWrite(
         MidiSchedulerTransformTelemetryProvider::Provider(),

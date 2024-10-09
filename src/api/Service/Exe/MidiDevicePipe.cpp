@@ -13,9 +13,9 @@ using namespace winrt::Windows::Devices::Enumeration;
 _Use_decl_annotations_
 HRESULT
 CMidiDevicePipe::Initialize(
-    LPCWSTR Device,
-    PMIDISRV_DEVICECREATION_PARAMS CreationParams,
-    DWORD* MmcssTaskId
+    LPCWSTR device,
+    PMIDISRV_DEVICECREATION_PARAMS creationParams,
+    DWORD* mmcssTaskId
 )
 {
     TraceLoggingWrite(
@@ -25,7 +25,7 @@ CMidiDevicePipe::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
 
@@ -33,9 +33,9 @@ CMidiDevicePipe::Initialize(
 
     ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
 
-    RETURN_IF_FAILED(CMidiPipe::Initialize(Device, CreationParams->Flow));
+    RETURN_IF_FAILED(CMidiPipe::Initialize(device, creationParams->Flow));
 
-    abstractionCreationParams.DataFormat = CreationParams->DataFormat;
+    abstractionCreationParams.DataFormat = creationParams->DataFormat;
 
     // retrieve the abstraction layer GUID for this peripheral
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
@@ -43,7 +43,7 @@ CMidiDevicePipe::Initialize(
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient));
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(
-        Device, 
+        device, 
         additionalProperties, 
         winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
@@ -53,7 +53,7 @@ CMidiDevicePipe::Initialize(
 
     GUID dummySessionId{};
 
-    if (MidiFlowBidirectional == CreationParams->Flow)
+    if (MidiFlowBidirectional == creationParams->Flow)
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -62,16 +62,16 @@ CMidiDevicePipe::Initialize(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Creating bidirectional flow", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
-        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
+        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(device, &abstractionCreationParams, mmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
     }
-    else if (MidiFlowIn == CreationParams->Flow)
+    else if (MidiFlowIn == creationParams->Flow)
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -80,7 +80,7 @@ CMidiDevicePipe::Initialize(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Creating input flow", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
 
@@ -88,9 +88,9 @@ CMidiDevicePipe::Initialize(
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&m_MidiInDevice));
-        RETURN_IF_FAILED(m_MidiInDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
+        RETURN_IF_FAILED(m_MidiInDevice->Initialize(device, &abstractionCreationParams, mmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
     }
-    else if (MidiFlowOut == CreationParams->Flow)
+    else if (MidiFlowOut == creationParams->Flow)
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -99,14 +99,14 @@ CMidiDevicePipe::Initialize(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Creating output flow", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
         wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiOut), (void**)&m_MidiOutDevice));
-        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(Device, &abstractionCreationParams, MmcssTaskId, dummySessionId));
+        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(device, &abstractionCreationParams, mmcssTaskId, dummySessionId));
     }
     else
     {
@@ -158,14 +158,14 @@ CMidiDevicePipe::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit Success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     return S_OK;
 }
 
 HRESULT
-CMidiDevicePipe::Cleanup()
+CMidiDevicePipe::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -180,15 +180,15 @@ CMidiDevicePipe::Cleanup()
 
         if (m_MidiBiDiDevice)
         {
-            LOG_IF_FAILED(m_MidiBiDiDevice->Cleanup());
+            LOG_IF_FAILED(m_MidiBiDiDevice->Shutdown());
         }
         if (m_MidiInDevice)
         {
-            LOG_IF_FAILED(m_MidiInDevice->Cleanup());
+            LOG_IF_FAILED(m_MidiInDevice->Shutdown());
         }
         if (m_MidiOutDevice)
         {
-            LOG_IF_FAILED(m_MidiOutDevice->Cleanup());
+            LOG_IF_FAILED(m_MidiOutDevice->Shutdown());
         }
 
         m_MidiBiDiDevice.reset();
@@ -196,7 +196,7 @@ CMidiDevicePipe::Cleanup()
         m_MidiOutDevice.reset();
     }
 
-    RETURN_IF_FAILED(CMidiPipe::Cleanup());
+    RETURN_IF_FAILED(CMidiPipe::Shutdown());
 
     return S_OK;
 }
@@ -204,9 +204,9 @@ CMidiDevicePipe::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidiDevicePipe::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Timestamp
+    PVOID data,
+    UINT length,
+    LONGLONG timestamp
 )
 {
     // TODO: 
@@ -232,7 +232,7 @@ CMidiDevicePipe::SendMidiMessage(
     // for jitter calculation. The DevicePipe is the single connection to the device, so
     // we can ensure order there before it goes to the transport.
 
-    auto hr = SendMidiMessageNow(Data, Length, Timestamp);
+    auto hr = SendMidiMessageNow(data, length, timestamp);
     LOG_IF_FAILED(hr);
 
     return hr;
@@ -241,9 +241,9 @@ CMidiDevicePipe::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidiDevicePipe::SendMidiMessageNow(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Timestamp
+    PVOID data,
+    UINT length,
+    LONGLONG timestamp
 )
 {
     // TODO: This function is where we'll check to see if we're in SysEx or not. If we are
@@ -255,14 +255,14 @@ CMidiDevicePipe::SendMidiMessageNow(
 
     if (m_MidiBiDiDevice)
     {
-        auto hr = m_MidiBiDiDevice->SendMidiMessage(Data, Length, Timestamp);
+        auto hr = m_MidiBiDiDevice->SendMidiMessage(data, length, timestamp);
         RETURN_IF_FAILED(hr);
 
         return S_OK;
     }
     else if (m_MidiOutDevice)
     {
-        auto hr = m_MidiOutDevice->SendMidiMessage(Data, Length, Timestamp);
+        auto hr = m_MidiOutDevice->SendMidiMessage(data, length, timestamp);
         RETURN_IF_FAILED(hr);
 
         return S_OK;

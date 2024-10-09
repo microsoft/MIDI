@@ -7,16 +7,16 @@ CMidi2DiagnosticsAbstractionModule _AtlModule;
 extern "C" BOOL WINAPI
 DllMain(
     HINSTANCE /* hInstance */,
-    DWORD Reason,
-    LPVOID Reserved
+    DWORD reason,
+    LPVOID reserved
 )
 {
-    if (Reason == DLL_PROCESS_ATTACH)
+    if (reason == DLL_PROCESS_ATTACH)
     {
         wil::SetResultTelemetryFallback(MidiDiagnosticsAbstractionTelemetryProvider::FallbackTelemetryCallback);
     }
 
-    return _AtlModule.DllMain(Reason, Reserved);
+    return _AtlModule.DllMain(reason, reserved);
 }
 
 _Use_decl_annotations_
@@ -30,12 +30,12 @@ DllCanUnloadNow(void)
 _Use_decl_annotations_
 STDAPI
 DllGetClassObject(
-    REFCLSID Clsid,
-    REFIID Riid,
-    LPVOID* Object
+    REFCLSID clsid,
+    REFIID riid,
+    LPVOID* object
 )
 {
-    return _AtlModule.DllGetClassObject(Clsid, Riid, Object);
+    return _AtlModule.DllGetClassObject(clsid, riid, object);
 }
 
 STDAPI
@@ -56,12 +56,12 @@ DllUnregisterServer(void)
 _Use_decl_annotations_
 STDAPI
 DllInstall(
-    BOOL Install,
+    BOOL install,
     LPCWSTR )
 {
     HRESULT hr = E_FAIL;
 
-    if (Install)
+    if (install)
     {
         hr = DllRegisterServer();
         if (FAILED(hr))

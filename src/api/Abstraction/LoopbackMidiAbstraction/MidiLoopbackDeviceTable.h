@@ -41,7 +41,7 @@ public:
 
         if (auto device = m_devices.find(cleanId); device != m_devices.end())
         {
-            device->second.Cleanup();
+            device->second.Shutdown();
 
             m_devices.erase(cleanId);
         }

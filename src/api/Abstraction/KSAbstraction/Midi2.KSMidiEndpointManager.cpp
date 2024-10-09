@@ -26,8 +26,8 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
-    IUnknown* midiDeviceManager,
-    IUnknown* midiEndpointProtocolManager
+    IMidiDeviceManagerInterface* midiDeviceManager,
+    IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
@@ -159,7 +159,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         wil::unique_handle hPin;
         KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
         MidiTransport transportCapability { MidiTransport_Invalid };
-        MidiDataFormat dataFormatCapability { MidiDataFormat_Invalid };
+        MidiDataFormats dataFormatCapability { MidiDataFormats_Invalid };
         KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
         GUID nativeDataFormat {0};
 
@@ -216,7 +216,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             );
 
             transportCapability = (MidiTransport)((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
-            dataFormatCapability = (MidiDataFormat) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormat_UMP);
+            dataFormatCapability = (MidiDataFormats) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormats_UMP);
 
             LOG_IF_FAILED_WITH_EXPECTED(
                 PinPropertySimple(hPin.get(), 
@@ -432,7 +432,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     if (newMidiPins.size() == 2 && 
         (newMidiPins[0]->Flow != newMidiPins[1]->Flow) &&
         (newMidiPins[0]->TransportCapability == newMidiPins[1]->TransportCapability) &&
-        (newMidiPins[0]->DataFormatCapability & MidiDataFormat::MidiDataFormat_UMP) == MidiDataFormat::MidiDataFormat_UMP )
+        (newMidiPins[0]->DataFormatCapability & MidiDataFormats::MidiDataFormats_UMP) == MidiDataFormats::MidiDataFormats_UMP )
     {
         //TraceLoggingWrite(
         //    MidiKSAbstractionTelemetryProvider::Provider(),
@@ -544,19 +544,20 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         MIDIENDPOINTCOMMONPROPERTIES commonProperties {};
         commonProperties.AbstractionLayerGuid = KsAbstractionLayerGUID;
-        commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
+        commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
         commonProperties.FriendlyName = MidiPin->Name.c_str();
         commonProperties.TransportCode = transportCode.c_str();
-        commonProperties.TransportSuppliedEndpointName = MidiPin->Name.c_str();
-        commonProperties.TransportSuppliedEndpointDescription = nullptr;
-        commonProperties.UserSuppliedEndpointName = nullptr;
-        commonProperties.UserSuppliedEndpointDescription = nullptr;
+        commonProperties.EndpointName = MidiPin->Name.c_str();
+        commonProperties.EndpointDescription = nullptr;
+        commonProperties.CustomEndpointName = nullptr;
+        commonProperties.CustomEndpointDescription = nullptr;
         commonProperties.UniqueIdentifier = MidiPin->SerialNumber.c_str();
         commonProperties.ManufacturerName = MidiPin->ManufacturerName.c_str();
         commonProperties.SupportedDataFormats = MidiPin->DataFormatCapability;
-        commonProperties.SupportsMultiClient = true;
-        commonProperties.GenerateIncomingTimestamps = true;
 
+        UINT32 capabilities {0};
+        capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
+        capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
 
         interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
@@ -588,10 +589,9 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 // default native UMP devices to support MIDI 1.0 and MIDI 2.0 until they negotiation otherwise
                 // These properties were originally meant only for the results of protocol negotiation, but they were confusing when not set
 
-                commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-                //commonProperties.RequiresMetadataHandler = true;
-                commonProperties.SupportsMidi1ProtocolDefaultValue = true;
-                commonProperties.SupportsMidi2ProtocolDefaultValue = true;
+                commonProperties.NativeDataFormat = MidiDataFormats_UMP;
+                capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+                capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
             }
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
@@ -608,10 +608,8 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 // default bytestream devices to MIDI 1.0 protocol only
                 // These properties were originally meant only for the results of protocol negotiation, but they were confusing when not set
 
-                commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM;
-                //commonProperties.RequiresMetadataHandler = false;
-                commonProperties.SupportsMidi1ProtocolDefaultValue = true;
-                commonProperties.SupportsMidi2ProtocolDefaultValue = false;
+                commonProperties.NativeDataFormat = MidiDataFormats_ByteStream;
+                capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
             }
             else
             {
@@ -619,6 +617,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             }
         }
 
+        commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
         if (MidiPin->GroupTerminalBlockDataSizeOut > 0)
         {
@@ -678,8 +677,8 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
         createInfo.pszDeviceDescription = MidiPin->Name.c_str();
 
-        const ULONG deviceInterfaceIdMaxSize = 255;
-        wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
+        wil::unique_cotaskmem_string newDeviceInterfaceId;
+
 
         // log telemetry in the event activating the SWD for this pin has failed,
         // but push forward with creation for other pins.
@@ -688,13 +687,12 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                                                             MidiPin->CreateUMPOnly,
                                                             MidiPin->Flow,
                                                             &commonProperties,
-                                                            (ULONG) interfaceDevProperties.size(),
+                                                            (ULONG)interfaceDevProperties.size(),
                                                             (ULONG)0,
-                                                            (PVOID)interfaceDevProperties.data(),
-                                                            (PVOID)nullptr,
-                                                            (PVOID)&createInfo,
-                                                            (LPWSTR)&newDeviceInterfaceId,
-                                                            deviceInterfaceIdMaxSize));
+                                                            interfaceDevProperties.data(),
+                                                            nullptr,
+                                                            &createInfo,
+                                                            &newDeviceInterfaceId));
 
         
         // Now we deal with metadata provided in-protocol and also by the user
@@ -715,7 +713,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             // Here we're only building search keys for the SWD id, but we need to broaden this to
             // other relevant search criteria like serial number or the original name, etc.
 
-            auto jsonSearchKeys = AbstractionState::Current().GetConfigurationManager()->BuildEndpointJsonSearchKeysForSWD(newDeviceInterfaceId);
+            auto jsonSearchKeys = AbstractionState::Current().GetConfigurationManager()->BuildEndpointJsonSearchKeysForSWD(newDeviceInterfaceId.get());
 
             TraceLoggingWrite(
                 MidiKSAbstractionTelemetryProvider::Provider(),
@@ -756,7 +754,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Starting up protocol negotiator for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(newDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                    TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                     TraceLoggingWideString(MidiPin->Id.c_str(), "Pin id")
                 );
 
@@ -766,13 +764,13 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
 
                 negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
-                negotiationParams.PreferToSendJRTimestampsToEndpoint = false;
-                negotiationParams.PreferToReceiveJRTimestampsFromEndpoint = false;
+                negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
+                negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
                 negotiationParams.TimeoutMilliseconds = 5000;
 
                 LOG_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
                     __uuidof(Midi2KSAbstraction),
-                    newDeviceInterfaceId,
+                    newDeviceInterfaceId.get(),
                     negotiationParams,
                     this
                 ));
@@ -929,7 +927,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher, winrt
 
 
 HRESULT
-CMidi2KSMidiEndpointManager::Cleanup()
+CMidi2KSMidiEndpointManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -939,7 +937,7 @@ CMidi2KSMidiEndpointManager::Cleanup()
         TraceLoggingPointer(this, "this")
         );
 
-    AbstractionState::Current().Cleanup();
+    AbstractionState::Current().Shutdown();
 
     m_AvailableMidiPins.clear();
 

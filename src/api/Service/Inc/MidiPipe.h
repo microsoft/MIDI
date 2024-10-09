@@ -18,29 +18,29 @@ class CMidiPipe :
 public:
     virtual ~CMidiPipe()
     {
-        Cleanup();
+        Shutdown();
     }
 
-    virtual HRESULT Initialize(_In_ LPCWSTR Device,
-        _In_ MidiFlow Flow)
+    virtual HRESULT Initialize(_In_ LPCWSTR device,
+        _In_ MidiFlow flow)
     {
-        m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(Device);
-        m_Flow = Flow;
+        m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(device);
+        m_Flow = flow;
 
         if (IsFlowSupported(MidiFlowIn))
         {
-            m_DataFormatIn = MidiDataFormat_Any;
+            m_DataFormatIn = MidiDataFormats_Any;
         }
 
         if (IsFlowSupported(MidiFlowOut))
         {
-            m_DataFormatOut = MidiDataFormat_Any;
+            m_DataFormatOut = MidiDataFormats_Any;
         }
 
         return S_OK;
     }
 
-    virtual HRESULT Cleanup()
+    virtual HRESULT Shutdown()
     {
         auto lock = m_Lock.lock();
         m_ConnectedPipes.clear();
@@ -49,19 +49,19 @@ public:
         return S_OK;
     };
 
-    virtual HRESULT AddConnectedPipe(wil::com_ptr_nothrow<CMidiPipe>& ConnectedOutputPipe)
+    virtual HRESULT AddConnectedPipe(wil::com_ptr_nothrow<CMidiPipe>& connectedOutputPipe)
     {
         auto lock = m_Lock.lock();
-        m_ConnectedPipes[(MidiPipeHandle)ConnectedOutputPipe.get()] = ConnectedOutputPipe;
+        m_ConnectedPipes[(MidiPipeHandle)connectedOutputPipe.get()] = connectedOutputPipe;
 
         return S_OK;
     }
     
-    virtual HRESULT RemoveConnectedPipe(wil::com_ptr_nothrow<CMidiPipe>& ConnectedOutputPipe)  
+    virtual HRESULT RemoveConnectedPipe(wil::com_ptr_nothrow<CMidiPipe>& connectedOutputPipe)  
     {
         auto lock = m_Lock.lock();
 
-        auto item = m_ConnectedPipes.find((MidiPipeHandle)ConnectedOutputPipe.get());
+        auto item = m_ConnectedPipes.find((MidiPipeHandle)connectedOutputPipe.get());
 
         if (item != m_ConnectedPipes.end())
         {
@@ -75,7 +75,7 @@ public:
     virtual HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG) { return E_NOTIMPL; }
     virtual HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG) { return E_NOTIMPL; }
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Length, _In_ LONGLONG Position, _In_ LONGLONG Context)
+    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT length, _In_ LONGLONG position, _In_ LONGLONG context)
     {
         // need to hold the client pipe lock to ensure that
         // no clients are added or removed while performing the callback
@@ -84,20 +84,20 @@ public:
 
         for (auto const& Client : m_ConnectedPipes)
         {
-            // By convention, Context will contain the group index this message is targeting.
+            // By convention, context will contain the group index this message is targeting.
             // If this client is group filtered, and the context is a valid group index, then
             // filter the messages being sent to this client by the group index.
             // otherwise, send all messages to the client.
-            if (Client.second->IsGroupFiltered() && IS_VALID_GROUP_INDEX(Context))
+            if (Client.second->IsGroupFiltered() && IS_VALID_GROUP_INDEX(context))
             {
-                if (Client.second->GroupIndex() == (UINT32) Context)
+                if (Client.second->GroupIndex() == (UINT32) context)
                 {
-                    LOG_IF_FAILED(Client.second->SendMidiMessage(Data, Length, Position));
+                    LOG_IF_FAILED(Client.second->SendMidiMessage(Data, length, position));
                 }
             }
             else
             {
-                LOG_IF_FAILED(Client.second->SendMidiMessage(Data, Length, Position));
+                LOG_IF_FAILED(Client.second->SendMidiMessage(Data, length, position));
             }
         }
 
@@ -105,46 +105,46 @@ public:
     }
 
     std::wstring MidiDevice() { return m_Device; }
-    MidiDataFormat DataFormatIn() { return m_DataFormatIn; }
-    MidiDataFormat DataFormatOut() { return m_DataFormatOut; }
+    MidiDataFormats DataFormatIn() { return m_DataFormatIn; }
+    MidiDataFormats DataFormatOut() { return m_DataFormatOut; }
     MidiFlow Flow() { return m_Flow; }
-    BOOL IsFlowSupported(MidiFlow Flow) { return (m_Flow == MidiFlowBidirectional || m_Flow == Flow); }
+    BOOL IsFlowSupported(MidiFlow flow) { return (m_Flow == MidiFlowBidirectional || m_Flow == flow); }
 
-    virtual HRESULT SetDataFormatIn(MidiDataFormat DataFormat)
+    virtual HRESULT SetDataFormatIn(MidiDataFormats dataFormat)
     {
-        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), !IsFormatSupportedIn(DataFormat));
-        m_DataFormatIn = DataFormat;
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), !IsFormatSupportedIn(dataFormat));
+        m_DataFormatIn = dataFormat;
         return S_OK;
     }
 
-    virtual HRESULT SetDataFormatOut(MidiDataFormat DataFormat)
+    virtual HRESULT SetDataFormatOut(MidiDataFormats dataFormat)
     {
-        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), !IsFormatSupportedOut(DataFormat));
-        m_DataFormatOut = DataFormat;
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), !IsFormatSupportedOut(dataFormat));
+        m_DataFormatOut = dataFormat;
         return S_OK;
     }
 
-    virtual BOOL IsFormatSupportedIn(MidiDataFormat DataFormat)
+    virtual BOOL IsFormatSupportedIn(MidiDataFormats dataFormat)
     {
-        if (m_DataFormatIn == MidiDataFormat_Any)
+        if (m_DataFormatIn == MidiDataFormats_Any)
         {
             return TRUE;
         }
         else
         {
-            return m_DataFormatIn == DataFormat;
+            return m_DataFormatIn == dataFormat;
         }
     }
 
-    virtual BOOL IsFormatSupportedOut(MidiDataFormat DataFormat)
+    virtual BOOL IsFormatSupportedOut(MidiDataFormats dataFormat)
     {
-        if (m_DataFormatOut == MidiDataFormat_Any)
+        if (m_DataFormatOut == MidiDataFormats_Any)
         {
             return TRUE;
         }
         else
         {
-           return m_DataFormatOut == DataFormat;
+           return m_DataFormatOut == dataFormat;
         }
     }
 
@@ -154,20 +154,20 @@ public:
         return !m_Clients.empty();
     }
 
-    virtual void AddClient(MidiClientHandle Handle)
+    virtual void AddClient(MidiClientHandle handle)
     {
         auto lock = m_Lock.lock();
-        auto client = std::find(m_Clients.begin(), m_Clients.end(), Handle);
+        auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
         if (client == m_Clients.end())
         {
-            m_Clients.push_back(Handle);
+            m_Clients.push_back(handle);
         }
     }
 
-    virtual void RemoveClient(MidiClientHandle Handle)
+    virtual void RemoveClient(MidiClientHandle handle)
     {
         auto lock = m_Lock.lock();
-        auto client = std::find(m_Clients.begin(), m_Clients.end(), Handle);
+        auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
         if (client != m_Clients.end())
         {
             m_Clients.erase(client);
@@ -184,8 +184,8 @@ public:
 
 private:
     std::wstring m_Device;
-    MidiDataFormat m_DataFormatIn{ MidiDataFormat_Invalid };
-    MidiDataFormat m_DataFormatOut{ MidiDataFormat_Invalid };
+    MidiDataFormats m_DataFormatIn{ MidiDataFormats_Invalid };
+    MidiDataFormats m_DataFormatOut{ MidiDataFormats_Invalid };
     MidiFlow m_Flow{ MidiFlowIn };
 
     wil::critical_section m_Lock;

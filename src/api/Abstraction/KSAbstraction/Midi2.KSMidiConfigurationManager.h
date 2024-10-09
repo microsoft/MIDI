@@ -16,9 +16,9 @@ class CMidi2KSMidiConfigurationManager :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ GUID abstractionGuid, _In_ IUnknown* deviceManagerInterface, _In_ IUnknown* MidiServiceConfigurationManagerInterface));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* response));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Initialize(_In_ GUID abstractionGuid, _In_ IMidiDeviceManagerInterface* deviceManagerInterface, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _In_ BOOL isFromConfigurationFile, _Out_ BSTR* response));
+    STDMETHOD(Shutdown)();
 
     // internal method called after endpoint creation
     HRESULT ApplyConfigFileUpdatesForEndpoint(_In_ std::wstring endpointSearchKeysJson);

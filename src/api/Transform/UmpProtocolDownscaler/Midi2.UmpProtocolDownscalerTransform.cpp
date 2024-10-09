@@ -11,13 +11,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2UmpProtocolDownscalerTransform::Activate(
-    REFIID Iid,
-    void **Interface
+    REFIID iid,
+    void **activatedInterface
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == activatedInterface);
 
-    if (__uuidof(IMidiDataTransform) == Iid)
+    if (__uuidof(IMidiDataTransform) == iid)
     {
         TraceLoggingWrite(
             MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
@@ -30,7 +30,7 @@ CMidi2UmpProtocolDownscalerTransform::Activate(
 
         wil::com_ptr_nothrow<IMidiDataTransform> midiTransform;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2UmpProtocolDownscalerMidiTransform>(&midiTransform));
-        *Interface = midiTransform.detach();
+        *activatedInterface = midiTransform.detach();
     }
 
     else

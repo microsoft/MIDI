@@ -8,6 +8,12 @@
 
 #include "stdafx.h"
 
+#define SAFE_COTASKMEMFREE(p) \
+    if (NULL != p) { \
+        CoTaskMemFree(p); \
+        (p) = NULL; \
+    }
+    
 _Use_decl_annotations_
 void *midl_user_allocate(size_t size)
 {
@@ -21,7 +27,7 @@ void midl_user_free(void* p)
 }
 
 HRESULT MidiSrvVerifyConnectivity(
-    handle_t /*BindingHandle*/)
+    handle_t /*bindingHandle*/)
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -40,11 +46,11 @@ HRESULT MidiSrvVerifyConnectivity(
 }
 
 HRESULT MidiSrvCreateClient(
-    /* [in] */ handle_t BindingHandle,
-    /* [string][in] */ __RPC__in_string LPCWSTR MidiDevice,
-    /* [in] */ __RPC__in PMIDISRV_CLIENTCREATION_PARAMS CreationParams,
-    /* [in] */ __RPC__in GUID SessionId,
-    /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *Client
+    /* [in] */ handle_t bindingHandle,
+    /* [string][in] */ __RPC__in_string LPCWSTR midiDevice,
+    /* [in] */ __RPC__in PMIDISRV_CLIENTCREATION_PARAMS creationParams,
+    /* [in] */ __RPC__in GUID sessionId,
+    /* [out] */ __RPC__deref_out_opt PMIDISRV_CLIENT *client
     )
 {
     TraceLoggingWrite(
@@ -75,11 +81,11 @@ HRESULT MidiSrvCreateClient(
     DWORD clientProcessId{0};
     wil::unique_handle clientProcessHandle;
 
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(bindingHandle, &clientProcessId)));
 
     // get the client PID, impersonate the client to get the client process handle, and then
     // revert back to self.
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(BindingHandle)));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(bindingHandle)));
     clientProcessHandle.reset(OpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, clientProcessId));
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcRevertToSelf()));
 
@@ -87,18 +93,18 @@ HRESULT MidiSrvCreateClient(
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->CreateMidiClient(MidiDevice, SessionId, clientProcessId, clientProcessHandle, CreationParams, createdClient, false));
+    RETURN_IF_FAILED(clientManager->CreateMidiClient(midiDevice, sessionId, clientProcessId, clientProcessHandle, creationParams, createdClient, false));
 
     // Success, transfer the MIDISRV_CLIENT data to the caller.
-    *Client = createdClient;
+    *client = createdClient;
     createdClient = nullptr;
 
     return S_OK;
 }
 
 HRESULT MidiSrvDestroyClient(
-    /* [in] */ handle_t /* BindingHandle */,
-    /* [in] */ __RPC__in MidiClientHandle ClientHandle)
+    /* [in] */ handle_t /* bindingHandle */,
+    /* [in] */ __RPC__in MidiClientHandle clientHandle)
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -113,7 +119,7 @@ HRESULT MidiSrvDestroyClient(
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->DestroyMidiClient(ClientHandle));
+    RETURN_IF_FAILED(clientManager->DestroyMidiClient(clientHandle));
 
     return S_OK;
 }
@@ -121,12 +127,12 @@ HRESULT MidiSrvDestroyClient(
 
 HRESULT 
 MidiSrvUpdateConfiguration(
-    /* [in] */ handle_t BindingHandle,
-    /*[in, string]*/ __RPC__in_string LPCWSTR ConfigurationJson,
-    __RPC__in BOOL IsFromConfigurationFile,
-    __RPC__out BSTR* Response)
+    /* [in] */ handle_t bindingHandle,
+    /*[in, string]*/ __RPC__in_string LPCWSTR configurationJson,
+    __RPC__in BOOL isFromConfigurationFile,
+    __RPC__out BSTR* responseOut)
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(bindingHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -136,15 +142,15 @@ MidiSrvUpdateConfiguration(
         TraceLoggingWideString(L"Enter")
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, ConfigurationJson);
-    RETURN_HR_IF_NULL(E_INVALIDARG, Response);
+    RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
+    RETURN_HR_IF_NULL(E_INVALIDARG, responseOut);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(ConfigurationJson, "JSON")
+        TraceLoggingWideString(configurationJson, "JSON")
     );
 
     // Send it to the configuration manager and get it broken apart
@@ -157,7 +163,7 @@ MidiSrvUpdateConfiguration(
     RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configurationManager));
     RETURN_IF_FAILED(g_MidiService->GetDeviceManager(deviceManager));
 
-    auto configEntries = configurationManager->GetTransportAbstractionSettingsFromJsonString(ConfigurationJson);
+    auto configEntries = configurationManager->GetTransportAbstractionSettingsFromJsonString(configurationJson);
 
     if (configEntries.size() == 0)
     {
@@ -180,7 +186,7 @@ MidiSrvUpdateConfiguration(
         CComBSTR response;
         response.Empty();
 
-        deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str(), IsFromConfigurationFile, &response);
+        deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str(), isFromConfigurationFile, &response);
 
         // Probably need to do more formatting of this. Should use the json objects instead
 
@@ -189,7 +195,7 @@ MidiSrvUpdateConfiguration(
         ::SysFreeString(response);
     }
 
-    RETURN_IF_FAILED(combinedResponse.CopyTo(Response));
+    RETURN_IF_FAILED(combinedResponse.CopyTo(responseOut));
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
 
@@ -207,10 +213,10 @@ MidiSrvUpdateConfiguration(
 
 HRESULT
 MidiSrvRegisterSession(
-    /* [in] */ handle_t BindingHandle,
-    __RPC__in GUID SessionId,
-    __RPC__in_string LPCWSTR SessionName,
-    __RPC__deref_out_opt PMIDISRV_CONTEXT_HANDLE* ContextHandle
+    /* [in] */ handle_t bindingHandle,
+    __RPC__in GUID sessionId,
+    __RPC__in_string LPCWSTR sessionName,
+    __RPC__deref_out_opt PMIDISRV_CONTEXT_HANDLE* contextHandle
 )
 {
     TraceLoggingWrite(
@@ -229,14 +235,14 @@ MidiSrvRegisterSession(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(BindingHandle)));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(bindingHandle, &clientProcessId)));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(bindingHandle)));
     clientProcessHandle.reset(OpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, clientProcessId));
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcRevertToSelf()));
 
     RETURN_LAST_ERROR_IF_NULL(clientProcessHandle);
 
-    RETURN_IF_FAILED(sessionTracker->AddClientSession(SessionId, SessionName, clientProcessId, clientProcessHandle, ContextHandle));
+    RETURN_IF_FAILED(sessionTracker->AddClientSession(sessionId, sessionName, clientProcessId, clientProcessHandle, contextHandle));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -251,13 +257,13 @@ MidiSrvRegisterSession(
 
 HRESULT
 MidiSrvUpdateSessionName(
-    /* [in] */ handle_t BindingHandle,
-    __RPC__in PMIDISRV_CONTEXT_HANDLE ContextHandle,
-    __RPC__in GUID SessionId,
-    __RPC__in_string LPCWSTR SessionName
+    /* [in] */ handle_t bindingHandle,
+    __RPC__in PMIDISRV_CONTEXT_HANDLE contextHandle,
+    __RPC__in GUID sessionId,
+    __RPC__in_string LPCWSTR sessionName
 )
 {
-    UNREFERENCED_PARAMETER(ContextHandle);
+    UNREFERENCED_PARAMETER(contextHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -274,9 +280,9 @@ MidiSrvUpdateSessionName(
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
     DWORD clientProcessId{0};
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(bindingHandle, &clientProcessId)));
 
-    RETURN_IF_FAILED(sessionTracker->UpdateClientSessionName(SessionId, SessionName, clientProcessId));
+    RETURN_IF_FAILED(sessionTracker->UpdateClientSessionName(sessionId, sessionName, clientProcessId));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -291,12 +297,12 @@ MidiSrvUpdateSessionName(
 
 HRESULT
 MidiSrvDeregisterSession(
-    /* [in] */ handle_t BindingHandle,
-    __RPC__in PMIDISRV_CONTEXT_HANDLE ContextHandle,
-    __RPC__in GUID SessionId
+    /* [in] */ handle_t bindingHandle,
+    __RPC__in PMIDISRV_CONTEXT_HANDLE contextHandle,
+    __RPC__in GUID sessionId
 )
 {
-    UNREFERENCED_PARAMETER(ContextHandle);
+    UNREFERENCED_PARAMETER(contextHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -313,9 +319,9 @@ MidiSrvDeregisterSession(
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
     DWORD clientProcessId{0};
-    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(BindingHandle, &clientProcessId)));
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(bindingHandle, &clientProcessId)));
 
-    RETURN_IF_FAILED(sessionTracker->RemoveClientSession(SessionId, clientProcessId));
+    RETURN_IF_FAILED(sessionTracker->RemoveClientSession(sessionId, clientProcessId));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -361,11 +367,11 @@ __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
 
 HRESULT
 MidiSrvGetSessionList(
-    /* [in] */ handle_t BindingHandle,
-    __RPC__out BSTR* SessionListJson
+    /* [in] */ handle_t bindingHandle,
+    __RPC__out BSTR* sessionListJson
 )
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(bindingHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -386,7 +392,7 @@ MidiSrvGetSessionList(
 
     RETURN_IF_FAILED(sessionTracker->GetSessionList(&sessionList));
 
-    RETURN_IF_FAILED(sessionList.CopyTo(SessionListJson));
+    RETURN_IF_FAILED(sessionList.CopyTo(sessionListJson));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -402,11 +408,11 @@ MidiSrvGetSessionList(
 
 HRESULT 
 MidiSrvGetAbstractionList(
-    /*[in]*/ handle_t BindingHandle,
-    __RPC__out BSTR* AbstractionListJson
+    /*[in]*/ handle_t bindingHandle,
+    __RPC__out BSTR* abstractionListJson
 )
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
+    UNREFERENCED_PARAMETER(bindingHandle);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -428,7 +434,7 @@ MidiSrvGetAbstractionList(
 
     json::JsonObject rootObject{};
 
-    for (auto const& metadata : allMetadata)
+    for (auto &metadata : allMetadata)
     {
         // add to result object
 
@@ -440,29 +446,30 @@ MidiSrvGetAbstractionList(
         if (metadata.Author != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Author));
         if (metadata.SmallImagePath != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.SmallImagePath));
         if (metadata.Version != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_VERSION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Version));
-        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsRuntimeCreatableByApps));
-        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsRuntimeCreatableBySettings));
-        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsSystemManaged));
-        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.IsClientConfigurable));
+        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsRuntimeCreatableByApps));
+        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsRuntimeCreatableBySettings));
+        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsSystemManaged));
+        abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsClientConfigurable));
 //        if (metadata.ClientConfigurationAssemblyName != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.ClientConfigurationAssemblyName));
 
         // add the abstraction metadata to the root, using the abstraction id as the key
         rootObject.SetNamedValue(internal::GuidToString(metadata.Id).c_str(), abstractionObject);
 
-        // We need to free all those bstrs in the struct. I hate this pattern.
+        // We need to free all the strings in the struct. I hate this pattern.
 
-        ::SysFreeString(metadata.Name);
-        ::SysFreeString(metadata.Description);
-        ::SysFreeString(metadata.Author);
-        ::SysFreeString(metadata.SmallImagePath);
-        ::SysFreeString(metadata.Version);
-//        ::SysFreeString(metadata.ClientConfigurationAssemblyName);
+        SAFE_COTASKMEMFREE(metadata.Name);
+        SAFE_COTASKMEMFREE(metadata.TransportCode);
+        SAFE_COTASKMEMFREE(metadata.Description);
+        SAFE_COTASKMEMFREE(metadata.Author);
+        SAFE_COTASKMEMFREE(metadata.SmallImagePath);
+        SAFE_COTASKMEMFREE(metadata.Version);
+//        SAFE_COTASKMEMFREE(metadata.ClientConfigurationAssemblyName);
 
     }
 
     // stringify json to output parameter
 
-    internal::JsonStringifyObjectToOutParam(rootObject, &AbstractionListJson);
+    internal::JsonStringifyObjectToOutParam(rootObject, &abstractionListJson);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -477,12 +484,12 @@ MidiSrvGetAbstractionList(
 
 HRESULT
 MidiSrvGetTransformList(
-    /*[in]*/ handle_t BindingHandle,
-    __RPC__out BSTR* TransformListJson
+    /*[in]*/ handle_t bindingHandle,
+    __RPC__out BSTR* transformListJson
 )
 {
-    UNREFERENCED_PARAMETER(BindingHandle);
-    UNREFERENCED_PARAMETER(TransformListJson);
+    UNREFERENCED_PARAMETER(bindingHandle);
+    UNREFERENCED_PARAMETER(transformListJson);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

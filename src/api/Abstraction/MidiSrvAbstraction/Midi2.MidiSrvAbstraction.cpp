@@ -12,13 +12,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvAbstraction::Activate(
-    REFIID Iid,
-    void **Interface
+    REFIID iid,
+    void **activatedInterface
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == activatedInterface);
 
-    if (__uuidof(IMidiIn) == Iid)
+    if (__uuidof(IMidiIn) == iid)
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -31,9 +31,9 @@ CMidi2MidiSrvAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiIn> midiIn;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvIn>(&midiIn));
-        *Interface = midiIn.detach();
+        *activatedInterface = midiIn.detach();
     }
-    else if (__uuidof(IMidiOut) == Iid)
+    else if (__uuidof(IMidiOut) == iid)
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -46,9 +46,9 @@ CMidi2MidiSrvAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiOut> midiOut;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvOut>(&midiOut));
-        *Interface = midiOut.detach();
+        *activatedInterface = midiOut.detach();
     }
-    else if (__uuidof(IMidiBiDi) == Iid)
+    else if (__uuidof(IMidiBiDi) == iid)
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -61,9 +61,9 @@ CMidi2MidiSrvAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvBiDi>(&midiBiDi));
-        *Interface = midiBiDi.detach();
+        *activatedInterface = midiBiDi.detach();
     }
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == Iid)
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == iid)
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -76,10 +76,10 @@ CMidi2MidiSrvAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> config;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvConfigurationManager>(&config));
-        *Interface = config.detach();
+        *activatedInterface = config.detach();
     }
     
-    else if (__uuidof(IMidiServicePluginMetadataReporterInterface) == Iid)
+    else if (__uuidof(IMidiServicePluginMetadataReporterInterface) == iid)
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -92,11 +92,11 @@ CMidi2MidiSrvAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiServicePluginMetadataReporterInterface> metadataReporter;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvConfigurationManager>(&metadataReporter));  // config manager implements this interface
-        *Interface = metadataReporter.detach();
+        *activatedInterface = metadataReporter.detach();
     }
 
 
-    else if (__uuidof(IMidiSessionTracker) == Iid)
+    else if (__uuidof(IMidiSessionTracker) == iid)
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -109,7 +109,7 @@ CMidi2MidiSrvAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiSessionTracker> config;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvSessionTracker>(&config));
-        *Interface = config.detach();
+        *activatedInterface = config.detach();
     }
     else
     {
@@ -128,28 +128,28 @@ CMidi2MidiSrvAbstraction::Activate(
 }
 
 _Use_decl_annotations_
-void __RPC_FAR* __RPC_USER midl_user_allocate(size_t ByteCount
+void __RPC_FAR* __RPC_USER midl_user_allocate(size_t byteCount
 )
 {
-    return (void*)new (std::nothrow) BYTE[ByteCount];
+    return (void*)new (std::nothrow) BYTE[byteCount];
 }
 
 _Use_decl_annotations_
-void __RPC_USER midl_user_free(void __RPC_FAR* Pointer
+void __RPC_USER midl_user_free(void __RPC_FAR* pointer
 )
 {
-    delete[](BYTE*)Pointer;
+    delete[](BYTE*)pointer;
 }
 
 // using the protocol and endpoint, retrieve the midisrv
 // rpc binding handle
 _Use_decl_annotations_
 HRESULT
-GetMidiSrvBindingHandle(handle_t* BindingHandle
+GetMidiSrvBindingHandle(handle_t* bindingHandle
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == BindingHandle);
-    *BindingHandle = NULL;
+    RETURN_HR_IF(E_INVALIDARG, nullptr == bindingHandle);
+    *bindingHandle = NULL;
 
     RPC_WSTR stringBinding = nullptr;
     auto cleanupOnExit = wil::scope_exit([&]()
@@ -170,7 +170,7 @@ GetMidiSrvBindingHandle(handle_t* BindingHandle
 
     RETURN_IF_WIN32_ERROR(RpcBindingFromStringBinding(
         stringBinding,
-        BindingHandle));
+        bindingHandle));
 
     return S_OK;
 }

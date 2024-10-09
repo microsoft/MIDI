@@ -35,7 +35,7 @@ public:
 
     STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context);
 
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
     void EndProcessing() { if (m_endProcessing.is_valid()) m_endProcessing.SetEvent(); }
 

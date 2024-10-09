@@ -35,28 +35,28 @@ class CMidiPort :
 public:
     CMidiPort();
     ~CMidiPort();
-    HRESULT RuntimeClassInitialize(_In_ GUID SessionId, _In_ std::wstring& InterfaceId, _In_ MidiFlow Flow, _In_ MIDIOPENDESC* OpenDesc, _In_ DWORD_PTR Flags);
-    HRESULT Cleanup();
-    HRESULT MidMessage(_In_ UINT Msg, _In_  DWORD_PTR Param1, _In_ DWORD_PTR Param2);
-    HRESULT ModMessage(_In_ UINT Msg, _In_  DWORD_PTR Param1, _In_ DWORD_PTR Param2);
-    bool IsFlow(_In_ MidiFlow Flow);
+    HRESULT RuntimeClassInitialize(_In_ GUID sessionId, _In_ std::wstring& interfaceId, _In_ MidiFlow flow, _In_ const MIDIOPENDESC* openDesc, _In_ DWORD_PTR flags);
+    HRESULT Shutdown();
+    HRESULT MidMessage(_In_ UINT msg, _In_  DWORD_PTR param1, _In_ DWORD_PTR param2);
+    HRESULT ModMessage(_In_ UINT msg, _In_  DWORD_PTR param1, _In_ DWORD_PTR param2);
+    bool IsFlow(_In_ MidiFlow flow);
 
 private:
     HRESULT Reset();
-    HRESULT AddBuffer(_In_ LPMIDIHDR Buffer, _In_ DWORD_PTR BufferSize);
+    HRESULT AddBuffer(_In_ LPMIDIHDR buffer, _In_ DWORD_PTR bufferSize);
     HRESULT Start();
     HRESULT Stop();
     HRESULT Close();
 
     // IMidiCallback, for receiving midi in messages from the service.
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context);
+    STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context);
 
-    HRESULT SendMidiMessage(_In_ UINT32 MidiMessage);
-    HRESULT SendLongMessage(_In_ LPMIDIHDR Buffer);
+    HRESULT SendMidiMessage(_In_ UINT32 midiMessage);
+    HRESULT SendLongMessage(_In_ LPMIDIHDR buffer);
 
-    HRESULT CompleteLongBuffer(_In_ UINT Message, _In_ LONGLONG Position);
+    HRESULT CompleteLongBuffer(_In_ UINT message, _In_ LONGLONG position);
     
-    void WinmmClientCallback(_In_ UINT Msg, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
+    void WinmmClientCallback(_In_ UINT msg, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
 
     wil::critical_section m_Lock;
 

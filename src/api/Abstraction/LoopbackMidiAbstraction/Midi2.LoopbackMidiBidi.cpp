@@ -127,7 +127,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2LoopbackMidiBiDi::Cleanup()
+CMidi2LoopbackMidiBiDi::Shutdown()
 {
     TraceLoggingWrite(
         MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),

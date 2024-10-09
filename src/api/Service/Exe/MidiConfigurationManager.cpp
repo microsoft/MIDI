@@ -302,7 +302,7 @@ std::vector<ABSTRACTIONMETADATA> CMidiConfigurationManager::GetAllEnabledTranspo
 
                 results.push_back(std::move(metadata));
 
-                plugin->Cleanup();
+                plugin->Shutdown();
             }
             else
             {
@@ -1029,7 +1029,7 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessi
 
 
 
-HRESULT CMidiConfigurationManager::Cleanup() noexcept
+HRESULT CMidiConfigurationManager::Shutdown() noexcept
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

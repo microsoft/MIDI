@@ -12,18 +12,18 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvBiDi::Initialize(
-    LPCWSTR Device,
-    PABSTRACTIONCREATIONPARAMS CreationParams,
-    DWORD * MmcssTaskId,
-    IMidiCallback * Callback,
-    LONGLONG Context,
-    GUID SessionId
+    LPCWSTR device,
+    PABSTRACTIONCREATIONPARAMS creationParams,
+    DWORD * mmcssTaskId,
+    IMidiCallback * callback,
+    LONGLONG context,
+    GUID sessionId
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmcssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == callback);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == device);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == mmcssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == creationParams);
 
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -37,14 +37,14 @@ CMidi2MidiSrvBiDi::Initialize(
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
 
-    RETURN_IF_FAILED(midiSrv->Initialize(Device, MidiFlowBidirectional, CreationParams, MmcssTaskId, Callback, Context, SessionId));
+    RETURN_IF_FAILED(midiSrv->Initialize(device, MidiFlowBidirectional, creationParams, mmcssTaskId, callback, context, sessionId));
     m_MidiSrv = std::move(midiSrv);
 
     return S_OK;
 }
 
 HRESULT
-CMidi2MidiSrvBiDi::Cleanup()
+CMidi2MidiSrvBiDi::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -56,7 +56,7 @@ CMidi2MidiSrvBiDi::Cleanup()
 
     if (m_MidiSrv)
     {
-        RETURN_IF_FAILED(m_MidiSrv->Cleanup());
+        RETURN_IF_FAILED(m_MidiSrv->Shutdown());
         m_MidiSrv.reset();
     }
 
@@ -66,16 +66,16 @@ CMidi2MidiSrvBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvBiDi::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
+    PVOID data,
+    UINT length,
+    LONGLONG position
 )
 {
     if (m_MidiSrv)
     {
-        //return m_MidiSrv->SendMidiMessage(Data, Length, Position);
+        //return m_MidiSrv->SendMidiMessage(data, length, position);
 
-        auto hr = m_MidiSrv->SendMidiMessage(Data, Length, Position);
+        auto hr = m_MidiSrv->SendMidiMessage(data, length, position);
         LOG_IF_FAILED(hr);
 
         return hr;

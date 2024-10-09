@@ -20,7 +20,7 @@ public:
 
     bool IsFromConfigurationFile{ true };
 
-    void Cleanup()
+    void Shutdown()
     {
         if (m_callbackA != nullptr)
         {
@@ -75,7 +75,7 @@ public:
         //m_bidiA = nullptr;
         //m_bidiB = nullptr;
 
-        Cleanup();
+        Shutdown();
     }
 
 private:

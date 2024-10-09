@@ -28,19 +28,19 @@ public:
     ~CMidiPorts();
 
     HRESULT RuntimeClassInitialize();
-    HRESULT Cleanup();
-    DWORD APIENTRY MidMessage(_In_ UINT DeviceID, _In_ UINT Msg, _In_ DWORD_PTR User, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
-    DWORD APIENTRY ModMessage(_In_ UINT DeviceID, _In_ UINT Msg, _In_ DWORD_PTR User, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
+    HRESULT Shutdown();
+    DWORD APIENTRY MidMessage(_In_ UINT deviceID, _In_ UINT msg, _In_ DWORD_PTR user, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
+    DWORD APIENTRY ModMessage(_In_ UINT deviceID, _In_ UINT msg, _In_ DWORD_PTR user, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
 
 private:
-    HRESULT GetMidiDeviceCount(_In_ MidiFlow Flow, _In_ UINT32& Count);
-    HRESULT GetDevCaps(_In_ MidiFlow Flow, _In_ UINT PortNumber, _In_ DWORD_PTR MidiCaps);
-    HRESULT Open(_In_ MidiFlow Flow, _In_ UINT PortNumber, _In_ MIDIOPENDESC* MidiOpenDesc, _In_ DWORD_PTR Flags, _In_ MidiPortHandle* OpenedPort);
-    HRESULT Close(_In_ MidiFlow Flow, _In_ MidiPortHandle PortHandle);
-    HRESULT ForwardMidMessage(_In_ UINT Msg, _In_ MidiPortHandle PortHandle, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
-    HRESULT ForwardModMessage(_In_ UINT Msg, _In_ MidiPortHandle PortHandle, _In_ DWORD_PTR Param1, _In_ DWORD_PTR Param2);
+    HRESULT GetMidiDeviceCount(_In_ MidiFlow flow, _In_ UINT32& count);
+    HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps);
+    HRESULT Open(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ const MIDIOPENDESC* midiOpenDesc, _In_ DWORD_PTR flags, _In_ MidiPortHandle* openedPort);
+    HRESULT Close(_In_ MidiFlow flow, _In_ MidiPortHandle portHandle);
+    HRESULT ForwardMidMessage(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
+    HRESULT ForwardModMessage(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
 
-    HRESULT GetOpenedPort(_In_ MidiFlow Flow, _In_ MidiPortHandle PortHandle, _In_ wil::com_ptr_nothrow<CMidiPort> &Port);
+    HRESULT GetOpenedPort(_In_ MidiFlow flow, _In_ MidiPortHandle portHandle, _In_ wil::com_ptr_nothrow<CMidiPort> &port);
 
     wil::critical_section m_Lock;
 

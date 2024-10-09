@@ -22,17 +22,17 @@ public:
                             _In_ PMIDISRV_CLIENT,
                             _In_ DWORD *,
                             _In_ BOOL);
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
     HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
     // client pipe must have the same format for both in and out, so
     // setting the format for one or the other sets for both.
-    virtual HRESULT SetDataFormatIn(MidiDataFormat DataFormat)
+    virtual HRESULT SetDataFormatIn(MidiDataFormats DataFormat)
     {
         RETURN_IF_FAILED(CMidiPipe::SetDataFormatIn(DataFormat));
-        if (CMidiPipe::DataFormatOut() != MidiDataFormat_Invalid)
+        if (CMidiPipe::DataFormatOut() != MidiDataFormats_Invalid)
         {
             RETURN_IF_FAILED(CMidiPipe::SetDataFormatOut(DataFormat));
             if (m_MidiPump)
@@ -48,10 +48,10 @@ public:
         return S_OK;
     }
 
-    virtual HRESULT SetDataFormatOut(MidiDataFormat DataFormat)
+    virtual HRESULT SetDataFormatOut(MidiDataFormats DataFormat)
     {
         RETURN_IF_FAILED(CMidiPipe::SetDataFormatOut(DataFormat));
-        if (CMidiPipe::DataFormatIn() != MidiDataFormat_Invalid)
+        if (CMidiPipe::DataFormatIn() != MidiDataFormats_Invalid)
         {
             RETURN_IF_FAILED(CMidiPipe::SetDataFormatIn(DataFormat));
             if (m_MidiPump)

@@ -29,10 +29,10 @@ void midl_user_free(void* p)
 
 // using the protocol and endpoint, retrieve the midisrv
 // rpc binding handle
-HRESULT GetMidiSrvBindingHandle(handle_t* BindingHandle)
+HRESULT GetMidiSrvBindingHandle(handle_t* bindingHandle)
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == BindingHandle);
-    *BindingHandle = NULL;
+    RETURN_HR_IF(E_INVALIDARG, nullptr == bindingHandle);
+    *bindingHandle = NULL;
 
     RPC_WSTR stringBinding = nullptr;
     auto cleanupOnExit = wil::scope_exit([&]() {
@@ -52,7 +52,7 @@ HRESULT GetMidiSrvBindingHandle(handle_t* BindingHandle)
 
     RETURN_IF_WIN32_ERROR(RpcBindingFromStringBinding(
         stringBinding,
-        BindingHandle));
+        bindingHandle));
 
     return S_OK;
 }
@@ -117,7 +117,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
 
         if (midiPump)
         {
-            midiPump->Cleanup();
+            midiPump->Shutdown();
         }
 
         if (client)
@@ -154,7 +154,7 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
         }
     });
 
-    creationParams.DataFormat = MidiDataFormat_UMP;
+    creationParams.DataFormat = MidiDataFormats_UMP;
     creationParams.Flow = MidiFlowBidirectional;
     creationParams.BufferSize = PAGE_SIZE;
 

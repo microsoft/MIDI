@@ -13,8 +13,8 @@
 typedef struct MIDISRV_TRANSFORMCREATION_PARAMS
 {
     GUID TransformGuid;
-    MidiDataFormat DataFormatIn;
-    MidiDataFormat DataFormatOut;
+    MidiDataFormats DataFormatIn;
+    MidiDataFormats DataFormatOut;
     MidiFlow Flow;
     BYTE UmpGroupIndex;
 } MIDISRV_TRANSFORMCREATION_PARAMS, *PMIDISRV_TRANSFORMCREATION_PARAMS;
@@ -26,9 +26,9 @@ public:
     HRESULT Initialize(_In_ LPCWSTR, // device it's associated to
                             _In_ PMIDISRV_TRANSFORMCREATION_PARAMS, // what transform to create
                             _In_ DWORD *, // mmcss
-                            _In_ IUnknown* // MidiDeviceManager to provide to transforms that need to update device properties
+                            _In_ IMidiDeviceManagerInterface* // MidiDeviceManager to provide to transforms that need to update device properties
     ); 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
     HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG);

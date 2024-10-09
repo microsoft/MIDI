@@ -16,7 +16,7 @@ class CMidi2MidiSrvBiDi :
 public:
     STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ GUID));
     STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;

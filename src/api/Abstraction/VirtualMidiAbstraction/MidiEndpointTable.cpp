@@ -8,7 +8,7 @@
 
 #include "pch.h"
 
-HRESULT MidiEndpointTable::Cleanup()
+HRESULT MidiEndpointTable::Shutdown()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),

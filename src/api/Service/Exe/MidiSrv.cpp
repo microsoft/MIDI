@@ -41,7 +41,7 @@ CMidiSrv::Initialize()
 
     auto cleanupOnError = wil::scope_exit([&]()
     {
-        Cleanup();
+        Shutdown();
     });
 
     const PCWSTR RpcSddl =
@@ -181,7 +181,7 @@ CMidiSrv::Initialize()
 }
 
 HRESULT
-CMidiSrv::Cleanup()
+CMidiSrv::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -210,37 +210,37 @@ CMidiSrv::Cleanup()
 
     if (m_ClientManager)
     {
-        RETURN_IF_FAILED(m_ClientManager->Cleanup());
+        RETURN_IF_FAILED(m_ClientManager->Shutdown());
         m_ClientManager.reset();
     }
 
     if (m_DeviceManager)
     {
-        RETURN_IF_FAILED(m_DeviceManager->Cleanup());
+        RETURN_IF_FAILED(m_DeviceManager->Shutdown());
         m_DeviceManager.reset();
     }
 
     if (m_PerformanceManager)
     {
-        RETURN_IF_FAILED(m_PerformanceManager->Cleanup());
+        RETURN_IF_FAILED(m_PerformanceManager->Shutdown());
         m_PerformanceManager.reset();
     }
 
     if (m_ProcessManager)
     {
-        RETURN_IF_FAILED(m_ProcessManager->Cleanup());
+        RETURN_IF_FAILED(m_ProcessManager->Shutdown());
         m_ProcessManager.reset();
     }
 
     if (m_ConfigurationManager)
     {
-        RETURN_IF_FAILED(m_ConfigurationManager->Cleanup());
+        RETURN_IF_FAILED(m_ConfigurationManager->Shutdown());
         m_ConfigurationManager.reset();
     }
 
     if (m_SessionTracker)
     {
-        RETURN_IF_FAILED(m_SessionTracker->Cleanup());
+        RETURN_IF_FAILED(m_SessionTracker->Shutdown());
         m_SessionTracker.reset();
     }
 

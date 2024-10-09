@@ -19,7 +19,7 @@ public:
     ~CMidiSrv() {}
 
     HRESULT Initialize();
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
     HRESULT GetDeviceManager(std::shared_ptr<CMidiDeviceManager>& manager)
     {

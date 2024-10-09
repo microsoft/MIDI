@@ -65,7 +65,7 @@ public:
 
     STDMETHOD(VerifyConnectivity)();
 
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
 

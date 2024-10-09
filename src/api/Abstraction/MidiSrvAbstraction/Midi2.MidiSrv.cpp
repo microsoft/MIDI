@@ -12,13 +12,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrv::Initialize(
-    LPCWSTR Device,
-    MidiFlow Flow,
-    PABSTRACTIONCREATIONPARAMS CreationParams,
-    DWORD * MmcssTaskId,
-    IMidiCallback * Callback,
-    LONGLONG Context,
-    GUID SessionId
+    LPCWSTR device,
+    MidiFlow flow,
+    PABSTRACTIONCREATIONPARAMS creationParams,
+    DWORD * mmcssTaskId,
+    IMidiCallback * callback,
+    LONGLONG context,
+    GUID sessionId
 )
 {
     TraceLoggingWrite(
@@ -29,7 +29,7 @@ CMidi2MidiSrv::Initialize(
         TraceLoggingPointer(this, "this")
         );
 
-    MIDISRV_CLIENTCREATION_PARAMS creationParams{ };
+    MIDISRV_CLIENTCREATION_PARAMS clientCreationParams{ };
     PMIDISRV_CLIENT client{ nullptr };
     wil::unique_rpc_binding bindingHandle;
 
@@ -37,7 +37,7 @@ CMidi2MidiSrv::Initialize(
     {
         if (m_MidiPump)
         {
-            m_MidiPump->Cleanup();
+            m_MidiPump->Shutdown();
         }
 
         if (client)
@@ -56,15 +56,15 @@ CMidi2MidiSrv::Initialize(
         }
     });
 
-    creationParams.Flow = Flow;
-    creationParams.DataFormat = CreationParams->DataFormat;
+    clientCreationParams.Flow = flow;
+    clientCreationParams.DataFormat = creationParams->DataFormat;
 
     // Todo: client side buffering requests to come from some service setting?
     // - See https://aka.ms/midiissues/219 for details
     
-    //creationParams.BufferSize = PAGE_SIZE;  // original
-    //creationParams.BufferSize = 512;    // Set this for debugging see https://aka.ms/midiissues/182 for all the drama :)
-    creationParams.BufferSize = PAGE_SIZE * 2;
+    //clientCreationParams.BufferSize = PAGE_SIZE;  // original
+    //clientCreationParams.BufferSize = 512;    // Set this for debugging see https://aka.ms/midiissues/182 for all the drama :)
+    clientCreationParams.BufferSize = PAGE_SIZE * 2;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
@@ -72,19 +72,19 @@ CMidi2MidiSrv::Initialize(
     {
         // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
         // with structured exception handling.
-        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), Device, &creationParams, SessionId, &client));
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), device, &clientCreationParams, sessionId, &client));
         RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
         RpcEndExcept
         return S_OK;
     }());
 
     m_ClientHandle = client->ClientHandle;
-    CreationParams->DataFormat = client->DataFormat;
+    creationParams->DataFormat = client->DataFormat;
 
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiInPipe;
     std::unique_ptr<MEMORY_MAPPED_PIPE> midiOutPipe;
 
-    if (Flow == MidiFlowBidirectional || Flow == MidiFlowIn)
+    if (flow == MidiFlowBidirectional || flow == MidiFlowIn)
     {
         midiInPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(midiInPipe);
@@ -106,7 +106,7 @@ CMidi2MidiSrv::Initialize(
         RETURN_IF_FAILED(CreateMappedRegisters(midiInPipe->RegistersBuffer.get(), &midiInPipe->Registers));
     }
 
-    if (Flow == MidiFlowBidirectional || Flow == MidiFlowOut)
+    if (flow == MidiFlowBidirectional || flow == MidiFlowOut)
     {
         midiOutPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(midiOutPipe);
@@ -136,7 +136,7 @@ CMidi2MidiSrv::Initialize(
     RETURN_IF_NULL_ALLOC(m_MidiPump);
 
     // TODO: Need to double-check if the "false" for auto-generating the timestamp is appropriate here.
-    RETURN_IF_FAILED(m_MidiPump->Initialize(MmcssTaskId, midiInPipe, midiOutPipe, Callback, Context, false));
+    RETURN_IF_FAILED(m_MidiPump->Initialize(mmcssTaskId, midiInPipe, midiOutPipe, callback, context, false));
 
     cleanupOnError.release();
 
@@ -144,7 +144,7 @@ CMidi2MidiSrv::Initialize(
 }
 
 HRESULT
-CMidi2MidiSrv::Cleanup()
+CMidi2MidiSrv::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -156,7 +156,7 @@ CMidi2MidiSrv::Cleanup()
 
     if (m_MidiPump)
     {
-        RETURN_IF_FAILED(m_MidiPump->Cleanup());
+        RETURN_IF_FAILED(m_MidiPump->Shutdown());
         m_MidiPump.reset();
     }
 
@@ -185,14 +185,14 @@ CMidi2MidiSrv::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrv::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
+    PVOID data,
+    UINT length,
+    LONGLONG position
 )
 {
     if (m_MidiPump)
     {
-        return m_MidiPump->SendMidiMessage(Data, Length, Position);;
+        return m_MidiPump->SendMidiMessage(data, length, position);;
     }
 
     return E_ABORT;

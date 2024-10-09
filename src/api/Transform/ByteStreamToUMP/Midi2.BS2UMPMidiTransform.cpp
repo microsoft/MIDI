@@ -7,12 +7,12 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2BS2UMPMidiTransform::Initialize(
-    LPCWSTR Device,
-    PTRANSFORMCREATIONPARAMS CreationParams,
+    LPCWSTR device,
+    PTRANSFORMCREATIONPARAMS creationParams,
     DWORD *,
-    IMidiCallback * Callback,
-    LONGLONG /*Context*/,
-    IUnknown* /*MidiDeviceManager*/
+    IMidiCallback * callback,
+    LONGLONG /*context*/,
+    IMidiDeviceManagerInterface* /*midiDeviceManager*/
 )
 {
     TraceLoggingWrite(
@@ -23,24 +23,24 @@ CMidi2BS2UMPMidiTransform::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatIn != MidiDataFormat_ByteStream);
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatOut != MidiDataFormat_UMP);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), creationParams->DataFormatIn != MidiDataFormats_ByteStream);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), creationParams->DataFormatOut != MidiDataFormats_UMP);
 
-    m_Device = Device;
-    m_Callback = Callback;
+    m_Device = device;
+    m_Callback = callback;
 
     m_BS2UMP.outputMIDI2 = false;
 
-    if (IS_VALID_GROUP_INDEX(CreationParams->UmpGroupIndex))
+    if (IS_VALID_GROUP_INDEX(creationParams->UmpGroupIndex))
     {
-        m_BS2UMP.defaultGroup = (uint8_t) CreationParams->UmpGroupIndex;
+        m_BS2UMP.defaultGroup = (uint8_t) creationParams->UmpGroupIndex;
     }
 
     return S_OK;
 }
 
 HRESULT
-CMidi2BS2UMPMidiTransform::Cleanup()
+CMidi2BS2UMPMidiTransform::Shutdown()
 {
     TraceLoggingWrite(
         MidiBS2UMPTransformTelemetryProvider::Provider(),
@@ -56,16 +56,16 @@ CMidi2BS2UMPMidiTransform::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2BS2UMPMidiTransform::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
+    PVOID inputData,
+    UINT length,
+    LONGLONG position
 )
 {
     // Note: Group number is set in the initialize function
      
-    auto data = static_cast<BYTE *>(Data);
+    auto data = static_cast<BYTE *>(inputData);
 
-    for (UINT i = 0; i < Length; i++)
+    for (UINT i = 0; i < length; i++)
     {
         // Send the bytestream byte(s) to the parser. The way the parser works, we need
         // to check for valid UMP words after each byte is parsed.
@@ -102,7 +102,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
                 LOG_IF_FAILED(m_Callback->Callback(
                     (PVOID)m_umpMessage, 
                     (UINT)m_umpMessageCurrentWordCount * sizeof(uint32_t), 
-                    Position, 
+                    position, 
                     m_BS2UMP.defaultGroup));
 
                 m_umpMessageCurrentWordCount = 0;

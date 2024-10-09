@@ -15,8 +15,8 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvConfigurationManager::Initialize(
     GUID abstractionGuid, 
-    IUnknown* deviceManagerInterface, 
-    IUnknown* midiServiceConfigurationManagerInterface)
+    IMidiDeviceManagerInterface* deviceManagerInterface, 
+    IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -42,7 +42,7 @@ CMidi2MidiSrvConfigurationManager::Initialize(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BOOL IsFromConfigurationFile, BSTR* response)
+CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BOOL isFromConfigurationFile, BSTR* response)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -62,7 +62,7 @@ CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, IsFromConfigurationFile, response));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, isFromConfigurationFile, response));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             return S_OK;
@@ -74,7 +74,7 @@ CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::GetAbstractionList(BSTR* AbstractionListJson)
+CMidi2MidiSrvConfigurationManager::GetAbstractionList(BSTR* abstractionListJson)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -87,13 +87,13 @@ CMidi2MidiSrvConfigurationManager::GetAbstractionList(BSTR* AbstractionListJson)
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, AbstractionListJson);
+    RETURN_HR_IF_NULL(E_INVALIDARG, abstractionListJson);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetAbstractionList(bindingHandle.get(), AbstractionListJson));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetAbstractionList(bindingHandle.get(), abstractionListJson));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             return S_OK;
@@ -105,7 +105,7 @@ CMidi2MidiSrvConfigurationManager::GetAbstractionList(BSTR* AbstractionListJson)
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::GetTransformList(BSTR* TransformListJson)
+CMidi2MidiSrvConfigurationManager::GetTransformList(BSTR* sransformListJson)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -118,13 +118,13 @@ CMidi2MidiSrvConfigurationManager::GetTransformList(BSTR* TransformListJson)
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, TransformListJson);
+    RETURN_HR_IF_NULL(E_INVALIDARG, sransformListJson);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransformList(bindingHandle.get(), TransformListJson));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransformList(bindingHandle.get(), sransformListJson));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
                 return S_OK;
@@ -139,7 +139,7 @@ CMidi2MidiSrvConfigurationManager::GetTransformList(BSTR* TransformListJson)
 
 
 HRESULT
-CMidi2MidiSrvConfigurationManager::Cleanup()
+CMidi2MidiSrvConfigurationManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),

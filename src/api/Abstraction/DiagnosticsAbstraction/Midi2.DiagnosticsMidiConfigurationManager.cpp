@@ -13,13 +13,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsMidiConfigurationManager::Initialize(
-    GUID AbstractionId,
-    IUnknown* MidiDeviceManager,
-    IUnknown* MidiServiceConfigurationManagerInterface
+    GUID abstractionId,
+    IMidiDeviceManagerInterface* midiDeviceManager,
+    IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface
 )
 {
-    UNREFERENCED_PARAMETER(MidiServiceConfigurationManagerInterface);
-    UNREFERENCED_PARAMETER(AbstractionId);
+    UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
+    UNREFERENCED_PARAMETER(abstractionId);
 
 
     TraceLoggingWrite(
@@ -30,8 +30,8 @@ CMidi2DiagnosticsMidiConfigurationManager::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, MidiDeviceManager);
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
 
     return S_OK;
 }
@@ -39,9 +39,9 @@ CMidi2DiagnosticsMidiConfigurationManager::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsMidiConfigurationManager::UpdateConfiguration(
-    LPCWSTR ConfigurationJsonSection,
-    BOOL IsFromConfigurationFile,
-    BSTR* Response)
+    LPCWSTR configurationJsonSection,
+    BOOL isFromConfigurationFile,
+    BSTR* response)
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
@@ -52,15 +52,15 @@ CMidi2DiagnosticsMidiConfigurationManager::UpdateConfiguration(
     );
 
 
-    UNREFERENCED_PARAMETER(ConfigurationJsonSection);
-    UNREFERENCED_PARAMETER(IsFromConfigurationFile);
-    UNREFERENCED_PARAMETER(Response);
+    UNREFERENCED_PARAMETER(configurationJsonSection);
+    UNREFERENCED_PARAMETER(isFromConfigurationFile);
+    UNREFERENCED_PARAMETER(response);
 
     return E_NOTIMPL;
 }
 
 HRESULT
-CMidi2DiagnosticsMidiConfigurationManager::Cleanup()
+CMidi2DiagnosticsMidiConfigurationManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),

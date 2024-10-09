@@ -29,110 +29,110 @@
 
 _Use_decl_annotations_
 HRESULT
-GetRequiredBufferSize(ULONG& RequestedSize
+GetRequiredBufferSize(ULONG& requestedSize
 )
 {
-    SYSTEM_INFO SystemInfo;
-    GetSystemInfo(&SystemInfo);
-    RequestedSize = ((RequestedSize + SystemInfo.dwAllocationGranularity - 1) & ~(SystemInfo.dwAllocationGranularity - 1));
+    SYSTEM_INFO systemInfo;
+    GetSystemInfo(&systemInfo);
+    requestedSize = ((requestedSize + systemInfo.dwAllocationGranularity - 1) & ~(systemInfo.dwAllocationGranularity - 1));
 
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-MapBuffer(BOOL DoubleMapped,
-            ULONG Size,
-            PMEMORY_MAPPED_BUFFER BufferAllocationData
+MapBuffer(BOOL doubleMapped,
+            ULONG size,
+            PMEMORY_MAPPED_BUFFER bufferAllocationData
 )
 {
-    PBYTE MapAddress = nullptr;
+    PBYTE mapAddress = nullptr;
 
-    if (DoubleMapped)
+    if (doubleMapped)
     {
         wil::unique_virtualalloc_ptr<void> placeholderAlloc;
-        placeholderAlloc.reset(VirtualAlloc(nullptr, 2 * (SIZE_T) Size, MEM_RESERVE, PAGE_READWRITE));
+        placeholderAlloc.reset(VirtualAlloc(nullptr, 2 * (SIZE_T) size, MEM_RESERVE, PAGE_READWRITE));
         RETURN_IF_NULL_ALLOC(placeholderAlloc);
-        MapAddress = (PBYTE)placeholderAlloc.get();
+        mapAddress = (PBYTE)placeholderAlloc.get();
         placeholderAlloc.reset();
 
-        BufferAllocationData->Map2.reset(MapViewOfFileEx(BufferAllocationData->FileMapping.get(), FILE_MAP_ALL_ACCESS, 0, 0, Size, MapAddress + Size));
-        RETURN_IF_NULL_ALLOC(BufferAllocationData->Map2);
+        bufferAllocationData->Map2.reset(MapViewOfFileEx(bufferAllocationData->FileMapping.get(), FILE_MAP_ALL_ACCESS, 0, 0, size, mapAddress + size));
+        RETURN_IF_NULL_ALLOC(bufferAllocationData->Map2);
     }
 
-    BufferAllocationData->Map1.reset(MapViewOfFileEx(BufferAllocationData->FileMapping.get(), FILE_MAP_ALL_ACCESS, 0, 0, Size, MapAddress));
-    RETURN_IF_NULL_ALLOC(BufferAllocationData->Map1);
+    bufferAllocationData->Map1.reset(MapViewOfFileEx(bufferAllocationData->FileMapping.get(), FILE_MAP_ALL_ACCESS, 0, 0, size, mapAddress));
+    RETURN_IF_NULL_ALLOC(bufferAllocationData->Map1);
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CreateMappedBuffer(BOOL DoubleMapped,
-                    ULONG Size,
-                    PMEMORY_MAPPED_BUFFER BufferAllocationData
+CreateMappedBuffer(BOOL doubleMapped,
+                    ULONG size,
+                    PMEMORY_MAPPED_BUFFER bufferAllocationData
 )
 {
-    if (!BufferAllocationData->FileMapping)
+    if (!bufferAllocationData->FileMapping)
     {
-        BufferAllocationData->FileMapping.reset(CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, Size, nullptr));
-        RETURN_LAST_ERROR_IF_NULL(BufferAllocationData->FileMapping);
+        bufferAllocationData->FileMapping.reset(CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, size, nullptr));
+        RETURN_LAST_ERROR_IF_NULL(bufferAllocationData->FileMapping);
     }
-    RETURN_IF_FAILED(MapBuffer(DoubleMapped, Size, BufferAllocationData));
+    RETURN_IF_FAILED(MapBuffer(doubleMapped, size, bufferAllocationData));
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CreateMappedDataBuffer(ULONG RequestedSize,
-                            PMEMORY_MAPPED_BUFFER Buffer,
-                            PMEMORY_MAPPED_DATA Data
+CreateMappedDataBuffer(ULONG requestedSize,
+                            PMEMORY_MAPPED_BUFFER buffer,
+                            PMEMORY_MAPPED_DATA data
 )
 {
-    if (Data->BufferSize == 0)
+    if (data->BufferSize == 0)
     {
         // If the buffer size is not already known
         // determine a buffer size that is compatible with
         // the requested size, which cannot be 0.
-        RETURN_HR_IF(E_INVALIDARG, 0 == RequestedSize);
-        RETURN_IF_FAILED(GetRequiredBufferSize(RequestedSize));
-        Data->BufferSize = RequestedSize;
+        RETURN_HR_IF(E_INVALIDARG, 0 == requestedSize);
+        RETURN_IF_FAILED(GetRequiredBufferSize(requestedSize));
+        data->BufferSize = requestedSize;
     }
     else
     {
         // The buffer has already been allocated is just being mapped,
         // the requested size is unused and should be 0.
-        RETURN_HR_IF(E_INVALIDARG, 0 != RequestedSize);
+        RETURN_HR_IF(E_INVALIDARG, 0 != requestedSize);
     }
 
-    RETURN_IF_FAILED(CreateMappedBuffer(TRUE, Data->BufferSize, Buffer));
+    RETURN_IF_FAILED(CreateMappedBuffer(TRUE, data->BufferSize, buffer));
 
-    Data->BufferAddress = (PBYTE)Buffer->Map1.get();
+    data->BufferAddress = (PBYTE)buffer->Map1.get();
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CreateMappedRegisters(PMEMORY_MAPPED_BUFFER Buffer,
-                        PMEMORY_MAPPED_REGISTERS Registers
+CreateMappedRegisters(PMEMORY_MAPPED_BUFFER buffer,
+                        PMEMORY_MAPPED_REGISTERS registers
 )
 {
-    RETURN_IF_FAILED(CreateMappedBuffer(FALSE, sizeof(ULONG) * 2, Buffer));
-    Registers->ReadPosition = (PULONG)Buffer->Map1.get();
-    Registers->WritePosition = Registers->ReadPosition + 1;
+    RETURN_IF_FAILED(CreateMappedBuffer(FALSE, sizeof(ULONG) * 2, buffer));
+    registers->ReadPosition = (PULONG)buffer->Map1.get();
+    registers->WritePosition = registers->ReadPosition + 1;
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
 DisableMmcss(
-    unique_mmcss_handle& MmcssHandle
+    unique_mmcss_handle& mmcssHandle
 )
 {
     if (CMidiXProc::MMCSSUseEnabled())
     {
-        RETURN_HR_IF(S_OK, NULL == MmcssHandle);
+        RETURN_HR_IF(S_OK, NULL == mmcssHandle);
         // Detach the thread from the MMCSS service to free the handle.
-        MmcssHandle.reset();
+        mmcssHandle.reset();
     }
 
     return S_OK;
@@ -141,26 +141,26 @@ DisableMmcss(
 _Use_decl_annotations_
 HRESULT
 EnableMmcss(
-    unique_mmcss_handle& MmcssHandle,
-    DWORD& MmcssTaskId
+    unique_mmcss_handle& mmcssHandle,
+    DWORD& mmcssTaskId
 )
 {
     if (CMidiXProc::MMCSSUseEnabled())
     {
-        MmcssHandle.reset(AvSetMmThreadCharacteristics(L"Pro Audio", &MmcssTaskId));
-        if (!MmcssHandle)
+        mmcssHandle.reset(AvSetMmThreadCharacteristics(L"Pro Audio", &mmcssTaskId));
+        if (!mmcssHandle)
         {
             // If the task id has gone invalid, try with a new task id
-            MmcssTaskId = 0;
-            MmcssHandle.reset(AvSetMmThreadCharacteristics(L"Pro Audio", &MmcssTaskId));
+            mmcssTaskId = 0;
+            mmcssHandle.reset(AvSetMmThreadCharacteristics(L"Pro Audio", &mmcssTaskId));
         }
 
         auto cleanupOnFailure = wil::scope_exit([&]()
             {
-                MmcssHandle.reset();
+                mmcssHandle.reset();
             });
 
-        RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), FALSE == AvSetMmThreadPriority(MmcssHandle.get(), AVRT_PRIORITY_HIGH));
+        RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), FALSE == AvSetMmThreadPriority(mmcssHandle.get(), AVRT_PRIORITY_HIGH));
         cleanupOnFailure.release();
     }
     else
@@ -175,7 +175,7 @@ EnableMmcss(
 
 CMidiXProc::~CMidiXProc()
 {
-    Cleanup();
+    Shutdown();
 }
 
 // static members, because of the way the C-style functions are used
@@ -206,43 +206,43 @@ bool CMidiXProc::MMCSSUseEnabled()
 
 _Use_decl_annotations_
 HRESULT
-CMidiXProc::Initialize(DWORD* MmcssTaskId,
-                        std::unique_ptr<MEMORY_MAPPED_PIPE>& MidiIn,
-                        std::unique_ptr<MEMORY_MAPPED_PIPE>& MidiOut,
-                        IMidiCallback *MidiInCallback,
-                        LONGLONG Context,
-                        BOOL OverwriteZeroTimestamp
+CMidiXProc::Initialize(DWORD* mmcssTaskId,
+                        std::unique_ptr<MEMORY_MAPPED_PIPE>& midiIn,
+                        std::unique_ptr<MEMORY_MAPPED_PIPE>& midiOut,
+                        IMidiCallback *midiInCallback,
+                        LONGLONG context,
+                        BOOL overwriteZeroTimestamp
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmcssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, !MidiIn && !MidiOut);
-    RETURN_HR_IF(E_INVALIDARG, MidiIn && !MidiInCallback);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == mmcssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, !midiIn && !midiOut);
+    RETURN_HR_IF(E_INVALIDARG, midiIn && !midiInCallback);
 
     // validate that the provided data format is valid
-    if (MidiIn)
+    if (midiIn)
     {
-        RETURN_HR_IF(E_INVALIDARG, (MidiIn->DataFormat != MidiDataFormat_ByteStream) && 
-            (MidiIn->DataFormat != MidiDataFormat_UMP) && 
-            (MidiIn->DataFormat != MidiDataFormat_Any));
+        RETURN_HR_IF(E_INVALIDARG, (midiIn->DataFormat != MidiDataFormats_ByteStream) && 
+            (midiIn->DataFormat != MidiDataFormats_UMP) && 
+            (midiIn->DataFormat != MidiDataFormats_Any));
     }
 
-    if (MidiOut)
+    if (midiOut)
     {
-        RETURN_HR_IF(E_INVALIDARG, (MidiOut->DataFormat != MidiDataFormat_ByteStream) && 
-            (MidiOut->DataFormat != MidiDataFormat_UMP) &&
-            (MidiOut->DataFormat != MidiDataFormat_Any));
+        RETURN_HR_IF(E_INVALIDARG, (midiOut->DataFormat != MidiDataFormats_ByteStream) && 
+            (midiOut->DataFormat != MidiDataFormats_UMP) &&
+            (midiOut->DataFormat != MidiDataFormats_Any));
     }
 
-    m_MidiInCallback = MidiInCallback;
-    m_MidiInCallbackContext = Context;
+    m_MidiInCallback = midiInCallback;
+    m_MidiInCallbackContext = context;
     m_ThreadTerminateEvent.create();
     m_ThreadStartedEvent.create();
-    m_MmcssTaskId = *MmcssTaskId;
+    m_MmcssTaskId = *mmcssTaskId;
 
     // now that we know we will succeed, take ownership of the
     // mapped pipes.
-    m_MidiIn = std::move(MidiIn);
-    m_MidiOut = std::move(MidiOut);
+    m_MidiIn = std::move(midiIn);
+    m_MidiOut = std::move(midiOut);
 
     // true if incoming messages from the device should get a timestamp
     // we never timestamp outgoing messages TO the device, because 0 has
@@ -250,7 +250,7 @@ CMidiXProc::Initialize(DWORD* MmcssTaskId,
     // This is ultimately set by the client manager using a value from
     // the property store, which was written by the abstraction at
     // enumeration time
-    m_OverwriteZeroTimestamp = OverwriteZeroTimestamp;
+    m_OverwriteZeroTimestamp = overwriteZeroTimestamp;
 
     // if we have midi in, create our worker.
     if (m_MidiIn)
@@ -263,13 +263,13 @@ CMidiXProc::Initialize(DWORD* MmcssTaskId,
 
     // return the task id actually used by the worker thread, if one was
     // created
-    *MmcssTaskId = m_MmcssTaskId;
+    *mmcssTaskId = m_MmcssTaskId;
 
     return S_OK;
 }
 
 HRESULT
-CMidiXProc::Cleanup()
+CMidiXProc::Shutdown()
 {
     // if a worker has configured mmcss and hasn't yet cleaned
     // it up, this is our last chance
@@ -296,30 +296,30 @@ CMidiXProc::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidiXProc::SendMidiMessage(
-    void * MidiData,
-    UINT32 Length,
-    LONGLONG Position
+    void * midiData,
+    UINT32 length,
+    LONGLONG position
 )
 {
     bool bufferSent{false};
-    UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + Length;
+    UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
 
     RETURN_HR_IF(E_UNEXPECTED, !m_MidiOut);
-    RETURN_HR_IF(E_INVALIDARG, Length < MINIMUM_LOOPED_DATASIZE);
-    RETURN_HR_IF(E_INVALIDARG, (m_MidiOut->DataFormat != MidiDataFormat_ByteStream) && 
-                                (m_MidiOut->DataFormat != MidiDataFormat_UMP));
+    RETURN_HR_IF(E_INVALIDARG, length < MINIMUM_LOOPED_DATASIZE);
+    RETURN_HR_IF(E_INVALIDARG, (m_MidiOut->DataFormat != MidiDataFormats_ByteStream) && 
+                                (m_MidiOut->DataFormat != MidiDataFormats_UMP));
 
-    if (m_MidiOut->DataFormat == MidiDataFormat_ByteStream)
+    if (m_MidiOut->DataFormat == MidiDataFormats_ByteStream)
     {
-        RETURN_HR_IF(E_INVALIDARG, Length > MAXIMUM_LOOPED_BYTESTREAM_DATASIZE);
+        RETURN_HR_IF(E_INVALIDARG, length > MAXIMUM_LOOPED_BYTESTREAM_DATASIZE);
     }
     else
     {
-        RETURN_HR_IF(E_INVALIDARG, Length > MAXIMUM_LOOPED_UMP_DATASIZE);
+        RETURN_HR_IF(E_INVALIDARG, length > MAXIMUM_LOOPED_UMP_DATASIZE);
     }
 
-    PMEMORY_MAPPED_REGISTERS Registers = &(m_MidiOut->Registers);
-    PMEMORY_MAPPED_DATA Data = &(m_MidiOut->Data);
+    PMEMORY_MAPPED_REGISTERS registers = &(m_MidiOut->Registers);
+    PMEMORY_MAPPED_DATA data = &(m_MidiOut->Data);
     bool retry {false};
 
     do{
@@ -331,15 +331,15 @@ CMidiXProc::SendMidiMessage(
 
         // the write position is the last position we have written,
         // the read position is the last position the driver has read from
-        ULONG writePosition = InterlockedCompareExchange((LONG*)Registers->WritePosition, 0, 0);
-        ULONG readPosition = InterlockedCompareExchange((LONG*)Registers->ReadPosition, 0, 0);
-        ULONG newWritePosition = (writePosition + requiredBufferSize) % Data->BufferSize;
+        ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
+        ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
+        ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
         ULONG bytesAvailable{ 0 };
 
         // Calculate the available space in the buffer.
         if (readPosition <= writePosition)
         {
-            bytesAvailable = Data->BufferSize - (writePosition - readPosition);
+            bytesAvailable = data->BufferSize - (writePosition - readPosition);
         }
         else
         {
@@ -359,15 +359,15 @@ CMidiXProc::SendMidiMessage(
         // if there is sufficient space to write the buffer, send it
         if (bytesAvailable >= requiredBufferSize)
         {
-            PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)Data->BufferAddress) + writePosition);
+            PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)data->BufferAddress) + writePosition);
 
-            header->ByteCount = Length;
-            CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), MidiData, Length);
+            header->ByteCount = length;
+            CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), midiData, length);
 
             // if a position provided is nonzero, use it, otherwise use the current QPC
-            if (Position)
+            if (position)
             {
-                header->Position = Position;
+                header->Position = position;
             }
             else if (m_OverwriteZeroTimestamp)
             {
@@ -377,7 +377,7 @@ CMidiXProc::SendMidiMessage(
             }
 
             // update the write position and notify the other side that data is available.
-            InterlockedExchange((LONG*)Registers->WritePosition, newWritePosition);
+            InterlockedExchange((LONG*)registers->WritePosition, newWritePosition);
             RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
 
             bufferSent = true;
@@ -418,8 +418,8 @@ CMidiXProc::ProcessMidiIn()
         DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
         if (ret == (WAIT_OBJECT_0 + 1))
         {
-            PMEMORY_MAPPED_REGISTERS Registers = &(m_MidiIn->Registers);
-            PMEMORY_MAPPED_DATA Data = &(m_MidiIn->Data);
+            PMEMORY_MAPPED_REGISTERS registers = &(m_MidiIn->Registers);
+            PMEMORY_MAPPED_DATA mappedData = &(m_MidiIn->Data);
 
             do
             {
@@ -429,9 +429,9 @@ CMidiXProc::ProcessMidiIn()
 
                 // the read position is the last position we have read,
                 // the write position is the last position written to
-                ULONG readPosition = InterlockedCompareExchange((LONG*) Registers->ReadPosition, 0, 0);
-                ULONG writePosition = InterlockedCompareExchange((LONG*) Registers->WritePosition, 0, 0);
-                ULONG bytesAvailable {0};
+                ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
+                ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
+                ULONG bytesAvailable{ 0 };
 
                 if (readPosition <= writePosition)
                 {
@@ -439,7 +439,7 @@ CMidiXProc::ProcessMidiIn()
                 }
                 else
                 {
-                    bytesAvailable = Data->BufferSize - (readPosition - writePosition);
+                    bytesAvailable = mappedData->BufferSize - (readPosition - writePosition);
                 }
 
                 if (0 == bytesAvailable ||
@@ -451,10 +451,10 @@ CMidiXProc::ProcessMidiIn()
                     break;
                 }
 
-                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT) (((BYTE *) Data->BufferAddress) + readPosition);
+                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + readPosition);
                 UINT32 dataSize = header->ByteCount;
                 UINT32 totalSize = dataSize + sizeof(LOOPEDDATAFORMAT);
-                ULONG newReadPosition = (readPosition + totalSize) % Data->BufferSize;
+                ULONG newReadPosition = (readPosition + totalSize) % mappedData->BufferSize;
 
                 if (bytesAvailable < totalSize)
                 {
@@ -464,7 +464,7 @@ CMidiXProc::ProcessMidiIn()
                     break;
                 }
 
-                PVOID data = (PVOID) (((BYTE *) header) + sizeof(LOOPEDDATAFORMAT));
+                PVOID data = (PVOID)(((BYTE*)header) + sizeof(LOOPEDDATAFORMAT));
 
                 if (m_MidiInCallback)
                 {
@@ -481,16 +481,16 @@ CMidiXProc::ProcessMidiIn()
 
                 // advance to the next midi packet, we loop processing them one at a time
                 // until we have processed all that is available for this pass.
-                InterlockedExchange((LONG*) Registers->ReadPosition, newReadPosition);
+                InterlockedExchange((LONG*)registers->ReadPosition, newReadPosition);
                 RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiIn->ReadEvent.get()));
-            } while(TRUE);
+            } while (TRUE);
         }
         else
         {
             // exit event or wait failed, exit the thread.
             break;
         }
-    }while (TRUE);
+    } while (TRUE);
 
     return S_OK;
 }
@@ -498,12 +498,12 @@ CMidiXProc::ProcessMidiIn()
 _Use_decl_annotations_
 DWORD WINAPI
 CMidiXProc::MidiInWorker(
-    LPVOID lpParam
+    LPVOID param
 )
 {
     auto coinit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
-    CMidiXProc *This = reinterpret_cast<CMidiXProc*>(lpParam);
+    CMidiXProc *This = reinterpret_cast<CMidiXProc*>(param);
     if (This)
     {
         // pump should not be started if midi in is not required.

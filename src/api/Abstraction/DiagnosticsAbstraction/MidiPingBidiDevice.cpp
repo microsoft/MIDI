@@ -12,16 +12,16 @@ _Use_decl_annotations_
 HRESULT
 MidiPingBidiDevice::SendMidiMessage
 (
-    void* Message,
-    UINT32 Size,
+    void* message,
+    UINT32 size,
     LONGLONG /*timestamp*/
 )
 {
     RETURN_HR_IF_NULL(E_POINTER, m_Callback);
-    RETURN_HR_IF_NULL(E_INVALIDARG, Message);
-    RETURN_HR_IF(E_INVALIDARG, Size != sizeof(internal::PackedPingRequestUmp));
+    RETURN_HR_IF_NULL(E_INVALIDARG, message);
+    RETURN_HR_IF(E_INVALIDARG, size != sizeof(internal::PackedPingRequestUmp));
    
-    auto requestUmp = (internal::PackedPingRequestUmp*)Message;
+    auto requestUmp = (internal::PackedPingRequestUmp*)message;
 
     RETURN_HR_IF(E_INVALIDARG, requestUmp->Word0 != INTERNAL_PING_REQUEST_UMP_WORD0);
 
@@ -39,16 +39,16 @@ _Use_decl_annotations_
 void
 MidiPingBidiDevice::SetCallback
 (
-    IMidiCallback* Callback,
-    LONGLONG Context
+    IMidiCallback* callback,
+    LONGLONG context
 )
 {
-    m_Callback = Callback;
-    m_Context = Context;
+    m_Callback = callback;
+    m_Context = context;
 }
 
 void
-MidiPingBidiDevice::Cleanup()
+MidiPingBidiDevice::Shutdown()
 {
     m_Callback = nullptr;
     m_Context = 0;
@@ -58,5 +58,5 @@ MidiPingBidiDevice::MidiPingBidiDevice() = default;
 
 MidiPingBidiDevice::~MidiPingBidiDevice()
 {
-    Cleanup();
+    Shutdown();
 }

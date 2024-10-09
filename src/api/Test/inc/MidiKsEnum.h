@@ -15,7 +15,7 @@ public:
     KSMidiDeviceEnum();
     virtual ~KSMidiDeviceEnum();
     HRESULT EnumerateFilters();
-    virtual HRESULT Cleanup();
+    virtual HRESULT Shutdown();
 
     // should have accessors, for now keeping it simple
     // and letting them be public.

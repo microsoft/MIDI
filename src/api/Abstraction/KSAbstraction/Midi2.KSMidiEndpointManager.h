@@ -20,7 +20,7 @@ public:
     INT32 PinId{ 0 };               // contains the pin id, for bidi it is the MidiflowOut pin id
     INT32 PinIdIn{ 0 };             // only used for bidi, contains the MidiFlowIn pin id
     MidiTransport TransportCapability {MidiTransport_Invalid};
-    MidiDataFormat DataFormatCapability {MidiDataFormat_Invalid};
+    MidiDataFormats DataFormatCapability {MidiDataFormats_Invalid};
     MidiFlow Flow{ MidiFlowOut };
     BOOL CreateUMPOnly{ FALSE };
     HRESULT SwdCreation{ S_OK };
@@ -45,8 +45,8 @@ class CMidi2KSMidiEndpointManager :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
+    STDMETHOD(Shutdown)();
 
     STDMETHOD(ProtocolNegotiationCompleteCallback(
         _In_ GUID transportGuid,

@@ -16,7 +16,7 @@ public:
     ~CMidiPerformanceManager() {}
     
     HRESULT Initialize();
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
 

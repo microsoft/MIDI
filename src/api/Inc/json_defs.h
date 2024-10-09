@@ -13,8 +13,8 @@
 
 #pragma once
 
-//#define MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_NAME_PROPERTY_KEY               L"userSuppliedName"
-//#define MIDI_CONFIG_JSON_ENDPOINT_USER_SUPPLIED_DESCRIPTION_PROPERTY_KEY        L"userSuppliedDescription"
+//#define MIDI_CONFIG_JSON_ENDPOINT_CUSTOM_NAME_PROPERTY_KEY               L"customName"
+//#define MIDI_CONFIG_JSON_ENDPOINT_CUSTOM_DESCRIPTION_PROPERTY_KEY        L"customDescription"
 //#define MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY              L"forceSingleClientOnly"
 
 
@@ -51,11 +51,11 @@
 
 
 
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_NAME_PROPERTY                        L"userSuppliedName"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_DESCRIPTION_PROPERTY                 L"userSuppliedDescription"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_SMALL_IMAGE_PROPERTY                 L"userSuppliedSmallImage"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_LARGE_IMAGE_PROPERTY                 L"userSuppliedLargeImage"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_USER_SUPPLIED_PORT_NUMBER                          L"userSuppliedPortNumber"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_NAME_PROPERTY                        L"customName"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY                 L"customDescription"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY                 L"customSmallImage"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY                 L"customLargeImage"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_NUMBER                          L"customPortNumber"
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY                                         L"create"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY                                         L"update"

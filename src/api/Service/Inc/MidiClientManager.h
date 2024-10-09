@@ -35,7 +35,7 @@ public:
 
 
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
     HRESULT GetMidiClient(
@@ -61,8 +61,8 @@ private:
     GetMidiTransform(
         _In_ LPCWSTR,
         _In_ MidiFlow,
-        _In_ MidiDataFormat,
-        _In_ MidiDataFormat,
+        _In_ MidiDataFormats,
+        _In_ MidiDataFormats,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&,
         _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 

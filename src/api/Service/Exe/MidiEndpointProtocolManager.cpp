@@ -26,9 +26,9 @@ using namespace winrt::Windows::Foundation;
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::Initialize(
-    std::shared_ptr<CMidiClientManager>& ClientManager,
-    std::shared_ptr<CMidiDeviceManager>& DeviceManager,
-    std::shared_ptr<CMidiSessionTracker>& SessionTracker
+    std::shared_ptr<CMidiClientManager>& clientManager,
+    std::shared_ptr<CMidiDeviceManager>& deviceManager,
+    std::shared_ptr<CMidiSessionTracker>& sessionTracker
 )
 {
     // use our clsid as the session id. 
@@ -44,9 +44,9 @@ CMidiEndpointProtocolManager::Initialize(
     );
 
 
-    m_clientManager = ClientManager;
-    m_deviceManager = DeviceManager;
-    m_sessionTracker = SessionTracker;
+    m_clientManager = clientManager;
+    m_deviceManager = deviceManager;
+    m_sessionTracker = sessionTracker;
 
     wil::unique_handle processHandle(GetCurrentProcess());
     
@@ -127,10 +127,10 @@ CMidiEndpointProtocolManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windo
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::DiscoverAndNegotiate(
-    GUID AbstractionGuid,
-    LPCWSTR DeviceInterfaceId,
-    ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-    IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
+    GUID abstractionGuid,
+    LPCWSTR deviceInterfaceId,
+    ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
+    IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
 ) noexcept
 {
     TraceLoggingWrite(
@@ -140,10 +140,10 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(DeviceInterfaceId);
+    auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
     std::shared_ptr<CMidiEndpointProtocolWorker> worker{ nullptr };
 
@@ -165,7 +165,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
 
     auto initializeHR = worker->Initialize(
         m_sessionId,
-        AbstractionGuid,
+        abstractionGuid,
         cleanEndpointDeviceInterfaceId.c_str(),
         m_clientManager,
         m_deviceManager,
@@ -184,8 +184,8 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         newEntry.Worker = worker;
 
         newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
-            NegotiationParams,
-            NegotiationCompleteCallback);
+            negotiationParams,
+            negotiationCompleteCallback);
 
         m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
         m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();
@@ -198,7 +198,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     return S_OK;
@@ -234,7 +234,7 @@ CMidiEndpointProtocolManager::RemoveWorkerIfPresent(std::wstring endpointInterfa
             val->second.Thread->join();             // join until the thread is done
         }
 
-        LOG_IF_FAILED(val->second.Worker->Cleanup());
+        LOG_IF_FAILED(val->second.Worker->Shutdown());
 
         val->second.Worker.reset();
         val->second.Thread.reset();
@@ -269,7 +269,7 @@ CMidiEndpointProtocolManager::RemoveWorkerIfPresent(std::wstring endpointInterfa
 
 
 HRESULT
-CMidiEndpointProtocolManager::Cleanup()
+CMidiEndpointProtocolManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

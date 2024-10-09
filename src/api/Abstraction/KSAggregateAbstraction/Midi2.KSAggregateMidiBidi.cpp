@@ -16,18 +16,18 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiBiDi::Initialize(
-    LPCWSTR Device,
-    PABSTRACTIONCREATIONPARAMS CreationParams,
-    DWORD * MmCssTaskId,
-    IMidiCallback * Callback,
-    LONGLONG Context,
-    GUID /* SessionId */
+    LPCWSTR device,
+    PABSTRACTIONCREATIONPARAMS creationParams,
+    DWORD * mmCssTaskId,
+    IMidiCallback * callback,
+    LONGLONG context,
+    GUID /* sessionId */
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == callback);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == mmCssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == device);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == creationParams);
 
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -35,10 +35,10 @@ CMidi2KSAggregateMidiBiDi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-    m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Device);
+    m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdWStringCopy(device);
 
     m_countMidiMessageSent = 0;
 
@@ -48,12 +48,12 @@ CMidi2KSAggregateMidiBiDi::Initialize(
 
     RETURN_IF_FAILED(
         midiDevice->Initialize(
-            Device, 
+            device, 
             MidiFlowBidirectional, 
-            CreationParams, 
-            MmCssTaskId, 
-            Callback, 
-            Context
+            creationParams, 
+            mmCssTaskId, 
+            callback, 
+            context
         )
     );
 
@@ -73,7 +73,7 @@ CMidi2KSAggregateMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2KSAggregateMidiBiDi::Cleanup()
+CMidi2KSAggregateMidiBiDi::Shutdown()
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -88,7 +88,7 @@ CMidi2KSAggregateMidiBiDi::Cleanup()
 
     if (m_MidiDevice)
     {
-        m_MidiDevice->Cleanup();
+        m_MidiDevice->Shutdown();
         m_MidiDevice = nullptr;
     }
 
@@ -98,9 +98,9 @@ CMidi2KSAggregateMidiBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiBiDi::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Timestamp
+    PVOID data,
+    UINT length,
+    LONGLONG timestamp
 )
 {
     if (m_MidiDevice != nullptr)
@@ -112,11 +112,11 @@ CMidi2KSAggregateMidiBiDi::SendMidiMessage(
         //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
         //    TraceLoggingPointer(this, "this"),
         //    TraceLoggingWideString(L"Received MIDI Message. Sending to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        //    TraceLoggingUInt32(Length, "data length"),
-        //    TraceLoggingUInt64(Timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        //    TraceLoggingUInt32(length, "data length"),
+        //    TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         //);
 
-        RETURN_IF_FAILED(m_MidiDevice->SendMidiMessage(Data, Length, Timestamp));
+        RETURN_IF_FAILED(m_MidiDevice->SendMidiMessage(data, length, timestamp));
 
         m_countMidiMessageSent++;
 
@@ -142,8 +142,8 @@ CMidi2KSAggregateMidiBiDi::SendMidiMessage(
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"MidiDevice is nullptr. Returning E_FAIL", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingUInt32(Length, "data length"),
-            TraceLoggingUInt64(Timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD),
+            TraceLoggingUInt32(length, "data length"),
+            TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD),
             TraceLoggingUInt64(m_countMidiMessageSent, "Count messages sent so far")
         );
 

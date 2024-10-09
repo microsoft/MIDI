@@ -19,8 +19,8 @@ const WCHAR midisrvTransferComplete[] =  L"MidisrvTransferComplete";
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::Initialize(
-    std::shared_ptr<CMidiPerformanceManager>& PerformanceManager, 
-    std::shared_ptr<CMidiEndpointProtocolManager>& EndpointProtocolManager,
+    std::shared_ptr<CMidiPerformanceManager>& performanceManager, 
+    std::shared_ptr<CMidiEndpointProtocolManager>& endpointProtocolManager,
     std::shared_ptr<CMidiConfigurationManager>& configurationManager)
 {
     DWORD transferState = 0;
@@ -119,8 +119,8 @@ CMidiDeviceManager::Initialize(
                         // init the abstraction's config manager
                         auto initializeResult = abstractionConfigurationManager->Initialize(
                             AbstractionLayer,
-                            (IUnknown*)this, 
-                            (IUnknown*)m_ConfigurationManager.get());
+                            this, 
+                            m_ConfigurationManager.get());
 
                         if (FAILED(initializeResult))
                         {
@@ -252,7 +252,7 @@ CMidiDeviceManager::Initialize(
 
                 if (endpointManager != nullptr)
                 {
-                    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = EndpointProtocolManager.get();
+                    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = endpointProtocolManager.get();
 
                     TraceLoggingWrite(
                         MidiSrvTelemetryProvider::Provider(),
@@ -264,7 +264,7 @@ CMidiDeviceManager::Initialize(
                         TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                     );
 
-                    auto initializeResult = endpointManager->Initialize((IUnknown*)this, (IUnknown*)protocolManager.get());
+                    auto initializeResult = endpointManager->Initialize(this, protocolManager.get());
 
                     if (SUCCEEDED(initializeResult))
                     {
@@ -379,7 +379,7 @@ CMidiDeviceManager::Initialize(
         }
     }
 
-    m_PerformanceManager = PerformanceManager;
+    m_PerformanceManager = performanceManager;
 
     return S_OK;
 }
@@ -387,7 +387,7 @@ CMidiDeviceManager::Initialize(
 typedef struct _CREATECONTEXT
 {
     PMIDIPORT MidiPort{ nullptr };
-    wil::unique_event creationCompleted{wil::EventOptions::None};
+    wil::unique_event CreationCompleted{wil::EventOptions::None};
     DEVPROPERTY* InterfaceDevProperties{ nullptr };
     ULONG IntPropertyCount{ 0 };
 } CREATECONTEXT, * PCREATECONTEXT;
@@ -400,12 +400,12 @@ typedef struct _PARENTDEVICECREATECONTEXT
 
 
 
-void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationResult, __in PVOID pContext, __in_opt PCWSTR /* pszDeviceInstanceId */)
+void SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResult, __in PVOID context, __in_opt PCWSTR /* deviceInstanceId */)
 {
     // fix code analysis complaint
-    if (pContext == nullptr) return;
+    if (context == nullptr) return;
 
-    PCREATECONTEXT creationContext = (PCREATECONTEXT)pContext;
+    PCREATECONTEXT creationContext = (PCREATECONTEXT)context;
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -422,12 +422,12 @@ void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationRes
     // interface registration has started, assume
     // failure
     creationContext->MidiPort->SwDeviceState = SWDEVICESTATE::Failed;
-    creationContext->MidiPort->hr = CreationResult;
+    creationContext->MidiPort->hr = creationResult;
 
     if (SUCCEEDED(creationContext->MidiPort->hr))
     {
         creationContext->MidiPort->hr = SwDeviceInterfaceRegister(
-            hSwDevice,
+            swDevice,
             creationContext->MidiPort->InterfaceCategory,
             nullptr,
             creationContext->IntPropertyCount,
@@ -454,40 +454,40 @@ void SwMidiPortCreateCallback(__in HSWDEVICE hSwDevice, __in HRESULT CreationRes
     }
 
     // success or failure, signal we have completed.
-    creationContext->creationCompleted.SetEvent();
+    creationContext->CreationCompleted.SetEvent();
 }
 
 
 void
 SwMidiParentDeviceCreateCallback(
-    __in HSWDEVICE /*hSwDevice*/,
-    __in HRESULT CreationResult,
-    __in_opt PVOID pContext,
-    __in_opt PCWSTR pszDeviceInstanceId
+    __in HSWDEVICE /*swDevice*/,
+    __in HRESULT creationResult,
+    __in_opt PVOID context,
+    __in_opt PCWSTR deviceInstanceId
 )
 {
-    if (pContext == nullptr)
+    if (context == nullptr)
     {
         // TODO: Should log this.
 
         return;
     }
 
-    PPARENTDEVICECREATECONTEXT creationContext = (PPARENTDEVICECREATECONTEXT)pContext;
+    PPARENTDEVICECREATECONTEXT creationContext = (PPARENTDEVICECREATECONTEXT)context;
 
     // interface registration has started, assume failure
     creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Failed;
-    creationContext->MidiParentDevice->hr = CreationResult;
+    creationContext->MidiParentDevice->hr = creationResult;
 
-    LOG_IF_FAILED(CreationResult);
+    LOG_IF_FAILED(creationResult);
 
-    if (SUCCEEDED(CreationResult))
+    if (SUCCEEDED(creationResult))
     {
         // success, mark the port as created
         creationContext->MidiParentDevice->SwDeviceState = SWDEVICESTATE::Created;
 
         // get the new device instance ID. This is usually modified from what we started with
-        creationContext->MidiParentDevice->InstanceId = std::wstring(pszDeviceInstanceId);
+        creationContext->MidiParentDevice->InstanceId = std::wstring(deviceInstanceId);
     }
 
     // success or failure, signal we have completed.
@@ -498,11 +498,10 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::ActivateVirtualParentDevice
 (
-    ULONG DevPropertyCount,
-    PVOID DevProperties,
-    PVOID CreateInfo,
-    PWSTR CreatedSwDeviceId,
-    ULONG CreatedSwDeviceIdCharCount
+    ULONG devicePropertyCount,
+    const DEVPROPERTY* deviceProperties,
+    const SW_DEVICE_CREATE_INFO* createInfo,
+    LPWSTR* createdSwDeviceId
 )
 {
     TraceLoggingWrite(
@@ -514,16 +513,10 @@ CMidiDeviceManager::ActivateVirtualParentDevice
     );
 
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, CreateInfo);
-    RETURN_HR_IF_NULL(E_INVALIDARG, CreatedSwDeviceId);
-    RETURN_HR_IF(E_INVALIDARG, CreatedSwDeviceIdCharCount == 0);
+    RETURN_HR_IF_NULL(E_INVALIDARG, createInfo);
+    RETURN_HR_IF_NULL(E_INVALIDARG, createdSwDeviceId);
 
-    if (CreatedSwDeviceId != nullptr && CreatedSwDeviceIdCharCount > 0)
-    {
-        CreatedSwDeviceId[CreatedSwDeviceIdCharCount - 1] = (wchar_t)0;
-    }
-
-    auto pcreateinfo = (SW_DEVICE_CREATE_INFO *)CreateInfo;
+    auto pcreateinfo = (SW_DEVICE_CREATE_INFO *)createInfo;
 
     std::unique_ptr<MIDIPARENTDEVICE> midiParent = std::make_unique<MIDIPARENTDEVICE>();
     RETURN_IF_NULL_ALLOC(midiParent);
@@ -537,11 +530,11 @@ CMidiDeviceManager::ActivateVirtualParentDevice
 
     DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
-    if (DevPropertyCount > 0 && DevProperties != nullptr)
+    if (devicePropertyCount > 0 && deviceProperties != nullptr)
     {
-        for (ULONG i = 0; i < DevPropertyCount; i++)
+        for (ULONG i = 0; i < devicePropertyCount; i++)
         {
-            devProperties.push_back(((DEVPROPERTY*)DevProperties)[i]);
+            devProperties.push_back(((DEVPROPERTY*)deviceProperties)[i]);
         }
     }
 
@@ -569,25 +562,19 @@ CMidiDeviceManager::ActivateVirtualParentDevice
     RETURN_IF_FAILED(creationContext.MidiParentDevice->hr);
     RETURN_HR_IF(E_FAIL, creationContext.MidiParentDevice->SwDeviceState != SWDEVICESTATE::Created);
 
+    wil::unique_cotaskmem_string newDeviceId;
+    newDeviceId = wil::make_cotaskmem_string_nothrow(creationContext.MidiParentDevice->InstanceId.c_str());
+    RETURN_IF_NULL_ALLOC(newDeviceId.get());
+    *createdSwDeviceId = newDeviceId.release();
 
-    // return the created device interface Id. This is needed for anything that will 
-    // do a match in the Ids from Windows.Devices.Enumeration
-    if (CreatedSwDeviceId != nullptr && CreatedSwDeviceIdCharCount > 0)
-    {
-        creationContext.MidiParentDevice->InstanceId.copy(CreatedSwDeviceId, CreatedSwDeviceIdCharCount - 1);
-
-        CreatedSwDeviceId[CreatedSwDeviceIdCharCount - 1] = (wchar_t)0;
-
-        TraceLoggingWrite(
-            MidiSrvTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(CreatedSwDeviceId)
-        );
-
-    }
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(*createdSwDeviceId)
+    );
 
     if (SUCCEEDED(creationContext.MidiParentDevice->hr))
     {
@@ -601,17 +588,16 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::ActivateEndpoint
 (
-    PCWSTR ParentInstanceId,
-    BOOL UMPOnly,
-    MidiFlow Flow,
-    PMIDIENDPOINTCOMMONPROPERTIES CommonProperties,
-    ULONG IntPropertyCount,
-    ULONG DevPropertyCount,
-    PVOID InterfaceDevProperties,
-    PVOID DeviceDevProperties,
-    PVOID CreateInfo,
-    PWSTR CreatedDeviceInterfaceId,
-    ULONG CreatedDeviceInterfaceIdWCharCount
+    PCWSTR parentInstanceId,
+    BOOL umpOnly,
+    MidiFlow flow,
+    PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
+    ULONG intPropertyCount,
+    ULONG devPropertyCount,
+    const DEVPROPERTY* interfaceDevProperties,
+    const DEVPROPERTY* deviceDevProperties,
+    const SW_DEVICE_CREATE_INFO* createInfo,
+    LPWSTR *createdDeviceInterfaceId
 )
 {
     TraceLoggingWrite(
@@ -621,11 +607,11 @@ CMidiDeviceManager::ActivateEndpoint
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(ParentInstanceId, "parent"),
-        TraceLoggingBool(CommonProperties != nullptr, "Common Properties Provided"),
-        TraceLoggingULong(IntPropertyCount, "Interface Property Count"),
-        TraceLoggingULong(DevPropertyCount, "Device Property Count"),
-        TraceLoggingBool(UMPOnly, "UMP Only")
+        TraceLoggingWideString(parentInstanceId, "parent"),
+        TraceLoggingBool(commonProperties != nullptr, "Common Properties Provided"),
+        TraceLoggingULong(intPropertyCount, "Interface Property Count"),
+        TraceLoggingULong(devPropertyCount, "Device Property Count"),
+        TraceLoggingBool(umpOnly, "UMP Only")
     );
 
     auto lock = m_MidiPortsLock.lock();
@@ -633,21 +619,13 @@ CMidiDeviceManager::ActivateEndpoint
     const bool alreadyActivated = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
     {
         // if this instance id already activated, then we cannot activate/create a second time,
-        if (((SW_DEVICE_CREATE_INFO*)CreateInfo)->pszInstanceId == Port->InstanceId)
+        if (((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId == Port->InstanceId)
         {
             return true;
         }
 
         return false;
     }) != m_MidiPorts.end();
-
-    if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdWCharCount > 0)
-    {
-        // ensure null termination and clear any garbage
-        memset(CreatedDeviceInterfaceId, 0, CreatedDeviceInterfaceIdWCharCount * sizeof(wchar_t));
-        //CreatedDeviceInterfaceId[CreatedDeviceInterfaceIdWCharCount - 1] = (wchar_t)0;
-    }
-
 
     if (alreadyActivated)
     {
@@ -658,8 +636,8 @@ CMidiDeviceManager::ActivateEndpoint
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Already Activated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(ParentInstanceId, "parent"),
-            TraceLoggingWideString(((SW_DEVICE_CREATE_INFO*)CreateInfo)->pszInstanceId, "port instance")
+            TraceLoggingWideString(parentInstanceId, "parent"),
+            TraceLoggingWideString(((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId, "port instance")
             );
 
         return S_FALSE;
@@ -668,10 +646,10 @@ CMidiDeviceManager::ActivateEndpoint
     {
         std::vector<DEVPROPERTY> allInterfaceProperties{};
 
-        if (IntPropertyCount > 0 && InterfaceDevProperties != nullptr)
+        if (intPropertyCount > 0 && interfaceDevProperties != nullptr)
         {
             // copy the incoming array into a vector so that we can add additional items.
-            std::vector<DEVPROPERTY> suppliedInterfaceProperties((DEVPROPERTY*)InterfaceDevProperties, (DEVPROPERTY*)(InterfaceDevProperties) + IntPropertyCount);
+            std::vector<DEVPROPERTY> suppliedInterfaceProperties((DEVPROPERTY*)interfaceDevProperties, (DEVPROPERTY*)(interfaceDevProperties) + intPropertyCount);
 
             // copy to the main vector that we're going to keep using.
             allInterfaceProperties = suppliedInterfaceProperties;
@@ -683,8 +661,8 @@ CMidiDeviceManager::ActivateEndpoint
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(ParentInstanceId, "parent"),
-                TraceLoggingULong((ULONG)IntPropertyCount, "provided interface props count"),
+                TraceLoggingWideString(parentInstanceId, "parent"),
+                TraceLoggingULong((ULONG)intPropertyCount, "provided interface props count"),
                 TraceLoggingULong((ULONG)allInterfaceProperties.size(), "copied interface props count")
             );
         }
@@ -693,7 +671,7 @@ CMidiDeviceManager::ActivateEndpoint
         DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
         // Build common properties so these are consistent from endpoint to endpoint
-        if (CommonProperties != nullptr)
+        if (commonProperties != nullptr)
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
@@ -701,21 +679,21 @@ CMidiDeviceManager::ActivateEndpoint
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingWideString(parentInstanceId, "parent"),
                 TraceLoggingWideString(L"Common properties object supplied", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(CommonProperties->AbstractionLayerGuid)) });
+                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->AbstractionLayerGuid)) });
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(CommonProperties->EndpointPurpose)) });
+                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->EndpointDeviceType)) });
             
-            if (CommonProperties->FriendlyName != nullptr && wcslen(CommonProperties->FriendlyName) > 0)
+            if (commonProperties->FriendlyName != nullptr && wcslen(commonProperties->FriendlyName) > 0)
             {
                 allInterfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->FriendlyName) + 1)), (PVOID)(CommonProperties->FriendlyName) });
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(commonProperties->FriendlyName) + 1)), (PVOID)(commonProperties->FriendlyName) });
             }
             else
             {
@@ -726,7 +704,7 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Common Properties: Friendly Name is null or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(ParentInstanceId, "parent")
+                    TraceLoggingWideString(parentInstanceId, "parent")
                     );
 
                 return E_INVALIDARG;
@@ -734,10 +712,10 @@ CMidiDeviceManager::ActivateEndpoint
 
             // transport information
 
-            if (CommonProperties->TransportCode != nullptr && wcslen(CommonProperties->TransportCode) > 0)
+            if (commonProperties->TransportCode != nullptr && wcslen(commonProperties->TransportCode) > 0)
             {
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportCode, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->TransportCode) + 1)), (PVOID)CommonProperties->TransportCode });
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(commonProperties->TransportCode) + 1)), (PVOID)commonProperties->TransportCode });
             }
             else
             {
@@ -747,7 +725,7 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(ParentInstanceId),
+                    TraceLoggingWideString(parentInstanceId),
                     TraceLoggingWideString(L"Common Properties: Transport Code is null or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
@@ -755,10 +733,10 @@ CMidiDeviceManager::ActivateEndpoint
             }
 
 
-            if (CommonProperties->TransportSuppliedEndpointName != nullptr && wcslen(CommonProperties->TransportSuppliedEndpointName) > 0)
+            if (commonProperties->EndpointName != nullptr && wcslen(commonProperties->EndpointName) > 0)
             {
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->TransportSuppliedEndpointName) + 1)), (PVOID)CommonProperties->TransportSuppliedEndpointName });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(commonProperties->EndpointName) + 1)), (PVOID)commonProperties->EndpointName });
             }
             else
             {
@@ -768,17 +746,17 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_TransportSuppliedEndpointName", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(parentInstanceId),
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_EndpointName", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
                 
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointName, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
-            if (CommonProperties->TransportSuppliedEndpointDescription != nullptr && wcslen(CommonProperties->TransportSuppliedEndpointDescription) > 0)
+            if (commonProperties->EndpointDescription != nullptr && wcslen(commonProperties->EndpointDescription) > 0)
             {
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-                   DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->TransportSuppliedEndpointDescription) + 1)), (PVOID)CommonProperties->TransportSuppliedEndpointDescription });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_Description, DEVPROP_STORE_SYSTEM, nullptr},
+                   DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(commonProperties->EndpointDescription) + 1)), (PVOID)commonProperties->EndpointDescription });
             }
             else
             {
@@ -788,17 +766,17 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_TransportSuppliedDescription", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(parentInstanceId),
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_Description", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_Description, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
-            if (CommonProperties->UniqueIdentifier != nullptr && wcslen(CommonProperties->UniqueIdentifier) > 0)
+            if (commonProperties->UniqueIdentifier != nullptr && wcslen(commonProperties->UniqueIdentifier) > 0)
             {
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SerialNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->UniqueIdentifier) + 1)), (PVOID)CommonProperties->UniqueIdentifier });
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(commonProperties->UniqueIdentifier) + 1)), (PVOID)commonProperties->UniqueIdentifier });
             }
             else
             {
@@ -808,17 +786,17 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(ParentInstanceId),
+                    TraceLoggingWideString(parentInstanceId),
                     TraceLoggingWideString(L"Clearing PKEY_MIDI_SerialNumber", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SerialNumber, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
-            if (CommonProperties->ManufacturerName != nullptr && wcslen(CommonProperties->ManufacturerName) != 0)
+            if (commonProperties->ManufacturerName != nullptr && wcslen(commonProperties->ManufacturerName) != 0)
             {
                 allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ManufacturerName, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->ManufacturerName) + 1)), (PVOID)CommonProperties->ManufacturerName });
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(commonProperties->ManufacturerName) + 1)), (PVOID)commonProperties->ManufacturerName });
             }
             else
             {
@@ -828,7 +806,7 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(ParentInstanceId),
+                    TraceLoggingWideString(parentInstanceId),
                     TraceLoggingWideString(L"Clearing PKEY_MIDI_ManufacturerName", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
@@ -837,10 +815,10 @@ CMidiDeviceManager::ActivateEndpoint
 
             // user-supplied information, if available
 
-            if (CommonProperties->UserSuppliedEndpointName != nullptr && wcslen(CommonProperties->UserSuppliedEndpointName) != 0)
+            if (commonProperties->CustomEndpointName != nullptr && wcslen(commonProperties->CustomEndpointName) != 0)
             {
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->UserSuppliedEndpointName) + 1)), (PVOID)CommonProperties->UserSuppliedEndpointName });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(commonProperties->CustomEndpointName) + 1)), (PVOID)commonProperties->CustomEndpointName });
             }
             else
             {
@@ -850,17 +828,17 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_UserSuppliedEndpointName", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(parentInstanceId),
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_CustomEndpointName", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedEndpointName, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
-            if (CommonProperties->UserSuppliedEndpointDescription != nullptr && wcslen(CommonProperties->UserSuppliedEndpointDescription) != 0)
+            if (commonProperties->CustomEndpointDescription != nullptr && wcslen(commonProperties->CustomEndpointDescription) != 0)
             {
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(CommonProperties->UserSuppliedEndpointDescription) + 1)), (PVOID)CommonProperties->UserSuppliedEndpointDescription });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(commonProperties->CustomEndpointDescription) + 1)), (PVOID)commonProperties->CustomEndpointDescription });
             }
             else
             {
@@ -870,11 +848,11 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(ParentInstanceId),
-                    TraceLoggingWideString(L"Clearing PKEY_MIDI_UserSuppliedDescription", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    TraceLoggingWideString(parentInstanceId),
+                    TraceLoggingWideString(L"Clearing PKEY_MIDI_CustomDescription", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedDescription, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr}, DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
             TraceLoggingWrite(
@@ -883,7 +861,7 @@ CMidiDeviceManager::ActivateEndpoint
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingWideString(parentInstanceId, "parent"),
                 TraceLoggingWideString(L"Adding other non-string properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
@@ -891,39 +869,35 @@ CMidiDeviceManager::ActivateEndpoint
             // format is how we talk to it from the service (the driver may translate to UMP, for example)
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(CommonProperties->NativeDataFormat)) });
+                DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(commonProperties->NativeDataFormat)) });
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(CommonProperties->SupportedDataFormats)) });
+                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->SupportedDataFormats)) });
 
             // Protocol defaults for cases when protocol negotiation may not happen or may not complete
-
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)(CommonProperties->SupportsMidi1ProtocolDefaultValue ? &devPropTrue : &devPropFalse) });
+                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)((commonProperties->Capabilities & MidiEndpointCapabilities_SupportsMidi1Protocol)? &devPropTrue : &devPropFalse) });
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi2Protocol, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)(CommonProperties->SupportsMidi2ProtocolDefaultValue ? &devPropTrue : &devPropFalse) });
+                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)((commonProperties->Capabilities & MidiEndpointCapabilities_SupportsMidi2Protocol) ? &devPropTrue : &devPropFalse) });
 
             // behavior
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_GenerateIncomingTimestamp, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)(CommonProperties->GenerateIncomingTimestamps ? &devPropTrue : &devPropFalse) });
-
-            //allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointRequiresMetadataHandler, DEVPROP_STORE_SYSTEM, nullptr},
-            //    DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)(CommonProperties->RequiresMetadataHandler ? &devPropTrue : &devPropFalse) });
+                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)((commonProperties->Capabilities & MidiEndpointCapabilities_GenerateIncomingTimestamps) ? &devPropTrue : &devPropFalse) });
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)(CommonProperties->SupportsMultiClient ? &devPropTrue : &devPropFalse) });
+                DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)((commonProperties->Capabilities & MidiEndpointCapabilities_SupportsMultiClient) ? &devPropTrue : &devPropFalse) });
         
-            if (CommonProperties->UserSuppliedEndpointPortNumber > 0)
+            if (commonProperties->CustomEndpointPortNumber > 0)
             {
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(CommonProperties->UserSuppliedEndpointPortNumber)) });
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->CustomEndpointPortNumber)) });
             }
             else
             {
                 // this is needed to clear any cached property, or garbage value
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
         }
@@ -935,7 +909,7 @@ CMidiDeviceManager::ActivateEndpoint
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingWideString(parentInstanceId, "parent"),
                 TraceLoggingWideString(L"NO Common properties object supplied", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
@@ -947,7 +921,7 @@ CMidiDeviceManager::ActivateEndpoint
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(ParentInstanceId, "parent"),
+            TraceLoggingWideString(parentInstanceId, "parent"),
             TraceLoggingWideString(L"Adding clearing properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
@@ -985,7 +959,7 @@ CMidiDeviceManager::ActivateEndpoint
         //    __FUNCTION__,
         //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         //    TraceLoggingPointer(this, "this"),
-        //    TraceLoggingWideString(ParentInstanceId, "parent"),
+        //    TraceLoggingWideString(parentInstanceId, "parent"),
         //    TraceLoggingWideString(L"Adding clearing properties for function blocks", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         //);
 
@@ -1014,7 +988,7 @@ CMidiDeviceManager::ActivateEndpoint
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Registering cleanupOnFailure", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(ParentInstanceId, "parent")
+            TraceLoggingWideString(parentInstanceId, "parent")
             );
 
         std::wstring deviceInterfaceId{ };
@@ -1022,7 +996,7 @@ CMidiDeviceManager::ActivateEndpoint
         auto cleanupOnFailure = wil::scope_exit([&]()
         {
             // in the event that creation fails, clean up all of the interfaces associated with this InstanceId
-            DeactivateEndpoint(((SW_DEVICE_CREATE_INFO*)CreateInfo)->pszInstanceId);
+            DeactivateEndpoint(((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId);
         });
 
 
@@ -1033,20 +1007,20 @@ CMidiDeviceManager::ActivateEndpoint
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Activating UMP Endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(ParentInstanceId, "parent")
+            TraceLoggingWideString(parentInstanceId, "parent")
         );
         
         // Activate the UMP version of this endpoint.
         auto activationResult = ActivateEndpointInternal(
-            ParentInstanceId, 
+            parentInstanceId, 
             nullptr, 
             FALSE, 
-            Flow, 
+            flow, 
             (ULONG)allInterfaceProperties.size(),
-            DevPropertyCount, 
+            devPropertyCount, 
             (DEVPROPERTY*)(allInterfaceProperties.data()),
-            (DEVPROPERTY*)DeviceDevProperties, 
-            (SW_DEVICE_CREATE_INFO*)CreateInfo, 
+            (DEVPROPERTY*)deviceDevProperties, 
+            (SW_DEVICE_CREATE_INFO*)createInfo, 
             &deviceInterfaceId);
 
         if (FAILED(activationResult))
@@ -1058,7 +1032,7 @@ CMidiDeviceManager::ActivateEndpoint
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Failed to activate UMP endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingWideString(parentInstanceId, "parent"),
                 TraceLoggingHResult(activationResult, "Activation HRESULT")
             );
 
@@ -1066,27 +1040,27 @@ CMidiDeviceManager::ActivateEndpoint
         }
 
 
-        if (!UMPOnly)
+        if (!umpOnly)
         {
             std::wstring friendlyName;
             std::vector<DEVPROPERTY> midi1OutInterfaceProperties{};
             std::vector<DEVPROPERTY> midi1InInterfaceProperties{};
 
-            if (CommonProperties->UserSuppliedEndpointName)
+            if (commonProperties->CustomEndpointName)
             {
-                friendlyName = CommonProperties->UserSuppliedEndpointName;
+                friendlyName = commonProperties->CustomEndpointName;
             }
             else
             {
-                if (CommonProperties->ManufacturerName)
+                if (commonProperties->ManufacturerName)
                 {
-                    friendlyName += CommonProperties->ManufacturerName;
+                    friendlyName += commonProperties->ManufacturerName;
                     friendlyName += L" ";
                 }
 
-                if (CommonProperties->TransportSuppliedEndpointName)
+                if (commonProperties->EndpointName)
                 {
-                    friendlyName += CommonProperties->TransportSuppliedEndpointName;
+                    friendlyName += commonProperties->EndpointName;
                 }
             }
 
@@ -1102,13 +1076,13 @@ CMidiDeviceManager::ActivateEndpoint
             midi1InInterfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(midiInFriendlyName.c_str()) + 1)), (PVOID)midiInFriendlyName.c_str() });
 
-            if (CommonProperties->UserSuppliedEndpointPortNumber > 0 && CommonProperties->UserSuppliedEndpointPortNumber <= MAX_WINMM_PORT_NUMBER)
+            if (commonProperties->CustomEndpointPortNumber > 0 && commonProperties->CustomEndpointPortNumber <= MAX_WINMM_PORT_NUMBER)
             {
-                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(CommonProperties->UserSuppliedEndpointPortNumber)) });
+                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->CustomEndpointPortNumber)) });
 
-                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(CommonProperties->UserSuppliedEndpointPortNumber)) });
+                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->CustomEndpointPortNumber)) });
             }
             else
             {
@@ -1118,29 +1092,29 @@ CMidiDeviceManager::ActivateEndpoint
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(ParentInstanceId),
+                    TraceLoggingWideString(parentInstanceId),
                     TraceLoggingWideString(L"Clearing User supplied port number properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                 );
 
                 // if you don't clear the values, the next time the same SWD is created, the old values will be pulled from cache
 
-                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_EMPTY, 0, nullptr });
 
-                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_UserSuppliedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
             // The abstraction layer GUID is required for various tests for targeting the tests on this SWD.
             midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(CommonProperties->AbstractionLayerGuid)) });
+                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->AbstractionLayerGuid)) });
 
             midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(CommonProperties->AbstractionLayerGuid)) });
+                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->AbstractionLayerGuid)) });
 
             // The Midi 1 ports are an abstraction generated and handled by Midisrv, as such it can do both bytestream
             // and UMP.
-            MidiDataFormat supportedDataFormats { MidiDataFormat_Any };
+            MidiDataFormats supportedDataFormats { MidiDataFormats_Any };
 
             midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(supportedDataFormats)) });
@@ -1148,15 +1122,15 @@ CMidiDeviceManager::ActivateEndpoint
             midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(supportedDataFormats)) });
 
-            if (CommonProperties->NativeDataFormat > 0)
+            if (commonProperties->NativeDataFormat > 0)
             {
                 // Native data format is used by various tests to determine which messages are valid to send to the device,
                 // copy it over if we have it.
                 midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(CommonProperties->NativeDataFormat)) });
+                    DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(commonProperties->NativeDataFormat)) });
 
                 midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(CommonProperties->NativeDataFormat)) });
+                    DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(commonProperties->NativeDataFormat)) });
             }
 
             // TODO: temporary hard coded group index value
@@ -1172,7 +1146,7 @@ CMidiDeviceManager::ActivateEndpoint
                 DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(groupIndex)) });
 
             // now activate the midi 1 SWD's for this endpoint
-            if (Flow == MidiFlowBidirectional)
+            if (flow == MidiFlowBidirectional)
             {
                 // This logic will need to change. We need one endpoint for each group, but we
                 // don't know that until we get the function blocks. We know a little due to
@@ -1194,7 +1168,7 @@ CMidiDeviceManager::ActivateEndpoint
                 );
 
                 RETURN_IF_FAILED(ActivateEndpointInternal(
-                    ParentInstanceId,
+                    parentInstanceId,
                     deviceInterfaceId.c_str(),
                     TRUE,
                     MidiFlowOut,
@@ -1202,7 +1176,7 @@ CMidiDeviceManager::ActivateEndpoint
                     0,
                     (DEVPROPERTY*)(midi1OutInterfaceProperties.data()),
                     nullptr,
-                    (SW_DEVICE_CREATE_INFO*)CreateInfo,
+                    (SW_DEVICE_CREATE_INFO*)createInfo,
                     nullptr));
 
 
@@ -1217,7 +1191,7 @@ CMidiDeviceManager::ActivateEndpoint
                 );
 
                 RETURN_IF_FAILED(ActivateEndpointInternal(
-                    ParentInstanceId,
+                    parentInstanceId,
                     deviceInterfaceId.c_str(),
                     TRUE,
                     MidiFlowIn,
@@ -1225,10 +1199,10 @@ CMidiDeviceManager::ActivateEndpoint
                     0,
                     (DEVPROPERTY*)(midi1InInterfaceProperties.data()),
                     nullptr,
-                    (SW_DEVICE_CREATE_INFO*)CreateInfo, 
+                    (SW_DEVICE_CREATE_INFO*)createInfo, 
                     nullptr));
             }
-            else if (Flow == MidiFlowOut)
+            else if (flow == MidiFlowOut)
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
@@ -1240,7 +1214,7 @@ CMidiDeviceManager::ActivateEndpoint
                 );
 
                 RETURN_IF_FAILED(ActivateEndpointInternal(
-                    ParentInstanceId,
+                    parentInstanceId,
                     deviceInterfaceId.c_str(),
                     TRUE,
                     MidiFlowOut,
@@ -1248,10 +1222,10 @@ CMidiDeviceManager::ActivateEndpoint
                     0,
                     (DEVPROPERTY*)(midi1OutInterfaceProperties.data()),
                     nullptr,
-                    (SW_DEVICE_CREATE_INFO*)CreateInfo, 
+                    (SW_DEVICE_CREATE_INFO*)createInfo, 
                     nullptr));
             }
-            else if (Flow == MidiFlowIn)
+            else if (flow == MidiFlowIn)
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
@@ -1263,7 +1237,7 @@ CMidiDeviceManager::ActivateEndpoint
                 );
 
                 RETURN_IF_FAILED(ActivateEndpointInternal(
-                    ParentInstanceId,
+                    parentInstanceId,
                     deviceInterfaceId.c_str(),
                     TRUE,
                     MidiFlowIn,
@@ -1271,19 +1245,18 @@ CMidiDeviceManager::ActivateEndpoint
                     0,
                     (DEVPROPERTY*)(midi1InInterfaceProperties.data()),
                     nullptr,
-                    (SW_DEVICE_CREATE_INFO*)CreateInfo, 
+                    (SW_DEVICE_CREATE_INFO*)createInfo, 
                     nullptr));
             }
         }
 
         // return the created device interface Id. This is needed for anything that will 
         // do a match in the Ids from Windows.Devices.Enumeration
-        if (CreatedDeviceInterfaceId != nullptr && CreatedDeviceInterfaceIdWCharCount > 0)
+        if (createdDeviceInterfaceId != nullptr)
         {
-            //memset((byte*)CreatedDeviceInterfaceId, 0, CreatedDeviceInterfaceIdBufferSize * sizeof(wchar_t));
-            deviceInterfaceId.copy(CreatedDeviceInterfaceId, CreatedDeviceInterfaceIdWCharCount - 1);
-
-            CreatedDeviceInterfaceId[CreatedDeviceInterfaceIdWCharCount - 1] = (wchar_t)0;
+            wil::unique_cotaskmem_string tempString = wil::make_cotaskmem_string_nothrow(deviceInterfaceId.c_str());
+            RETURN_IF_NULL_ALLOC(tempString.get());
+            *createdDeviceInterfaceId = tempString.release();
         }
 
         cleanupOnFailure.release();
@@ -1296,20 +1269,20 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::ActivateEndpointInternal
 (
-    PCWSTR ParentInstanceId,
-    PCWSTR AssociatedInterfaceId,
-    BOOL MidiOne,
-    MidiFlow Flow,
-    ULONG IntPropertyCount,
-    ULONG DevPropertyCount,
-    DEVPROPERTY *InterfaceDevProperties,
-    DEVPROPERTY *DeviceDevProperties,
-    SW_DEVICE_CREATE_INFO *CreateInfo,
-    std::wstring *DeviceInterfaceId
+    PCWSTR parentInstanceId,
+    PCWSTR associatedInterfaceId,
+    BOOL midiOne,
+    MidiFlow flow,
+    ULONG intPropertyCount,
+    ULONG devPropertyCount,
+    const DEVPROPERTY *interfaceDevProperties,
+    const DEVPROPERTY *deviceDevProperties,
+    const SW_DEVICE_CREATE_INFO *createInfo,
+    std::wstring *deviceInterfaceId
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, InterfaceDevProperties);
-    RETURN_HR_IF(E_INVALIDARG, IntPropertyCount == 0);
+    RETURN_HR_IF_NULL(E_INVALIDARG, interfaceDevProperties);
+    RETURN_HR_IF(E_INVALIDARG, intPropertyCount == 0);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -1318,11 +1291,11 @@ CMidiDeviceManager::ActivateEndpointInternal
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(ParentInstanceId, "parent instance id"),
-        TraceLoggingWideString(AssociatedInterfaceId, "associated interface id"),
-        TraceLoggingBool(MidiOne, "midi 1"),
-        TraceLoggingULong(IntPropertyCount, "interface prop count"),
-        TraceLoggingULong(DevPropertyCount, "device prop count")
+        TraceLoggingWideString(parentInstanceId, "parent instance id"),
+        TraceLoggingWideString(associatedInterfaceId, "associated interface id"),
+        TraceLoggingBool(midiOne, "midi 1"),
+        TraceLoggingULong(intPropertyCount, "interface prop count"),
+        TraceLoggingULong(devPropertyCount, "device prop count")
     );
 
 
@@ -1333,21 +1306,21 @@ CMidiDeviceManager::ActivateEndpointInternal
     std::vector<DEVPROPERTY> interfaceProperties{};
 
     // copy the incoming array into a vector so that we can add additional items.
-    if (InterfaceDevProperties != nullptr && IntPropertyCount > 0)
+    if (interfaceDevProperties != nullptr && intPropertyCount > 0)
     {
-        std::vector<DEVPROPERTY> existingInterfaceProperties(InterfaceDevProperties, InterfaceDevProperties + IntPropertyCount);
+        std::vector<DEVPROPERTY> existingInterfaceProperties(interfaceDevProperties, interfaceDevProperties + intPropertyCount);
 
         // copy 'em over
         interfaceProperties = existingInterfaceProperties;
     }
 
-    if (AssociatedInterfaceId != nullptr && wcslen(AssociatedInterfaceId) > 0)
+    if (associatedInterfaceId != nullptr && wcslen(associatedInterfaceId) > 0)
     {
         // add any additional required items to the vector
         interfaceProperties.push_back({ {PKEY_MIDI_AssociatedUMP, DEVPROP_STORE_SYSTEM, nullptr},
-                   DEVPROP_TYPE_STRING, static_cast<ULONG>((wcslen(AssociatedInterfaceId) + 1) * sizeof(WCHAR)), (PVOID)AssociatedInterfaceId });
+                   DEVPROP_TYPE_STRING, static_cast<ULONG>((wcslen(associatedInterfaceId) + 1) * sizeof(WCHAR)), (PVOID)associatedInterfaceId });
 
-        midiPort->AssociatedInterfaceId = AssociatedInterfaceId;
+        midiPort->AssociatedInterfaceId = associatedInterfaceId;
     }
     else
     {
@@ -1365,19 +1338,19 @@ CMidiDeviceManager::ActivateEndpointInternal
     interfaceProperties.push_back({ {DEVPKEY_Device_NoConnectSound, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });
 
-    midiPort->InstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(CreateInfo->pszInstanceId);
-    midiPort->Flow = Flow;
-    midiPort->Enumerator = MidiOne ? AUDIO_DEVICE_ENUMERATOR : MIDI_DEVICE_ENUMERATOR;
-    midiPort->MidiOne = MidiOne;
+    midiPort->InstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(createInfo->pszInstanceId);
+    midiPort->Flow = flow;
+    midiPort->Enumerator = midiOne ? AUDIO_DEVICE_ENUMERATOR : MIDI_DEVICE_ENUMERATOR;
+    midiPort->MidiOne = midiOne;
 
-    if (MidiOne)
+    if (midiOne)
     {
-        if (Flow == MidiFlowOut)
+        if (flow == MidiFlowOut)
         {
             //midiPort->InstanceId += L"_O";
             midiPort->InterfaceCategory = &DEVINTERFACE_MIDI_OUTPUT;
         }
-        else if (Flow == MidiFlowIn)
+        else if (flow == MidiFlowIn)
         {
             //midiPort->InstanceId += L"_I";
             midiPort->InterfaceCategory = &DEVINTERFACE_MIDI_INPUT;
@@ -1389,15 +1362,15 @@ CMidiDeviceManager::ActivateEndpointInternal
     }
     else
     {
-        if (Flow == MidiFlowOut)
+        if (flow == MidiFlowOut)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT;
         }
-        else if (Flow == MidiFlowIn)
+        else if (flow == MidiFlowIn)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_INPUT;
         }
-        else if (Flow == MidiFlowBidirectional)
+        else if (flow == MidiFlowBidirectional)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI;
         }
@@ -1418,10 +1391,10 @@ CMidiDeviceManager::ActivateEndpointInternal
     // create the devnode for the device
     midiPort->hr = SwDeviceCreate(
         midiPort->Enumerator.c_str(),
-        ParentInstanceId,
-        CreateInfo,
-        DevPropertyCount,
-        DevPropertyCount == 0 ? (DEVPROPERTY*)nullptr : DeviceDevProperties,
+        parentInstanceId,
+        createInfo,
+        devPropertyCount,
+        devPropertyCount == 0 ? (DEVPROPERTY*)nullptr : deviceDevProperties,
         SwMidiPortCreateCallback,
         &creationContext,
         wil::out_param(midiPort->SwDevice));
@@ -1429,7 +1402,7 @@ CMidiDeviceManager::ActivateEndpointInternal
     if (SUCCEEDED(midiPort->hr))
     {
         // wait 10 seconds for creation to complete
-        creationContext.creationCompleted.wait(10000);
+        creationContext.CreationCompleted.wait(10000);
     }
     else if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == midiPort->hr)
     {
@@ -1440,8 +1413,8 @@ CMidiDeviceManager::ActivateEndpointInternal
         //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         //    TraceLoggingPointer(this, "this"),
         //    TraceLoggingWideString(L"Endpoint already exists."),
-        //    TraceLoggingWideString(ParentInstanceId, "parent"),
-        //    TraceLoggingBool(MidiOne)
+        //    TraceLoggingWideString(parentInstanceId, "parent"),
+        //    TraceLoggingBool(midiOne)
         //);
 
         // if the devnode already exists, then we likely only need to create/activate the interface, a previous
@@ -1467,10 +1440,10 @@ CMidiDeviceManager::ActivateEndpointInternal
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Activating previously created endpoint."),
-                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingWideString(parentInstanceId, "parent"),
                 TraceLoggingWideString(midiPort->InstanceId.c_str(), "new port"),
                 TraceLoggingWideString(midiPort->Enumerator.c_str(), "new port enumerator"),
-                TraceLoggingBool(MidiOne)
+                TraceLoggingBool(midiOne)
             );
 
             midiPort->SwDevice = item->get()->SwDevice;
@@ -1485,10 +1458,10 @@ CMidiDeviceManager::ActivateEndpointInternal
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Endpoint exists, but it is not in the MidiDeviceManager store. Is something else creating endpoints?"),
-                TraceLoggingWideString(ParentInstanceId, "parent"),
+                TraceLoggingWideString(parentInstanceId, "parent"),
                 TraceLoggingWideString(midiPort->InstanceId.c_str(), "new port"),
                 TraceLoggingWideString(midiPort->Enumerator.c_str(), "new port enumerator"),
-                TraceLoggingBool(MidiOne)
+                TraceLoggingBool(midiOne)
             );
         }
     }
@@ -1501,8 +1474,8 @@ CMidiDeviceManager::ActivateEndpointInternal
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"SwDeviceCreate failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(ParentInstanceId, "parent"),
-            TraceLoggingBool(MidiOne)
+            TraceLoggingWideString(parentInstanceId, "parent"),
+            TraceLoggingBool(midiOne)
         );
     }
 
@@ -1518,8 +1491,8 @@ CMidiDeviceManager::ActivateEndpointInternal
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"SwDeviceCreate returned a failed HR", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingHResult(midiPort->hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
-            TraceLoggingWideString(ParentInstanceId, "parent"),
-            TraceLoggingBool(MidiOne)
+            TraceLoggingWideString(parentInstanceId, "parent"),
+            TraceLoggingBool(midiOne)
         );
     }
     RETURN_IF_FAILED(midiPort->hr);
@@ -1533,16 +1506,16 @@ CMidiDeviceManager::ActivateEndpointInternal
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"SwDeviceState != SWDEVICESTATE::Created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(ParentInstanceId, "parent"),
-            TraceLoggingBool(MidiOne)
+            TraceLoggingWideString(parentInstanceId, "parent"),
+            TraceLoggingBool(midiOne)
         );
     }
     RETURN_HR_IF(E_FAIL, midiPort->SwDeviceState != SWDEVICESTATE::Created);
 
-    if (MidiOne)
+    if (midiOne)
     {
         // Assign the port number for this midi port
-        RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), Flow));
+        RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), flow));
     }
 
     // Activate the SWD just created, it's created in the disabled state to allow for assigning
@@ -1552,9 +1525,9 @@ CMidiDeviceManager::ActivateEndpointInternal
         midiPort->DeviceInterfaceId.get(),
         TRUE));
 
-    if (DeviceInterfaceId)
+    if (deviceInterfaceId)
     {
-        *DeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(midiPort->DeviceInterfaceId.get());
+        *deviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(midiPort->DeviceInterfaceId.get());
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -1562,7 +1535,7 @@ CMidiDeviceManager::ActivateEndpointInternal
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(DeviceInterfaceId->c_str(), "created device interface id")
+            TraceLoggingWideString(deviceInterfaceId->c_str(), "created device interface id")
         );
     }
 
@@ -1577,14 +1550,14 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::UpdateEndpointProperties
 (
-    PCWSTR DeviceInterfaceId,
-    ULONG IntPropertyCount,
-    PVOID InterfaceDevProperties
+    PCWSTR deviceInterfaceId,
+    ULONG intPropertyCount,
+    const DEVPROPERTY* interfaceDevProperties
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, DeviceInterfaceId);
-    RETURN_HR_IF_NULL(E_INVALIDARG, InterfaceDevProperties);
-    RETURN_HR_IF(E_INVALIDARG, IntPropertyCount == 0);
+    RETURN_HR_IF_NULL(E_INVALIDARG, deviceInterfaceId);
+    RETURN_HR_IF_NULL(E_INVALIDARG, interfaceDevProperties);
+    RETURN_HR_IF(E_INVALIDARG, intPropertyCount == 0);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -1592,11 +1565,11 @@ CMidiDeviceManager::UpdateEndpointProperties
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingULong(IntPropertyCount, "property count")
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingULong(intPropertyCount, "property count")
     );
 
-    auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(DeviceInterfaceId);
+    auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
     // locate the MIDIPORT 
     auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
@@ -1616,7 +1589,7 @@ CMidiDeviceManager::UpdateEndpointProperties
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Device not found. If the updates are from the config file, the device may not yet have been enumerated.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(requestedInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingULong(IntPropertyCount, "property count")
+            TraceLoggingULong(intPropertyCount, "property count")
         );
 
         // device not found
@@ -1630,8 +1603,8 @@ CMidiDeviceManager::UpdateEndpointProperties
         auto propSetHR = SwDeviceInterfacePropertySet(
             deviceHandle,
             item->get()->DeviceInterfaceId.get(),
-            IntPropertyCount,
-            (const DEVPROPERTY*)InterfaceDevProperties
+            intPropertyCount,
+            (const DEVPROPERTY*)interfaceDevProperties
         );
 
         if (SUCCEEDED(propSetHR))
@@ -1644,7 +1617,7 @@ CMidiDeviceManager::UpdateEndpointProperties
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Properties set", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(requestedInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingULong(IntPropertyCount, "property count")
+                TraceLoggingULong(intPropertyCount, "property count")
             );
 
             // update/refresh the port numbers for all affected midi1 ports
@@ -1670,7 +1643,7 @@ CMidiDeviceManager::UpdateEndpointProperties
                 TraceLoggingWideString(L"Error setting properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingHResult(propSetHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
                 TraceLoggingWideString(requestedInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingULong(IntPropertyCount, "property count")
+                TraceLoggingULong(intPropertyCount, "property count")
             );
 
             return propSetHR;
@@ -1684,9 +1657,9 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::DeleteEndpointProperties
 (
-    PCWSTR DeviceInterfaceId,
-    ULONG IntPropertyCount,
-    PVOID InterfaceDevPropKeys
+    PCWSTR deviceInterfaceId,
+    ULONG intPropertyCount,
+    const DEVPROPERTY* interfaceDevPropKeys
 )
 {
     TraceLoggingWrite(
@@ -1695,32 +1668,32 @@ CMidiDeviceManager::DeleteEndpointProperties
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingULong(IntPropertyCount, "property count")
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingULong(intPropertyCount, "property count")
     );
 
     // create list of dev properties from the keys
 
     // Call UpdateEndpointProperties
 
-    auto keys = (const DEVPROPKEY*)InterfaceDevPropKeys;
+    auto keys = (const DEVPROPKEY*)interfaceDevPropKeys;
 
     std::vector<DEVPROPERTY> properties;
 
-    for (ULONG i = 0; i < IntPropertyCount; i++)
+    for (ULONG i = 0; i < intPropertyCount; i++)
     {
         properties.push_back({{ keys[i], DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_EMPTY, 0, NULL });
     }
 
-    return UpdateEndpointProperties(DeviceInterfaceId, (ULONG)properties.size(), (PVOID)properties.data());
+    return UpdateEndpointProperties(deviceInterfaceId, (ULONG)properties.size(), properties.data());
 }
 
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::DeactivateEndpoint
 (
-        PCWSTR InstanceId
+    PCWSTR instanceId
 )
 {
     TraceLoggingWrite(
@@ -1729,17 +1702,17 @@ CMidiDeviceManager::DeactivateEndpoint
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(InstanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+        TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
     );
 
-    auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(InstanceId);
+    auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
 
     // there may be more than one SWD associated with this instance id, as we reuse
     // the instance id for the legacy SWD, it just has a different activator and InterfaceClass.
     do
     {
         // locate the MIDIPORT that identifies the swd
-        // NOTE: This uses InstanceId, not the Device Interface Id
+        // NOTE: This uses instanceId, not the Device Interface Id
         auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
             if (cleanId == Port->InstanceId)
@@ -1764,7 +1737,7 @@ CMidiDeviceManager::DeactivateEndpoint
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Found instance id in ports list.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(InstanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+                TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
             );
 
             // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
@@ -1780,7 +1753,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::RemoveEndpoint
 (
-    PCWSTR InstanceId 
+    PCWSTR instanceId 
 )
 {
     TraceLoggingWrite(
@@ -1789,11 +1762,11 @@ CMidiDeviceManager::RemoveEndpoint
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(InstanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+        TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
     );
 
     // first deactivate, to ensure it's removed from the tracking list
-    LOG_IF_FAILED(DeactivateEndpoint(InstanceId));
+    LOG_IF_FAILED(DeactivateEndpoint(instanceId));
 
     // TODO: Locate the device with this instance id using windows.devices.enumeration,
     // and delete it.
@@ -1806,13 +1779,13 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::UpdateAbstractionConfiguration
 (
-    GUID AbstractionId,
-    LPCWSTR ConfigurationJson,
-    BOOL IsFromConfigurationFile,
-    BSTR* Response
+    GUID abstractionId,
+    LPCWSTR configurationJson,
+    BOOL isFromConfigurationFile,
+    LPWSTR* response
 )
 {
-    if (ConfigurationJson != nullptr)
+    if (configurationJson != nullptr)
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -1820,18 +1793,18 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingGuid(AbstractionId, "abstraction id"),
-            TraceLoggingWideString(ConfigurationJson, "config json"),
-            TraceLoggingBool(IsFromConfigurationFile, "from config file")
+            TraceLoggingGuid(abstractionId, "abstraction id"),
+            TraceLoggingWideString(configurationJson, "config json"),
+            TraceLoggingBool(isFromConfigurationFile, "from config file")
         );
 
-        if (auto search = m_MidiAbstractionConfigurationManagers.find(AbstractionId); search != m_MidiAbstractionConfigurationManagers.end())
+        if (auto search = m_MidiAbstractionConfigurationManagers.find(abstractionId); search != m_MidiAbstractionConfigurationManagers.end())
         {
             auto configManager = search->second;
 
             if (configManager)
             {
-                return configManager->UpdateConfiguration(ConfigurationJson, IsFromConfigurationFile, Response);
+                return configManager->UpdateConfiguration(configurationJson, isFromConfigurationFile, response);
             }
         }
         else
@@ -1843,7 +1816,7 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(AbstractionId, "abstraction id")
+                TraceLoggingGuid(abstractionId, "abstraction id")
             );
 
         }
@@ -1867,7 +1840,7 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
 
 
 HRESULT
-CMidiDeviceManager::Cleanup()
+CMidiDeviceManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -1879,12 +1852,12 @@ CMidiDeviceManager::Cleanup()
 
     for (auto const& endpointManager : m_MidiEndpointManagers)
     {
-        endpointManager.second->Cleanup();
+        endpointManager.second->Shutdown();
     }
 
     for (auto const& configurationManager : m_MidiAbstractionConfigurationManagers)
     {
-        configurationManager.second->Cleanup();
+        configurationManager.second->Shutdown();
     }
 
     m_MidiEndpointManagers.clear();
@@ -1907,8 +1880,8 @@ typedef struct _PORT_INFO
 {
     bool inUse {false};
     bool isEnabled {false};
-    bool hasUserSuppliedPortNumber{false};
-    UINT32 userSuppliedPortNumber {0};
+    bool hasCustomPortNumber{false};
+    UINT32 customPortNumber {0};
     std::wstring interfaceId;
 } PORT_INFO;
 
@@ -1917,8 +1890,8 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::AssignPortNumber(
     HSWDEVICE SwDevice,
-    PWSTR DeviceInterfaceId,
-    MidiFlow Flow
+    PWSTR deviceInterfaceId,
+    MidiFlow flow
 )
 {
     TraceLoggingWrite(
@@ -1928,25 +1901,25 @@ CMidiDeviceManager::AssignPortNumber(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    auto deviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(DeviceInterfaceId);
+    auto interfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
     std::map<UINT32, PORT_INFO> portInfo;
 
     bool hasServiceAssignedPortNumber {false};
     UINT32 serviceAssignedPortNumber {0};
-    bool hasUserSuppliedPortNumber {false};
-    UINT32 userSuppliedPortNumber {0};
+    bool hasCustomPortNumber {false};
+    UINT32 customPortNumber {0};
     bool interfaceEnabled {false};
 
-    winrt::hstring deviceSelector(Flow == MidiFlowOut?MIDI1_OUTPUT_DEVICES:MIDI1_INPUT_DEVICES);
+    winrt::hstring deviceSelector(flow == MidiFlowOut?MIDI1_OUTPUT_DEVICES:MIDI1_INPUT_DEVICES);
     wil::unique_event enumerationCompleted{wil::EventOptions::None};
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_UserSuppliedPortNumber));
+    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_CustomPortNumber));
 
     auto watcher = DeviceInformation::CreateWatcher(deviceSelector, additionalProperties);
 
@@ -1984,7 +1957,7 @@ CMidiDeviceManager::AssignPortNumber(
 
         }
 
-        prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_UserSuppliedPortNumber));
+        prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_CustomPortNumber));
         if (prop)
         {
             userPortNum = winrt::unbox_value<UINT32>(prop);
@@ -2009,11 +1982,11 @@ CMidiDeviceManager::AssignPortNumber(
 
         // if this is the interface we are processing, do not add it to the list, we want to determine if
         // there are any others using the requested port(s).
-        if (processingInterface == deviceInterfaceId)
+        if (processingInterface == interfaceId)
         {
             interfaceEnabled = device.IsEnabled();
-            hasUserSuppliedPortNumber = userPortNumValid;
-            userSuppliedPortNumber = userPortNum;
+            hasCustomPortNumber = userPortNumValid;
+            customPortNumber = userPortNum;
             hasServiceAssignedPortNumber = servicePortNumValid;
             serviceAssignedPortNumber = servicePortNum;
         }
@@ -2028,8 +2001,8 @@ CMidiDeviceManager::AssignPortNumber(
                 portInfo[servicePortNum].inUse = true;
                 portInfo[servicePortNum].isEnabled = device.IsEnabled();
                 portInfo[servicePortNum].interfaceId = processingInterface;
-                portInfo[servicePortNum].hasUserSuppliedPortNumber = userPortNumValid;
-                portInfo[servicePortNum].userSuppliedPortNumber = userPortNum;
+                portInfo[servicePortNum].hasCustomPortNumber = userPortNumValid;
+                portInfo[servicePortNum].customPortNumber = userPortNum;
             }
         }
     });
@@ -2065,20 +2038,20 @@ CMidiDeviceManager::AssignPortNumber(
     // if this port is already enabled, but not on it's ideal user assigned endpoint,
     // then an update to our user assigned port is desired (but not guaranteed).
     bool configUpdateDesired = (interfaceEnabled && 
-                                hasUserSuppliedPortNumber && 
+                                hasCustomPortNumber && 
                                 hasServiceAssignedPortNumber && 
-                                serviceAssignedPortNumber != userSuppliedPortNumber);
+                                serviceAssignedPortNumber != customPortNumber);
 
     // if no one is using the user assigned port number, or there is someone but they 
     // can be moved to some other port, then our optimal port is available to us.
     // This logic ensures that we do not take a user assigned port number from an enabled port
     // that was also assigned this same port number, otherwise we would end up in a recursion
     // loop with each port reassigning the other.
-    bool optimalPortAvailable = (hasUserSuppliedPortNumber &&
-                                    (!portInfo[userSuppliedPortNumber].inUse || 
-                                    !portInfo[userSuppliedPortNumber].isEnabled ||
-                                    !portInfo[userSuppliedPortNumber].hasUserSuppliedPortNumber ||
-                                    portInfo[userSuppliedPortNumber].userSuppliedPortNumber != userSuppliedPortNumber));
+    bool optimalPortAvailable = (hasCustomPortNumber &&
+                                    (!portInfo[customPortNumber].inUse || 
+                                    !portInfo[customPortNumber].isEnabled ||
+                                    !portInfo[customPortNumber].hasCustomPortNumber ||
+                                    portInfo[customPortNumber].customPortNumber != customPortNumber));
 
     bool interfaceDeactivated{false};
     auto restoreInterfaceStateOnExit = wil::scope_exit([&]()
@@ -2087,7 +2060,7 @@ CMidiDeviceManager::AssignPortNumber(
         // the state to active before returning.
         if (interfaceDeactivated)
         {
-            LOG_IF_FAILED(SwDeviceInterfaceSetState(SwDevice, DeviceInterfaceId, TRUE));
+            LOG_IF_FAILED(SwDeviceInterfaceSetState(SwDevice, deviceInterfaceId, TRUE));
         }
     });
 
@@ -2100,7 +2073,7 @@ CMidiDeviceManager::AssignPortNumber(
             // first, disable the interface if it's currently active, because
             // we're going to be changing the port number for it and it can't be
             // active when we do that.
-            LOG_IF_FAILED(SwDeviceInterfaceSetState(SwDevice, DeviceInterfaceId, FALSE));
+            LOG_IF_FAILED(SwDeviceInterfaceSetState(SwDevice, deviceInterfaceId, FALSE));
             interfaceDeactivated = true;
         }
 
@@ -2111,7 +2084,7 @@ CMidiDeviceManager::AssignPortNumber(
             DEVPROP_TYPE_EMPTY, 0, NULL });
         RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
             SwDevice,
-            DeviceInterfaceId,
+            deviceInterfaceId,
             1,
             (const DEVPROPERTY*)newProperties.data()));
 
@@ -2139,7 +2112,7 @@ CMidiDeviceManager::AssignPortNumber(
                                     DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(firstAvailablePortNumber)) });
             LOG_IF_FAILED(SwDeviceInterfacePropertySet(
                 SwDevice,
-                DeviceInterfaceId,
+                deviceInterfaceId,
                 1,
                 (const DEVPROPERTY*)newProperties.data()));
             newProperties.clear();
@@ -2149,7 +2122,7 @@ CMidiDeviceManager::AssignPortNumber(
         // port number is available for this endpoint, we want to use it.
         if (optimalPortAvailable)
         {
-            assignedPortNumber = userSuppliedPortNumber;   
+            assignedPortNumber = customPortNumber;   
         }
 
         // we've decided what the new port will be for this endpoint, lock it in.
@@ -2157,23 +2130,23 @@ CMidiDeviceManager::AssignPortNumber(
                                 DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(assignedPortNumber)) });
         RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
             SwDevice,
-            DeviceInterfaceId,
+            deviceInterfaceId,
             1,
             (const DEVPROPERTY*)newProperties.data()));
         newProperties.clear();
 
         // Following from the logic above, we need to determine if the user assigned port number that was 
         // assigned to this port was in use by an enabled port and needs to have a previous user reassigned.
-        if (hasUserSuppliedPortNumber && 
-            assignedPortNumber == userSuppliedPortNumber &&
-            portInfo[userSuppliedPortNumber].inUse &&
-            portInfo[userSuppliedPortNumber].isEnabled)
+        if (hasCustomPortNumber && 
+            assignedPortNumber == customPortNumber &&
+            portInfo[customPortNumber].inUse &&
+            portInfo[customPortNumber].isEnabled)
         {
             // First, we need to locate the MIDIPORT for the current user of this port, so we have the SW handle,
             // the MIDIPORT should exist, since the port is active.
             // If the MIDIPORT does not exist, then we can not move the conflicting port, exit with failure and fall back to the
             // next available for the assigning port.
-            auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(portInfo[userSuppliedPortNumber].interfaceId);
+            auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(portInfo[customPortNumber].interfaceId);
             auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
             {
                 auto portInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Port->DeviceInterfaceId.get());
@@ -2183,7 +2156,7 @@ CMidiDeviceManager::AssignPortNumber(
             RETURN_HR_IF(E_ABORT, item != m_MidiPorts.end());
             
             // Recursive call, assign a new port number to this port.
-            RETURN_IF_FAILED(AssignPortNumber(item->get()->SwDevice.get(), item->get()->DeviceInterfaceId.get(), Flow));
+            RETURN_IF_FAILED(AssignPortNumber(item->get()->SwDevice.get(), item->get()->DeviceInterfaceId.get(), flow));
         }
 
         cleanupOnFailure.release();
@@ -2196,7 +2169,7 @@ CMidiDeviceManager::AssignPortNumber(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(DeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
 

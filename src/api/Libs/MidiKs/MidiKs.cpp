@@ -25,36 +25,36 @@
 
 KSMidiDevice::~KSMidiDevice()
 {
-    Cleanup();
+    Shutdown();
 }
 
 _Use_decl_annotations_
 HRESULT
 KSMidiDevice::Initialize(
-    LPCWSTR Device,
-    HANDLE Filter,
-    UINT PinId,
-    MidiTransport Transport,
-    ULONG& BufferSize
+    LPCWSTR device,
+    HANDLE filter,
+    UINT pinId,
+    MidiTransport transport,
+    ULONG& bufferSize
 )
 {
-    m_Transport = Transport;
+    m_Transport = transport;
 
-    m_FilterFilename = wil::make_cotaskmem_string_nothrow(Device);
+    m_FilterFilename = wil::make_cotaskmem_string_nothrow(device);
     RETURN_IF_NULL_ALLOC(m_FilterFilename);
 
-    if (!Filter)
+    if (!filter)
     {
         RETURN_IF_FAILED(FilterInstantiate(m_FilterFilename.get(), &m_Filter));
     }
     else
     {
-        RETURN_IF_WIN32_BOOL_FALSE(DuplicateHandle(GetCurrentProcess(), Filter, GetCurrentProcess(), &m_Filter, 0, FALSE, DUPLICATE_SAME_ACCESS));
+        RETURN_IF_WIN32_BOOL_FALSE(DuplicateHandle(GetCurrentProcess(), filter, GetCurrentProcess(), &m_Filter, 0, FALSE, DUPLICATE_SAME_ACCESS));
     }
 
-    m_PinID = PinId;
+    m_PinID = pinId;
 
-    RETURN_IF_FAILED(OpenStream(BufferSize));
+    RETURN_IF_FAILED(OpenStream(bufferSize));
     RETURN_IF_FAILED(PinSetState(KSSTATE_ACQUIRE));
     RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
     RETURN_IF_FAILED(PinSetState(KSSTATE_RUN));
@@ -64,7 +64,7 @@ KSMidiDevice::Initialize(
 
 _Use_decl_annotations_
 HRESULT
-KSMidiDevice::OpenStream(ULONG& BufferSize
+KSMidiDevice::OpenStream(ULONG& bufferSize
 )
 {
     RETURN_IF_FAILED(InstantiateMidiPin(m_Filter.get(), m_PinID, m_Transport, &m_Pin));
@@ -76,7 +76,7 @@ KSMidiDevice::OpenStream(ULONG& BufferSize
         m_MidiPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(m_MidiPipe);
 
-        m_MidiPipe->DataFormat = (m_Transport == MidiTransport_CyclicByteStream)?MidiDataFormat_ByteStream:MidiDataFormat_UMP;
+        m_MidiPipe->DataFormat = (m_Transport == MidiTransport_CyclicByteStream)?MidiDataFormats_ByteStream:MidiDataFormats_UMP;
         m_CrossProcessMidiPump.reset(new (std::nothrow) CMidiXProc());
         RETURN_IF_NULL_ALLOC(m_CrossProcessMidiPump);
 
@@ -85,7 +85,7 @@ KSMidiDevice::OpenStream(ULONG& BufferSize
 
         // if we're looped (cyclic buffer), we need to
         // configure the buffer, registers, and event.
-        RETURN_IF_FAILED(ConfigureLoopedBuffer(BufferSize));
+        RETURN_IF_FAILED(ConfigureLoopedBuffer(bufferSize));
         RETURN_IF_FAILED(ConfigureLoopedRegisters());
         RETURN_IF_FAILED(ConfigureLoopedEvent());
     }
@@ -93,21 +93,21 @@ KSMidiDevice::OpenStream(ULONG& BufferSize
     {
         // Buffer size isn't applicable for
         // legacy messages sent through ioctl
-        BufferSize = 0;
+        bufferSize = 0;
     }
 
     return S_OK;
 }
 
 HRESULT
-KSMidiDevice::Cleanup()
+KSMidiDevice::Shutdown()
 {
     // tear down all cross process work before
     // closing out pin and filter handles, which will
     // invalidate the memory addresses.
     if (m_CrossProcessMidiPump)
     {
-        m_CrossProcessMidiPump->Cleanup();
+        m_CrossProcessMidiPump->Shutdown();
         m_CrossProcessMidiPump.reset();
     }
 
@@ -136,7 +136,7 @@ KSMidiDevice::Cleanup()
 _Use_decl_annotations_
 HRESULT
 KSMidiDevice::PinSetState(
-    KSSTATE PinState
+    KSSTATE pinState
 )
 {
     KSPROPERTY property {0};
@@ -151,7 +151,7 @@ KSMidiDevice::PinSetState(
         IOCTL_KS_PROPERTY,
         &property,
         propertySize,
-        &PinState,
+        &pinState,
         sizeof(KSSTATE),
         nullptr));
 
@@ -160,7 +160,7 @@ KSMidiDevice::PinSetState(
 
 _Use_decl_annotations_
 HRESULT
-KSMidiDevice::ConfigureLoopedBuffer(ULONG& BufferSize
+KSMidiDevice::ConfigureLoopedBuffer(ULONG& bufferSize
 )
 {
     KSMIDILOOPED_BUFFER_PROPERTY property {0};
@@ -173,7 +173,7 @@ KSMidiDevice::ConfigureLoopedBuffer(ULONG& BufferSize
 
     // Seems to be a reasonable balance for now,
     // TBD make this configurable via api or registry.
-    property.RequestedBufferSize    = BufferSize;
+    property.RequestedBufferSize    = bufferSize;
 
     RETURN_IF_FAILED(SyncIoctl(
         m_Pin.get(),
@@ -185,7 +185,7 @@ KSMidiDevice::ConfigureLoopedBuffer(ULONG& BufferSize
         nullptr));
 
     m_MidiPipe->Data.BufferAddress = (PBYTE) buffer.BufferAddress;
-    BufferSize = m_MidiPipe->Data.BufferSize = buffer.ActualBufferSize;
+    bufferSize = m_MidiPipe->Data.BufferSize = buffer.ActualBufferSize;
 
     return S_OK;
 }
@@ -245,24 +245,24 @@ KSMidiDevice::ConfigureLoopedEvent()
 _Use_decl_annotations_
 HRESULT
 KSMidiOutDevice::Initialize(
-    LPCWSTR Device,
-    HANDLE Filter,
-    UINT PinId,
-    MidiTransport Transport,
-    ULONG BufferSize,
-    DWORD* MmcssTaskId
+    LPCWSTR device,
+    HANDLE filter,
+    UINT pinId,
+    MidiTransport transport,
+    ULONG bufferSize,
+    DWORD* mmcssTaskId
 )
 {
-    RETURN_IF_FAILED(KSMidiDevice::Initialize(Device, Filter, PinId, Transport, BufferSize));
+    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize));
 
-    m_MmcssTaskId = *MmcssTaskId;
+    m_MmcssTaskId = *mmcssTaskId;
     if (m_CrossProcessMidiPump)
     {
         std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
         // we're sending midi messages here, so this is a midi out pipe, midi in pipe is unused
-        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, emptyPipe, m_MidiPipe, nullptr, 0, true));
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(mmcssTaskId, emptyPipe, m_MidiPipe, nullptr, 0, true));
     }
-    *MmcssTaskId = m_MmcssTaskId;
+    *mmcssTaskId = m_MmcssTaskId;
 
     return S_OK;
 }
@@ -270,31 +270,31 @@ KSMidiOutDevice::Initialize(
 _Use_decl_annotations_
 HRESULT
 KSMidiOutDevice::SendMidiMessage(
-    void * MidiData,
-    UINT32 Length,
-    LONGLONG Position
+    void * midiData,
+    UINT32 length,
+    LONGLONG position
 )
 {
     // The length must be one of the valid UMP data lengths
-    RETURN_HR_IF(E_INVALIDARG, Length == 0);
+    RETURN_HR_IF(E_INVALIDARG, length == 0);
 
     if (m_CrossProcessMidiPump)
     {
-        return m_CrossProcessMidiPump->SendMidiMessage(MidiData, Length, Position);
+        return m_CrossProcessMidiPump->SendMidiMessage(midiData, length, position);
     }
     else
     {
         // using standard, write via standard streaming ioctls
-        return WritePacketMidiData(MidiData, Length, Position);
+        return WritePacketMidiData(midiData, length, position);
     }
 }
 
 _Use_decl_annotations_
 HRESULT
 KSMidiOutDevice::WritePacketMidiData(
-    void* MidiData,
-    UINT32 Length,
-    LONGLONG Position
+    void* midiData,
+    UINT32 length,
+    LONGLONG position
 )
 {
     KSSTREAM_HEADER kssh {0};
@@ -302,7 +302,7 @@ KSMidiOutDevice::WritePacketMidiData(
     UINT32 totalLength = 0;
 
     // total size of the payload is the leading structure + message size
-    totalLength = DWORD_ALIGN(sizeof(KSMUSICFORMAT) + Length);
+    totalLength = DWORD_ALIGN(sizeof(KSMUSICFORMAT) + length);
 
     // allocate and zero an event, so we can send everything as a single message
     event = reinterpret_cast<KSMUSICFORMAT*>(new BYTE[totalLength]{0});
@@ -315,10 +315,10 @@ KSMidiOutDevice::WritePacketMidiData(
 
     // The byte count here is the size of the actual midi message, without
     // leading KSMUSICFORMAT structure size or padding
-    event->ByteCount = Length;
+    event->ByteCount = length;
 
     // now we can copy over the message data into the KSMUSICFORMAT
-    CopyMemory(event + 1, MidiData, Length);
+    CopyMemory(event + 1, midiData, length);
 
     kssh.Size = sizeof(KSSTREAM_HEADER);
 
@@ -328,7 +328,7 @@ KSMidiOutDevice::WritePacketMidiData(
     kssh.PresentationTime.Denominator = 1;
 
     // for legacy midi 1, if the position provided was 0, use 0
-    kssh.PresentationTime.Time = Position;
+    kssh.PresentationTime.Time = position;
 
     // the length here is the allocated size of event, so 
     // header structure + data + padding
@@ -351,13 +351,13 @@ KSMidiOutDevice::WritePacketMidiData(
 }
 
 HRESULT
-KSMidiInDevice::Cleanup()
+KSMidiInDevice::Shutdown()
 {
     m_Running = FALSE;
 
     // safe to clean up the base class now that any looped
     // worker threads are cleaned up.
-    HRESULT hr = KSMidiDevice::Cleanup();
+    HRESULT hr = KSMidiDevice::Shutdown();
 
     if (m_ThreadHandle)
     {
@@ -432,12 +432,12 @@ KSMidiInDevice::SendRequestToDriver()
 _Use_decl_annotations_
 DWORD WINAPI
 KSMidiInDevice::MidiInWorker(
-    LPVOID lpParam
+    LPVOID param
 )
 {
     auto coinit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
-    KSMidiInDevice *This = reinterpret_cast<KSMidiInDevice*>(lpParam);
+    KSMidiInDevice *This = reinterpret_cast<KSMidiInDevice*>(param);
     if (This)
     {
         // Enable MMCSS for the midi in worker thread
@@ -458,43 +458,43 @@ KSMidiInDevice::MidiInWorker(
 _Use_decl_annotations_
 HRESULT
 KSMidiInDevice::Initialize(
-    LPCWSTR Device,
-    HANDLE Filter,
-    UINT PinId,
-    MidiTransport Transport,
-    ULONG BufferSize,
-    DWORD* MmcssTaskId,
-    IMidiCallback *Callback,
-    LONGLONG Context
+    LPCWSTR device,
+    HANDLE filter,
+    UINT pinId,
+    MidiTransport transport,
+    ULONG bufferSize,
+    DWORD* mmcssTaskId,
+    IMidiCallback *callback,
+    LONGLONG context
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == callback);
 
-    RETURN_IF_FAILED(KSMidiDevice::Initialize(Device, Filter, PinId, Transport, BufferSize));
+    RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize));
 
     if (m_CrossProcessMidiPump)
     {
         std::unique_ptr<MEMORY_MAPPED_PIPE> emptyPipe;
         // we're getting midi messages here, so this is a midi in pipe, midi out pipe is unused
-        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(MmcssTaskId, m_MidiPipe, emptyPipe, Callback, Context, true));
+        RETURN_IF_FAILED(m_CrossProcessMidiPump->Initialize(mmcssTaskId, m_MidiPipe, emptyPipe, callback, context, true));
     }
     else
     {
-        m_MmcssTaskId = *MmcssTaskId;
+        m_MmcssTaskId = *mmcssTaskId;
 
         m_ThreadTerminateEvent.create();
         m_ThreadStartedEvent.create();
 
         // grab the callback/lambda that was passed in, for use later for message callbacks.
-        m_MidiInCallback = Callback;
-        m_MidiInCallbackContext = Context;
+        m_MidiInCallback = callback;
+        m_MidiInCallbackContext = context;
 
         m_ThreadHandle.reset(CreateThread(nullptr, 0, MidiInWorker, this, 0, nullptr));
         RETURN_LAST_ERROR_IF_NULL(m_ThreadHandle);
 
         RETURN_HR_IF(E_FAIL, WaitForSingleObject(m_ThreadStartedEvent.get(), 30000) != WAIT_OBJECT_0);
 
-        *MmcssTaskId = m_MmcssTaskId;
+        *mmcssTaskId = m_MmcssTaskId;
     }
 
     return S_OK;

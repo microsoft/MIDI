@@ -46,11 +46,11 @@ public:
     Midi2DriverTests()
     {}
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context)
+    STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
         if (m_MidiInCallback)
         {
-            m_MidiInCallback(Data, Size, Position, Context);
+            m_MidiInCallback(data, size, position, context);
         }
         return S_OK;
     }
@@ -61,9 +61,9 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    void TestMidiIO(MidiTransport Transport);
-    void TestMidiIO_ManyMessages(MidiTransport Transport);
-    void TestMidiIO_Latency(MidiTransport Transport, BOOL DelayedMessages);
+    void TestMidiIO(MidiTransport transport);
+    void TestMidiIO_ManyMessages(MidiTransport transport);
+    void TestMidiIO_Latency(MidiTransport transport, BOOL delayedMessages);
     
     std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
 };

@@ -529,7 +529,7 @@ VOID SvcInit()
     // Check whether to stop the service.
     WaitForSingleObject(g_SvcStopEvent.get(), INFINITE);
 
-    hr = g_MidiService->Cleanup();
+    hr = g_MidiService->Shutdown();
     LOG_IF_FAILED(hr);
     ReportSvcStatus( SERVICE_STOPPED, hr, 0 );
 
@@ -580,18 +580,18 @@ VOID SvcReportEvent(_In_z_ LPCSTR )
 // Parameters:
 //   dwCtrl - control code
 //
-VOID WINAPI SvcCtrlHandler(_In_ DWORD Ctrl)
+VOID WINAPI SvcCtrlHandler(_In_ DWORD ctrl)
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingUInt32(Ctrl, "ctrl")
+        TraceLoggingUInt32(ctrl, "ctrl")
     );
 
    // Handle the requested control code. 
-   switch(Ctrl) 
+   switch(ctrl) 
    {  
       case SERVICE_CONTROL_STOP: 
          ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0);
