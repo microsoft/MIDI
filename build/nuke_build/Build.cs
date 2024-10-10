@@ -110,8 +110,13 @@ class Build : NukeBuild
     AbsolutePath SamplesCSWinRTSolutionFolder => SamplesRootFolder / "csharp-net";
 
 
-    string[] InProcPlatforms => new string[] { "x64", "Arm64", "Arm64EC"  };
-    string[] OutOfProcPlatforms => new string[] { "x64", "Arm64" };
+    string[] SdkPlatforms => new string[] { "x64", "Arm64EC"  };
+    string[] ServiceAndApiPlatforms => new string[] { "x64", "Arm64EC" };
+    string[] ToolsPlatforms => new string[] { "x64", "Arm64" };
+    string[] NativeSamplesPlatforms => new string[] { "x64", "Arm64EC", "Arm64" };
+    string[] ManagedSamplesPlatforms => new string[] { "x64", "Arm64" };
+    string[] InstallerPlatforms => new string[] { "x64", "Arm64" };
+
 
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
@@ -136,7 +141,7 @@ class Build : NukeBuild
         .DependsOn(Prerequisites)
         .Executes(() =>
     {
-        foreach (var platform in OutOfProcPlatforms)
+        foreach (var platform in ServiceAndApiPlatforms)
         {
             string solutionDir = ApiSolutionFolder.ToString() + @"\";
 
@@ -162,34 +167,35 @@ class Build : NukeBuild
                 .EnableNodeReuse()
             );
 
-
             // copy binaries to staging folder
             var stagingFiles = new List<AbsolutePath>();
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midisrv.exe");
-
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.MidiSrvAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.DiagnosticsAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.KSAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.KSAggregateAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.VirtualMidiAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.LoopbackMidiAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.VirtualPatchBayAbstraction.dll");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.BS2UMPTransform.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.UMP2BSTransform.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.UmpProtocolDownscalerTransform.dll");
+            // only in-proc files, like the MidiSrvAbstraction, are Arm64EC
+            var servicePlatform = platform == "Arm64EC" ? "Arm64" : "x64";
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.SchedulerTransform.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midisrv.exe");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"wdmaud2.drv");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.DiagnosticsAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.KSAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.KSAggregateAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualMidiAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.LoopbackMidiAbstraction.dll");
+            // stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualPatchBayAbstraction.dll");
+
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.BS2UMPTransform.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.UMP2BSTransform.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.UmpProtocolDownscalerTransform.dll");
+
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.SchedulerTransform.dll");
+
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"wdmaud2.drv");
 
             foreach (var file in stagingFiles)
             {
-                FileSystemTasks.CopyFileToDirectory(file, ApiStagingFolder / platform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(file, ApiStagingFolder / servicePlatform, FileExistsPolicy.Overwrite, true);
             }
-
-
         }
 
         // Copy reference files to reference folder. This requires
@@ -201,7 +207,7 @@ class Build : NukeBuild
 
         var intermediateFolder = ApiSolutionFolder / "vsfiles" / "intermediate";
 
-        foreach (var platform in InProcPlatforms)
+        foreach (var platform in ServiceAndApiPlatforms)
         {
             var referenceFiles = new List<AbsolutePath>();
 
@@ -230,7 +236,7 @@ class Build : NukeBuild
         .DependsOn(BuildServiceAndPlugins)
         .Executes(() =>
         {
-            foreach (var platform in InProcPlatforms)
+            foreach (var platform in SdkPlatforms)
             {
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
 
@@ -259,7 +265,7 @@ class Build : NukeBuild
 
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
 
-            foreach (var platform in InProcPlatforms)
+            foreach (var platform in SdkPlatforms)
             {
                 var sdkBinaries = new List<AbsolutePath>();
 
@@ -303,7 +309,7 @@ class Build : NukeBuild
                 true);
 
 
-            foreach (var targetPlatform in InProcPlatforms)
+            foreach (var targetPlatform in SdkPlatforms)
             {
                 string sourcePlatform;
 
@@ -340,7 +346,7 @@ class Build : NukeBuild
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
-            foreach (var platform in OutOfProcPlatforms)
+            foreach (var platform in InstallerPlatforms)
             {
                 UpdateSetupBundleInfoIncludeFile(platform);
 
@@ -399,7 +405,7 @@ class Build : NukeBuild
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
-            foreach (var platform in OutOfProcPlatforms)
+            foreach (var platform in InstallerPlatforms)
             {
                 UpdateSetupBundleInfoIncludeFile(platform);
 
@@ -470,7 +476,7 @@ class Build : NukeBuild
             bool wxsWritten = false;
 
             // build x64 and Arm64, no Arm64EC
-            foreach (var platform in OutOfProcPlatforms)
+            foreach (var platform in ToolsPlatforms)
             {
                 string solutionDir = MidiSettingsSolutionFolder.ToString() + @"\";
 
@@ -678,7 +684,7 @@ class Build : NukeBuild
             );
 
             // build x64 and Arm64, no Arm64EC
-            foreach (var platform in OutOfProcPlatforms)
+            foreach (var platform in ToolsPlatforms)
             {
                 string solutionDir = MidiConsoleSolutionFolder.ToString() + @"\";
 
@@ -836,7 +842,7 @@ class Build : NukeBuild
 
             
             // make sure they compile
-            foreach (var platform in InProcPlatforms)
+            foreach (var platform in NativeSamplesPlatforms)
             {
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
 
@@ -886,184 +892,184 @@ class Build : NukeBuild
         //.DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
         .Executes(() =>
     {
-        var projectionOutputRoot = ElectronProjectionRootFolder / "projection";
-        projectionOutputRoot.CreateOrCleanDirectory();
+      //  var projectionOutputRoot = ElectronProjectionRootFolder / "projection";
+      //  projectionOutputRoot.CreateOrCleanDirectory();
 
-      //  var projectionReleaseRoot = ElectronProjectionRootFolder / "projection_release";
-      //  projectionReleaseRoot.CreateOrCleanDirectory();
-
-
-        foreach (var platform in OutOfProcPlatforms)
-        {
-            var platformOutputRootFolder = projectionOutputRoot / platform;
-            platformOutputRootFolder.CreateDirectory();
+      ////  var projectionReleaseRoot = ElectronProjectionRootFolder / "projection_release";
+      ////  projectionReleaseRoot.CreateOrCleanDirectory();
 
 
-            // copy the winmd and impl libs from staging
-
-            var sdkFiles = (AppSdkStagingFolder / platform).GlobFiles("*.dll", "*.winmd", "*.pri");
-
-            foreach (var sdkFile in sdkFiles)
-            {
-                FileSystemTasks.CopyFileToDirectory(
-                    sdkFile,
-                    platformOutputRootFolder,
-                    FileExistsPolicy.Overwrite,
-                    true);
-            }
+      //  foreach (var platform in OutOfProcPlatforms)
+      //  {
+      //      var platformOutputRootFolder = projectionOutputRoot / platform;
+      //      platformOutputRootFolder.CreateDirectory();
 
 
-            // main windows metadata file
-            //FileSystemTasks.CopyFileToDirectory(
-            //    @"C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd",
-            //    platformOutputRootFolder,
-            //    FileExistsPolicy.Overwrite, true);
+      //      // copy the winmd and impl libs from staging
 
-            foreach (var ns in AppSdkAssemblies)
-            {
-                var nsRootFolder = platformOutputRootFolder / ns.ToLower();
-                nsRootFolder.CreateDirectory();
+      //      var sdkFiles = (AppSdkStagingFolder / platform).GlobFiles("*.dll", "*.winmd", "*.pri");
 
-                var namespaceBuildFolder = nsRootFolder / "build";
-                namespaceBuildFolder.CreateOrCleanDirectory();
-
-                // the winmd files are in the parent folder
-                //NodeRT($"--winmd {AppSdkStagingFolder / platform / ns + ".winmd"} --outdir {platformOutputRootFolder} --verbose");
-                NodeRT($"--winmd {AppSdkStagingFolder / platform / ns + ".winmd"} --outdir {platformOutputRootFolder}");
-
-                // todo: need to capture return code
-            }
-
-            // the NodeRt tool creates folders for each namespace, not for 
-            // each winmd, so we then need to loop through and compile the
-            // dll for each namespace.
-
-            var platformNamespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder, "microsoft.windows.devices.midi2*");
-            //var namespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder);
-
-            foreach (var platformNamespaceFolder in platformNamespaceFolders)
-            {
-                // build the projection
-                Console.Out.WriteLine("--------------");
-                Console.Out.WriteLine($"Rebuilding: {platformNamespaceFolder}");
-
-                //NodeGyp(
-                //    arguments: $"rebuild --msvs_version=2022",
-                //    workingDirectory: platformNamespaceFolder,
-                //    logOutput: false
-                //    );
-
-                // node-gyp rebuild --target=32.0.0 --arch=x64 --dist-url=https://electronjs.org/headers
-
-                //NpmTasks.Npm(
-                //    "install electron --save-dev",
-                //    platformNamespaceFolder);
+      //      foreach (var sdkFile in sdkFiles)
+      //      {
+      //          FileSystemTasks.CopyFileToDirectory(
+      //              sdkFile,
+      //              platformOutputRootFolder,
+      //              FileExistsPolicy.Overwrite,
+      //              true);
+      //      }
 
 
-                //NodeGyp(
-                //    arguments: $"configure" +
-                //        $" --node_use_v8_platform=false " +
-                //        $" --node_use_bundled_v8=false" +
-                //        $" --msvs_version=2022" +
-                //        $" --target=32.0.0" +
-                //        $" --dist-url=https://electronjs.org/headers" +
-                //        
-                //    workingDirectory: platformNamespaceFolder,
-                //    logOutput: false
-                //    );
+      //      // main windows metadata file
+      //      //FileSystemTasks.CopyFileToDirectory(
+      //      //    @"C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.20348.0\Windows.winmd",
+      //      //    platformOutputRootFolder,
+      //      //    FileExistsPolicy.Overwrite, true);
 
-                NodeGyp(
-                    arguments: $"rebuild" +
-                        $" --openssl_fips=X" +
-                        $" --arch={platform.ToLower()}" +
-                       /* $" --verbose" + */
-                        $" --msvs_version=2022",
-                    workingDirectory: platformNamespaceFolder,
-                    logOutput: true
-                    );
+      //      foreach (var ns in AppSdkAssemblies)
+      //      {
+      //          var nsRootFolder = platformOutputRootFolder / ns.ToLower();
+      //          nsRootFolder.CreateDirectory();
 
+      //          var namespaceBuildFolder = nsRootFolder / "build";
+      //          namespaceBuildFolder.CreateOrCleanDirectory();
 
+      //          // the winmd files are in the parent folder
+      //          //NodeRT($"--winmd {AppSdkStagingFolder / platform / ns + ".winmd"} --outdir {platformOutputRootFolder} --verbose");
+      //          NodeRT($"--winmd {AppSdkStagingFolder / platform / ns + ".winmd"} --outdir {platformOutputRootFolder}");
 
+      //          // todo: need to capture return code
+      //      }
 
-                // todo: need to capture return code
+      //      // the NodeRt tool creates folders for each namespace, not for 
+      //      // each winmd, so we then need to loop through and compile the
+      //      // dll for each namespace.
 
-                //NpmTasks.Npm(
-                //    "install --save-dev @electron/rebuild",
-                //    nsFolder);
+      //      var platformNamespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder, "microsoft.windows.devices.midi2*");
+      //      //var namespaceFolders = Globbing.GlobDirectories(platformOutputRootFolder);
 
-                // Next step is to execute the electron-rebuild.cmd
-                // .\node_modules\.bin\electron-rebuild.cmd
-                // but that path is different for each one, and nuke
-                // doesn't seem to support that with their Tools.
+      //      foreach (var platformNamespaceFolder in platformNamespaceFolders)
+      //      {
+      //          // build the projection
+      //          Console.Out.WriteLine("--------------");
+      //          Console.Out.WriteLine($"Rebuilding: {platformNamespaceFolder}");
 
+      //          //NodeGyp(
+      //          //    arguments: $"rebuild --msvs_version=2022",
+      //          //    workingDirectory: platformNamespaceFolder,
+      //          //    logOutput: false
+      //          //    );
 
-                // now copy the output files
+      //          // node-gyp rebuild --target=32.0.0 --arch=x64 --dist-url=https://electronjs.org/headers
 
-                //var nsReleaseRootFolder = projectionReleaseRoot / platform / nsFolder.Name.ToLower();
-                //nsReleaseRootFolder.CreateDirectory();
-
-                //binding.node is the binary
-
-                // Because of electron versioning vs node versioning, it's easier for the
-                // consumer if we just ship all the source, as crazy as that is for this.
-
-                //FileSystemTasks.CopyDirectoryRecursively(
-                //    platformNamespaceFolder,
-                //    projectionReleaseRoot / platform,
-                //    DirectoryExistsPolicy.Merge
-                //    );
+      //          //NpmTasks.Npm(
+      //          //    "install electron --save-dev",
+      //          //    platformNamespaceFolder);
 
 
-                //var sourceBinFolder = platformNamespaceFolder / "build" / "Release";
+      //          //NodeGyp(
+      //          //    arguments: $"configure" +
+      //          //        $" --node_use_v8_platform=false " +
+      //          //        $" --node_use_bundled_v8=false" +
+      //          //        $" --msvs_version=2022" +
+      //          //        $" --target=32.0.0" +
+      //          //        $" --dist-url=https://electronjs.org/headers" +
+      //          //        
+      //          //    workingDirectory: platformNamespaceFolder,
+      //          //    logOutput: false
+      //          //    );
 
-                //FileSystemTasks.CopyFileToDirectory(
-                //    sourceBinFolder / "binding.node",
-                //    nsReleaseRootFolder / "build" / "Release",
-                //    FileExistsPolicy.Overwrite, true);
-
-                //// we also want the three files in the lib folder
-
-                //var sourceLibFolder = nsFolder / "lib";
-
-                //var libFiles = sourceLibFolder.GlobFiles("*.js", "*.ts");
-
-                //foreach (var libFile in libFiles)
-                //{
-                //    //Console.WriteLine($"Copying Projection File: {libFile}");
-
-                //    FileSystemTasks.CopyFileToDirectory(
-                //        libFile,
-                //        nsReleaseRootFolder / "lib",
-                //        FileExistsPolicy.Overwrite, true);
-                //}
-
-                //FileSystemTasks.CopyFileToDirectory(
-                //    nsFolder / "package.json",
-                //    nsReleaseRootFolder,
-                //    FileExistsPolicy.Overwrite, true);
-
-
-            }
+      //          NodeGyp(
+      //              arguments: $"rebuild" +
+      //                  $" --openssl_fips=X" +
+      //                  $" --arch={platform.ToLower()}" +
+      //                 /* $" --verbose" + */
+      //                  $" --msvs_version=2022",
+      //              workingDirectory: platformNamespaceFolder,
+      //              logOutput: true
+      //              );
 
 
 
-            // copy the manifest over and name it the default for electron apps
-            FileSystemTasks.CopyFile(
-                AppSdkStagingFolder / platform / "ExampleMidiApp.exe.manifest",
-                platformOutputRootFolder / "electron.exe.manifest" ,
-                FileExistsPolicy.Overwrite, 
-                true);
 
-            // Remove windows.winmd
+      //          // todo: need to capture return code
 
+      //          //NpmTasks.Npm(
+      //          //    "install --save-dev @electron/rebuild",
+      //          //    nsFolder);
 
-
-            // now, we zip it all up and put it over into the release folder
-
-            platformOutputRootFolder.ZipTo(ThisReleaseFolder / $"electron-node-projection-{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}-{platform.ToLower()}.zip");
+      //          // Next step is to execute the electron-rebuild.cmd
+      //          // .\node_modules\.bin\electron-rebuild.cmd
+      //          // but that path is different for each one, and nuke
+      //          // doesn't seem to support that with their Tools.
 
 
-        }
+      //          // now copy the output files
+
+      //          //var nsReleaseRootFolder = projectionReleaseRoot / platform / nsFolder.Name.ToLower();
+      //          //nsReleaseRootFolder.CreateDirectory();
+
+      //          //binding.node is the binary
+
+      //          // Because of electron versioning vs node versioning, it's easier for the
+      //          // consumer if we just ship all the source, as crazy as that is for this.
+
+      //          //FileSystemTasks.CopyDirectoryRecursively(
+      //          //    platformNamespaceFolder,
+      //          //    projectionReleaseRoot / platform,
+      //          //    DirectoryExistsPolicy.Merge
+      //          //    );
+
+
+      //          //var sourceBinFolder = platformNamespaceFolder / "build" / "Release";
+
+      //          //FileSystemTasks.CopyFileToDirectory(
+      //          //    sourceBinFolder / "binding.node",
+      //          //    nsReleaseRootFolder / "build" / "Release",
+      //          //    FileExistsPolicy.Overwrite, true);
+
+      //          //// we also want the three files in the lib folder
+
+      //          //var sourceLibFolder = nsFolder / "lib";
+
+      //          //var libFiles = sourceLibFolder.GlobFiles("*.js", "*.ts");
+
+      //          //foreach (var libFile in libFiles)
+      //          //{
+      //          //    //Console.WriteLine($"Copying Projection File: {libFile}");
+
+      //          //    FileSystemTasks.CopyFileToDirectory(
+      //          //        libFile,
+      //          //        nsReleaseRootFolder / "lib",
+      //          //        FileExistsPolicy.Overwrite, true);
+      //          //}
+
+      //          //FileSystemTasks.CopyFileToDirectory(
+      //          //    nsFolder / "package.json",
+      //          //    nsReleaseRootFolder,
+      //          //    FileExistsPolicy.Overwrite, true);
+
+
+      //      }
+
+
+
+      //      // copy the manifest over and name it the default for electron apps
+      //      FileSystemTasks.CopyFile(
+      //          AppSdkStagingFolder / platform / "ExampleMidiApp.exe.manifest",
+      //          platformOutputRootFolder / "electron.exe.manifest" ,
+      //          FileExistsPolicy.Overwrite, 
+      //          true);
+
+      //      // Remove windows.winmd
+
+
+
+      //      // now, we zip it all up and put it over into the release folder
+
+      //      platformOutputRootFolder.ZipTo(ThisReleaseFolder / $"electron-node-projection-{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}-{platform.ToLower()}.zip");
+
+
+      //  }
 
     });
 
@@ -1076,6 +1082,7 @@ class Build : NukeBuild
         .DependsOn(Prerequisites)
         .DependsOn(BuildServiceAndPlugins)
         .DependsOn(BuildServiceAndPluginsInstaller)
+
         .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)

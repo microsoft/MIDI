@@ -51,7 +51,7 @@ public:
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
 
-    HRESULT AddHost(MidiNetworkHost* host);
+    HRESULT AddHost(_In_ MidiNetworkHost* host);
 
 
 private:

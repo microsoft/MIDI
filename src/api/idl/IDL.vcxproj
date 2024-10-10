@@ -104,6 +104,7 @@
     <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64)</LibraryPath>
     <ExcludePath>$(CommonExcludePath);$(VC_ExecutablePath_ARM64);$(VC_LibraryPath_ARM64);</ExcludePath>
     <ReferencePath>$(VC_ReferencesPath_ARM64);</ReferencePath>
+    <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
@@ -120,6 +121,7 @@
     <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64)</LibraryPath>
     <ExcludePath>$(CommonExcludePath);$(VC_ExecutablePath_ARM64);$(VC_LibraryPath_ARM64);</ExcludePath>
     <ReferencePath>$(VC_ReferencesPath_ARM64);</ReferencePath>
+    <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)\VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>

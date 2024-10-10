@@ -67,4 +67,6 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_USER_AUTH_KEY        L"userAuth"             // credential key to user/password entry in vault
 
 
+#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY             L"productInstanceId"
+
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CLIENT_KEY                               L"client"

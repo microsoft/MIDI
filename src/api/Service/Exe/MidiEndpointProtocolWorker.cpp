@@ -256,7 +256,7 @@ CMidiEndpointProtocolWorker::Start(
         if (auto index = internal::NormalizeEndpointInterfaceIdWStringCopy(m_deviceInterfaceId).find(L"#midisrv#midiu_ks_"); 
             index != std::wstring::npos)
         {
-            Sleep(500);
+            Sleep(2500);
         }
         // End partner compatibility mitigation added 2024-10-08
 

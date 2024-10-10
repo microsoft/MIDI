@@ -116,6 +116,7 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorEnumEndpointsFailed));
             }
 
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.CommonStringCanceled));
             return string.Empty;
         }
 
