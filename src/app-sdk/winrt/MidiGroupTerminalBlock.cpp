@@ -24,7 +24,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         fb->InternalSetisReadOnly(false);
 
         fb->IsActive(true);
-        fb->Number(m_block.Number);
+        fb->Number(max(0, m_block.Number - 1));     // group terminal blocks are numbered 1-255. Function blocks start with 0 as the id.
         fb->Name(m_block.Name.c_str());
         fb->FirstGroupIndex(m_block.FirstGroupIndex);
         fb->GroupCount(m_block.GroupCount);
