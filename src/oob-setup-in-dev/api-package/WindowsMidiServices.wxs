@@ -1,0 +1,84 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+
+    <Package  
+          Name="Windows MIDI Services In-Development $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="1.0.0.0"
+          UpgradeCode="43890557-4bb2-49b7-9173-d778d0db36fd"
+          Scope="perMachine"
+          Compressed="true"
+          
+          >
+       
+        <MediaTemplate EmbedCab="yes" />
+
+        
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="API_INSTALLFOLDER" Name="API" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
+                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+        
+        <!-- Transport and other Service Plugins -->
+        <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
+    
+        <Component Id="WindowsServiceAbstractions"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="733939fc-5a15-49e6-8e72-3106d74fd635"  >
+
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll"                SelfRegCost="1" Vital="true" />
+
+
+        </Component>
+        
+
+            <Component Id="ConfigurationRegistryEntries"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="776a9966-c2b4-44b5-816c-9441a87c585b"
+                   NeverOverwrite="false">
+                   
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services">
+
+                <RegistryKey Key="Endpoint Processing Plugins">
+                    <!-- TODO: Any processing plugins -->
+                </RegistryKey>
+
+                <RegistryKey Key="Transport Plugins">
+                    
+                    
+                    <RegistryKey Key="Midi2VirtualPatchBayTransport">
+                        <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    </RegistryKey>
+
+                    <RegistryKey Key="Midi2NetworkMidiTransport">
+                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
+                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    </RegistryKey>
+                    
+
+                </RegistryKey>
+            </RegistryKey>
+        </Component>
+        
+
+
+        <Feature Id="WindowsMIDIServices">
+            <ComponentRef Id="WindowsServiceAbstractions"/>
+            <ComponentRef Id="ConfigurationRegistryEntries"/>
+
+        </Feature>
+
+    </Package>
+</Wix>
