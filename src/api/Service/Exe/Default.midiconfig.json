@@ -16,10 +16,6 @@
         {
             "_comment": "KSAggregate MIDI (USB etc.)"
         },
-        "{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}":
-        {
-            "_comment": "Virtual Patch Bay"
-        },
         "{8FEAAD91-70E1-4A19-997A-377720A719C1}":
         {
             "_comment": "Virtual Device MIDI"

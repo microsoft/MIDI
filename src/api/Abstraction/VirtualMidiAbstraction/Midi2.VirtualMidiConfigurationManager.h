@@ -16,9 +16,9 @@ class CMidi2VirtualMidiConfigurationManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IUnknown* MidiDeviceManager, _In_ IUnknown* MidiServiceConfigurationManagerInterface));
+    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IMidiDeviceManagerInterface* MidiDeviceManager, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* Response));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;

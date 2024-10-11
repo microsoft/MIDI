@@ -13,18 +13,18 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiBiDi::Initialize(
-    LPCWSTR Device,
-    PABSTRACTIONCREATIONPARAMS CreationParams,
-    DWORD * MmCssTaskId,
-    IMidiCallback * Callback,
-    LONGLONG Context,
+    LPCWSTR device,
+    PABSTRACTIONCREATIONPARAMS creationParams,
+    DWORD * mmcssTaskId,
+    IMidiCallback * callback,
+    LONGLONG context,
     GUID /* SessionId */
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Callback);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == callback);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == device);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == mmcssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == creationParams);
 
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -32,21 +32,21 @@ CMidi2KSMidiBiDi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(Device, "Device"),
-        TraceLoggingHexUInt32(*MmCssTaskId, "MmCssTaskId")
+        TraceLoggingWideString(device, "device"),
+        TraceLoggingHexUInt32(*mmcssTaskId, "mmcssTaskId")
         );
 
     std::unique_ptr<CMidi2KSMidi> midiDevice(new (std::nothrow) CMidi2KSMidi());
     RETURN_IF_NULL_ALLOC(midiDevice);
 
-    RETURN_IF_FAILED(midiDevice->Initialize(Device, MidiFlowBidirectional, CreationParams, MmCssTaskId, Callback, Context));
+    RETURN_IF_FAILED(midiDevice->Initialize(device, MidiFlowBidirectional, creationParams, mmcssTaskId, callback, context));
     m_MidiDevice = std::move(midiDevice);
 
     return S_OK;
 }
 
 HRESULT
-CMidi2KSMidiBiDi::Cleanup()
+CMidi2KSMidiBiDi::Shutdown()
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -58,7 +58,7 @@ CMidi2KSMidiBiDi::Cleanup()
 
     if (m_MidiDevice)
     {
-        m_MidiDevice->Cleanup();
+        m_MidiDevice->Shutdown();
         m_MidiDevice.reset();
     }
 
@@ -68,14 +68,14 @@ CMidi2KSMidiBiDi::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiBiDi::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
+    PVOID data,
+    UINT length,
+    LONGLONG position
 )
 {
     if (m_MidiDevice)
     {
-        return m_MidiDevice->SendMidiMessage(Data, Length, Position);
+        return m_MidiDevice->SendMidiMessage(data, length, position);
     }
 
     return E_ABORT;

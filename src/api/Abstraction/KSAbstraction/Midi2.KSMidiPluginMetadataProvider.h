@@ -18,6 +18,6 @@ class CMidi2KSMidiPluginMetadataProvider :
 public:
     STDMETHOD(Initialize());
     STDMETHOD(GetMetadata(_Out_ PABSTRACTIONMETADATA metadata));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 };

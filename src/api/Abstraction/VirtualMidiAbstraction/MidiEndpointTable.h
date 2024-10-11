@@ -61,7 +61,7 @@ public:
 
     bool IsUniqueIdInUse(_In_ std::wstring const uniqueId) noexcept;
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
 

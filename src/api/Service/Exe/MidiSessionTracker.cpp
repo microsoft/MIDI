@@ -100,11 +100,11 @@ CMidiSessionTracker::VerifyConnectivity()
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::AddClientSession(
-    GUID SessionId,
-    LPCWSTR SessionName,
-    DWORD ClientProcessId,
-    wil::unique_handle& ClientProcessHandle,
-    PVOID* ContextHandle
+    GUID sessionId,
+    LPCWSTR sessionName,
+    DWORD clientProcessId,
+    wil::unique_handle& clientProcessHandle,
+    PVOID* contextHandle
 )
 {
 
@@ -115,17 +115,17 @@ CMidiSessionTracker::AddClientSession(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingGuid(SessionId),
-        TraceLoggingUInt32(ClientProcessId),
-        TraceLoggingWideString(SessionName)
+        TraceLoggingGuid(sessionId),
+        TraceLoggingUInt32(clientProcessId),
+        TraceLoggingWideString(sessionName)
     );
 
     // context handle can be null for protocol manager
-    //RETURN_HR_IF_NULL(E_INVALIDARG, ContextHandle);
+    //RETURN_HR_IF_NULL(E_INVALIDARG, contextHandle);
 
 
     auto lock = m_sessionsLock.lock();
-    auto result = FindSession(SessionId, ClientProcessId);
+    auto result = FindSession(sessionId, clientProcessId);
 
     if (result != m_sessions.end())
     {
@@ -146,7 +146,7 @@ CMidiSessionTracker::AddClientSession(
     std::wstring modulePath{ 0 };
     modulePath.resize(MAX_PATH + 1);
 
-    auto numPathCharacters = GetModuleFileNameEx(ClientProcessHandle.get(), NULL, modulePath.data(), (DWORD)modulePath.capacity());
+    auto numPathCharacters = GetModuleFileNameEx(clientProcessHandle.get(), NULL, modulePath.data(), (DWORD)modulePath.capacity());
     if (numPathCharacters > 0)
     {
         clientProcessName = (std::filesystem::path(modulePath).filename()).c_str();
@@ -171,22 +171,22 @@ CMidiSessionTracker::AddClientSession(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Creating new session entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingGuid(SessionId),
-        TraceLoggingUInt32(ClientProcessId),
-        TraceLoggingWideString(SessionName),
+        TraceLoggingGuid(sessionId),
+        TraceLoggingUInt32(clientProcessId),
+        TraceLoggingWideString(sessionName),
         TraceLoggingWideString(clientProcessName.c_str())
     );
 
 
     MidiSessionEntry entry{ };
 
-    entry.SessionId = SessionId;
-    entry.ClientProcessId = ClientProcessId;
+    entry.SessionId = sessionId;
+    entry.ClientProcessId = clientProcessId;
     entry.StartTime = std::chrono::system_clock::now();
 
-    if (SessionName != nullptr)
+    if (sessionName != nullptr)
     {
-        entry.SessionName = internal::TrimmedWStringCopy(SessionName);
+        entry.SessionName = internal::TrimmedWStringCopy(sessionName);
     }
     else
     {
@@ -200,15 +200,15 @@ CMidiSessionTracker::AddClientSession(
 
     m_sessions.push_back(entry);
 
-    if (ContextHandle != nullptr)
+    if (contextHandle != nullptr)
     {
         // we use the pointer to the session entry as the context handle, so
         // we need to add it to the vector before we have that value
 
-        auto savedEntryIterator = FindSession(SessionId, ClientProcessId);
+        auto savedEntryIterator = FindSession(sessionId, clientProcessId);
         auto contextHandleValue = &(*(savedEntryIterator));
 
-        *ContextHandle = (PVOID)contextHandleValue;
+        *contextHandle = (PVOID)contextHandleValue;
 
         savedEntryIterator->ContextHandle = contextHandleValue;
     }
@@ -220,9 +220,9 @@ CMidiSessionTracker::AddClientSession(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Session created", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingGuid(SessionId),
-        TraceLoggingUInt32(ClientProcessId),
-        TraceLoggingWideString(SessionName),
+        TraceLoggingGuid(sessionId),
+        TraceLoggingUInt32(clientProcessId),
+        TraceLoggingWideString(sessionName),
         TraceLoggingWideString(clientProcessName.c_str())
     );
 
@@ -232,9 +232,9 @@ CMidiSessionTracker::AddClientSession(
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::UpdateClientSessionName(
-    GUID SessionId,
-    LPCWSTR SessionName,
-    DWORD ClientProcessId
+    GUID sessionId,
+    LPCWSTR sessionName,
+    DWORD clientProcessId
 )
 {
     TraceLoggingWrite(
@@ -243,20 +243,20 @@ CMidiSessionTracker::UpdateClientSessionName(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(SessionId),
-        TraceLoggingUInt32(ClientProcessId),
-        TraceLoggingWideString(SessionName)
+        TraceLoggingGuid(sessionId),
+        TraceLoggingUInt32(clientProcessId),
+        TraceLoggingWideString(sessionName)
     );
 
     // clean up the session name
-    std::wstring newName{ SessionName };
+    std::wstring newName{ sessionName };
     internal::InPlaceTrim(newName);
 
     if (!newName.empty())
     {
         auto lock = m_sessionsLock.lock();
 
-        auto sess = FindSession(SessionId, ClientProcessId);
+        auto sess = FindSession(sessionId, clientProcessId);
         if (sess != m_sessions.end())
         {
             sess->SessionName = newName;
@@ -270,9 +270,9 @@ CMidiSessionTracker::UpdateClientSessionName(
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"E_NOTFOUND. No matching session", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(SessionId),
-                TraceLoggingUInt32(ClientProcessId),
-                TraceLoggingWideString(SessionName)
+                TraceLoggingGuid(sessionId),
+                TraceLoggingUInt32(clientProcessId),
+                TraceLoggingWideString(sessionName)
             );
 
             RETURN_IF_FAILED(E_NOTFOUND);
@@ -287,9 +287,9 @@ CMidiSessionTracker::UpdateClientSessionName(
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"E_INVALIDARG. Trimmed session name is empty", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingGuid(SessionId),
-            TraceLoggingUInt32(ClientProcessId),
-            TraceLoggingWideString(SessionName)
+            TraceLoggingGuid(sessionId),
+            TraceLoggingUInt32(clientProcessId),
+            TraceLoggingWideString(sessionName)
         );
 
         RETURN_IF_FAILED(E_INVALIDARG);
@@ -302,8 +302,8 @@ CMidiSessionTracker::UpdateClientSessionName(
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::RemoveClientSession(
-    GUID SessionId,
-    DWORD ClientProcessId
+    GUID sessionId,
+    DWORD clientProcessId
 )
 {
     TraceLoggingWrite(
@@ -312,13 +312,13 @@ CMidiSessionTracker::RemoveClientSession(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(SessionId),
-        TraceLoggingUInt32(ClientProcessId)
+        TraceLoggingGuid(sessionId),
+        TraceLoggingUInt32(clientProcessId)
     );
 
     auto lock = m_sessionsLock.lock();
     
-    auto session = FindSession(SessionId, ClientProcessId);
+    auto session = FindSession(sessionId, clientProcessId);
     if (session != m_sessions.end())
     {
         m_sessions.erase(session);
@@ -336,7 +336,7 @@ CMidiSessionTracker::RemoveClientSession(
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::RemoveClientSessionInternal(
-    PVOID ContextHandle
+    PVOID contextHandle
 )
 {
     TraceLoggingWrite(
@@ -345,16 +345,16 @@ CMidiSessionTracker::RemoveClientSessionInternal(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingPointer(ContextHandle)
+        TraceLoggingPointer(contextHandle)
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, ContextHandle);
+    RETURN_HR_IF_NULL(E_INVALIDARG, contextHandle);
 
     auto lock = m_sessionsLock.lock();
 
     std::shared_ptr<CMidiClientManager> clientManager = m_clientManager.lock();
 
-    if (auto sessionEntry = FindSessionForContextHandle(ContextHandle); sessionEntry != m_sessions.end())
+    if (auto sessionEntry = FindSessionForContextHandle(contextHandle); sessionEntry != m_sessions.end())
     {
         // Remove each client connection using the MidiClientManager
 
@@ -377,12 +377,12 @@ CMidiSessionTracker::RemoveClientSessionInternal(
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::IsValidSession(
-    GUID SessionId, 
-    DWORD ClientProcessId
+    GUID sessionId, 
+    DWORD clientProcessId
 )
 {
     auto lock = m_sessionsLock.lock();
-    auto session = FindSession(SessionId, ClientProcessId);
+    auto session = FindSession(sessionId, clientProcessId);
 
     if (session != m_sessions.end())
     {
@@ -393,8 +393,8 @@ CMidiSessionTracker::IsValidSession(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Session Valid. Found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingGuid(SessionId, "Session ID"),
-            TraceLoggingUInt32(ClientProcessId, "Client Process ID")
+            TraceLoggingGuid(sessionId, "Session ID"),
+            TraceLoggingUInt32(clientProcessId, "Client Process ID")
         );
 
         return S_OK;
@@ -407,8 +407,8 @@ CMidiSessionTracker::IsValidSession(
         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Session Invalid. NOT found in the tracker", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingGuid(SessionId, "Session ID"),
-        TraceLoggingUInt32(ClientProcessId, "Client Process ID"),
+        TraceLoggingGuid(sessionId, "Session ID"),
+        TraceLoggingUInt32(clientProcessId, "Client Process ID"),
         TraceLoggingUInt32(static_cast<uint32_t>(m_sessions.size()), "Total session count")
     );
 
@@ -420,10 +420,10 @@ CMidiSessionTracker::IsValidSession(
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::AddClientEndpointConnection(
-    GUID SessionId, 
-    DWORD ClientProcessId,
-    LPCWSTR ConnectionEndpointInterfaceId,
-    MidiClientHandle ClientHandle
+    GUID sessionId, 
+    DWORD clientProcessId,
+    LPCWSTR connectionEndpointInterfaceId,
+    MidiClientHandle clientHandle
     )
 {
     TraceLoggingWrite(
@@ -432,14 +432,14 @@ CMidiSessionTracker::AddClientEndpointConnection(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(SessionId),
-        TraceLoggingUInt32(ClientProcessId),
-        TraceLoggingWideString(ConnectionEndpointInterfaceId)
+        TraceLoggingGuid(sessionId),
+        TraceLoggingUInt32(clientProcessId),
+        TraceLoggingWideString(connectionEndpointInterfaceId)
     );
 
     MidiSessionConnectionEntry newConnection;
 
-    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(ConnectionEndpointInterfaceId);
+    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(connectionEndpointInterfaceId);
 
     newConnection.ConnectedEndpointInterfaceId = cleanEndpointId;
     newConnection.InstanceCount = 1;
@@ -447,7 +447,7 @@ CMidiSessionTracker::AddClientEndpointConnection(
        
     auto lock = m_sessionsLock.lock();
 
-    auto sessionEntry = FindSession(SessionId, ClientProcessId);
+    auto sessionEntry = FindSession(sessionId, clientProcessId);
     if (sessionEntry != m_sessions.end())
     {
         if (auto connection = sessionEntry->Connections.find(cleanEndpointId); connection != sessionEntry->Connections.end())
@@ -461,7 +461,7 @@ CMidiSessionTracker::AddClientEndpointConnection(
         }
 
         // need to end up removing these laters
-        sessionEntry->ClientHandles.push_back(ClientHandle);
+        sessionEntry->ClientHandles.push_back(clientHandle);
     }
     else
     {
@@ -473,9 +473,9 @@ CMidiSessionTracker::AddClientEndpointConnection(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingGuid(SessionId),
-            TraceLoggingUInt32(ClientProcessId),
-            TraceLoggingWideString(ConnectionEndpointInterfaceId),
+            TraceLoggingGuid(sessionId),
+            TraceLoggingUInt32(clientProcessId),
+            TraceLoggingWideString(connectionEndpointInterfaceId),
             TraceLoggingWideString(L"No valid session found. Returning E_NOTFOUND.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
@@ -488,10 +488,10 @@ CMidiSessionTracker::AddClientEndpointConnection(
 _Use_decl_annotations_
 HRESULT
 CMidiSessionTracker::RemoveClientEndpointConnection(
-    GUID SessionId, 
-    DWORD ClientProcessId,
-    LPCWSTR ConnectionEndpointInterfaceId,
-    MidiClientHandle /*ClientHandle*/
+    GUID sessionId, 
+    DWORD clientProcessId,
+    LPCWSTR connectionEndpointInterfaceId,
+    MidiClientHandle /*clientHandle*/
 )
 {
     TraceLoggingWrite(
@@ -500,16 +500,16 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(SessionId),
-        TraceLoggingUInt32(ClientProcessId),
-        TraceLoggingWideString(ConnectionEndpointInterfaceId)
+        TraceLoggingGuid(sessionId),
+        TraceLoggingUInt32(clientProcessId),
+        TraceLoggingWideString(connectionEndpointInterfaceId)
     );
 
     auto lock = m_sessionsLock.lock();
 
-    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(ConnectionEndpointInterfaceId);
+    auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(connectionEndpointInterfaceId);
 
-    if (auto sessionEntry = FindSession(SessionId, ClientProcessId); sessionEntry != m_sessions.end())
+    if (auto sessionEntry = FindSession(sessionId, clientProcessId); sessionEntry != m_sessions.end())
     {
         if (auto connection = sessionEntry->Connections.find(cleanEndpointId); connection != sessionEntry->Connections.end())
         {
@@ -535,7 +535,7 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
 _Use_decl_annotations_
 HRESULT 
 CMidiSessionTracker::GetSessionList(
-    BSTR* SessionList
+    BSTR* sessionList
 )
 {
     TraceLoggingWrite(
@@ -605,13 +605,13 @@ CMidiSessionTracker::GetSessionList(
 
     ccbstr = wstr.c_str();
 
-    RETURN_IF_FAILED(ccbstr.CopyTo(SessionList));
+    RETURN_IF_FAILED(ccbstr.CopyTo(sessionList));
 
     return S_OK;
 }
 
 HRESULT
-CMidiSessionTracker::Cleanup()
+CMidiSessionTracker::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

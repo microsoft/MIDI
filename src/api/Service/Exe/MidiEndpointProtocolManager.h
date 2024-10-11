@@ -37,7 +37,7 @@ public:
         );
 
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
     GUID m_sessionId;

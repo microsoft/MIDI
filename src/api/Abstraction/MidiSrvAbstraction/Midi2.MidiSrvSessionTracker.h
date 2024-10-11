@@ -29,9 +29,7 @@ public:
     STDMETHOD(GetSessionList(_Out_ BSTR* SessionList));
     //STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
 
-    STDMETHOD(VerifyConnectivity)();
-
-    STDMETHOD(Cleanup());
+    STDMETHOD(Shutdown());
 
 private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;

@@ -12,12 +12,12 @@
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolWorker::Initialize(
-    GUID SessionId,
-    GUID AbstractionGuid,
-    LPCWSTR EndpointDeviceInterfaceId,
-    std::shared_ptr<CMidiClientManager>& ClientManager,
-    std::shared_ptr<CMidiDeviceManager>& DeviceManager,
-    std::shared_ptr<CMidiSessionTracker>& SessionTracker
+    GUID sessionId,
+    GUID abstractionGuid,
+    LPCWSTR endpointDeviceInterfaceId,
+    std::shared_ptr<CMidiClientManager>& clientManager,
+    std::shared_ptr<CMidiDeviceManager>& deviceManager,
+    std::shared_ptr<CMidiSessionTracker>& sessionTracker
 )
 {
     TraceLoggingWrite(
@@ -27,16 +27,16 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(EndpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    m_abstractionGuid = AbstractionGuid;
-    m_sessionId = SessionId;
-    m_deviceInterfaceId = EndpointDeviceInterfaceId;
+    m_abstractionGuid = abstractionGuid;
+    m_sessionId = sessionId;
+    m_deviceInterfaceId = endpointDeviceInterfaceId;
 
-    m_clientManager = ClientManager;
-    m_deviceManager = DeviceManager;
-    m_sessionTracker = SessionTracker;
+    m_clientManager = clientManager;
+    m_deviceManager = deviceManager;
+    m_sessionTracker = sessionTracker;
 
     m_clientProcessId = GetCurrentProcessId();
 
@@ -49,7 +49,7 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Initialize complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(EndpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     return S_OK;
@@ -138,8 +138,8 @@ CMidiEndpointProtocolWorker::FunctionBlockNamePropertyKeyFromNumber(
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolWorker::Start(
-    ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-    IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
+    ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
+    IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
 )
 {
     TraceLoggingWrite(
@@ -155,12 +155,12 @@ CMidiEndpointProtocolWorker::Start(
 
     m_initialNegotiation = true;
 
-    m_negotiationCompleteCallback = NegotiationCompleteCallback;
+    m_negotiationCompleteCallback = negotiationCompleteCallback;
 
     // these are defaults, but discovery will tell us what we can really do here.
-    m_preferToSendJRTimestampsToEndpoint = NegotiationParams.PreferToSendJRTimestampsToEndpoint;
-    m_preferToReceiveJRTimestampsFromEndpoint = NegotiationParams.PreferToReceiveJRTimestampsFromEndpoint;
-    m_preferredMidiProtocol = NegotiationParams.PreferredMidiProtocol;
+    m_preferToSendJRTimestampsToEndpoint = negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint;
+    m_preferToReceiveJRTimestampsFromEndpoint = negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint;
+    m_preferredMidiProtocol = negotiationParams.PreferredMidiProtocol;
 
     // We continue listening for and updating metadata even after we return.
     // We don't raise any changed events here. Instead, anyone interested in getting
@@ -177,8 +177,7 @@ CMidiEndpointProtocolWorker::Start(
 
             // we only support UMP data format for protocol negotiation
             ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
-            abstractionCreationParams.DataFormat = MidiDataFormat::MidiDataFormat_UMP;
-            abstractionCreationParams.InstanceConfigurationJsonData = nullptr;
+            abstractionCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
 
             DWORD mmcssTaskId{ 0 };
             LONGLONG context{ 0 };
@@ -263,7 +262,7 @@ CMidiEndpointProtocolWorker::Start(
         // start initial negotiation. Return when timed out or when we have all the requested info.
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
-        m_allNegotiationMessagesReceived.wait(NegotiationParams.TimeoutMilliseconds);
+        m_allNegotiationMessagesReceived.wait(negotiationParams.TimeoutMilliseconds);
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -498,10 +497,10 @@ CMidiEndpointProtocolWorker::Start(
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolWorker::Callback(
-    PVOID Data,
-    UINT Size,
-    LONGLONG Position,
-    LONGLONG Context)
+    PVOID data,
+    UINT size,
+    LONGLONG position,
+    LONGLONG context)
 {
     //TraceLoggingWrite(
     //    MidiSrvTelemetryProvider::Provider(),
@@ -513,17 +512,17 @@ CMidiEndpointProtocolWorker::Callback(
     //);
 
 
-    UNREFERENCED_PARAMETER(Position);
-    UNREFERENCED_PARAMETER(Context);
+    UNREFERENCED_PARAMETER(position);
+    UNREFERENCED_PARAMETER(context);
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, Data);
+    RETURN_HR_IF_NULL(E_INVALIDARG, data);
 
 
-    if (Size == UMP128_BYTE_COUNT)
+    if (size == UMP128_BYTE_COUNT)
     {
         internal::PackedUmp128 ump;
 
-        if (internal::FillPackedUmp128FromBytePointer((byte*)Data, (uint8_t)Size, ump))
+        if (internal::FillPackedUmp128FromBytePointer((byte*)data, (uint8_t)size, ump))
         {
             // if type F, process it.
 
@@ -957,7 +956,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
 
 
 HRESULT
-CMidiEndpointProtocolWorker::Cleanup()
+CMidiEndpointProtocolWorker::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -983,7 +982,7 @@ CMidiEndpointProtocolWorker::Cleanup()
 
     if (m_midiBiDiDevice)
     {
-        m_midiBiDiDevice->Cleanup();
+        m_midiBiDiDevice->Shutdown();
         m_midiBiDiDevice.reset();
     }
 
@@ -1032,7 +1031,7 @@ CMidiEndpointProtocolWorker::UpdateEndpointNameProperty()
                 DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
         };
 
-        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
         // clear out any old value that's in there
         //m_endpointName.clear();
@@ -1077,7 +1076,7 @@ CMidiEndpointProtocolWorker::UpdateEndpointProductInstanceIdProperty()
                 DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
         };
 
-        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
         // clear out any old value that's in there
         //m_productInstanceId.clear();
@@ -1095,7 +1094,7 @@ CMidiEndpointProtocolWorker::UpdateEndpointProductInstanceIdProperty()
                 DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
         };
 
-        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
         return S_OK;
     }
@@ -1131,7 +1130,7 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockNameProperty(uint8_t functionBlo
                 DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
         };
 
-        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
         // clear out any old name that's in there
       //  m_functionBlockNames.erase(functionBlockNumber);
@@ -1148,7 +1147,7 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockNameProperty(uint8_t functionBlo
                 DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
         };
 
-        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+        RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
         return S_OK;
     }
@@ -1192,7 +1191,7 @@ CMidiEndpointProtocolWorker::UpdateStreamConfigurationProperties(internal::Packe
 
     };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
     return S_OK;
 }
@@ -1247,7 +1246,7 @@ CMidiEndpointProtocolWorker::UpdateDeviceIdentityProperty(internal::PackedUmp128
 
     };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
     return S_OK;
 }
@@ -1314,7 +1313,7 @@ CMidiEndpointProtocolWorker::UpdateEndpointInfoProperties(internal::PackedUmp128
 
     };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
     return S_OK;
 }
@@ -1366,7 +1365,7 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockProperty(internal::PackedUmp128&
 
     };
 
-    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), (PVOID)props));
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_deviceInterfaceId.c_str(), ARRAYSIZE(props), props));
 
     return S_OK;
 }

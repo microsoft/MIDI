@@ -11,15 +11,28 @@ import "unknwn.idl";
 import "oaidl.idl";
 import "ocidl.idl";
 
+// Include sw def's and dev prop def's for IDL compiling, but
+// leaving them for clients will result in duplicate definitions.
+cpp_quote("#ifdef MIDL_PASS")
+#define PCWSTR LPCWSTR
+#define PCZZWSTR LPCWSTR
+#include "specstrings.h"
+#include "swdevicedef.h"
+#include "devpropdef.h"
+cpp_quote("#else")
+cpp_quote("#include <swdevicedef.h>")
+cpp_quote("#include <devpropdef.h>")
+cpp_quote("#endif")
+
 
 // Enumeration of midi data formats. These are used to communicate both a requested format, and the negotiated format.
 typedef enum
 {
-    MidiDataFormat_Invalid = 0,
-    MidiDataFormat_ByteStream = 0x1,
-    MidiDataFormat_UMP = 0x2,
-    MidiDataFormat_Any = 0x3
-} MidiDataFormat;
+    MidiDataFormats_Invalid = 0,
+    MidiDataFormats_ByteStream = 0x1,
+    MidiDataFormats_UMP = 0x2,
+    MidiDataFormats_Any = 0xFFFF
+} MidiDataFormats;
 
 // Enumeration to communicate the direction of flow of midi data, with respect to the midi peripheral.
 typedef enum
@@ -29,11 +42,19 @@ typedef enum
     MidiFlowBidirectional
 } MidiFlow;
 
+typedef enum
+{
+    MetadataFlags_None = 0,
+    MetadataFlags_IsRuntimeCreatableByApps = 1,
+    MetadataFlags_IsRuntimeCreatableBySettings = 2,
+    MetadataFlags_IsSystemManaged = 4,
+    MetadataFlags_IsClientConfigurable = 8
+} MetadataFlags;
+
 // Structure used during abstraction initialization to communicate format information and other configuration
 typedef struct
 {
-    MidiDataFormat DataFormat;
-    LPCWSTR InstanceConfigurationJsonData;
+    MidiDataFormats DataFormat;
 } ABSTRACTIONCREATIONPARAMS, * PABSTRACTIONCREATIONPARAMS;
 
 
@@ -41,81 +62,99 @@ typedef struct
 [
     object,
     local,
-    uuid(EA264200-3328-49E5-8815-73649A8748BE),
-    pointer_default(unique)
+    uuid(EA264200-3328-49E5-8815-73649A8748BE)
 ]
 interface IMidiAbstraction : IUnknown
 {
     HRESULT Activate(
-        [in, annotation("_In_")] REFIID Iid,
-        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
+        [in, annotation("_In_")] REFIID iid,
+        [out, iid_is(iid), annotation("_COM_Outptr_")] void** activatedInterface
     );
 };
 
 // ============================================================================================
 // Endpoint types: In/Out/Bidirectional and the Callback
 
-// Used for sending data upstream from an abstraction to a client. Also used in transforms.
+// Used for sending data from an abstraction to the client using the abstraction.
+// Also used in transforms.
+// Due to this usage, data flowing through IMidiCallback may be MidiIn data, or MidiOut data.
+//
+// The format of the data sent in the callback is determined by the initialization of the MidiAbstraction,
+// or MidiTransform that is performing the callback. 
+//
+// The position is specified as either 0, or a QPC.
+// Usage of the position depends upon the context of the callback, whether MidiIn or MidiOut.
+// For MidiIn, the position should be the QPC at the time the midi message was recieved from the abstraction, or 
+// the QPC when it was first received by the service.
+// For MidiOut, the position should either be 0 indicating that it should be delivered immediately, or the QPC 
+// that it should be delivered at for scheduled playback.
+//
+// context will typically contain the value provided at initialization time, however in some situations internal in
+// the midi service, with midi transforms, the context is defined to contain the group index for the midi data.
 [
     object,
         local,
-        uuid(4D6A29E5-DF4F-4A2D-A923-9B23B3F2D6F6),
-        pointer_default(unique)
+        uuid(4D6A29E5-DF4F-4A2D-A923-9B23B3F2D6F6)
 ]
 interface IMidiCallback : IUnknown
 {
     HRESULT Callback(
-        [in] PVOID message,
-        [in] UINT size,
-        [in] LONGLONG position,
-        [in] LONGLONG context
+        [in, annotation("_In_")] PVOID message,
+        [in, annotation("_In_")] UINT size,
+        [in, annotation("_In_")] LONGLONG position,
+        [in, annotation("_In_")] LONGLONG context
     );
 };
 
-// Represents a MidiIn abstraction instance, which is used to move data from a peripheral upstream to a client
+// Represents a MidiIn abstraction instance, which is used to move data from a peripheral to the client
+// using the abstraction.
 [
     object,
         local,
-        uuid(6C4B8BF9-8133-4B41-8303-1FDE78E20ACA),
-        pointer_default(unique)
+        uuid(6C4B8BF9-8133-4B41-8303-1FDE78E20ACA)
 ]
 interface IMidiIn : IUnknown
 {
     HRESULT Initialize(
-        [in] LPCWSTR deviceId,
-        [in] PABSTRACTIONCREATIONPARAMS creationParams,
-        [in] DWORD* mmcssTaskId,
-        [in] IMidiCallback* callback,
-        [in] LONGLONG context,
-        [in] GUID SessionId
+        [in, string, annotation("_In_")] LPCWSTR deviceId,
+        [in, annotation("_In_")] PABSTRACTIONCREATIONPARAMS creationParams,
+        [in, out, annotation("_Inout_")] DWORD* mmcssTaskId,
+        [in, annotation("_In_")] IMidiCallback* callback,
+        [in, annotation("_In_")] LONGLONG context,
+        [in, annotation("_In_")] GUID sessionId
 
     );
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 };
 
 // Represents a MidiOut abstraction instance, which is used to move data from a client to the abstraction
 [
     object,
     local,
-    uuid(F328D645-7D6D-4924-A7E3-9DEE245189F9),
-    pointer_default(unique)
+    uuid(F328D645-7D6D-4924-A7E3-9DEE245189F9)
 ]
 interface IMidiOut : IUnknown
 {
     HRESULT Initialize(
-        [in] LPCWSTR deviceId,
-        [in] PABSTRACTIONCREATIONPARAMS creationParams,
-        [in] DWORD* mmcssTaskId,
-        [in] GUID SessionId
+        [in, string, annotation("_In_")] LPCWSTR deviceId,
+        [in, annotation("_In_")] PABSTRACTIONCREATIONPARAMS creationParams,
+        [in, annotation("_In_")] DWORD* mmcssTaskId,
+        [in, annotation("_In_")] GUID sessionId
     );
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
+    // The format of the data sent through SendMidiMessage is determined by the creationParams provided
+    // during IMidiOut initialization.
+    //
+    // The position is specified as either 0, or a QPC.
+    // The position should either be 0 indicating that it should be delivered immediately, or the QPC 
+    // that it should be delivered at for scheduled playback.
     HRESULT SendMidiMessage(
-        [in] PVOID message,
-        [in] UINT size,
-        [in] LONGLONG position
+        [in, annotation("_In_")] PVOID message,
+        [in, annotation("_In_")] UINT size,
+        [in, annotation("_In_")] LONGLONG position
 
     );
 };
@@ -125,169 +164,147 @@ interface IMidiOut : IUnknown
 [
     object,
     local,
-    uuid(B89BBB45-7001-4BEA-BBD8-C7CC26E7836C),
-    pointer_default(unique)
+    uuid(B89BBB45-7001-4BEA-BBD8-C7CC26E7836C)
 ]
 interface IMidiBiDi : IUnknown
 {
     HRESULT Initialize(
-        [in] LPCWSTR deviceId,
-        [in] PABSTRACTIONCREATIONPARAMS creationParams,
-        [in] DWORD* mmcssTaskId,
-        [in] IMidiCallback* callback,
-        [in] LONGLONG context,
-        [in] GUID SessionId
+        [in, string, annotation("_In_")] LPCWSTR deviceId,
+        [in, annotation("_In_")] PABSTRACTIONCREATIONPARAMS creationParams,
+        [in, out, annotation("_Inout_")] DWORD* mmcssTaskId,
+        [in, annotation("_In_")] IMidiCallback* callback,
+        [in, annotation("_In_")] LONGLONG context,
+        [in, annotation("_In_")] GUID sessionId
     );
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
+    // The format of the data sent through SendMidiMessage is determined by the creationParams provided
+    // during IMidiBiDi initialization.
+    //
+    // The position is specified as either 0, or a QPC.
+    // The position should either be 0 indicating that it should be delivered immediately, or the QPC 
+    // that it should be delivered at for scheduled playback.
     HRESULT SendMidiMessage(
-        [in] PVOID message,
-        [in] UINT size,
-        [in] LONGLONG position
+        [in, annotation("_In_")] PVOID message,
+        [in, annotation("_In_")] UINT size,
+        [in, annotation("_In_")] LONGLONG position
     );
 };
-
-
-// ============================================================================================
-// Endpoint manager in the service
-
-
-// IMidiEndpointManager is implemented by midi endpoint abstractions, and is called by MidiSrv 
-// during service startup to allow the endpoint abstraction to coordinate with MidiSrv for 
-// configuring and publishing midi endpoints.
-[
-    object,
-    local,
-    uuid(badff6d2-0e3c-4009-a473-6ba82c008662),
-    pointer_default(unique)
-]
-interface IMidiEndpointManager : IUnknown
-{
-    HRESULT Initialize(
-        [in] IUnknown* midiDeviceManager,
-        [in] IUnknown* midiEndpointProtocolManager //,
-        /*[in] LPCWSTR configurationJson */
-    );
-
-    HRESULT Cleanup();
-};
-
-
 
 // ============================================================================================
 // Endpoint management
 
-
-// If you change these, you should also update
-// the WinRT MidiEndpointDevicePurpose enum, which is projected through the WinRT SDK
+// These must align to the WinRT MidiEndpointDevicePurpose enum, which is part of the public nuget
+// package.
 typedef enum
 {
-    NormalMessageEndpoint = 0,
-    VirtualDeviceResponder = 100,
-    InBoxGeneralMidiSynth = 400,
-    DiagnosticLoopback = 500,
-    DiagnosticPing = 510,
-} MidiEndpointDevicePurposePropertyValue;
+    MidiEndpointDeviceType_Normal = 0,
+    MidiEndpointDeviceType_VirtualDeviceResponder = 100,
+    MidiEndpointDeviceType_MidiSynthesizer = 400,
+    MidiEndpointDeviceType_DiagnosticLoopback = 500,
+    MidiEndpointDeviceType_DiagnosticPing = 510,
+} MidiEndpointDeviceType;
 
+typedef enum
+{
+    MidiEndpointCapabilities_None = 0,
+    MidiEndpointCapabilities_SupportsMidi1Protocol = 1,
+    MidiEndpointCapabilities_SupportsMidi2Protocol = 2,
+    MidiEndpointCapabilities_SupportsMultiClient = 4,
+    MidiEndpointCapabilities_GenerateIncomingTimestamps = 8
+} MidiEndpointCapabilities;
 
 // Used during endpoint creation to communicate common midi endpoint properties.
 typedef struct
 {
     GUID AbstractionLayerGuid;
-    MidiEndpointDevicePurposePropertyValue EndpointPurpose;
+    MidiEndpointDeviceType EndpointDeviceType;
 
     LPCWSTR FriendlyName;
 
+    // a two to four character "code" used to identify the transport as part of
+    // the SWD creation string. New transports should avoid using codes already in use by other
+    // transports, however two or more transports using the same code will not cause functional problems.
     LPCWSTR TransportCode;
-    LPCWSTR TransportSuppliedEndpointName;
-    LPCWSTR TransportSuppliedEndpointDescription;
+    LPCWSTR EndpointName;
+    LPCWSTR EndpointDescription;
 
-    LPCWSTR UserSuppliedEndpointName;
-    LPCWSTR UserSuppliedEndpointDescription;
-    UINT32  UserSuppliedEndpointPortNumber;
+    LPCWSTR CustomEndpointName;
+    LPCWSTR CustomEndpointDescription;
+    UINT32  CustomEndpointPortNumber;
 
+    // Contents varies by transport, contains a unique identifier that is repeatable
+    // for this endpoint, possibly a guid or peripheral serial number.
     LPCWSTR UniqueIdentifier;
     LPCWSTR ManufacturerName;
 
-    MidiDataFormat SupportedDataFormats;
-    BYTE NativeDataFormat;
+    MidiDataFormats SupportedDataFormats;
+    MidiDataFormats NativeDataFormat;
 
-    BOOL SupportsMidi1ProtocolDefaultValue;
-    BOOL SupportsMidi2ProtocolDefaultValue;
-
-    BOOL SupportsMultiClient;
-    //BOOL RequiresMetadataHandler;
-    BOOL GenerateIncomingTimestamps;
+    MidiEndpointCapabilities Capabilities;
 } MIDIENDPOINTCOMMONPROPERTIES, * PMIDIENDPOINTCOMMONPROPERTIES;
 
-// Used for communicating midi endpoint information from an abstraction to MidiSrv, for publishing the endpoint.
+// Used for communicating midi endpoint information from an abstraction to MidiSrv, for publishing the SWD's which represent
+// the endpoint(s) and are enumerated by client applications.
 [
     object,
-        local,
-        uuid(A04374D3-4514-44E1-A2F9-7D8B907AEF1F),
-        pointer_default(unique)
+    local,
+    uuid(A04374D3-4514-44E1-A2F9-7D8B907AEF1F)
 ]
 interface IMidiDeviceManagerInterface : IUnknown
 {
-
     HRESULT ActivateVirtualParentDevice(
-        [in] ULONG DevPropertyCount,
-        [in, annotation("_In_opt_")] PVOID DevProperties,
-        [in, annotation("_In_")] PVOID CreateInfo,
-        [out, annotation("_Out_writes_opt_z_(CreatedSwDeviceIdCharCount)")] LPWSTR CreatedSwDeviceId,
-        [in] ULONG CreatedSwDeviceIdCharCount
+        [in, annotation("_In_")] ULONG devPropertyCount,
+        [in, size_is(devPropertyCount), annotation("_In_opt_")] const DEVPROPERTY* devProperties,
+        [in] const SW_DEVICE_CREATE_INFO* createInfo,
+        [out, string, annotation("_Out_opt_")] LPWSTR* createdDeviceInterfaceId
     );
 
-
     HRESULT ActivateEndpoint(
-        [in] LPCWSTR ParentInstanceId,
-        [in] BOOL UMPOnly,
-        [in] MidiFlow MidiFlow,
-        [in] PMIDIENDPOINTCOMMONPROPERTIES CommonProperties,
-        [in] ULONG IntPropertyCount,
-        [in] ULONG DevPropertyCount,
-        [in, annotation("_In_opt_")] PVOID InterfaceDevProperties,
-        [in, annotation("_In_opt_")] PVOID DeviceDevProperties,
-        [in, annotation("_In_opt_")] PVOID CreateInfo,
-        [out, annotation("_Out_writes_opt_z_(CreatedSwDeviceInterfaceIdWCharCount)")] LPWSTR CreatedSwDeviceInterfaceId,
-        [in] ULONG CreatedSwDeviceInterfaceIdWCharCount
+        [in, string, annotation("_In_")] LPCWSTR parentInstanceId,
+        [in, annotation("_In_")] BOOL umpOnly,
+        [in, annotation("_In_")] MidiFlow midiFlow,
+        [in, annotation("_In_")] PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
+        [in, annotation("_In_")] ULONG intPropertyCount,
+        [in, annotation("_In_")] ULONG devPropertyCount,
+        [in, size_is(intPropertyCount), annotation("_In_opt_")] const DEVPROPERTY* interfaceDevProperties,
+        [in, size_is(devPropertyCount), annotation("_In_opt_")] const DEVPROPERTY* deviceDevProperties,
+        [in, annotation("_In_opt_")] const SW_DEVICE_CREATE_INFO* createInfo,
+        [out, string, annotation("_Out_opt_")] LPWSTR* createdDeviceInterfaceId
     );
 
     HRESULT UpdateEndpointProperties(
-        [in] LPCWSTR DeviceInterfaceId,
-        [in] ULONG IntPropertyCount,
-        [in, annotation("_In_")] PVOID InterfaceDevProperties
+        [in, string, annotation("_In_")] LPCWSTR deviceInterfaceId,
+        [in, annotation("_In_")] ULONG intPropertyCount,
+        [in, size_is(intPropertyCount), annotation("_In_")] const DEVPROPERTY* interfaceDevProperties
     );
 
     HRESULT DeleteEndpointProperties(
-        [in] LPCWSTR DeviceInterfaceId,
-        [in] ULONG IntPropertyCount,
-        [in, annotation("_In_")] PVOID DevPropKeys
+        [in, string, annotation("_In_")] LPCWSTR deviceInterfaceId,
+        [in, annotation("_In_")] ULONG devPropertyCount,
+        [in, size_is(devPropertyCount), annotation("_In_opt_")] const DEVPROPERTY* devPropKeys
     );
 
     HRESULT DeactivateEndpoint(
-        [in] LPCWSTR InstanceId
+        [in, string, annotation("_In_")] LPCWSTR instanceId
     );
 
     HRESULT RemoveEndpoint(
-        [in] LPCWSTR InstanceId
+        [in, string, annotation("_In_")] LPCWSTR instanceId
     );
 
 
     // Update the configuration for an abstraction or endpoints managed by that abstraction
     HRESULT UpdateAbstractionConfiguration(
-        [in] GUID AbstractionId,
-        [in] LPCWSTR ConfigurationJson,
-        [in] BOOL IsFromConfigurationFile,
-        [out] BSTR* Response
+        [in, annotation("_In_")] GUID abstractionId,
+        [in, string, annotation("_In_")] LPCWSTR configurationJson,
+        [in, annotation("_In_")] BOOL isFromConfigurationFile,
+        [out, string, annotation("_Out_")] LPWSTR* response
     );
 
 
 };
-
-
-
 
 // ============================================================================================
 // Service (and Abstraction/Transform) Configuration
@@ -296,32 +313,31 @@ interface IMidiDeviceManagerInterface : IUnknown
 [
     object,
     local,
-    uuid(6c21fcda-051b-4f06-8d40-f5bced5957c0),
-    pointer_default(unique)
+    uuid(6c21fcda-051b-4f06-8d40-f5bced5957c0)
 ]
 interface IMidiServiceConfigurationManagerInterface : IUnknown
 {
     // these parse provided json
 
     HRESULT GetAbstractionCreateActionJsonObject(
-        [in] LPCWSTR sourceAbstractionJson,
-        [out] BSTR* responseJson
+        [in, string, annotation("_In_")] LPCWSTR sourceAbstractionJson,
+        [out, string, annotation("_Out_")] LPWSTR* responseJson
     );
 
     HRESULT GetAbstractionUpdateActionJsonObject(
-        [in] LPCWSTR sourceAbstractionJson,
-        [out] BSTR* responseJson
+        [in, string, annotation("_In_")] LPCWSTR sourceAbstractionJson,
+        [out, string, annotation("_Out_")] LPWSTR* responseJson
     );
 
     HRESULT GetAbstractionRemoveActionJsonObject(
-        [in] LPCWSTR sourceAbstractionJson,
-        [out] BSTR* responseJson
+        [in, string, annotation("_In_")] LPCWSTR sourceAbstractionJson,
+        [out, string, annotation("_Out_")] LPWSTR* responseJson
     );
 
     HRESULT GetAbstractionMatchingEndpointJsonObject(
-        [in] LPCWSTR sourceActionObjectJson,
-        [in] LPCWSTR searchKeyValuePairsJson,
-        [out] BSTR* responseJson
+        [in, string, annotation("_In_")] LPCWSTR sourceActionObjectJson,
+        [in, string, annotation("_In_")] LPCWSTR searchKeyValuePairsJson,
+        [out, string, annotation("_Out_")] LPWSTR* responseJson
     );
 
 
@@ -330,9 +346,9 @@ interface IMidiServiceConfigurationManagerInterface : IUnknown
     // the abstraction has actually created the device interface
 
     HRESULT GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject(
-        [in] GUID abstractionId,
-        [in] LPCWSTR searchKeyValuePairsJson,
-        [out] BSTR* responseJson
+        [in, annotation("_In_")] GUID abstractionId,
+        [in, string, annotation("_In_")] LPCWSTR searchKeyValuePairsJson,
+        [out, string, annotation("_Out_")] LPWSTR* responseJson
     );
 
 };
@@ -340,31 +356,26 @@ interface IMidiServiceConfigurationManagerInterface : IUnknown
 // Used for sending configuration information to the abstraction from a client (for runtime updates) 
 // or from the device manager in the service (for global configuration file updates), which may 
 // affect the published endpoints
-// 
-// we're going to want one of these for transforms, but it needs to have
-// enough context to be able to target a specific instance of a transform
-// for a specific device
 [
     object,
     local,
-    uuid(f19dd642-1809-4497-9eee-f230b11bd6fb),
-    pointer_default(unique)
+    uuid(f19dd642-1809-4497-9eee-f230b11bd6fb)
 ]
 interface IMidiAbstractionConfigurationManager : IUnknown
 {
     HRESULT Initialize(
-        [in] GUID abstractionId,
-        [in] IUnknown* midiDeviceManager,
-        [in] IUnknown* midiServiceConfigurationManager
+        [in, annotation("_In_")] GUID abstractionId,
+        [in, annotation("_In_")] IMidiDeviceManagerInterface* midiDeviceManager,
+        [in, annotation("_In_")] IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManager
     );
 
     HRESULT UpdateConfiguration(
-        [in] LPCWSTR configurationJsonSection,
-        [in] BOOL IsFromConfigurationFile,
-        [out] BSTR* response
+        [in, string, annotation("_In_")] LPCWSTR configurationJsonSection,
+        [in, annotation("_In_")] BOOL isFromConfigurationFile,
+        [out, string, annotation("_Out_")] LPWSTR* response
     );
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 };
 
 
@@ -373,11 +384,14 @@ interface IMidiAbstractionConfigurationManager : IUnknown
 // Message transformation
 
 // Configuration parameters for initializing the transform
+// For transforms that change the data format, the in and out
+// data formats are needed.
+// Conversion between UMP and Bytestream also requires a group index
+// for targeting/filtering the messages.
 typedef struct
 {
-    MidiDataFormat DataFormatIn;
-    MidiDataFormat DataFormatOut;
-    LPCWSTR InstanceConfigurationJsonData;
+    MidiDataFormats DataFormatIn;
+    MidiDataFormats DataFormatOut;
     BYTE UmpGroupIndex;
 } TRANSFORMCREATIONPARAMS, * PTRANSFORMCREATIONPARAMS;
 
@@ -387,14 +401,13 @@ typedef struct
 [
     object,
         local,
-        uuid(65FA86A4-0433-4DCD-88E4-E565051CAB2D),
-        pointer_default(unique)
+        uuid(65FA86A4-0433-4DCD-88E4-E565051CAB2D)
 ]
 interface IMidiTransform : IUnknown
 {
     HRESULT Activate(
-        [in, annotation("_In_")] REFIID Iid,
-        [out, iid_is(Iid), annotation("_COM_Outptr_")] void** Interface
+        [in, annotation("_In_")] REFIID iid,
+        [out, iid_is(iid), annotation("_COM_Outptr_")] void** activatedInterface
     );
 };
 
@@ -402,26 +415,25 @@ interface IMidiTransform : IUnknown
 [
     object,
         local,
-        uuid(5D2400F0-F2EE-4A51-A3BE-0AC9A19C09C4),
-        pointer_default(unique)
+        uuid(5D2400F0-F2EE-4A51-A3BE-0AC9A19C09C4)
 ]
 interface IMidiDataTransform : IUnknown
 {
     HRESULT Initialize(
-        [in] LPCWSTR deviceId,
-        [in] PTRANSFORMCREATIONPARAMS creationParams,
-        [in] DWORD* mmcssTaskId,
-        [in] IMidiCallback* callback,
-        [in] LONGLONG context,
-        [in] IUnknown* midiDeviceManager
+        [in, string, annotation("_In_")] LPCWSTR deviceId,
+        [in, annotation("_In_")] PTRANSFORMCREATIONPARAMS creationParams,
+        [in, out, annotation("_Inout_")] DWORD* mmcssTaskId,
+        [in, annotation("_In_")] IMidiCallback* callback,
+        [in, annotation("_In_")] LONGLONG context,
+        [in, annotation("_In_")] IMidiDeviceManagerInterface* midiDeviceManager
     );
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
     HRESULT SendMidiMessage(
-        [in] PVOID message,
-        [in] UINT size,
-        [in] LONGLONG position
+        [in, annotation("_In_")] PVOID message,
+        [in, annotation("_In_")] UINT size,
+        [in, annotation("_In_")] LONGLONG position
     );
 };
 
@@ -450,12 +462,15 @@ typedef struct
 // so they can create compatible MIDI 1.0 ports from the results
 // from MIDI 2.0 protocol negotiation. This is not sent over RPC
 // or otherwise used cross-process. In-service only.
+//
+// AllEndpointInformationReceived is set to true when the final negotation message
+// is received.
+//
 typedef struct
 {
     BOOL AllEndpointInformationReceived;
 
-    BOOL EndpointSupportsMIDI2Protocol;
-    BOOL EndpointSupportsMIDI1Protocol;
+    MidiEndpointCapabilities EndpointCapabilities;
 
     LPCWSTR EndpointSuppliedName;
     LPCWSTR EndpointSuppliedProductInstanceId;
@@ -471,8 +486,8 @@ typedef struct
 // The service's input into the protocol negotiation process for a single endpoint
 typedef struct
 {
-    BOOL PreferToSendJRTimestampsToEndpoint;
-    BOOL PreferToReceiveJRTimestampsFromEndpoint;
+    BOOL PreferToSendJitterReductionTimestampsToEndpoint;
+    BOOL PreferToReceiveJitterReductionTimestampsFromEndpoint;
     BYTE PreferredMidiProtocol;
     WORD TimeoutMilliseconds;
 } ENDPOINTPROTOCOLNEGOTIATIONPARAMS, *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
@@ -485,15 +500,14 @@ typedef struct
 [
     object,
         local,
-        uuid(f948dc64-e03a-4e24-bc6e-437ad729cd50),
-        pointer_default(unique)
+        uuid(f948dc64-e03a-4e24-bc6e-437ad729cd50)
 ]
 interface IMidiProtocolNegotiationCompleteCallback : IUnknown
 {
     HRESULT ProtocolNegotiationCompleteCallback(
-        [in] GUID AbstractionGuid,
-        [in] LPCWSTR DeviceInterfaceId,
-        [in] PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results
+        [in, annotation("_In_")] GUID abstractionGuid,
+        [in, string, annotation("_In_")] LPCWSTR deviceInterfaceId,
+        [in, annotation("_In_")] PENDPOINTPROTOCOLNEGOTIATIONRESULTS results
     );
 };
 
@@ -502,25 +516,41 @@ interface IMidiProtocolNegotiationCompleteCallback : IUnknown
 [
     object,
     local,
-    uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482),
-    pointer_default(unique)
+    uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482)
 ]
 interface IMidiEndpointProtocolManagerInterface : IUnknown
 {
     HRESULT DiscoverAndNegotiate(
-        [in] GUID AbstractionGuid,
-        [in] LPCWSTR DeviceInterfaceId,
-        [in] ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-        [in] IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
+        [in, annotation("_In_")] GUID abstractionGuid,
+        [in, string, annotation("_In_")] LPCWSTR deviceInterfaceId,
+        [in, annotation("_In_")] ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
+        [in, annotation("_In_")] IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
     );
 
 
 };
 
+// ============================================================================================
+// Endpoint manager in the service
 
 
+// IMidiEndpointManager is implemented by midi endpoint abstractions, and is called by MidiSrv 
+// during service startup to allow the endpoint abstraction to coordinate with MidiSrv for 
+// configuring and publishing midi endpoints.
+[
+    object,
+    local,
+    uuid(badff6d2-0e3c-4009-a473-6ba82c008662)
+]
+interface IMidiEndpointManager : IUnknown
+{
+    HRESULT Initialize(
+        [in, annotation("_In_")] IMidiDeviceManagerInterface* midiDeviceManager,
+        [in, annotation("_In_")] IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
+    );
 
-
+    HRESULT Shutdown();
+};
 
 // ============================================================================================
 // Service Plugin Reporting
@@ -530,22 +560,17 @@ interface IMidiEndpointProtocolManagerInterface : IUnknown
 // Settings and MIDI Console apps. 
 typedef struct
 {
-    GUID Id;            // class Id
-    LPCWSTR TransportCode;   // this comes from a constant, not resources
-
-    BSTR Name;
-    BSTR Description;
-    BSTR Author;
-
-    BSTR SmallImagePath;
-
-    BSTR Version;
-
-    BOOL IsRuntimeCreatableByApps;
-    BOOL IsRuntimeCreatableBySettings;
-
-    BOOL IsSystemManaged;
-    BOOL IsClientConfigurable;
+    GUID Id;
+    // a two to four character "code" used to identify the transport as part of
+    // the SWD creation string. New transports should avoid using codes already in use by other
+    // transports, however two or more transports using the same code will not cause functional problems.
+    LPWSTR TransportCode;
+    LPWSTR Name;
+    LPWSTR Description;
+    LPWSTR Author;
+    LPWSTR SmallImagePath;
+    LPWSTR Version;
+    MetadataFlags Flags;
 } ABSTRACTIONMETADATA, * PABSTRACTIONMETADATA;
 
 
@@ -554,40 +579,31 @@ typedef struct
 // the MIDI Settings and MIDI Console apps. 
 typedef struct
 {
-    GUID Id;           // class Id
-
-    BSTR Name;
-    BSTR Description;
-    BSTR Author;
-
-    BSTR SmallImagePath;
-
-    BSTR Version;
-
-    BOOL IsRuntimeCreatableByApps;
-    BOOL IsRuntimeCreatableBySettings;
-
-    BOOL IsSystemManaged;
-    BOOL IsClientConfigurable;
+    GUID Id;
+    LPWSTR Name;
+    LPWSTR Description;
+    LPWSTR Author;
+    LPWSTR SmallImagePath;
+    LPWSTR Version;
+    MetadataFlags Flags;
 } TRANSFORMMETADATA, * PTRANSFORMMETADATA;
 
 // Interface used to obtain the abstraction metadata for reporting to the user. 
 // This is implemented by each abstraction in the service.
 [
     object,
-        local,
-        uuid(8d542740-83f8-4a9a-8627-cd6324b6c1f4),
-        pointer_default(unique)
+    local,
+    uuid(8d542740-83f8-4a9a-8627-cd6324b6c1f4)
 ]
 interface IMidiServiceAbstractionPluginMetadataProvider : IUnknown
 {
     HRESULT Initialize();
 
     HRESULT GetMetadata(
-        [out] PABSTRACTIONMETADATA metadata
+        [out, annotation("_Out_")] PABSTRACTIONMETADATA metadata
     );
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 };
 
 // Interface used to obtain the transform metadata for reporting to the user. 
@@ -595,34 +611,32 @@ interface IMidiServiceAbstractionPluginMetadataProvider : IUnknown
 [
     object,
         local,
-        uuid(76c65f88-061f-4e4f-bb9d-3ac1981f12f2),
-        pointer_default(unique)
+        uuid(76c65f88-061f-4e4f-bb9d-3ac1981f12f2)
 ]
 interface IMidiServiceTransformPluginMetadataProvider : IUnknown
 {
     HRESULT Initialize();
 
     HRESULT GetMetadata(
-        [out] PTRANSFORMMETADATA metadata
+        [out, annotation("_Out_")] PTRANSFORMMETADATA metadata
     );
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 };
 
 // Used by the client to request the abstraction and transform metadata.
 [
     object,
         local,
-        uuid(469c7722-f779-40c3-b648-52620f75dcee),
-        pointer_default(unique)
+        uuid(469c7722-f779-40c3-b648-52620f75dcee)
 ]
 interface IMidiServicePluginMetadataReporterInterface : IUnknown
 {
     HRESULT GetAbstractionList(
-        [out] BSTR* AbstractionListJson);
+        [out, string, annotation("_Out_")] LPWSTR* abstractionListJson);
 
     HRESULT GetTransformList(
-        [out] BSTR* TransformListJson);
+        [out, string, annotation("_Out_")] LPWSTR* transformListJson);
 
 };
 
@@ -637,32 +651,28 @@ interface IMidiServicePluginMetadataReporterInterface : IUnknown
 [
     object,
         local,
-        uuid(194c2746-3ae5-419a-94d9-20416c7dbefe),
-        pointer_default(unique)
+        uuid(194c2746-3ae5-419a-94d9-20416c7dbefe)
 ]
 interface IMidiSessionTracker : IUnknown
 {
     HRESULT Initialize();
 
     HRESULT AddClientSession(
-        [in] GUID SessionId,
-        [in] LPCWSTR SessionName
+        [in, annotation("_In_")] GUID sessionId,
+        [in, string, annotation("_In_")] LPCWSTR sessionName
     );
 
     HRESULT UpdateClientSessionName(
-        [in] GUID SessionId,
-        [in] LPCWSTR SessionName
+        [in, annotation("_In_")] GUID sessionId,
+        [in, string, annotation("_In_")] LPCWSTR sessionName
     );
 
     HRESULT RemoveClientSession(
-        [in] GUID SessionId
+        [in, annotation("_In_")] GUID sessionId
     );
 
     HRESULT GetSessionList(
-        [out] BSTR* SessionDetailsList);
+        [out, string, annotation("_Out_")] LPWSTR* sessionDetailsList);
 
-    // TODO: May want to move this to an interface that deals with connection health/tracking
-    HRESULT VerifyConnectivity();
-
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 };
