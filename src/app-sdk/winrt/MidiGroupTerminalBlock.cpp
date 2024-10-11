@@ -129,15 +129,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         if (gtbBandwidthValue == 0)
         {
+            // Bandwidth capability is unknown or not a fixed value
             return (uint32_t)0;
         }
         else if (gtbBandwidthValue == 0x0001)
         {
-            return (uint32_t)31250;
+            return (uint32_t)MIDI_1_STANDARD_BITS_PER_SECOND;
         }
         else
         {
-            // 4000, not 4096, for 4k bps
+            // 4000, not 4096, for 4k bps per the spec
+            // max value is FFFFh * 4000d = 262,140,000d
             return (uint32_t)(gtbBandwidthValue * 4000);
         }
     }
@@ -151,6 +153,5 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         return CalculateBandwidth(m_block.MaxOutputBandwidth);
     }
-
 
 }

@@ -49,6 +49,12 @@
 // per message
 #define MAXIMUM_LIBMIDI2_BYTESTREAM_DATASIZE 20
 
+// speed of a standard MIDI 1.0 connection. Used in the SDK, and will be used in
+// transforms or service in the future when we introduce optional throttling
+#define MIDI_1_STANDARD_BITS_PER_SECOND 31250
+// this is /10 and not /8 because MIDI 1 standard was 8-n-1, or 10 bits per byte
+#define MIDI_1_STANDARD_BYTES_PER_SECOND (MIDI_1_STANDARD_BITS_PER_SECOND / 10)
+
 // largest supported bytestream is 2048
 // TODO: revisit this, possibly have wdmaud2 chunk down large sysex messages to
 // something more manageable
