@@ -11,10 +11,10 @@
 _Use_decl_annotations_
 HRESULT
 CMidiTransformPipe::Initialize(
-    LPCWSTR Device,
-    PMIDISRV_TRANSFORMCREATION_PARAMS CreationParams,
-    DWORD* MmcssTaskId,
-    IUnknown* MidiDeviceManager
+    LPCWSTR device,
+    PMIDISRV_TRANSFORMCREATION_PARAMS pipeCreationParams,
+    DWORD* mmcssTaskId,
+    IMidiDeviceManagerInterface* midiDeviceManager
 )
 {
     TraceLoggingWrite(
@@ -24,31 +24,31 @@ CMidiTransformPipe::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
 
     wil::com_ptr_nothrow<IMidiTransform> midiTransform;
     TRANSFORMCREATIONPARAMS creationParams {};
 
-    m_TransformGuid = CreationParams->TransformGuid;
+    m_TransformGuid = pipeCreationParams->TransformGuid;
 
     // Transforms are "bidirectional" from the midi pipes perspective,
     // so we always initialize the pipe as bidirectional.
-    RETURN_IF_FAILED(CMidiPipe::Initialize(Device, MidiFlowBidirectional));
+    RETURN_IF_FAILED(CMidiPipe::Initialize(device, MidiFlowBidirectional));
 
-    RETURN_IF_FAILED(SetDataFormatIn(CreationParams->DataFormatIn));
-    RETURN_IF_FAILED(SetDataFormatOut(CreationParams->DataFormatOut));
+    RETURN_IF_FAILED(SetDataFormatIn(pipeCreationParams->DataFormatIn));
+    RETURN_IF_FAILED(SetDataFormatOut(pipeCreationParams->DataFormatOut));
 
     RETURN_IF_FAILED(CoCreateInstance(m_TransformGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransform)));
     RETURN_IF_FAILED(midiTransform->Activate(__uuidof(IMidiDataTransform), (void**)&m_MidiDataTransform));
 
     creationParams.DataFormatIn = DataFormatIn();
     creationParams.DataFormatOut = DataFormatOut();
-    creationParams.UmpGroupIndex = CreationParams->UmpGroupIndex;
+    creationParams.UmpGroupIndex = pipeCreationParams->UmpGroupIndex;
 
     // transforms are initialized with the group index as the context.
-    RETURN_IF_FAILED(m_MidiDataTransform->Initialize(Device, &creationParams, MmcssTaskId, this, CreationParams->UmpGroupIndex, MidiDeviceManager));
+    RETURN_IF_FAILED(m_MidiDataTransform->Initialize(device, &creationParams, mmcssTaskId, this, pipeCreationParams->UmpGroupIndex, midiDeviceManager));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -57,7 +57,7 @@ CMidiTransformPipe::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     return S_OK;
@@ -69,7 +69,7 @@ GUID CMidiTransformPipe::TransformGuid()
 }
 
 HRESULT
-CMidiTransformPipe::Cleanup()
+CMidiTransformPipe::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -82,10 +82,10 @@ CMidiTransformPipe::Cleanup()
 
     if (m_MidiDataTransform)
     {
-        RETURN_IF_FAILED(m_MidiDataTransform->Cleanup());
+        RETURN_IF_FAILED(m_MidiDataTransform->Shutdown());
     }
 
-    RETURN_IF_FAILED(CMidiPipe::Cleanup());
+    RETURN_IF_FAILED(CMidiPipe::Shutdown());
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -103,23 +103,23 @@ CMidiTransformPipe::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidiTransformPipe::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Timestamp
+    PVOID data,
+    UINT length,
+    LONGLONG timestamp
 )
 {
-    return m_MidiDataTransform->SendMidiMessage(Data, Length, Timestamp);
+    return m_MidiDataTransform->SendMidiMessage(data, length, timestamp);
 }
 
 
 _Use_decl_annotations_
 HRESULT
 CMidiTransformPipe::SendMidiMessageNow(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Timestamp
+    PVOID data,
+    UINT length,
+    LONGLONG timestamp
 )
 {
-    return m_MidiDataTransform->SendMidiMessage(Data, Length, Timestamp);
+    return m_MidiDataTransform->SendMidiMessage(data, length, timestamp);
 }
 

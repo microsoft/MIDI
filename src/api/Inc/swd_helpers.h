@@ -22,14 +22,14 @@ namespace WindowsMidiServicesInternal
 {
     inline std::wstring CalculateEndpointDevicePrimaryName(
         _In_ std::wstring const& transportSuppliedEndpointName,
-        _In_ std::wstring const& userSuppliedEndpointName,
+        _In_ std::wstring const& customEndpointName,
         _In_ std::wstring const& inProtocolDiscoveredEndpointName
     )
     {
         // top priority is any user-supplied name
-        if (!::WindowsMidiServicesInternal::TrimmedWStringCopy(userSuppliedEndpointName).empty())
+        if (!::WindowsMidiServicesInternal::TrimmedWStringCopy(customEndpointName).empty())
         {
-            return ::WindowsMidiServicesInternal::TrimmedWStringCopy(userSuppliedEndpointName);
+            return ::WindowsMidiServicesInternal::TrimmedWStringCopy(customEndpointName);
         }
 
         // next priority is any in-protocol name

@@ -16,7 +16,7 @@ public:
     ~CMidiProcessManager() {}
     
     HRESULT Initialize();
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
 

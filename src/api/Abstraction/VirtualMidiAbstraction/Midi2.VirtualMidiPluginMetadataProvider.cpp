@@ -25,27 +25,29 @@ CMidi2VirtualMidiPluginMetadataProvider::GetMetadata(
     RETURN_HR_IF_NULL(E_INVALIDARG, metadata);
 
     metadata->Id = ABSTRACTION_LAYER_GUID;
-    metadata->TransportCode = TRANSPORT_CODE;
 
-    internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_NAME, &metadata->Name);
-    internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_DESCRIPTION, &metadata->Description);
-    internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_AUTHOR, &metadata->Author);
-    internal::ResourceCopyToBSTR(IDS_PLUGIN_METADATA_VERSION, &metadata->Version);
+    wil::unique_cotaskmem_string tempString;
+    tempString = wil::make_cotaskmem_string_nothrow(TRANSPORT_CODE);
+    RETURN_IF_NULL_ALLOC(tempString.get());
+    metadata->TransportCode = tempString.release();
+
+    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_NAME, &metadata->Name);
+    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_DESCRIPTION, &metadata->Description);
+    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_AUTHOR, &metadata->Author);
+    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_VERSION, &metadata->Version);
 
     metadata->SmallImagePath = NULL;                        // TODO
 //    metadata->ClientConfigurationAssemblyName = NULL;       // TODO
 
-    metadata->IsRuntimeCreatableByApps = true;
-    metadata->IsRuntimeCreatableBySettings = false;
-
-    metadata->IsSystemManaged = false;
-    metadata->IsClientConfigurable = false;
+    UINT32 flags {0};
+    flags |= MetadataFlags_IsRuntimeCreatableByApps;
+    metadata->Flags = (MetadataFlags) flags;
 
     return S_OK;
 }
 
 HRESULT
-CMidi2VirtualMidiPluginMetadataProvider::Cleanup()
+CMidi2VirtualMidiPluginMetadataProvider::Shutdown()
 {
     return S_OK;
 }

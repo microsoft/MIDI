@@ -12,7 +12,7 @@
 
 typedef struct MIDISRV_DEVICECREATION_PARAMS
 {
-    MidiDataFormat DataFormat;
+    MidiDataFormats DataFormat;
     MidiFlow Flow;
     ULONG BufferSize;
 } MIDISRV_DEVICECREATION_PARAMS, *PMIDISRV_DEVICECREATION_PARAMS;
@@ -24,7 +24,7 @@ public:
     HRESULT Initialize(_In_ LPCWSTR,
                        _In_ PMIDISRV_DEVICECREATION_PARAMS,
                        _In_ DWORD *);
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
     // called by the client
     HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);

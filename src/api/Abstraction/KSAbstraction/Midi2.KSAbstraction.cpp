@@ -12,13 +12,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAbstraction::Activate(
-    REFIID Riid,
-    void **Interface
+    REFIID riid,
+    void **activatedInterface
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == activatedInterface);
 
-    if (__uuidof(IMidiIn) == Riid)
+    if (__uuidof(IMidiIn) == riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
@@ -31,9 +31,9 @@ CMidi2KSAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiIn> midiIn;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiIn>(&midiIn));
-        *Interface = midiIn.detach();
+        *activatedInterface = midiIn.detach();
     }
-    else if (__uuidof(IMidiOut) == Riid)
+    else if (__uuidof(IMidiOut) == riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
@@ -46,9 +46,9 @@ CMidi2KSAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiOut> midiOut;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiOut>(&midiOut));
-        *Interface = midiOut.detach();
+        *activatedInterface = midiOut.detach();
     }
-    else if (__uuidof(IMidiBiDi) == Riid)
+    else if (__uuidof(IMidiBiDi) == riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
@@ -61,9 +61,9 @@ CMidi2KSAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiBiDi>(&midiBiDi));
-        *Interface = midiBiDi.detach();
+        *activatedInterface = midiBiDi.detach();
     }
-    else if (__uuidof(IMidiEndpointManager) == Riid)
+    else if (__uuidof(IMidiEndpointManager) == riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
@@ -81,9 +81,9 @@ CMidi2KSAbstraction::Activate(
             AbstractionState::Current().ConstructEndpointManager();
         }
 
-        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
+        RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(riid, activatedInterface));
     }
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    else if (__uuidof(IMidiAbstractionConfigurationManager) == riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
@@ -100,10 +100,10 @@ CMidi2KSAbstraction::Activate(
             AbstractionState::Current().ConstructConfigurationManager();
         }
 
-        RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
+        RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(riid, activatedInterface));
     }
 
-    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == riid)
     {
         TraceLoggingWrite(
             MidiKSAbstractionTelemetryProvider::Provider(),
@@ -116,7 +116,7 @@ CMidi2KSAbstraction::Activate(
 
         wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSMidiPluginMetadataProvider>(&metadataProvider));
-        *Interface = metadataProvider.detach();
+        *activatedInterface = metadataProvider.detach();
     }
 
     else

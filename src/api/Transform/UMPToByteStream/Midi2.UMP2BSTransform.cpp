@@ -5,13 +5,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2UMP2BSTransform::Activate(
-    REFIID Iid,
-    void **Interface
+    REFIID iid,
+    void **activatedInterface
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == activatedInterface);
 
-    if (__uuidof(IMidiDataTransform) == Iid)
+    if (__uuidof(IMidiDataTransform) == iid)
     {
         TraceLoggingWrite(
             MidiUMP2BSTransformTelemetryProvider::Provider(),
@@ -25,7 +25,7 @@ CMidi2UMP2BSTransform::Activate(
 
         wil::com_ptr_nothrow<IMidiDataTransform> midiTransform;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2UMP2BSMidiTransform>(&midiTransform));
-        *Interface = midiTransform.detach();
+        *activatedInterface = midiTransform.detach();
     }
 
     else

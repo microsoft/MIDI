@@ -15,15 +15,15 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiOut::Initialize(
-    LPCWSTR Device,   
-    PABSTRACTIONCREATIONPARAMS CreationParams,
-    DWORD * MmCssTaskId,
+    LPCWSTR device,   
+    PABSTRACTIONCREATIONPARAMS creationParams,
+    DWORD * mmcssTaskId,
     GUID /* SessionId */
 )
 {
-    RETURN_HR_IF(E_INVALIDARG, nullptr == Device);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MmCssTaskId);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == CreationParams);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == device);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == mmcssTaskId);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == creationParams);
 
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -31,21 +31,21 @@ CMidi2KSMidiOut::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingHexUInt32(*MmCssTaskId, "MmCss Id")
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingHexUInt32(*mmcssTaskId, "MmCss Id")
         );
 
     std::unique_ptr<CMidi2KSMidi> midiDevice(new (std::nothrow) CMidi2KSMidi());
     RETURN_IF_NULL_ALLOC(midiDevice);
 
-    RETURN_IF_FAILED(midiDevice->Initialize(Device, MidiFlowOut, CreationParams, MmCssTaskId, nullptr, 0));
+    RETURN_IF_FAILED(midiDevice->Initialize(device, MidiFlowOut, creationParams, mmcssTaskId, nullptr, 0));
     m_MidiDevice = std::move(midiDevice);
 
     return S_OK;
 }
 
 HRESULT
-CMidi2KSMidiOut::Cleanup()
+CMidi2KSMidiOut::Shutdown()
 {
     TraceLoggingWrite(
         MidiKSAbstractionTelemetryProvider::Provider(),
@@ -57,7 +57,7 @@ CMidi2KSMidiOut::Cleanup()
 
     if (m_MidiDevice)
     {
-        m_MidiDevice->Cleanup();
+        m_MidiDevice->Shutdown();
         m_MidiDevice.reset();
     }
 
@@ -67,14 +67,14 @@ CMidi2KSMidiOut::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiOut::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Position
+    PVOID data,
+    UINT length,
+    LONGLONG position
 )
 {
     if (m_MidiDevice)
     {
-        return m_MidiDevice->SendMidiMessage(Data, Length, Position);
+        return m_MidiDevice->SendMidiMessage(data, length, position);
     }
 
     return E_ABORT;

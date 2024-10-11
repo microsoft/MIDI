@@ -18,7 +18,7 @@
 class KSMidiDevice
 {
 public:
-    virtual HRESULT Cleanup();
+    virtual HRESULT Shutdown();
     virtual ~KSMidiDevice();
 
 protected:
@@ -89,7 +89,7 @@ public:
 
     virtual ~KSMidiInDevice()
     {
-        Cleanup();
+        Shutdown();
     }
 
     HRESULT Initialize(
@@ -103,7 +103,7 @@ public:
         _In_ LONGLONG);
 
     virtual
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
     wil::com_ptr_nothrow<IMidiCallback> m_MidiInCallback;

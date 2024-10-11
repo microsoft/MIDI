@@ -47,7 +47,7 @@ typedef ULONGLONG MidiClientHandle;
 
 typedef struct MIDISRV_CLIENTCREATION_PARAMS
 {
-    MidiDataFormat DataFormat;
+    MidiDataFormats DataFormat;
     MidiFlow     Flow;
     ULONG        BufferSize;
 } MIDISRV_CLIENTCREATION_PARAMS, *PMIDISRV_CLIENTCREATION_PARAMS;
@@ -69,7 +69,7 @@ typedef struct MIDISRV_CLIENT
     ULONG MidiOutBufferSize;
 
     MidiClientHandle ClientHandle;
-    MidiDataFormat DataFormat;
+    MidiDataFormats DataFormat;
 } MIDISRV_CLIENT, *PMIDISRV_CLIENT;
 
 [
@@ -80,65 +80,65 @@ typedef struct MIDISRV_CLIENT
 interface MidiSrvRPC
 {
     HRESULT MidiSrvCreateClient(
-        [in] handle_t BindingHandle, 
-        [in, string] LPCWSTR MidiDevice, 
-        [in] PMIDISRV_CLIENTCREATION_PARAMS CreationParams, 
-        [in] GUID SessionId, 
-        [out] PMIDISRV_CLIENT *Client);
+        [in] handle_t bindingHandle, 
+        [in, string] LPCWSTR midiDevice, 
+        [in] PMIDISRV_CLIENTCREATION_PARAMS creationParams, 
+        [in] GUID sessionId, 
+        [out] PMIDISRV_CLIENT *client);
 
     HRESULT MidiSrvDestroyClient(
-        [in] handle_t BindingHandle, 
-        [in] MidiClientHandle ClientHandle);
+        [in] handle_t bindingHandle, 
+        [in] MidiClientHandle clientHandle);
 
 
     // API-driven configuration
 
     HRESULT MidiSrvUpdateConfiguration(
-        [in] handle_t BindingHandle, 
-        [in, string] LPCWSTR ConfigurationJson, 
-        [in] BOOL IsFromConfigurationFile,
-        [out] BSTR* Response);
+        [in] handle_t bindingHandle, 
+        [in, string] LPCWSTR configurationJson, 
+        [in] BOOL isFromConfigurationFile,
+        [out, string] LPWSTR* response);
 
 
     // Session Management and reporting
 
     HRESULT MidiSrvRegisterSession(
-        [in] handle_t BindingHandle, 
-        [in] GUID SessionId,
-        [in, string] LPCWSTR SessionName,
-        [in,out] PMIDISRV_CONTEXT_HANDLE *ContextHandle
+        [in] handle_t bindingHandle, 
+        [in] GUID sessionId,
+        [in, string] LPCWSTR sessionName,
+        [in,out] PMIDISRV_CONTEXT_HANDLE *contextHandle
     );
 
     HRESULT MidiSrvUpdateSessionName(
-        [in] handle_t BindingHandle,
-        [in] PMIDISRV_CONTEXT_HANDLE ContextHandle,
-        [in] GUID SessionId,
-        [in, string] LPCWSTR SessionName
+        [in] handle_t bindingHandle,
+        [in] PMIDISRV_CONTEXT_HANDLE contextHandle,
+        [in] GUID sessionId,
+        [in, string] LPCWSTR sessionName
     );
 
     HRESULT MidiSrvDeregisterSession(
-        [in] handle_t BindingHandle, 
-        [in] PMIDISRV_CONTEXT_HANDLE ContextHandle,
-        [in] GUID SessionId
+        [in] handle_t bindingHandle, 
+        [in] PMIDISRV_CONTEXT_HANDLE contextHandle,
+        [in] GUID sessionId
     );
 
 
     HRESULT MidiSrvGetSessionList(
-        [in] handle_t BindingHandle, 
-        [out] BSTR* SessionListJson);
+        [in] handle_t bindingHandle, 
+        [out, string] LPWSTR* sessionListJson);
 
 
     // Abstractions and Transforms metadata reporting only
 
     HRESULT MidiSrvGetAbstractionList(
-        [in] handle_t BindingHandle,
-        [out] BSTR* AbstractionListJson);
+        [in] handle_t bindingHandle,
+        [out, string] LPWSTR* abstractionListJson);
 
     HRESULT MidiSrvGetTransformList(
-        [in] handle_t BindingHandle,
-        [out] BSTR* TransformListJson);
+        [in] handle_t bindingHandle,
+        [out, string] LPWSTR* transformListJson);
 
     HRESULT MidiSrvVerifyConnectivity(
-        [in] handle_t BindingHandle);
+        [in] handle_t bindingHandle);
 
 }

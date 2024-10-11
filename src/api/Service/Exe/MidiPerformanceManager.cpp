@@ -23,7 +23,7 @@ CMidiPerformanceManager::Initialize()
 }
 
 HRESULT
-CMidiPerformanceManager::Cleanup()
+CMidiPerformanceManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),

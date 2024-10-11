@@ -23,49 +23,11 @@ CMidi2MidiSrvSessionTracker::Initialize()
     return S_OK;
 }
 
-HRESULT
-CMidi2MidiSrvSessionTracker::VerifyConnectivity()
-{
-    TraceLoggingWrite(
-        MidiSrvAbstractionTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
-
-    if (MidiSrvManager::IsServiceInstalled())
-    {
-        wil::unique_rpc_binding bindingHandle;
-
-        RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-
-        RETURN_IF_FAILED([&]()
-            {
-                // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
-                // with structured exception handling.
-                RpcTryExcept RETURN_IF_FAILED(MidiSrvVerifyConnectivity(bindingHandle.get()));
-                RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
-                RpcEndExcept
-
-                    return S_OK;
-            }());
-
-        return S_OK;
-    }
-    else
-    {
-        // service isn't installed
-        return E_FAIL;
-    }
-}
-
-
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::AddClientSession(
-    GUID SessionId,
-    LPCWSTR SessionName
+    GUID sessionId,
+    LPCWSTR sessionName
 )
 {
     TraceLoggingWrite(
@@ -79,13 +41,13 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, SessionName);
+    RETURN_HR_IF_NULL(E_INVALIDARG, sessionName);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), SessionId, SessionName, &m_contextHandle));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), sessionId, sessionName, &m_contextHandle));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             
@@ -98,8 +60,8 @@ CMidi2MidiSrvSessionTracker::AddClientSession(
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::UpdateClientSessionName(
-    GUID SessionId,
-    LPCWSTR SessionName
+    GUID sessionId,
+    LPCWSTR sessionName
 )
 {
     TraceLoggingWrite(
@@ -113,13 +75,13 @@ CMidi2MidiSrvSessionTracker::UpdateClientSessionName(
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, SessionName);
+    RETURN_HR_IF_NULL(E_INVALIDARG, sessionName);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateSessionName(bindingHandle.get(), m_contextHandle, SessionId, SessionName));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateSessionName(bindingHandle.get(), m_contextHandle, sessionId, sessionName));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
 
@@ -133,7 +95,7 @@ CMidi2MidiSrvSessionTracker::UpdateClientSessionName(
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::RemoveClientSession(
-    GUID SessionId
+    GUID sessionId
 )
 {
     TraceLoggingWrite(
@@ -152,7 +114,7 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvDeregisterSession(bindingHandle.get(), m_contextHandle, SessionId));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvDeregisterSession(bindingHandle.get(), m_contextHandle, sessionId));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
 
@@ -165,12 +127,12 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 //_Use_decl_annotations_
 //HRESULT
 //CMidi2MidiSrvSessionTracker::AddClientEndpointConnection(
-//    GUID SessionId,
-//    LPCWSTR ConnectionEndpointInterfaceId
+//    GUID sessionId,
+//    LPCWSTR sonnectionEndpointInterfaceId
 //)
 //{
-//    UNREFERENCED_PARAMETER(SessionId);
-//    UNREFERENCED_PARAMETER(ConnectionEndpointInterfaceId);
+//    UNREFERENCED_PARAMETER(sessionId);
+//    UNREFERENCED_PARAMETER(sonnectionEndpointInterfaceId);
 //
 //    return S_OK;
 //}
@@ -178,12 +140,12 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 //_Use_decl_annotations_
 //HRESULT
 //CMidi2MidiSrvSessionTracker::RemoveClientEndpointConnection(
-//    GUID SessionId,
-//    LPCWSTR ConnectionEndpointInterfaceId
+//    GUID sessionId,
+//    LPCWSTR sonnectionEndpointInterfaceId
 //)
 //{
-//    UNREFERENCED_PARAMETER(SessionId);
-//    UNREFERENCED_PARAMETER(ConnectionEndpointInterfaceId);
+//    UNREFERENCED_PARAMETER(sessionId);
+//    UNREFERENCED_PARAMETER(sonnectionEndpointInterfaceId);
 //
 //    return S_OK;
 //}
@@ -192,7 +154,7 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 //_Use_decl_annotations_
 //HRESULT
 //CMidi2MidiSrvSessionTracker::GetSessionList(
-//    LPSAFEARRAY* SessionDetailsList
+//    LPSAFEARRAY* sessionDetailsList
 //)
 //{
 //    TraceLoggingWrite(
@@ -204,7 +166,7 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 //    );
 //
 //    // TODO
-//    SessionDetailsList = nullptr;
+//    sessionDetailsList = nullptr;
 //
 //    return S_OK;
 //
@@ -214,7 +176,7 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::GetSessionList(
-    BSTR* SessionList
+    BSTR* sessionList
 )
 {
     TraceLoggingWrite(
@@ -228,13 +190,13 @@ CMidi2MidiSrvSessionTracker::GetSessionList(
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, SessionList);
+    RETURN_HR_IF_NULL(E_INVALIDARG, sessionList);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), SessionList));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), sessionList));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             return S_OK;
@@ -244,7 +206,7 @@ CMidi2MidiSrvSessionTracker::GetSessionList(
 }
 
 HRESULT
-CMidi2MidiSrvSessionTracker::Cleanup()
+CMidi2MidiSrvSessionTracker::Shutdown()
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),

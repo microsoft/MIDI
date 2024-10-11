@@ -22,8 +22,8 @@ GUID AbstractionLayerGUID = __uuidof(Midi2VirtualMidiAbstraction);
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiEndpointManager::Initialize(
-    IUnknown* MidiDeviceManager, 
-    IUnknown* MidiEndpointProtocolManager
+    IMidiDeviceManagerInterface* midiDeviceManager, 
+    IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
@@ -34,11 +34,11 @@ CMidi2VirtualMidiEndpointManager::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiDeviceManager);
-    RETURN_HR_IF(E_INVALIDARG, nullptr == MidiEndpointProtocolManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
+    RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
-    RETURN_IF_FAILED(MidiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
-    RETURN_IF_FAILED(MidiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
 
 
     m_ContainerId = ABSTRACTION_LAYER_GUID;           // we use the transport ID as the container ID for convenience
@@ -169,18 +169,15 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
     createInfo.pContainerId = &m_ContainerId;
 
-    const ULONG deviceIdMaxSize = 255;
-    wchar_t newDeviceId[deviceIdMaxSize]{ 0 };
+    wil::unique_cotaskmem_string newDeviceId;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateVirtualParentDevice(
         0,
         nullptr,
         &createInfo,
-        (PWSTR)newDeviceId,
-        deviceIdMaxSize
-    ));
+        &newDeviceId));
 
-    m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
+    m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId.get());
 
 
     TraceLoggingWrite(
@@ -189,7 +186,7 @@ CMidi2VirtualMidiEndpointManager::CreateParentDevice()
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(newDeviceId, "New parent device instance id")
+        TraceLoggingWideString(newDeviceId.get(), "New parent device instance id")
     );
 
     return S_OK;
@@ -213,8 +210,8 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
     ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
 
     negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
-    negotiationParams.PreferToSendJRTimestampsToEndpoint = false;
-    negotiationParams.PreferToReceiveJRTimestampsFromEndpoint = false;
+    negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
+    negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
     negotiationParams.TimeoutMilliseconds = 3000;
 
     RETURN_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
@@ -255,10 +252,6 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-    //bool requiresMetadataHandler = true;
-    bool multiClient = true;
-    bool generateIncomingTimestamps = true;
-
     // no user or in-protocol data in this case
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
@@ -275,29 +268,27 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = endpointName.c_str();
 
-
-    const ULONG deviceInterfaceIdMaxSize = 255;
-    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
-
+    wil::unique_cotaskmem_string newDeviceInterfaceId;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties;
     commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
-    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::NormalMessageEndpoint;
+    commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
-    commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
-    commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
-    commonProperties.UserSuppliedEndpointName = nullptr;
-    commonProperties.UserSuppliedEndpointDescription = nullptr;
+    commonProperties.EndpointName = endpointName.c_str();
+    commonProperties.EndpointDescription = endpointDescription.c_str();
+    commonProperties.CustomEndpointName = nullptr;
+    commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = entry.ShortUniqueId.c_str();
-    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
-    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    commonProperties.SupportsMultiClient = multiClient;
-    //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
-    commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
-    commonProperties.ManufacturerName = entry.Manufacturer.c_str();
-    commonProperties.SupportsMidi1ProtocolDefaultValue = true;
-    commonProperties.SupportsMidi2ProtocolDefaultValue = true;
+    commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
+    commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
+
+    UINT32 capabilities {0};
+    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+    capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
+    capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
+    capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
+    commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
@@ -306,21 +297,20 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
         (ULONG)0,
-        (PVOID)interfaceDeviceProperties.data(),
-        (PVOID)nullptr,
-        (PVOID)&createInfo,
-        (LPWSTR)&newDeviceInterfaceId,
-        deviceInterfaceIdMaxSize));
+        interfaceDeviceProperties.data(),
+        nullptr,
+        &createInfo,
+        &newDeviceInterfaceId));
 
 
      // we need this for removal later
     entry.CreatedShortClientInstanceId = instanceId;
-    entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+    entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
     entry.MidiClientBiDi = nullptr;
 
     // time to do protocol negotiation, request endpoint metadata, function blocks, etc.
 
-    LOG_IF_FAILED(NegotiateAndRequestMetadata(newDeviceInterfaceId));
+    LOG_IF_FAILED(NegotiateAndRequestMetadata(newDeviceInterfaceId.get()));
 
 
     TraceLoggingWrite(
@@ -363,10 +353,6 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
     std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
-    //bool requiresMetadataHandler = false;
-    bool multiClient = false;
-    bool generateIncomingTimestamps = true;
-
     // no user or in-protocol data in this case
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
 
@@ -385,28 +371,26 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
     createInfo.pszDeviceDescription = endpointName.c_str();
 
-    const ULONG deviceInterfaceIdMaxSize = 255;
-    wchar_t newDeviceInterfaceId[deviceInterfaceIdMaxSize]{ 0 };
-
+    wil::unique_cotaskmem_string newDeviceInterfaceId;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
-    commonProperties.EndpointPurpose = MidiEndpointDevicePurposePropertyValue::VirtualDeviceResponder;
+    commonProperties.EndpointDeviceType = MidiEndpointDeviceType_VirtualDeviceResponder;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
-    commonProperties.TransportSuppliedEndpointName = endpointName.c_str();
-    commonProperties.TransportSuppliedEndpointDescription = endpointDescription.c_str();
-    commonProperties.UserSuppliedEndpointName = nullptr;
-    commonProperties.UserSuppliedEndpointDescription = nullptr;
+    commonProperties.EndpointName = endpointName.c_str();
+    commonProperties.EndpointDescription = endpointDescription.c_str();
+    commonProperties.CustomEndpointName = nullptr;
+    commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = entry.ShortUniqueId.c_str();
-    commonProperties.SupportedDataFormats = MidiDataFormat::MidiDataFormat_UMP;
-    commonProperties.NativeDataFormat = MIDI_PROP_NATIVEDATAFORMAT_UMP;
-    commonProperties.SupportsMultiClient = multiClient;
-    //commonProperties.RequiresMetadataHandler = requiresMetadataHandler;
-    commonProperties.GenerateIncomingTimestamps = generateIncomingTimestamps;
-    commonProperties.ManufacturerName = entry.Manufacturer.c_str();
-    commonProperties.SupportsMidi1ProtocolDefaultValue = true;
-    commonProperties.SupportsMidi2ProtocolDefaultValue = true;
+    commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
+    commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
+
+    UINT32 capabilities {0};
+    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+    capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
+    capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
+    commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
@@ -415,16 +399,15 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),
         (ULONG)0,
-        (PVOID)interfaceDeviceProperties.data(),
-        (PVOID)nullptr,
-        (PVOID)&createInfo,
-        (LPWSTR)&newDeviceInterfaceId,
-        deviceInterfaceIdMaxSize));
+        interfaceDeviceProperties.data(),
+        nullptr,
+        &createInfo,
+        &newDeviceInterfaceId));
 
 
     // we need this for device removal later
     entry.CreatedShortDeviceInstanceId = instanceId;
-    entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId);
+    entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
     entry.CreatedClientEndpointId = L"";
     entry.CreatedShortClientInstanceId = L"";
     entry.MidiDeviceBiDi = nullptr;
@@ -447,7 +430,7 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
 
 
 HRESULT
-CMidi2VirtualMidiEndpointManager::Cleanup()
+CMidi2VirtualMidiEndpointManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
@@ -459,8 +442,8 @@ CMidi2VirtualMidiEndpointManager::Cleanup()
 
     // destroy and release all the devices we have created
 
-    LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->Cleanup());
-    AbstractionState::Current().Cleanup();
+    LOG_IF_FAILED(AbstractionState::Current().GetEndpointTable()->Shutdown());
+    AbstractionState::Current().Shutdown();
 
     m_MidiDeviceManager.reset();
     m_MidiProtocolManager.reset();

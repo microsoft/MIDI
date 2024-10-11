@@ -18,7 +18,7 @@ public:
 
     STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_ GUID));
     STDMETHOD(SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
 

@@ -38,9 +38,8 @@ void MidiBSToUMPTransformTests::InternalTestSysEx(
     std::wstring deviceId{ L"foobarbaz" };
 
     TRANSFORMCREATIONPARAMS creationParams{};
-    creationParams.DataFormatIn = MidiDataFormat::MidiDataFormat_ByteStream;
-    creationParams.DataFormatOut = MidiDataFormat::MidiDataFormat_UMP;
-    creationParams.InstanceConfigurationJsonData = nullptr;
+    creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_ByteStream;
+    creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
     creationParams.UmpGroupIndex = groupIndex;
 
     DWORD mmcssTaskId{};
@@ -104,7 +103,7 @@ void MidiBSToUMPTransformTests::InternalTestSysEx(
 
     m_MidiInCallback = nullptr;
 
-    transform->Cleanup();
+    transform->Shutdown();
 
     VERIFY_ARE_EQUAL(expectedMessageCount, receivedMessageCount);
 }

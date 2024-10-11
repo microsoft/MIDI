@@ -68,7 +68,7 @@ namespace WindowsMidiServicesInternal
         }
     }
 
-    inline HRESULT ResourceCopyToBSTR(_In_ UINT resourceId, BSTR* bstr)
+    inline HRESULT ResourceCopyToCoString(_In_ UINT resourceId, LPWSTR* coString)
     {
         ATL::CComBSTR ccbstr;
 
@@ -76,7 +76,12 @@ namespace WindowsMidiServicesInternal
 
         if (loadSuccess)
         {
-            return ccbstr.CopyTo(bstr);
+            wil::unique_cotaskmem_string tempString;
+            tempString = wil::make_cotaskmem_string_nothrow(ccbstr);
+            RETURN_IF_NULL_ALLOC(tempString.get());
+            *coString = tempString.release();
+
+            return S_OK;
         }
         else
         {

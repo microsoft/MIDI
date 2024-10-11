@@ -79,20 +79,16 @@ public:
     ~CMidiDeviceManager() {}
 
     STDMETHOD(Initialize)(
-        _In_ std::shared_ptr<CMidiPerformanceManager>& performanceManager,
-        _In_ std::shared_ptr<CMidiEndpointProtocolManager>& EndpointProtocolManager,
-        _In_ std::shared_ptr<CMidiConfigurationManager>& configurationManager);
-
+        _In_ std::shared_ptr<CMidiPerformanceManager>&,
+        _In_ std::shared_ptr<CMidiEndpointProtocolManager>&,
+        _In_ std::shared_ptr<CMidiConfigurationManager>&);
 
     STDMETHOD(ActivateVirtualParentDevice)(
-        _In_ ULONG DevPropertyCount,
-        _In_opt_ PVOID DevProperties,
-        _In_ PVOID CreateInfo,
-        _Out_writes_opt_z_(CreatedSwDeviceIdCharCount) PWSTR CreatedSwDeviceId,
-        _In_  ULONG CreatedSwDeviceIdCharCount
+        _In_ ULONG,
+        _In_opt_ const DEVPROPERTY*,
+        _In_ const SW_DEVICE_CREATE_INFO*,
+        _Out_opt_ LPWSTR*
     );
-
-
 
     STDMETHOD(ActivateEndpoint)(
         _In_ PCWSTR,
@@ -101,11 +97,10 @@ public:
         _In_ PMIDIENDPOINTCOMMONPROPERTIES,
         _In_ ULONG,
         _In_ ULONG,
-        _In_ PVOID,
-        _In_ PVOID,
-        _In_ PVOID,
-        _Out_writes_opt_z_(CreatedSwDeviceInterfaceIdWCharCount) PWSTR CreatedDeviceInterfaceId,
-        _In_ ULONG CreatedSwDeviceInterfaceIdWCharCount
+        _In_ const DEVPROPERTY* ,
+        _In_ const DEVPROPERTY* ,
+        _In_ const SW_DEVICE_CREATE_INFO*,
+        _Out_opt_ LPWSTR*
     );
 
     STDMETHOD(DeactivateEndpoint)(_In_ PCWSTR);
@@ -115,13 +110,13 @@ public:
     STDMETHOD(UpdateEndpointProperties)(
         _In_ PCWSTR,
         _In_ ULONG,
-        _In_ PVOID
+        _In_ const DEVPROPERTY*
         );
 
     STDMETHOD(DeleteEndpointProperties)(
         _In_ PCWSTR,
         _In_ ULONG,
-        _In_ PVOID
+        _In_ const DEVPROPERTY*
         );
 
     //STDMETHOD(DeleteAllEndpointInProtocolDiscoveredProperties)(
@@ -131,14 +126,13 @@ public:
 
     // this is for runtime updates only, not for config file updates
     STDMETHOD(UpdateAbstractionConfiguration)(
-        _In_ GUID AbstractionId,
-        _In_ LPCWSTR ConfigurationJson,
-        _In_ BOOL IsFromConfigurationFile,
-        _Out_ BSTR* Response
+        _In_ GUID,
+        _In_ LPCWSTR,
+        _In_ BOOL,
+        _Out_ LPWSTR*
         );
 
-
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
     //TODO: Method to update the properties (using SwDevicePropertySet and an array of props) for a device by its Id
 
@@ -152,9 +146,9 @@ private:
         _In_ MidiFlow,
         _In_ ULONG,
         _In_ ULONG,
-        _In_ DEVPROPERTY*,
-        _In_ DEVPROPERTY*,
-        _In_ SW_DEVICE_CREATE_INFO*,
+        _In_ const DEVPROPERTY*,
+        _In_ const DEVPROPERTY*,
+        _In_ const SW_DEVICE_CREATE_INFO*,
         _In_opt_ std::wstring*
     );
 

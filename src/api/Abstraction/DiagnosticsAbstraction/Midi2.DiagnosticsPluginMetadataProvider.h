@@ -18,7 +18,7 @@ class CMidi2DiagnosticsPluginMetadataProvider :
 public:
     STDMETHOD(Initialize());
     STDMETHOD(GetMetadata(_Out_ PABSTRACTIONMETADATA metadata));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Shutdown)();
 
 private:
 

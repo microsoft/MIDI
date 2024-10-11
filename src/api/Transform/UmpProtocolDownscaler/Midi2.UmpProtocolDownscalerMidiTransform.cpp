@@ -13,12 +13,12 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
-    LPCWSTR Device,
-    PTRANSFORMCREATIONPARAMS CreationParams,
+    LPCWSTR device,
+    PTRANSFORMCREATIONPARAMS creationParams,
     DWORD *,
-    IMidiCallback * Callback,
-    LONGLONG Context,
-    IUnknown* /*MidiDeviceManager*/
+    IMidiCallback * callback,
+    LONGLONG context,
+    IMidiDeviceManagerInterface* /*midiDeviceManager*/
 )
 {
     TraceLoggingWrite(
@@ -28,21 +28,21 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(Device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     // this only converts UMP to UMP
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatIn != MidiDataFormat_UMP);
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), CreationParams->DataFormatOut != MidiDataFormat_UMP);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), creationParams->DataFormatIn != MidiDataFormats_UMP);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), creationParams->DataFormatOut != MidiDataFormats_UMP);
 
-    m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(Device);
-    m_Callback = Callback;
-    m_Context = Context;
+    m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(device);
+    m_Callback = callback;
+    m_Context = context;
 
 
     // get the deviceinstanceid and also the support for m1 and m2
 
-    auto dev = DeviceInformation::CreateFromIdAsync(Device, 
+    auto dev = DeviceInformation::CreateFromIdAsync(device, 
         {
             STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol,
             STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol,
@@ -197,7 +197,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceRemoved(DeviceWatcher, DeviceI
 
 
 HRESULT
-CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
+CMidi2UmpProtocolDownscalerMidiTransform::Shutdown()
 {
     TraceLoggingWrite(
         MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
@@ -216,9 +216,9 @@ CMidi2UmpProtocolDownscalerMidiTransform::Cleanup()
 _Use_decl_annotations_
 HRESULT
 CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
-    PVOID Data,
-    UINT Length,
-    LONGLONG Timestamp
+    PVOID inputData,
+    UINT length,
+    LONGLONG timestamp
 )
 {
     //TraceLoggingWrite(
@@ -233,15 +233,15 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     // if downscaling and upscaling aren't required, quickly move on
     if (!m_downscalingRequiredForEndpoint && !m_upscalingRequiredForEndpoint)
     {
-        RETURN_IF_FAILED(m_Callback->Callback(Data, Length, Timestamp, m_Context));
+        RETURN_IF_FAILED(m_Callback->Callback(inputData, length, timestamp, m_Context));
     }
     else if (m_downscalingRequiredForEndpoint)
     {
-        if (Length >= sizeof(uint32_t))
+        if (length >= sizeof(uint32_t))
         {
             // Send the UMP(s) to the parser
-            uint32_t* data = (uint32_t*)Data;
-            for (UINT i = 0; i < (Length / sizeof(uint32_t)); i++)
+            uint32_t* data = (uint32_t*)inputData;
+            for (UINT i = 0; i < (length / sizeof(uint32_t)); i++)
             {
                 m_umpToMidi1.UMPStreamParse(data[i]);
             }
@@ -261,7 +261,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                 if (wordCount > 0)
                 {
                     // we use return here instead of log, because the number of UMPs created should be no more than 1
-                    RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), Timestamp, m_Context));
+                    RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), timestamp, m_Context));
                 }
             }
         }
@@ -277,8 +277,8 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Invalid UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingUInt32(Length, "Message Length in Bytes"),
-                TraceLoggingUInt64(Timestamp, "Message Timestamp")
+                TraceLoggingUInt32(length, "Message length in Bytes"),
+                TraceLoggingUInt64(timestamp, "Message timestamp")
             );
         }
 
@@ -290,7 +290,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
         // easy addition of this in the future when libmidi2 supports protocol upscaling
         // https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/25
 
-        RETURN_IF_FAILED(m_Callback->Callback(Data, Length, Timestamp, m_Context));
+        RETURN_IF_FAILED(m_Callback->Callback(inputData, length, timestamp, m_Context));
 
         return S_OK;
     }

@@ -41,8 +41,8 @@ class CMidi2KSAggregateMidiEndpointManager :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ IUnknown*, _In_ IUnknown*));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
+    STDMETHOD(Shutdown)();
 
 private:
     STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& MasterEndpointDefinition);
