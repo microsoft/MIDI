@@ -169,7 +169,7 @@
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(SolutionDir)VSFiles\ARM64EC\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.MidiSrvAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -188,7 +188,7 @@
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(SolutionDir)VSFiles\ARM64EC\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.MidiSrvAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -241,7 +241,7 @@
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(SolutionDir)VSFiles\ARM64EC\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.MidiSrvAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
@@ -260,7 +260,7 @@
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(SolutionDir)VSFiles\ARM64EC\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.MidiSrvAbstraction.def</ModuleDefinitionFile>
     </Link>
     <Midl>
