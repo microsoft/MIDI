@@ -95,6 +95,8 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
     MidiNetworkUdpHostDefinition& definition,
     winrt::hstring& errorMessage)
 {
+    errorMessage = L"";
+
     // is there a unique identifier?
 
     if (definition.EntryIdentifier.empty())
@@ -295,7 +297,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 definition.EntryIdentifier = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENTRY_IDENTIFIER_KEY, L""));
 
                 definition.UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
-                definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_PRODUCT_INSTANCE_ID_PROPERTY, L""));
+                definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
 
                 definition.Authentication = MidiNetworkUdpHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, L""));
                 definition.ConnectionPolicy = MidiNetworkUdpHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY, L""));
@@ -340,7 +342,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 // if the provided service instance name is empty, default to 
                 // machine name. If that name is already in use, add an additional
-                // disambiguator
+                // disambiguation value
                 if (serviceInstanceNamePrefix.empty())
                 {
                     std::wstring buffer{};
@@ -356,7 +358,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 definition.ServiceInstanceName = serviceInstanceNamePrefix;
 
-                // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguator number
+                // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number
 
 
 
@@ -365,12 +367,14 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 if (SUCCEEDED(ValidateHostDefinition(definition, validationErrorMessage)))
                 {
-
                     // create the host
 
+                    auto host = std::make_shared<MidiNetworkHost>();
 
+                    RETURN_HR_IF_NULL(E_POINTER, host);
+                    RETURN_IF_FAILED(host->Initialize(definition));
 
-
+                    host->Start();
                 }
                 else
                 {

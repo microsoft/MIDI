@@ -1,0 +1,13 @@
+﻿<Project Sdk="WixToolset.Sdk/4.0.2">
+  <PropertyGroup>
+    <OutputName>WindowsMIDIServicesInDevelopmentSetup</OutputName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Arm64' ">
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+</Project>

@@ -78,9 +78,14 @@ MidiNetworkHost::Start()
     ));
 
 
-    // start listening on a new thread.
-
+    // TODO: start listening on a new thread.
+    //ProcessIncomingPackets();
     
+
+
+
+
+
 
     return S_OK;
 }

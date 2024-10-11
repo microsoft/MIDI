@@ -87,11 +87,12 @@
         <file target="runtimes\win-arm64\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
         <!-- Temporarily including implementation in NuGet file for Preview 6 -->
-        <file target="runtimes\win-arm64\native"     src =" ..\..\..\vsfiles\out\coalesce\Arm64\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-arm64\native"     src =" ..\..\..\vsfiles\out\coalesce\Arm64\Release\Microsoft.Windows.Devices.Midi2*.dll" />
+        <!-- The files in the Arm64EC folder are fat Arm64X binaries, covering Arm64 and Arm64EC -->
+        <file target="runtimes\win-arm64\native"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.pri" />
+        <file target="runtimes\win-arm64\native"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.dll" />
 
-        <file target="runtimes\win-arm64\lib\net6.0"     src =" ..\..\..\vsfiles\out\coalesce\Arm64\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-arm64\lib\net6.0"     src =" ..\..\..\vsfiles\out\coalesce\Arm64\Release\Microsoft.Windows.Devices.Midi2*.dll" />
+        <file target="runtimes\win-arm64\lib\net6.0"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.pri" />
+        <file target="runtimes\win-arm64\lib\net6.0"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.dll" />
 
 
         <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->

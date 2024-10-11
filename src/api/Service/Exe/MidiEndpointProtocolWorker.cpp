@@ -252,9 +252,10 @@ CMidiEndpointProtocolWorker::Start(
         // devices or initial enumeration.
         // Search for "#midisrv#midiu_ks_" is to restrict this to just USB devices using the 
         // USB MIDI 2.0 driver, so network and other MIDI 2.0 transports are unaffected
-        if (auto index = internal::NormalizeEndpointInterfaceIdWStringCopy(m_deviceInterfaceId).find(L"#midisrv#midiu_ks_"); index != std::wstring::npos)
+        if (auto index = internal::NormalizeEndpointInterfaceIdWStringCopy(m_deviceInterfaceId).find(L"#midisrv#midiu_ks_"); 
+            index != std::wstring::npos)
         {
-            Sleep(500);
+            Sleep(2500);
         }
         // End partner compatibility mitigation added 2024-10-08
 

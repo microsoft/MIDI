@@ -24,7 +24,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         fb->InternalSetisReadOnly(false);
 
         fb->IsActive(true);
-        fb->Number(m_block.Number);
+        fb->Number(max(0, m_block.Number - 1));     // group terminal blocks are numbered 1-255. Function blocks start with 0 as the id.
         fb->Name(m_block.Name.c_str());
         fb->FirstGroupIndex(m_block.FirstGroupIndex);
         fb->GroupCount(m_block.GroupCount);
@@ -129,15 +129,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         if (gtbBandwidthValue == 0)
         {
+            // Bandwidth capability is unknown or not a fixed value
             return (uint32_t)0;
         }
         else if (gtbBandwidthValue == 0x0001)
         {
-            return (uint32_t)31250;
+            return (uint32_t)MIDI_1_STANDARD_BITS_PER_SECOND;
         }
         else
         {
-            // 4000, not 4096, for 4k bps
+            // 4000, not 4096, for 4k bps per the spec
+            // max value is FFFFh * 4000d = 262,140,000d
             return (uint32_t)(gtbBandwidthValue * 4000);
         }
     }
@@ -151,6 +153,5 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         return CalculateBandwidth(m_block.MaxOutputBandwidth);
     }
-
 
 }

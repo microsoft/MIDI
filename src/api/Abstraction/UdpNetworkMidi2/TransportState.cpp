@@ -39,3 +39,15 @@ TransportState::ConstructConfigurationManager()
 
     return S_OK;
 }
+
+
+_Use_decl_annotations_
+HRESULT 
+TransportState::AddHost(MidiNetworkHost* host)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, host);
+
+
+
+    return S_OK;
+}

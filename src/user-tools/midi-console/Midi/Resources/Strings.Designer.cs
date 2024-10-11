@@ -295,6 +295,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Canceled.
+        /// </summary>
+        internal static string CommonStringCanceled {
+            get {
+                return ResourceManager.GetString("CommonStringCanceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Direction.
         /// </summary>
         internal static string CommonStringDirectionSingular {

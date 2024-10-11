@@ -866,4 +866,7 @@ Timestamp</value>
   <data name="EndpointReconnected" xml:space="preserve">
     <value>Endpoint reconnected</value>
   </data>
+  <data name="CommonStringCanceled" xml:space="preserve">
+    <value>Canceled</value>
+  </data>
 </root>
