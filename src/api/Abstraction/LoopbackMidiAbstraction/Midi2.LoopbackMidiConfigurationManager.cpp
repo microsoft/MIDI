@@ -40,8 +40,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
-    BOOL isFromConfigurationFile,
-    BSTR* response
+    LPWSTR* response
 )
 {
     TraceLoggingWrite(
@@ -77,14 +76,18 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                 TraceLoggingWideString(configurationJsonSection, "json")
             );
 
-            internal::JsonStringifyObjectToOutParam(responseObject, &response);
+            internal::JsonStringifyObjectToOutParam(responseObject, response);
 
             return E_FAIL;
         }
 
         // I was tempted to call this the Prefix Code. KHAN!!
-        std::wstring instanceIdPrefixA = isFromConfigurationFile ? MIDI_PERM_LOOP_INSTANCE_ID_A_PREFIX : MIDI_TEMP_LOOP_INSTANCE_ID_A_PREFIX;
-        std::wstring instanceIdPrefixB = isFromConfigurationFile ? MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX : MIDI_TEMP_LOOP_INSTANCE_ID_B_PREFIX;
+        //std::wstring instanceIdPrefixA = isFromConfigurationFile ? MIDI_PERM_LOOP_INSTANCE_ID_A_PREFIX : MIDI_TEMP_LOOP_INSTANCE_ID_A_PREFIX;
+        //std::wstring instanceIdPrefixB = isFromConfigurationFile ? MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX : MIDI_TEMP_LOOP_INSTANCE_ID_B_PREFIX;
+
+        std::wstring instanceIdPrefixA = MIDI_PERM_LOOP_INSTANCE_ID_A_PREFIX;
+        std::wstring instanceIdPrefixB = MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX;
+
         // we should probably set a property based on this as well.
 
         auto createObject = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
@@ -144,7 +147,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingWideString(L"Endpoint name missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, &response);
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                             return E_FAIL;
                         }
@@ -161,13 +164,13 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingWideString(L"Unique identifier missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, &response);
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                             return E_FAIL;
                         }
 
 
-                        if (SUCCEEDED(AbstractionState::Current().GetEndpointManager()->CreateEndpointPair(definitionA, definitionB, isFromConfigurationFile)))
+                        if (SUCCEEDED(AbstractionState::Current().GetEndpointManager()->CreateEndpointPair(definitionA, definitionB)))
                         {
                             TraceLoggingWrite(
                                 MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
@@ -209,7 +212,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingWideString(L"Failed to create endpoints", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, &response);
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                             return E_FAIL;
                         }
@@ -228,7 +231,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                             TraceLoggingWideString(L"Failed to get one or both endpoints from the JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                         );
 
-                        internal::JsonStringifyObjectToOutParam(responseObject, &response);
+                        internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                         return E_FAIL;
 
@@ -246,7 +249,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(L"Unable to convert association id property to a JsonObject", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     );
 
-                    internal::JsonStringifyObjectToOutParam(responseObject, &response);
+                    internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                     return E_FAIL;
                 }
@@ -261,81 +264,76 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
         // update and delete are runtime operations, not config file operations
 
-        if (!isFromConfigurationFile)
+        auto deleteArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY, nullptr);
+
+        // Create ----------------------------------
+
+        if (deleteArray != nullptr && deleteArray.Size() > 0)
         {
-            auto deleteArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY, nullptr);
+            auto o = deleteArray.First();
 
-            // Create ----------------------------------
-
-            if (deleteArray != nullptr && deleteArray.Size() > 0)
+            while (o.HasCurrent())
             {
-                auto o = deleteArray.First();
+                // each entry is an association id
 
-                while (o.HasCurrent())
+                auto associationId = o.Current().GetString();
+
+                // if the entry was runtime-created and not from the config file, we can delete both endpoints 
+
+                auto device = AbstractionState::Current().GetEndpointTable()->GetDevice(associationId.c_str());
+
+
+                auto removalHr = AbstractionState::Current().GetEndpointManager()->DeleteEndpointPair(device->DefinitionA, device->DefinitionB);
+
+                LOG_IF_FAILED(removalHr);
+
+                if (SUCCEEDED(removalHr))
                 {
-                    // each entry is an association id
+                    AbstractionState::Current().GetEndpointTable()->RemoveDevice(associationId.c_str());
 
-                    auto associationId = o.Current().GetString();
-
-                    // if the entry was runtime-created and not from the config file, we can delete both endpoints 
-
-                    auto device = AbstractionState::Current().GetEndpointTable()->GetDevice(associationId.c_str());
-
-                    // we can only delete runtime-created devices here
-
-                    if (!device->IsFromConfigurationFile)
-                    {
-                        auto removalHr = AbstractionState::Current().GetEndpointManager()->DeleteEndpointPair(device->DefinitionA, device->DefinitionB);
-
-                        LOG_IF_FAILED(removalHr);
-
-                        if (SUCCEEDED(removalHr))
-                        {
-                            AbstractionState::Current().GetEndpointTable()->RemoveDevice(associationId.c_str());
-
-                            auto removeSuccessVal = json::JsonValue::CreateBooleanValue(true);
-                            responseObject.SetNamedValue(
-                                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                                removeSuccessVal);
-                        }
-                        else
-                        {
-                            // failed to remove device
-
-                            TraceLoggingWrite(
-                                MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_ERROR,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Failed to remove device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingWideString(configurationJsonSection, "json")
-                            );
-                        }
-                    }
-
-
-                    o.MoveNext();
+                    auto removeSuccessVal = json::JsonValue::CreateBooleanValue(true);
+                    responseObject.SetNamedValue(
+                        MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                        removeSuccessVal);
                 }
+                else
+                {
+                    // failed to remove device
+
+                    TraceLoggingWrite(
+                        MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Failed to remove device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(configurationJsonSection, "json")
+                    );
+                }
+                    
+
+
+                o.MoveNext();
             }
-
-            //auto updateArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY);
-
-            //// Update ----------------------------------
-
-            //if (updateArray.Size() > 0)
-            //{
-            //    // TODO
-            //}
-            //else
-            //{
-            //    // TODO : Update endpoints
-            //}
-
         }
 
+        //auto updateArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY);
 
-        internal::JsonStringifyObjectToOutParam(responseObject, &response);
+        //// Update ----------------------------------
+
+        //if (updateArray.Size() > 0)
+        //{
+        //    // TODO
+        //}
+        //else
+        //{
+        //    // TODO : Update endpoints
+        //}
+
+        
+
+
+        internal::JsonStringifyObjectToOutParam(responseObject, response);
 
         return S_OK;
 
@@ -367,7 +365,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     }
 
     // return the json with the information the client will need
-    internal::JsonStringifyObjectToOutParam(responseObject, &response);
+    internal::JsonStringifyObjectToOutParam(responseObject, response);
 
     return S_OK;
 }

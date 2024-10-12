@@ -81,18 +81,21 @@ namespace WindowsMidiServicesInternal
     }
 
     _Success_(return == true)
-    inline bool JsonStringifyObjectToOutParam(_In_ json::JsonObject const& obj, _Out_ BSTR** outParam) noexcept
+    inline bool JsonStringifyObjectToOutParam(
+        _In_ json::JsonObject const& obj, 
+        _Out_ LPWSTR* outParam) noexcept
     {
         try
         {
-            ATL::CComBSTR responseString = obj.Stringify().c_str();
+            wil::unique_cotaskmem_string tempString = wil::make_cotaskmem_string_nothrow(obj.Stringify().c_str());
 
-            auto hr = responseString.CopyTo(*outParam);
-
-            if (SUCCEEDED(hr))
+            if (tempString.get() != nullptr)
             {
+                *outParam = (LPWSTR)tempString.release();
                 return true;
             }
+
+            return false;
         }
         catch (...)
         {

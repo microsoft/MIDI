@@ -127,8 +127,8 @@ CMidiEndpointProtocolManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windo
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::DiscoverAndNegotiate(
-    GUID abstractionGuid,
-    LPCWSTR deviceInterfaceId,
+    GUID transportId,
+    LPCWSTR endpointDeviceInterfaceId,
     ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
     IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
 ) noexcept
@@ -140,10 +140,10 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
+    auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
     std::shared_ptr<CMidiEndpointProtocolWorker> worker{ nullptr };
 
@@ -165,7 +165,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
 
     auto initializeHR = worker->Initialize(
         m_sessionId,
-        abstractionGuid,
+        transportId,
         cleanEndpointDeviceInterfaceId.c_str(),
         m_clientManager,
         m_deviceManager,
@@ -198,7 +198,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     return S_OK;

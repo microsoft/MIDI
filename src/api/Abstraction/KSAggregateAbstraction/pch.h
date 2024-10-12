@@ -79,8 +79,7 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "MidiXProc.h"
 
-#include <libmidi2/umpToBytestream.h>
-#include <libmidi2/bytestreamToUMP.h>
+
 
 #include "strsafe.h"
 
@@ -112,12 +111,13 @@ class CMidi2KSAggregateMidiBiDi;
 class AbstractionState;
 
 #include "Midi2.KSAggregateAbstraction.h"
+#include "Midi2.KSAggregateMidiInProxy.h"
 #include "Midi2.KSAggregateMidi.h"
 #include "Midi2.KSAggregateMidiBiDi.h"
 #include "Midi2.KSAggregateMidiEndpointManager.h"
 #include "Midi2.KSAggregateMidiConfigurationManager.h"
 #include "Midi2.KSAggregateMidiPluginMetadataProvider.h"
-#include "Midi2.KSAggregateMidiInProxy.h"
+
 
 #include "AbstractionState.h"
 

@@ -49,7 +49,7 @@ CMidi2DiagnosticsAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsEndpointManager>(&midiEndpointManager));
         *activatedInterface = midiEndpointManager.detach();
     }
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == riid)
+    else if (__uuidof(IMidiTransportConfigurationManager) == riid)
     {
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
@@ -61,12 +61,12 @@ CMidi2DiagnosticsAbstraction::Activate(
 
         );
 
-        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> midiConfigurationManager;
+        wil::com_ptr_nothrow<IMidiTransportConfigurationManager> midiConfigurationManager;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsMidiConfigurationManager>(&midiConfigurationManager));
         *activatedInterface = midiConfigurationManager.detach();
     }
 
-    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == riid)
+    else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == riid)
     {
         TraceLoggingWrite(
             MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
@@ -78,7 +78,7 @@ CMidi2DiagnosticsAbstraction::Activate(
 
         );
 
-        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2DiagnosticsPluginMetadataProvider>(&metadataProvider));
         *activatedInterface = metadataProvider.detach();
     }

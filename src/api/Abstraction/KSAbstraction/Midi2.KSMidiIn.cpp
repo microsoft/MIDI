@@ -14,7 +14,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiIn::Initialize(
     LPCWSTR device,
-    PABSTRACTIONCREATIONPARAMS creationParams,
+    PTRANSPORTCREATIONPARAMS creationParams,
     DWORD * mmcssTaskId,
     IMidiCallback * callback,
     LONGLONG context,
@@ -41,7 +41,7 @@ CMidi2KSMidiIn::Initialize(
     RETURN_IF_NULL_ALLOC(midiDevice);
 
     RETURN_IF_FAILED(midiDevice->Initialize(device, MidiFlowIn, creationParams, mmcssTaskId, callback, context));
-    m_MidiDevice = std::move(midiDevice);
+    m_midiDevice = std::move(midiDevice);
 
     return S_OK;
 }
@@ -57,10 +57,10 @@ CMidi2KSMidiIn::Shutdown()
         TraceLoggingPointer(this, "this")
         );
 
-    if (m_MidiDevice)
+    if (m_midiDevice)
     {
-        m_MidiDevice->Shutdown();
-        m_MidiDevice.reset();
+        m_midiDevice->Shutdown();
+        m_midiDevice.reset();
     }
 
     return S_OK;

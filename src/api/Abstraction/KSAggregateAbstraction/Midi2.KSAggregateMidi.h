@@ -8,6 +8,11 @@
 
 #pragma once
 
+#ifndef MIDI2_KSAGGREGATEMIDI_H
+#define MIDI2_KSAGGREGATEMIDI_H
+
+#include <libmidi2/umpToBytestream.h>
+#include <libmidi2/bytestreamToUMP.h>
 
 #define KSMIDI_PIN_MAP_ENTRY_COUNT 16   // if this were to change, it would foul up existing properties, so don't do that.
 
@@ -24,13 +29,11 @@ typedef struct {
 } KSMIDI_PIN_MAP, * PKSMIDI_PIN_MAP;
 
 
-
-
 class CMidi2KSAggregateMidi
 {
 public:
 
-    HRESULT Initialize(_In_ LPCWSTR, _In_ MidiFlow, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG);
+    HRESULT Initialize(_In_ LPCWSTR, _In_ MidiFlow, _In_ PTRANSPORTCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG);
     HRESULT SendMidiMessage(_In_ PVOID , _In_ UINT , _In_ LONGLONG);
     HRESULT Shutdown();
 
@@ -48,5 +51,7 @@ private:
     // translation support for aggregated UMP endpoints made up of MIDI 1.0 pins
     umpToBytestream m_UMP2BS;
 
+//    wil::com_ptr_nothrow<IMidiDataTransform> m_Ump2BSTransform{ nullptr };
 };
 
+#endif

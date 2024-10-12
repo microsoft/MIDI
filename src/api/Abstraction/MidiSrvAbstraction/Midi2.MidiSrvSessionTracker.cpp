@@ -176,7 +176,7 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::GetSessionList(
-    BSTR* sessionList
+    LPWSTR* sessionList
 )
 {
     TraceLoggingWrite(

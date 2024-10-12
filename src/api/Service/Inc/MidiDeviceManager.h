@@ -125,10 +125,9 @@ public:
 
 
     // this is for runtime updates only, not for config file updates
-    STDMETHOD(UpdateAbstractionConfiguration)(
+    STDMETHOD(UpdateTransportConfiguration)(
         _In_ GUID,
         _In_ LPCWSTR,
-        _In_ BOOL,
         _Out_ LPWSTR*
         );
 
@@ -158,15 +157,15 @@ private:
         _In_ MidiFlow
     );
 
-    std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
-    std::shared_ptr<CMidiConfigurationManager> m_ConfigurationManager;
+    std::shared_ptr<CMidiPerformanceManager> m_performanceManager;
+    std::shared_ptr<CMidiConfigurationManager> m_configurationManager;
 
-    std::map<GUID, wil::com_ptr_nothrow<IMidiEndpointManager>, GUIDCompare> m_MidiEndpointManagers;
-    std::map<GUID, wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager>, GUIDCompare> m_MidiAbstractionConfigurationManagers;
+    std::map<GUID, wil::com_ptr_nothrow<IMidiEndpointManager>, GUIDCompare> m_midiEndpointManagers;
+    std::map<GUID, wil::com_ptr_nothrow<IMidiTransportConfigurationManager>, GUIDCompare> m_midiTransportConfigurationManagers;
 
-    wil::critical_section m_MidiPortsLock;
-    std::vector<std::unique_ptr<MIDIPORT>> m_MidiPorts;
+    wil::critical_section m_midiPortsLock;
+    std::vector<std::unique_ptr<MIDIPORT>> m_midiPorts;
 
-    std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_MidiParents;
+    std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_midiParents;
 };
 

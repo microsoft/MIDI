@@ -34,7 +34,7 @@ CMidiDeviceManager::Initialize(
         TraceLoggingPointer(this, "this")
     );
 
-    m_ConfigurationManager = configurationManager;
+    m_configurationManager = configurationManager;
 
     // query for midisrv control keys
     if (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, driver32Path, midisrvTransferComplete, RRF_RT_DWORD, NULL, &transferState, &dataSize) && 
@@ -59,11 +59,11 @@ CMidiDeviceManager::Initialize(
 
     // Get the enabled abstraction layers from the registry
 
-    for (auto const& AbstractionLayer : m_ConfigurationManager->GetEnabledTransportAbstractionLayers())
+    for (auto const& AbstractionLayer : m_configurationManager->GetEnabledTransports())
     {
-        wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
         wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
-        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> abstractionConfigurationManager;
+        wil::com_ptr_nothrow<IMidiTransportConfigurationManager> abstractionConfigurationManager;
 
         try
         {
@@ -78,7 +78,7 @@ CMidiDeviceManager::Initialize(
             );
 
             // provide the initial settings for these transports
-            auto transportSettingsJson = m_ConfigurationManager->GetSavedConfigurationForTransportAbstraction(AbstractionLayer);
+            auto transportSettingsJson = m_configurationManager->GetSavedConfigurationForTransport(AbstractionLayer);
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
@@ -111,7 +111,7 @@ CMidiDeviceManager::Initialize(
                 // If present, an abstraction device manager may make use of its configuration manager, so activate
                 // and initialize the configuration manager before activating the device manager so that configuration
                 // is present.
-                auto configHR = midiAbstraction->Activate(__uuidof(IMidiAbstractionConfigurationManager), (void**)&abstractionConfigurationManager);
+                auto configHR = midiAbstraction->Activate(__uuidof(IMidiTransportConfigurationManager), (void**)&abstractionConfigurationManager);
                 if (SUCCEEDED(configHR))
                 {
                     if (abstractionConfigurationManager != nullptr)
@@ -120,7 +120,7 @@ CMidiDeviceManager::Initialize(
                         auto initializeResult = abstractionConfigurationManager->Initialize(
                             AbstractionLayer,
                             this, 
-                            m_ConfigurationManager.get());
+                            m_configurationManager.get());
 
                         if (FAILED(initializeResult))
                         {
@@ -140,7 +140,7 @@ CMidiDeviceManager::Initialize(
                         else
                         {
                             // don't std::move this because we sill need it
-                            m_MidiAbstractionConfigurationManagers[AbstractionLayer] = abstractionConfigurationManager;
+                            m_midiTransportConfigurationManagers[AbstractionLayer] = abstractionConfigurationManager;
 
                             if (!transportSettingsJson.empty())
                             {
@@ -154,12 +154,9 @@ CMidiDeviceManager::Initialize(
                                     TraceLoggingGuid(AbstractionLayer, "abstraction layer")
                                 );
 
-                                CComBSTR response{};
+                                LPWSTR response{};
 
-                                auto updateConfigHR = abstractionConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), true, &response);
-
-                                // we don't use the response info here.
-                                response.Empty();
+                                auto updateConfigHR = abstractionConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response);
 
                                 if (FAILED(updateConfigHR))
                                 {
@@ -268,7 +265,7 @@ CMidiDeviceManager::Initialize(
 
                     if (SUCCEEDED(initializeResult))
                     {
-                        m_MidiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+                        m_midiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
 
                         TraceLoggingWrite(
                             MidiSrvTelemetryProvider::Provider(),
@@ -379,7 +376,7 @@ CMidiDeviceManager::Initialize(
         }
     }
 
-    m_PerformanceManager = performanceManager;
+    m_performanceManager = performanceManager;
 
     return S_OK;
 }
@@ -578,7 +575,7 @@ CMidiDeviceManager::ActivateVirtualParentDevice
 
     if (SUCCEEDED(creationContext.MidiParentDevice->hr))
     {
-        m_MidiParents.push_back(std::move(midiParent));
+        m_midiParents.push_back(std::move(midiParent));
     }
 
     return S_OK;
@@ -614,9 +611,9 @@ CMidiDeviceManager::ActivateEndpoint
         TraceLoggingBool(umpOnly, "UMP Only")
     );
 
-    auto lock = m_MidiPortsLock.lock();
+    auto lock = m_midiPortsLock.lock();
 
-    const bool alreadyActivated = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+    const bool alreadyActivated = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
     {
         // if this instance id already activated, then we cannot activate/create a second time,
         if (((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId == Port->InstanceId)
@@ -625,7 +622,7 @@ CMidiDeviceManager::ActivateEndpoint
         }
 
         return false;
-    }) != m_MidiPorts.end();
+    }) != m_midiPorts.end();
 
     if (alreadyActivated)
     {
@@ -685,7 +682,7 @@ CMidiDeviceManager::ActivateEndpoint
 
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->AbstractionLayerGuid)) });
+                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->TransportId)) });
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->EndpointDeviceType)) });
@@ -1107,10 +1104,10 @@ CMidiDeviceManager::ActivateEndpoint
 
             // The abstraction layer GUID is required for various tests for targeting the tests on this SWD.
             midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->AbstractionLayerGuid)) });
+                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->TransportId)) });
 
             midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->AbstractionLayerGuid)) });
+                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->TransportId)) });
 
             // The Midi 1 ports are an abstraction generated and handled by Midisrv, as such it can do both bytestream
             // and UMP.
@@ -1419,7 +1416,7 @@ CMidiDeviceManager::ActivateEndpointInternal
 
         // if the devnode already exists, then we likely only need to create/activate the interface, a previous
         // call created the devnode. First, locate the matching SwDevice handle for the existing devnode.
-        auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+        auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
             // if this instance id already activated, then we cannot activate/create a second time,
             if (midiPort->InstanceId == Port->InstanceId &&
@@ -1431,7 +1428,7 @@ CMidiDeviceManager::ActivateEndpointInternal
             return false;
         });
 
-        if (item != m_MidiPorts.end())
+        if (item != m_midiPorts.end())
         {
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
@@ -1540,7 +1537,7 @@ CMidiDeviceManager::ActivateEndpointInternal
     }
 
     // success, transfer the midiPort to the list
-    m_MidiPorts.push_back(std::move(midiPort));
+    m_midiPorts.push_back(std::move(midiPort));
 
     return S_OK;
 }
@@ -1572,14 +1569,14 @@ CMidiDeviceManager::UpdateEndpointProperties
     auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
 
     // locate the MIDIPORT 
-    auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+    auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
             auto portInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Port->DeviceInterfaceId.get());
 
             return (portInterfaceId == requestedInterfaceId);
         });
 
-    if (item == m_MidiPorts.end())
+    if (item == m_midiPorts.end())
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
@@ -1621,7 +1618,7 @@ CMidiDeviceManager::UpdateEndpointProperties
             );
 
             // update/refresh the port numbers for all affected midi1 ports
-            for (auto const& MidiPort : m_MidiPorts)
+            for (auto const& MidiPort : m_midiPorts)
             {
                 if (MidiPort->AssociatedInterfaceId == requestedInterfaceId &&
                     MidiPort->MidiOne)
@@ -1713,7 +1710,7 @@ CMidiDeviceManager::DeactivateEndpoint
     {
         // locate the MIDIPORT that identifies the swd
         // NOTE: This uses instanceId, not the Device Interface Id
-        auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+        auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
             if (cleanId == Port->InstanceId)
             {
@@ -1724,7 +1721,7 @@ CMidiDeviceManager::DeactivateEndpoint
         });
 
         // exit if the item was not found. We're done.
-        if (item == m_MidiPorts.end())
+        if (item == m_midiPorts.end())
         {
             break;
         }
@@ -1742,7 +1739,7 @@ CMidiDeviceManager::DeactivateEndpoint
 
             // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
             // which will deactivate the device, done.
-            m_MidiPorts.erase(item);
+            m_midiPorts.erase(item);
         }
     } while (TRUE);
 
@@ -1777,11 +1774,10 @@ CMidiDeviceManager::RemoveEndpoint
 
 _Use_decl_annotations_
 HRESULT
-CMidiDeviceManager::UpdateAbstractionConfiguration
+CMidiDeviceManager::UpdateTransportConfiguration
 (
-    GUID abstractionId,
+    GUID transportId,
     LPCWSTR configurationJson,
-    BOOL isFromConfigurationFile,
     LPWSTR* response
 )
 {
@@ -1793,18 +1789,17 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingGuid(abstractionId, "abstraction id"),
-            TraceLoggingWideString(configurationJson, "config json"),
-            TraceLoggingBool(isFromConfigurationFile, "from config file")
+            TraceLoggingGuid(transportId, "abstraction id"),
+            TraceLoggingWideString(configurationJson, "config json")
         );
 
-        if (auto search = m_MidiAbstractionConfigurationManagers.find(abstractionId); search != m_MidiAbstractionConfigurationManagers.end())
+        if (auto search = m_midiTransportConfigurationManagers.find(transportId); search != m_midiTransportConfigurationManagers.end())
         {
             auto configManager = search->second;
 
             if (configManager)
             {
-                return configManager->UpdateConfiguration(configurationJson, isFromConfigurationFile, response);
+                return configManager->UpdateConfiguration(configurationJson, response);
             }
         }
         else
@@ -1816,7 +1811,7 @@ CMidiDeviceManager::UpdateAbstractionConfiguration
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(abstractionId, "abstraction id")
+                TraceLoggingGuid(transportId, "transport id")
             );
 
         }
@@ -1850,22 +1845,22 @@ CMidiDeviceManager::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
-    for (auto const& endpointManager : m_MidiEndpointManagers)
+    for (auto const& endpointManager : m_midiEndpointManagers)
     {
-        endpointManager.second->Shutdown();
+        LOG_IF_FAILED(endpointManager.second->Shutdown());
     }
 
-    for (auto const& configurationManager : m_MidiAbstractionConfigurationManagers)
+    for (auto const& configurationManager : m_midiTransportConfigurationManagers)
     {
-        configurationManager.second->Shutdown();
+        LOG_IF_FAILED(configurationManager.second->Shutdown());
     }
 
-    m_MidiEndpointManagers.clear();
-    m_MidiAbstractionConfigurationManagers.clear();
+    m_midiEndpointManagers.clear();
+    m_midiTransportConfigurationManagers.clear();
 
-    m_MidiPorts.clear();
+    m_midiPorts.clear();
 
-    m_MidiParents.clear();
+    m_midiParents.clear();
 
     return S_OK;
 }
@@ -2147,13 +2142,13 @@ CMidiDeviceManager::AssignPortNumber(
             // If the MIDIPORT does not exist, then we can not move the conflicting port, exit with failure and fall back to the
             // next available for the assigning port.
             auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(portInfo[customPortNumber].interfaceId);
-            auto item = std::find_if(m_MidiPorts.begin(), m_MidiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+            auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
             {
                 auto portInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Port->DeviceInterfaceId.get());
                 return (portInterfaceId == requestedInterfaceId);
             });
 
-            RETURN_HR_IF(E_ABORT, item != m_MidiPorts.end());
+            RETURN_HR_IF(E_ABORT, item != m_midiPorts.end());
             
             // Recursive call, assign a new port number to this port.
             RETURN_IF_FAILED(AssignPortNumber(item->get()->SwDevice.get(), item->get()->DeviceInterfaceId.get(), flow));

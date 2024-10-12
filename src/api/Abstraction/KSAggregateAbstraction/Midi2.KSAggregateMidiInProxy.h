@@ -16,14 +16,14 @@ class CMidi2KSAggregateMidiInProxy :
 {
 public:
     HRESULT Initialize(
-        _In_ LPCWSTR Device,
-        _In_ HANDLE Filter,
-        _In_ UINT PinId,
-        _In_ ULONG BufferSize,
-        _In_ DWORD* MmcssTaskId,
-        _In_ IMidiCallback* Callback,
-        _In_ LONGLONG Context,
-        _In_ BYTE Group);
+        _In_ LPCWSTR endpointDeviceInterfaceId,
+        _In_ HANDLE filter,
+        _In_ UINT pinId,
+        _In_ ULONG bufferSize,
+        _In_ DWORD* mmcssTaskId,
+        _In_ IMidiCallback* callback,
+        _In_ LONGLONG context,
+        _In_ BYTE group);
 
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
 
@@ -33,7 +33,6 @@ private:
     std::wstring m_endpointDeviceId{};
     std::atomic<uint64_t> m_countMidiMessageSent{};
 
- //   bytestreamToUMP m_BS2UMP;
     wil::com_ptr_nothrow<IMidiDataTransform> m_bs2UmpTransform{ nullptr };
 
     IMidiCallback* m_callback{ nullptr };

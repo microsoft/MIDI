@@ -15,7 +15,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2PingMidiBiDi::Initialize(
     LPCWSTR endpointId,
-    PABSTRACTIONCREATIONPARAMS creationParams,
+    PTRANSPORTCREATIONPARAMS creationParams,
     DWORD*,
     IMidiCallback* callback,
     LONGLONG context,

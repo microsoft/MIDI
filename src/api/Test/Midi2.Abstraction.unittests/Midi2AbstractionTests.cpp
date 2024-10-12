@@ -159,7 +159,7 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID iid, MidiDataFormats dataF
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
@@ -168,7 +168,7 @@ void MidiAbstractionTests::TestMidiAbstraction(REFIID iid, MidiDataFormats dataF
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { dataFormat };
+    TRANSPORTCREATIONPARAMS abstractionCreationParams { dataFormat };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
@@ -358,7 +358,7 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID iid, _In_ Mid
 {
 //    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
@@ -366,7 +366,7 @@ void MidiAbstractionTests::TestMidiAbstractionCreationOrder(REFIID iid, _In_ Mid
     DWORD mmcssTaskIdIn {0};
     DWORD mmcssTaskIdOut {0};
     unique_mmcss_handle mmcssHandle;
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { dataFormat };
+    TRANSPORTCREATIONPARAMS abstractionCreationParams { dataFormat };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
@@ -529,14 +529,14 @@ void MidiAbstractionTests::TestMidiAbstractionBiDi(REFIID iid, MidiDataFormats d
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
     wil::com_ptr_nothrow<IMidiBiDi> midiBiDiDevice;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId {0};
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { dataFormat };
+    TRANSPORTCREATIONPARAMS abstractionCreationParams { dataFormat };
     std::wstring midiBiDirectionalInstanceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
@@ -672,7 +672,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataFo
 
     DWORD messageDelay{ 10 };
 
-    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
     wil::com_ptr_nothrow<IMidiBiDi> midiBiDiDevice;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId{0};
@@ -699,7 +699,7 @@ void MidiAbstractionTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataFo
     LONGLONG previousReceive{ 0 };
 
     long double qpcPerMs = 0;
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams { dataFormat };
+    TRANSPORTCREATIONPARAMS abstractionCreationParams { dataFormat };
     std::wstring midiBiDirectionalInstanceId;
 
     QueryPerformanceFrequency(&performanceFrequency);
@@ -1014,7 +1014,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormats dataFormat1, M
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     wil::com_ptr_nothrow<IMidiIn> midiInDevice1;
     wil::com_ptr_nothrow<IMidiOut> midiOutDevice1;
@@ -1036,8 +1036,8 @@ void MidiAbstractionTests::TestMidiSrvMultiClient(MidiDataFormats dataFormat1, M
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams1 { dataFormat1 };
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams2 { dataFormat2 };
+    TRANSPORTCREATIONPARAMS abstractionCreationParams1 { dataFormat1 };
+    TRANSPORTCREATIONPARAMS abstractionCreationParams2 { dataFormat2 };
 
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
@@ -1350,7 +1350,7 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
-    wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+    wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     wil::com_ptr_nothrow<IMidiBiDi> midiDevice1;
     wil::com_ptr_nothrow<IMidiBiDi> midiDevice2;
@@ -1370,8 +1370,8 @@ void MidiAbstractionTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams1 { dataFormat1 };
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams2 { dataFormat2 };
+    TRANSPORTCREATIONPARAMS abstractionCreationParams1 { dataFormat1 };
+    TRANSPORTCREATIONPARAMS abstractionCreationParams2 { dataFormat2 };
     std::wstring midiInstanceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));

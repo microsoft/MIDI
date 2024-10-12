@@ -237,7 +237,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     );
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
-    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.TransportId = m_TransportAbstractionId;
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
@@ -312,8 +312,7 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
     std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
-    std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB,
-    bool isFromConfigurationFile
+    std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
 )
 {
     TraceLoggingWrite(
@@ -335,7 +334,7 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
 
             auto device = MidiLoopbackDevice{};
 
-            device.IsFromConfigurationFile = isFromConfigurationFile;
+         //   device.IsFromConfigurationFile = isFromConfigurationFile;
             device.DefinitionA = *definitionA;
             device.DefinitionB = *definitionB;
 

@@ -8,6 +8,16 @@
 
 #pragma once
 
+#ifndef MIDI2_UMPPROTOCOLDOWNSCALERMIDITRANSFORM_H
+#define MIDI2_UMPPROTOCOLDOWNSCALERMIDITRANSFORM_H
+
+
+#include <libmidi2/utils.h>                 // AM_MIDI2
+#include <libmidi2/umpMessageCreate.h>      // AM_MIDI2
+#include <libmidi2/umpToMIDI1Protocol.h>    // AM_MIDI2
+
+
+
 using namespace winrt::Windows::Devices::Enumeration;
 //
 // Despite the name, this does both downscaling and upscaling
@@ -20,7 +30,14 @@ class CMidi2UmpProtocolDownscalerMidiTransform :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSFORMCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ IMidiDeviceManagerInterface*));
+    STDMETHOD(Initialize(
+        _In_ LPCWSTR, 
+        _In_ PTRANSFORMCREATIONPARAMS, 
+        _In_ DWORD *, 
+        _In_opt_ IMidiCallback *, 
+        _In_ LONGLONG, 
+        _In_ IMidiDeviceManagerInterface*));
+
     STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
     STDMETHOD(Shutdown)();
 
@@ -53,4 +70,4 @@ private:
 
 };
 
-
+#endif

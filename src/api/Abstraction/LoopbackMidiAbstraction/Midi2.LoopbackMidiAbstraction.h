@@ -23,7 +23,7 @@ using namespace ATL;
 class ATL_NO_VTABLE CMidi2LoopbackMidiAbstraction : 
     public CComObjectRootEx<CComMultiThreadModel>,
     public CComCoClass<CMidi2LoopbackMidiAbstraction, &CLSID_Midi2LoopbackMidiAbstraction>,
-    public IMidiAbstraction
+    public IMidiTransport
 {
 public:
     CMidi2LoopbackMidiAbstraction()
@@ -33,7 +33,7 @@ public:
     DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2LOOPBACKMIDIABSTRACTION)
 
     BEGIN_COM_MAP(CMidi2LoopbackMidiAbstraction)
-        COM_INTERFACE_ENTRY(IMidiAbstraction)
+        COM_INTERFACE_ENTRY(IMidiTransport)
     END_COM_MAP()
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()

@@ -79,7 +79,7 @@ private:
     std::queue<LPMIDIHDR> m_InBuffers;
     wil::unique_event m_BuffersAdded{wil::EventOptions::None};
     
-    wil::com_ptr_nothrow<IMidiAbstraction> m_MidiAbstraction;
+    wil::com_ptr_nothrow<IMidiTransport> m_MidiAbstraction;
     wil::com_ptr_nothrow<IMidiIn> m_MidiIn;
     wil::com_ptr_nothrow<IMidiOut> m_MidiOut;
 };

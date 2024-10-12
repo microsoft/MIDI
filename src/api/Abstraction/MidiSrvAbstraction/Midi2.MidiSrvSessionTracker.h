@@ -17,16 +17,16 @@ public:
     STDMETHOD(Initialize());
 
     // These are called from the client API
-    STDMETHOD(AddClientSession(_In_ GUID SessionId, _In_ LPCWSTR SessionName));
-    STDMETHOD(UpdateClientSessionName(_In_ GUID SessionId, _In_ LPCWSTR SessionName));
-    STDMETHOD(RemoveClientSession(_In_ GUID SessionId));
+    STDMETHOD(AddClientSession(_In_ GUID sessionId, _In_ LPCWSTR sessionName));
+    STDMETHOD(UpdateClientSessionName(_In_ GUID sessionId, _In_ LPCWSTR sessionName));
+    STDMETHOD(RemoveClientSession(_In_ GUID sessionId));
 
     // These are called from within the service
     //STDMETHOD(AddClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId));
     //STDMETHOD(RemoveClientEndpointConnection(_In_ GUID SessionId, _In_ LPCWSTR ConnectionEndpointInterfaceId));
 
     // This is called from the SDK
-    STDMETHOD(GetSessionList(_Out_ BSTR* SessionList));
+    STDMETHOD(GetSessionList(_Out_ LPWSTR* sessionList));
     //STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
 
     STDMETHOD(Shutdown());

@@ -11,11 +11,10 @@
 #include "pch.h"
 
 
-
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiInProxy::Initialize(
-    LPCWSTR device,
+    LPCWSTR endpointDeviceInterfaceId,
     HANDLE filter,
     UINT pinId,
     ULONG bufferSize,
@@ -31,7 +30,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingUInt32(pinId, "Pin id"),
         TraceLoggingUInt8(groupIndex, "Group index")
         );
@@ -40,7 +39,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
     m_context = context;
     m_groupIndex = groupIndex;
 
-    m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdWStringCopy(device);
+    m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
     m_countMidiMessageSent = 0;
 
@@ -51,7 +50,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 
     auto initResult =
         m_device->Initialize(
-            device,
+            endpointDeviceInterfaceId,
             filter,
             pinId,
             MidiTransport::MidiTransport_StandardByteStream,
@@ -71,7 +70,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Unable to initialize sub-device for input", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingHResult(initResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
-            TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
             TraceLoggingUInt32(pinId, "pin id")
         );
 
@@ -93,7 +92,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
     creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
     creationParams.UmpGroupIndex = groupIndex;
 
-    RETURN_IF_FAILED(m_bs2UmpTransform->Initialize(device, &creationParams, mmcssTaskId, m_callback, 0, nullptr));
+    RETURN_IF_FAILED(m_bs2UmpTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, m_callback, 0, nullptr));
 
     return S_OK;
 }

@@ -7,13 +7,13 @@
 // ============================================================================
 
 #include "pch.h"
-//#include "bytestreamToUMP.h"
-//#include "midi2.BS2UMPtransform.h"
+
+#include "Midi2.UmpProtocolDownscalerMidiTransform.h"
 
 _Use_decl_annotations_
 HRESULT
 CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
-    LPCWSTR device,
+    LPCWSTR endpointDeviceInterfaceId,
     PTRANSFORMCREATIONPARAMS creationParams,
     DWORD *,
     IMidiCallback * callback,
@@ -28,21 +28,21 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     // this only converts UMP to UMP
     RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), creationParams->DataFormatIn != MidiDataFormats_UMP);
     RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_UNSUPPORTED_TYPE), creationParams->DataFormatOut != MidiDataFormats_UMP);
 
-    m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(device);
+    m_Device = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
     m_Callback = callback;
     m_Context = context;
 
 
     // get the deviceinstanceid and also the support for m1 and m2
 
-    auto dev = DeviceInformation::CreateFromIdAsync(device, 
+    auto dev = DeviceInformation::CreateFromIdAsync(endpointDeviceInterfaceId,
         {
             STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol,
             STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol,

@@ -16,7 +16,7 @@ library Midi2MidiSrvAbstractionLib
     [uuid(2BA15E4E-5417-4A66-85B8-2B2260EFBC84), version(1.0)]
     coclass Midi2MidiSrvAbstraction
     {
-        [default] interface IMidiAbstraction;
+        [default] interface IMidiTransport;
     }
 };
 

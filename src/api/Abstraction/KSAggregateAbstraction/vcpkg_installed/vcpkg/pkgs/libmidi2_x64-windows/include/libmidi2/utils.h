@@ -127,6 +127,20 @@
 #define MIDICI_PE_SUBREPLY 0x39
 #define MIDICI_PE_NOTIFY 0x3F
 
+#define MIDICI_PE_STATUS_OK 200
+#define MIDICI_PE_STATUS_ACCEPTED 202
+#define MIDICI_PE_STATUS_RESOURCE_UNAVAILABLE 341
+#define MIDICI_PE_STATUS_BAD_DATA 342
+#define MIDICI_PE_STATUS_TOO_MANY_REQS 343
+#define MIDICI_PE_STATUS_BAD_REQ 400
+#define MIDICI_PE_STATUS_REQ_UNAUTHORIZED 403
+#define MIDICI_PE_STATUS_RESOURCE_UNSUPPORTED 404
+#define MIDICI_PE_STATUS_RESOURCE_NOT_ALLOWED 405
+#define MIDICI_PE_STATUS_PAYLOAD_TOO_LARGE 413
+#define MIDICI_PE_STATUS_UNSUPPORTED_MEDIA_TYPE 415
+#define MIDICI_PE_STATUS_INVALID_DATA_VERSION 445
+#define MIDICI_PE_STATUS_INTERNAL_DEVICE_ERROR 500
+
 #define MIDICI_PI_CAPABILITY 0x40
 #define MIDICI_PI_CAPABILITYREPLY 0x41
 #define MIDICI_PI_MM_REPORT 0x42
@@ -168,9 +182,54 @@
 #define UMP_MIDI_ENDPOINT 0xF
 
 namespace M2Utils {
-uint32_t scaleUp(uint32_t srcVal, uint8_t srcBits, uint8_t dstBits);
+ inline void clear(uint8_t * const dest, uint8_t const c, std::size_t const n) {
+  for (auto i = std::size_t{0}; i < n; i++) {
+   dest[i] = c;
+  }
+ }
 
-uint32_t scaleDown(uint32_t srcVal, uint8_t srcBits, uint8_t dstBits);
+ inline uint32_t scaleUp(uint32_t srcVal, uint8_t srcBits, uint8_t dstBits){
+  //Handle value of 0 - skip processing
+  if(srcVal == 0){
+   return 0L;
+  }
+
+  //handle 1-bit (bool) scaling
+  if(srcBits == 1){
+   return (1 << dstBits) - 1L;
+  }
+
+  // simple bit shift
+  uint8_t scaleBits = (dstBits - srcBits);
+  uint32_t bitShiftedValue = (srcVal + 0L) << scaleBits;
+  uint32_t srcCenter = 1 << (srcBits-1);
+  if (srcVal <= srcCenter ) {
+   return bitShiftedValue;
+  }
+
+  // expanded bit repeat scheme
+  uint8_t repeatBits = srcBits - 1;
+  auto repeatMask = (1 << repeatBits) - 1;
+  uint32_t repeatValue = srcVal & repeatMask;
+  if (scaleBits > repeatBits) {
+   repeatValue <<= scaleBits - repeatBits;
+  } else {
+   repeatValue >>= repeatBits - scaleBits;
+  }
+
+  while (repeatValue != 0) {
+   bitShiftedValue |= repeatValue;
+   repeatValue >>= repeatBits;
+  }
+  return bitShiftedValue;
+ }
+
+ inline uint32_t scaleDown(uint32_t srcVal, uint8_t srcBits, uint8_t dstBits){
+  // simple bit shift
+  uint8_t scaleBits = (srcBits - dstBits);
+  return srcVal >> scaleBits;
+ }
 
 }
+
 #endif

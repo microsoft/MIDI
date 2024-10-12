@@ -129,8 +129,7 @@ HRESULT
 MidiSrvUpdateConfiguration(
     /* [in] */ handle_t bindingHandle,
     /*[in, string]*/ __RPC__in_string LPCWSTR configurationJson,
-    __RPC__in BOOL isFromConfigurationFile,
-    __RPC__out BSTR* responseOut)
+    __RPC__out LPWSTR* responseOut)
 {
     UNREFERENCED_PARAMETER(bindingHandle);
 
@@ -163,7 +162,7 @@ MidiSrvUpdateConfiguration(
     RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configurationManager));
     RETURN_IF_FAILED(g_MidiService->GetDeviceManager(deviceManager));
 
-    auto configEntries = configurationManager->GetTransportAbstractionSettingsFromJsonString(configurationJson);
+    auto configEntries = configurationManager->GetTransportSettingsFromJsonString(configurationJson);
 
     if (configEntries.size() == 0)
     {
@@ -178,24 +177,24 @@ MidiSrvUpdateConfiguration(
         return E_FAIL;
     }
 
-    CComBSTR combinedResponse;
-    combinedResponse.Empty();
+    std::wstring combinedResponse{};
 
     for (auto i = configEntries.begin(); i != configEntries.end(); i++)
     {
-        CComBSTR response;
-        response.Empty();
+        LPWSTR response;
 
-        deviceManager->UpdateAbstractionConfiguration(i->first, i->second.c_str(), isFromConfigurationFile, &response);
+        deviceManager->UpdateTransportConfiguration(i->first, i->second.c_str(), &response);
 
         // Probably need to do more formatting of this. Should use the json objects instead
 
         combinedResponse += response;
-
-        ::SysFreeString(response);
     }
 
-    RETURN_IF_FAILED(combinedResponse.CopyTo(responseOut));
+    wil::unique_cotaskmem_string tempString;
+    tempString = wil::make_cotaskmem_string_nothrow(combinedResponse.c_str());
+    RETURN_IF_NULL_ALLOC(tempString.get());
+    combinedResponse = tempString.release();
+
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
 
@@ -368,7 +367,7 @@ __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
 HRESULT
 MidiSrvGetSessionList(
     /* [in] */ handle_t bindingHandle,
-    __RPC__out BSTR* sessionListJson
+    __RPC__out LPWSTR* sessionListJson
 )
 {
     UNREFERENCED_PARAMETER(bindingHandle);
@@ -387,12 +386,7 @@ MidiSrvGetSessionList(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    CComBSTR sessionList;
-    sessionList.Empty();
-
-    RETURN_IF_FAILED(sessionTracker->GetSessionList(&sessionList));
-
-    RETURN_IF_FAILED(sessionList.CopyTo(sessionListJson));
+    RETURN_IF_FAILED(sessionTracker->GetSessionList(sessionListJson));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -407,9 +401,9 @@ MidiSrvGetSessionList(
 }
 
 HRESULT 
-MidiSrvGetAbstractionList(
+MidiSrvGetTransportList(
     /*[in]*/ handle_t bindingHandle,
-    __RPC__out BSTR* abstractionListJson
+    __RPC__out LPWSTR* transportListJson
 )
 {
     UNREFERENCED_PARAMETER(bindingHandle);
@@ -428,7 +422,7 @@ MidiSrvGetAbstractionList(
 
     RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configManager));
 
-    auto allMetadata = configManager->GetAllEnabledTransportAbstractionLayerMetadata();
+    auto allMetadata = configManager->GetAllEnabledTransportMetadata();
 
     // TODO: This code should probably live in the configuration manager instead of the RPC layer
 
@@ -453,7 +447,7 @@ MidiSrvGetAbstractionList(
 //        if (metadata.ClientConfigurationAssemblyName != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.ClientConfigurationAssemblyName));
 
         // add the abstraction metadata to the root, using the abstraction id as the key
-        rootObject.SetNamedValue(internal::GuidToString(metadata.Id).c_str(), abstractionObject);
+        rootObject.SetNamedValue(internal::GuidToString(metadata.TransportId).c_str(), abstractionObject);
 
         // We need to free all the strings in the struct. I hate this pattern.
 
@@ -469,7 +463,7 @@ MidiSrvGetAbstractionList(
 
     // stringify json to output parameter
 
-    internal::JsonStringifyObjectToOutParam(rootObject, &abstractionListJson);
+    internal::JsonStringifyObjectToOutParam(rootObject, transportListJson);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -485,7 +479,7 @@ MidiSrvGetAbstractionList(
 HRESULT
 MidiSrvGetTransformList(
     /*[in]*/ handle_t bindingHandle,
-    __RPC__out BSTR* transformListJson
+    __RPC__out LPWSTR* transformListJson
 )
 {
     UNREFERENCED_PARAMETER(bindingHandle);
