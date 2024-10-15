@@ -12,7 +12,7 @@
 #define MIDI2_UMPPROTOCOLDOWNSCALERTRANSFORM_H
 
 
-#include "Midi2.UmpProtocolDownscalerMidiTransform.h"
+#include "pch.h"
 
 
 class MidiUmpProtocolDownscalerTransformTelemetryProvider : public wil::TraceLoggingProvider

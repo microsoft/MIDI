@@ -11,12 +11,11 @@
 #ifndef MIDI2_UMPPROTOCOLDOWNSCALERMIDITRANSFORM_H
 #define MIDI2_UMPPROTOCOLDOWNSCALERMIDITRANSFORM_H
 
+#include "pch.h"
 
 #include <libmidi2/utils.h>                 // AM_MIDI2
 #include <libmidi2/umpMessageCreate.h>      // AM_MIDI2
 #include <libmidi2/umpToMIDI1Protocol.h>    // AM_MIDI2
-
-
 
 using namespace winrt::Windows::Devices::Enumeration;
 //
@@ -42,7 +41,7 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    umpToMIDI1Protocol m_umpToMidi1{};
+    umpToMIDI1Protocol m_umpToMidi1;
   //  umpToMIDI2Protocol m_umpToMidi2{};
 
     // this gets set based on the protocol negotiated, and also if we're using

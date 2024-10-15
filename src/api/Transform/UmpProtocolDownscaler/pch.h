@@ -61,7 +61,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "dllmain.h"
 
-class CMidi2UmpProtocolDownscalerMidiTransform;
+//class CMidi2UmpProtocolDownscalerMidiTransform;
 
 //#include "Midi2.UmpProtocolDownscalerMidiTransform.h"
 #include "Midi2.UmpProtocolDownscalerTransform.h"
