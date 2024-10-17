@@ -55,7 +55,7 @@ CMidi2LoopbackMidiAbstraction::Activate(
 
         RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(Riid, Interface));
     }
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == Riid)
+    else if (__uuidof(IMidiTransportConfigurationManager) == Riid)
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
@@ -63,7 +63,7 @@ CMidi2LoopbackMidiAbstraction::Activate(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+            TraceLoggingWideString(L"IMidiTransportConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
 
         );
 
@@ -75,7 +75,7 @@ CMidi2LoopbackMidiAbstraction::Activate(
 
         RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(Riid, Interface));
     }
-    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == Riid)
+    else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == Riid)
     {
         TraceLoggingWrite(
             MidiLoopbackMidiAbstractionTelemetryProvider::Provider(),
@@ -87,7 +87,7 @@ CMidi2LoopbackMidiAbstraction::Activate(
 
         );
 
-        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2LoopbackMidiPluginMetadataProvider>(&metadataProvider));
         *Interface = metadataProvider.detach();
     }

@@ -23,7 +23,7 @@ library Midi2DiagnosticsAbstractionLib
     [uuid(ac9b5417-3fe0-4e62-960f-034ee4235a1a), version(1.0)]
     coclass Midi2DiagnosticsAbstraction
     {
-        [default] interface IMidiAbstraction;
+        [default] interface IMidiTransport;
     }
 };
 

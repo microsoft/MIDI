@@ -1,8 +1,8 @@
-# Install script for directory: C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean
+# Install script for directory: G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/debug")
+  set(CMAKE_INSTALL_PREFIX "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/pkgs/libmidi2_x64-windows/debug")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -33,14 +33,14 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/libmidi2.lib")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib" TYPE STATIC_LIBRARY FILES "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/libmidi2.lib")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   if(EXISTS "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/libmidi2/libmidi2-config.cmake")
     file(DIFFERENT _cmake_export_file_changed FILES
          "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/libmidi2/libmidi2-config.cmake"
-         "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/Export/0d7ad336f582a14afd488c3a7811f6bb/libmidi2-config.cmake")
+         "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/Export/0d7ad336f582a14afd488c3a7811f6bb/libmidi2-config.cmake")
     if(_cmake_export_file_changed)
       file(GLOB _cmake_old_config_files "$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/share/libmidi2/libmidi2-config-*.cmake")
       if(_cmake_old_config_files)
@@ -53,23 +53,24 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
     endif()
     unset(_cmake_export_file_changed)
   endif()
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libmidi2" TYPE FILE FILES "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/Export/0d7ad336f582a14afd488c3a7811f6bb/libmidi2-config.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libmidi2" TYPE FILE FILES "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/Export/0d7ad336f582a14afd488c3a7811f6bb/libmidi2-config.cmake")
   if(CMAKE_INSTALL_CONFIG_NAME MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
-    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libmidi2" TYPE FILE FILES "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/Export/0d7ad336f582a14afd488c3a7811f6bb/libmidi2-config-debug.cmake")
+    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/libmidi2" TYPE FILE FILES "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/CMakeFiles/Export/0d7ad336f582a14afd488c3a7811f6bb/libmidi2-config-debug.cmake")
   endif()
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include/libmidi2" TYPE FILE FILES
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/bytestreamToUMP.h"
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/mcoded7.h"
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/midiCIMessageCreate.h"
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/midiCIProcessor.h"
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/umpMessageCreate.h"
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/umpProcessor.h"
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/umpToBytestream.h"
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/umpToMIDI1Protocol.h"
-    "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.10-041d1ac4e6.clean/include/utils.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/bytestreamToUMP.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/mcoded7.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/midiCIMessageCreate.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/midiCIProcessor.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/umpMessageCreate.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/umpProcessor.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/umpToBytestream.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/umpToMIDI1Protocol.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/umpToMIDI2Protocol.h"
+    "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/src/v0.13-92239e9432.clean/include/utils.h"
     )
 endif()
 
@@ -81,5 +82,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/GitHub/Microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "G:/GitHub/microsoft/midi/src/api/Abstraction/KSAggregateAbstraction/vcpkg_installed/vcpkg/blds/libmidi2/x64-windows-dbg/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

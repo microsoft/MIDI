@@ -23,7 +23,7 @@ using namespace ATL;
 class ATL_NO_VTABLE CMidi2NetworkMidiTransport :
     public CComObjectRootEx<CComMultiThreadModel>,
     public CComCoClass<CMidi2NetworkMidiTransport, &CLSID_Midi2NetworkMidiTransport>,
-    public IMidiAbstraction
+    public IMidiTransport
 {
 public:
     CMidi2NetworkMidiTransport()
@@ -33,7 +33,7 @@ public:
     DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2NETWORKMIDITRANSPORT)
 
     BEGIN_COM_MAP(CMidi2NetworkMidiTransport)
-        COM_INTERFACE_ENTRY(IMidiAbstraction)
+        COM_INTERFACE_ENTRY(IMidiTransport)
     END_COM_MAP()
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()

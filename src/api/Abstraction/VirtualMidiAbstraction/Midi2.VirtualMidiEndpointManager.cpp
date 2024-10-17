@@ -271,7 +271,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     wil::unique_cotaskmem_string newDeviceInterfaceId;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties;
-    commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
+    commonProperties.TransportId = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
@@ -374,7 +374,7 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     wil::unique_cotaskmem_string newDeviceInterfaceId;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
-    commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
+    commonProperties.TransportId = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType_VirtualDeviceResponder;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();

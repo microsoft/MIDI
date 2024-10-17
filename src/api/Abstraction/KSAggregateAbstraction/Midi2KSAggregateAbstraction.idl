@@ -16,7 +16,7 @@ library Midi2KSAggregateAbstractionLib
     [uuid(0f273b18-e372-4d95-87ac-c31c3d22e937), version(1.0)]
     coclass Midi2KSAggregateAbstraction
     {
-        [default] interface IMidiAbstraction;
+        [default] interface IMidiTransport;
     }
 };
 

@@ -182,9 +182,12 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_GenerateIncomingTimestamp, 10);     // DEVPROP_T
 
 // this is the device-supplied name in the case of device-based transports
 // we have a copy here because we may rewrite FriendlyName
+
+// Transport-supplied Endpoint Name
 #define STRING_PKEY_MIDI_EndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"14"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointName, 14);     // DEVPROP_TYPE_STRING
 
+// Transport-supplied Endpoint Description
 #define STRING_PKEY_MIDI_Description MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"15"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Description, 15);     // DEVPROP_TYPE_STRING
 

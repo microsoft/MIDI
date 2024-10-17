@@ -26,8 +26,7 @@ public:
 
     HRESULT CreateEndpointPair(
         _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionA,
-        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB,
-        _In_ bool isFromConfigurationFile
+        _In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definitionB
     );
 
     HRESULT DeleteEndpointPair(

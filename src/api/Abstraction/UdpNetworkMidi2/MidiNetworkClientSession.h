@@ -20,7 +20,7 @@ class MidiNetworkClientSession
 public:
     HRESULT Initialize();
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
 

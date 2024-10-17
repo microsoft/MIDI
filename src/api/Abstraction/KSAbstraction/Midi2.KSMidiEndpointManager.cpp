@@ -42,8 +42,8 @@ CMidi2KSMidiEndpointManager::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
-    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_midiProtocolManager));
 
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
@@ -543,7 +543,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         std::vector<DEVPROPERTY> interfaceDevProperties;
 
         MIDIENDPOINTCOMMONPROPERTIES commonProperties {};
-        commonProperties.AbstractionLayerGuid = KsAbstractionLayerGUID;
+        commonProperties.TransportId = KsAbstractionLayerGUID;
         commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
         commonProperties.FriendlyName = MidiPin->Name.c_str();
         commonProperties.TransportCode = transportCode.c_str();
@@ -682,7 +682,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         // log telemetry in the event activating the SWD for this pin has failed,
         // but push forward with creation for other pins.
-        LOG_IF_FAILED(MidiPin->SwdCreation = m_MidiDeviceManager->ActivateEndpoint(
+        LOG_IF_FAILED(MidiPin->SwdCreation = m_midiDeviceManager->ActivateEndpoint(
                                                             MidiPin->ParentInstanceId.c_str(),
                                                             MidiPin->CreateUMPOnly,
                                                             MidiPin->Flow,
@@ -768,7 +768,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
                 negotiationParams.TimeoutMilliseconds = 5000;
 
-                LOG_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
+                LOG_IF_FAILED(m_midiProtocolManager->DiscoverAndNegotiate(
                     __uuidof(Midi2KSAbstraction),
                     newDeviceInterfaceId.get(),
                     negotiationParams,
@@ -815,16 +815,16 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
 _Use_decl_annotations_
 HRESULT CMidi2KSMidiEndpointManager::ProtocolNegotiationCompleteCallback(
-    GUID transportGuid,
-    LPCWSTR deviceInterfaceId,
+    GUID transportId,
+    LPCWSTR endpointDeviceInterfaceId,
     PENDPOINTPROTOCOLNEGOTIATIONRESULTS results)
 {
     // this is not a centralized callback in this case, but is on the transport itself
     // so no need to use the parameter here
-    UNREFERENCED_PARAMETER(transportGuid);
+    UNREFERENCED_PARAMETER(transportId);
 
     RETURN_HR_IF_NULL(E_INVALIDARG, results);
-    RETURN_HR_IF_NULL(E_INVALIDARG, deviceInterfaceId);
+    RETURN_HR_IF_NULL(E_INVALIDARG, endpointDeviceInterfaceId);
 
     // iterate through returned function blocks.
 
@@ -893,7 +893,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInform
         }
 
         // notify the device manager using the InstanceId for this midi device
-        LOG_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(item->get()->InstanceId.c_str()));
+        LOG_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(item->get()->InstanceId.c_str()));
 
         // remove the MIDI_PIN_INFO from the list
         m_AvailableMidiPins.erase(item);
@@ -949,8 +949,8 @@ CMidi2KSMidiEndpointManager::Shutdown()
     m_DeviceStopped.revoke();
     m_DeviceEnumerationCompleted.revoke();
 
-    m_MidiDeviceManager.reset();
-    m_MidiProtocolManager.reset();
+    m_midiDeviceManager.reset();
+    m_midiProtocolManager.reset();
 
     return S_OK;
 }

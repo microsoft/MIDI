@@ -155,11 +155,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     bool updatedAdditionalCapabilities{ false };
 
 
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_TransportSuppliedEndpointName) ||
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointName) ||
                         args.Properties().HasKey(L"System.ItemNameDisplay") ||
                         args.Properties().HasKey(L"System.Devices.FriendlyName") ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedEndpointName))
+                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomEndpointName))
                     {
                         updatedName = true;
                     }
@@ -200,10 +200,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         updatedFunctionBlocks = true;
                     }
 
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedEndpointName) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedLargeImagePath) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedSmallImagePath) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_UserSuppliedDescription)
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_CustomEndpointName) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomLargeImagePath) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomSmallImagePath) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomDescription)
                         )
                     {
                         updatedUserMetadata = true;

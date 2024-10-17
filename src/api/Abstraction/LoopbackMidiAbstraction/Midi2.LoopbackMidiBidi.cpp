@@ -13,7 +13,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBiDi::Initialize(
     LPCWSTR endpointId,
-    PABSTRACTIONCREATIONPARAMS,
+    PTRANSPORTCREATIONPARAMS,
     DWORD *,
     IMidiCallback * Callback,
     LONGLONG Context,

@@ -52,11 +52,11 @@
 
 /* Forward Declarations */ 
 
-#ifndef __IMidiAbstraction_FWD_DEFINED__
-#define __IMidiAbstraction_FWD_DEFINED__
-typedef interface IMidiAbstraction IMidiAbstraction;
+#ifndef __IMidiTransport_FWD_DEFINED__
+#define __IMidiTransport_FWD_DEFINED__
+typedef interface IMidiTransport IMidiTransport;
 
-#endif 	/* __IMidiAbstraction_FWD_DEFINED__ */
+#endif 	/* __IMidiTransport_FWD_DEFINED__ */
 
 
 #ifndef __IMidiCallback_FWD_DEFINED__
@@ -87,13 +87,6 @@ typedef interface IMidiBiDi IMidiBiDi;
 #endif 	/* __IMidiBiDi_FWD_DEFINED__ */
 
 
-#ifndef __IMidiEndpointManager_FWD_DEFINED__
-#define __IMidiEndpointManager_FWD_DEFINED__
-typedef interface IMidiEndpointManager IMidiEndpointManager;
-
-#endif 	/* __IMidiEndpointManager_FWD_DEFINED__ */
-
-
 #ifndef __IMidiDeviceManagerInterface_FWD_DEFINED__
 #define __IMidiDeviceManagerInterface_FWD_DEFINED__
 typedef interface IMidiDeviceManagerInterface IMidiDeviceManagerInterface;
@@ -108,11 +101,11 @@ typedef interface IMidiServiceConfigurationManagerInterface IMidiServiceConfigur
 #endif 	/* __IMidiServiceConfigurationManagerInterface_FWD_DEFINED__ */
 
 
-#ifndef __IMidiAbstractionConfigurationManager_FWD_DEFINED__
-#define __IMidiAbstractionConfigurationManager_FWD_DEFINED__
-typedef interface IMidiAbstractionConfigurationManager IMidiAbstractionConfigurationManager;
+#ifndef __IMidiTransportConfigurationManager_FWD_DEFINED__
+#define __IMidiTransportConfigurationManager_FWD_DEFINED__
+typedef interface IMidiTransportConfigurationManager IMidiTransportConfigurationManager;
 
-#endif 	/* __IMidiAbstractionConfigurationManager_FWD_DEFINED__ */
+#endif 	/* __IMidiTransportConfigurationManager_FWD_DEFINED__ */
 
 
 #ifndef __IMidiTransform_FWD_DEFINED__
@@ -143,11 +136,18 @@ typedef interface IMidiEndpointProtocolManagerInterface IMidiEndpointProtocolMan
 #endif 	/* __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__ */
 
 
-#ifndef __IMidiServiceAbstractionPluginMetadataProvider_FWD_DEFINED__
-#define __IMidiServiceAbstractionPluginMetadataProvider_FWD_DEFINED__
-typedef interface IMidiServiceAbstractionPluginMetadataProvider IMidiServiceAbstractionPluginMetadataProvider;
+#ifndef __IMidiEndpointManager_FWD_DEFINED__
+#define __IMidiEndpointManager_FWD_DEFINED__
+typedef interface IMidiEndpointManager IMidiEndpointManager;
 
-#endif 	/* __IMidiServiceAbstractionPluginMetadataProvider_FWD_DEFINED__ */
+#endif 	/* __IMidiEndpointManager_FWD_DEFINED__ */
+
+
+#ifndef __IMidiServiceTransportPluginMetadataProvider_FWD_DEFINED__
+#define __IMidiServiceTransportPluginMetadataProvider_FWD_DEFINED__
+typedef interface IMidiServiceTransportPluginMetadataProvider IMidiServiceTransportPluginMetadataProvider;
+
+#endif 	/* __IMidiServiceTransportPluginMetadataProvider_FWD_DEFINED__ */
 
 
 #ifndef __IMidiServiceTransformPluginMetadataProvider_FWD_DEFINED__
@@ -184,14 +184,128 @@ extern "C"{
 /* interface __MIDL_itf_WindowsMidiServices_0000_0000 */
 /* [local] */ 
 
-typedef /* [public][public][public][public][public][public][public][public][public][public][public][public][public] */ 
+#ifdef MIDL_PASS
+#pragma once
+#pragma warning(push)
+#pragma warning(disable:4668) 
+#pragma once
+#pragma region Input Buffer SAL 1 compatibility macros
+#pragma endregion Input Buffer SAL 1 compatibility macros
+#pragma once
+#pragma once
+#pragma warning(pop)
+#pragma once
+typedef 
+enum _SW_DEVICE_CAPABILITIES
+    {
+        SWDeviceCapabilitiesNone	= 0,
+        SWDeviceCapabilitiesRemovable	= 0x1,
+        SWDeviceCapabilitiesSilentInstall	= 0x2,
+        SWDeviceCapabilitiesNoDisplayInUI	= 0x4,
+        SWDeviceCapabilitiesDriverRequired	= 0x8
+    } 	SW_DEVICE_CAPABILITIES;
+
+typedef enum _SW_DEVICE_CAPABILITIES *PSW_DEVICE_CAPABILITIES;
+
+typedef struct _SW_DEVICE_CREATE_INFO
+    {
+    ULONG cbSize;
+    LPCWSTR pszInstanceId;
+    LPCWSTR pszzHardwareIds;
+    LPCWSTR pszzCompatibleIds;
+    const GUID *pContainerId;
+    ULONG CapabilityFlags;
+    LPCWSTR pszDeviceDescription;
+    LPCWSTR pszDeviceLocation;
+    const SECURITY_DESCRIPTOR *pSecurityDescriptor;
+    } 	SW_DEVICE_CREATE_INFO;
+
+typedef struct _SW_DEVICE_CREATE_INFO *PSW_DEVICE_CREATE_INFO;
+
+typedef 
+enum _SW_DEVICE_LIFETIME
+    {
+        SWDeviceLifetimeHandle	= 0,
+        SWDeviceLifetimeParentPresent	= ( SWDeviceLifetimeHandle + 1 ) ,
+        SWDeviceLifetimeMax	= ( SWDeviceLifetimeParentPresent + 1 ) 
+    } 	SW_DEVICE_LIFETIME;
+
+typedef enum _SW_DEVICE_LIFETIME *PSW_DEVICE_LIFETIME;
+
+#pragma warning(push)
+#pragma warning(disable:4001) 
+#pragma once
+#pragma warning(push)
+#pragma warning(disable:4001) 
+#pragma once
+#pragma warning(pop)
+#pragma warning(pop)
+#pragma region Desktop Family or OneCore Family or Games Family
+typedef ULONG DEVPROPTYPE;
+
+typedef ULONG *PDEVPROPTYPE;
+
+typedef CHAR DEVPROP_BOOLEAN;
+
+typedef CHAR *PDEVPROP_BOOLEAN;
+
+typedef GUID DEVPROPGUID;
+
+typedef GUID *PDEVPROPGUID;
+
+typedef ULONG DEVPROPID;
+
+typedef ULONG *PDEVPROPID;
+
+typedef struct _DEVPROPKEY
+    {
+    DEVPROPGUID fmtid;
+    DEVPROPID pid;
+    } 	DEVPROPKEY;
+
+typedef struct _DEVPROPKEY *PDEVPROPKEY;
+
+typedef 
+enum _DEVPROPSTORE
+    {
+        DEVPROP_STORE_SYSTEM	= 0,
+        DEVPROP_STORE_USER	= ( DEVPROP_STORE_SYSTEM + 1 ) 
+    } 	DEVPROPSTORE;
+
+typedef enum _DEVPROPSTORE *PDEVPROPSTORE;
+
+typedef struct _DEVPROPCOMPKEY
+    {
+    DEVPROPKEY Key;
+    DEVPROPSTORE Store;
+    LPCWSTR LocaleName;
+    } 	DEVPROPCOMPKEY;
+
+typedef struct _DEVPROPCOMPKEY *PDEVPROPCOMPKEY;
+
+typedef struct _DEVPROPERTY
+    {
+    DEVPROPCOMPKEY CompKey;
+    DEVPROPTYPE Type;
+    ULONG BufferSize;
+    PVOID Buffer;
+    } 	DEVPROPERTY;
+
+typedef struct _DEVPROPERTY *PDEVPROPERTY;
+
+#pragma endregion
+#else
+#include <swdevicedef.h>
+#include <devpropdef.h>
+#endif
+typedef /* [public][public][public][public][public][public][public][public][public][public][public][public][public][public][public][public] */ 
 enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0001
     {
-        MidiDataFormat_Invalid	= 0,
-        MidiDataFormat_ByteStream	= 0x1,
-        MidiDataFormat_UMP	= 0x2,
-        MidiDataFormat_Any	= 0x3
-    } 	MidiDataFormat;
+        MidiDataFormats_Invalid	= 0,
+        MidiDataFormats_ByteStream	= 0x1,
+        MidiDataFormats_UMP	= 0x2,
+        MidiDataFormats_Any	= 0xffff
+    } 	MidiDataFormats;
 
 typedef /* [public][public] */ 
 enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0002
@@ -201,78 +315,87 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0002
         MidiFlowBidirectional	= ( MidiFlowOut + 1 ) 
     } 	MidiFlow;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003
+typedef /* [public][public][public][public][public][public][public] */ 
+enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003
     {
-    MidiDataFormat DataFormat;
-    LPCWSTR InstanceConfigurationJsonData;
-    } 	ABSTRACTIONCREATIONPARAMS;
+        MetadataFlags_None	= 0,
+        MetadataFlags_IsRuntimeCreatableByApps	= 1,
+        MetadataFlags_IsRuntimeCreatableBySettings	= 2,
+        MetadataFlags_IsSystemManaged	= 4,
+        MetadataFlags_IsClientConfigurable	= 8
+    } 	MetadataFlags;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003 *PABSTRACTIONCREATIONPARAMS;
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004
+    {
+    MidiDataFormats DataFormat;
+    } 	TRANSPORTCREATIONPARAMS;
+
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004 *PTRANSPORTCREATIONPARAMS;
 
 
 
 extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0000_v0_0_c_ifspec;
 extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0000_v0_0_s_ifspec;
 
-#ifndef __IMidiAbstraction_INTERFACE_DEFINED__
-#define __IMidiAbstraction_INTERFACE_DEFINED__
+#ifndef __IMidiTransport_INTERFACE_DEFINED__
+#define __IMidiTransport_INTERFACE_DEFINED__
 
-/* interface IMidiAbstraction */
-/* [unique][uuid][local][object] */ 
+/* interface IMidiTransport */
+/* [uuid][local][object] */ 
 
 
-EXTERN_C const IID IID_IMidiAbstraction;
+EXTERN_C const IID IID_IMidiTransport;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
     MIDL_INTERFACE("EA264200-3328-49E5-8815-73649A8748BE")
-    IMidiAbstraction : public IUnknown
+    IMidiTransport : public IUnknown
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Activate( 
             /* [annotation][in] */ 
-            _In_  REFIID Iid,
+            _In_  REFIID iid,
             /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **Interface) = 0;
+            _COM_Outptr_  void **activatedInterface) = 0;
         
     };
     
     
 #else 	/* C style interface */
 
-    typedef struct IMidiAbstractionVtbl
+    typedef struct IMidiTransportVtbl
     {
         BEGIN_INTERFACE
         
         DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
         HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiAbstraction * This,
+            IMidiTransport * This,
             /* [in] */ REFIID riid,
             /* [annotation][iid_is][out] */ 
             _COM_Outptr_  void **ppvObject);
         
         DECLSPEC_XFGVIRT(IUnknown, AddRef)
         ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiAbstraction * This);
+            IMidiTransport * This);
         
         DECLSPEC_XFGVIRT(IUnknown, Release)
         ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiAbstraction * This);
+            IMidiTransport * This);
         
-        DECLSPEC_XFGVIRT(IMidiAbstraction, Activate)
+        DECLSPEC_XFGVIRT(IMidiTransport, Activate)
         HRESULT ( STDMETHODCALLTYPE *Activate )( 
-            IMidiAbstraction * This,
+            IMidiTransport * This,
             /* [annotation][in] */ 
-            _In_  REFIID Iid,
+            _In_  REFIID iid,
             /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **Interface);
+            _COM_Outptr_  void **activatedInterface);
         
         END_INTERFACE
-    } IMidiAbstractionVtbl;
+    } IMidiTransportVtbl;
 
-    interface IMidiAbstraction
+    interface IMidiTransport
     {
-        CONST_VTBL struct IMidiAbstractionVtbl *lpVtbl;
+        CONST_VTBL struct IMidiTransportVtbl *lpVtbl;
     };
 
     
@@ -280,18 +403,18 @@ EXTERN_C const IID IID_IMidiAbstraction;
 #ifdef COBJMACROS
 
 
-#define IMidiAbstraction_QueryInterface(This,riid,ppvObject)	\
+#define IMidiTransport_QueryInterface(This,riid,ppvObject)	\
     ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
 
-#define IMidiAbstraction_AddRef(This)	\
+#define IMidiTransport_AddRef(This)	\
     ( (This)->lpVtbl -> AddRef(This) ) 
 
-#define IMidiAbstraction_Release(This)	\
+#define IMidiTransport_Release(This)	\
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiAbstraction_Activate(This,Iid,Interface)	\
-    ( (This)->lpVtbl -> Activate(This,Iid,Interface) ) 
+#define IMidiTransport_Activate(This,iid,activatedInterface)	\
+    ( (This)->lpVtbl -> Activate(This,iid,activatedInterface) ) 
 
 #endif /* COBJMACROS */
 
@@ -301,14 +424,14 @@ EXTERN_C const IID IID_IMidiAbstraction;
 
 
 
-#endif 	/* __IMidiAbstraction_INTERFACE_DEFINED__ */
+#endif 	/* __IMidiTransport_INTERFACE_DEFINED__ */
 
 
 #ifndef __IMidiCallback_INTERFACE_DEFINED__
 #define __IMidiCallback_INTERFACE_DEFINED__
 
 /* interface IMidiCallback */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiCallback;
@@ -320,10 +443,14 @@ EXTERN_C const IID IID_IMidiCallback;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Callback( 
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position,
-            /* [in] */ LONGLONG context) = 0;
+            /* [annotation][in] */ 
+            _In_  PVOID message,
+            /* [annotation][in] */ 
+            _In_  UINT size,
+            /* [annotation][in] */ 
+            _In_  LONGLONG position,
+            /* [annotation][in] */ 
+            _In_  LONGLONG context) = 0;
         
     };
     
@@ -352,10 +479,14 @@ EXTERN_C const IID IID_IMidiCallback;
         DECLSPEC_XFGVIRT(IMidiCallback, Callback)
         HRESULT ( STDMETHODCALLTYPE *Callback )( 
             IMidiCallback * This,
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position,
-            /* [in] */ LONGLONG context);
+            /* [annotation][in] */ 
+            _In_  PVOID message,
+            /* [annotation][in] */ 
+            _In_  UINT size,
+            /* [annotation][in] */ 
+            _In_  LONGLONG position,
+            /* [annotation][in] */ 
+            _In_  LONGLONG context);
         
         END_INTERFACE
     } IMidiCallbackVtbl;
@@ -398,7 +529,7 @@ EXTERN_C const IID IID_IMidiCallback;
 #define __IMidiIn_INTERFACE_DEFINED__
 
 /* interface IMidiIn */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiIn;
@@ -410,14 +541,20 @@ EXTERN_C const IID IID_IMidiIn;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Initialize( 
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PABSTRACTIONCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ IMidiCallback *callback,
-            /* [in] */ LONGLONG context,
-            /* [in] */ GUID SessionId) = 0;
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PTRANSPORTCREATIONPARAMS creationParams,
+            /* [annotation][out][in] */ 
+            _Inout_  DWORD *mmcssTaskId,
+            /* [annotation][in] */ 
+            _In_  IMidiCallback *callback,
+            /* [annotation][in] */ 
+            _In_  LONGLONG context,
+            /* [annotation][in] */ 
+            _In_  GUID sessionId) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
     };
     
@@ -446,15 +583,21 @@ EXTERN_C const IID IID_IMidiIn;
         DECLSPEC_XFGVIRT(IMidiIn, Initialize)
         HRESULT ( STDMETHODCALLTYPE *Initialize )( 
             IMidiIn * This,
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PABSTRACTIONCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ IMidiCallback *callback,
-            /* [in] */ LONGLONG context,
-            /* [in] */ GUID SessionId);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PTRANSPORTCREATIONPARAMS creationParams,
+            /* [annotation][out][in] */ 
+            _Inout_  DWORD *mmcssTaskId,
+            /* [annotation][in] */ 
+            _In_  IMidiCallback *callback,
+            /* [annotation][in] */ 
+            _In_  LONGLONG context,
+            /* [annotation][in] */ 
+            _In_  GUID sessionId);
         
-        DECLSPEC_XFGVIRT(IMidiIn, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
+        DECLSPEC_XFGVIRT(IMidiIn, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
             IMidiIn * This);
         
         END_INTERFACE
@@ -480,11 +623,11 @@ EXTERN_C const IID IID_IMidiIn;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiIn_Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,SessionId)	\
-    ( (This)->lpVtbl -> Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,SessionId) ) 
+#define IMidiIn_Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,sessionId)	\
+    ( (This)->lpVtbl -> Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,sessionId) ) 
 
-#define IMidiIn_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
+#define IMidiIn_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
 
 #endif /* COBJMACROS */
 
@@ -501,7 +644,7 @@ EXTERN_C const IID IID_IMidiIn;
 #define __IMidiOut_INTERFACE_DEFINED__
 
 /* interface IMidiOut */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiOut;
@@ -513,17 +656,24 @@ EXTERN_C const IID IID_IMidiOut;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Initialize( 
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PABSTRACTIONCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ GUID SessionId) = 0;
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PTRANSPORTCREATIONPARAMS creationParams,
+            /* [annotation][in] */ 
+            _In_  DWORD *mmcssTaskId,
+            /* [annotation][in] */ 
+            _In_  GUID sessionId) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE SendMidiMessage( 
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position) = 0;
+            /* [annotation][in] */ 
+            _In_  PVOID message,
+            /* [annotation][in] */ 
+            _In_  UINT size,
+            /* [annotation][in] */ 
+            _In_  LONGLONG position) = 0;
         
     };
     
@@ -552,21 +702,28 @@ EXTERN_C const IID IID_IMidiOut;
         DECLSPEC_XFGVIRT(IMidiOut, Initialize)
         HRESULT ( STDMETHODCALLTYPE *Initialize )( 
             IMidiOut * This,
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PABSTRACTIONCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ GUID SessionId);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PTRANSPORTCREATIONPARAMS creationParams,
+            /* [annotation][in] */ 
+            _In_  DWORD *mmcssTaskId,
+            /* [annotation][in] */ 
+            _In_  GUID sessionId);
         
-        DECLSPEC_XFGVIRT(IMidiOut, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
+        DECLSPEC_XFGVIRT(IMidiOut, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
             IMidiOut * This);
         
         DECLSPEC_XFGVIRT(IMidiOut, SendMidiMessage)
         HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
             IMidiOut * This,
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position);
+            /* [annotation][in] */ 
+            _In_  PVOID message,
+            /* [annotation][in] */ 
+            _In_  UINT size,
+            /* [annotation][in] */ 
+            _In_  LONGLONG position);
         
         END_INTERFACE
     } IMidiOutVtbl;
@@ -591,11 +748,11 @@ EXTERN_C const IID IID_IMidiOut;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiOut_Initialize(This,deviceId,creationParams,mmcssTaskId,SessionId)	\
-    ( (This)->lpVtbl -> Initialize(This,deviceId,creationParams,mmcssTaskId,SessionId) ) 
+#define IMidiOut_Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,sessionId)	\
+    ( (This)->lpVtbl -> Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,sessionId) ) 
 
-#define IMidiOut_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
+#define IMidiOut_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
 
 #define IMidiOut_SendMidiMessage(This,message,size,position)	\
     ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
@@ -615,7 +772,7 @@ EXTERN_C const IID IID_IMidiOut;
 #define __IMidiBiDi_INTERFACE_DEFINED__
 
 /* interface IMidiBiDi */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiBiDi;
@@ -627,19 +784,28 @@ EXTERN_C const IID IID_IMidiBiDi;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Initialize( 
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PABSTRACTIONCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ IMidiCallback *callback,
-            /* [in] */ LONGLONG context,
-            /* [in] */ GUID SessionId) = 0;
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PTRANSPORTCREATIONPARAMS creationParams,
+            /* [annotation][out][in] */ 
+            _Inout_  DWORD *mmcssTaskId,
+            /* [annotation][in] */ 
+            _In_  IMidiCallback *callback,
+            /* [annotation][in] */ 
+            _In_  LONGLONG context,
+            /* [annotation][in] */ 
+            _In_  GUID sessionId) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE SendMidiMessage( 
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position) = 0;
+            /* [annotation][in] */ 
+            _In_  PVOID message,
+            /* [annotation][in] */ 
+            _In_  UINT size,
+            /* [annotation][in] */ 
+            _In_  LONGLONG position) = 0;
         
     };
     
@@ -668,23 +834,32 @@ EXTERN_C const IID IID_IMidiBiDi;
         DECLSPEC_XFGVIRT(IMidiBiDi, Initialize)
         HRESULT ( STDMETHODCALLTYPE *Initialize )( 
             IMidiBiDi * This,
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PABSTRACTIONCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ IMidiCallback *callback,
-            /* [in] */ LONGLONG context,
-            /* [in] */ GUID SessionId);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PTRANSPORTCREATIONPARAMS creationParams,
+            /* [annotation][out][in] */ 
+            _Inout_  DWORD *mmcssTaskId,
+            /* [annotation][in] */ 
+            _In_  IMidiCallback *callback,
+            /* [annotation][in] */ 
+            _In_  LONGLONG context,
+            /* [annotation][in] */ 
+            _In_  GUID sessionId);
         
-        DECLSPEC_XFGVIRT(IMidiBiDi, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
+        DECLSPEC_XFGVIRT(IMidiBiDi, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
             IMidiBiDi * This);
         
         DECLSPEC_XFGVIRT(IMidiBiDi, SendMidiMessage)
         HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
             IMidiBiDi * This,
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position);
+            /* [annotation][in] */ 
+            _In_  PVOID message,
+            /* [annotation][in] */ 
+            _In_  UINT size,
+            /* [annotation][in] */ 
+            _In_  LONGLONG position);
         
         END_INTERFACE
     } IMidiBiDiVtbl;
@@ -709,11 +884,11 @@ EXTERN_C const IID IID_IMidiBiDi;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiBiDi_Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,SessionId)	\
-    ( (This)->lpVtbl -> Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,SessionId) ) 
+#define IMidiBiDi_Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,sessionId)	\
+    ( (This)->lpVtbl -> Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,sessionId) ) 
 
-#define IMidiBiDi_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
+#define IMidiBiDi_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
 
 #define IMidiBiDi_SendMidiMessage(This,message,size,position)	\
     ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
@@ -729,147 +904,59 @@ EXTERN_C const IID IID_IMidiBiDi;
 #endif 	/* __IMidiBiDi_INTERFACE_DEFINED__ */
 
 
-#ifndef __IMidiEndpointManager_INTERFACE_DEFINED__
-#define __IMidiEndpointManager_INTERFACE_DEFINED__
-
-/* interface IMidiEndpointManager */
-/* [unique][uuid][local][object] */ 
-
-
-EXTERN_C const IID IID_IMidiEndpointManager;
-
-#if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    MIDL_INTERFACE("badff6d2-0e3c-4009-a473-6ba82c008662")
-    IMidiEndpointManager : public IUnknown
-    {
-    public:
-        virtual HRESULT STDMETHODCALLTYPE Initialize( 
-            /* [in] */ IUnknown *midiDeviceManager,
-            /* [in] */ IUnknown *midiEndpointProtocolManager) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
-        
-    };
-    
-    
-#else 	/* C style interface */
-
-    typedef struct IMidiEndpointManagerVtbl
-    {
-        BEGIN_INTERFACE
-        
-        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiEndpointManager * This,
-            /* [in] */ REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **ppvObject);
-        
-        DECLSPEC_XFGVIRT(IUnknown, AddRef)
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiEndpointManager * This);
-        
-        DECLSPEC_XFGVIRT(IUnknown, Release)
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiEndpointManager * This);
-        
-        DECLSPEC_XFGVIRT(IMidiEndpointManager, Initialize)
-        HRESULT ( STDMETHODCALLTYPE *Initialize )( 
-            IMidiEndpointManager * This,
-            /* [in] */ IUnknown *midiDeviceManager,
-            /* [in] */ IUnknown *midiEndpointProtocolManager);
-        
-        DECLSPEC_XFGVIRT(IMidiEndpointManager, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
-            IMidiEndpointManager * This);
-        
-        END_INTERFACE
-    } IMidiEndpointManagerVtbl;
-
-    interface IMidiEndpointManager
-    {
-        CONST_VTBL struct IMidiEndpointManagerVtbl *lpVtbl;
-    };
-
-    
-
-#ifdef COBJMACROS
-
-
-#define IMidiEndpointManager_QueryInterface(This,riid,ppvObject)	\
-    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
-
-#define IMidiEndpointManager_AddRef(This)	\
-    ( (This)->lpVtbl -> AddRef(This) ) 
-
-#define IMidiEndpointManager_Release(This)	\
-    ( (This)->lpVtbl -> Release(This) ) 
-
-
-#define IMidiEndpointManager_Initialize(This,midiDeviceManager,midiEndpointProtocolManager)	\
-    ( (This)->lpVtbl -> Initialize(This,midiDeviceManager,midiEndpointProtocolManager) ) 
-
-#define IMidiEndpointManager_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
-
-#endif /* COBJMACROS */
-
-
-#endif 	/* C style interface */
-
-
-
-
-#endif 	/* __IMidiEndpointManager_INTERFACE_DEFINED__ */
-
-
-/* interface __MIDL_itf_WindowsMidiServices_0000_0006 */
+/* interface __MIDL_itf_WindowsMidiServices_0000_0005 */
 /* [local] */ 
 
 typedef /* [public][public][public][public] */ 
-enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0006_0001
+enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0005_0001
     {
-        NormalMessageEndpoint	= 0,
-        VirtualDeviceResponder	= 100,
-        InBoxGeneralMidiSynth	= 400,
-        DiagnosticLoopback	= 500,
-        DiagnosticPing	= 510
-    } 	MidiEndpointDevicePurposePropertyValue;
+        MidiEndpointDeviceType_Normal	= 0,
+        MidiEndpointDeviceType_VirtualDeviceResponder	= 100,
+        MidiEndpointDeviceType_MidiSynthesizer	= 400,
+        MidiEndpointDeviceType_DiagnosticLoopback	= 500,
+        MidiEndpointDeviceType_DiagnosticPing	= 510
+    } 	MidiEndpointDeviceType;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0006_0002
+typedef /* [public][public][public][public][public][public][public] */ 
+enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0005_0002
     {
-    GUID AbstractionLayerGuid;
-    MidiEndpointDevicePurposePropertyValue EndpointPurpose;
+        MidiEndpointCapabilities_None	= 0,
+        MidiEndpointCapabilities_SupportsMidi1Protocol	= 1,
+        MidiEndpointCapabilities_SupportsMidi2Protocol	= 2,
+        MidiEndpointCapabilities_SupportsMultiClient	= 4,
+        MidiEndpointCapabilities_GenerateIncomingTimestamps	= 8
+    } 	MidiEndpointCapabilities;
+
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0005_0003
+    {
+    GUID TransportId;
+    MidiEndpointDeviceType EndpointDeviceType;
     LPCWSTR FriendlyName;
     LPCWSTR TransportCode;
-    LPCWSTR TransportSuppliedEndpointName;
-    LPCWSTR TransportSuppliedEndpointDescription;
-    LPCWSTR UserSuppliedEndpointName;
-    LPCWSTR UserSuppliedEndpointDescription;
-    UINT32 UserSuppliedEndpointPortNumber;
+    LPCWSTR EndpointName;
+    LPCWSTR EndpointDescription;
+    LPCWSTR CustomEndpointName;
+    LPCWSTR CustomEndpointDescription;
+    UINT32 CustomEndpointPortNumber;
     LPCWSTR UniqueIdentifier;
     LPCWSTR ManufacturerName;
-    MidiDataFormat SupportedDataFormats;
-    BYTE NativeDataFormat;
-    BOOL SupportsMidi1ProtocolDefaultValue;
-    BOOL SupportsMidi2ProtocolDefaultValue;
-    BOOL SupportsMultiClient;
-    BOOL GenerateIncomingTimestamps;
+    MidiDataFormats SupportedDataFormats;
+    MidiDataFormats NativeDataFormat;
+    MidiEndpointCapabilities Capabilities;
     } 	MIDIENDPOINTCOMMONPROPERTIES;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0006_0002 *PMIDIENDPOINTCOMMONPROPERTIES;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0005_0003 *PMIDIENDPOINTCOMMONPROPERTIES;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0006_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0006_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0005_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0005_v0_0_s_ifspec;
 
 #ifndef __IMidiDeviceManagerInterface_INTERFACE_DEFINED__
 #define __IMidiDeviceManagerInterface_INTERFACE_DEFINED__
 
 /* interface IMidiDeviceManagerInterface */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiDeviceManagerInterface;
@@ -881,55 +968,67 @@ EXTERN_C const IID IID_IMidiDeviceManagerInterface;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE ActivateVirtualParentDevice( 
-            /* [in] */ ULONG DevPropertyCount,
             /* [annotation][in] */ 
-            _In_opt_  PVOID DevProperties,
-            /* [annotation][in] */ 
-            _In_  PVOID CreateInfo,
-            /* [annotation][out] */ 
-            _Out_writes_opt_z_(CreatedSwDeviceIdCharCount)  LPWSTR CreatedSwDeviceId,
-            /* [in] */ ULONG CreatedSwDeviceIdCharCount) = 0;
+            _In_  ULONG devPropertyCount,
+            /* [annotation][size_is][in] */ 
+            _In_opt_  const DEVPROPERTY *devProperties,
+            /* [in] */ const SW_DEVICE_CREATE_INFO *createInfo,
+            /* [annotation][string][out] */ 
+            _Out_opt_  LPWSTR *createdDeviceId) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE ActivateEndpoint( 
-            /* [in] */ LPCWSTR ParentInstanceId,
-            /* [in] */ BOOL UMPOnly,
-            /* [in] */ MidiFlow MidiFlow,
-            /* [in] */ PMIDIENDPOINTCOMMONPROPERTIES CommonProperties,
-            /* [in] */ ULONG IntPropertyCount,
-            /* [in] */ ULONG DevPropertyCount,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR parentInstanceId,
             /* [annotation][in] */ 
-            _In_opt_  PVOID InterfaceDevProperties,
+            _In_  BOOL umpOnly,
             /* [annotation][in] */ 
-            _In_opt_  PVOID DeviceDevProperties,
+            _In_  MidiFlow midiFlow,
             /* [annotation][in] */ 
-            _In_opt_  PVOID CreateInfo,
-            /* [annotation][out] */ 
-            _Out_writes_opt_z_(CreatedSwDeviceInterfaceIdWCharCount)  LPWSTR CreatedSwDeviceInterfaceId,
-            /* [in] */ ULONG CreatedSwDeviceInterfaceIdWCharCount) = 0;
+            _In_  PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
+            /* [annotation][in] */ 
+            _In_  ULONG intPropertyCount,
+            /* [annotation][in] */ 
+            _In_  ULONG devPropertyCount,
+            /* [annotation][size_is][in] */ 
+            _In_opt_  const DEVPROPERTY *interfaceDevProperties,
+            /* [annotation][size_is][in] */ 
+            _In_opt_  const DEVPROPERTY *deviceDevProperties,
+            /* [annotation][in] */ 
+            _In_opt_  const SW_DEVICE_CREATE_INFO *createInfo,
+            /* [annotation][string][out] */ 
+            _Out_opt_  LPWSTR *createdEndpointDeviceInterfaceId) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE UpdateEndpointProperties( 
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ ULONG IntPropertyCount,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
             /* [annotation][in] */ 
-            _In_  PVOID InterfaceDevProperties) = 0;
+            _In_  ULONG intPropertyCount,
+            /* [annotation][size_is][in] */ 
+            _In_  const DEVPROPERTY *interfaceDevProperties) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE DeleteEndpointProperties( 
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ ULONG IntPropertyCount,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
             /* [annotation][in] */ 
-            _In_  PVOID DevPropKeys) = 0;
+            _In_  ULONG devPropertyCount,
+            /* [annotation][size_is][in] */ 
+            _In_opt_  const DEVPROPERTY *devPropKeys) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE DeactivateEndpoint( 
-            /* [in] */ LPCWSTR InstanceId) = 0;
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR instanceId) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE RemoveEndpoint( 
-            /* [in] */ LPCWSTR InstanceId) = 0;
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR instanceId) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE UpdateAbstractionConfiguration( 
-            /* [in] */ GUID AbstractionId,
-            /* [in] */ LPCWSTR ConfigurationJson,
-            /* [in] */ BOOL IsFromConfigurationFile,
-            /* [out] */ BSTR *Response) = 0;
+        virtual HRESULT STDMETHODCALLTYPE UpdateTransportConfiguration( 
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR configurationJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson) = 0;
         
     };
     
@@ -958,67 +1057,79 @@ EXTERN_C const IID IID_IMidiDeviceManagerInterface;
         DECLSPEC_XFGVIRT(IMidiDeviceManagerInterface, ActivateVirtualParentDevice)
         HRESULT ( STDMETHODCALLTYPE *ActivateVirtualParentDevice )( 
             IMidiDeviceManagerInterface * This,
-            /* [in] */ ULONG DevPropertyCount,
             /* [annotation][in] */ 
-            _In_opt_  PVOID DevProperties,
-            /* [annotation][in] */ 
-            _In_  PVOID CreateInfo,
-            /* [annotation][out] */ 
-            _Out_writes_opt_z_(CreatedSwDeviceIdCharCount)  LPWSTR CreatedSwDeviceId,
-            /* [in] */ ULONG CreatedSwDeviceIdCharCount);
+            _In_  ULONG devPropertyCount,
+            /* [annotation][size_is][in] */ 
+            _In_opt_  const DEVPROPERTY *devProperties,
+            /* [in] */ const SW_DEVICE_CREATE_INFO *createInfo,
+            /* [annotation][string][out] */ 
+            _Out_opt_  LPWSTR *createdDeviceId);
         
         DECLSPEC_XFGVIRT(IMidiDeviceManagerInterface, ActivateEndpoint)
         HRESULT ( STDMETHODCALLTYPE *ActivateEndpoint )( 
             IMidiDeviceManagerInterface * This,
-            /* [in] */ LPCWSTR ParentInstanceId,
-            /* [in] */ BOOL UMPOnly,
-            /* [in] */ MidiFlow MidiFlow,
-            /* [in] */ PMIDIENDPOINTCOMMONPROPERTIES CommonProperties,
-            /* [in] */ ULONG IntPropertyCount,
-            /* [in] */ ULONG DevPropertyCount,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR parentInstanceId,
             /* [annotation][in] */ 
-            _In_opt_  PVOID InterfaceDevProperties,
+            _In_  BOOL umpOnly,
             /* [annotation][in] */ 
-            _In_opt_  PVOID DeviceDevProperties,
+            _In_  MidiFlow midiFlow,
             /* [annotation][in] */ 
-            _In_opt_  PVOID CreateInfo,
-            /* [annotation][out] */ 
-            _Out_writes_opt_z_(CreatedSwDeviceInterfaceIdWCharCount)  LPWSTR CreatedSwDeviceInterfaceId,
-            /* [in] */ ULONG CreatedSwDeviceInterfaceIdWCharCount);
+            _In_  PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
+            /* [annotation][in] */ 
+            _In_  ULONG intPropertyCount,
+            /* [annotation][in] */ 
+            _In_  ULONG devPropertyCount,
+            /* [annotation][size_is][in] */ 
+            _In_opt_  const DEVPROPERTY *interfaceDevProperties,
+            /* [annotation][size_is][in] */ 
+            _In_opt_  const DEVPROPERTY *deviceDevProperties,
+            /* [annotation][in] */ 
+            _In_opt_  const SW_DEVICE_CREATE_INFO *createInfo,
+            /* [annotation][string][out] */ 
+            _Out_opt_  LPWSTR *createdEndpointDeviceInterfaceId);
         
         DECLSPEC_XFGVIRT(IMidiDeviceManagerInterface, UpdateEndpointProperties)
         HRESULT ( STDMETHODCALLTYPE *UpdateEndpointProperties )( 
             IMidiDeviceManagerInterface * This,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ ULONG IntPropertyCount,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
             /* [annotation][in] */ 
-            _In_  PVOID InterfaceDevProperties);
+            _In_  ULONG intPropertyCount,
+            /* [annotation][size_is][in] */ 
+            _In_  const DEVPROPERTY *interfaceDevProperties);
         
         DECLSPEC_XFGVIRT(IMidiDeviceManagerInterface, DeleteEndpointProperties)
         HRESULT ( STDMETHODCALLTYPE *DeleteEndpointProperties )( 
             IMidiDeviceManagerInterface * This,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ ULONG IntPropertyCount,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
             /* [annotation][in] */ 
-            _In_  PVOID DevPropKeys);
+            _In_  ULONG devPropertyCount,
+            /* [annotation][size_is][in] */ 
+            _In_opt_  const DEVPROPERTY *devPropKeys);
         
         DECLSPEC_XFGVIRT(IMidiDeviceManagerInterface, DeactivateEndpoint)
         HRESULT ( STDMETHODCALLTYPE *DeactivateEndpoint )( 
             IMidiDeviceManagerInterface * This,
-            /* [in] */ LPCWSTR InstanceId);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR instanceId);
         
         DECLSPEC_XFGVIRT(IMidiDeviceManagerInterface, RemoveEndpoint)
         HRESULT ( STDMETHODCALLTYPE *RemoveEndpoint )( 
             IMidiDeviceManagerInterface * This,
-            /* [in] */ LPCWSTR InstanceId);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR instanceId);
         
-        DECLSPEC_XFGVIRT(IMidiDeviceManagerInterface, UpdateAbstractionConfiguration)
-        HRESULT ( STDMETHODCALLTYPE *UpdateAbstractionConfiguration )( 
+        DECLSPEC_XFGVIRT(IMidiDeviceManagerInterface, UpdateTransportConfiguration)
+        HRESULT ( STDMETHODCALLTYPE *UpdateTransportConfiguration )( 
             IMidiDeviceManagerInterface * This,
-            /* [in] */ GUID AbstractionId,
-            /* [in] */ LPCWSTR ConfigurationJson,
-            /* [in] */ BOOL IsFromConfigurationFile,
-            /* [out] */ BSTR *Response);
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR configurationJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson);
         
         END_INTERFACE
     } IMidiDeviceManagerInterfaceVtbl;
@@ -1043,26 +1154,26 @@ EXTERN_C const IID IID_IMidiDeviceManagerInterface;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiDeviceManagerInterface_ActivateVirtualParentDevice(This,DevPropertyCount,DevProperties,CreateInfo,CreatedSwDeviceId,CreatedSwDeviceIdCharCount)	\
-    ( (This)->lpVtbl -> ActivateVirtualParentDevice(This,DevPropertyCount,DevProperties,CreateInfo,CreatedSwDeviceId,CreatedSwDeviceIdCharCount) ) 
+#define IMidiDeviceManagerInterface_ActivateVirtualParentDevice(This,devPropertyCount,devProperties,createInfo,createdDeviceId)	\
+    ( (This)->lpVtbl -> ActivateVirtualParentDevice(This,devPropertyCount,devProperties,createInfo,createdDeviceId) ) 
 
-#define IMidiDeviceManagerInterface_ActivateEndpoint(This,ParentInstanceId,UMPOnly,MidiFlow,CommonProperties,IntPropertyCount,DevPropertyCount,InterfaceDevProperties,DeviceDevProperties,CreateInfo,CreatedSwDeviceInterfaceId,CreatedSwDeviceInterfaceIdWCharCount)	\
-    ( (This)->lpVtbl -> ActivateEndpoint(This,ParentInstanceId,UMPOnly,MidiFlow,CommonProperties,IntPropertyCount,DevPropertyCount,InterfaceDevProperties,DeviceDevProperties,CreateInfo,CreatedSwDeviceInterfaceId,CreatedSwDeviceInterfaceIdWCharCount) ) 
+#define IMidiDeviceManagerInterface_ActivateEndpoint(This,parentInstanceId,umpOnly,midiFlow,commonProperties,intPropertyCount,devPropertyCount,interfaceDevProperties,deviceDevProperties,createInfo,createdEndpointDeviceInterfaceId)	\
+    ( (This)->lpVtbl -> ActivateEndpoint(This,parentInstanceId,umpOnly,midiFlow,commonProperties,intPropertyCount,devPropertyCount,interfaceDevProperties,deviceDevProperties,createInfo,createdEndpointDeviceInterfaceId) ) 
 
-#define IMidiDeviceManagerInterface_UpdateEndpointProperties(This,DeviceInterfaceId,IntPropertyCount,InterfaceDevProperties)	\
-    ( (This)->lpVtbl -> UpdateEndpointProperties(This,DeviceInterfaceId,IntPropertyCount,InterfaceDevProperties) ) 
+#define IMidiDeviceManagerInterface_UpdateEndpointProperties(This,endpointDeviceInterfaceId,intPropertyCount,interfaceDevProperties)	\
+    ( (This)->lpVtbl -> UpdateEndpointProperties(This,endpointDeviceInterfaceId,intPropertyCount,interfaceDevProperties) ) 
 
-#define IMidiDeviceManagerInterface_DeleteEndpointProperties(This,DeviceInterfaceId,IntPropertyCount,DevPropKeys)	\
-    ( (This)->lpVtbl -> DeleteEndpointProperties(This,DeviceInterfaceId,IntPropertyCount,DevPropKeys) ) 
+#define IMidiDeviceManagerInterface_DeleteEndpointProperties(This,endpointDeviceInterfaceId,devPropertyCount,devPropKeys)	\
+    ( (This)->lpVtbl -> DeleteEndpointProperties(This,endpointDeviceInterfaceId,devPropertyCount,devPropKeys) ) 
 
-#define IMidiDeviceManagerInterface_DeactivateEndpoint(This,InstanceId)	\
-    ( (This)->lpVtbl -> DeactivateEndpoint(This,InstanceId) ) 
+#define IMidiDeviceManagerInterface_DeactivateEndpoint(This,instanceId)	\
+    ( (This)->lpVtbl -> DeactivateEndpoint(This,instanceId) ) 
 
-#define IMidiDeviceManagerInterface_RemoveEndpoint(This,InstanceId)	\
-    ( (This)->lpVtbl -> RemoveEndpoint(This,InstanceId) ) 
+#define IMidiDeviceManagerInterface_RemoveEndpoint(This,instanceId)	\
+    ( (This)->lpVtbl -> RemoveEndpoint(This,instanceId) ) 
 
-#define IMidiDeviceManagerInterface_UpdateAbstractionConfiguration(This,AbstractionId,ConfigurationJson,IsFromConfigurationFile,Response)	\
-    ( (This)->lpVtbl -> UpdateAbstractionConfiguration(This,AbstractionId,ConfigurationJson,IsFromConfigurationFile,Response) ) 
+#define IMidiDeviceManagerInterface_UpdateTransportConfiguration(This,transportId,configurationJson,responseJson)	\
+    ( (This)->lpVtbl -> UpdateTransportConfiguration(This,transportId,configurationJson,responseJson) ) 
 
 #endif /* COBJMACROS */
 
@@ -1079,7 +1190,7 @@ EXTERN_C const IID IID_IMidiDeviceManagerInterface;
 #define __IMidiServiceConfigurationManagerInterface_INTERFACE_DEFINED__
 
 /* interface IMidiServiceConfigurationManagerInterface */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiServiceConfigurationManagerInterface;
@@ -1090,27 +1201,39 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManagerInterface;
     IMidiServiceConfigurationManagerInterface : public IUnknown
     {
     public:
-        virtual HRESULT STDMETHODCALLTYPE GetAbstractionCreateActionJsonObject( 
-            /* [in] */ LPCWSTR sourceAbstractionJson,
-            /* [out] */ BSTR *responseJson) = 0;
+        virtual HRESULT STDMETHODCALLTYPE GetTransportCreateActionEntry( 
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sourceTransportJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE GetAbstractionUpdateActionJsonObject( 
-            /* [in] */ LPCWSTR sourceAbstractionJson,
-            /* [out] */ BSTR *responseJson) = 0;
+        virtual HRESULT STDMETHODCALLTYPE GetTransportUpdateActionEntry( 
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sourceTransportJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE GetAbstractionRemoveActionJsonObject( 
-            /* [in] */ LPCWSTR sourceAbstractionJson,
-            /* [out] */ BSTR *responseJson) = 0;
+        virtual HRESULT STDMETHODCALLTYPE GetTransportRemoveActionEntry( 
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sourceTransportJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE GetAbstractionMatchingEndpointJsonObject( 
-            /* [in] */ LPCWSTR sourceActionObjectJson,
-            /* [in] */ LPCWSTR searchKeyValuePairsJson,
-            /* [out] */ BSTR *responseJson) = 0;
+        virtual HRESULT STDMETHODCALLTYPE GetMatchingEndpointEntry( 
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sourceActionObjectJson,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR searchKeyValuePairsJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject( 
-            /* [in] */ GUID abstractionId,
-            /* [in] */ LPCWSTR searchKeyValuePairsJson,
-            /* [out] */ BSTR *responseJson) = 0;
+        virtual HRESULT STDMETHODCALLTYPE GetCachedEndpointUpdateEntry( 
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR searchKeyValuePairsJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson) = 0;
         
     };
     
@@ -1136,37 +1259,49 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManagerInterface;
         ULONG ( STDMETHODCALLTYPE *Release )( 
             IMidiServiceConfigurationManagerInterface * This);
         
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetAbstractionCreateActionJsonObject)
-        HRESULT ( STDMETHODCALLTYPE *GetAbstractionCreateActionJsonObject )( 
+        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetTransportCreateActionEntry)
+        HRESULT ( STDMETHODCALLTYPE *GetTransportCreateActionEntry )( 
             IMidiServiceConfigurationManagerInterface * This,
-            /* [in] */ LPCWSTR sourceAbstractionJson,
-            /* [out] */ BSTR *responseJson);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sourceTransportJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson);
         
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetAbstractionUpdateActionJsonObject)
-        HRESULT ( STDMETHODCALLTYPE *GetAbstractionUpdateActionJsonObject )( 
+        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetTransportUpdateActionEntry)
+        HRESULT ( STDMETHODCALLTYPE *GetTransportUpdateActionEntry )( 
             IMidiServiceConfigurationManagerInterface * This,
-            /* [in] */ LPCWSTR sourceAbstractionJson,
-            /* [out] */ BSTR *responseJson);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sourceTransportJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson);
         
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetAbstractionRemoveActionJsonObject)
-        HRESULT ( STDMETHODCALLTYPE *GetAbstractionRemoveActionJsonObject )( 
+        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetTransportRemoveActionEntry)
+        HRESULT ( STDMETHODCALLTYPE *GetTransportRemoveActionEntry )( 
             IMidiServiceConfigurationManagerInterface * This,
-            /* [in] */ LPCWSTR sourceAbstractionJson,
-            /* [out] */ BSTR *responseJson);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sourceTransportJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson);
         
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetAbstractionMatchingEndpointJsonObject)
-        HRESULT ( STDMETHODCALLTYPE *GetAbstractionMatchingEndpointJsonObject )( 
+        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetMatchingEndpointEntry)
+        HRESULT ( STDMETHODCALLTYPE *GetMatchingEndpointEntry )( 
             IMidiServiceConfigurationManagerInterface * This,
-            /* [in] */ LPCWSTR sourceActionObjectJson,
-            /* [in] */ LPCWSTR searchKeyValuePairsJson,
-            /* [out] */ BSTR *responseJson);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sourceActionObjectJson,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR searchKeyValuePairsJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson);
         
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject)
-        HRESULT ( STDMETHODCALLTYPE *GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject )( 
+        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManagerInterface, GetCachedEndpointUpdateEntry)
+        HRESULT ( STDMETHODCALLTYPE *GetCachedEndpointUpdateEntry )( 
             IMidiServiceConfigurationManagerInterface * This,
-            /* [in] */ GUID abstractionId,
-            /* [in] */ LPCWSTR searchKeyValuePairsJson,
-            /* [out] */ BSTR *responseJson);
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR searchKeyValuePairsJson,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson);
         
         END_INTERFACE
     } IMidiServiceConfigurationManagerInterfaceVtbl;
@@ -1191,20 +1326,20 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManagerInterface;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiServiceConfigurationManagerInterface_GetAbstractionCreateActionJsonObject(This,sourceAbstractionJson,responseJson)	\
-    ( (This)->lpVtbl -> GetAbstractionCreateActionJsonObject(This,sourceAbstractionJson,responseJson) ) 
+#define IMidiServiceConfigurationManagerInterface_GetTransportCreateActionEntry(This,sourceTransportJson,responseJson)	\
+    ( (This)->lpVtbl -> GetTransportCreateActionEntry(This,sourceTransportJson,responseJson) ) 
 
-#define IMidiServiceConfigurationManagerInterface_GetAbstractionUpdateActionJsonObject(This,sourceAbstractionJson,responseJson)	\
-    ( (This)->lpVtbl -> GetAbstractionUpdateActionJsonObject(This,sourceAbstractionJson,responseJson) ) 
+#define IMidiServiceConfigurationManagerInterface_GetTransportUpdateActionEntry(This,sourceTransportJson,responseJson)	\
+    ( (This)->lpVtbl -> GetTransportUpdateActionEntry(This,sourceTransportJson,responseJson) ) 
 
-#define IMidiServiceConfigurationManagerInterface_GetAbstractionRemoveActionJsonObject(This,sourceAbstractionJson,responseJson)	\
-    ( (This)->lpVtbl -> GetAbstractionRemoveActionJsonObject(This,sourceAbstractionJson,responseJson) ) 
+#define IMidiServiceConfigurationManagerInterface_GetTransportRemoveActionEntry(This,sourceTransportJson,responseJson)	\
+    ( (This)->lpVtbl -> GetTransportRemoveActionEntry(This,sourceTransportJson,responseJson) ) 
 
-#define IMidiServiceConfigurationManagerInterface_GetAbstractionMatchingEndpointJsonObject(This,sourceActionObjectJson,searchKeyValuePairsJson,responseJson)	\
-    ( (This)->lpVtbl -> GetAbstractionMatchingEndpointJsonObject(This,sourceActionObjectJson,searchKeyValuePairsJson,responseJson) ) 
+#define IMidiServiceConfigurationManagerInterface_GetMatchingEndpointEntry(This,sourceActionObjectJson,searchKeyValuePairsJson,responseJson)	\
+    ( (This)->lpVtbl -> GetMatchingEndpointEntry(This,sourceActionObjectJson,searchKeyValuePairsJson,responseJson) ) 
 
-#define IMidiServiceConfigurationManagerInterface_GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject(This,abstractionId,searchKeyValuePairsJson,responseJson)	\
-    ( (This)->lpVtbl -> GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject(This,abstractionId,searchKeyValuePairsJson,responseJson) ) 
+#define IMidiServiceConfigurationManagerInterface_GetCachedEndpointUpdateEntry(This,transportId,searchKeyValuePairsJson,responseJson)	\
+    ( (This)->lpVtbl -> GetCachedEndpointUpdateEntry(This,transportId,searchKeyValuePairsJson,responseJson) ) 
 
 #endif /* COBJMACROS */
 
@@ -1217,81 +1352,89 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManagerInterface;
 #endif 	/* __IMidiServiceConfigurationManagerInterface_INTERFACE_DEFINED__ */
 
 
-#ifndef __IMidiAbstractionConfigurationManager_INTERFACE_DEFINED__
-#define __IMidiAbstractionConfigurationManager_INTERFACE_DEFINED__
+#ifndef __IMidiTransportConfigurationManager_INTERFACE_DEFINED__
+#define __IMidiTransportConfigurationManager_INTERFACE_DEFINED__
 
-/* interface IMidiAbstractionConfigurationManager */
-/* [unique][uuid][local][object] */ 
+/* interface IMidiTransportConfigurationManager */
+/* [uuid][local][object] */ 
 
 
-EXTERN_C const IID IID_IMidiAbstractionConfigurationManager;
+EXTERN_C const IID IID_IMidiTransportConfigurationManager;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
     MIDL_INTERFACE("f19dd642-1809-4497-9eee-f230b11bd6fb")
-    IMidiAbstractionConfigurationManager : public IUnknown
+    IMidiTransportConfigurationManager : public IUnknown
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Initialize( 
-            /* [in] */ GUID abstractionId,
-            /* [in] */ IUnknown *midiDeviceManager,
-            /* [in] */ IUnknown *midiServiceConfigurationManager) = 0;
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][in] */ 
+            _In_  IMidiDeviceManagerInterface *midiDeviceManager,
+            /* [annotation][in] */ 
+            _In_  IMidiServiceConfigurationManagerInterface *midiServiceConfigurationManager) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE UpdateConfiguration( 
-            /* [in] */ LPCWSTR configurationJsonSection,
-            /* [in] */ BOOL IsFromConfigurationFile,
-            /* [out] */ BSTR *response) = 0;
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR configurationJsonSection,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
     };
     
     
 #else 	/* C style interface */
 
-    typedef struct IMidiAbstractionConfigurationManagerVtbl
+    typedef struct IMidiTransportConfigurationManagerVtbl
     {
         BEGIN_INTERFACE
         
         DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
         HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiAbstractionConfigurationManager * This,
+            IMidiTransportConfigurationManager * This,
             /* [in] */ REFIID riid,
             /* [annotation][iid_is][out] */ 
             _COM_Outptr_  void **ppvObject);
         
         DECLSPEC_XFGVIRT(IUnknown, AddRef)
         ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiAbstractionConfigurationManager * This);
+            IMidiTransportConfigurationManager * This);
         
         DECLSPEC_XFGVIRT(IUnknown, Release)
         ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiAbstractionConfigurationManager * This);
+            IMidiTransportConfigurationManager * This);
         
-        DECLSPEC_XFGVIRT(IMidiAbstractionConfigurationManager, Initialize)
+        DECLSPEC_XFGVIRT(IMidiTransportConfigurationManager, Initialize)
         HRESULT ( STDMETHODCALLTYPE *Initialize )( 
-            IMidiAbstractionConfigurationManager * This,
-            /* [in] */ GUID abstractionId,
-            /* [in] */ IUnknown *midiDeviceManager,
-            /* [in] */ IUnknown *midiServiceConfigurationManager);
+            IMidiTransportConfigurationManager * This,
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][in] */ 
+            _In_  IMidiDeviceManagerInterface *midiDeviceManager,
+            /* [annotation][in] */ 
+            _In_  IMidiServiceConfigurationManagerInterface *midiServiceConfigurationManager);
         
-        DECLSPEC_XFGVIRT(IMidiAbstractionConfigurationManager, UpdateConfiguration)
+        DECLSPEC_XFGVIRT(IMidiTransportConfigurationManager, UpdateConfiguration)
         HRESULT ( STDMETHODCALLTYPE *UpdateConfiguration )( 
-            IMidiAbstractionConfigurationManager * This,
-            /* [in] */ LPCWSTR configurationJsonSection,
-            /* [in] */ BOOL IsFromConfigurationFile,
-            /* [out] */ BSTR *response);
+            IMidiTransportConfigurationManager * This,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR configurationJsonSection,
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *responseJson);
         
-        DECLSPEC_XFGVIRT(IMidiAbstractionConfigurationManager, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
-            IMidiAbstractionConfigurationManager * This);
+        DECLSPEC_XFGVIRT(IMidiTransportConfigurationManager, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
+            IMidiTransportConfigurationManager * This);
         
         END_INTERFACE
-    } IMidiAbstractionConfigurationManagerVtbl;
+    } IMidiTransportConfigurationManagerVtbl;
 
-    interface IMidiAbstractionConfigurationManager
+    interface IMidiTransportConfigurationManager
     {
-        CONST_VTBL struct IMidiAbstractionConfigurationManagerVtbl *lpVtbl;
+        CONST_VTBL struct IMidiTransportConfigurationManagerVtbl *lpVtbl;
     };
 
     
@@ -1299,24 +1442,24 @@ EXTERN_C const IID IID_IMidiAbstractionConfigurationManager;
 #ifdef COBJMACROS
 
 
-#define IMidiAbstractionConfigurationManager_QueryInterface(This,riid,ppvObject)	\
+#define IMidiTransportConfigurationManager_QueryInterface(This,riid,ppvObject)	\
     ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
 
-#define IMidiAbstractionConfigurationManager_AddRef(This)	\
+#define IMidiTransportConfigurationManager_AddRef(This)	\
     ( (This)->lpVtbl -> AddRef(This) ) 
 
-#define IMidiAbstractionConfigurationManager_Release(This)	\
+#define IMidiTransportConfigurationManager_Release(This)	\
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiAbstractionConfigurationManager_Initialize(This,abstractionId,midiDeviceManager,midiServiceConfigurationManager)	\
-    ( (This)->lpVtbl -> Initialize(This,abstractionId,midiDeviceManager,midiServiceConfigurationManager) ) 
+#define IMidiTransportConfigurationManager_Initialize(This,transportId,midiDeviceManager,midiServiceConfigurationManager)	\
+    ( (This)->lpVtbl -> Initialize(This,transportId,midiDeviceManager,midiServiceConfigurationManager) ) 
 
-#define IMidiAbstractionConfigurationManager_UpdateConfiguration(This,configurationJsonSection,IsFromConfigurationFile,response)	\
-    ( (This)->lpVtbl -> UpdateConfiguration(This,configurationJsonSection,IsFromConfigurationFile,response) ) 
+#define IMidiTransportConfigurationManager_UpdateConfiguration(This,configurationJsonSection,responseJson)	\
+    ( (This)->lpVtbl -> UpdateConfiguration(This,configurationJsonSection,responseJson) ) 
 
-#define IMidiAbstractionConfigurationManager_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
+#define IMidiTransportConfigurationManager_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
 
 #endif /* COBJMACROS */
 
@@ -1326,32 +1469,31 @@ EXTERN_C const IID IID_IMidiAbstractionConfigurationManager;
 
 
 
-#endif 	/* __IMidiAbstractionConfigurationManager_INTERFACE_DEFINED__ */
+#endif 	/* __IMidiTransportConfigurationManager_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_WindowsMidiServices_0000_0009 */
+/* interface __MIDL_itf_WindowsMidiServices_0000_0008 */
 /* [local] */ 
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0009_0001
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0008_0001
     {
-    MidiDataFormat DataFormatIn;
-    MidiDataFormat DataFormatOut;
-    LPCWSTR InstanceConfigurationJsonData;
+    MidiDataFormats DataFormatIn;
+    MidiDataFormats DataFormatOut;
     BYTE UmpGroupIndex;
     } 	TRANSFORMCREATIONPARAMS;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0009_0001 *PTRANSFORMCREATIONPARAMS;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0008_0001 *PTRANSFORMCREATIONPARAMS;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0009_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0009_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0008_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0008_v0_0_s_ifspec;
 
 #ifndef __IMidiTransform_INTERFACE_DEFINED__
 #define __IMidiTransform_INTERFACE_DEFINED__
 
 /* interface IMidiTransform */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiTransform;
@@ -1364,9 +1506,9 @@ EXTERN_C const IID IID_IMidiTransform;
     public:
         virtual HRESULT STDMETHODCALLTYPE Activate( 
             /* [annotation][in] */ 
-            _In_  REFIID Iid,
+            _In_  REFIID iid,
             /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **Interface) = 0;
+            _COM_Outptr_  void **activatedInterface) = 0;
         
     };
     
@@ -1396,9 +1538,9 @@ EXTERN_C const IID IID_IMidiTransform;
         HRESULT ( STDMETHODCALLTYPE *Activate )( 
             IMidiTransform * This,
             /* [annotation][in] */ 
-            _In_  REFIID Iid,
+            _In_  REFIID iid,
             /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **Interface);
+            _COM_Outptr_  void **activatedInterface);
         
         END_INTERFACE
     } IMidiTransformVtbl;
@@ -1423,8 +1565,8 @@ EXTERN_C const IID IID_IMidiTransform;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiTransform_Activate(This,Iid,Interface)	\
-    ( (This)->lpVtbl -> Activate(This,Iid,Interface) ) 
+#define IMidiTransform_Activate(This,iid,activatedInterface)	\
+    ( (This)->lpVtbl -> Activate(This,iid,activatedInterface) ) 
 
 #endif /* COBJMACROS */
 
@@ -1441,7 +1583,7 @@ EXTERN_C const IID IID_IMidiTransform;
 #define __IMidiDataTransform_INTERFACE_DEFINED__
 
 /* interface IMidiDataTransform */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiDataTransform;
@@ -1453,19 +1595,28 @@ EXTERN_C const IID IID_IMidiDataTransform;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Initialize( 
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PTRANSFORMCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ IMidiCallback *callback,
-            /* [in] */ LONGLONG context,
-            /* [in] */ IUnknown *midiDeviceManager) = 0;
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PTRANSFORMCREATIONPARAMS creationParams,
+            /* [annotation][out][in] */ 
+            _Inout_  DWORD *mmcssTaskId,
+            /* [annotation][in] */ 
+            _In_  IMidiCallback *callback,
+            /* [annotation][in] */ 
+            _In_  LONGLONG context,
+            /* [annotation][in] */ 
+            _In_  IMidiDeviceManagerInterface *midiDeviceManager) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE SendMidiMessage( 
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position) = 0;
+            /* [annotation][in] */ 
+            _In_  PVOID message,
+            /* [annotation][in] */ 
+            _In_  UINT size,
+            /* [annotation][in] */ 
+            _In_  LONGLONG position) = 0;
         
     };
     
@@ -1494,23 +1645,32 @@ EXTERN_C const IID IID_IMidiDataTransform;
         DECLSPEC_XFGVIRT(IMidiDataTransform, Initialize)
         HRESULT ( STDMETHODCALLTYPE *Initialize )( 
             IMidiDataTransform * This,
-            /* [in] */ LPCWSTR deviceId,
-            /* [in] */ PTRANSFORMCREATIONPARAMS creationParams,
-            /* [in] */ DWORD *mmcssTaskId,
-            /* [in] */ IMidiCallback *callback,
-            /* [in] */ LONGLONG context,
-            /* [in] */ IUnknown *midiDeviceManager);
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PTRANSFORMCREATIONPARAMS creationParams,
+            /* [annotation][out][in] */ 
+            _Inout_  DWORD *mmcssTaskId,
+            /* [annotation][in] */ 
+            _In_  IMidiCallback *callback,
+            /* [annotation][in] */ 
+            _In_  LONGLONG context,
+            /* [annotation][in] */ 
+            _In_  IMidiDeviceManagerInterface *midiDeviceManager);
         
-        DECLSPEC_XFGVIRT(IMidiDataTransform, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
+        DECLSPEC_XFGVIRT(IMidiDataTransform, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
             IMidiDataTransform * This);
         
         DECLSPEC_XFGVIRT(IMidiDataTransform, SendMidiMessage)
         HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
             IMidiDataTransform * This,
-            /* [in] */ PVOID message,
-            /* [in] */ UINT size,
-            /* [in] */ LONGLONG position);
+            /* [annotation][in] */ 
+            _In_  PVOID message,
+            /* [annotation][in] */ 
+            _In_  UINT size,
+            /* [annotation][in] */ 
+            _In_  LONGLONG position);
         
         END_INTERFACE
     } IMidiDataTransformVtbl;
@@ -1535,11 +1695,11 @@ EXTERN_C const IID IID_IMidiDataTransform;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiDataTransform_Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,midiDeviceManager)	\
-    ( (This)->lpVtbl -> Initialize(This,deviceId,creationParams,mmcssTaskId,callback,context,midiDeviceManager) ) 
+#define IMidiDataTransform_Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,midiDeviceManager)	\
+    ( (This)->lpVtbl -> Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,midiDeviceManager) ) 
 
-#define IMidiDataTransform_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
+#define IMidiDataTransform_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
 
 #define IMidiDataTransform_SendMidiMessage(This,message,size,position)	\
     ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
@@ -1555,10 +1715,10 @@ EXTERN_C const IID IID_IMidiDataTransform;
 #endif 	/* __IMidiDataTransform_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_WindowsMidiServices_0000_0011 */
+/* interface __MIDL_itf_WindowsMidiServices_0000_0010 */
 /* [local] */ 
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0001
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0001
     {
     BYTE Number;
     BYTE FirstGroup;
@@ -1569,13 +1729,12 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_00
     LPCWSTR Name;
     } 	DISCOVEREDFUNCTIONBLOCK;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0001 *PDISCOVEREDFUNCTIONBLOCK;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0001 *PDISCOVEREDFUNCTIONBLOCK;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0002
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0002
     {
     BOOL AllEndpointInformationReceived;
-    BOOL EndpointSupportsMIDI2Protocol;
-    BOOL EndpointSupportsMIDI1Protocol;
+    MidiEndpointCapabilities EndpointCapabilities;
     LPCWSTR EndpointSuppliedName;
     LPCWSTR EndpointSuppliedProductInstanceId;
     BYTE CountFunctionBlocksDeclared;
@@ -1584,28 +1743,28 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_00
     PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;
     } 	ENDPOINTPROTOCOLNEGOTIATIONRESULTS;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0002 *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0002 *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
 
-typedef /* [public][public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0003
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0003
     {
-    BOOL PreferToSendJRTimestampsToEndpoint;
-    BOOL PreferToReceiveJRTimestampsFromEndpoint;
+    BOOL PreferToSendJitterReductionTimestampsToEndpoint;
+    BOOL PreferToReceiveJitterReductionTimestampsFromEndpoint;
     BYTE PreferredMidiProtocol;
     WORD TimeoutMilliseconds;
     } 	ENDPOINTPROTOCOLNEGOTIATIONPARAMS;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0011_0003 *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0003 *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0011_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0011_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0010_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0010_v0_0_s_ifspec;
 
 #ifndef __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
 #define __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
 
 /* interface IMidiProtocolNegotiationCompleteCallback */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
@@ -1617,9 +1776,12 @@ EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE ProtocolNegotiationCompleteCallback( 
-            /* [in] */ GUID AbstractionGuid,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results) = 0;
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PENDPOINTPROTOCOLNEGOTIATIONRESULTS results) = 0;
         
     };
     
@@ -1648,9 +1810,12 @@ EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
         DECLSPEC_XFGVIRT(IMidiProtocolNegotiationCompleteCallback, ProtocolNegotiationCompleteCallback)
         HRESULT ( STDMETHODCALLTYPE *ProtocolNegotiationCompleteCallback )( 
             IMidiProtocolNegotiationCompleteCallback * This,
-            /* [in] */ GUID AbstractionGuid,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ PENDPOINTPROTOCOLNEGOTIATIONRESULTS Results);
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  PENDPOINTPROTOCOLNEGOTIATIONRESULTS results);
         
         END_INTERFACE
     } IMidiProtocolNegotiationCompleteCallbackVtbl;
@@ -1675,8 +1840,8 @@ EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiProtocolNegotiationCompleteCallback_ProtocolNegotiationCompleteCallback(This,AbstractionGuid,DeviceInterfaceId,Results)	\
-    ( (This)->lpVtbl -> ProtocolNegotiationCompleteCallback(This,AbstractionGuid,DeviceInterfaceId,Results) ) 
+#define IMidiProtocolNegotiationCompleteCallback_ProtocolNegotiationCompleteCallback(This,transportId,endpointDeviceInterfaceId,results)	\
+    ( (This)->lpVtbl -> ProtocolNegotiationCompleteCallback(This,transportId,endpointDeviceInterfaceId,results) ) 
 
 #endif /* COBJMACROS */
 
@@ -1693,7 +1858,7 @@ EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
 #define __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
 
 /* interface IMidiEndpointProtocolManagerInterface */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
@@ -1705,10 +1870,14 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE DiscoverAndNegotiate( 
-            /* [in] */ GUID AbstractionGuid,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-            /* [in] */ IMidiProtocolNegotiationCompleteCallback *NegotiationCompleteCallback) = 0;
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
+            /* [annotation][in] */ 
+            _In_  IMidiProtocolNegotiationCompleteCallback *negotiationCompleteCallback) = 0;
         
     };
     
@@ -1737,10 +1906,14 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
         DECLSPEC_XFGVIRT(IMidiEndpointProtocolManagerInterface, DiscoverAndNegotiate)
         HRESULT ( STDMETHODCALLTYPE *DiscoverAndNegotiate )( 
             IMidiEndpointProtocolManagerInterface * This,
-            /* [in] */ GUID AbstractionGuid,
-            /* [in] */ LPCWSTR DeviceInterfaceId,
-            /* [in] */ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-            /* [in] */ IMidiProtocolNegotiationCompleteCallback *NegotiationCompleteCallback);
+            /* [annotation][in] */ 
+            _In_  GUID transportId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId,
+            /* [annotation][in] */ 
+            _In_  ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
+            /* [annotation][in] */ 
+            _In_  IMidiProtocolNegotiationCompleteCallback *negotiationCompleteCallback);
         
         END_INTERFACE
     } IMidiEndpointProtocolManagerInterfaceVtbl;
@@ -1765,8 +1938,8 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiEndpointProtocolManagerInterface_DiscoverAndNegotiate(This,AbstractionGuid,DeviceInterfaceId,NegotiationParams,NegotiationCompleteCallback)	\
-    ( (This)->lpVtbl -> DiscoverAndNegotiate(This,AbstractionGuid,DeviceInterfaceId,NegotiationParams,NegotiationCompleteCallback) ) 
+#define IMidiEndpointProtocolManagerInterface_DiscoverAndNegotiate(This,transportId,endpointDeviceInterfaceId,negotiationParams,negotiationCompleteCallback)	\
+    ( (This)->lpVtbl -> DiscoverAndNegotiate(This,transportId,endpointDeviceInterfaceId,negotiationParams,negotiationCompleteCallback) ) 
 
 #endif /* COBJMACROS */
 
@@ -1779,112 +1952,71 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
 #endif 	/* __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_WindowsMidiServices_0000_0013 */
-/* [local] */ 
+#ifndef __IMidiEndpointManager_INTERFACE_DEFINED__
+#define __IMidiEndpointManager_INTERFACE_DEFINED__
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0001
-    {
-    GUID Id;
-    LPCWSTR TransportCode;
-    BSTR Name;
-    BSTR Description;
-    BSTR Author;
-    BSTR SmallImagePath;
-    BSTR Version;
-    BOOL IsRuntimeCreatableByApps;
-    BOOL IsRuntimeCreatableBySettings;
-    BOOL IsSystemManaged;
-    BOOL IsClientConfigurable;
-    } 	ABSTRACTIONMETADATA;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0001 *PABSTRACTIONMETADATA;
-
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0002
-    {
-    GUID Id;
-    BSTR Name;
-    BSTR Description;
-    BSTR Author;
-    BSTR SmallImagePath;
-    BSTR Version;
-    BOOL IsRuntimeCreatableByApps;
-    BOOL IsRuntimeCreatableBySettings;
-    BOOL IsSystemManaged;
-    BOOL IsClientConfigurable;
-    } 	TRANSFORMMETADATA;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0002 *PTRANSFORMMETADATA;
+/* interface IMidiEndpointManager */
+/* [uuid][local][object] */ 
 
 
-
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0013_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0013_v0_0_s_ifspec;
-
-#ifndef __IMidiServiceAbstractionPluginMetadataProvider_INTERFACE_DEFINED__
-#define __IMidiServiceAbstractionPluginMetadataProvider_INTERFACE_DEFINED__
-
-/* interface IMidiServiceAbstractionPluginMetadataProvider */
-/* [unique][uuid][local][object] */ 
-
-
-EXTERN_C const IID IID_IMidiServiceAbstractionPluginMetadataProvider;
+EXTERN_C const IID IID_IMidiEndpointManager;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
-    MIDL_INTERFACE("8d542740-83f8-4a9a-8627-cd6324b6c1f4")
-    IMidiServiceAbstractionPluginMetadataProvider : public IUnknown
+    MIDL_INTERFACE("badff6d2-0e3c-4009-a473-6ba82c008662")
+    IMidiEndpointManager : public IUnknown
     {
     public:
-        virtual HRESULT STDMETHODCALLTYPE Initialize( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Initialize( 
+            /* [annotation][in] */ 
+            _In_  IMidiDeviceManagerInterface *midiDeviceManager,
+            /* [annotation][in] */ 
+            _In_  IMidiEndpointProtocolManagerInterface *midiEndpointProtocolManager) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE GetMetadata( 
-            /* [out] */ PABSTRACTIONMETADATA metadata) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
     };
     
     
 #else 	/* C style interface */
 
-    typedef struct IMidiServiceAbstractionPluginMetadataProviderVtbl
+    typedef struct IMidiEndpointManagerVtbl
     {
         BEGIN_INTERFACE
         
         DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
         HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiServiceAbstractionPluginMetadataProvider * This,
+            IMidiEndpointManager * This,
             /* [in] */ REFIID riid,
             /* [annotation][iid_is][out] */ 
             _COM_Outptr_  void **ppvObject);
         
         DECLSPEC_XFGVIRT(IUnknown, AddRef)
         ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiServiceAbstractionPluginMetadataProvider * This);
+            IMidiEndpointManager * This);
         
         DECLSPEC_XFGVIRT(IUnknown, Release)
         ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiServiceAbstractionPluginMetadataProvider * This);
+            IMidiEndpointManager * This);
         
-        DECLSPEC_XFGVIRT(IMidiServiceAbstractionPluginMetadataProvider, Initialize)
+        DECLSPEC_XFGVIRT(IMidiEndpointManager, Initialize)
         HRESULT ( STDMETHODCALLTYPE *Initialize )( 
-            IMidiServiceAbstractionPluginMetadataProvider * This);
+            IMidiEndpointManager * This,
+            /* [annotation][in] */ 
+            _In_  IMidiDeviceManagerInterface *midiDeviceManager,
+            /* [annotation][in] */ 
+            _In_  IMidiEndpointProtocolManagerInterface *midiEndpointProtocolManager);
         
-        DECLSPEC_XFGVIRT(IMidiServiceAbstractionPluginMetadataProvider, GetMetadata)
-        HRESULT ( STDMETHODCALLTYPE *GetMetadata )( 
-            IMidiServiceAbstractionPluginMetadataProvider * This,
-            /* [out] */ PABSTRACTIONMETADATA metadata);
-        
-        DECLSPEC_XFGVIRT(IMidiServiceAbstractionPluginMetadataProvider, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
-            IMidiServiceAbstractionPluginMetadataProvider * This);
+        DECLSPEC_XFGVIRT(IMidiEndpointManager, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
+            IMidiEndpointManager * This);
         
         END_INTERFACE
-    } IMidiServiceAbstractionPluginMetadataProviderVtbl;
+    } IMidiEndpointManagerVtbl;
 
-    interface IMidiServiceAbstractionPluginMetadataProvider
+    interface IMidiEndpointManager
     {
-        CONST_VTBL struct IMidiServiceAbstractionPluginMetadataProviderVtbl *lpVtbl;
+        CONST_VTBL struct IMidiEndpointManagerVtbl *lpVtbl;
     };
 
     
@@ -1892,24 +2024,21 @@ EXTERN_C const IID IID_IMidiServiceAbstractionPluginMetadataProvider;
 #ifdef COBJMACROS
 
 
-#define IMidiServiceAbstractionPluginMetadataProvider_QueryInterface(This,riid,ppvObject)	\
+#define IMidiEndpointManager_QueryInterface(This,riid,ppvObject)	\
     ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
 
-#define IMidiServiceAbstractionPluginMetadataProvider_AddRef(This)	\
+#define IMidiEndpointManager_AddRef(This)	\
     ( (This)->lpVtbl -> AddRef(This) ) 
 
-#define IMidiServiceAbstractionPluginMetadataProvider_Release(This)	\
+#define IMidiEndpointManager_Release(This)	\
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiServiceAbstractionPluginMetadataProvider_Initialize(This)	\
-    ( (This)->lpVtbl -> Initialize(This) ) 
+#define IMidiEndpointManager_Initialize(This,midiDeviceManager,midiEndpointProtocolManager)	\
+    ( (This)->lpVtbl -> Initialize(This,midiDeviceManager,midiEndpointProtocolManager) ) 
 
-#define IMidiServiceAbstractionPluginMetadataProvider_GetMetadata(This,metadata)	\
-    ( (This)->lpVtbl -> GetMetadata(This,metadata) ) 
-
-#define IMidiServiceAbstractionPluginMetadataProvider_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
+#define IMidiEndpointManager_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
 
 #endif /* COBJMACROS */
 
@@ -1919,14 +2048,153 @@ EXTERN_C const IID IID_IMidiServiceAbstractionPluginMetadataProvider;
 
 
 
-#endif 	/* __IMidiServiceAbstractionPluginMetadataProvider_INTERFACE_DEFINED__ */
+#endif 	/* __IMidiEndpointManager_INTERFACE_DEFINED__ */
+
+
+/* interface __MIDL_itf_WindowsMidiServices_0000_0013 */
+/* [local] */ 
+
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0001
+    {
+    GUID TransportId;
+    LPWSTR TransportCode;
+    LPWSTR Name;
+    LPWSTR Description;
+    LPWSTR Author;
+    LPWSTR SmallImagePath;
+    LPWSTR Version;
+    MetadataFlags Flags;
+    } 	TRANSPORTMETADATA;
+
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0001 *PTRANSPORTMETADATA;
+
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0002
+    {
+    GUID TransformId;
+    LPWSTR Name;
+    LPWSTR Description;
+    LPWSTR Author;
+    LPWSTR SmallImagePath;
+    LPWSTR Version;
+    MetadataFlags Flags;
+    } 	TRANSFORMMETADATA;
+
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0002 *PTRANSFORMMETADATA;
+
+
+
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0013_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0013_v0_0_s_ifspec;
+
+#ifndef __IMidiServiceTransportPluginMetadataProvider_INTERFACE_DEFINED__
+#define __IMidiServiceTransportPluginMetadataProvider_INTERFACE_DEFINED__
+
+/* interface IMidiServiceTransportPluginMetadataProvider */
+/* [uuid][local][object] */ 
+
+
+EXTERN_C const IID IID_IMidiServiceTransportPluginMetadataProvider;
+
+#if defined(__cplusplus) && !defined(CINTERFACE)
+    
+    MIDL_INTERFACE("8d542740-83f8-4a9a-8627-cd6324b6c1f4")
+    IMidiServiceTransportPluginMetadataProvider : public IUnknown
+    {
+    public:
+        virtual HRESULT STDMETHODCALLTYPE Initialize( void) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE GetMetadata( 
+            /* [annotation][out] */ 
+            _Out_  PTRANSPORTMETADATA metadata) = 0;
+        
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
+        
+    };
+    
+    
+#else 	/* C style interface */
+
+    typedef struct IMidiServiceTransportPluginMetadataProviderVtbl
+    {
+        BEGIN_INTERFACE
+        
+        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
+        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
+            IMidiServiceTransportPluginMetadataProvider * This,
+            /* [in] */ REFIID riid,
+            /* [annotation][iid_is][out] */ 
+            _COM_Outptr_  void **ppvObject);
+        
+        DECLSPEC_XFGVIRT(IUnknown, AddRef)
+        ULONG ( STDMETHODCALLTYPE *AddRef )( 
+            IMidiServiceTransportPluginMetadataProvider * This);
+        
+        DECLSPEC_XFGVIRT(IUnknown, Release)
+        ULONG ( STDMETHODCALLTYPE *Release )( 
+            IMidiServiceTransportPluginMetadataProvider * This);
+        
+        DECLSPEC_XFGVIRT(IMidiServiceTransportPluginMetadataProvider, Initialize)
+        HRESULT ( STDMETHODCALLTYPE *Initialize )( 
+            IMidiServiceTransportPluginMetadataProvider * This);
+        
+        DECLSPEC_XFGVIRT(IMidiServiceTransportPluginMetadataProvider, GetMetadata)
+        HRESULT ( STDMETHODCALLTYPE *GetMetadata )( 
+            IMidiServiceTransportPluginMetadataProvider * This,
+            /* [annotation][out] */ 
+            _Out_  PTRANSPORTMETADATA metadata);
+        
+        DECLSPEC_XFGVIRT(IMidiServiceTransportPluginMetadataProvider, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
+            IMidiServiceTransportPluginMetadataProvider * This);
+        
+        END_INTERFACE
+    } IMidiServiceTransportPluginMetadataProviderVtbl;
+
+    interface IMidiServiceTransportPluginMetadataProvider
+    {
+        CONST_VTBL struct IMidiServiceTransportPluginMetadataProviderVtbl *lpVtbl;
+    };
+
+    
+
+#ifdef COBJMACROS
+
+
+#define IMidiServiceTransportPluginMetadataProvider_QueryInterface(This,riid,ppvObject)	\
+    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
+
+#define IMidiServiceTransportPluginMetadataProvider_AddRef(This)	\
+    ( (This)->lpVtbl -> AddRef(This) ) 
+
+#define IMidiServiceTransportPluginMetadataProvider_Release(This)	\
+    ( (This)->lpVtbl -> Release(This) ) 
+
+
+#define IMidiServiceTransportPluginMetadataProvider_Initialize(This)	\
+    ( (This)->lpVtbl -> Initialize(This) ) 
+
+#define IMidiServiceTransportPluginMetadataProvider_GetMetadata(This,metadata)	\
+    ( (This)->lpVtbl -> GetMetadata(This,metadata) ) 
+
+#define IMidiServiceTransportPluginMetadataProvider_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
+
+#endif /* COBJMACROS */
+
+
+#endif 	/* C style interface */
+
+
+
+
+#endif 	/* __IMidiServiceTransportPluginMetadataProvider_INTERFACE_DEFINED__ */
 
 
 #ifndef __IMidiServiceTransformPluginMetadataProvider_INTERFACE_DEFINED__
 #define __IMidiServiceTransformPluginMetadataProvider_INTERFACE_DEFINED__
 
 /* interface IMidiServiceTransformPluginMetadataProvider */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiServiceTransformPluginMetadataProvider;
@@ -1940,9 +2208,10 @@ EXTERN_C const IID IID_IMidiServiceTransformPluginMetadataProvider;
         virtual HRESULT STDMETHODCALLTYPE Initialize( void) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE GetMetadata( 
-            /* [out] */ PTRANSFORMMETADATA metadata) = 0;
+            /* [annotation][out] */ 
+            _Out_  PTRANSFORMMETADATA metadata) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
     };
     
@@ -1975,10 +2244,11 @@ EXTERN_C const IID IID_IMidiServiceTransformPluginMetadataProvider;
         DECLSPEC_XFGVIRT(IMidiServiceTransformPluginMetadataProvider, GetMetadata)
         HRESULT ( STDMETHODCALLTYPE *GetMetadata )( 
             IMidiServiceTransformPluginMetadataProvider * This,
-            /* [out] */ PTRANSFORMMETADATA metadata);
+            /* [annotation][out] */ 
+            _Out_  PTRANSFORMMETADATA metadata);
         
-        DECLSPEC_XFGVIRT(IMidiServiceTransformPluginMetadataProvider, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
+        DECLSPEC_XFGVIRT(IMidiServiceTransformPluginMetadataProvider, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
             IMidiServiceTransformPluginMetadataProvider * This);
         
         END_INTERFACE
@@ -2010,8 +2280,8 @@ EXTERN_C const IID IID_IMidiServiceTransformPluginMetadataProvider;
 #define IMidiServiceTransformPluginMetadataProvider_GetMetadata(This,metadata)	\
     ( (This)->lpVtbl -> GetMetadata(This,metadata) ) 
 
-#define IMidiServiceTransformPluginMetadataProvider_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
+#define IMidiServiceTransformPluginMetadataProvider_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
 
 #endif /* COBJMACROS */
 
@@ -2028,7 +2298,7 @@ EXTERN_C const IID IID_IMidiServiceTransformPluginMetadataProvider;
 #define __IMidiServicePluginMetadataReporterInterface_INTERFACE_DEFINED__
 
 /* interface IMidiServicePluginMetadataReporterInterface */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiServicePluginMetadataReporterInterface;
@@ -2039,11 +2309,13 @@ EXTERN_C const IID IID_IMidiServicePluginMetadataReporterInterface;
     IMidiServicePluginMetadataReporterInterface : public IUnknown
     {
     public:
-        virtual HRESULT STDMETHODCALLTYPE GetAbstractionList( 
-            /* [out] */ BSTR *AbstractionListJson) = 0;
+        virtual HRESULT STDMETHODCALLTYPE GetTransportList( 
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *transportListJson) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE GetTransformList( 
-            /* [out] */ BSTR *TransformListJson) = 0;
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *transformListJson) = 0;
         
     };
     
@@ -2069,15 +2341,17 @@ EXTERN_C const IID IID_IMidiServicePluginMetadataReporterInterface;
         ULONG ( STDMETHODCALLTYPE *Release )( 
             IMidiServicePluginMetadataReporterInterface * This);
         
-        DECLSPEC_XFGVIRT(IMidiServicePluginMetadataReporterInterface, GetAbstractionList)
-        HRESULT ( STDMETHODCALLTYPE *GetAbstractionList )( 
+        DECLSPEC_XFGVIRT(IMidiServicePluginMetadataReporterInterface, GetTransportList)
+        HRESULT ( STDMETHODCALLTYPE *GetTransportList )( 
             IMidiServicePluginMetadataReporterInterface * This,
-            /* [out] */ BSTR *AbstractionListJson);
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *transportListJson);
         
         DECLSPEC_XFGVIRT(IMidiServicePluginMetadataReporterInterface, GetTransformList)
         HRESULT ( STDMETHODCALLTYPE *GetTransformList )( 
             IMidiServicePluginMetadataReporterInterface * This,
-            /* [out] */ BSTR *TransformListJson);
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *transformListJson);
         
         END_INTERFACE
     } IMidiServicePluginMetadataReporterInterfaceVtbl;
@@ -2102,11 +2376,11 @@ EXTERN_C const IID IID_IMidiServicePluginMetadataReporterInterface;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiServicePluginMetadataReporterInterface_GetAbstractionList(This,AbstractionListJson)	\
-    ( (This)->lpVtbl -> GetAbstractionList(This,AbstractionListJson) ) 
+#define IMidiServicePluginMetadataReporterInterface_GetTransportList(This,transportListJson)	\
+    ( (This)->lpVtbl -> GetTransportList(This,transportListJson) ) 
 
-#define IMidiServicePluginMetadataReporterInterface_GetTransformList(This,TransformListJson)	\
-    ( (This)->lpVtbl -> GetTransformList(This,TransformListJson) ) 
+#define IMidiServicePluginMetadataReporterInterface_GetTransformList(This,transformListJson)	\
+    ( (This)->lpVtbl -> GetTransformList(This,transformListJson) ) 
 
 #endif /* COBJMACROS */
 
@@ -2123,7 +2397,7 @@ EXTERN_C const IID IID_IMidiServicePluginMetadataReporterInterface;
 #define __IMidiSessionTracker_INTERFACE_DEFINED__
 
 /* interface IMidiSessionTracker */
-/* [unique][uuid][local][object] */ 
+/* [uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiSessionTracker;
@@ -2137,22 +2411,26 @@ EXTERN_C const IID IID_IMidiSessionTracker;
         virtual HRESULT STDMETHODCALLTYPE Initialize( void) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE AddClientSession( 
-            /* [in] */ GUID SessionId,
-            /* [in] */ LPCWSTR SessionName) = 0;
+            /* [annotation][in] */ 
+            _In_  GUID sessionId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sessionName) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE UpdateClientSessionName( 
-            /* [in] */ GUID SessionId,
-            /* [in] */ LPCWSTR SessionName) = 0;
+            /* [annotation][in] */ 
+            _In_  GUID sessionId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sessionName) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE RemoveClientSession( 
-            /* [in] */ GUID SessionId) = 0;
+            /* [annotation][in] */ 
+            _In_  GUID sessionId) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE GetSessionList( 
-            /* [out] */ BSTR *SessionDetailsList) = 0;
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *sessionDetailsList) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE VerifyConnectivity( void) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE Cleanup( void) = 0;
+        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
     };
     
@@ -2185,31 +2463,33 @@ EXTERN_C const IID IID_IMidiSessionTracker;
         DECLSPEC_XFGVIRT(IMidiSessionTracker, AddClientSession)
         HRESULT ( STDMETHODCALLTYPE *AddClientSession )( 
             IMidiSessionTracker * This,
-            /* [in] */ GUID SessionId,
-            /* [in] */ LPCWSTR SessionName);
+            /* [annotation][in] */ 
+            _In_  GUID sessionId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sessionName);
         
         DECLSPEC_XFGVIRT(IMidiSessionTracker, UpdateClientSessionName)
         HRESULT ( STDMETHODCALLTYPE *UpdateClientSessionName )( 
             IMidiSessionTracker * This,
-            /* [in] */ GUID SessionId,
-            /* [in] */ LPCWSTR SessionName);
+            /* [annotation][in] */ 
+            _In_  GUID sessionId,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR sessionName);
         
         DECLSPEC_XFGVIRT(IMidiSessionTracker, RemoveClientSession)
         HRESULT ( STDMETHODCALLTYPE *RemoveClientSession )( 
             IMidiSessionTracker * This,
-            /* [in] */ GUID SessionId);
+            /* [annotation][in] */ 
+            _In_  GUID sessionId);
         
         DECLSPEC_XFGVIRT(IMidiSessionTracker, GetSessionList)
         HRESULT ( STDMETHODCALLTYPE *GetSessionList )( 
             IMidiSessionTracker * This,
-            /* [out] */ BSTR *SessionDetailsList);
+            /* [annotation][string][out] */ 
+            _Out_  LPWSTR *sessionDetailsList);
         
-        DECLSPEC_XFGVIRT(IMidiSessionTracker, VerifyConnectivity)
-        HRESULT ( STDMETHODCALLTYPE *VerifyConnectivity )( 
-            IMidiSessionTracker * This);
-        
-        DECLSPEC_XFGVIRT(IMidiSessionTracker, Cleanup)
-        HRESULT ( STDMETHODCALLTYPE *Cleanup )( 
+        DECLSPEC_XFGVIRT(IMidiSessionTracker, Shutdown)
+        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
             IMidiSessionTracker * This);
         
         END_INTERFACE
@@ -2238,23 +2518,20 @@ EXTERN_C const IID IID_IMidiSessionTracker;
 #define IMidiSessionTracker_Initialize(This)	\
     ( (This)->lpVtbl -> Initialize(This) ) 
 
-#define IMidiSessionTracker_AddClientSession(This,SessionId,SessionName)	\
-    ( (This)->lpVtbl -> AddClientSession(This,SessionId,SessionName) ) 
+#define IMidiSessionTracker_AddClientSession(This,sessionId,sessionName)	\
+    ( (This)->lpVtbl -> AddClientSession(This,sessionId,sessionName) ) 
 
-#define IMidiSessionTracker_UpdateClientSessionName(This,SessionId,SessionName)	\
-    ( (This)->lpVtbl -> UpdateClientSessionName(This,SessionId,SessionName) ) 
+#define IMidiSessionTracker_UpdateClientSessionName(This,sessionId,sessionName)	\
+    ( (This)->lpVtbl -> UpdateClientSessionName(This,sessionId,sessionName) ) 
 
-#define IMidiSessionTracker_RemoveClientSession(This,SessionId)	\
-    ( (This)->lpVtbl -> RemoveClientSession(This,SessionId) ) 
+#define IMidiSessionTracker_RemoveClientSession(This,sessionId)	\
+    ( (This)->lpVtbl -> RemoveClientSession(This,sessionId) ) 
 
-#define IMidiSessionTracker_GetSessionList(This,SessionDetailsList)	\
-    ( (This)->lpVtbl -> GetSessionList(This,SessionDetailsList) ) 
+#define IMidiSessionTracker_GetSessionList(This,sessionDetailsList)	\
+    ( (This)->lpVtbl -> GetSessionList(This,sessionDetailsList) ) 
 
-#define IMidiSessionTracker_VerifyConnectivity(This)	\
-    ( (This)->lpVtbl -> VerifyConnectivity(This) ) 
-
-#define IMidiSessionTracker_Cleanup(This)	\
-    ( (This)->lpVtbl -> Cleanup(This) ) 
+#define IMidiSessionTracker_Shutdown(This)	\
+    ( (This)->lpVtbl -> Shutdown(This) ) 
 
 #endif /* COBJMACROS */
 

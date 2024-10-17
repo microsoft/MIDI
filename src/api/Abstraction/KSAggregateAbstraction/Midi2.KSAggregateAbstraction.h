@@ -23,7 +23,7 @@ using namespace ATL;
 class ATL_NO_VTABLE CMidi2KSAggregateAbstraction :
     public CComObjectRootEx<CComMultiThreadModel>,
     public CComCoClass<CMidi2KSAggregateAbstraction, &CLSID_Midi2KSAggregateAbstraction>,
-    public IMidiAbstraction
+    public IMidiTransport
 {
 public:
     CMidi2KSAggregateAbstraction()
@@ -33,7 +33,7 @@ public:
     DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2KSAGGREGATEABSTRACTION)
 
     BEGIN_COM_MAP(CMidi2KSAggregateAbstraction)
-        COM_INTERFACE_ENTRY(IMidiAbstraction)
+        COM_INTERFACE_ENTRY(IMidiTransport)
     END_COM_MAP()
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()

@@ -303,7 +303,7 @@ MidiNetworkHost::EstablishNewSession()
 
 
 HRESULT 
-MidiNetworkHost::Cleanup()
+MidiNetworkHost::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -321,7 +321,7 @@ MidiNetworkHost::Cleanup()
 
     if (m_advertiser)
     {
-        m_advertiser->Cleanup();
+        m_advertiser->Shutdown();
     }
 
 

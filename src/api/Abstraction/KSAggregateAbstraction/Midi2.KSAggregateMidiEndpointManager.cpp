@@ -53,13 +53,13 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
-    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_midiProtocolManager));
 
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-    m_Watcher = DeviceInformation::CreateWatcher(deviceSelector);
+    m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
 
     auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded);
     auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved);
@@ -67,13 +67,13 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     auto deviceStoppedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped);
     auto deviceEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted);
 
-    m_DeviceAdded = m_Watcher.Added(winrt::auto_revoke, deviceAddedHandler);
-    m_DeviceRemoved = m_Watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
-    m_DeviceUpdated = m_Watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
-    m_DeviceStopped = m_Watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
-    m_DeviceEnumerationCompleted = m_Watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+    m_DeviceAdded = m_watcher.Added(winrt::auto_revoke, deviceAddedHandler);
+    m_DeviceRemoved = m_watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
+    m_DeviceUpdated = m_watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
+    m_DeviceStopped = m_watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
+    m_DeviceEnumerationCompleted = m_watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
 
-    m_Watcher.Start();
+    m_watcher.Start();
 
     // Wait for everything to be created so that they're available immediately after service start.
     m_EnumerationCompleted.wait(10000);
@@ -107,7 +107,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     std::vector<DEVPROPERTY> interfaceDevProperties;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
-    commonProperties.AbstractionLayerGuid = ABSTRACTION_LAYER_GUID;
+    commonProperties.TransportId = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = masterEndpointDefinition.EndpointName.c_str();
     commonProperties.TransportCode = TRANSPORT_CODE;
@@ -230,7 +230,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
 
     LOG_IF_FAILED(
-        swdCreationResult = m_MidiDeviceManager->ActivateEndpoint(
+        swdCreationResult = m_midiDeviceManager->ActivateEndpoint(
             masterEndpointDefinition.ParentDeviceInstanceId.c_str(),
             false,                                  // TODO: create UMP only, handle the MIDI 1.0 compat ports
             MidiFlow::MidiFlowBidirectional,        // bidi only for the UMP endpoint
@@ -626,7 +626,7 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
         );
 
         // notify the device manager using the InstanceId for this midi device
-        LOG_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(device.Id().c_str()));
+        LOG_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(device.Id().c_str()));
 
         // remove the MIDI_PIN_INFO from the list
         m_availableEndpointDefinitions.erase(item);
@@ -670,18 +670,26 @@ CMidi2KSAggregateMidiEndpointManager::Shutdown()
         TraceLoggingPointer(this, "this")
         );
 
-    AbstractionState::Current().Shutdown();
-
-    m_Watcher.Stop();
-    m_EnumerationCompleted.wait(500);
     m_DeviceAdded.revoke();
     m_DeviceRemoved.revoke();
     m_DeviceUpdated.revoke();
     m_DeviceStopped.revoke();
+
     m_DeviceEnumerationCompleted.revoke();
 
-    m_MidiDeviceManager.reset();
-    m_MidiProtocolManager.reset();
+    m_watcher.Stop();
+
+    uint8_t tries{ 0 };
+    while (m_watcher.Status() != DeviceWatcherStatus::Stopped && tries < 50)
+    {
+        Sleep(100);
+        tries++;
+    }
+
+    AbstractionState::Current().Shutdown();
+
+    m_midiDeviceManager.reset();
+    m_midiProtocolManager.reset();
 
     return S_OK;
 }

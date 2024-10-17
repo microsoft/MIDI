@@ -49,8 +49,8 @@ public:
     STDMETHOD(Shutdown)();
 
     STDMETHOD(ProtocolNegotiationCompleteCallback(
-        _In_ GUID transportGuid,
-        _In_ LPCWSTR deviceInterfaceId,
+        _In_ GUID transportId,
+        _In_ LPCWSTR endpointDeviceInterfaceId,
         _In_ PENDPOINTPROTOCOLNEGOTIATIONRESULTS results));
 
 private:
@@ -62,8 +62,8 @@ private:
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
-    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
+    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_midiProtocolManager;
 
     std::vector<std::unique_ptr<MIDI_PIN_INFO>> m_AvailableMidiPins;
     

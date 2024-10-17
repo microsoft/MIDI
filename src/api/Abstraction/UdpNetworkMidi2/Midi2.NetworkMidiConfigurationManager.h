@@ -12,13 +12,13 @@
 class CMidi2NetworkMidiConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiAbstractionConfigurationManager>
+    IMidiTransportConfigurationManager>
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IUnknown* midiDeviceManager, _In_ IUnknown* midiServiceConfigurationManagerInterface));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _In_ BOOL isFromConfigurationFile, _Out_ BSTR* Response));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManagerInterface* midiDeviceManager, _In_ IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface));
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _Out_ LPWSTR* Response));
+    STDMETHOD(Shutdown)();
 
     STDMETHOD(ValidateHostDefinition(_In_ MidiNetworkUdpHostDefinition& definition, _Out_ winrt::hstring& errorMessage));
 //    STDMETHOD(ValidateClientDefinition(_In_ MidiNetworkUdpClientDefinition& definition));

@@ -13,7 +13,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvOut::Initialize(
     LPCWSTR device,
-    PABSTRACTIONCREATIONPARAMS creationParams,
+    PTRANSPORTCREATIONPARAMS creationParams,
     DWORD * mmcssTaskId,
     GUID sessionId
 )

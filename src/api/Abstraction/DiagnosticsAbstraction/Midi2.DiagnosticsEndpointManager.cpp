@@ -146,7 +146,7 @@ CMidi2DiagnosticsEndpointManager::CreateLoopbackEndpoint(
     wil::unique_cotaskmem_string newDeviceInterfaceId;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
-    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.TransportId = m_TransportAbstractionId;
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType_DiagnosticLoopback;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
@@ -237,7 +237,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
     wil::unique_cotaskmem_string newDeviceInterfaceId;
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
-    commonProperties.AbstractionLayerGuid = m_TransportAbstractionId;
+    commonProperties.TransportId = m_TransportAbstractionId;
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType_DiagnosticLoopback;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();

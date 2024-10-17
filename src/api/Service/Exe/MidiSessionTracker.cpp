@@ -535,7 +535,7 @@ CMidiSessionTracker::RemoveClientEndpointConnection(
 _Use_decl_annotations_
 HRESULT 
 CMidiSessionTracker::GetSessionList(
-    BSTR* sessionList
+    LPWSTR* sessionList
 )
 {
     TraceLoggingWrite(

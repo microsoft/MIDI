@@ -30,7 +30,7 @@ MidiNetworkClientSession::Initialize()
 
 
 HRESULT 
-MidiNetworkClientSession::Cleanup()
+MidiNetworkClientSession::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

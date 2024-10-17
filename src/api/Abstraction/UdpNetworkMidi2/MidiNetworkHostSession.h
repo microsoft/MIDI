@@ -27,7 +27,7 @@ public:
     HRESULT ReceiveMidiMessagesFromNetwork(_In_ uint16_t const sequenceNumber, _In_ std::vector<uint32_t> const& words);
     HRESULT SendMidiMessageToNetwork();
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 
 private:

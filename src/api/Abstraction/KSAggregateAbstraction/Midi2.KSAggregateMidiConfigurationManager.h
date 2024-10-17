@@ -12,12 +12,16 @@
 class CMidi2KSAggregateMidiConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiAbstractionConfigurationManager>
+    IMidiTransportConfigurationManager>
 {
 public:
 
-    STDMETHOD(Initialize(_In_ GUID abstractionGuid, _In_ IMidiDeviceManagerInterface* deviceManagerInterface, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* response));
+    STDMETHOD(Initialize(
+        _In_ GUID transportId, 
+        _In_ IMidiDeviceManagerInterface* deviceManagerInterface, 
+        _In_ IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface));
+    
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Out_ LPWSTR* responseJson));
     STDMETHOD(Shutdown)();
 
     // internal method called after endpoint creation
@@ -33,8 +37,8 @@ public:
 private:
 //    std::vector<std::unique_ptr<ConfigUpdateForEndpoint>> m_CachedConfigurationUpdates{};
 
-    wil::com_ptr_nothrow<IMidiServiceConfigurationManagerInterface> m_MidiServiceConfigurationManagerInterface;
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
+    wil::com_ptr_nothrow<IMidiServiceConfigurationManagerInterface> m_midiServiceConfigurationManagerInterface;
+    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
 
     //HRESULT ApplyUserConfiguration(_In_ std::wstring deviceInterfaceId);
 

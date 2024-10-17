@@ -15,7 +15,7 @@ class CMidi2KSAggregateMidiBiDi :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ GUID));
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSPORTCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ GUID));
     STDMETHOD(SendMidiMessage(_In_ PVOID , _In_ UINT , _In_ LONGLONG));
     STDMETHOD(Shutdown)();
 
@@ -23,7 +23,7 @@ private:
     std::wstring m_endpointDeviceId{};
     std::atomic<uint64_t> m_countMidiMessageSent{};
 
-    std::unique_ptr<CMidi2KSAggregateMidi> m_MidiDevice;
+    std::unique_ptr<CMidi2KSAggregateMidi> m_midiDevice;
 
 
 

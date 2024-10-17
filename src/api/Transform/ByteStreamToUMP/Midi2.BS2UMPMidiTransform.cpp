@@ -29,7 +29,7 @@ CMidi2BS2UMPMidiTransform::Initialize(
     m_Device = device;
     m_Callback = callback;
 
-    m_BS2UMP.outputMIDI2 = false;
+    //m_BS2UMP.outputMIDI2 = false;
 
     if (IS_VALID_GROUP_INDEX(creationParams->UmpGroupIndex))
     {

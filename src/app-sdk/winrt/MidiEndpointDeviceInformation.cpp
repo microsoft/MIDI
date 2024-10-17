@@ -159,8 +159,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
         additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
 
-        additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedEndpointName);
-        additionalProperties.Append(STRING_PKEY_MIDI_TransportSuppliedDescription);
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointName);
+        additionalProperties.Append(STRING_PKEY_MIDI_Description);
 
 
 
@@ -201,10 +201,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
 
         // User-supplied metadata ============================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedEndpointName);
-        additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedLargeImagePath);
-        additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedSmallImagePath);
-        additionalProperties.Append(STRING_PKEY_MIDI_UserSuppliedDescription);
+        additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
+        additionalProperties.Append(STRING_PKEY_MIDI_CustomLargeImagePath);
+        additionalProperties.Append(STRING_PKEY_MIDI_CustomSmallImagePath);
+        additionalProperties.Append(STRING_PKEY_MIDI_CustomDescription);
        
         // Additional Capabilities ============================================================
         additionalProperties.Append(STRING_PKEY_MIDI_RequiresNoteOffTranslation);
@@ -222,7 +222,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
 
         additionalProperties.Append(STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks);
-        additionalProperties.Append(STRING_PKEY_MIDI_MidiOutUserSuppliedLatencyTicks);
+        additionalProperties.Append(STRING_PKEY_MIDI_MidiOutCustomLatencyTicks);
         additionalProperties.Append(STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride);
 
 
@@ -681,11 +681,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiEndpointUserSuppliedInfo info{};
 
-        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_UserSuppliedEndpointName, L"");
-        info.Description = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_UserSuppliedDescription, L"");
+        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_CustomEndpointName, L"");
+        info.Description = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_CustomDescription, L"");
         
-        info.LargeImagePath = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_UserSuppliedLargeImagePath, L"");
-        info.SmallImagePath = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_UserSuppliedSmallImagePath, L"");
+        info.LargeImagePath = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_CustomLargeImagePath, L"");
+        info.SmallImagePath = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_CustomSmallImagePath, L"");
 
         info.RequiresNoteOffTranslation = GetProperty<bool>(STRING_PKEY_MIDI_RequiresNoteOffTranslation, false);
         info.SupportsMidiPolyphonicExpression = GetProperty<bool>(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false);
@@ -698,8 +698,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiEndpointTransportSuppliedInfo info{};
 
-        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_TransportSuppliedEndpointName, L"");
-        info.Description = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_TransportSuppliedDescription, L"");
+        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_EndpointName, L"");
+        info.Description = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_Description, L"");
 
 //        info.LargeImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedLargeImagePath, L"");
 //        info.SmallImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedSmallImagePath, L"");
@@ -715,9 +715,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         auto formatProperty = GetProperty<uint8_t>(STRING_PKEY_MIDI_NativeDataFormat, 0);
 
-        if (formatProperty == MIDI_PROP_NATIVEDATAFORMAT_BYTESTREAM)
+        if (formatProperty == MidiDataFormats::MidiDataFormats_ByteStream)
             info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::Midi1ByteFormat;
-        else if (formatProperty == MIDI_PROP_NATIVEDATAFORMAT_UMP)
+        else if (formatProperty == MidiDataFormats::MidiDataFormats_UMP)
             info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat;
         else
             info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::Unknown;

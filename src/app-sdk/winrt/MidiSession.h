@@ -73,7 +73,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // everything in the session needs to use this service abstraction because the
         // context handle is tied to it.
-        winrt::com_ptr<IMidiAbstraction> m_serviceAbstraction;
+        winrt::com_ptr<IMidiTransport> m_serviceAbstraction;
         winrt::com_ptr<IMidiSessionTracker> m_sessionTracker;
 
         // key is the unique guid for the connection

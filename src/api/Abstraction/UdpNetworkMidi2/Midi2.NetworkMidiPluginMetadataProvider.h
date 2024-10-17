@@ -12,13 +12,13 @@
 class CMidi2NetworkMidiPluginMetadataProvider :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiServiceAbstractionPluginMetadataProvider>
+    IMidiServiceTransportPluginMetadataProvider>
 
 {
 public:
     STDMETHOD(Initialize());
-    STDMETHOD(GetMetadata(_Out_ PABSTRACTIONMETADATA metadata));
-    STDMETHOD(Cleanup)();
+    STDMETHOD(GetMetadata(_Out_ PTRANSPORTMETADATA metadata));
+    STDMETHOD(Shutdown)();
 
 private:
 

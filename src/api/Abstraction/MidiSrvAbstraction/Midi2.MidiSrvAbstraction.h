@@ -28,7 +28,7 @@ using namespace ATL;
 class ATL_NO_VTABLE CMidi2MidiSrvAbstraction : 
     public CComObjectRootEx<CComMultiThreadModel>,
     public CComCoClass<CMidi2MidiSrvAbstraction, &CLSID_Midi2MidiSrvAbstraction>,
-    public IMidiAbstraction
+    public IMidiTransport
 {
 public:
     CMidi2MidiSrvAbstraction()
@@ -38,7 +38,7 @@ public:
     DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2MIDISRVABSTRACTION)
 
     BEGIN_COM_MAP(CMidi2MidiSrvAbstraction)
-        COM_INTERFACE_ENTRY(IMidiAbstraction)
+        COM_INTERFACE_ENTRY(IMidiTransport)
     END_COM_MAP()
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()

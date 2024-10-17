@@ -50,17 +50,44 @@ public:
     
 
     // These are called from within the service
-    STDMETHOD(IsValidSession)(_In_ GUID SessionId, _In_ DWORD ClientProcessId);
-    STDMETHOD(AddClientSession)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, _In_ DWORD ClientProcessId, _In_ wil::unique_handle& ClientProcessHandle, _Out_opt_ PVOID* ContextHandle);
-    STDMETHOD(AddClientEndpointConnection)(_In_ GUID SessionId, _In_ DWORD ClientProcessId, _In_ LPCWSTR ConnectionEndpointInterfaceId, _In_ MidiClientHandle ClientHandle);
-    STDMETHOD(UpdateClientSessionName)(_In_ GUID SessionId, _In_ LPCWSTR SessionName, DWORD ClientProcessId);
-    STDMETHOD(RemoveClientSession)(_In_ GUID SessionId, _In_ DWORD ClientProcessId);
-    STDMETHOD(RemoveClientEndpointConnection)(_In_ GUID SessionId, _In_ DWORD ClientProcessId, _In_ LPCWSTR ConnectionEndpointInterfaceId, _In_ MidiClientHandle ClientHandle);
+    STDMETHOD(IsValidSession)(
+        _In_ GUID sessionId, 
+        _In_ DWORD clientProcessId);
 
-    STDMETHOD(RemoveClientSessionInternal)(_In_ PVOID ContextHandle);
+    STDMETHOD(AddClientSession)(
+        _In_ GUID sessionId, 
+        _In_ LPCWSTR sessionName, 
+        _In_ DWORD clientProcessId, 
+        _In_ wil::unique_handle& clientProcessHandle, 
+        _Out_opt_ PVOID* contextHandle);
+
+    STDMETHOD(AddClientEndpointConnection)(
+        _In_ GUID sessionId, 
+        _In_ DWORD clientProcessId, 
+        _In_ LPCWSTR connectionEndpointInterfaceId, 
+        _In_ MidiClientHandle clientHandle);
+
+    STDMETHOD(UpdateClientSessionName)(
+        _In_ GUID sessionId, 
+        _In_ LPCWSTR sessionName, 
+        DWORD clientProcessId);
+
+    STDMETHOD(RemoveClientSession)(
+        _In_ GUID sessionId, 
+        _In_ DWORD clientProcessId);
+
+    STDMETHOD(RemoveClientEndpointConnection)(
+        _In_ GUID sessionId, 
+        _In_ DWORD clientProcessId, 
+        _In_ LPCWSTR connectionEndpointInterfaceId, 
+        _In_ MidiClientHandle clientHandle);
+
+    STDMETHOD(RemoveClientSessionInternal)(
+        _In_ PVOID contextHandle);
 
     // This is called from the SDK
-    STDMETHOD(GetSessionList)(_Out_ BSTR* SessionList);
+    STDMETHOD(GetSessionList)(
+        _Out_ LPWSTR* sessionList);
     //STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
 
     STDMETHOD(VerifyConnectivity)();

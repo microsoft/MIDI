@@ -40,8 +40,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection, 
-    BOOL isFromConfigurationFile,
-    BSTR* response
+    LPWSTR* response
 )
 {
     TraceLoggingWrite(
@@ -67,25 +66,9 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
 
 
-    // This abstraction doesn't support creating endpoints from the configuration file.
-    // They are for runtime creation only.
-    if (isFromConfigurationFile)
+    if (configurationJsonSection == nullptr)
     {
-        TraceLoggingWrite(
-            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Virtual endpoints can be created only at runtime through the API, not from the configuration file.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-
-        // we return S_OK here because this can happen at service startup, and no reason to log an error here
-        return S_OK;
-    }
-    else if (configurationJsonSection == nullptr)
-    {
-        internal::JsonStringifyObjectToOutParam(responseObject, &response);
+        internal::JsonStringifyObjectToOutParam(responseObject, response);
 
         RETURN_IF_FAILED(E_INVALIDARG);
     }
@@ -103,7 +86,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
                 TraceLoggingWideString(configurationJsonSection, "json")
             );
 
-            internal::JsonStringifyObjectToOutParam(responseObject, &response);
+            internal::JsonStringifyObjectToOutParam(responseObject, response);
 
             RETURN_IF_FAILED(E_INVALIDARG);
         }
@@ -116,7 +99,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
             // TODO: Set the response to something meaningful here
 
-            internal::JsonStringifyObjectToOutParam(responseObject, &response);
+            internal::JsonStringifyObjectToOutParam(responseObject, response);
 
             return S_OK;
         }
@@ -184,7 +167,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
                 }
 
-                internal::JsonStringifyObjectToOutParam(responseObject, &response);
+                internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                 // create the device-side endpoint. This is a critical step
                 RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateDeviceSideEndpoint(deviceEntry));
@@ -222,7 +205,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
     );
 
     // return the json with the information the client will need
-    internal::JsonStringifyObjectToOutParam(responseObject, &response);
+    internal::JsonStringifyObjectToOutParam(responseObject, response);
 
     return S_OK;
 }

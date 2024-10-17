@@ -25,40 +25,40 @@ public:
 
     // given a JSON object with create/update/remove child keys, 
     // will return the contents of any create key
-    STDMETHOD(GetAbstractionCreateActionJsonObject)(
-        _In_ LPCWSTR sourceAbstractionJson,
-        _Out_ BSTR* responseJson
+    STDMETHOD(GetTransportCreateActionEntry)(
+        _In_ LPCWSTR sourceTransportJson,
+        _Out_ LPWSTR* responseJson
         );
 
     // given a JSON object with create/update/remove child keys, 
     // will return the contents of any update key
-    STDMETHOD(GetAbstractionUpdateActionJsonObject)(
-        _In_ LPCWSTR sourceAbstractionJson,
-        _Out_ BSTR* responseJson
+    STDMETHOD(GetTransportUpdateActionEntry)(
+        _In_ LPCWSTR sourceTransportJson,
+        _Out_ LPWSTR* responseJson
         );
 
     // given a JSON object with create/update/remove child keys, 
     // will return the contents of any remove key
-    STDMETHOD(GetAbstractionRemoveActionJsonObject)(
-        _In_ LPCWSTR sourceAbstractionJson,
-        _Out_ BSTR* responseJson
+    STDMETHOD(GetTransportRemoveActionEntry)(
+        _In_ LPCWSTR sourceTransportJson,
+        _Out_ LPWSTR* responseJson
         );
 
     // given the contents of a create/update/remove object, will return the object which matches the criteria
     // provided in the searchKeyValuePairsJson json object
-    STDMETHOD(GetAbstractionMatchingEndpointJsonObject)(
+    STDMETHOD(GetMatchingEndpointEntry)(
         _In_ LPCWSTR sourceActionObjectJson,
         _In_ LPCWSTR searchKeyValuePairsJson,
-        _Out_ BSTR* responseJson
+        _Out_ LPWSTR* responseJson
         );
 
     // Uses the internal cache of config file entries and returns any matching update json for the 
     // specified abstraction. This is needed for abstractions that create devices after the initial
     // configuration has been read.
-    STDMETHOD(GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject)(
-        _In_ GUID abstractionId,
+    STDMETHOD(GetCachedEndpointUpdateEntry)(
+        _In_ GUID transportId,
         _In_ LPCWSTR searchKeyValuePairsJson,
-        _Out_ BSTR* responseJson
+        _Out_ LPWSTR* responseJson
     );
 
 
@@ -69,21 +69,21 @@ public:
 
 
 
-    std::vector<GUID> GetEnabledTransportAbstractionLayers() const noexcept;
+    std::vector<GUID> GetEnabledTransports() const noexcept;
     std::vector<GUID> GetEnabledEndpointProcessingTransforms() const noexcept;
 
-    std::vector<ABSTRACTIONMETADATA> GetAllEnabledTransportAbstractionLayerMetadata() const noexcept;
+    std::vector<TRANSPORTMETADATA> GetAllEnabledTransportMetadata() const noexcept;
 
 
 
-    std::wstring GetSavedConfigurationForTransportAbstraction(
+    std::wstring GetSavedConfigurationForTransport(
         _In_ GUID abstractionGuid) const noexcept;
 
     std::wstring GetSavedConfigurationForEndpointProcessingTransform(
         _In_ GUID abstractionGuid) const noexcept;
 
 
-    std::map<GUID, std::wstring, GUIDCompare> GetTransportAbstractionSettingsFromJsonString(
+    std::map<GUID, std::wstring, GUIDCompare> GetTransportSettingsFromJsonString(
         _In_ std::wstring json) const noexcept;
 
 

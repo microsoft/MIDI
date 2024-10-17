@@ -135,7 +135,7 @@ MidiNetworkAdvertiser::Advertise(
 
 
 HRESULT 
-MidiNetworkAdvertiser::Cleanup()
+MidiNetworkAdvertiser::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

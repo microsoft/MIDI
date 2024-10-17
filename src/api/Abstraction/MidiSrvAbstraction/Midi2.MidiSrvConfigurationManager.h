@@ -11,17 +11,21 @@
 class CMidi2MidiSrvConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiAbstractionConfigurationManager,
+    IMidiTransportConfigurationManager,
     IMidiServicePluginMetadataReporterInterface>
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID abstractionGuid, _In_ IMidiDeviceManagerInterface* deviceManagerInterface, _In_ IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* response));
+    STDMETHOD(Initialize(
+        _In_ GUID transportId, 
+        _In_ IMidiDeviceManagerInterface* deviceManagerInterface, 
+        _In_ IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface));
+
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Out_ LPWSTR* responseJson));
     STDMETHOD(Shutdown)();
 
 
-    STDMETHOD(GetAbstractionList(_Out_ BSTR* AbstractionListJson));
-    STDMETHOD(GetTransformList(_Out_ BSTR* TransformListJson));
+    STDMETHOD(GetTransportList(_Out_ LPWSTR* transportListJson));
+    STDMETHOD(GetTransformList(_Out_ LPWSTR* transformListJson));
 
 private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;

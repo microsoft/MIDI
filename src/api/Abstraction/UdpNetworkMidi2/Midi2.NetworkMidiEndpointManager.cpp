@@ -20,8 +20,8 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::Initialize(
-    IUnknown* midiDeviceManager,
-    IUnknown* /*midiEndpointProtocolManager*/
+    IMidiDeviceManagerInterface* midiDeviceManager,
+    IMidiEndpointProtocolManagerInterface* /*midiEndpointProtocolManager*/
 )
 {
     TraceLoggingWrite(
@@ -70,15 +70,13 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
     createInfo.pszDeviceDescription = parentDeviceName.c_str();
     createInfo.pContainerId = &m_containerId;
 
-    const ULONG deviceIdMaxSize = 255;
-    wchar_t newDeviceId[deviceIdMaxSize]{ 0 };
+    LPWSTR newDeviceId;
 
     RETURN_IF_FAILED(m_midiDeviceManager->ActivateVirtualParentDevice(
         0,
         nullptr,
         &createInfo,
-        (PWSTR)newDeviceId,
-        deviceIdMaxSize
+        (LPWSTR*)&newDeviceId
     ));
 
     m_parentDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceId);
@@ -112,7 +110,7 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 
 
 HRESULT
-CMidi2NetworkMidiEndpointManager::Cleanup()
+CMidi2NetworkMidiEndpointManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

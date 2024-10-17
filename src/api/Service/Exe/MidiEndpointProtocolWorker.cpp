@@ -13,7 +13,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolWorker::Initialize(
     GUID sessionId,
-    GUID abstractionGuid,
+    GUID transportId,
     LPCWSTR endpointDeviceInterfaceId,
     std::shared_ptr<CMidiClientManager>& clientManager,
     std::shared_ptr<CMidiDeviceManager>& deviceManager,
@@ -30,7 +30,7 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    m_abstractionGuid = abstractionGuid;
+    m_abstractionId = transportId;
     m_sessionId = sessionId;
     m_deviceInterfaceId = endpointDeviceInterfaceId;
 
@@ -173,10 +173,10 @@ CMidiEndpointProtocolWorker::Start(
         // we do this here instead of in initialize so this is created on the worker thread
         if (!m_midiBiDiDevice)
         {
-            wil::com_ptr_nothrow<IMidiAbstraction> serviceAbstraction{ nullptr };
+            wil::com_ptr_nothrow<IMidiTransport> serviceAbstraction{ nullptr };
 
             // we only support UMP data format for protocol negotiation
-            ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
+            TRANSPORTCREATIONPARAMS abstractionCreationParams{ };
             abstractionCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
 
             DWORD mmcssTaskId{ 0 };
@@ -463,7 +463,7 @@ CMidiEndpointProtocolWorker::Start(
             );
 
             LOG_IF_FAILED(m_negotiationCompleteCallback->ProtocolNegotiationCompleteCallback(
-                m_abstractionGuid, 
+                m_abstractionId, 
                 m_deviceInterfaceId.c_str(), 
                 &m_mostRecentResults
                 )

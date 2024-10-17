@@ -31,7 +31,7 @@ CMidiDevicePipe::Initialize(
 
     auto deviceLock = m_DevicePipeLock.lock();
 
-    ABSTRACTIONCREATIONPARAMS abstractionCreationParams;
+    TRANSPORTCREATIONPARAMS abstractionCreationParams;
 
     RETURN_IF_FAILED(CMidiPipe::Initialize(device, creationParams->Flow));
 
@@ -65,7 +65,7 @@ CMidiDevicePipe::Initialize(
             TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
@@ -84,7 +84,7 @@ CMidiDevicePipe::Initialize(
         );
 
 
-        wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&m_MidiInDevice));
@@ -102,7 +102,7 @@ CMidiDevicePipe::Initialize(
             TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
 
         RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
         RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiOut), (void**)&m_MidiOutDevice));

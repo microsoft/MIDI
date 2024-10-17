@@ -17,7 +17,7 @@ HRESULT
 CMidi2KSMidi::Initialize(
     LPCWSTR device,
     MidiFlow flow,
-    PABSTRACTIONCREATIONPARAMS creationParams,
+    PTRANSPORTCREATIONPARAMS creationParams,
     DWORD * mmcssTaskId,
     IMidiCallback * callback,
     LONGLONG context

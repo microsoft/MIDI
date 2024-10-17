@@ -13,7 +13,7 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
     interface IMidiServiceTransportPluginConfig
     {
         Guid TransportId { get; };
-        Boolean IsFromCurrentConfigFile{ get; };
+        //Boolean IsFromCurrentConfigFile{ get; };
 
         String GetConfigJson();
     }

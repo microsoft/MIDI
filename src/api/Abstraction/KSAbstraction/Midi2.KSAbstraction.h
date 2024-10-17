@@ -22,7 +22,7 @@ using namespace ATL;
 class ATL_NO_VTABLE CMidi2KSAbstraction : 
     public CComObjectRootEx<CComMultiThreadModel>,
     public CComCoClass<CMidi2KSAbstraction, &CLSID_Midi2KSAbstraction>,
-    public IMidiAbstraction
+    public IMidiTransport
 {
 public:
     CMidi2KSAbstraction()
@@ -32,7 +32,7 @@ public:
     DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2KSABSTRACTION)
 
     BEGIN_COM_MAP(CMidi2KSAbstraction)
-        COM_INTERFACE_ENTRY(IMidiAbstraction)
+        COM_INTERFACE_ENTRY(IMidiTransport)
     END_COM_MAP()
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()

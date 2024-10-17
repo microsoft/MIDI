@@ -14,7 +14,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBiDi::Initialize(
     LPCWSTR,
-    PABSTRACTIONCREATIONPARAMS,
+    PTRANSPORTCREATIONPARAMS,
     DWORD *,
     IMidiCallback * callback,
     LONGLONG context,
@@ -37,7 +37,7 @@ CMidi2NetworkMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2NetworkMidiBiDi::Cleanup()
+CMidi2NetworkMidiBiDi::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

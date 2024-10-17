@@ -14,7 +14,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiBiDi::Initialize(
     LPCWSTR endpointId,
-    PABSTRACTIONCREATIONPARAMS,
+    PTRANSPORTCREATIONPARAMS,
     DWORD *,
     IMidiCallback * callback,
     LONGLONG context,

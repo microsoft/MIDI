@@ -13,13 +13,13 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsMidiConfigurationManager::Initialize(
-    GUID abstractionId,
+    GUID transportId,
     IMidiDeviceManagerInterface* midiDeviceManager,
     IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface
 )
 {
     UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
-    UNREFERENCED_PARAMETER(abstractionId);
+    UNREFERENCED_PARAMETER(transportId);
 
 
     TraceLoggingWrite(
@@ -31,7 +31,7 @@ CMidi2DiagnosticsMidiConfigurationManager::Initialize(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
 
     return S_OK;
 }
@@ -40,8 +40,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
-    BOOL isFromConfigurationFile,
-    BSTR* response)
+    LPWSTR* response)
 {
     TraceLoggingWrite(
         MidiDiagnosticsAbstractionTelemetryProvider::Provider(),
@@ -53,7 +52,6 @@ CMidi2DiagnosticsMidiConfigurationManager::UpdateConfiguration(
 
 
     UNREFERENCED_PARAMETER(configurationJsonSection);
-    UNREFERENCED_PARAMETER(isFromConfigurationFile);
     UNREFERENCED_PARAMETER(response);
 
     return E_NOTIMPL;
@@ -70,7 +68,7 @@ CMidi2DiagnosticsMidiConfigurationManager::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
-    m_MidiDeviceManager.reset();
+    m_midiDeviceManager.reset();
 
     return S_OK;
 }

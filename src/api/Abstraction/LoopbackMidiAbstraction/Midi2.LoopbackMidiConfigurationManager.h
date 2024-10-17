@@ -12,12 +12,12 @@
 class CMidi2LoopbackMidiConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiAbstractionConfigurationManager>
+    IMidiTransportConfigurationManager>
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IMidiDeviceManagerInterface* MidiDeviceManager, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* Response));
+    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManagerInterface* MidiDeviceManager, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _Out_ LPWSTR* Response));
     STDMETHOD(Shutdown)();
 
 private:

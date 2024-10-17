@@ -24,9 +24,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
 
         static json::JsonObject InternalSendConfigJsonAndGetResponse(
-            _In_ winrt::guid const& abstractionId, 
-            _In_ json::JsonObject const& configObject,
-            _In_ bool const isFromCurrentConfigFile) noexcept;
+            _In_ winrt::guid const& transportId, 
+            _In_ json::JsonObject const& configObject) noexcept;
 
     private:
 

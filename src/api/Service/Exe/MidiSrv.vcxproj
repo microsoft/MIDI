@@ -146,7 +146,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)VSFiles\ARM64EC\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -163,7 +163,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)VSFiles\ARM64EC\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -190,7 +190,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)VSFiles\ARM64EC\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -207,7 +207,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)VSFiles\ARM64EC\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -231,7 +231,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)VSFiles\x64\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -253,7 +253,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)VSFiles\x64\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>

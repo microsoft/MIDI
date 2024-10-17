@@ -53,7 +53,7 @@ CMidi2KSAggregateAbstraction::Activate(
 
         RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->QueryInterface(iid, activatedInterface));
     }
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == iid)
+    else if (__uuidof(IMidiTransportConfigurationManager) == iid)
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -73,7 +73,7 @@ CMidi2KSAggregateAbstraction::Activate(
         RETURN_IF_FAILED(AbstractionState::Current().GetConfigurationManager()->QueryInterface(iid, activatedInterface));
     }
 
-    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == iid)
+    else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == iid)
     {
         TraceLoggingWrite(
             MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -84,7 +84,7 @@ CMidi2KSAggregateAbstraction::Activate(
             TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiPluginMetadataProvider>(&metadataProvider));
         *activatedInterface = metadataProvider.detach();
     }

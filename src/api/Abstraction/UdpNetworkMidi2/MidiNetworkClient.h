@@ -22,7 +22,7 @@ class MidiNetworkClient
 public:
     HRESULT Initialize(_In_ MidiNetworkUdpClientDefinition& clientDefinition);
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
     // this will need to take the incoming packet and then route it to the 
