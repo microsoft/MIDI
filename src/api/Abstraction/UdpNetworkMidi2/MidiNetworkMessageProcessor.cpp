@@ -45,7 +45,7 @@ MidiNetworkMessageProcessor::SendUmpWithForwardErrorCorrection()
 
 
 HRESULT 
-MidiNetworkMessageProcessor::Cleanup()
+MidiNetworkMessageProcessor::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

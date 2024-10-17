@@ -28,7 +28,7 @@ public:
         _In_ winrt::hstring const& midiProductInstanceId
     );
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
 

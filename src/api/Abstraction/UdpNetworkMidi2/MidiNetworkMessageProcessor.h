@@ -19,7 +19,7 @@ public:
     HRESULT SendUmpWithForwardErrorCorrection();
 
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
 

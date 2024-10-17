@@ -70,7 +70,7 @@ public:
 
     HRESULT Start();
 
-    HRESULT Cleanup();
+    HRESULT Shutdown();
 
 private:
     // this will need to take the incoming packet and then route it to the 

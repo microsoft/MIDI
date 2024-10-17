@@ -56,7 +56,7 @@ CMidi2NetworkMidiTransport::Activate(
     }
 
 
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == riid)
+    else if (__uuidof(IMidiTransportConfigurationManager) == riid)
     {
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -76,7 +76,7 @@ CMidi2NetworkMidiTransport::Activate(
         RETURN_IF_FAILED(TransportState::Current().GetConfigurationManager()->QueryInterface(riid, requestedInterface));
     }
 
-    else if (__uuidof(IMidiServiceAbstractionPluginMetadataProvider) == riid)
+    else if (__uuidof(IMidiServiceTransportPluginMetadataProvider) == riid)
     {
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -87,7 +87,7 @@ CMidi2NetworkMidiTransport::Activate(
             TraceLoggingWideString(L"IMidiServiceAbstractionPluginMetadataProvider", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> metadataProvider;
+        wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> metadataProvider;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiPluginMetadataProvider>(&metadataProvider));
         *requestedInterface = metadataProvider.detach();
     }
