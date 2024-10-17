@@ -13,13 +13,13 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiInProxy::Initialize(
+CMidi2KSAggregateMidiOutProxy::Initialize(
     LPCWSTR endpointDeviceInterfaceId,
     HANDLE filter,
     UINT pinId,
     ULONG bufferSize,
     DWORD* mmcssTaskId,
-    IMidiCallback* callback,
+    IMidiCallback* callback,        // callback here is the actual MIDI output
     LONGLONG context,
     BYTE groupIndex
 )
@@ -33,7 +33,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
         TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingUInt32(pinId, "Pin id"),
         TraceLoggingUInt8(groupIndex, "Group index")
-        );
+    );
 
     m_callback = callback;
     m_context = context;
@@ -45,7 +45,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 
     // create the KS device and add to our runtime map
     //m_device.reset(new (std::nothrow) KSMidiInDevice());
-    m_device = std::make_unique<KSMidiInDevice>();
+    m_device = std::make_unique<KSMidiOutDevice>();
     RETURN_IF_NULL_ALLOC(m_device);
 
     auto initResult =
@@ -55,9 +55,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
             pinId,
             MidiTransport::MidiTransport_StandardByteStream,
             bufferSize,
-            mmcssTaskId,
-            (IMidiCallback* )this,
-            context
+            mmcssTaskId
         );
 
     if (FAILED(initResult))
@@ -81,52 +79,42 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 
     wil::com_ptr_nothrow<IMidiTransform> transformPlugin;
 
-    auto transformId = __uuidof(Midi2BS2UMPTransform);
+    auto transformId = __uuidof(Midi2UMP2BSTransform);
 
     RETURN_IF_FAILED(CoCreateInstance(transformId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformPlugin)));
 
-    RETURN_IF_FAILED(transformPlugin->Activate(__uuidof(IMidiDataTransform), (void**)(&m_bs2UmpTransform)));
+    RETURN_IF_FAILED(transformPlugin->Activate(__uuidof(IMidiDataTransform), (void**)(&m_ump2BSTransform)));
+
 
     TRANSFORMCREATIONPARAMS creationParams{};
-    creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_ByteStream;
-    creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
+    creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_UMP;
+    creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_ByteStream;
     creationParams.UmpGroupIndex = groupIndex;
 
-    RETURN_IF_FAILED(m_bs2UmpTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, m_callback, 0, nullptr));
+    // the transform sends the results directly to the specified callback
+    RETURN_IF_FAILED(m_ump2BSTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, m_callback, m_context, nullptr));
 
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiInProxy::Callback(
-    PVOID data, 
+CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
+    PVOID data,
     UINT length,
-    LONGLONG timestamp,
-    LONGLONG /* context */
+    LONGLONG timestamp
 )
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
-    RETURN_HR_IF_NULL(E_POINTER, m_callback);
-    RETURN_HR_IF_NULL(E_POINTER, m_bs2UmpTransform);
+    //RETURN_HR_IF_NULL(E_POINTER, m_callback);
+    RETURN_HR_IF_NULL(E_POINTER, m_ump2BSTransform);
 
-    //TraceLoggingWrite(
-    //    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_VERBOSE,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(L"Callback received from device. Sending data to next callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-    //    TraceLoggingUInt32(length, "data length"),
-    //    TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-    //);
-
-    // the callback for the transform is wired up in initialize
-    return m_bs2UmpTransform->SendMidiMessage(data, length, timestamp);
+    return m_ump2BSTransform->SendMidiMessage(data, length, timestamp);
 }
 
+
 HRESULT
-CMidi2KSAggregateMidiInProxy::Shutdown()
+CMidi2KSAggregateMidiOutProxy::Shutdown()
 {
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -141,10 +129,10 @@ CMidi2KSAggregateMidiInProxy::Shutdown()
 
     m_callback = nullptr;
 
-    if (m_bs2UmpTransform)
+    if (m_ump2BSTransform)
     {
-        m_bs2UmpTransform->Shutdown();
-        m_bs2UmpTransform.reset();
+        m_ump2BSTransform->Shutdown();
+        m_ump2BSTransform.reset();
     }
 
     if (m_device)

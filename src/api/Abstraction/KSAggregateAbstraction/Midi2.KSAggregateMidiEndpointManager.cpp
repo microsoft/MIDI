@@ -670,15 +670,23 @@ CMidi2KSAggregateMidiEndpointManager::Shutdown()
         TraceLoggingPointer(this, "this")
         );
 
-    AbstractionState::Current().Shutdown();
-
-    m_watcher.Stop();
-    m_EnumerationCompleted.wait(500);
     m_DeviceAdded.revoke();
     m_DeviceRemoved.revoke();
     m_DeviceUpdated.revoke();
     m_DeviceStopped.revoke();
+
     m_DeviceEnumerationCompleted.revoke();
+
+    m_watcher.Stop();
+
+    uint8_t tries{ 0 };
+    while (m_watcher.Status() != DeviceWatcherStatus::Stopped && tries < 50)
+    {
+        Sleep(100);
+        tries++;
+    }
+
+    AbstractionState::Current().Shutdown();
 
     m_midiDeviceManager.reset();
     m_midiProtocolManager.reset();

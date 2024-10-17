@@ -103,15 +103,21 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "Midi2BS2UMPTransform.h"
 #include "Midi2BS2UMPTransform_i.c"
 
+#include "Midi2UMP2BSTransform.h"
+#include "Midi2UMP2BSTransform_i.c"
+
+
 
 class CMidi2KSAggregateMidiEndpointManager;
 class CMidi2KSAggregateMidiInProxy;
+class CMidi2KSAggregateMidiOutProxy;
 class CMidi2KSAggregateMidiConfigurationManager;
 class CMidi2KSAggregateMidiBiDi;
 class AbstractionState;
 
 #include "Midi2.KSAggregateAbstraction.h"
 #include "Midi2.KSAggregateMidiInProxy.h"
+#include "Midi2.KSAggregateMidiOutProxy.h"
 #include "Midi2.KSAggregateMidi.h"
 #include "Midi2.KSAggregateMidiBiDi.h"
 #include "Midi2.KSAggregateMidiEndpointManager.h"

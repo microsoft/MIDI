@@ -21,8 +21,6 @@
 
 
 
-
-
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidi::Initialize(
@@ -218,21 +216,22 @@ CMidi2KSAggregateMidi::Initialize(
                 for (uint8_t outputGroup = 0; outputGroup < KSMIDI_PIN_MAP_ENTRY_COUNT; outputGroup++)
                 {
                     auto pinId = pinMap->OutputEntries[outputGroup].PinId;
-                        
+
                     if (pinMap->OutputEntries[outputGroup].IsValid)
                     {
-                        // create the KS device and add to our runtime map
-                        auto ksDevice = std::make_unique<KSMidiOutDevice>();
-                        RETURN_IF_NULL_ALLOC(ksDevice);
+                        wil::com_ptr_nothrow<CMidi2KSAggregateMidiOutProxy> proxy;
+                        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2KSAggregateMidiOutProxy>(&proxy));
 
                         auto initResult =
-                            ksDevice->Initialize(
+                            proxy->Initialize(
                                 endpointDeviceInterfaceId,
-                                filter.get(), 
-                                pinId, 
-                                MidiTransport::MidiTransport_StandardByteStream,
-                                requestedBufferSize, 
-                                mmCssTaskId
+                                filter.get(),
+                                pinId,
+                                requestedBufferSize,
+                                mmCssTaskId,
+                                m_callback,
+                                context,
+                                outputGroup
                             );
 
                         if (FAILED(initResult))
@@ -243,7 +242,7 @@ CMidi2KSAggregateMidi::Initialize(
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Unable to initialize sub-device for output", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(L"Unable to initialize sub-device proxy for output", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingHResult(initResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
                                 TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                                 TraceLoggingUInt32(requestedBufferSize, "buffer size"),
@@ -261,7 +260,7 @@ CMidi2KSAggregateMidi::Initialize(
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Created sub-device for output", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(L"Created sub-device proxy for output", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                                 TraceLoggingUInt32(requestedBufferSize, "buffer size"),
                                 TraceLoggingUInt32(pinId, "pin id"),
@@ -269,7 +268,7 @@ CMidi2KSAggregateMidi::Initialize(
                             );
                         }
 
-                        m_midiOutDeviceGroupMap[outputGroup] = std::move(ksDevice);
+                        m_midiOutDeviceGroupMap[outputGroup] = std::move(proxy);
                     }
                 }
             }
@@ -302,14 +301,18 @@ CMidi2KSAggregateMidi::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-    for (auto it = m_midiInDeviceGroupMap.begin(); it != m_midiInDeviceGroupMap.end();)
+    while (!m_midiInDeviceGroupMap.empty())
     {
+        auto it = m_midiInDeviceGroupMap.begin();
+
         LOG_IF_FAILED(it->second->Shutdown());
         it = m_midiInDeviceGroupMap.erase(it);
     }
 
-    for (auto it = m_midiOutDeviceGroupMap.begin(); it != m_midiOutDeviceGroupMap.end();)
+    while (!m_midiOutDeviceGroupMap.empty())
     {
+        auto it = m_midiOutDeviceGroupMap.begin();
+
         LOG_IF_FAILED(it->second->Shutdown());
         it = m_midiOutDeviceGroupMap.erase(it);
     }
@@ -357,70 +360,7 @@ CMidi2KSAggregateMidi::SendMidiMessage(
 
             if (mapEntry != m_midiOutDeviceGroupMap.end())
             {
-                // translate message before sending to KS device. We use the same
-                // code the other transforms use, from the libmidi2 project
-
-                // Send the UMP(s) to the parser
-                uint32_t* data = (uint32_t*)inputData;
-                for (UINT i = 0; i < (length / sizeof(uint32_t)); i++)
-                {
-                    m_UMP2BS.UMPStreamParse(data[i]);
-                }
-
-                // retrieve the bytestream message from the parser
-                // and send it on
-                while (m_UMP2BS.availableBS())
-                {
-                    BYTE byteStream[MAXIMUM_LOOPED_BYTESTREAM_DATASIZE];
-                    UINT byteCount;
-                    for (byteCount = 0; byteCount < _countof(byteStream) && m_UMP2BS.availableBS(); byteCount++)
-                    {
-                        byteStream[byteCount] = m_UMP2BS.readBS();
-                    }
-
-                    if (byteCount > 0)
-                    {
-                        if (mapEntry->second != nullptr)
-                        {
-                            auto sendHr = mapEntry->second->SendMidiMessage(&(byteStream[0]), byteCount, position);
-
-                            if (FAILED(sendHr))
-                            {
-                                // unable to send message
-                                TraceLoggingWrite(
-                                    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                                    MIDI_TRACE_EVENT_ERROR,
-                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                    TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(L"Unable to send message to MIDI 1.0 endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                    TraceLoggingUInt8(groupIndex, "Group Index"),
-                                    TraceLoggingHResult(sendHr),
-                                    TraceLoggingUInt8Array(&(byteStream[0]), (UINT16)byteCount, "message bytes"),
-                                    TraceLoggingUInt64(position, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-                                );
-
-                                LOG_IF_FAILED(sendHr);
-                            }
-                        }
-                        else
-                        {
-                            TraceLoggingWrite(
-                                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_ERROR,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Endpoint entry in map is nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingUInt8(groupIndex, "Group Index"),
-                                TraceLoggingUInt64(position, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-                            );
-
-                            LOG_IF_FAILED(E_POINTER);
-
-                        }
-                    }
-                }
+                LOG_IF_FAILED(mapEntry->second->SendMidiMessage(inputData, length, position));
 
                 return S_OK;
             }
@@ -443,15 +383,15 @@ CMidi2KSAggregateMidi::SendMidiMessage(
         }
         else
         {
-            // it's a message type with no group field. We just drop it and move ok
-            TraceLoggingWrite(
-                MidiKSAggregateAbstractionTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Groupless message sent to aggregated KS endpoint. Dropping message.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
+            //// it's a message type with no group field. We just drop it and move ok
+            //TraceLoggingWrite(
+            //    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+            //    MIDI_TRACE_EVENT_INFO,
+            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            //    TraceLoggingPointer(this, "this"),
+            //    TraceLoggingWideString(L"Groupless message sent to aggregated KS endpoint. Dropping message.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            //);
 
             return S_OK;
         }

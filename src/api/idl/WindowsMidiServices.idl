@@ -258,7 +258,7 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in, annotation("_In_")] ULONG devPropertyCount,
         [in, size_is(devPropertyCount), annotation("_In_opt_")] const DEVPROPERTY* devProperties,
         [in] const SW_DEVICE_CREATE_INFO* createInfo,
-        [out, string, annotation("_Out_opt_")] LPWSTR* createdEndpointDeviceInterfaceId
+        [out, string, annotation("_Out_opt_")] LPWSTR* createdDeviceId
     );
 
     HRESULT ActivateEndpoint(
@@ -295,7 +295,7 @@ interface IMidiDeviceManagerInterface : IUnknown
     );
 
 
-    // Update the configuration for an abstraction or endpoints managed by that abstraction
+    // Update the configuration for a transport  or endpoints managed by that transport 
     HRESULT UpdateTransportConfiguration(
         [in, annotation("_In_")] GUID transportId,
         [in, string, annotation("_In_")] LPCWSTR configurationJson,
