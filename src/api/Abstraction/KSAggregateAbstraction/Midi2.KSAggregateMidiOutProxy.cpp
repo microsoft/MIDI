@@ -19,7 +19,6 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
     UINT pinId,
     ULONG bufferSize,
     DWORD* mmcssTaskId,
-    IMidiCallback* callback,        // callback here is the actual MIDI output
     LONGLONG context,
     BYTE groupIndex
 )
@@ -35,7 +34,6 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
         TraceLoggingUInt8(groupIndex, "Group index")
     );
 
-    m_callback = callback;
     m_context = context;
     m_groupIndex = groupIndex;
 
@@ -91,8 +89,8 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
     creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_ByteStream;
     creationParams.UmpGroupIndex = groupIndex;
 
-    // the transform sends the results directly to the specified callback
-    RETURN_IF_FAILED(m_ump2BSTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, m_callback, m_context, nullptr));
+    // the transform sends the results back here through the IMidiCallback interface so we can then send to the associated KS device
+    RETURN_IF_FAILED(m_ump2BSTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, this, m_context, nullptr));
 
     return S_OK;
 }
@@ -109,8 +107,40 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
     //RETURN_HR_IF_NULL(E_POINTER, m_callback);
     RETURN_HR_IF_NULL(E_POINTER, m_ump2BSTransform);
 
+    // get the message translated. Comes back via the callback
     return m_ump2BSTransform->SendMidiMessage(data, length, timestamp);
 }
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiOutProxy::Callback(
+    PVOID data,
+    UINT length,
+    LONGLONG timestamp,
+    LONGLONG /* context */
+)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, data);
+    RETURN_HR_IF_NULL(E_POINTER, m_device);
+
+    //TraceLoggingWrite(
+    //    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_VERBOSE,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Callback received from device. Sending data to next callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingUInt32(length, "data length"),
+    //    TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    //);
+
+    // Send transformed message to device
+    RETURN_IF_FAILED(m_device->SendMidiMessage(data, length, timestamp));
+
+    return S_OK;
+}
+
+
 
 
 HRESULT
@@ -126,8 +156,6 @@ CMidi2KSAggregateMidiOutProxy::Shutdown()
         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingUInt64(m_countMidiMessageSent, "Count messages forwarded")
     );
-
-    m_callback = nullptr;
 
     if (m_ump2BSTransform)
     {

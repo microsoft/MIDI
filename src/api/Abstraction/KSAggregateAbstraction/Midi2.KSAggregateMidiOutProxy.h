@@ -21,15 +21,15 @@ public:
         _In_ UINT pinId,
         _In_ ULONG bufferSize,
         _In_ DWORD* mmcssTaskId,
-        _In_ IMidiCallback* callback,
         _In_ LONGLONG context,
         _In_ BYTE groupIndex
     );
 
     STDMETHOD(SendMidiMessage)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
-    // unused, but here to compile
-    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG) { return S_OK; }
+    // in this case, the callback fires when we get the translation back
+    // from the transform
+    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
 
     HRESULT Shutdown();
 
@@ -38,8 +38,6 @@ private:
     std::atomic<uint64_t> m_countMidiMessageSent{};
 
     wil::com_ptr_nothrow<IMidiDataTransform> m_ump2BSTransform{ nullptr };
-
-    IMidiCallback* m_callback{ nullptr };
 
     std::unique_ptr<KSMidiOutDevice> m_device{ nullptr };
 

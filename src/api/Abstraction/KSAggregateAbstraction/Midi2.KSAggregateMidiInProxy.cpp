@@ -92,6 +92,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
     creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
     creationParams.UmpGroupIndex = groupIndex;
 
+    // in this case, the message is translated and then sent directly to the callback provided in initialize
     RETURN_IF_FAILED(m_bs2UmpTransform->Initialize(endpointDeviceInterfaceId, &creationParams, mmcssTaskId, m_callback, 0, nullptr));
 
     return S_OK;

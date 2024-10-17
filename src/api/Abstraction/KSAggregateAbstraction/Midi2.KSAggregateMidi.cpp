@@ -229,7 +229,6 @@ CMidi2KSAggregateMidi::Initialize(
                                 pinId,
                                 requestedBufferSize,
                                 mmCssTaskId,
-                                m_callback,
                                 context,
                                 outputGroup
                             );
