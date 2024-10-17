@@ -81,7 +81,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         try
         {
             // We're talking to the service, so use the MIDI Service abstraction, not a KS or other one
-            m_serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            m_serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
             if (m_serviceAbstraction != nullptr)
             {

@@ -16,7 +16,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
         winrt::guid sessionId,
-        winrt::com_ptr<IMidiAbstraction> serviceAbstraction,
+        winrt::com_ptr<IMidiTransport> serviceAbstraction,
         winrt::guid const connectionId,
         winrt::hstring const endpointDeviceId,
         midi2::IMidiEndpointConnectionSettings connectionSettings,
@@ -129,9 +129,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             connectionSettingsJsonString = static_cast<LPCWSTR>(m_connectionSettings.SettingsJson().c_str());
         }
 
-        ABSTRACTIONCREATIONPARAMS abstractionCreationParams{ };
-        abstractionCreationParams.DataFormat = MidiDataFormat_UMP;
-        abstractionCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
+        TRANSPORTCREATIONPARAMS abstractionCreationParams{ };
+        abstractionCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
+        //abstractionCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
 
         auto result = m_endpointAbstraction->Initialize(
             (LPCWSTR)(ConnectedEndpointDeviceId().c_str()),
@@ -371,7 +371,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         {
             // todo: some error / hresult handling here
 
-            auto hr = m_endpointAbstraction->Cleanup();
+            auto hr = m_endpointAbstraction->Shutdown();
 
             if (FAILED(hr))
             {
