@@ -19,10 +19,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 
         try
         {
-            winrt::com_ptr<IMidiAbstraction> serviceAbstraction;
+            winrt::com_ptr<IMidiTransport> serviceAbstraction;
             winrt::com_ptr<IMidiServicePluginMetadataReporterInterface> metadataReporter;
 
-            serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
             if (serviceAbstraction != nullptr)
             {
@@ -31,7 +31,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
                     CComBSTR metadataListJson;
                     metadataListJson.Empty();
 
-                    metadataReporter->GetAbstractionList(&metadataListJson);
+                    metadataReporter->GetTransportList(&metadataListJson);
 
                     // parse it into json objects
 
@@ -107,10 +107,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 
         try
         {
-            winrt::com_ptr<IMidiAbstraction> serviceAbstraction;
+            winrt::com_ptr<IMidiTransport> serviceAbstraction;
             winrt::com_ptr<IMidiSessionTracker> sessionTracker;
 
-            serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
             if (serviceAbstraction != nullptr)
             {

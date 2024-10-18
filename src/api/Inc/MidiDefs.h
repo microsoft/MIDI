@@ -84,11 +84,14 @@
 
 #define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"
 
+// if value > 0, then endpoint discovery and protocol negotiation are enabled
+// HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services\Midi2DiscoveryEnabled (DWORD)
+#define MIDI_DISCOVERY_ENABLED_REG_VALUE                L"Midi2DiscoveryEnabled"
+#define MIDI_DISCOVERY_ENABLED_REG_DEFAULT_VALUE        0x00000001
 
 
 #define MIDI_ROOT_ENDPOINT_APP_SDK_REG_KEY              MIDI_ROOT_REG_KEY L"\\Desktop App SDK Runtime"
-#define MIDI_APP_SDK_ARM64_REG_VALUE                    L"Arm64"
-#define MIDI_APP_SDK_ARM64EC_REG_VALUE                  L"Arm64EC"
+#define MIDI_APP_SDK_ARM64X_REG_VALUE                   L"Arm64X"
 #define MIDI_APP_SDK_X64_REG_VALUE                      L"x64"
 
 
@@ -182,9 +185,12 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_GenerateIncomingTimestamp, 10);     // DEVPROP_T
 
 // this is the device-supplied name in the case of device-based transports
 // we have a copy here because we may rewrite FriendlyName
+
+// Transport-supplied Endpoint Name
 #define STRING_PKEY_MIDI_EndpointName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"14"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointName, 14);     // DEVPROP_TYPE_STRING
 
+// Transport-supplied Endpoint Description
 #define STRING_PKEY_MIDI_Description MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"15"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Description, 15);     // DEVPROP_TYPE_STRING
 

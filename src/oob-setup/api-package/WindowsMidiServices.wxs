@@ -105,6 +105,10 @@
 
                 <RegistryValue Type="string" Name="CurrentConfig" Value="Default.midiconfig.json" />
 
+                <RegistryValue Type="integer" Name="Midi2DiscoveryEnabled" Value="1" />
+
+                <RegistryValue Type="integer" Name="UseMMCSS" Value="0" />
+
                 <RegistryKey Key="Endpoint Processing Plugins">
                     <!-- TODO: Any processing plugins -->
                 </RegistryKey>

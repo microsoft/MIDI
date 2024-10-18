@@ -63,7 +63,7 @@ CMidi2MidiSrvAbstraction::Activate(
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvBiDi>(&midiBiDi));
         *activatedInterface = midiBiDi.detach();
     }
-    else if (__uuidof(IMidiAbstractionConfigurationManager) == iid)
+    else if (__uuidof(IMidiTransportConfigurationManager) == iid)
     {
         TraceLoggingWrite(
             MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -74,7 +74,7 @@ CMidi2MidiSrvAbstraction::Activate(
             TraceLoggingWideString(L"IMidiAbstractionConfigurationManager", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiAbstractionConfigurationManager> config;
+        wil::com_ptr_nothrow<IMidiTransportConfigurationManager> config;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvConfigurationManager>(&config));
         *activatedInterface = config.detach();
     }

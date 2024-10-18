@@ -95,7 +95,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;midikscommon.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midikscommon.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -106,7 +106,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;midikscommon.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midikscommon.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -117,7 +117,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;midikscommon.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midikscommon.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -129,7 +129,7 @@
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midixproc.lib;midikscommon.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midikscommon.lib;midiswenum.lib;miditestcommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

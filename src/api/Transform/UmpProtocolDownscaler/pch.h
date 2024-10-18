@@ -46,16 +46,12 @@
 
 #include "mididefs.h"
 
-#include <libmidi2/utils.h>                 // AM_MIDI2
-#include <libmidi2/umpMessageCreate.h>      // AM_MIDI2
-#include <libmidi2/umpToMIDI1Protocol.h>    // AM_MIDI2
-//#include <libmidi2/>
-
 #include "ump_helpers.h"        // internal helpers
 #include "wstring_util.h"
 #include "swd_helpers.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
+
 
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
@@ -65,6 +61,9 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "dllmain.h"
 
+//class CMidi2UmpProtocolDownscalerMidiTransform;
+
+//#include "Midi2.UmpProtocolDownscalerMidiTransform.h"
 #include "Midi2.UmpProtocolDownscalerTransform.h"
-#include "Midi2.UmpProtocolDownscalerMidiTransform.h"
+
 

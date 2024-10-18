@@ -19,11 +19,11 @@ CMidi2LoopbackMidiPluginMetadataProvider::Initialize()
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiPluginMetadataProvider::GetMetadata(
-    PABSTRACTIONMETADATA metadata)
+    PTRANSPORTMETADATA metadata)
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, metadata);
 
-    metadata->Id = ABSTRACTION_LAYER_GUID;
+    metadata->TransportId = ABSTRACTION_LAYER_GUID;
 
     wil::unique_cotaskmem_string tempString;
     tempString = wil::make_cotaskmem_string_nothrow(TRANSPORT_CODE);

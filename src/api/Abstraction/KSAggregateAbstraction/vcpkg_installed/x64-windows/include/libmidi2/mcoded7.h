@@ -21,32 +21,80 @@
 #ifndef MC7_H
 #define MC7_H
 
+#include "utils.h"
+
 #include <cstdint>
 
-class mcoded7Decode{
-	private:
-		uint8_t dumpPos=255;
-		uint8_t fBit=0;
-		uint8_t cnt=0;
-		uint8_t bits=0;
-	public:
-        uint8_t dump[7];
-        uint16_t currentPos();
-		void reset();
-		void parseS7Byte(uint8_t s7Byte);
+class mcoded7Decode
+{
+private:
+	uint8_t dumpPos = 255;
+	uint8_t fBit = 0;
+	uint8_t cnt = 0;
+	uint8_t bits = 0;
+
+public:
+	uint8_t dump[7];
+	uint16_t currentPos() { return dumpPos; }
+
+	void reset()
+	{
+		M2Utils::clear(dump, 0, 7);
+		fBit = 0;
+		bits = 0;
+		dumpPos = 255;
+	}
+
+	void parseS7Byte(uint8_t s7Byte)
+	{
+		if (dumpPos == 255)
+		{
+			reset();
+			bits = s7Byte;
+			dumpPos = 0;
+		}
+		else
+		{
+			fBit = ((bits >> (6 - dumpPos)) & 1) << 7;
+			dump[dumpPos++] = s7Byte | fBit;
+		}
+	}
 };
 
 
-class mcoded7Encode{
+class mcoded7Encode
+{
+private:
+	uint16_t dumpPos = 1;
+	uint8_t cnt = 6;
 
-	private:
-		uint16_t dumpPos = 1;
-		uint8_t cnt = 6;
-	public:
-        uint8_t dump[8];
-        uint16_t currentPos();
-        void reset();
-		void parseByte(uint8_t s8Byte);
+public:
+	uint8_t dump[8];
+	uint16_t currentPos() { return dumpPos - 1; }
+
+	void reset()
+	{
+		M2Utils::clear(dump, 0, 8);
+		dumpPos = 1;
+		cnt = 6;
+	}
+
+	void parseByte(uint8_t s8Byte)
+	{
+		uint8_t c = s8Byte & 0x7F;
+		uint8_t msb = s8Byte >> 7;
+		dump[0] |= msb << cnt;
+		dump[dumpPos] = c;
+		if (cnt == 0)
+		{
+			cnt = 6;
+		}
+		else
+		{
+			cnt--;
+		}
+		dumpPos++;
+	}
 };
 
 #endif

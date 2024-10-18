@@ -16,13 +16,13 @@ class CMidi2KSMidiOut :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PABSTRACTIONCREATIONPARAMS, _In_ DWORD *, _In_ GUID));
+    STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSPORTCREATIONPARAMS, _In_ DWORD *, _In_ GUID));
     STDMETHOD(SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG));
     STDMETHOD(Shutdown)();
 
 private:
 
-    std::unique_ptr<CMidi2KSMidi> m_MidiDevice;
+    std::unique_ptr<CMidi2KSMidi> m_midiDevice;
 };
 
 

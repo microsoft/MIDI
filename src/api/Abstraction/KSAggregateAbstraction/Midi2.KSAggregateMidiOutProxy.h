@@ -9,10 +9,10 @@
 #pragma once
 
 
-class CMidi2KSAggregateMidiInProxy :
+class CMidi2KSAggregateMidiOutProxy :
     public Microsoft::WRL::RuntimeClass<
-        Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiCallback>
+    Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
+    IMidiCallback>
 {
 public:
     HRESULT Initialize(
@@ -21,10 +21,14 @@ public:
         _In_ UINT pinId,
         _In_ ULONG bufferSize,
         _In_ DWORD* mmcssTaskId,
-        _In_ IMidiCallback* callback,
         _In_ LONGLONG context,
-        _In_ BYTE groupIndex);
+        _In_ BYTE groupIndex
+    );
 
+    STDMETHOD(SendMidiMessage)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+
+    // in this case, the callback fires when we get the translation back
+    // from the transform
     STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
 
     HRESULT Shutdown();
@@ -33,11 +37,9 @@ private:
     std::wstring m_endpointDeviceId{};
     std::atomic<uint64_t> m_countMidiMessageSent{};
 
-    wil::com_ptr_nothrow<IMidiDataTransform> m_bs2UmpTransform{ nullptr };
+    wil::com_ptr_nothrow<IMidiDataTransform> m_ump2BSTransform{ nullptr };
 
-    IMidiCallback* m_callback{ nullptr };
-
-    std::unique_ptr<KSMidiInDevice> m_device{ nullptr };
+    std::unique_ptr<KSMidiOutDevice> m_device{ nullptr };
 
     LONGLONG m_context{};
     uint8_t m_groupIndex{};

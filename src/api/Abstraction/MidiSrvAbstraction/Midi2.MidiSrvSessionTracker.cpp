@@ -124,59 +124,12 @@ CMidi2MidiSrvSessionTracker::RemoveClientSession(
     return S_OK;
 }
 
-//_Use_decl_annotations_
-//HRESULT
-//CMidi2MidiSrvSessionTracker::AddClientEndpointConnection(
-//    GUID sessionId,
-//    LPCWSTR sonnectionEndpointInterfaceId
-//)
-//{
-//    UNREFERENCED_PARAMETER(sessionId);
-//    UNREFERENCED_PARAMETER(sonnectionEndpointInterfaceId);
-//
-//    return S_OK;
-//}
-//
-//_Use_decl_annotations_
-//HRESULT
-//CMidi2MidiSrvSessionTracker::RemoveClientEndpointConnection(
-//    GUID sessionId,
-//    LPCWSTR sonnectionEndpointInterfaceId
-//)
-//{
-//    UNREFERENCED_PARAMETER(sessionId);
-//    UNREFERENCED_PARAMETER(sonnectionEndpointInterfaceId);
-//
-//    return S_OK;
-//}
-
-
-//_Use_decl_annotations_
-//HRESULT
-//CMidi2MidiSrvSessionTracker::GetSessionList(
-//    LPSAFEARRAY* sessionDetailsList
-//)
-//{
-//    TraceLoggingWrite(
-//        MidiSrvAbstractionTelemetryProvider::Provider(),
-//        MIDI_TRACE_EVENT_INFO,
-//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingPointer(this, "this")
-//    );
-//
-//    // TODO
-//    sessionDetailsList = nullptr;
-//
-//    return S_OK;
-//
-//}
 
 
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvSessionTracker::GetSessionList(
-    BSTR* sessionList
+    LPWSTR* sessionList
 )
 {
     TraceLoggingWrite(
@@ -218,4 +171,43 @@ CMidi2MidiSrvSessionTracker::Shutdown()
 
 
     return S_OK;
+}
+
+BOOL
+CMidi2MidiSrvSessionTracker::VerifyConnectivity()
+{
+    TraceLoggingWrite(
+        MidiSrvAbstractionTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this")
+    );
+
+    wil::unique_rpc_binding bindingHandle;
+
+    LOG_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
+
+    auto verifyConnectivity = ([&]()
+        {
+            // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+            // with structured exception handling.
+            RpcTryExcept MidiSrvVerifyConnectivity(bindingHandle.get());
+            RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+            RpcEndExcept
+
+            return S_OK;
+        });
+
+    auto hr = verifyConnectivity();
+
+    if (FAILED(hr))
+    {
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }
+
 }

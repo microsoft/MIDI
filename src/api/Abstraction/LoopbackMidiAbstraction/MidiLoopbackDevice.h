@@ -18,7 +18,7 @@ public:
     MidiLoopbackDeviceDefinition DefinitionA;
     MidiLoopbackDeviceDefinition DefinitionB;
 
-    bool IsFromConfigurationFile{ true };
+//    bool IsFromConfigurationFile{ true };
 
     void Shutdown()
     {

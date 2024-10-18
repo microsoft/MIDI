@@ -45,8 +45,8 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& MasterEndpointDefinition);
-    STDMETHOD(CreateMidiBytestreamEndpoints)(_In_ KsAggregateEndpointDefinition& MasterEndpointDefinition);
+    STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& masterEndpointDefinition);
+    STDMETHOD(CreateMidiBytestreamEndpoints)(_In_ KsAggregateEndpointDefinition& masterEndpointDefinition);
 
     
     HRESULT OnDeviceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
@@ -55,12 +55,12 @@ private:
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
-    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
+    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_midiProtocolManager;
 
     std::vector<KsAggregateEndpointDefinition> m_availableEndpointDefinitions;
     
-    DeviceWatcher m_Watcher{0};
+    DeviceWatcher m_watcher{0};
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_DeviceAdded;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Removed_revoker m_DeviceRemoved;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Updated_revoker m_DeviceUpdated;

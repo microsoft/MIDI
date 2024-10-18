@@ -19,14 +19,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
     _Use_decl_annotations_
     json::JsonObject MidiServiceConfig::InternalSendConfigJsonAndGetResponse(
         winrt::guid const& abstractionId, 
-        json::JsonObject const& configObject,
-        bool const isFromCurrentConfigFile
+        json::JsonObject const& configObject
     ) noexcept
     {
-        auto iid = __uuidof(IMidiAbstractionConfigurationManager);
-        winrt::com_ptr<IMidiAbstractionConfigurationManager> configManager;
+        auto iid = __uuidof(IMidiTransportConfigurationManager);
+        winrt::com_ptr<IMidiTransportConfigurationManager> configManager;
 
-        auto serviceAbstraction = winrt::create_instance<IMidiAbstraction>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+        auto serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
 
         // default to failed
         auto response = internal::BuildConfigurationResponseObject(false);
@@ -96,7 +95,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
             // send up the payload
 
-            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), isFromCurrentConfigFile, &responseString);
+            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), &responseString);
 
             if (FAILED(configUpdateResult))
             {
@@ -220,8 +219,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
         auto responseJsonObject = InternalSendConfigJsonAndGetResponse(
             configUpdate.TransportId(),
-            jsonUpdate,
-            configUpdate.IsFromCurrentConfigFile()
+            jsonUpdate
         );
 
         if (responseJsonObject == nullptr)

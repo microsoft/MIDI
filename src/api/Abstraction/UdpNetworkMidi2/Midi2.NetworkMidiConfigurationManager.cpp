@@ -14,8 +14,8 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::Initialize(
     GUID transportId,
-    IUnknown* midiDeviceManager,
-    IUnknown* midiServiceConfigurationManagerInterface
+    IMidiDeviceManagerInterface* midiDeviceManager,
+    IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface
 )
 {
     UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
@@ -156,8 +156,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
-    BOOL isFromConfigurationFile,
-    BSTR* response
+    LPWSTR* response
 )
 {
     TraceLoggingWrite(
@@ -168,8 +167,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
-
-    UNREFERENCED_PARAMETER(isFromConfigurationFile);
 
     // if we're passed a null or empty json, we just quietly exit
     if (configurationJsonSection == nullptr) return S_OK;
@@ -250,7 +247,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
             TraceLoggingWideString(configurationJsonSection, "json")
         );
 
-        internal::JsonStringifyObjectToOutParam(responseObject, &response);
+        internal::JsonStringifyObjectToOutParam(responseObject, response);
 
         RETURN_IF_FAILED(E_INVALIDARG);
     }
@@ -263,7 +260,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
         // TODO: Set the response to something meaningful here
 
-        internal::JsonStringifyObjectToOutParam(responseObject, &response);
+        internal::JsonStringifyObjectToOutParam(responseObject, response);
 
         // once we enable update/delete we need to move this
         return S_OK;
@@ -427,14 +424,14 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     );
 
     // return the json with the information the client will need
-    internal::JsonStringifyObjectToOutParam(responseObject, &response);
+    internal::JsonStringifyObjectToOutParam(responseObject, response);
 
     return S_OK;
 }
 
 
 HRESULT
-CMidi2NetworkMidiConfigurationManager::Cleanup()
+CMidi2NetworkMidiConfigurationManager::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

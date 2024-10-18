@@ -12,16 +12,16 @@
 class CMidi2DiagnosticsMidiConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiAbstractionConfigurationManager>
+    IMidiTransportConfigurationManager>
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID AbstractionId, _In_ IMidiDeviceManagerInterface* MidiDeviceManager, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
-    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR ConfigurationJsonSection, _In_ BOOL IsFromConfigurationFile, _Out_ BSTR* Response));
+    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManagerInterface* MidiDeviceManager, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
+    STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _Out_ LPWSTR* response));
     STDMETHOD(Shutdown)();
 
 private:
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
+    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
 
     //GUID m_abstractionId;   // kept for convenience
 };

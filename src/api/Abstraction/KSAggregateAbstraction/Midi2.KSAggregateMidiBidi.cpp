@@ -17,7 +17,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiBiDi::Initialize(
     LPCWSTR device,
-    PABSTRACTIONCREATIONPARAMS creationParams,
+    PTRANSPORTCREATIONPARAMS creationParams,
     DWORD * mmCssTaskId,
     IMidiCallback * callback,
     LONGLONG context,
@@ -57,7 +57,7 @@ CMidi2KSAggregateMidiBiDi::Initialize(
         )
     );
 
-    m_MidiDevice = std::move(midiDevice);
+    m_midiDevice = std::move(midiDevice);
 
     TraceLoggingWrite(
         MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -86,10 +86,10 @@ CMidi2KSAggregateMidiBiDi::Shutdown()
         TraceLoggingUInt64(m_countMidiMessageSent, "Count messages sent")
         );
 
-    if (m_MidiDevice)
+    if (m_midiDevice)
     {
-        m_MidiDevice->Shutdown();
-        m_MidiDevice = nullptr;
+        m_midiDevice->Shutdown();
+        m_midiDevice = nullptr;
     }
 
     return S_OK;
@@ -103,7 +103,7 @@ CMidi2KSAggregateMidiBiDi::SendMidiMessage(
     LONGLONG timestamp
 )
 {
-    if (m_MidiDevice != nullptr)
+    if (m_midiDevice != nullptr)
     {
         //TraceLoggingWrite(
         //    MidiKSAggregateAbstractionTelemetryProvider::Provider(),
@@ -116,7 +116,7 @@ CMidi2KSAggregateMidiBiDi::SendMidiMessage(
         //    TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         //);
 
-        RETURN_IF_FAILED(m_MidiDevice->SendMidiMessage(data, length, timestamp));
+        RETURN_IF_FAILED(m_midiDevice->SendMidiMessage(data, length, timestamp));
 
         m_countMidiMessageSent++;
 

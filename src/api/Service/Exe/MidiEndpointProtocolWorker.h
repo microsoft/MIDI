@@ -20,20 +20,20 @@ public:
     ~CMidiEndpointProtocolWorker() {}
 
     STDMETHOD(Initialize)(
-        _In_ GUID SessionId,
-        _In_ GUID AbstractionGuid,
-        _In_ LPCWSTR EndpointDeviceInterfaceId,
-        _In_ std::shared_ptr<CMidiClientManager>& ClientManager,
-        _In_ std::shared_ptr<CMidiDeviceManager>& DeviceManager,
-        _In_ std::shared_ptr<CMidiSessionTracker>& SessionTracker
+        _In_ GUID sessionId,
+        _In_ GUID transportId,
+        _In_ LPCWSTR endpointDeviceInterfaceId,
+        _In_ std::shared_ptr<CMidiClientManager>& clientManager,
+        _In_ std::shared_ptr<CMidiDeviceManager>& deviceManager,
+        _In_ std::shared_ptr<CMidiSessionTracker>& sessionTracker
         );
 
     STDMETHOD(Start)(
-        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-        _In_ IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
+        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
+        _In_ IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
         );
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, _In_ LONGLONG Context);
+    STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context);
 
     STDMETHOD(Shutdown)();
 
@@ -44,7 +44,7 @@ private:
     //std::wstring m_deviceInstanceId;
     GUID m_sessionId{};
     DWORD m_clientProcessId{};
-    GUID m_abstractionGuid{};
+    GUID m_abstractionId{};
 
     LONGLONG m_context{ 0 };
 

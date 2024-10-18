@@ -96,7 +96,6 @@ interface MidiSrvRPC
     HRESULT MidiSrvUpdateConfiguration(
         [in] handle_t bindingHandle, 
         [in, string] LPCWSTR configurationJson, 
-        [in] BOOL isFromConfigurationFile,
         [out, string] LPWSTR* response);
 
 
@@ -130,15 +129,16 @@ interface MidiSrvRPC
 
     // Abstractions and Transforms metadata reporting only
 
-    HRESULT MidiSrvGetAbstractionList(
+    HRESULT MidiSrvGetTransportList(
         [in] handle_t bindingHandle,
-        [out, string] LPWSTR* abstractionListJson);
+        [out, string] LPWSTR* transportListJson);
 
     HRESULT MidiSrvGetTransformList(
         [in] handle_t bindingHandle,
         [out, string] LPWSTR* transformListJson);
 
-    HRESULT MidiSrvVerifyConnectivity(
+    // required for clients to be able to enumerate devices without creating a session
+    BOOL MidiSrvVerifyConnectivity(
         [in] handle_t bindingHandle);
 
 }

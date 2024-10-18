@@ -8,6 +8,13 @@
 
 #pragma once
 
+#ifndef MIDI2_UMPPROTOCOLDOWNSCALERTRANSFORM_H
+#define MIDI2_UMPPROTOCOLDOWNSCALERTRANSFORM_H
+
+
+#include "pch.h"
+
+
 class MidiUmpProtocolDownscalerTransformTelemetryProvider : public wil::TraceLoggingProvider
 {
     IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
@@ -43,3 +50,5 @@ private:
 
 OBJECT_ENTRY_AUTO(__uuidof(Midi2UmpProtocolDownscalerTransform), CMidi2UmpProtocolDownscalerTransform)
 
+
+#endif

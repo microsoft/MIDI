@@ -24,22 +24,26 @@ public:
     ~CMidiEndpointProtocolManager() {}
 
     STDMETHOD(Initialize)(
-        _In_ std::shared_ptr<CMidiClientManager>& ClientManager,
-        _In_ std::shared_ptr<CMidiDeviceManager>& DeviceManager,
-        _In_ std::shared_ptr<CMidiSessionTracker>& SessionTracker
+        _In_ std::shared_ptr<CMidiClientManager>& clientManager,
+        _In_ std::shared_ptr<CMidiDeviceManager>& deviceManager,
+        _In_ std::shared_ptr<CMidiSessionTracker>& sessionTracker
     );
 
     STDMETHOD(DiscoverAndNegotiate)(
-        _In_ GUID AbstractionGuid,
-        _In_ LPCWSTR DeviceInterfaceId,
-        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS NegotiationParams,
-        _In_ IMidiProtocolNegotiationCompleteCallback* NegotiationCompleteCallback
+        _In_ GUID transportId,
+        _In_ LPCWSTR endpointDeviceInterfaceId,
+        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
+        _In_ IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
         );
 
+    BOOL IsEnabled() { return m_discoveryAndProtocolNegotiationEnabled; }
 
     HRESULT Shutdown();
 
 private:
+    bool m_discoveryAndProtocolNegotiationEnabled{ true };
+    
+    
     GUID m_sessionId;
 
     std::shared_ptr<CMidiClientManager> m_clientManager;

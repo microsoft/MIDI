@@ -21,7 +21,7 @@
 
 
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
-std::vector<GUID> CMidiConfigurationManager::GetEnabledTransportAbstractionLayers() const noexcept
+std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexcept
 {
     std::vector<GUID> availableAbstractionLayers;
 
@@ -269,7 +269,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
 }
 
 
-std::vector<ABSTRACTIONMETADATA> CMidiConfigurationManager::GetAllEnabledTransportAbstractionLayerMetadata() const noexcept
+std::vector<TRANSPORTMETADATA> CMidiConfigurationManager::GetAllEnabledTransportMetadata() const noexcept
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -279,24 +279,24 @@ std::vector<ABSTRACTIONMETADATA> CMidiConfigurationManager::GetAllEnabledTranspo
         TraceLoggingPointer(this, "this")
     );
 
-    std::vector<ABSTRACTIONMETADATA> results{};
+    std::vector<TRANSPORTMETADATA> results{};
 
-    auto abstractionIdList = GetEnabledTransportAbstractionLayers();
+    auto abstractionIdList = GetEnabledTransports();
 
     // for each item in the list, activate the MidiServiceAbstractionPlugin and get the metadata
 
     for (auto const& abstractionId : abstractionIdList)
     {
-        wil::com_ptr_nothrow<IMidiAbstraction> midiAbstraction;
-        wil::com_ptr_nothrow<IMidiServiceAbstractionPluginMetadataProvider> plugin;
+        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> plugin;
 
         if (SUCCEEDED(CoCreateInstance(abstractionId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction))))
         {
-            if (SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiServiceAbstractionPluginMetadataProvider), (void**)&plugin)))
+            if (SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiServiceTransportPluginMetadataProvider), (void**)&plugin)))
             {
                 plugin->Initialize();
 
-                ABSTRACTIONMETADATA metadata;
+                TRANSPORTMETADATA metadata;
 
                 LOG_IF_FAILED(plugin->GetMetadata(&metadata));
 
@@ -375,7 +375,7 @@ std::wstring CMidiConfigurationManager::GetCurrentConfigurationFileName() noexce
 #pragma push_macro("GetObject")
 #undef GetObject
 
-std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTransportAbstractionSettingsFromJsonString(
+std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTransportSettingsFromJsonString(
     _In_ std::wstring jsonStringSource) const noexcept
 {
     TraceLoggingWrite(
@@ -525,7 +525,8 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
 
 
 
-HRESULT CMidiConfigurationManager::Initialize()
+HRESULT
+CMidiConfigurationManager::Initialize()
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -654,9 +655,9 @@ CMidiConfigurationManager::LoadCurrentConfigurationFile()
 
 _Use_decl_annotations_
 HRESULT
-CMidiConfigurationManager::GetAbstractionCreateActionJsonObject(
-    LPCWSTR sourceAbstractionJson,
-    BSTR* responseJson
+CMidiConfigurationManager::GetTransportCreateActionEntry(
+    LPCWSTR sourceTransportJson,
+    LPWSTR* responseJson
 )
 {
     TraceLoggingWrite(
@@ -667,7 +668,7 @@ CMidiConfigurationManager::GetAbstractionCreateActionJsonObject(
         TraceLoggingPointer(this, "this")
     );
 
-    UNREFERENCED_PARAMETER(sourceAbstractionJson);
+    UNREFERENCED_PARAMETER(sourceTransportJson);
     UNREFERENCED_PARAMETER(responseJson);
 
 
@@ -677,9 +678,9 @@ CMidiConfigurationManager::GetAbstractionCreateActionJsonObject(
 
 _Use_decl_annotations_
 HRESULT
-CMidiConfigurationManager::GetAbstractionUpdateActionJsonObject(
-    LPCWSTR sourceAbstractionJson,
-    BSTR* responseJson
+CMidiConfigurationManager::GetTransportUpdateActionEntry(
+    LPCWSTR sourceTransportJson,
+    LPWSTR* responseJson
 )
 {
     TraceLoggingWrite(
@@ -690,7 +691,7 @@ CMidiConfigurationManager::GetAbstractionUpdateActionJsonObject(
         TraceLoggingPointer(this, "this")
     );
 
-    UNREFERENCED_PARAMETER(sourceAbstractionJson);
+    UNREFERENCED_PARAMETER(sourceTransportJson);
     UNREFERENCED_PARAMETER(responseJson);
 
 
@@ -700,9 +701,9 @@ CMidiConfigurationManager::GetAbstractionUpdateActionJsonObject(
 
 _Use_decl_annotations_
 HRESULT
-CMidiConfigurationManager::GetAbstractionRemoveActionJsonObject(
-    LPCWSTR sourceAbstractionJson,
-    BSTR* responseJson
+CMidiConfigurationManager::GetTransportRemoveActionEntry(
+    LPCWSTR sourceTransportJson,
+    LPWSTR* responseJson
     )
 {
     TraceLoggingWrite(
@@ -713,7 +714,7 @@ CMidiConfigurationManager::GetAbstractionRemoveActionJsonObject(
         TraceLoggingPointer(this, "this")
     );
 
-    UNREFERENCED_PARAMETER(sourceAbstractionJson);
+    UNREFERENCED_PARAMETER(sourceTransportJson);
     UNREFERENCED_PARAMETER(responseJson);
 
 
@@ -723,10 +724,10 @@ CMidiConfigurationManager::GetAbstractionRemoveActionJsonObject(
 
 _Use_decl_annotations_
 HRESULT
-CMidiConfigurationManager::GetAbstractionMatchingEndpointJsonObject(
+CMidiConfigurationManager::GetMatchingEndpointEntry(
     LPCWSTR sourceActionObjectJson,
     LPCWSTR searchKeyValuePairsJson,
-    BSTR* responseJson
+    LPWSTR* responseJson
 )
 {
     TraceLoggingWrite(
@@ -779,10 +780,10 @@ CMidiConfigurationManager::GetAbstractionMatchingEndpointJsonObject(
 //
 _Use_decl_annotations_
 HRESULT
-CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObject(
-    GUID abstractionId,
+CMidiConfigurationManager::GetCachedEndpointUpdateEntry(
+    GUID transportId,
     LPCWSTR searchKeyValuePairsJson,
-    BSTR* responseJson
+    LPWSTR* responseJson
     )
 {
     TraceLoggingWrite(
@@ -797,7 +798,7 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
     try
     {
         auto jsonSearchKeySets = json::JsonArray::Parse(searchKeyValuePairsJson);
-        auto abstractionKey = internal::GuidToString(abstractionId);
+        auto abstractionKey = internal::GuidToString(transportId);
 
         if (m_jsonObject != nullptr)
         {
@@ -888,7 +889,7 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
                                         json::JsonObject wrapperObject{};
                                         wrapperObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, updateArray);
 
-                                        internal::JsonStringifyObjectToOutParam(wrapperObject.GetObject(), &responseJson);
+                                        internal::JsonStringifyObjectToOutParam(wrapperObject.GetObject(), responseJson);
 
                                         return S_OK;
                                     }
@@ -935,17 +936,8 @@ CMidiConfigurationManager::GetAndPurgeConfigFileAbstractionEndpointUpdateJsonObj
 }
 
 
-
-
-
-
-
-
-
-
-
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstraction(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransport(GUID transportId) const noexcept
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -953,14 +945,14 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstrac
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(abstractionGuid)
+        TraceLoggingGuid(transportId)
     );
 
 
     try
     {
 
-        auto key = internal::GuidToString(abstractionGuid);
+        auto key = internal::GuidToString(transportId);
 
         if (m_jsonObject != nullptr)
         {
@@ -988,7 +980,7 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForTransportAbstrac
 
 
 _Use_decl_annotations_
-std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessingTransform(GUID abstractionGuid) const noexcept
+std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessingTransform(GUID transportId) const noexcept
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -996,13 +988,13 @@ std::wstring CMidiConfigurationManager::GetSavedConfigurationForEndpointProcessi
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(abstractionGuid)
+        TraceLoggingGuid(transportId)
     );
 
     
     try
     {
-        auto key = internal::GuidToString(abstractionGuid);
+        auto key = internal::GuidToString(transportId);
 
         if (m_jsonObject != nullptr)
         {

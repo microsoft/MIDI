@@ -24,7 +24,7 @@ library Midi2VirtualMidiAbstractionLib
     [uuid(8FEAAD91-70E1-4A19-997A-377720A719C1), version(1.0)]
     coclass Midi2VirtualMidiAbstraction
     {
-        [default] interface IMidiAbstraction;
+        [default] interface IMidiTransport;
     }
 };
 

@@ -126,26 +126,32 @@ public:
 
     virtual BOOL IsFormatSupportedIn(MidiDataFormats dataFormat)
     {
-        if (m_DataFormatIn == MidiDataFormats_Any)
-        {
-            return TRUE;
-        }
-        else
-        {
-            return m_DataFormatIn == dataFormat;
-        }
+        // avoid C26813 warning
+        return (BOOL)((m_DataFormatIn & dataFormat) == dataFormat);
+
+        //if (m_DataFormatIn == MidiDataFormats_Any)
+        //{
+        //    return TRUE;
+        //}
+        //else
+        //{
+        //    return m_DataFormatIn == dataFormat;
+        //}
     }
 
     virtual BOOL IsFormatSupportedOut(MidiDataFormats dataFormat)
     {
-        if (m_DataFormatOut == MidiDataFormats_Any)
-        {
-            return TRUE;
-        }
-        else
-        {
-           return m_DataFormatOut == dataFormat;
-        }
+        // avoid C26813 warning
+        return (BOOL)((m_DataFormatOut & dataFormat) == dataFormat);
+        
+        //if (m_DataFormatOut == MidiDataFormats_Any)
+        //{
+        //    return TRUE;
+        //}
+        //else
+        //{
+        //   return m_DataFormatOut == dataFormat;
+        //}
     }
 
     virtual BOOL InUse()

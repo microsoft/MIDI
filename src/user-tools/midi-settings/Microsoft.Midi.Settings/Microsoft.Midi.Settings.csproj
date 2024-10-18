@@ -90,30 +90,30 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.1" />
-    <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.1.240821" />
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.1.240821" />
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.1.240821" />
-    <PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.1.240821" />
-    <PackageReference Include="CommunityToolkit.WinUI.Extensions" Version="8.1.240821" />
-    <PackageReference Include="CommunityToolkit.WinUI.Helpers" Version="8.1.240821" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.1.240916" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.1.240916" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.1.240916" />
+    <PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.1.240916" />
+    <PackageReference Include="CommunityToolkit.WinUI.Extensions" Version="8.1.240916" />
+    <PackageReference Include="CommunityToolkit.WinUI.Helpers" Version="8.1.240916" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.TraceSource" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.3" />
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24260.2134-preview.7" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.6" />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="1.0.24291.1352-preview.7" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240829007" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
       
       <PackageReference Include="System.Management" Version="8.0.0" />
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
-      <PackageReference Include="System.Text.Json" Version="8.0.4" />
+      <PackageReference Include="System.Text.Json" Version="8.0.5" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 
-      <PackageReference Include="WinUIEx" Version="2.4.0" />
+      <PackageReference Include="WinUIEx" Version="2.4.2" />
 
 	  
-    <PackageReference Include="CommunityToolkit.Common" Version="8.3.1" />
+    <PackageReference Include="CommunityToolkit.Common" Version="8.3.2" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
   </ItemGroup>
 

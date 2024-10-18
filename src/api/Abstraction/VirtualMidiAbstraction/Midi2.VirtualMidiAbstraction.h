@@ -23,7 +23,7 @@ using namespace ATL;
 class ATL_NO_VTABLE CMidi2VirtualMidiAbstraction : 
     public CComObjectRootEx<CComMultiThreadModel>,
     public CComCoClass<CMidi2VirtualMidiAbstraction, &CLSID_Midi2VirtualMidiAbstraction>,
-    public IMidiAbstraction
+    public IMidiTransport
 {
 public:
     CMidi2VirtualMidiAbstraction()
@@ -33,7 +33,7 @@ public:
     DECLARE_REGISTRY_RESOURCEID(IDR_MIDI2VIRTUALMIDIABSTRACTION)
 
     BEGIN_COM_MAP(CMidi2VirtualMidiAbstraction)
-        COM_INTERFACE_ENTRY(IMidiAbstraction)
+        COM_INTERFACE_ENTRY(IMidiTransport)
     END_COM_MAP()
 
     DECLARE_PROTECT_FINAL_CONSTRUCT()

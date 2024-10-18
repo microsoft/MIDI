@@ -55,7 +55,7 @@ MidiNetworkHostSession::SendMidiMessageToNetwork()
 
 
 HRESULT 
-MidiNetworkHostSession::Cleanup()
+MidiNetworkHostSession::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

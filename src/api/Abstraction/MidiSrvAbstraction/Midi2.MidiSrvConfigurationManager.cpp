@@ -14,7 +14,7 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvConfigurationManager::Initialize(
-    GUID abstractionGuid, 
+    GUID transportId, 
     IMidiDeviceManagerInterface* deviceManagerInterface, 
     IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface)
 {
@@ -30,7 +30,7 @@ CMidi2MidiSrvConfigurationManager::Initialize(
     UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
 
 
-    m_abstractionGuid = abstractionGuid;
+    m_abstractionGuid = transportId;
 
     return S_OK;
 
@@ -42,7 +42,7 @@ CMidi2MidiSrvConfigurationManager::Initialize(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, BOOL isFromConfigurationFile, BSTR* response)
+CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, LPWSTR* response)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -62,7 +62,7 @@ CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, isFromConfigurationFile, response));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, response));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             return S_OK;
@@ -74,7 +74,7 @@ CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::GetAbstractionList(BSTR* abstractionListJson)
+CMidi2MidiSrvConfigurationManager::GetTransportList(LPWSTR* transportListJson)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -87,13 +87,13 @@ CMidi2MidiSrvConfigurationManager::GetAbstractionList(BSTR* abstractionListJson)
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, abstractionListJson);
+    RETURN_HR_IF_NULL(E_INVALIDARG, transportListJson);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetAbstractionList(bindingHandle.get(), abstractionListJson));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransportList(bindingHandle.get(), transportListJson));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             return S_OK;
@@ -105,7 +105,7 @@ CMidi2MidiSrvConfigurationManager::GetAbstractionList(BSTR* abstractionListJson)
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::GetTransformList(BSTR* sransformListJson)
+CMidi2MidiSrvConfigurationManager::GetTransformList(LPWSTR* transformListJson)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
@@ -118,13 +118,13 @@ CMidi2MidiSrvConfigurationManager::GetTransformList(BSTR* sransformListJson)
     wil::unique_rpc_binding bindingHandle;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, sransformListJson);
+    RETURN_HR_IF_NULL(E_INVALIDARG, transformListJson);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransformList(bindingHandle.get(), sransformListJson));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransformList(bindingHandle.get(), transformListJson));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
                 return S_OK;

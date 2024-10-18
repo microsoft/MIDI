@@ -42,8 +42,8 @@ CMidi2KSMidiEndpointManager::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
-    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_midiProtocolManager));
 
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
@@ -543,7 +543,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         std::vector<DEVPROPERTY> interfaceDevProperties;
 
         MIDIENDPOINTCOMMONPROPERTIES commonProperties {};
-        commonProperties.AbstractionLayerGuid = KsAbstractionLayerGUID;
+        commonProperties.TransportId = KsAbstractionLayerGUID;
         commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
         commonProperties.FriendlyName = MidiPin->Name.c_str();
         commonProperties.TransportCode = transportCode.c_str();
@@ -682,7 +682,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         // log telemetry in the event activating the SWD for this pin has failed,
         // but push forward with creation for other pins.
-        LOG_IF_FAILED(MidiPin->SwdCreation = m_MidiDeviceManager->ActivateEndpoint(
+        LOG_IF_FAILED(MidiPin->SwdCreation = m_midiDeviceManager->ActivateEndpoint(
                                                             MidiPin->ParentInstanceId.c_str(),
                                                             MidiPin->CreateUMPOnly,
                                                             MidiPin->Flow,
@@ -747,33 +747,36 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             // don't want to perform this on translated byte stream endpoints
             if (MidiPin->Flow == MidiFlowBidirectional && MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
             {
-                TraceLoggingWrite(
-                    MidiKSAbstractionTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Starting up protocol negotiator for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                    TraceLoggingWideString(MidiPin->Id.c_str(), "Pin id")
-                );
+                if (m_midiProtocolManager != nullptr && m_midiProtocolManager->IsEnabled())
+                {
+                    TraceLoggingWrite(
+                        MidiKSAbstractionTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Starting up protocol negotiator for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                        TraceLoggingWideString(MidiPin->Id.c_str(), "Pin id")
+                    );
 
-                // Required MIDI 2.0 Protocol step
-                // Invoke the protocol negotiator to now capture updated endpoint info.
+                    // Required MIDI 2.0 Protocol step
+                    // Invoke the protocol negotiator to now capture updated endpoint info.
 
-                ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
+                    ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
 
-                negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
-                negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
-                negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
-                negotiationParams.TimeoutMilliseconds = 5000;
+                    negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
+                    negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
+                    negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
+                    negotiationParams.TimeoutMilliseconds = 5000;
 
-                LOG_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
-                    __uuidof(Midi2KSAbstraction),
-                    newDeviceInterfaceId.get(),
-                    negotiationParams,
-                    this
-                ));
+                    LOG_IF_FAILED(m_midiProtocolManager->DiscoverAndNegotiate(
+                        __uuidof(Midi2KSAbstraction),
+                        newDeviceInterfaceId.get(),
+                        negotiationParams,
+                        this
+                    ));
+                }
             }
         }
         else
@@ -815,16 +818,16 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
 _Use_decl_annotations_
 HRESULT CMidi2KSMidiEndpointManager::ProtocolNegotiationCompleteCallback(
-    GUID transportGuid,
-    LPCWSTR deviceInterfaceId,
+    GUID transportId,
+    LPCWSTR endpointDeviceInterfaceId,
     PENDPOINTPROTOCOLNEGOTIATIONRESULTS results)
 {
     // this is not a centralized callback in this case, but is on the transport itself
     // so no need to use the parameter here
-    UNREFERENCED_PARAMETER(transportGuid);
+    UNREFERENCED_PARAMETER(transportId);
 
     RETURN_HR_IF_NULL(E_INVALIDARG, results);
-    RETURN_HR_IF_NULL(E_INVALIDARG, deviceInterfaceId);
+    RETURN_HR_IF_NULL(E_INVALIDARG, endpointDeviceInterfaceId);
 
     // iterate through returned function blocks.
 
@@ -893,7 +896,7 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInform
         }
 
         // notify the device manager using the InstanceId for this midi device
-        LOG_IF_FAILED(m_MidiDeviceManager->RemoveEndpoint(item->get()->InstanceId.c_str()));
+        LOG_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(item->get()->InstanceId.c_str()));
 
         // remove the MIDI_PIN_INFO from the list
         m_AvailableMidiPins.erase(item);
@@ -949,8 +952,8 @@ CMidi2KSMidiEndpointManager::Shutdown()
     m_DeviceStopped.revoke();
     m_DeviceEnumerationCompleted.revoke();
 
-    m_MidiDeviceManager.reset();
-    m_MidiProtocolManager.reset();
+    m_midiDeviceManager.reset();
+    m_midiProtocolManager.reset();
 
     return S_OK;
 }

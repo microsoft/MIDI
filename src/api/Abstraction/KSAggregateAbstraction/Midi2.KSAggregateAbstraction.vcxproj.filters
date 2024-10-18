@@ -45,6 +45,9 @@
     <ClCompile Include="Midi2.KSAggregateMidiInProxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.KSAggregateMidiOutProxy.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Midi2KSAggregateAbstraction.idl">
@@ -95,6 +98,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.KSAggregateMidiInProxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.KSAggregateMidiOutProxy.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

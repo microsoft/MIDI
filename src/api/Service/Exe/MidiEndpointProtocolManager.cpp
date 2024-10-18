@@ -31,50 +31,68 @@ CMidiEndpointProtocolManager::Initialize(
     std::shared_ptr<CMidiSessionTracker>& sessionTracker
 )
 {
-    // use our clsid as the session id. 
-    m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(m_sessionId, "session id")
-    );
-
-
     m_clientManager = clientManager;
     m_deviceManager = deviceManager;
     m_sessionTracker = sessionTracker;
 
-    wil::unique_handle processHandle(GetCurrentProcess());
-    
-    RETURN_IF_FAILED(m_sessionTracker->AddClientSession(
-        m_sessionId,
-        MIDI_PROTOCOL_MANAGER_SESSION_NAME,
-        GetCurrentProcessId(),
-        processHandle,
-        nullptr));
 
-    winrt::hstring deviceSelector(
-        L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+    // check to see if we're enabled
 
-    m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
+    DWORD regValueEnabled{ MIDI_DISCOVERY_ENABLED_REG_DEFAULT_VALUE };
+    if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_DISCOVERY_ENABLED_REG_VALUE, &regValueEnabled)))
+    {
+        m_discoveryAndProtocolNegotiationEnabled = (bool)(regValueEnabled > 0);
+    }
+    else
+    {
+        m_discoveryAndProtocolNegotiationEnabled = false;
+    }
 
-    auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidiEndpointProtocolManager::OnDeviceAdded);
-    auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidiEndpointProtocolManager::OnDeviceRemoved);
-    auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidiEndpointProtocolManager::OnDeviceUpdated);
-    auto deviceStoppedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidiEndpointProtocolManager::OnDeviceStopped);
-    auto deviceEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidiEndpointProtocolManager::OnEnumerationCompleted);
+    // we only spin this all up if negotiation is enabled
+    if (m_discoveryAndProtocolNegotiationEnabled)
+    {
 
-    m_DeviceAdded = m_watcher.Added(winrt::auto_revoke, deviceAddedHandler);
-    m_DeviceRemoved = m_watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
-    m_DeviceUpdated = m_watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
-    m_DeviceStopped = m_watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
-    m_DeviceEnumerationCompleted = m_watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+        // use our clsid as the session id. 
+        m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
 
-    m_watcher.Start();
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingGuid(m_sessionId, "session id")
+        );
+
+
+        wil::unique_handle processHandle(GetCurrentProcess());
+
+        RETURN_IF_FAILED(m_sessionTracker->AddClientSession(
+            m_sessionId,
+            MIDI_PROTOCOL_MANAGER_SESSION_NAME,
+            GetCurrentProcessId(),
+            processHandle,
+            nullptr));
+
+        winrt::hstring deviceSelector(
+            L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+
+        m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
+
+        auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidiEndpointProtocolManager::OnDeviceAdded);
+        auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidiEndpointProtocolManager::OnDeviceRemoved);
+        auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidiEndpointProtocolManager::OnDeviceUpdated);
+        auto deviceStoppedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidiEndpointProtocolManager::OnDeviceStopped);
+        auto deviceEnumerationCompletedHandler = TypedEventHandler<DeviceWatcher, winrt::Windows::Foundation::IInspectable>(this, &CMidiEndpointProtocolManager::OnEnumerationCompleted);
+
+        m_DeviceAdded = m_watcher.Added(winrt::auto_revoke, deviceAddedHandler);
+        m_DeviceRemoved = m_watcher.Removed(winrt::auto_revoke, deviceRemovedHandler);
+        m_DeviceUpdated = m_watcher.Updated(winrt::auto_revoke, deviceUpdatedHandler);
+        m_DeviceStopped = m_watcher.Stopped(winrt::auto_revoke, deviceStoppedHandler);
+        m_DeviceEnumerationCompleted = m_watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
+
+        m_watcher.Start();
+    }
 
     return S_OK;
 }
@@ -127,8 +145,8 @@ CMidiEndpointProtocolManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windo
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolManager::DiscoverAndNegotiate(
-    GUID abstractionGuid,
-    LPCWSTR deviceInterfaceId,
+    GUID transportId,
+    LPCWSTR endpointDeviceInterfaceId,
     ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
     IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
 ) noexcept
@@ -140,10 +158,18 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(m_discoveryAndProtocolNegotiationEnabled, "IsEnabled")
     );
 
-    auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
+    // clients should check for IsEnabled before calling this function
+    if (!m_discoveryAndProtocolNegotiationEnabled)
+    {
+        return E_ABORT;
+    }
+
+
+    auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
     std::shared_ptr<CMidiEndpointProtocolWorker> worker{ nullptr };
 
@@ -165,7 +191,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
 
     auto initializeHR = worker->Initialize(
         m_sessionId,
-        abstractionGuid,
+        transportId,
         cleanEndpointDeviceInterfaceId.c_str(),
         m_clientManager,
         m_deviceManager,
@@ -198,7 +224,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     return S_OK;
@@ -280,16 +306,20 @@ CMidiEndpointProtocolManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    // log a an active session so a user can figure out which
-    // processes have any given device open.
-    m_sessionTracker->RemoveClientSession(m_sessionId, GetCurrentProcessId());
 
-    for (auto& [key, val] : m_endpointWorkers)
+    if (m_discoveryAndProtocolNegotiationEnabled)
     {
-        LOG_IF_FAILED(RemoveWorkerIfPresent(key));
-    }
+        // log a an active session so a user can figure out which
+        // processes have any given device open.
+        m_sessionTracker->RemoveClientSession(m_sessionId, GetCurrentProcessId());
 
-    m_endpointWorkers.clear();
+        for (auto& [key, val] : m_endpointWorkers)
+        {
+            LOG_IF_FAILED(RemoveWorkerIfPresent(key));
+        }
+
+        m_endpointWorkers.clear();
+    }
 
     m_clientManager.reset();
     m_deviceManager.reset();
