@@ -26,7 +26,11 @@ void midl_user_free(void* p)
     delete[] (BYTE*)p;
 }
 
-HRESULT MidiSrvVerifyConnectivity(
+// used so apps have a method they can call to spin up the service and
+// be able to do things like device enumeration which rely on the service
+// to be running, but do not actually trigger service start
+BOOL 
+MidiSrvVerifyConnectivity(
     handle_t /*bindingHandle*/)
 {
     TraceLoggingWrite(
@@ -40,7 +44,10 @@ HRESULT MidiSrvVerifyConnectivity(
 
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
-    RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
+    if (FAILED(g_MidiService->GetSessionTracker(sessionTracker)))
+    {
+        return false;
+    }
 
     return sessionTracker->VerifyConnectivity();
 }
@@ -190,10 +197,14 @@ MidiSrvUpdateConfiguration(
         combinedResponse += response;
     }
 
-    wil::unique_cotaskmem_string tempString;
-    tempString = wil::make_cotaskmem_string_nothrow(combinedResponse.c_str());
-    RETURN_IF_NULL_ALLOC(tempString.get());
-    combinedResponse = tempString.release();
+
+
+    //wil::unique_cotaskmem_string tempString;
+    //tempString = wil::make_cotaskmem_string_nothrow(combinedResponse.c_str());
+    //RETURN_IF_NULL_ALLOC(tempString.get());
+    //combinedResponse = tempString.release();
+
+    *responseOut = (LPWSTR)combinedResponse.c_str();
 
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
@@ -463,6 +474,8 @@ MidiSrvGetTransportList(
 
     // stringify json to output parameter
 
+    // TODO: Doesn't this leak? With the switch to LPWSTR, the client doesn't
+    // know that these have to be freed. It was obvious with BSTR.
     internal::JsonStringifyObjectToOutParam(rootObject, transportListJson);
 
     TraceLoggingWrite(
@@ -483,7 +496,7 @@ MidiSrvGetTransformList(
 )
 {
     UNREFERENCED_PARAMETER(bindingHandle);
-    UNREFERENCED_PARAMETER(transformListJson);
+    //UNREFERENCED_PARAMETER(transformListJson);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -493,7 +506,15 @@ MidiSrvGetTransformList(
         TraceLoggingWideString(L"Enter")
     );
 
-    // TODO
+    json::JsonObject rootObject{};
+
+
+    // TODO. Right now, this returns an empty list because transform configuration is not yet in place
+
+
+    // stringify json to output parameter
+    internal::JsonStringifyObjectToOutParam(rootObject, transformListJson);
+
 
     return S_OK;
 }

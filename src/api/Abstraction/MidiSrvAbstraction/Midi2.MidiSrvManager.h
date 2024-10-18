@@ -30,8 +30,8 @@ public:
     __success(return == true)
     static bool IsServiceInstalled();
 
-    __success(return == true)
-    static bool AttemptToStartService();
+    //__success(return == true)
+    //static bool AttemptToStartService();
 };
 
 

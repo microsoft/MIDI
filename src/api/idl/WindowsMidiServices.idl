@@ -525,6 +525,7 @@ interface IMidiEndpointProtocolManagerInterface : IUnknown
         [in, annotation("_In_")] IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
     );
 
+    BOOL IsEnabled();
 
 };
 
@@ -673,4 +674,7 @@ interface IMidiSessionTracker : IUnknown
         [out, string, annotation("_Out_")] LPWSTR* sessionDetailsList);
 
     HRESULT Shutdown();
+
+    // required to ensure demand-start service is running before clients try to enumerate endpoints
+    BOOL VerifyConnectivity();
 };

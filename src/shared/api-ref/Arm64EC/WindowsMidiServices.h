@@ -1879,6 +1879,8 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
             /* [annotation][in] */ 
             _In_  IMidiProtocolNegotiationCompleteCallback *negotiationCompleteCallback) = 0;
         
+        virtual BOOL STDMETHODCALLTYPE IsEnabled( void) = 0;
+        
     };
     
     
@@ -1915,6 +1917,10 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
             /* [annotation][in] */ 
             _In_  IMidiProtocolNegotiationCompleteCallback *negotiationCompleteCallback);
         
+        DECLSPEC_XFGVIRT(IMidiEndpointProtocolManagerInterface, IsEnabled)
+        BOOL ( STDMETHODCALLTYPE *IsEnabled )( 
+            IMidiEndpointProtocolManagerInterface * This);
+        
         END_INTERFACE
     } IMidiEndpointProtocolManagerInterfaceVtbl;
 
@@ -1940,6 +1946,9 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
 
 #define IMidiEndpointProtocolManagerInterface_DiscoverAndNegotiate(This,transportId,endpointDeviceInterfaceId,negotiationParams,negotiationCompleteCallback)	\
     ( (This)->lpVtbl -> DiscoverAndNegotiate(This,transportId,endpointDeviceInterfaceId,negotiationParams,negotiationCompleteCallback) ) 
+
+#define IMidiEndpointProtocolManagerInterface_IsEnabled(This)	\
+    ( (This)->lpVtbl -> IsEnabled(This) ) 
 
 #endif /* COBJMACROS */
 
@@ -2432,6 +2441,8 @@ EXTERN_C const IID IID_IMidiSessionTracker;
         
         virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
+        virtual BOOL STDMETHODCALLTYPE VerifyConnectivity( void) = 0;
+        
     };
     
     
@@ -2492,6 +2503,10 @@ EXTERN_C const IID IID_IMidiSessionTracker;
         HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
             IMidiSessionTracker * This);
         
+        DECLSPEC_XFGVIRT(IMidiSessionTracker, VerifyConnectivity)
+        BOOL ( STDMETHODCALLTYPE *VerifyConnectivity )( 
+            IMidiSessionTracker * This);
+        
         END_INTERFACE
     } IMidiSessionTrackerVtbl;
 
@@ -2532,6 +2547,9 @@ EXTERN_C const IID IID_IMidiSessionTracker;
 
 #define IMidiSessionTracker_Shutdown(This)	\
     ( (This)->lpVtbl -> Shutdown(This) ) 
+
+#define IMidiSessionTracker_VerifyConnectivity(This)	\
+    ( (This)->lpVtbl -> VerifyConnectivity(This) ) 
 
 #endif /* COBJMACROS */
 

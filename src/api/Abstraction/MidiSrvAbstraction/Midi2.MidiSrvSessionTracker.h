@@ -31,6 +31,8 @@ public:
 
     STDMETHOD(Shutdown());
 
+    BOOL VerifyConnectivity();
+
 private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;
 

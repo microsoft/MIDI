@@ -137,7 +137,8 @@ interface MidiSrvRPC
         [in] handle_t bindingHandle,
         [out, string] LPWSTR* transformListJson);
 
-    HRESULT MidiSrvVerifyConnectivity(
+    // required for clients to be able to enumerate devices without creating a session
+    BOOL MidiSrvVerifyConnectivity(
         [in] handle_t bindingHandle);
 
 }

@@ -36,10 +36,14 @@ public:
         _In_ IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
         );
 
+    BOOL IsEnabled() { return m_discoveryAndProtocolNegotiationEnabled; }
 
     HRESULT Shutdown();
 
 private:
+    bool m_discoveryAndProtocolNegotiationEnabled{ true };
+    
+    
     GUID m_sessionId;
 
     std::shared_ptr<CMidiClientManager> m_clientManager;

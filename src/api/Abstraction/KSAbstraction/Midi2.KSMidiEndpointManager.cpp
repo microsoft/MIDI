@@ -747,33 +747,36 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             // don't want to perform this on translated byte stream endpoints
             if (MidiPin->Flow == MidiFlowBidirectional && MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
             {
-                TraceLoggingWrite(
-                    MidiKSAbstractionTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Starting up protocol negotiator for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                    TraceLoggingWideString(MidiPin->Id.c_str(), "Pin id")
-                );
+                if (m_midiProtocolManager != nullptr && m_midiProtocolManager->IsEnabled())
+                {
+                    TraceLoggingWrite(
+                        MidiKSAbstractionTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Starting up protocol negotiator for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                        TraceLoggingWideString(MidiPin->Id.c_str(), "Pin id")
+                    );
 
-                // Required MIDI 2.0 Protocol step
-                // Invoke the protocol negotiator to now capture updated endpoint info.
+                    // Required MIDI 2.0 Protocol step
+                    // Invoke the protocol negotiator to now capture updated endpoint info.
 
-                ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
+                    ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
 
-                negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
-                negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
-                negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
-                negotiationParams.TimeoutMilliseconds = 5000;
+                    negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
+                    negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
+                    negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
+                    negotiationParams.TimeoutMilliseconds = 5000;
 
-                LOG_IF_FAILED(m_midiProtocolManager->DiscoverAndNegotiate(
-                    __uuidof(Midi2KSAbstraction),
-                    newDeviceInterfaceId.get(),
-                    negotiationParams,
-                    this
-                ));
+                    LOG_IF_FAILED(m_midiProtocolManager->DiscoverAndNegotiate(
+                        __uuidof(Midi2KSAbstraction),
+                        newDeviceInterfaceId.get(),
+                        negotiationParams,
+                        this
+                    ));
+                }
             }
         }
         else

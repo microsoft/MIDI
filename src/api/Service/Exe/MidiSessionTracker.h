@@ -90,7 +90,7 @@ public:
         _Out_ LPWSTR* sessionList);
     //STDMETHOD(GetSessionList)(_Out_ LPSAFEARRAY* SessionDetailsList);
 
-    STDMETHOD(VerifyConnectivity)();
+    BOOL VerifyConnectivity();
 
     STDMETHOD(Shutdown)();
 

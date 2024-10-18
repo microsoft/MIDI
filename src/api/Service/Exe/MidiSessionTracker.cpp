@@ -82,7 +82,7 @@ CMidiSessionTracker::Initialize(std::shared_ptr<CMidiClientManager>& clientManag
     return S_OK;
 }
 
-HRESULT
+BOOL
 CMidiSessionTracker::VerifyConnectivity()
 {
     TraceLoggingWrite(
@@ -94,7 +94,7 @@ CMidiSessionTracker::VerifyConnectivity()
     );
 
     // if this gets called, we have connectivity
-    return S_OK;
+    return TRUE;
 }
 
 _Use_decl_annotations_
