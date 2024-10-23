@@ -235,10 +235,18 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
 
         // all others with a service assigned port number goes into the portInfo structure for processing.
         auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
+        
+
         if (prop)
         {
-            servicePortNum = winrt::unbox_value<UINT32>(prop);
-            servicePortNumValid = true;
+//            servicePortNum = winrt::unbox_value<UINT32>(prop);
+
+            std::optional<UINT32> servicePortNumValue = prop.try_as<UINT32>();
+            if (servicePortNumValue != std::nullopt && servicePortNumValue.has_value())
+            {
+                servicePortNum = servicePortNumValue.value();
+                servicePortNumValid = true;
+            }
         }
 
         if (servicePortNumValid)

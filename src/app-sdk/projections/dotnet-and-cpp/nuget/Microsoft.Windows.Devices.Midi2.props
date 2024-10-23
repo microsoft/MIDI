@@ -19,7 +19,7 @@
 		</Reference>
 
         <Reference Include="WindowsMidiServicesAppSDKInitialization">
-            <HintPath>$(NugetRoot)\ref\native\WMicrosoft.Windows.Devices.Midi2.Initialization.winmd</HintPath>
+            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Initialization.winmd</HintPath>
         </Reference>
         
         

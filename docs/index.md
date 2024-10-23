@@ -7,6 +7,8 @@ has_children: false
 
 **NOTE: These docs are currently a work-in-progress**
 
+The best place for questions and to stay up to date is on our Discord server. The best place to report bugs, as a developer, is the GitHub repo.
+
 Windows MIDI Services is an open source project, which has been developed with input and feedback from the community. 
 
 > [Source repo and developer releases on GitHub](https://aka.ms/midirepo)
@@ -41,11 +43,9 @@ While we're in developer preview, get started by downloading and installing the 
 
 ## Release Plans
 
-We currently plan to release Windows MIDI Services in-box in the latest version of Windows by the end of this calendar year. We will then back-port to the supported versions of Windows 11 and the latest supported Window 10 shortly afterwards.
+We'll soon have Windows MIDI Services in Windows Insider releases. The first few releases will be opt-in for people who request access on our Discord server, as they are not complete and they *will* break some current MIDI applications. After that, we'll open it up more broadly.
 
-(Plans are always subject to change, especially with quality-driven deliverables, but that's what we're currently working towards)
-
-The MIDI console and Settings app are planned to ship and be services through the Microsoft Store on Windows.
+After that, our release plan for the service, plugins, and API is to release when our customers, partners, and internal reviews are all happy with the results, especially backwards compatibility. This is currently expected to happen in the first half of CY 2025.
 
 ## Developer Samples
 
