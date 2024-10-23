@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using Microsoft.ApplicationInsights.Extensibility;
 using Nuke.Common;
 using Nuke.Common.CI;
@@ -37,13 +38,18 @@ class Build : NukeBuild
     string NuGetVersionName => "preview.7";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
-    string SetupBuildMajorMinor = "1.0";
+    string SetupBuildMajorMinor = "1.0.1";
     string SetupBuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
     string SetupBuildTimeNumber = UInt32.Parse(DateTime.Now.ToString("HHmm")).ToString();     // HHmm
 
 
-    string NugetFullVersionString => SetupBuildMajorMinor + "." + SetupBuildDateNumber + "." + SetupBuildTimeNumber + "-" + NuGetVersionName;
-    string NugetFullPackageId => "Microsoft.Windows.Devices.Midi2";
+    string NugetVersionString => SetupBuildMajorMinor + "-" + NuGetVersionName + "." + SetupBuildDateNumber + "." + SetupBuildTimeNumber ;
+    string NugetPackageId => "Microsoft.Windows.Devices.Midi2";
+
+    string NugetFullPackageIdWithVersion => NugetPackageId + "." + NugetVersionString;
+
+
+    string SetupBundleFullVersionString => SetupBuildMajorMinor + "-" + NuGetVersionName + "." + SetupBuildDateNumber + "." + SetupBuildTimeNumber;
 
 
     AbsolutePath _thisReleaseFolder;
@@ -236,6 +242,16 @@ class Build : NukeBuild
         .DependsOn(BuildServiceAndPlugins)
         .Executes(() =>
         {
+            //// for cswinrt
+            //NuGetTasks.NuGetInstall(_ => _
+            //    .SetProcessWorkingDirectory(AppSdkSolutionFolder)
+            //    .SetSource("https://api.nuget.org/v3/index.json")
+            //    .SetPackageID("Microsoft.Windows.CsWinRT")
+            //    .SetDependencyVersion(DependencyVersion.Highest)
+            //);
+
+
+
             foreach (var platform in SdkPlatforms)
             {
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
@@ -282,12 +298,12 @@ class Build : NukeBuild
                 // todo: it would be better to see if any of the generated winmds have changed and only
                 // do this step if those have changed. Maybe do a before/after date/time check?
 
-                Console.Out.WriteLine($"NuGet Version: {NugetFullVersionString}");
+                Console.Out.WriteLine($"NuGet Version: {NugetVersionString}");
 
                 NuGetTasks.NuGetPack(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "projections" / "dotnet-and-cpp" / "nuget" / "Microsoft.Windows.Devices.Midi2.nuspec")
-                    .AddProperty("version", NugetFullVersionString)
-                    .AddProperty("id", NugetFullPackageId)
+                    .AddProperty("version", NugetVersionString)
+                    .AddProperty("id", NugetPackageId)
                     .SetOutputDirectory(AppSdkNugetOutputFolder)
                 );
 
@@ -303,7 +319,7 @@ class Build : NukeBuild
             // copy the NuGet package over to this release
 
             FileSystemTasks.CopyFileToDirectory(
-                AppSdkNugetOutputFolder /  $"{NugetFullPackageId}.{NugetFullVersionString}.nupkg", 
+                AppSdkNugetOutputFolder /  $"{NugetFullPackageIdWithVersion}.nupkg", 
                 ThisReleaseFolder, 
                 FileExistsPolicy.Overwrite, 
                 true);
@@ -350,7 +366,7 @@ class Build : NukeBuild
             {
                 UpdateSetupBundleInfoIncludeFile(platform);
 
-                string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+                //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";               
 
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
 
@@ -380,7 +396,7 @@ class Build : NukeBuild
 
                 FileSystemTasks.CopyFile(
                     AppSdkSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
-                    ThisReleaseFolder / $"Windows MIDI Services (Tools and SDKs) {fullSetupVersionString}-{platform.ToLower()}.exe");
+                    ThisReleaseFolder / $"Windows MIDI Services (Tools and SDKs) {SetupBundleFullVersionString}-{platform.ToLower()}.exe");
 
             }
 
@@ -388,13 +404,13 @@ class Build : NukeBuild
 
     void UpdateSetupBundleInfoIncludeFile(string platform)
     {
-        string versionString = $"{SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+        //string versionString = $"{SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
 
         using (StreamWriter writer = System.IO.File.CreateText(SetupBundleInfoIncludeFile))
         {
             writer.WriteLine("<Include>");
             writer.WriteLine($"  <?define SetupVersionName=\"{SetupVersionName} {platform}\" ?>");
-            writer.WriteLine($"  <?define SetupVersionNumber=\"{versionString}\" ?>");
+            writer.WriteLine($"  <?define SetupVersionNumber=\"{SetupBundleFullVersionString}\" ?>");
             writer.WriteLine("</Include>");
         }
     }
@@ -409,7 +425,7 @@ class Build : NukeBuild
             {
                 UpdateSetupBundleInfoIncludeFile(platform);
 
-                string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+                //string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
 
                 string solutionDir = InBoxComponentsSetupSolutionFolder.ToString() + @"\";
 
@@ -437,7 +453,7 @@ class Build : NukeBuild
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
                 FileSystemTasks.CopyFile(
                     InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
-                    ThisReleaseFolder / $"Windows MIDI Services (In-Box Service) - {fullSetupVersionString}-{platform.ToLower()}.exe");
+                    ThisReleaseFolder / $"Windows MIDI Services (In-Box Service) - {SetupBundleFullVersionString}-{platform.ToLower()}.exe");
             }
         });
 
@@ -463,7 +479,8 @@ class Build : NukeBuild
                 .SetProcessWorkingDirectory(MidiSettingsSolutionFolder)
                 .SetPreRelease(true)
                 .SetSource(AppSdkNugetOutputFolder)
-                .SetPackageID(NugetFullPackageId)
+                .SetPackageID(NugetPackageId)
+                .SetDependencyVersion(DependencyVersion.Highest)
             );
 
             NuGetTasks.NuGetRestore(_ => _
@@ -673,7 +690,8 @@ class Build : NukeBuild
                 .SetProcessWorkingDirectory(MidiConsoleSolutionFolder)
                 .SetPreRelease(true)
                 .SetSource(AppSdkNugetOutputFolder)
-                .SetPackageID(NugetFullPackageId)
+                .SetPackageID(NugetPackageId)
+                .SetDependencyVersion(DependencyVersion.Highest)
             );
 
             NuGetTasks.NuGetRestore(_ => _
@@ -754,49 +772,99 @@ class Build : NukeBuild
 
         });
 
-    //Target BuildConsoleAppInstaller => _ => _
-    //    .DependsOn(BuildConsoleApp)
-    //    .DependsOn(BuildServiceAndPluginsInstaller)
-    //    .Executes(() =>
-    //    {
-    //        // we build for Arm64 and x64. No EC required here
-    //        foreach (var platform in OutOfProcPlatforms)
-    //        {
-    //            //UpdateSetupBundleInfoIncludeFile(platform);   // happens as part of service installer
 
-    //            string fullSetupVersionString = $"{SetupVersionName} {SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
+    void RestoreNuGetPackagesForCPPProject(string vcxprojFilePath, string solutionDir, string packagesConfigFullPath)
+    {
+        var projectDir = Path.GetDirectoryName(vcxprojFilePath);
 
-    //            string solutionDir = ConsoleSetupSolutionFolder.ToString() + @"\";
+        NuGetTasks.NuGetInstall(_ => _
+            .SetProcessWorkingDirectory(projectDir)
+            .SetPreRelease(true)
+            .SetSource(AppSdkNugetOutputFolder)
+            .SetPackageID(NugetPackageId)
+            .SetDependencyVersion(DependencyVersion.Highest)
+        );
 
-    //            var msbuildProperties = new Dictionary<string, object>();
-    //            msbuildProperties.Add("Platform", platform);
-    //            msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+        NuGetTasks.NuGetRestore(_ => _
+            .SetProcessWorkingDirectory(projectDir)
+            .SetSource(AppSdkNugetOutputFolder)
+            .SetSolutionDirectory(solutionDir)
+            //.SetConfigFile(packagesConfigFullPath)
+        );
+    }
 
-    //            Console.Out.WriteLine($"----------------------------------------------------------------------");
-    //            Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-    //            Console.Out.WriteLine($"Platform:    {platform.ToLower()}");
+    void UpdateWindowsMidiServicesSdkPackagePropertyForCppProject(string vcxprojFilePath)
+    {
+        if (File.Exists(vcxprojFilePath))
+        {
+            // this is ugly and annoying to have to do.
+            //   XmlTasks.XmlPoke(configFilePath, @"/packages/package/id", NugetFullPackageId)
 
-    //            var output = MSBuildTasks.MSBuild(_ => _
-    //                .SetTargetPath(ConsoleSetupSolutionFolder / "midi-console-setup.sln")
-    //                .SetMaxCpuCount(14)
-    //                /*.SetOutDir(outputFolder) */
-    //                /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
-    //                /*.SetTargets("Build") */
-    //                .SetProperties(msbuildProperties)
-    //                .SetConfiguration(Configuration.Release)
-    //                .EnableNodeReuse()
-    //            );
+            var doc = new XmlDocument();
+            doc.Load(vcxprojFilePath);
 
+            var manager = new XmlNamespaceManager(doc.NameTable);
+            manager.AddNamespace("msb", "http://schemas.microsoft.com/developer/msbuild/2003");
 
-    //            // todo: it would be better to see if any of the sdk files have changed and only
-    //            // do this copy if a new setup file was created. Maybe do a before/after date/time check?
-    //            FileSystemTasks.CopyFile(
-    //                ConsoleSetupSolutionFolder / "console-main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesConsoleSetup.exe",
-    //                ThisReleaseFolder / $"Windows MIDI Services (Console) - {fullSetupVersionString}-{platform.ToLower()}.exe");
-    //        }
+            XmlElement element = doc.SelectSingleNode($"/msb:Project/msb:PropertyGroup/msb:WindowsMidiServicesSdkPackage", manager) as XmlElement;
 
+            // change the version attribute
+            if (element != null)
+            {
+                element.InnerText = NugetFullPackageIdWithVersion;
 
-    //    });
+                doc.Save(vcxprojFilePath);
+
+                Console.WriteLine($"Updated {vcxprojFilePath}");
+            }
+            else
+            {
+                throw new ArgumentException($"Failed to update SDK Package Value for '{vcxprojFilePath}'.");
+            }
+
+        }
+        else
+        {
+            throw new ArgumentException($"vcxproj file does not exist '{vcxprojFilePath}'.");
+        }
+
+    }
+
+    void UpdatePackagesConfigForCPPProject(string configFilePath)
+    {
+        if (File.Exists(configFilePath))
+        {
+            // this is ugly and annoying to have to do.
+            //   XmlTasks.XmlPoke(configFilePath, @"/packages/package/id", NugetFullPackageId)
+
+            var doc = new XmlDocument();
+            doc.Load(configFilePath);
+
+            XmlElement element = doc.SelectSingleNode($"/packages/package[@id = \"{NugetPackageId}\"]") as XmlElement;
+
+            // change the version attribute
+            if (element != null)
+            {
+                Console.WriteLine($"Updating {element}");
+
+                element.SetAttribute("version", NugetVersionString);
+
+                doc.Save(configFilePath);
+
+                Console.WriteLine($"Updated {configFilePath}");
+            }
+            else
+            {
+                throw new ArgumentException($"Failed to update NuGet Package Value for '{configFilePath}'.");
+            }
+
+        }
+        else
+        {
+            throw new ArgumentException($"Packages.config file does not exist '{configFilePath}'.");
+        }
+    }
+
 
     Target BuildCppSamples => _ => _
         .DependsOn(BuildAndPackAllAppSDKs)
@@ -804,22 +872,45 @@ class Build : NukeBuild
         {
             var solution = SamplesCppWinRTSolutionFolder / "cpp-winrt-samples.sln";
 
-            // update nuget packages
+            // update nuget packages for each project 
+            foreach (var projectFolder in Directory.GetDirectories(SamplesCppWinRTSolutionFolder))
+            {
+                // only send paths that have a packages config in them
 
-            // for the MIDI nuget package
-            NuGetTasks.NuGetInstall(_ => _
-                .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
-                .SetPreRelease(true)
-                .SetSource(AppSdkNugetOutputFolder)
-                .SetPackageID(NugetFullPackageId)
-            );
+                var configFilePath = Path.Combine(projectFolder, "packages.config");
+
+                if (File.Exists(configFilePath))
+                {
+                    Console.WriteLine($"Updating {configFilePath}");
+                    UpdatePackagesConfigForCPPProject(configFilePath);
+
+                    var vcxprojFilePaths = Directory.GetFiles(projectFolder, "*.vcxproj");
+
+                    foreach (var path in vcxprojFilePaths)
+                    {
+                        Console.WriteLine($"Updating {path}");
+                        UpdateWindowsMidiServicesSdkPackagePropertyForCppProject(path);
+
+                        // nuget restore
+                        RestoreNuGetPackagesForCPPProject(path, SamplesCppWinRTSolutionFolder, configFilePath);
+
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Not a project folder {projectFolder}");
+                }
+
+            }
+
+
 
             // for cppwinrt
             NuGetTasks.NuGetInstall(_ => _
                 .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
-                .SetPreRelease(true)
                 .SetSource("https://api.nuget.org/v3/index.json")
                 .SetPackageID("Microsoft.Windows.CppWinRT")
+                .SetDependencyVersion(DependencyVersion.Highest)
             );
 
             // for WIL
@@ -831,15 +922,24 @@ class Build : NukeBuild
             //);
 
 
-            NuGetTasks.NuGetRestore(_ => _
-                .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
-                .SetSolutionDirectory(SamplesCppWinRTSolutionFolder)
-                .SetSource(AppSdkNugetOutputFolder)
-            /*.SetConfigFile(solution)*/
-            );
+            // for the MIDI nuget package
+            // the install and restore should work with the above 
+            // manual managing of the packages.config
+            //NuGetTasks.NuGetInstall(_ => _
+            //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+            //    .SetPreRelease(true)
+            //    .SetSource(AppSdkNugetOutputFolder)
+            //    .SetPackageID(NugetFullPackageId)
+            //    .SetDependencyVersion(DependencyVersion.Highest)
+            //);
+
+            //NuGetTasks.NuGetRestore(_ => _
+            //    .SetProcessWorkingDirectory(SamplesCppWinRTSolutionFolder)
+            //    .SetSolutionDirectory(SamplesCppWinRTSolutionFolder)
+            //    .SetSource(AppSdkNugetOutputFolder)
+            //);
 
 
-            
             // make sure they compile
             foreach (var platform in NativeSamplesPlatforms)
             {
@@ -873,6 +973,81 @@ class Build : NukeBuild
 
             }
         });
+
+
+    Target BuildCSharpSamples => _ => _
+        .DependsOn(BuildAndPackAllAppSDKs)
+        .Executes(() =>
+    {
+        var solution = SamplesCSWinRTSolutionFolder / "csharp-net-samples.sln";
+
+
+        // for cswinrt
+        NuGetTasks.NuGetInstall(_ => _
+            .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
+            .SetSource("https://api.nuget.org/v3/index.json")
+            .SetPackageID("Microsoft.Windows.CsWinRT")
+            .SetDependencyVersion(DependencyVersion.Highest)
+        );
+
+
+        // for the MIDI nuget package
+        // the install and restore should work with the above 
+        // manual managing of the packages.config
+        NuGetTasks.NuGetInstall(_ => _
+            .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
+            .SetPreRelease(true)
+            .SetSource(AppSdkNugetOutputFolder)
+            .SetPackageID(NugetPackageId)
+            .SetDependencyVersion(DependencyVersion.Highest)
+        );
+
+        NuGetTasks.NuGetRestore(_ => _
+            .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
+            .SetSolutionDirectory(SamplesCSWinRTSolutionFolder)
+            .SetSource(AppSdkNugetOutputFolder)
+        );
+
+
+        // make sure they compile
+        foreach (var platform in ManagedSamplesPlatforms)
+        {
+            string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
+
+            //DotNetTasks.DotNetBuild(_ => _
+            //    .SetProjectFile(SamplesCSWinRTSolutionFolder / "Midi" / "Midi.csproj")
+            //    .SetConfiguration(Configuration.Release)
+            //    .SetPublishSingleFile(false)
+            //    .SetPublishTrimmed(false)
+            //    .SetSelfContained(false)
+            //    .SetRuntime(rid)
+            //);
+
+
+            var msbuildProperties = new Dictionary<string, object>();
+            msbuildProperties.Add("Platform", platform);
+            msbuildProperties.Add("SolutionDir", SamplesCSWinRTSolutionFolder);      // to include trailing slash
+                                                                    //msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+
+            Console.Out.WriteLine($"----------------------------------------------------------------------");
+            Console.Out.WriteLine($"Solution:    {solution}");
+            Console.Out.WriteLine($"SolutionDir: {SamplesCSWinRTSolutionFolder}");
+            Console.Out.WriteLine($"Platform:    {platform}");
+
+
+            MSBuildTasks.MSBuild(_ => _
+                .SetTargetPath(solution)
+                .SetMaxCpuCount(14)
+                /*.SetOutDir(outputFolder) */
+                .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
+                /*.SetTargets("Build") */
+                .SetProperties(msbuildProperties)
+                .SetConfiguration(Configuration.Release)
+                //.SetVerbosity(MSBuildVerbosity.Minimal)
+                .EnableNodeReuse()
+            );
+        }
+    });
 
 
     // hard-coded paths to just get around some runtime limitations. This should
@@ -1081,13 +1256,13 @@ class Build : NukeBuild
         .DependsOn(Prerequisites)
         .DependsOn(BuildServiceAndPlugins)
         .DependsOn(BuildServiceAndPluginsInstaller)
-
         .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildConsoleApp)
         .DependsOn(BuildSettingsApp)
         .DependsOn(BuildAppSdkRuntimeAndToolsInstaller)
       //  .DependsOn(BuildAndPackageElectronProjection)
-      //  .DependsOn(BuildCppSamples)
+        .DependsOn(BuildCppSamples)
+        .DependsOn(BuildCSharpSamples)
         .Executes(() =>
         {
         });

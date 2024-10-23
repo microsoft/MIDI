@@ -118,23 +118,23 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementat
                 return false;
             }
 
-            //auto verifyConnectivityResult = tracker->VerifyConnectivity();
-            //if (FAILED(verifyConnectivityResult))
-            //{
-            //    LOG_IF_FAILED(verifyConnectivityResult);   // this also generates a fallback error with file and line number info
+            auto verifyConnectivityResult = tracker->VerifyConnectivity();
 
-            //    TraceLoggingWrite(
-            //        Midi2SdkTelemetryProvider::Provider(),
-            //        MIDI_SDK_TRACE_EVENT_ERROR,
-            //        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-            //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            //        TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-            //        TraceLoggingWideString(L"Failure hresult received verifying connectivity", MIDI_SDK_TRACE_MESSAGE_FIELD),
-            //        TraceLoggingHResult(verifyConnectivityResult, MIDI_SDK_TRACE_HRESULT_FIELD)
-            //    );
+            if (!verifyConnectivityResult)
+            {
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
-            //    return false;
-            //}
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failure received verifying connectivity", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return false;
+            }
 
             return true;
         }

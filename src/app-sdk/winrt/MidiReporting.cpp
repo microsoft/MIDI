@@ -11,6 +11,12 @@
 #include "MidiReporting.h"
 #include "Reporting.MidiReporting.g.cpp"
 
+#define SAFE_COTASKMEMFREE(p) \
+    if (NULL != p) { \
+        CoTaskMemFree(p); \
+        (p) = NULL; \
+    }
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 {
     foundation::Collections::IVector<rept::MidiServiceTransportPluginInfo> MidiReporting::GetInstalledTransportPlugins()
@@ -28,47 +34,53 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
             {
                 if (SUCCEEDED(serviceAbstraction->Activate(__uuidof(IMidiServicePluginMetadataReporterInterface), (void**)&metadataReporter)))
                 {
-                    CComBSTR metadataListJson;
-                    metadataListJson.Empty();
+                    LPWSTR rpcCallJson;
+                    metadataReporter->GetTransportList(&rpcCallJson);
 
-                    metadataReporter->GetTransportList(&metadataListJson);
 
-                    // parse it into json objects
-
-                    if (metadataListJson.m_str != nullptr && metadataListJson.Length() > 0)
+                    if (rpcCallJson != nullptr)
                     {
-                        winrt::hstring hstr(metadataListJson, metadataListJson.Length());
+                        winrt::hstring metadataListJsonString(rpcCallJson);
 
-                        // Parse the json, create the objects, throw them into the vector and return
+                        //SAFE_COTASKMEMFREE(rpcCallJson);
 
-                        json::JsonObject jsonObject = json::JsonObject::Parse(hstr);
+                        // parse it into json objects
 
-                        if (jsonObject != nullptr)
+                        if (metadataListJsonString.size() > 0)
                         {
-                            for (auto const& transportKV : jsonObject)
+                            // Parse the json, create the objects, throw them into the vector and return
+
+                            json::JsonObject jsonObject = json::JsonObject::Parse(metadataListJsonString);
+
+                            if (jsonObject != nullptr)
                             {
-                                rept::MidiServiceTransportPluginInfo info;
+                                for (auto const& transportKV : jsonObject)
+                                {
+                                    rept::MidiServiceTransportPluginInfo info;
 
-                                auto transport = transportKV.Value().GetObject();
+                                    auto transport = transportKV.Value().GetObject();
 
-                                info.Id = internal::StringToGuid(transportKV.Key().c_str());
-                                info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
-                                info.TransportCode = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L"");
-                                info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
-                                info.SmallImagePath = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, L"");
-                                info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
-                                info.Version = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_VERSION_PROPERTY_KEY, L"");
-                                info.IsSystemManaged = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false);
-                                info.IsRuntimeCreatableByApps = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false);
-                                info.IsRuntimeCreatableBySettings = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false);
-                                info.CanConfigure = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false);
+                                    info.Id = internal::StringToGuid(transportKV.Key().c_str());
+                                    info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
+                                    info.TransportCode = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L"");
+                                    info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
+                                    info.SmallImagePath = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, L"");
+                                    info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
+                                    info.Version = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_VERSION_PROPERTY_KEY, L"");
+                                    info.IsSystemManaged = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false);
+                                    info.IsRuntimeCreatableByApps = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false);
+                                    info.IsRuntimeCreatableBySettings = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false);
+                                    info.CanConfigure = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false);
 
-                                //transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, L"");
+                                    //transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, L"");
 
-                                transportList.Append(std::move(info));
+                                    transportList.Append(std::move(info));
+                                }
                             }
                         }
                     }
+
+
                 }
             }
         }

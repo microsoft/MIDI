@@ -75,7 +75,7 @@ CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvConfigurationManager::GetTransportList(LPWSTR* transportListJson)
-{
+{ 
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -91,6 +91,9 @@ CMidi2MidiSrvConfigurationManager::GetTransportList(LPWSTR* transportListJson)
 
     RETURN_IF_FAILED([&]()
         {
+            // RPC requirement            
+            //*transportListJson = nullptr;
+             
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
             RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransportList(bindingHandle.get(), transportListJson));

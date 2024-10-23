@@ -159,7 +159,7 @@ int main()
         std::cout << "- Transport-supplied Name: " << winrt::to_string(transportInfo.Name) << std::endl;
         std::cout << "- Description:             " << winrt::to_string(transportInfo.Description) << std::endl;
         std::cout << "- Transport Id:            " << winrt::to_string(winrt::to_hstring(transportInfo.TransportId)) << std::endl;
-        std::cout << "- Transport Mnemonic:      " << winrt::to_string(transportInfo.TransportAbbreviation) << std::endl;
+        std::cout << "- Transport Code:          " << winrt::to_string(transportInfo.TransportCode) << std::endl;
 
         if (transportInfo.NativeDataFormat == MidiEndpointNativeDataFormat::Midi1ByteFormat)
         {

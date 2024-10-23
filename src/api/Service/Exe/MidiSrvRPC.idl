@@ -131,7 +131,18 @@ interface MidiSrvRPC
 
     HRESULT MidiSrvGetTransportList(
         [in] handle_t bindingHandle,
-        [out, string] LPWSTR* transportListJson);
+        [out] LPWSTR* transportListJson);
+
+    // call with null transportList pointer to get a count of transports
+    // call again with transportList pointing to an appropriately-sized buffer
+    // and transportCount set to the value from the previous call. If count changes
+    // in between calls, failed hresult is returned.
+    //HRESULT MidiSrvGetTransportList(
+    //    [in] handle_t bindingHandle,
+    //    [in] DWORD transportMetadataStructSize,
+    //    [in, out] DWORD* transportCount,
+    //    [out, size_is(transportMetadataStructSize), length_is(transportCount)] PTRANSPORTMETADATA transportList
+    //    );
 
     HRESULT MidiSrvGetTransformList(
         [in] handle_t bindingHandle,

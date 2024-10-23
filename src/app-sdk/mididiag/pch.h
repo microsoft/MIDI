@@ -54,7 +54,13 @@ namespace svc = winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include <mmsystem.h>
 #include <timeapi.h>
 
+#include <wil/common.h>
+#include <wil/com.h>
+#include <wil/registry.h>
+
+
 #include "wstring_util.h"
+#include "MidiDefs.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
 

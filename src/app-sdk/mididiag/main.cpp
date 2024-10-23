@@ -186,6 +186,99 @@ void OutputError(_In_ std::wstring const& errorMessage)
 #define RETURN_FAIL return 1
 
 
+void OutputRegStringValue(std::wstring label, HKEY const key, std::wstring value)
+{
+    auto keyValue = wil::reg::try_get_value_string(key, value.c_str());
+    if (keyValue.has_value())
+    {
+        OutputStringField(label, keyValue.value());
+    }
+    else
+    {
+        OutputStringField(label, std::wstring{ L"Not present" });
+    }
+}
+
+// dword value > 0 == true
+void OutputRegDWordBooleanValue(std::wstring label, HKEY const key, std::wstring value)
+{
+    auto keyValue = wil::reg::try_get_value_dword(key, value.c_str());
+    if (keyValue.has_value())
+    {
+        OutputBooleanField(label, keyValue.value() > 0);
+    }
+    else
+    {
+        OutputStringField(label, std::wstring{ L"Not present" });
+    }
+}
+
+bool DoSectionRegistryEntries(_In_ bool const verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_REGISTRY);
+
+    try
+    {
+        // check to see if the root is there
+
+        const auto rootKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, wil::reg::key_access::read);
+
+        // list all values in the root
+
+        OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_CURRENT_CONFIG, rootKey.get(), MIDI_CONFIG_FILE_REG_VALUE);
+        OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_ENABLED, rootKey.get(), MIDI_DISCOVERY_ENABLED_REG_VALUE);
+        OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS, rootKey.get(), MIDI_USE_MMCSS_REG_VALUE);
+        OutputItemSeparator();
+
+        // TODO: list all values under the desktop app sdk runtime
+
+
+        // TODO: list all values under message processing plugins
+
+
+
+        // list all values under transport plugins
+
+        const auto transportPluginsKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY);
+
+        for (const auto& keyData : wil::make_range(wil::reg::key_iterator{ transportPluginsKey.get() }, wil::reg::key_iterator{}))
+        {
+            // name of the transport in the registry (this doesn't really mean anything)
+            OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, keyData.name);
+
+            const auto key = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, std::wstring(std::wstring(MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY) + L"\\" + keyData.name).c_str());
+
+            OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
+            OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED, key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
+
+            OutputItemSeparator();
+        }
+    }
+    catch (...)
+    {
+        OutputError(L"Could not open required registry key(s).");
+
+        return false;
+    }
+
+    return true;
+}
+
+bool DoSectionCOMComponents(_In_ bool const verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_COM);
+
+
+    return true;
+
+}
+
+
+
 bool DoSectionTransports(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
@@ -708,6 +801,12 @@ int __cdecl main()
         {
             if (!DoSectionClock(verbose)) RETURN_FAIL;
         }
+
+
+        DoSectionRegistryEntries(verbose);
+
+        DoSectionCOMComponents(verbose);
+
 
         if (!DoSectionServiceStatus(verbose)) RETURN_FAIL;
 

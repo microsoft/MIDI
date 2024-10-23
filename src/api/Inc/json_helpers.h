@@ -102,6 +102,8 @@ namespace WindowsMidiServicesInternal
 
         }
 
+       // *outParam = (LPWSTR)(obj.Stringify().c_str());
+
         return false;
     }
 

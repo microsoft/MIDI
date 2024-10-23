@@ -22,6 +22,29 @@
 
 #define MIDIDIAG_FIELD_LABEL_ERROR                                       L"ERROR"
 
+#define MIDIDIAG_SECTION_LABEL_ENUM_REGISTRY                             L"enum_registry"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_VALUE                              L"transport_id"
+
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT                               L"reg_root"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_ENABLED             L"reg_discovery_enabled"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS                     L"reg_use_mmcss"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_CURRENT_CONFIG                L"reg_current_config"
+
+
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_ARM64X                         L"reg_sdk_arm64x"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_X64                            L"registry_sdk_x64"
+
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORTS                         L"reg_transports"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME                     L"reg_transport_name"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID                    L"reg_transport_clsid"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED                  L"reg_transport_enabled"
+
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSFORMS                         L"reg_transforms"
+
+
+#define MIDIDIAG_SECTION_LABEL_ENUM_COM                                  L"enum_com"
+
+
 #define MIDIDIAG_SECTION_LABEL_ENUM_TRANSPORTS                           L"enum_transports"
 #define MIDIDIAG_FIELD_LABEL_TRANSPORT_ID                                L"transport_id"
 #define MIDIDIAG_FIELD_LABEL_TRANSPORT_NAME                              L"name"

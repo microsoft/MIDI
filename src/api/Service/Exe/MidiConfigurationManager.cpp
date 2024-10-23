@@ -126,8 +126,25 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
 
                             if (result == NOERROR)
                             {
-                                // Add to the vector
-                                availableAbstractionLayers.push_back(abstractionLayerGuid);
+                                // verify that there are no existing entries for this class id
+
+                                if (std::find(availableAbstractionLayers.begin(), availableAbstractionLayers.end(), abstractionLayerGuid) == availableAbstractionLayers.end())
+                                {
+                                    // Doesn't already exist, so add to the vector
+                                    availableAbstractionLayers.push_back(abstractionLayerGuid);
+                                }
+                                else
+                                {
+                                    TraceLoggingWrite(
+                                        MidiSrvTelemetryProvider::Provider(),
+                                        MIDI_TRACE_EVENT_WARNING,
+                                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                                        TraceLoggingWideString(L"Duplicate transport GUID in registry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                        TraceLoggingGuid(abstractionLayerGuid, "id"),
+                                        TraceLoggingPointer(this, "this")
+                                    );
+                                }
                             }
 
                         }
@@ -147,12 +164,13 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransforms() const noexcept
 {
-    std::vector<GUID> availableAbstractionLayers;
+    std::vector<GUID> availableTransforms;
 
-    // the diagnostics abstraction is always instantiated. We don't want to take the
-    // chance someone removes this from the registry, so it's hard-coded here. It's
-    // needed for support, tools, diagnostics, etc.
-    availableAbstractionLayers.push_back(__uuidof(Midi2DiagnosticsAbstraction));
+    // TODO: We'll want to add the required transforms here, like the translation ones
+   // availableTransforms.push_back(__uuidof(Midi2BS2UMPTransform));
+   // availableTransforms.push_back(__uuidof(Midi2UMP2BSTransform));
+   // availableTransforms.push_back(__uuidof(Midi2ProtocolDownscalerTransform));
+   // availableTransforms.push_back(__uuidof(Midi2SchedulerTransform));
 
     try
     {
@@ -214,7 +232,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
 
                 if (retCode == ERROR_SUCCESS)
                 {
-                    DWORD abstractionEnabled = 1;
+                    DWORD transformEnabled = 1;
 
                     // Check to see if that sub key has an Enabled value.
 
@@ -226,32 +244,51 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
 
                     try
                     {
-                        // is the abstraction layer enabled? > 0 or missing Enabled value mean it is
-                        abstractionEnabled = wil::reg::get_value<DWORD>(pluginKey.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
+                        // is the transform enabled? > 0 or missing Enabled value mean it is
+                        transformEnabled = wil::reg::get_value<DWORD>(pluginKey.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
                     }
                     catch (...)
                     {
                         // value doesn't exist, so we default to enabled
-                        abstractionEnabled = (DWORD)1;
+                        transformEnabled = (DWORD)1;
                     }
 
                     // we only proceed with this abstraction entry if it's enabled
-                    if (abstractionEnabled > 0)
+                    if (transformEnabled > 0)
                     {
                         try
                         {
-                            GUID abstractionLayerGuid;
+                            GUID transformGuid;
 
                             auto clsidString = wil::reg::get_value<std::wstring>(pluginKey.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
 
-                            auto result = CLSIDFromString((LPCTSTR)clsidString.c_str(), (LPGUID)&abstractionLayerGuid);
+                            auto result = CLSIDFromString((LPCTSTR)clsidString.c_str(), (LPGUID)&transformGuid);
 
                             LOG_IF_FAILED(result);
 
                             if (result == NOERROR)
                             {
                                 // Add to the vector
-                                availableAbstractionLayers.push_back(abstractionLayerGuid);
+                                availableTransforms.push_back(transformGuid);
+                            }
+
+
+                            if (std::find(availableTransforms.begin(), availableTransforms.end(), transformGuid) == availableTransforms.end())
+                            {
+                                // Doesn't already exist, so add to the vector
+                                availableTransforms.push_back(transformGuid);
+                            }
+                            else
+                            {
+                                TraceLoggingWrite(
+                                    MidiSrvTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_WARNING,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                                    TraceLoggingWideString(L"Duplicate transform GUID in registry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingGuid(transformGuid, "id"),
+                                    TraceLoggingPointer(this, "this")
+                                );
                             }
 
                         }
@@ -265,7 +302,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
     CATCH_LOG()
 
     // return a copy
-    return availableAbstractionLayers;
+    return availableTransforms;
 }
 
 
@@ -281,18 +318,18 @@ std::vector<TRANSPORTMETADATA> CMidiConfigurationManager::GetAllEnabledTransport
 
     std::vector<TRANSPORTMETADATA> results{};
 
-    auto abstractionIdList = GetEnabledTransports();
+    auto transportIdList = GetEnabledTransports();
 
     // for each item in the list, activate the MidiServiceAbstractionPlugin and get the metadata
 
-    for (auto const& abstractionId : abstractionIdList)
+    for (auto const& transportId : transportIdList)
     {
-        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
         wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> plugin;
 
-        if (SUCCEEDED(CoCreateInstance(abstractionId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction))))
+        if (SUCCEEDED(CoCreateInstance(transportId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))))
         {
-            if (SUCCEEDED(midiAbstraction->Activate(__uuidof(IMidiServiceTransportPluginMetadataProvider), (void**)&plugin)))
+            if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiServiceTransportPluginMetadataProvider), (void**)&plugin)))
             {
                 plugin->Initialize();
 
@@ -314,7 +351,7 @@ std::vector<TRANSPORTMETADATA> CMidiConfigurationManager::GetAllEnabledTransport
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingWideString(L"Unable to activate IMidiServiceAbstractionPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingGuid(abstractionId, "abstraction id"),
+                    TraceLoggingGuid(transportId, "transport id"),
                     TraceLoggingPointer(this, "this")
                 );
             }
