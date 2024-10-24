@@ -1059,13 +1059,20 @@ CMidiDeviceManager::ActivateEndpoint
                 {
                     friendlyName += commonProperties->EndpointName;
                 }
+
+                if (friendlyName.size() > 32 - 6)
+                {
+                    // if the size of name + " O-12\0" > 32, we need to lose the manufacturer name for WinMM compat
+                    friendlyName = commonProperties->EndpointName;
+                }
+
             }
 
-            // TODO: temporary hard coded strings, needs to be localized
-            friendlyName += L" Gp 0";
+            // O for Output, I for input, then the group number after that.
+            // we have to economize space due to 32 character WinMM name limit
+            std::wstring midiOutFriendlyName = friendlyName + L" O-0";
+            std::wstring midiInFriendlyName = friendlyName + L" I-0";
 
-            std::wstring midiOutFriendlyName = friendlyName + L" Out";
-            std::wstring midiInFriendlyName = friendlyName + L" In";
 
             midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(midiOutFriendlyName.c_str()) + 1)), (PVOID)midiOutFriendlyName.c_str() });

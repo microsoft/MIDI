@@ -236,13 +236,12 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
         // all others with a service assigned port number goes into the portInfo structure for processing.
         auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
         
-
         if (prop)
         {
 //            servicePortNum = winrt::unbox_value<UINT32>(prop);
 
             std::optional<UINT32> servicePortNumValue = prop.try_as<UINT32>();
-            if (servicePortNumValue != std::nullopt && servicePortNumValue.has_value())
+            if (servicePortNumValue != std::nullopt && servicePortNumValue.has_value() && servicePortNumValue.value() != 0)
             {
                 servicePortNum = servicePortNumValue.value();
                 servicePortNumValid = true;
@@ -262,8 +261,13 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
             }
 
             m_MidiPortInfo[flow][servicePortNum].PortNumber = servicePortNum;
-            m_MidiPortInfo[flow][servicePortNum].Name = device.Name();
+            m_MidiPortInfo[flow][servicePortNum].Name = device.Name().c_str();
             m_MidiPortInfo[flow][servicePortNum].InterfaceId = device.Id().c_str();
+
+            //OutputDebugString(device.Id().c_str());
+            //OutputDebugString(L" : ");
+            //OutputDebugString(device.Name().c_str());
+            //OutputDebugString(L"\n");
 
             // Fill in the midiCaps for this port
             if (flow == MidiFlowOut)
@@ -274,7 +278,7 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
                 caps->wPid = MM_MSFT_GENERIC_MIDIOUT;
                 caps->vDriverVersion = 0x0100;
 
-                wcsncpy_s(caps->szPname, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), MAXPNAMELEN);
+                wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
                 caps->szPname[MAXPNAMELEN - 1] = NULL;
 
                 caps->wTechnology = MOD_MIDIPORT;
@@ -291,7 +295,8 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
                 caps->wPid = MM_MSFT_GENERIC_MIDIIN;
                 caps->vDriverVersion = 0x0100;
 
-                wcsncpy_s(caps->szPname, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), MAXPNAMELEN);
+                //wcsncpy_s(caps->szPname, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), MAXPNAMELEN);
+                wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
                 caps->szPname[MAXPNAMELEN - 1] = NULL;
 
                 caps->dwSupport = 0;
