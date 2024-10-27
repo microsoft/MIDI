@@ -27,7 +27,7 @@ namespace Microsoft.Midi.ConsoleApp
 
 
             AnsiConsole.Status()
-            .Start("Enumerating transports...", ctx =>
+            .Start("Enumerating sessions...", ctx =>
             {
                 ctx.Spinner(Spinner.Known.Star);
 

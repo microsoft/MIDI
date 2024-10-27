@@ -569,26 +569,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     }
 
-    template<typename T>
-    T MidiEndpointDeviceInformation::GetProperty(
-        winrt::hstring key,
-        T defaultValue
-    ) const noexcept
-    {
-        if (!m_properties.HasKey(key)) return defaultValue;
-        if (m_properties.Lookup(key) == nullptr) return defaultValue;
 
-        std::optional<T> opt = m_properties.Lookup(key).try_as<T>();
-
-        if (opt == std::nullopt)
-        {
-            return defaultValue;
-        }
-        else
-        {
-            return opt.value();
-        }
-    }
 
 
 

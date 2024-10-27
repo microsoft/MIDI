@@ -118,6 +118,13 @@ namespace ci = ::winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
 
 
 
+#define SAFE_COTASKMEMFREE(p) \
+    if (NULL != p) { \
+        CoTaskMemFree(p); \
+        (p) = NULL; \
+    }
+
+
 #include "resource.h"
 
 #include "midi_stream_message_defs.h"
@@ -155,12 +162,6 @@ namespace ci = ::winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
 
 #include "MidiSession.h"
 
-#include "MidiEndpointDeviceInformationAddedEventArgs.h"
-#include "MidiEndpointDeviceInformationUpdatedEventArgs.h"
-#include "MidiEndpointDeviceInformationRemovedEventArgs.h"
-#include "MidiEndpointDeviceInformation.h"
-#include "MidiEndpointDeviceWatcher.h"
-
 #include "MidiLoopbackEndpointManager.h"
 #include "MidiLoopbackEndpointCreationConfig.h"
 #include "MidiLoopbackEndpointRemovalConfig.h"
@@ -188,7 +189,4 @@ namespace ci = ::winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
 #include "MidiSystemExclusiveSender.h"
 
 #include "MidiServiceConfig.h"
-
-
-
 

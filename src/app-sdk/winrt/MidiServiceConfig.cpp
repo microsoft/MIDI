@@ -13,12 +13,9 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementation
 {
-    // returns True if the MIDI Service is available on this PC
-
-
     _Use_decl_annotations_
     json::JsonObject MidiServiceConfig::InternalSendConfigJsonAndGetResponse(
-        winrt::guid const& abstractionId, 
+        winrt::guid const& transportId, 
         json::JsonObject const& configObject
     ) noexcept
     {
@@ -30,28 +27,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         // default to failed
         auto response = internal::BuildConfigurationResponseObject(false);
 
-
         if (serviceAbstraction)
         {
             auto activateConfigManagerResult = serviceAbstraction->Activate(iid, (void**)&configManager);
 
-            if (configManager == nullptr)
-            {
-                LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Config manager is null", MIDI_SDK_TRACE_MESSAGE_FIELD)
-                );
-                    
-                return response;
-            }
-
-            if (FAILED(activateConfigManagerResult))
+            if (FAILED(activateConfigManagerResult) || configManager == nullptr)
             {
                 LOG_IF_FAILED(activateConfigManagerResult);   // this also generates a fallback error with file and line number info
 
@@ -61,14 +41,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Config manager call failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Config manager activation failed with hresult or null config manager", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingHResult(activateConfigManagerResult, MIDI_SDK_TRACE_HRESULT_FIELD)
                     );
 
                 return response;
             }
 
-            auto initializeResult = configManager->Initialize(abstractionId, nullptr, nullptr);
+            auto initializeResult = configManager->Initialize(transportId, nullptr, nullptr);
 
             if (FAILED(initializeResult))
             {
@@ -88,38 +68,38 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
                 return response;
             }
 
-            CComBSTR responseString{};
-            responseString.Empty();
-
             auto jsonPayload = configObject.Stringify();
 
+            LPWSTR rpcResponseString{ nullptr };
+
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to initialize config manager", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingPointer(&rpcResponseString, "rpc response string local address")
+            );
+
             // send up the payload
+            auto callStatus = configManager->UpdateConfiguration(
+                jsonPayload.c_str(), 
+                &rpcResponseString
+            );
 
-            auto configUpdateResult = configManager->UpdateConfiguration(jsonPayload.c_str(), &responseString);
-
-            if (FAILED(configUpdateResult))
+            if (SUCCEEDED(callStatus) && rpcResponseString != nullptr && wcslen(rpcResponseString) > 0)
             {
-                LOG_IF_FAILED(configUpdateResult);   // this also generates a fallback error with file and line number info
+                winrt::hstring hstr{ rpcResponseString };
 
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed to configure endpoint", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingHResult(configUpdateResult, MIDI_SDK_TRACE_HRESULT_FIELD)
-                );
+                SAFE_COTASKMEMFREE(rpcResponseString);
 
-                // return a failed result
-                return response;
-            }
-            else
-            {
-                json::JsonObject responseObject;
+                json::JsonObject responseObject = json::JsonObject::Parse(hstr);
 
-                if (internal::JsonObjectFromBSTR(&responseString, responseObject))
+                if (responseObject != nullptr)
                 {
+                    // returns the JSON we parsed from the service response
                     return responseObject;
                 }
                 else
@@ -134,11 +114,30 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Unable to read response object from BSTR", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                        TraceLoggingWideString(L"Unable to read response object from string", MIDI_SDK_TRACE_MESSAGE_FIELD)
                     );
 
                     return response;
                 }
+            }
+            else
+            {
+                // failed
+
+                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Service config call failed", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingHResult(callStatus, "hresult"),
+                    TraceLoggingWideString(rpcResponseString, "service response string")
+                );
+
+                return response;
             }
         }
         else
@@ -155,7 +154,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
                 TraceLoggingWideString(L"Failed to create service abstraction", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-
             return response;
         }
 
@@ -168,11 +166,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept
     {
         // this initializes to a failure state, so we can just return it when we have a fail
-        //auto response = winrt::make_self<implementation::MidiServiceConfigurationResponse>();
-
         svc::MidiServiceConfigResponse response;
-
-        //response.Status = midi2::MidiServiceConfigResponseStatus::ErrorOther;
 
         if (configUpdate == nullptr)
         {

@@ -136,9 +136,12 @@ HRESULT
 MidiSrvUpdateConfiguration(
     /* [in] */ handle_t bindingHandle,
     /*[in, string]*/ __RPC__in_string LPCWSTR configurationJson,
-    __RPC__out LPWSTR* responseOut)
+    __RPC__out LPWSTR* responseJson)
 {
     UNREFERENCED_PARAMETER(bindingHandle);
+
+    // in case of any HRESULT error, the response is supposed to be nullptr
+    *responseJson = nullptr;
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -149,7 +152,7 @@ MidiSrvUpdateConfiguration(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
-    RETURN_HR_IF_NULL(E_INVALIDARG, responseOut);
+    //RETURN_HR_IF_NULL(E_INVALIDARG, responseJson);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -171,41 +174,30 @@ MidiSrvUpdateConfiguration(
 
     auto configEntries = configurationManager->GetTransportSettingsFromJsonString(configurationJson);
 
-    if (configEntries.size() == 0)
+    if (configEntries.size() != 1)
     {
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingWideString(L"No config entries in JSON string")
+            TraceLoggingWideString(L"Only one config entry allowed per call")
         );
 
         return E_FAIL;
     }
 
-    std::wstring combinedResponse{};
+    LPWSTR response;
 
-    for (auto i = configEntries.begin(); i != configEntries.end(); i++)
-    {
-        LPWSTR response;
+    RETURN_IF_FAILED(deviceManager->UpdateTransportConfiguration(
+        configEntries.begin()->first,
+        configEntries.begin()->second.c_str(),
+        &response));
 
-        deviceManager->UpdateTransportConfiguration(i->first, i->second.c_str(), &response);
+    // TODO: Should use tryparse here instead
+    auto responseObject = json::JsonObject::Parse(response);
 
-        // Probably need to do more formatting of this. Should use the json objects instead
-
-        combinedResponse += response;
-    }
-
-
-
-    //wil::unique_cotaskmem_string tempString;
-    //tempString = wil::make_cotaskmem_string_nothrow(combinedResponse.c_str());
-    //RETURN_IF_NULL_ALLOC(tempString.get());
-    //combinedResponse = tempString.release();
-
-    *responseOut = (LPWSTR)combinedResponse.c_str();
-
+    internal::JsonStringifyObjectToOutParam(responseObject, responseJson);
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
 
@@ -460,7 +452,7 @@ MidiSrvGetTransportList(
         // add the abstraction metadata to the root, using the abstraction id as the key
         rootObject.SetNamedValue(internal::GuidToString(metadata.TransportId).c_str(), transportObject);
 
-        // We need to free all the strings in the struct. I hate this pattern.
+        // We need to free all the strings in the struct. 
         SAFE_COTASKMEMFREE(metadata.Name);
         SAFE_COTASKMEMFREE(metadata.TransportCode);
         SAFE_COTASKMEMFREE(metadata.Description);
@@ -473,8 +465,6 @@ MidiSrvGetTransportList(
 
     // stringify json to output parameter
 
-    // TODO: Doesn't this leak? With the switch to LPWSTR, the client doesn't
-    // know that these have to be freed. It was obvious with BSTR.
     internal::JsonStringifyObjectToOutParam(rootObject, transportListJson);
 
     TraceLoggingWrite(

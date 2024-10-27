@@ -107,6 +107,35 @@ namespace WindowsMidiServicesInternal
         return false;
     }
 
+
+    _Success_(return == true)
+        inline bool JsonStringifyObjectToOutParam(
+            _In_ json::JsonArray const& array,
+            _Out_ LPWSTR * outParam) noexcept
+    {
+        try
+        {
+            wil::unique_cotaskmem_string tempString = wil::make_cotaskmem_string_nothrow(array.Stringify().c_str());
+
+            if (tempString.get() != nullptr)
+            {
+                *outParam = (LPWSTR)tempString.release();
+                return true;
+            }
+
+            return false;
+        }
+        catch (...)
+        {
+
+        }
+
+        // *outParam = (LPWSTR)(obj.Stringify().c_str());
+
+        return false;
+    }
+
+
     inline json::JsonObject JsonCreateSingleWStringPropertyObject(_In_ std::wstring const& key, _In_ std::wstring const& value) noexcept
     {
         json::JsonObject obj;

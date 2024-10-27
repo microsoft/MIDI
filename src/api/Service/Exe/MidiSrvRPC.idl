@@ -96,7 +96,7 @@ interface MidiSrvRPC
     HRESULT MidiSrvUpdateConfiguration(
         [in] handle_t bindingHandle, 
         [in, string] LPCWSTR configurationJson, 
-        [out, string] LPWSTR* response);
+        [out, string] LPWSTR* responseJson);
 
 
     // Session Management and reporting
@@ -131,7 +131,7 @@ interface MidiSrvRPC
 
     HRESULT MidiSrvGetTransportList(
         [in] handle_t bindingHandle,
-        [out] LPWSTR* transportListJson);
+        [out, string] LPWSTR* transportListJson);
 
     // call with null transportList pointer to get a count of transports
     // call again with transportList pointing to an appropriately-sized buffer
