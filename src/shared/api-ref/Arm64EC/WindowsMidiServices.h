@@ -1371,9 +1371,9 @@ EXTERN_C const IID IID_IMidiTransportConfigurationManager;
             /* [annotation][in] */ 
             _In_  GUID transportId,
             /* [annotation][in] */ 
-            _In_  IMidiDeviceManagerInterface *midiDeviceManager,
+            _In_opt_  IMidiDeviceManagerInterface *midiDeviceManager,
             /* [annotation][in] */ 
-            _In_  IMidiServiceConfigurationManagerInterface *midiServiceConfigurationManager) = 0;
+            _In_opt_  IMidiServiceConfigurationManagerInterface *midiServiceConfigurationManager) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE UpdateConfiguration( 
             /* [annotation][string][in] */ 
@@ -1413,9 +1413,9 @@ EXTERN_C const IID IID_IMidiTransportConfigurationManager;
             /* [annotation][in] */ 
             _In_  GUID transportId,
             /* [annotation][in] */ 
-            _In_  IMidiDeviceManagerInterface *midiDeviceManager,
+            _In_opt_  IMidiDeviceManagerInterface *midiDeviceManager,
             /* [annotation][in] */ 
-            _In_  IMidiServiceConfigurationManagerInterface *midiServiceConfigurationManager);
+            _In_opt_  IMidiServiceConfigurationManagerInterface *midiServiceConfigurationManager);
         
         DECLSPEC_XFGVIRT(IMidiTransportConfigurationManager, UpdateConfiguration)
         HRESULT ( STDMETHODCALLTYPE *UpdateConfiguration )( 

@@ -37,7 +37,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         void EndpointDefinitionB(_In_ loop::MidiLoopbackEndpointDefinition const& value) { m_definitionB = value; }
 
     private:
-        winrt::guid m_associationId;
+        winrt::guid m_associationId{};
 
         loop::MidiLoopbackEndpointDefinition m_definitionA{};
         loop::MidiLoopbackEndpointDefinition m_definitionB{};

@@ -22,13 +22,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         static svc::MidiServiceConfigResponse UpdateProcessingPluginConfig(
             _In_ svc::IMidiServiceMessageProcessingPluginConfig const& configUpdate) noexcept;
 
-
-        static json::JsonObject InternalSendConfigJsonAndGetResponse(
-            _In_ winrt::guid const& transportId, 
-            _In_ json::JsonObject const& configObject) noexcept;
-
     private:
 
+        static json::JsonObject InternalSendConfigJsonAndGetResponse(
+            _In_ winrt::guid const& transportId,
+            _In_ json::JsonObject const& configObject) noexcept;
 
     };
 }

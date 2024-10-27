@@ -11,12 +11,6 @@
 #include "MidiReporting.h"
 #include "Reporting.MidiReporting.g.cpp"
 
-#define SAFE_COTASKMEMFREE(p) \
-    if (NULL != p) { \
-        CoTaskMemFree(p); \
-        (p) = NULL; \
-    }
-
 namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 {
     foundation::Collections::IVector<rept::MidiServiceTransportPluginInfo> MidiReporting::GetInstalledTransportPlugins()
@@ -34,15 +28,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
             {
                 if (SUCCEEDED(serviceAbstraction->Activate(__uuidof(IMidiServicePluginMetadataReporterInterface), (void**)&metadataReporter)))
                 {
-                    LPWSTR rpcCallJson;
-                    metadataReporter->GetTransportList(&rpcCallJson);
+                    LPWSTR rpcCallJson{ nullptr };
+                    auto callStatus = metadataReporter->GetTransportList(&rpcCallJson);
 
-
-                    if (rpcCallJson != nullptr)
+                    if (SUCCEEDED(callStatus) && rpcCallJson != nullptr && wcslen(rpcCallJson) > 0)
                     {
                         winrt::hstring metadataListJsonString(rpcCallJson);
-
-                        //SAFE_COTASKMEMFREE(rpcCallJson);
 
                         // parse it into json objects
 
@@ -78,9 +69,23 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
                                 }
                             }
                         }
+
+                        SAFE_COTASKMEMFREE(rpcCallJson);
                     }
+                    else
+                    {
+                        LOG_IF_FAILED(callStatus);
 
-
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Failed to call service function.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingHResult(callStatus, "hresult")
+                        );
+                    }
                 }
             }
         }
@@ -128,16 +133,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
             {
                 if (SUCCEEDED(serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker)))
                 {
-                    CComBSTR sessionListJson;
-                    sessionListJson.Empty();
-
-                    sessionTracker->GetSessionList(&sessionListJson);
+                    LPWSTR rpcSessionListJson{ nullptr };
+                    auto callStatus = sessionTracker->GetSessionList(&rpcSessionListJson);
 
                     // parse it into json objects
 
-                    if (sessionListJson.m_str != nullptr && sessionListJson.Length() > 0)
+                    if (SUCCEEDED(callStatus) && rpcSessionListJson != nullptr && wcslen(rpcSessionListJson) > 0)
                     {
-                        winrt::hstring hstr(sessionListJson, sessionListJson.Length());
+                        winrt::hstring hstr(rpcSessionListJson);
 
                         // Parse the json, create the objects, throw them into the vector and return
 
@@ -192,7 +195,24 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
                                 sessionList.Append(*sessionObject);
                             }
                         }
+
+                        SAFE_COTASKMEMFREE(rpcSessionListJson);
                     }
+                    else
+                    {
+                        LOG_IF_FAILED(callStatus);
+
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Failed to call service function.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingHResult(callStatus, "hresult")
+                        );
+                    }
+
                 }
             }
         }

@@ -27,3 +27,4 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::factory_implemen
     {
     };
 }
+

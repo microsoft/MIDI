@@ -20,6 +20,7 @@ using Microsoft.Windows.Devices.Midi2;
 using Microsoft.Windows.Devices.Midi2.Messages;
 using Microsoft.Windows.Devices.Midi2.Endpoints.Virtual;
 using Microsoft.Windows.Devices.Midi2.Initialization;
+using Windows.UI.Popups;
 
 
 namespace MidiSample.AppToAppMidi
@@ -37,27 +38,42 @@ namespace MidiSample.AppToAppMidi
         {
             this.InitializeComponent();
 
+            UpdateName.IsEnabled = false;
+            EndpointNameEntry.IsEnabled = false;
+            PadContainer.Visibility = Visibility.Collapsed;
+
+            this.SetWindowSize(500, 600);
+            this.Closed += MainWindow_Closed;
+
             if (!MidiServicesInitializer.EnsureServiceAvailable())
             {
                 // In your application, you may decide it is appropriate to fall back to an older MIDI API
                 Console.WriteLine("Windows MIDI Services is not available");
+                this.AppWindow.Title = "(MIDI not available)";
+
             }
             else
             {
                 // bootstrap the SDK runtime. Should check the return result here
                 MidiServicesInitializer.InitializeSdkRuntime();
 
-                StartVirtualDevice();
+                if (StartVirtualDevice())
+                {
+                    var notes = new byte[] { 50, 52, 53, 55, 57, 58, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76 };
+                    Notes = notes.Select(n => new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
 
-                var notes = new byte[] { 50, 52, 53, 55, 57, 58, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76 };
+                    this.SetIsAlwaysOnTop(true);
 
-                Notes = notes.Select(n => new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
+                    UpdateName.IsEnabled = true;
+                    EndpointNameEntry.IsEnabled = true;
+                    PadContainer.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    this.AppWindow.Title = "(failed to start virtual device)";
+                }
             }
 
-            this.Closed += MainWindow_Closed;
-
-            this.SetWindowSize(500, 600);
-            this.SetIsAlwaysOnTop(true);
         }
 
         private void MainWindow_Closed(object sender, WindowEventArgs args)
@@ -72,7 +88,7 @@ namespace MidiSample.AppToAppMidi
             _session.Dispose();
         }
 
-        private void StartVirtualDevice()
+        private bool StartVirtualDevice()
         {
             try
             {
@@ -89,7 +105,7 @@ namespace MidiSample.AppToAppMidi
                 if (_session == null)
                 {
                     System.Diagnostics.Debug.WriteLine("StartVirtualDevice Unable to create session");
-                    return;
+                    return false;
                 }
 
                 // create the virtual device, so we can get the endpoint device id to connect to
@@ -100,7 +116,7 @@ namespace MidiSample.AppToAppMidi
                 if (_virtualDevice == null)
                 {
                     System.Diagnostics.Debug.WriteLine("StartVirtualDevice Unable to create virtual device");
-                    return;
+                    return false;
                 }
 
                 // create our device-side connection
@@ -110,7 +126,7 @@ namespace MidiSample.AppToAppMidi
                 if (_connection == null)
                 {
                     System.Diagnostics.Debug.WriteLine("StartVirtualDevice failed to create connection");
-                    return;
+                    return false;
                 }
 
                 // necessary for the virtual device to participate in MIDI communication
@@ -128,17 +144,21 @@ namespace MidiSample.AppToAppMidi
                     System.Diagnostics.Debug.WriteLine("Connection Opened");
 
                     this.AppWindow.Title = creationConfig.Name + ": Connected";
+
+                    return true;
                 }
                 else
                 {
                     System.Diagnostics.Debug.WriteLine("Connection Open Failed");
-                    this.AppWindow.Title = creationConfig.Name + ": (no connection)";
-                }
 
+                    return false;
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("Exception: " + ex.ToString());
+
+                return false;
             }
         }
 

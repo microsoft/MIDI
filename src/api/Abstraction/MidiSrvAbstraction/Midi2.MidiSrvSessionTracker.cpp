@@ -147,6 +147,9 @@ CMidi2MidiSrvSessionTracker::GetSessionList(
 
     RETURN_IF_FAILED([&]()
         {
+            // RPC requirement            
+            *sessionList = nullptr;
+
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
             RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), sessionList));

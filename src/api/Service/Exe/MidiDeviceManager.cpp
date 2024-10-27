@@ -1070,8 +1070,9 @@ CMidiDeviceManager::ActivateEndpoint
 
             // O for Output, I for input, then the group number after that.
             // we have to economize space due to 32 character WinMM name limit
-            std::wstring midiOutFriendlyName = friendlyName + L" O-0";
-            std::wstring midiInFriendlyName = friendlyName + L" I-0";
+            // Group numbers should be 1-16 here, so index+1
+            std::wstring midiOutFriendlyName = friendlyName + L" O-1";
+            std::wstring midiInFriendlyName = friendlyName + L" I-1";
 
 
             midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},

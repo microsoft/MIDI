@@ -302,7 +302,6 @@ interface IMidiDeviceManagerInterface : IUnknown
         [out, string, annotation("_Out_")] LPWSTR* responseJson
     );
 
-
 };
 
 // ============================================================================================
@@ -364,8 +363,8 @@ interface IMidiTransportConfigurationManager : IUnknown
 {
     HRESULT Initialize(
         [in, annotation("_In_")] GUID transportId,
-        [in, annotation("_In_")] IMidiDeviceManagerInterface* midiDeviceManager,
-        [in, annotation("_In_")] IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManager
+        [in, annotation("_In_opt_")] IMidiDeviceManagerInterface* midiDeviceManager,
+        [in, annotation("_In_opt_")] IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManager
     );
 
     HRESULT UpdateConfiguration(

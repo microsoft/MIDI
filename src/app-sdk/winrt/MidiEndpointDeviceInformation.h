@@ -93,11 +93,32 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring key,
             _In_ foundation::DateTime defaultValue) const noexcept;
 
-        
+
         template<typename T>
-        T GetProperty(
-            _In_ winrt::hstring key,
-            _In_ T defaultValue) const noexcept;
+        inline T GetProperty(
+            winrt::hstring key,
+            T defaultValue
+        ) const noexcept
+        {
+            if (!m_properties.HasKey(key)) return defaultValue;
+            if (m_properties.Lookup(key) == nullptr) return defaultValue;
+
+            std::optional<T> opt = m_properties.Lookup(key).try_as<T>();
+
+            if (opt == std::nullopt)
+            {
+                return defaultValue;
+            }
+            else
+            {
+                return opt.value();
+            }
+        }
+
+        //template<typename T>
+        //T GetProperty(
+        //    _In_ winrt::hstring key,
+        //    _In_ T defaultValue) const noexcept;
 
         //winrt::hstring GetStringProperty(
         //    _In_ winrt::hstring key,

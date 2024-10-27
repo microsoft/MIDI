@@ -17,10 +17,11 @@ class CMidi2MidiSrvConfigurationManager :
 public:
     STDMETHOD(Initialize(
         _In_ GUID transportId, 
-        _In_ IMidiDeviceManagerInterface* deviceManagerInterface, 
-        _In_ IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface));
+        _In_opt_ IMidiDeviceManagerInterface* deviceManagerInterface, 
+        _In_opt_ IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface));
 
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Out_ LPWSTR* responseJson));
+    //STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Inout_ BSTR* responseJson));
     STDMETHOD(Shutdown)();
 
 

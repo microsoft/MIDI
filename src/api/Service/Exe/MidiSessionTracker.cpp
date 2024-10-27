@@ -588,26 +588,22 @@ CMidiSessionTracker::GetSessionList(
 
     rootObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY, sessionsArray);
 
-    CComBSTR ccbstr;
-    ccbstr.Empty();
+    //CComBSTR ccbstr;
+    //ccbstr.Empty();
 
-    // we do this conversion step so we can trace log it
-    std::wstring wstr = rootObject.Stringify().c_str();
+    //// we do this conversion step so we can trace log it
+    //std::wstring wstr = rootObject.Stringify().c_str();
 
-    //TraceLoggingWrite(
-    //    MidiSrvTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(wstr.c_str())
-    //);
+    //ccbstr = wstr.c_str();
 
-    ccbstr = wstr.c_str();
+    //RETURN_IF_FAILED(ccbstr.CopyTo(sessionList));
 
-    RETURN_IF_FAILED(ccbstr.CopyTo(sessionList));
+    if (internal::JsonStringifyObjectToOutParam(rootObject, sessionList))
+    {
+        return S_OK;
+    }
 
-    return S_OK;
+    return E_FAIL;
 }
 
 HRESULT

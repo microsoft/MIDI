@@ -78,13 +78,13 @@ namespace WindowsMidiServicesInternal
 
     struct GroupTerminalBlockInternal
     {
-        uint8_t Number;
-        uint8_t Direction;
-        uint8_t FirstGroupIndex;
-        uint8_t GroupCount;
-        uint8_t Protocol;
-        uint16_t MaxInputBandwidth;
-        uint16_t MaxOutputBandwidth;
+        uint8_t Number{ 0 };
+        uint8_t Direction{ MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL };
+        uint8_t FirstGroupIndex{ 0 };
+        uint8_t GroupCount{ 1 };
+        uint8_t Protocol{ 0 };
+        uint16_t MaxInputBandwidth{ 0 };
+        uint16_t MaxOutputBandwidth{ 0 };
 
         std::wstring Name{ };
     };

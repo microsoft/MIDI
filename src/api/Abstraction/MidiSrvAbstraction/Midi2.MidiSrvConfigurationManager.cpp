@@ -42,29 +42,48 @@ CMidi2MidiSrvConfigurationManager::Initialize(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, LPWSTR* response)
+CMidi2MidiSrvConfigurationManager::UpdateConfiguration(LPCWSTR configurationJson, LPWSTR* responseJson)
 {
     TraceLoggingWrite(
         MidiSrvAbstractionTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Entering UpdateConfiguration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(configurationJson, "config json"),
+        TraceLoggingPointer(responseJson, "Response pointer")
+        );
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, responseJson);
+
+    // requirement for RPC and also in case of failure
+    *responseJson = NULL;
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
 
     wil::unique_rpc_binding bindingHandle;
-
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
-    RETURN_HR_IF_NULL(E_INVALIDARG, response);
-    RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, response));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, responseJson));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
+
+            TraceLoggingWrite(
+                MidiSrvAbstractionTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Completed RPC call", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(configurationJson, "config json"),
+                TraceLoggingPointer(responseJson, "Response pointer")
+            );
+
             return S_OK;
         }());
 
@@ -84,16 +103,17 @@ CMidi2MidiSrvConfigurationManager::GetTransportList(LPWSTR* transportListJson)
         TraceLoggingPointer(this, "this")
     );
 
-    wil::unique_rpc_binding bindingHandle;
-
-    RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
     RETURN_HR_IF_NULL(E_INVALIDARG, transportListJson);
+
+    // requirement for RPC and also in case of failure
+    *transportListJson = NULL;
+
+    wil::unique_rpc_binding bindingHandle;
+    RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
+
 
     RETURN_IF_FAILED([&]()
         {
-            // RPC requirement            
-            //*transportListJson = nullptr;
-             
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
             RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransportList(bindingHandle.get(), transportListJson));
@@ -118,19 +138,24 @@ CMidi2MidiSrvConfigurationManager::GetTransformList(LPWSTR* transformListJson)
         TraceLoggingPointer(this, "this")
     );
 
-    wil::unique_rpc_binding bindingHandle;
-
-    RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
     RETURN_HR_IF_NULL(E_INVALIDARG, transformListJson);
+
+    // requirement for RPC and also in case of failure
+    *transformListJson = NULL;
+
+    wil::unique_rpc_binding bindingHandle;
+    RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
+
 
     RETURN_IF_FAILED([&]()
         {
+
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
             RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransformList(bindingHandle.get(), transformListJson));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
-                return S_OK;
+            return S_OK;
         }());
 
     return S_OK;
