@@ -36,7 +36,7 @@ public:
         _In_ IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
         );
 
-    BOOL IsEnabled() { return m_discoveryAndProtocolNegotiationEnabled; }
+    STDMETHOD_(BOOL,IsEnabled)() { return m_discoveryAndProtocolNegotiationEnabled; }
 
     HRESULT Shutdown();
 
