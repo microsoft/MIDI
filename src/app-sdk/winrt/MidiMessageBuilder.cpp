@@ -151,12 +151,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         return midi2::MidiMessage128(
             timestamp,
             (uint32_t)(
-                0x5 << 28 |
-                group.Index() << 24 |
-                internal::CleanupNibble((uint8_t)status) << 20 |
-                internal::CleanupNibble(numberOfValidDataBytesThisMessage) << 16 |
-                streamId << 8 |
-                dataByte00),
+                (uint32_t)0x5 << 28 |
+                static_cast<uint32_t>(group.Index()) << 24 |
+                static_cast<uint32_t>(internal::CleanupNibble((uint8_t)status)) << 20 |
+                static_cast<uint32_t>(internal::CleanupNibble(numberOfValidDataBytesThisMessage)) << 16 |
+                static_cast<uint32_t>(streamId) << 8 |
+                static_cast<uint32_t>(dataByte00)),
             internal::MidiWordFromBytes(dataByte01, dataByte02, dataByte03, dataByte04),
             internal::MidiWordFromBytes(dataByte05, dataByte06, dataByte07, dataByte08),
             internal::MidiWordFromBytes(dataByte09, dataByte10, dataByte11, dataByte12)
@@ -184,23 +184,23 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
         // message type is 5. status is 8
         word0 = 
-            0x5 << 28 |
-            group.Index() << 24 |
-            0x8 << 20 | 
-            internal::CleanupNibble(mdsId) << 16 |
-            numberValidDataBytesInThisChunk;
+            (uint32_t)0x5 << 28 |
+            static_cast<uint32_t>(group.Index()) << 24 |
+            (uint32_t)0x8 << 20 | 
+            static_cast<uint32_t>(internal::CleanupNibble(mdsId)) << 16 |
+            static_cast<uint32_t>(numberValidDataBytesInThisChunk);
 
         word1 =
-            numberChunksInMixedDataSet << 16 |
-            numberOfThisChunk;
+            static_cast<uint32_t>(numberChunksInMixedDataSet) << 16 |
+            static_cast<uint32_t>(numberOfThisChunk);
 
         word2 =
-            manufacturerId << 16 |
-            deviceId;
+            static_cast<uint32_t>(manufacturerId) << 16 |
+            static_cast<uint32_t>(deviceId);
 
         word3 =
-            subId1 << 16 |
-            subId2;
+            static_cast<uint32_t>(subId1) << 16 |
+            static_cast<uint32_t>(subId2);
 
 
         return midi2::MidiMessage128(
@@ -239,30 +239,30 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
         // message type is 5. status is 8
         word0 =
-            0x5 << 28 |
-            group.Index() << 24 |
-            0x9 << 20 |
-            internal::CleanupNibble(mdsId) << 16 |
-            dataByte00 << 8 |
-            dataByte01;
+            (uint32_t)0x5 << 28 |
+            static_cast<uint32_t>(group.Index()) << 24 |
+            (uint32_t)0x9 << 20 |
+            static_cast<uint32_t>(internal::CleanupNibble(mdsId)) << 16 |
+            static_cast<uint32_t>(dataByte00) << 8 |
+            static_cast<uint32_t>(dataByte01);
 
         word1 =
-            dataByte02 << 24 |
-            dataByte03 << 16 |
-            dataByte04 << 8 |
-            dataByte05;
+            static_cast<uint32_t>(dataByte02) << 24 |
+            static_cast<uint32_t>(dataByte03) << 16 |
+            static_cast<uint32_t>(dataByte04) << 8 |
+            static_cast<uint32_t>(dataByte05);
 
         word2 =
-            dataByte06 << 24 |
-            dataByte07 << 16 |
-            dataByte08 << 8 |
-            dataByte09;
+            static_cast<uint32_t>(dataByte06) << 24 |
+            static_cast<uint32_t>(dataByte07) << 16 |
+            static_cast<uint32_t>(dataByte08) << 8 |
+            static_cast<uint32_t>(dataByte09);
 
         word3 =
-            dataByte10 << 24 |
-            dataByte11 << 16 |
-            dataByte12 << 8 |
-            dataByte13;
+            static_cast<uint32_t>(dataByte10) << 24 |
+            static_cast<uint32_t>(dataByte11) << 16 |
+            static_cast<uint32_t>(dataByte12) << 8 |
+            static_cast<uint32_t>(dataByte13);
 
 
         return midi2::MidiMessage128(
@@ -291,12 +291,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         return midi2::MidiMessage128(
             timestamp,
             (uint32_t)(
-                0xD << 28 |
-                group.Index() << 24 |
-                internal::CleanupCrumb(form) << 22 |
-                internal::CleanupCrumb(address) << 20 |
-                channel.Index() << 16 |
-                statusBank << 8 |
+                static_cast<uint32_t>(0xD) << 28 |
+                static_cast<uint32_t>(group.Index()) << 24 |
+                static_cast<uint32_t>(internal::CleanupCrumb(form)) << 22 |
+                static_cast<uint32_t>(internal::CleanupCrumb(address)) << 20 |
+                static_cast<uint32_t>(channel.Index()) << 16 |
+                static_cast<uint32_t>(statusBank) << 8 |
                 status),
             word1Data,
             word2Data,
@@ -319,9 +319,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         return midi2::MidiMessage128(
             timestamp, 
             (uint32_t)(
-                0xF << 28 |
-                internal::CleanupCrumb(form) << 26 |
-                internal::CleanupInt10(status) << 16 |
+                static_cast<uint32_t>(0xF) << 28 |
+                static_cast<uint32_t>(internal::CleanupCrumb(form)) << 26 |
+                static_cast<uint32_t>(internal::CleanupInt10(status)) << 16 |
                 word0RemainingData), 
             word1Data,
             word2Data,

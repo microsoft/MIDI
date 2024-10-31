@@ -30,6 +30,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         m_id = winrt::Windows::Foundation::GuidHelper::CreateNewGuid();
 
         m_associationId = config.AssociationId();
+
+        for (auto const& fb : config.FunctionBlocks())
+        {
+            m_functionBlocks.Insert(fb.Number(), fb);
+        }
+
     }
 
 
@@ -274,15 +280,28 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     {
         bool handled = false;
 
+        //OutputDebugString(L"MIDI SDK: MidiVirtualDevice::ProcessIncomingMessage\n");
+
         if (args.MessageType() == MidiMessageType::Stream128)
         {
             midi2::MidiMessage128 message{};
 
             if (args.FillMessage128(message))
             {
-                // if a endpoint discovery request, handle it with the data we have
+                // if an endpoint discovery request, handle it with the data we have
                 if (internal::MessageIsEndpointDiscoveryRequest(message.Word0()))
                 {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Endpoint discovery request received.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
+
+                    //OutputDebugString(L"MIDI SDK: Incoming message is endpoint discovery request\n");
+
                     uint8_t filterFlags = internal::GetEndpointDiscoveryMessageFilterFlagsFromSecondWord(message.Word1());
 
                     if (internal::EndpointDiscoveryFilterRequestsEndpointInfoNotification(filterFlags))
@@ -291,15 +310,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
                         auto notification = msgs::MidiStreamMessageBuilder::BuildEndpointInfoNotificationMessage(
                             MidiClock::TimestampConstantSendImmediately(),
-                            MIDI_PREFERRED_UMP_VERSION_MAJOR,
-                            MIDI_PREFERRED_UMP_VERSION_MINOR,
+                            m_declaredEndpointInfo.SpecificationVersionMajor,
+                            m_declaredEndpointInfo.SpecificationVersionMinor,
                             m_declaredEndpointInfo.HasStaticFunctionBlocks,
-                            (uint8_t)m_functionBlocks.Size(),
+                            m_declaredEndpointInfo.DeclaredFunctionBlockCount, /*(uint8_t)m_functionBlocks.Size(), */
                             m_declaredEndpointInfo.SupportsMidi20Protocol,
                             m_declaredEndpointInfo.SupportsMidi10Protocol,
                             m_declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps,
                             m_declaredEndpointInfo.SupportsSendingJitterReductionTimestamps
                         );
+
+                        //OutputDebugString(L"MIDI SDK: Responding with Endpoint Info Notification\n");
 
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(notification)))
                         {
@@ -339,6 +360,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                             m_declaredDeviceIdentity.SoftwareRevisionLevelByte4                  // byte 4
                         );
 
+                        //OutputDebugString(L"MIDI SDK: Responding with Device Identity Notification\n");
+
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(identityNotification)))
                         {
                             LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
@@ -367,6 +390,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                                 m_declaredEndpointInfo.Name
                             );
 
+                            //OutputDebugString(L"MIDI SDK: Responding with Endpoint Name Notification\n");
+
                             if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(nameMessages.GetView())))
                             {
                                 LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
@@ -393,6 +418,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                                 MidiClock::TimestampConstantSendImmediately(),
                                 m_declaredEndpointInfo.ProductInstanceId
                             );
+
+                            //OutputDebugString(L"MIDI SDK: Responding with Product Instance Id Notification\n");
 
                             if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendMultipleMessagesPacketList(instanceIdMessages.GetView())))
                             {
@@ -426,6 +453,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                             m_declaredEndpointInfo.SupportsSendingJitterReductionTimestamps
                         );
 
+                        //OutputDebugString(L"MIDI SDK: Responding with Stream Configuration Notification\n");
+
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(streamConfigurationNotification)))
                         {
                             LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
@@ -441,9 +470,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                         }
 
                     }
+
+                    handled = true;
                 }
                 else if (internal::MessageIsFunctionBlockDiscoveryRequest(message.Word0()))
                 {
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Function block discovery request received.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
+
+                    //OutputDebugString(L"MIDI SDK: Incoming message is function block discovery request\n");
+
                     uint8_t filterFlags = internal::GetFunctionBlockDiscoveryMessageFilterFlagsFromFirstWord(message.Word0());
 
                     bool requestInfo = internal::FunctionBlockDiscoveryFilterRequestsInfoNotification(filterFlags);
@@ -455,23 +497,56 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                     {
                         // send all function blocks
 
-                        for (uint8_t i = 0; i < (uint8_t)m_functionBlocks.Size(); i++)
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Sending ALL function blocks, as requested.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingUInt8(m_declaredEndpointInfo.DeclaredFunctionBlockCount, "Declared FB Count"),
+                            TraceLoggingUInt32(m_functionBlocks.Size(), "Actual FB count")
+                        );
+
+                        for (uint8_t i = 0; i < min(m_declaredEndpointInfo.DeclaredFunctionBlockCount, (uint8_t)m_functionBlocks.Size()); i++)
                         {
+                           // OutputDebugString(L"MIDI SDK: Responding with Function Block Info notification\n");
+
                             if (requestInfo) SendFunctionBlockInfoNotificationMessage(m_functionBlocks.Lookup(i));
+
+                            //OutputDebugString(L"MIDI SDK: Responding with Function Block Name notification\n");
 
                             if (requestName) SendFunctionBlockNameNotificationMessages(m_functionBlocks.Lookup(i));
                         }
+
+                        handled = true;
                     }
                     else
                     {
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Sending single requested function block.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingUInt8(fbNumber, "Function block number")
+                        );
+
                         // send single requested function block
                         if (m_functionBlocks.HasKey(fbNumber))
                         {
                             auto fb = m_functionBlocks.Lookup(fbNumber);
 
+                            //OutputDebugString(L"MIDI SDK: Responding with Function Block Info notification\n");
+
                             if (requestInfo) SendFunctionBlockInfoNotificationMessage(fb);
 
+                            //OutputDebugString(L"MIDI SDK: Responding with Function Block Name notification\n");
+
                             if (requestName) SendFunctionBlockNameNotificationMessages(fb);
+
+                            handled = true;
                         }
                         else
                         {
@@ -495,6 +570,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                     if (m_streamConfigurationRequestReceivedEvent)
                     {
                         m_streamConfigurationRequestReceivedEvent(*this, *reqArgs);
+
+                        handled = true;
                     }
                 }
                 else
@@ -523,7 +600,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         {
             // not a stream message. Ignore
 
-
         }
 
 
@@ -539,55 +615,4 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         }
 
     }
-
-
-
-
-    //_Use_decl_annotations_
-    //void MidiVirtualDevice::InternalSetDeviceDefinition(
-    //    _In_ midi2::MidiVirtualDeviceDefinition definition)
-    //{
-    //    internal::LogInfo(__FUNCTION__, L"Enter");
-
-    //    try
-    //    {
-    //        // populate all the views, properties, blocks, etc.
-
-    //        m_areFunctionBlocksStatic = definition.AreFunctionBlocksStatic();
-
-    //        for (uint8_t i = 0; i < definition.FunctionBlocks().Size(); i++)
-    //        {
-    //            auto fb = definition.FunctionBlocks().GetAt(i);
-
-    //            // this is required, so we enforce it here
-    //            fb.Number(i);
-
-    //            // TODO: Set the fb as read-only
-    //            
-
-    //             
-    //            // add the block
-    //            m_functionBlocks.Insert(i, fb);
-    //        }
-
-    //        m_endpointName = definition.EndpointName();
-    //        m_endpointProductInstanceId = definition.EndpointProductInstanceId();
-
-
-    //        // TODO: All the other stuff we'll want to report on
-
-
-
-    //        m_virtualEndpointDeviceDefinition = definition;
-
-    //    }
-    //    catch (...)
-    //    {
-    //        // todo log
-    //        internal::LogGeneralError(__FUNCTION__, L"Exception attempting to set device definition");
-
-    //    }
-
-    //}
-
 }
