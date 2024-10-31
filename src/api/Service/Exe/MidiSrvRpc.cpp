@@ -37,7 +37,9 @@ MidiSrvVerifyConnectivity(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiSessionTracker> sessionTracker;
@@ -64,7 +66,9 @@ HRESULT MidiSrvCreateClient(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiClientManager> clientManager;
@@ -117,7 +121,9 @@ HRESULT MidiSrvDestroyClient(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO)
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiClientManager> clientManager;
@@ -143,14 +149,6 @@ MidiSrvUpdateConfiguration(
     // in case of any HRESULT error, the response is supposed to be nullptr
     *responseJson = nullptr;
 
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Enter")
-    );
-
     RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
     //RETURN_HR_IF_NULL(E_INVALIDARG, responseJson);
 
@@ -159,6 +157,8 @@ MidiSrvUpdateConfiguration(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(configurationJson, "JSON")
     );
 
@@ -181,7 +181,8 @@ MidiSrvUpdateConfiguration(
             MIDI_TRACE_EVENT_ERROR,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingWideString(L"Only one config entry allowed per call")
+            TraceLoggingPointer(nullptr, "this"),
+            TraceLoggingWideString(L"Only one config entry allowed per call", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
         return E_FAIL;
@@ -206,7 +207,8 @@ MidiSrvUpdateConfiguration(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Exit success")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     return S_OK;
@@ -226,7 +228,8 @@ MidiSrvRegisterSession(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiSessionTracker> sessionTracker;
@@ -251,7 +254,8 @@ MidiSrvRegisterSession(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Exit success")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     return S_OK;
@@ -272,7 +276,8 @@ MidiSrvUpdateSessionName(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiSessionTracker> sessionTracker;
@@ -291,7 +296,8 @@ MidiSrvUpdateSessionName(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Exit success")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     return S_OK;
@@ -311,7 +317,8 @@ MidiSrvDeregisterSession(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiSessionTracker> sessionTracker;
@@ -330,7 +337,8 @@ MidiSrvDeregisterSession(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Exit success")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     return S_OK;
@@ -350,7 +358,8 @@ __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Enter context handle rundown")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter context handle rundown", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiSessionTracker> sessionTracker;
@@ -380,7 +389,8 @@ MidiSrvGetSessionList(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiSessionTracker> sessionTracker;
@@ -396,7 +406,8 @@ MidiSrvGetSessionList(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Exit success")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     return S_OK;
@@ -416,7 +427,8 @@ MidiSrvGetTransportList(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     std::shared_ptr<CMidiConfigurationManager> configManager;
@@ -472,7 +484,8 @@ MidiSrvGetTransportList(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Exit success")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     return S_OK;
@@ -572,7 +585,8 @@ MidiSrvGetTransformList(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingWideString(L"Enter")
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     json::JsonObject rootObject{};

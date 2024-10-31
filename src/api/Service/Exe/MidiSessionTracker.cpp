@@ -20,8 +20,9 @@ CMidiSessionTracker::FindSession(GUID sessionId, DWORD clientProcessId)
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingGuid(sessionId),
-        TraceLoggingUInt32(clientProcessId),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(sessionId, "session id"),
+        TraceLoggingUInt32(clientProcessId, "client process"),
         TraceLoggingUInt32((UINT32)m_sessions.size(), "Total session count")
         );
 
@@ -48,8 +49,9 @@ CMidiSessionTracker::FindSessionForContextHandle(PVOID contextHandle)
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
 
     if (contextHandle == nullptr) return m_sessions.end();
 
@@ -74,7 +76,8 @@ CMidiSessionTracker::Initialize(std::shared_ptr<CMidiClientManager>& clientManag
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     m_clientManager = clientManager;
@@ -90,8 +93,9 @@ CMidiSessionTracker::VerifyConnectivity()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
 
     // if this gets called, we have connectivity
     return TRUE;
@@ -345,7 +349,8 @@ CMidiSessionTracker::RemoveClientSessionInternal(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingPointer(contextHandle)
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(contextHandle, "context handle")
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, contextHandle);
@@ -370,6 +375,16 @@ CMidiSessionTracker::RemoveClientSessionInternal(
         // Remove this session entry
         m_sessions.erase(sessionEntry);
     }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(contextHandle, "context handle")
+    );
 
     return S_OK;
 }

@@ -18,7 +18,7 @@ CMidi2KSMidiOut::Initialize(
     LPCWSTR device,   
     PTRANSPORTCREATIONPARAMS creationParams,
     DWORD * mmcssTaskId,
-    GUID /* SessionId */
+    GUID SessionId
 )
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == device);
@@ -31,9 +31,10 @@ CMidi2KSMidiOut::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingHexUInt32(*mmcssTaskId, "MmCss Id")
-        );
+        TraceLoggingGuid(SessionId, "Session Id")
+    );
 
     std::unique_ptr<CMidi2KSMidi> midiDevice(new (std::nothrow) CMidi2KSMidi());
     RETURN_IF_NULL_ALLOC(midiDevice);

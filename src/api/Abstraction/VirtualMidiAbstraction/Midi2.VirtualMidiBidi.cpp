@@ -175,26 +175,26 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
     }
     else
     {
-        TraceLoggingWrite(
-            MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_VERBOSE,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"No linked connections", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingBool(m_isDeviceSide, "is device side"),
-            TraceLoggingUInt32(Size, "bytes"),
-            TraceLoggingUInt64(Position, "timestamp"),
-            TraceLoggingGuid(m_sessionId, "session id")
-        );
-
         if (m_isDeviceSide)
         {
             return S_OK;    // ok for device side to send when nothing is listening
         }
         else
         {
+            TraceLoggingWrite(
+                MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"No linked connections", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingBool(m_isDeviceSide, "is device side"),
+                TraceLoggingUInt32(Size, "bytes"),
+                TraceLoggingUInt64(Position, "timestamp"),
+                TraceLoggingGuid(m_sessionId, "session id")
+            );
+
             RETURN_IF_FAILED(E_POINTER);  // but if the client-side is not connected to a device, something is really wrong.
         }
     }
@@ -209,19 +209,19 @@ CMidi2VirtualMidiBiDi::Callback(
     LONGLONG context
 )
 {
-    TraceLoggingWrite(
-        MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_VERBOSE,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingBool(m_isDeviceSide, "is device side"),
-        TraceLoggingUInt32(Size, "bytes"),
-        TraceLoggingUInt64(Position, "timestamp"),
-        TraceLoggingGuid(m_sessionId, "session id")
-    );
+    //TraceLoggingWrite(
+    //    MidiVirtualMidiAbstractionTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_VERBOSE,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+    //    TraceLoggingBool(m_isDeviceSide, "is device side"),
+    //    TraceLoggingUInt32(Size, "bytes"),
+    //    TraceLoggingUInt64(Position, "timestamp"),
+    //    TraceLoggingGuid(m_sessionId, "session id")
+    //);
 
     // message received from the client
 

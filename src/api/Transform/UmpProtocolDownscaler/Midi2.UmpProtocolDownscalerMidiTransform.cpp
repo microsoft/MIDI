@@ -153,7 +153,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceUpdated(DeviceWatcher, DeviceI
         {
             m_downscalingRequiredForEndpoint = false;
 
-            if (m_endpointSupportsMidi1Protocol && m_endpointSupportsMidi2Protocol)
+            if (m_endpointSupportsMidi1Protocol /* && m_endpointSupportsMidi2Protocol*/)
             {
                 TraceLoggingWrite(
                     MidiUmpProtocolDownscalerTransformTelemetryProvider::Provider(),
@@ -242,6 +242,14 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     {
         if (length >= sizeof(uint32_t))
         {
+            // downscale only MIDI 2.0 channel voice messages : message type 4. Everything else passes through
+            if (internal::GetUmpMessageTypeFromFirstWord(internal::MidiWord0FromVoidMessageDataPointer(inputData)) != 4)
+            {
+                RETURN_IF_FAILED(m_Callback->Callback(inputData, length, timestamp, m_Context));
+
+                return S_OK;
+            }
+
             // Send the UMP(s) to the parser
             uint32_t* data = (uint32_t*)inputData;
             for (UINT i = 0; i < (length / sizeof(uint32_t)); i++)

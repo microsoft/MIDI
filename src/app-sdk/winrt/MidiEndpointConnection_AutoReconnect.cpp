@@ -28,13 +28,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // Deactivate MIDI stream
         DeactivateMidiStream(true);
-        //m_endpointAbstraction = nullptr;
 
         // Let plugins know we're not connected
         // TODO
 
         // set IsOpen to false
         m_isOpen = false;
+        m_hasHadDisconnect = true;
 
         if (m_endpointDeviceDisconnectedEvent)
         {
@@ -67,22 +67,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
 
-        if (m_endpointAbstraction != nullptr && m_isOpen)
-        {
-            // never disconnected
+        // we only care about this if we've actually had a disconnect incident already
+        if (!m_hasHadDisconnect) return;
 
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"InternalOnDeviceReconnect called, but endpoint was still open.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
-            );
-
-            return;
-        }
 
         if (!ActivateMidiStream())
         {

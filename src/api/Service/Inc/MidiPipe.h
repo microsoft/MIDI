@@ -162,16 +162,51 @@ public:
 
     virtual void AddClient(MidiClientHandle handle)
     {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt64(handle, "MIDI Client Handle"),
+            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
         auto lock = m_Lock.lock();
         auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
         if (client == m_Clients.end())
         {
             m_Clients.push_back(handle);
         }
+        else
+        {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Client already exists", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt64(handle, "MIDI Client Handle"),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+        }
     }
 
     virtual void RemoveClient(MidiClientHandle handle)
     {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt64(handle, "MIDI Client Handle"),
+            TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        );
+
         auto lock = m_Lock.lock();
         auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
         if (client != m_Clients.end())
@@ -181,6 +216,17 @@ public:
         else
         {
             LOG_IF_FAILED(E_NOTFOUND);
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Client not found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt64(handle, "MIDI Client Handle"),
+                TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
         }
     }
 

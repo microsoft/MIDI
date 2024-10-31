@@ -372,6 +372,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             // todo: some error / hresult handling here
 
             auto hr = m_endpointAbstraction->Shutdown();
+            m_endpointAbstraction == nullptr;
 
             if (FAILED(hr))
             {
@@ -396,8 +397,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     return false;
                 }
             }
-
-            m_endpointAbstraction == nullptr;
         }
 
         return true;
