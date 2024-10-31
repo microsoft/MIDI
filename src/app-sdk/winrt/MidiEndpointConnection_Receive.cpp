@@ -36,7 +36,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             return S_OK;
         }
 
-//#ifdef _DEBUG
+#ifdef _DEBUG
         // performance-critical function, so only trace when in a debug build
         TraceLoggingWrite(
             Midi2SdkTelemetryProvider::Provider(),
@@ -48,7 +48,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
-//#endif
+#endif
 
 
         try

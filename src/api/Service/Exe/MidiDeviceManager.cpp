@@ -1060,10 +1060,16 @@ CMidiDeviceManager::ActivateEndpoint
                     friendlyName += commonProperties->EndpointName;
                 }
 
-                if (friendlyName.size() > 32 - 6)
+#define MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX (32-6)
+
+                if (friendlyName.size() > MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX)
                 {
-                    // if the size of name + " O-12\0" > 32, we need to lose the manufacturer name for WinMM compat
-                    friendlyName = commonProperties->EndpointName;
+                    // if the size of name + " O-nn\0" > 32, we need to lose the manufacturer name for WinMM compat
+
+                    std::wstring shortName{ commonProperties->EndpointName };
+                    shortName.resize(MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX);
+
+                    friendlyName = shortName.c_str();
                 }
 
             }
@@ -1707,8 +1713,11 @@ CMidiDeviceManager::DeactivateEndpoint
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
     );
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, instanceId);
 
     auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
 
@@ -1741,8 +1750,9 @@ CMidiDeviceManager::DeactivateEndpoint
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Found instance id in ports list.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(instanceId, MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+                TraceLoggingWideString(L"Found instance id in ports list. Erasing", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD),
+                TraceLoggingWideString(item->get()->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
             // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
@@ -1750,6 +1760,17 @@ CMidiDeviceManager::DeactivateEndpoint
             m_midiPorts.erase(item);
         }
     } while (TRUE);
+
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+    );
 
     return S_OK;
 }

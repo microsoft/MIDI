@@ -184,7 +184,7 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                var connection = session.CreateEndpointConnection(endpointId);
+                var connection = session.CreateEndpointConnection(endpointId, true);
                 if (connection != null)
                 {
                     openSuccess = connection.Open();
@@ -202,6 +202,8 @@ namespace Microsoft.Midi.ConsoleApp
                 }
 
 
+                connection.EndpointDeviceDisconnected += Connection_EndpointDeviceDisconnected;
+                connection.EndpointDeviceReconnected += Connection_EndpointDeviceReconnected;
 
 
                 uint messagesSent = 0;
@@ -226,6 +228,13 @@ namespace Microsoft.Midi.ConsoleApp
 
                     while (stillSending && messagesAttempted < settings.Count)
                     {
+                        if (_disconnected)
+                        {
+                            // if we disconnect, we just have a short delay and then skip the rest of the loop
+                            Thread.Sleep(200);
+                            continue;
+                        }
+
                         UInt64 baseTimestamp = MidiClock.Now;
                         UInt64 timestamp = 0;
 
@@ -248,7 +257,6 @@ namespace Microsoft.Midi.ConsoleApp
                         {
                             _parsedWords![_parsedWords!.Count() - 1] = (_parsedWords![_parsedWords!.Count() - 1] + 1) % UInt32.MaxValue;
                         }
-
 
                         messagesAttempted++;
                         var sendResult = connection.SendSingleMessageWordArray(timestamp, 0, (byte)_parsedWords!.Count(), _parsedWords);
@@ -437,6 +445,27 @@ namespace Microsoft.Midi.ConsoleApp
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
         }
+
+
+        bool _disconnected = false;
+
+        // Auto-reconnect takes care of the internals. We're just reporting here
+        private void Connection_EndpointDeviceReconnected(IMidiEndpointConnectionSource sender, object args)
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.EndpointReconnected));
+
+            _disconnected = false;
+        }
+
+        // Auto-reconnect takes care of the internals. We're just reporting here
+        private void Connection_EndpointDeviceDisconnected(IMidiEndpointConnectionSource sender, object args)
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.EndpointDisconnected));
+
+            _disconnected = true;
+        }
+
+
 
     }
 }

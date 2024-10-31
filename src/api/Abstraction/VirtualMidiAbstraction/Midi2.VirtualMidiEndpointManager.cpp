@@ -270,7 +270,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
 
     wil::unique_cotaskmem_string newDeviceInterfaceId;
 
-    MIDIENDPOINTCOMMONPROPERTIES commonProperties;
+    MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.TransportId = ABSTRACTION_LAYER_GUID;
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = friendlyName.c_str();
@@ -280,6 +280,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     commonProperties.CustomEndpointName = nullptr;
     commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = entry.ShortUniqueId.c_str();
+    commonProperties.ManufacturerName = nullptr;
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
     commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
 

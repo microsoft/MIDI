@@ -211,6 +211,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         bool m_isOpen{ false };
         bool m_wasAlreadyOpened { false };      // true if this was initially opened. This is to avoid reopen events when first opened
+        bool m_hasHadDisconnect{ false };
         bool m_closeHasBeenCalled{ false };
 
         winrt::com_ptr<IMidiTransport> m_serviceAbstraction{ nullptr };

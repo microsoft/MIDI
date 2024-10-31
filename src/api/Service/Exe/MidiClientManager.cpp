@@ -130,10 +130,9 @@ GetEndpointRequiresOutboundProtocolDownscaling(
         auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_NativeDataFormat));
         if (prop)
         {
-            // this interface is pointing to a UMP interface, so use that instance id.
             auto nativeFormat = winrt::unbox_value<uint8_t>(prop);
 
-            if (nativeFormat == MidiDataFormats_UMP)
+            if (nativeFormat == MidiDataFormats_ByteStream)
             {
                 // Native bytestream behind a UMP driver, so yes, we need to downscale because the driver will just discard MT4
 
@@ -155,51 +154,6 @@ GetEndpointRequiresOutboundProtocolDownscaling(
 
     return S_OK;
 }
-
-//HRESULT
-//GetEndpointShouldHaveMetadataHandler(_In_ std::wstring midiDevice, _Inout_ bool& addMetadataListener, _In_ MidiFlow flow)
-//{
-//    TraceLoggingWrite(
-//        MidiSrvTelemetryProvider::Provider(),
-//        __FUNCTION__,
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingWideString(midiDevice.c_str(), "Device Id")
-//    );
-//
-//    if (flow == MidiFlow::MidiFlowBidirectional || flow == MidiFlow::MidiFlowIn)
-//    {
-//        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-//        additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_EndpointRequiresMetadataHandler));
-//        auto deviceInfo = DeviceInformation::CreateFromIdAsync(midiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
-//
-//        auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointRequiresMetadataHandler));
-//        if (prop)
-//        {
-//            // this interface is pointing to a UMP interface, so use that instance id.
-//            addMetadataListener = winrt::unbox_value<bool>(prop);
-//        }
-//        else
-//        {
-//            // default to true
-//            addMetadataListener = true;
-//        }
-//    }
-//    else
-//    {
-//        // output-only flow
-//        addMetadataListener = false;
-//    }
-//
-//    TraceLoggingWrite(
-//        MidiSrvTelemetryProvider::Provider(),
-//        __FUNCTION__,
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingWideString(midiDevice.c_str(), "Device Id"),
-//        TraceLoggingBool(addMetadataListener, "Add Metadata Listener")
-//    );
-//
-//    return S_OK;
-//}
 
 
 HRESULT
@@ -470,7 +424,7 @@ CMidiClientManager::GetMidiClient(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(cleanMidiDevice.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingGuid(sessionId, "Session Id")
     );
@@ -536,7 +490,7 @@ CMidiClientManager::GetMidiDevice(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(cleanMidiDevice.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
@@ -619,7 +573,7 @@ CMidiClientManager::GetMidiProtocolDownscalerTransform(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(devicePipe->MidiDevice().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
@@ -951,84 +905,6 @@ CMidiClientManager::GetMidiScheduler(
     return S_OK;
 }
 
-//_Use_decl_annotations_
-//HRESULT
-//CMidiClientManager::GetMidiEndpointMetadataHandler(
-//    MidiFlow flow,
-//    wil::com_ptr_nothrow<CMidiPipe>& devicePipe,
-//    wil::com_ptr_nothrow<CMidiPipe>& nextDeviceSidePipe,
-//    wil::com_ptr_nothrow<CMidiPipe>& clientConnectionPipe
-//)
-//{
-//    RETURN_HR_IF_NULL(E_INVALIDARG, devicePipe);
-//
-//    TraceLoggingWrite(
-//        MidiSrvTelemetryProvider::Provider(),
-//        MIDI_TRACE_EVENT_INFO,
-//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingPointer(this, "this"),
-//        TraceLoggingWideString(devicePipe->MidiDevice().c_str(), "Device Id")
-//    );
-//
-//    wil::com_ptr_nothrow<CMidiPipe> transformPipe{ nullptr };
-//
-//    // we only handle metadata on incoming messages
-//    RETURN_HR_IF(E_UNEXPECTED, flow != MidiFlow::MidiFlowIn);
-//
-//
-//    auto transforms = m_TransformPipes.equal_range(devicePipe->MidiDevice());
-//    for (auto& transform = transforms.first; transform != transforms.second; ++transform)
-//    {
-//        //wil::com_ptr_nothrow<CMidiTransformPipe> pipe = transform->second.get();
-//
-//        if (transform->second->TransformGuid() == __uuidof(Midi2EndpointMetadataListenerTransform))
-//        {
-//            transformPipe = transform->second;
-//            break;
-//        }
-//    }
-//
-//    // not found, instantiate the transform that is needed.
-//    if (!transformPipe)
-//    {
-//        MIDISRV_TRANSFORMCREATION_PARAMS creationParams{ 0 };
-//
-//        creationParams.Flow = flow;
-//        creationParams.DataFormatIn = MidiDataFormats::MidiDataFormats_UMP;
-//        creationParams.DataFormatOut = MidiDataFormats::MidiDataFormats_UMP;
-//
-//        creationParams.TransformGuid = __uuidof(Midi2EndpointMetadataListenerTransform);
-//        creationParams.UmpGroupIndex = INVALID_GROUP_INDEX;
-//
-//        // create the transform
-//        wil::com_ptr_nothrow<CMidiTransformPipe> transform;
-//        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
-//
-//        RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, m_DeviceManager.get()));
-//
-//        transformPipe = transform.get();
-//
-//        // connect the transform to the device
-//
-//        if (flow == MidiFlowIn)
-//        {
-//            RETURN_IF_FAILED(nextDeviceSidePipe->AddConnectedPipe(transformPipe));
-//        }
-//        else
-//        {
-//            RETURN_IF_FAILED(transformPipe->AddConnectedPipe(nextDeviceSidePipe));
-//        }
-//
-//        m_TransformPipes.emplace(devicePipe->MidiDevice(), transform);
-//    }
-//
-//    clientConnectionPipe = transformPipe;
-//
-//    return S_OK;
-//}
-
-
 
 _Use_decl_annotations_
 HRESULT
@@ -1318,7 +1194,8 @@ CMidiClientManager::DestroyMidiClient(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(clientHandle, "client handle")
     );
 
     auto lock = m_ClientManagerLock.lock();
@@ -1334,9 +1211,9 @@ CMidiClientManager::DestroyMidiClient(
         wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
         wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
 
-        midiClientPipe->Shutdown();
-
         m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), midiClientPipe->ClientProcessId(), client->second->MidiDevice().c_str(), clientHandle);
+
+        midiClientPipe->Shutdown();
 
         // remove this client from all of the transforms and disconnect it and any transforms no longer in use
         for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
@@ -1403,6 +1280,17 @@ CMidiClientManager::DestroyMidiClient(
     {
         RETURN_IF_FAILED(E_INVALIDARG);
     }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(clientHandle, "client handle")
+    );
+
 
     return S_OK;
 }

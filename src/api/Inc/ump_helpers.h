@@ -358,7 +358,7 @@ namespace WindowsMidiServicesInternal
     inline void SetGroupIndexInFirstWord(_Inout_ std::uint32_t firstWord, _In_ std::uint8_t groupIndex) noexcept
     {
         firstWord &= MIDI_MESSAGE_GROUP_WORD_CLEARING_MASK;
-        firstWord |= CleanupNibble(groupIndex) << MIDI_MESSAGE_GROUP_BITSHIFT;
+        firstWord |= static_cast<uint32_t>(CleanupNibble(groupIndex)) << MIDI_MESSAGE_GROUP_BITSHIFT;
     }
 
     // in order from msb to lsb. Avoids endian issues
@@ -369,7 +369,11 @@ namespace WindowsMidiServicesInternal
         _In_ uint8_t const byte3
         ) noexcept
     {
-        return (uint32_t)(byte0 << 24 | byte1 << 16 | byte2 << 8 | byte3);
+        return (uint32_t)(
+            static_cast<uint32_t>(byte0) << 24 | 
+            static_cast<uint32_t>(byte1) << 16 | 
+            static_cast<uint32_t>(byte2) << 8 | 
+            static_cast<uint32_t>(byte3));
     }
 
     // this function assumes you've already done the required range checking
@@ -410,22 +414,22 @@ namespace WindowsMidiServicesInternal
 
     inline void SetMidiWordMostSignificantByte1(_Inout_ uint32_t& word, _In_ uint8_t value)
     {
-        word = (word & 0x00FFFFFF) | (value << 24);
+        word = (word & 0x00FFFFFF) | (static_cast<uint32_t>(value) << 24);
     }
 
     inline void SetMidiWordMostSignificantByte2(_Inout_ uint32_t& word, _In_ uint8_t value)
     {
-        word = (word & 0xFF00FFFF) | (value << 16);
+        word = (word & 0xFF00FFFF) | (static_cast<uint32_t>(value) << 16);
     }
 
     inline void SetMidiWordMostSignificantByte3(_Inout_ uint32_t& word, _In_ uint8_t value)
     {
-        word = (word & 0xFFFF00FF) | (value << 8);
+        word = (word & 0xFFFF00FF) | (static_cast<uint32_t>(value) << 8);
     }
 
     inline void SetMidiWordMostSignificantByte4(_Inout_ uint32_t& word, _In_ uint8_t value)
     {
-        word = (word & 0xFFFFFF00) | (value);
+        word = (word & 0xFFFFFF00) | (static_cast<uint32_t>(value));
     }
 
 

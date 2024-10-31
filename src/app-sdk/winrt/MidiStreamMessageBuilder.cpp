@@ -56,23 +56,23 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         if (hasStaticFunctionBlocks) word1 = 0x80000000;
 
         // MSB is the static function blocks + 7 bit number of function blocks
-        word1 |= (internal::CleanupByte7(numberOfFunctionBlocks) << 24);
+        word1 |= (static_cast<uint32_t>(internal::CleanupByte7(numberOfFunctionBlocks)) << 24);
 
         // bit 9 (reading from least sig to most) is midi 1, bit 10 is midi 2
         
-        if (supportsMidi10Protocol) word1 |= 0x100;
-        if (supportsMidi20Protocol) word1 |= 0x200;
+        if (supportsMidi10Protocol) word1 |= (uint32_t)0x0100;
+        if (supportsMidi20Protocol) word1 |= (uint32_t)0x0200;
 
         // first bit is tx jr, second bit 2 is rx jr
 
-        if (supportsSendingJitterReductionTimestamps) word1 |= 0x1;
-        if (supportsReceivingJitterReductionTimestamps) word1 |= 0x2;
+        if (supportsSendingJitterReductionTimestamps) word1 |= (uint32_t)0x01;
+        if (supportsReceivingJitterReductionTimestamps) word1 |= (uint32_t)0x02;
 
         return MidiMessageBuilder::BuildStreamMessage(
             timestamp,
             MIDI_STREAM_MESSAGE_STANDARD_FORM0,     
             MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION, 
-            (uint16_t)umpVersionMajor << 8 | umpVersionMinor, // ump major is msb, ump minor is lsb
+            static_cast<uint16_t>(umpVersionMajor) << 8 | static_cast<uint16_t>(umpVersionMinor), // ump major is msb, ump minor is lsb
             word1, 
             MIDI_RESERVED_WORD,      // reserved word2   
             MIDI_RESERVED_WORD       // reserved word3
@@ -99,19 +99,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         uint32_t word2{ 0 };
         uint32_t word3{ 0 };
 
-        word1 |= internal::CleanupByte7(deviceManufacturerSysExIdByte1) << 16;
-        word1 |= internal::CleanupByte7(deviceManufacturerSysExIdByte2) << 8;
-        word1 |= internal::CleanupByte7(deviceManufacturerSysExIdByte3);
+        word1 |= static_cast<uint32_t>(internal::CleanupByte7(deviceManufacturerSysExIdByte1)) << 16;
+        word1 |= static_cast<uint32_t>(internal::CleanupByte7(deviceManufacturerSysExIdByte2)) << 8;
+        word1 |= static_cast<uint32_t>(internal::CleanupByte7(deviceManufacturerSysExIdByte3));
 
-        word2 |= internal::CleanupByte7(deviceFamilyLsb) << 24;
-        word2 |= internal::CleanupByte7(deviceFamilyMsb) << 16;
-        word2 |= internal::CleanupByte7(deviceFamilyModelNumberLsb) << 8;
-        word2 |= internal::CleanupByte7(deviceFamilyModelNumberMsb);
+        word2 |= static_cast<uint32_t>(internal::CleanupByte7(deviceFamilyLsb)) << 24;
+        word2 |= static_cast<uint32_t>(internal::CleanupByte7(deviceFamilyMsb)) << 16;
+        word2 |= static_cast<uint32_t>(internal::CleanupByte7(deviceFamilyModelNumberLsb)) << 8;
+        word2 |= static_cast<uint32_t>(internal::CleanupByte7(deviceFamilyModelNumberMsb));
 
-        word3 |= internal::CleanupByte7(softwareRevisionLevelByte1) << 24;
-        word3 |= internal::CleanupByte7(softwareRevisionLevelByte2) << 16;
-        word3 |= internal::CleanupByte7(softwareRevisionLevelByte3) << 8;
-        word3 |= internal::CleanupByte7(softwareRevisionLevelByte4);
+        word3 |= static_cast<uint32_t>(internal::CleanupByte7(softwareRevisionLevelByte1)) << 24;
+        word3 |= static_cast<uint32_t>(internal::CleanupByte7(softwareRevisionLevelByte2)) << 16;
+        word3 |= static_cast<uint32_t>(internal::CleanupByte7(softwareRevisionLevelByte3)) << 8;
+        word3 |= static_cast<uint32_t>(internal::CleanupByte7(softwareRevisionLevelByte4));
 
 
         return MidiMessageBuilder::BuildStreamMessage(
@@ -223,12 +223,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 
             if (characterCountFirstWord == 2)
             {
-                word0 |= packetBytes[currentIndex++] << 8;
+                word0 |= static_cast<uint32_t>(packetBytes[currentIndex++]) << 8;
             }
 
             if (characterCountFirstWord >= 1)
             {
-                word0 |= packetBytes[currentIndex++];
+                word0 |= static_cast<uint32_t>(packetBytes[currentIndex++]);
             }
 
             umpProjected.Word0(word0);
@@ -236,22 +236,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
             // remaining packets are filled with the data we have
 
             umpProjected.Word1(
-                packetBytes[currentIndex++] << 24 |
-                packetBytes[currentIndex++] << 16 |
-                packetBytes[currentIndex++] << 8 |
-                packetBytes[currentIndex++]);
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 24 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 16 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 8 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]));
 
             umpProjected.Word2(
-                packetBytes[currentIndex++] << 24 |
-                packetBytes[currentIndex++] << 16 |
-                packetBytes[currentIndex++] << 8 |
-                packetBytes[currentIndex++]);
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 24 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 16 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 8 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]));
 
             umpProjected.Word3(
-                packetBytes[currentIndex++] << 24 |
-                packetBytes[currentIndex++] << 16 |
-                packetBytes[currentIndex++] << 8 |
-                packetBytes[currentIndex++]);
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 24 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 16 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]) << 8 |
+                static_cast<uint32_t>(packetBytes[currentIndex++]));
 
             messages.Append(umpProjected);
 
@@ -310,7 +310,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
     {
         uint16_t word0Remaining{ 0 };
 
-        word0Remaining |= ((uint16_t)protocol << 8);
+        word0Remaining |= (static_cast<uint16_t>(protocol) << 8);
 
         if (expectToReceiveJRTimestamps)
             word0Remaining |= 0x02;     // second bit
@@ -340,7 +340,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
     {
         uint16_t word0Remaining{ 0 };
 
-        word0Remaining |= ((uint16_t)protocol << 8);
+        word0Remaining |= (static_cast<uint16_t>(protocol) << 8);
 
         if (confirmationWillReceiveJRTimestamps)
             word0Remaining |= 0x02;     // second bit
@@ -368,7 +368,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
     {
         uint16_t word0Remaining{ 0 };
 
-        word0Remaining |= ((uint16_t)functionBlockNumber << 8);
+        word0Remaining |= (static_cast<uint16_t>(functionBlockNumber) << 8);
 
         word0Remaining |= (uint8_t)requestFlags;
 
@@ -401,10 +401,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         uint32_t word1{ 0 };
 
 
-        word0Remaining |= (uint16_t)internal::CleanupByte7(functionBlockNumber) << 8;
-        word0Remaining |= (uint16_t)uiHint << 4;
-        word0Remaining |= (uint16_t)midi10 << 2;
-        word0Remaining |= (uint16_t)direction;
+        word0Remaining |= static_cast<uint16_t>(internal::CleanupByte7(functionBlockNumber)) << 8;
+        word0Remaining |= static_cast<uint16_t>(uiHint) << 4;
+        word0Remaining |= static_cast<uint16_t>(midi10) << 2;
+        word0Remaining |= static_cast<uint16_t>(direction);
 
         if (active)
         {
@@ -412,10 +412,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         }
 
         word1 =
-            (uint32_t)firstGroup << 24 |
-            (uint32_t)numberOfGroups << 16 |
-            (uint32_t)midiCIVersionFormat << 8 |
-            (uint32_t)maxNumberSysEx8Streams;
+            static_cast<uint32_t>(firstGroup) << 24 |
+            static_cast<uint32_t>(numberOfGroups) << 16 |
+            static_cast<uint32_t>(midiCIVersionFormat) << 8 |
+            static_cast<uint32_t>(maxNumberSysEx8Streams);
 
 
         return MidiMessageBuilder::BuildStreamMessage(
@@ -440,7 +440,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
     {
         // fb notifications include the function block number as the second
         // to last byte
-        uint16_t word0Remainder = (uint16_t)functionBlockNumber << 8;
+        uint16_t word0Remainder = static_cast<uint16_t>(functionBlockNumber) << 8;
 
         return BuildSplitTextMessages(
             timestamp,

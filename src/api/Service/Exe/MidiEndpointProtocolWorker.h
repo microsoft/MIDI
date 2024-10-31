@@ -37,7 +37,7 @@ public:
 
     STDMETHOD(Shutdown)();
 
-    void EndProcessing() { if (m_endProcessing.is_valid()) m_endProcessing.SetEvent(); }
+    void EndProcessing() { if (m_endProcessing.is_valid() && !m_endProcessing.is_signaled()) m_endProcessing.SetEvent(); }
 
 private:
     std::wstring m_deviceInterfaceId;

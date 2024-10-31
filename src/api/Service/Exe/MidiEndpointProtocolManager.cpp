@@ -51,7 +51,6 @@ CMidiEndpointProtocolManager::Initialize(
     // we only spin this all up if negotiation is enabled
     if (m_discoveryAndProtocolNegotiationEnabled)
     {
-
         // use our clsid as the session id. 
         m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
 
@@ -92,6 +91,18 @@ CMidiEndpointProtocolManager::Initialize(
         m_DeviceEnumerationCompleted = m_watcher.EnumerationCompleted(winrt::auto_revoke, deviceEnumerationCompletedHandler);
 
         m_watcher.Start();
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Discovery and protocol negotiation (and metadata capture) are disabled", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingGuid(m_sessionId, "session id")
+        );
     }
 
     return S_OK;
@@ -159,7 +170,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-        TraceLoggingBool(m_discoveryAndProtocolNegotiationEnabled, "IsEnabled")
+        TraceLoggingBool(m_discoveryAndProtocolNegotiationEnabled, "DiscoveryEnabled")
     );
 
     // clients should check for IsEnabled before calling this function
@@ -168,6 +179,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
         return E_ABORT;
     }
 
+    std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
 
     auto cleanEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
@@ -200,22 +212,19 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
 
     RETURN_IF_FAILED(initializeHR);
 
-    {
-        std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
 
-        // create the thread
+    // create the thread
 
-        ProtocolNegotiationWorkerThreadEntry newEntry{};
+    ProtocolNegotiationWorkerThreadEntry newEntry{};
 
-        newEntry.Worker = worker;
+    newEntry.Worker = worker;
 
-        newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
-            negotiationParams,
-            negotiationCompleteCallback);
+    newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
+        negotiationParams,
+        negotiationCompleteCallback);
 
-        m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
-        m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();
-    }
+    m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
+    m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -247,12 +256,12 @@ CMidiEndpointProtocolManager::RemoveWorkerIfPresent(std::wstring endpointInterfa
 
     auto cleanEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointInterfaceId);
 
+    std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
+
     auto val = m_endpointWorkers.find(cleanEndpointId);
 
     if (val != m_endpointWorkers.end())
     {
-        std::scoped_lock<std::mutex> lock(m_endpointWorkersMapMutex);
-
         val->second.Worker->EndProcessing();    // this sets an event that tells the thread to quit
 
         if (val->second.Thread->joinable())

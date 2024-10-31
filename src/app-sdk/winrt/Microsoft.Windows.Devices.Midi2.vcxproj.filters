@@ -262,9 +262,6 @@
     <Midl Include="MidiLoopbackEndpointRemovalConfig.idl">
       <Filter>SDK\Endpoints\Loopback</Filter>
     </Midl>
-    <Midl Include="MidiMessageBuilder.idl">
-      <Filter>SDK\Core\Messages</Filter>
-    </Midl>
     <Midl Include="MidiServiceConfig.idl">
       <Filter>SDK\ServiceConfig</Filter>
     </Midl>
@@ -372,6 +369,9 @@
     </Midl>
     <Midl Include="MidiUniqueId.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiMessageBuilder.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

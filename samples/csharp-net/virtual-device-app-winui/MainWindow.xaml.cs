@@ -112,12 +112,19 @@ namespace MidiSample.AppToAppMidi
                 System.Diagnostics.Debug.WriteLine("StartVirtualDevice Creating virtual device");
                 _virtualDevice = MidiVirtualDeviceManager.CreateVirtualDevice(creationConfig);
 
+
                 // return if unable to create virtual device
                 if (_virtualDevice == null)
                 {
                     System.Diagnostics.Debug.WriteLine("StartVirtualDevice Unable to create virtual device");
                     return false;
                 }
+
+                // this is for debugging in the sample. Normally you'd have this set to true
+                // you want to set this before you open the "device" side connection or else you may
+                // miss the initial discovery messages
+                _virtualDevice.SuppressHandledMessages = false;
+
 
                 // create our device-side connection
                 System.Diagnostics.Debug.WriteLine("StartVirtualDevice Creating endpoint connection");
@@ -164,8 +171,7 @@ namespace MidiSample.AppToAppMidi
 
         private void OnMidiMessageReceived(IMidiMessageReceivedEventSource sender, MidiMessageReceivedEventArgs args)
         {
-            System.Diagnostics.Debug.WriteLine("Message Received " + MidiMessageHelper.GetMessageDisplayNameFromFirstWord(
-                args.PeekFirstWord()));
+            System.Diagnostics.Debug.WriteLine($"- Received: {MidiMessageHelper.GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())} / {args.GetMessagePacket().ToString()}");
         }
 
         private void OnStreamConfigurationRequestReceived(MidiVirtualDevice sender, MidiStreamConfigRequestReceivedEventArgs args)
@@ -200,15 +206,30 @@ namespace MidiSample.AppToAppMidi
             declaredEndpointInfo.ProductInstanceId = "PMB_APP2_3263827";
             declaredEndpointInfo.SpecificationVersionMajor = 1; // see latest MIDI 2 UMP spec
             declaredEndpointInfo.SpecificationVersionMinor = 1; // see latest MIDI 2 UMP spec
-            declaredEndpointInfo.SupportsMidi10Protocol = true;
+            declaredEndpointInfo.SupportsMidi10Protocol = false;
             declaredEndpointInfo.SupportsMidi20Protocol = true;
             declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps = false;
             declaredEndpointInfo.SupportsSendingJitterReductionTimestamps = false;
-            declaredEndpointInfo.HasStaticFunctionBlocks = true;
-            
 
-            var declaredDeviceIdentity = new MidiDeclaredDeviceIdentity() ;
+            declaredEndpointInfo.HasStaticFunctionBlocks = true;
+            declaredEndpointInfo.DeclaredFunctionBlockCount = 3;    // needs to match the number of function blocks in the collection
+
+
             // todo: set any device identity values if you want. This is optional
+            // The SysEx id, if used, needs to be a valid one
+            var declaredDeviceIdentity = new MidiDeclaredDeviceIdentity() ;
+            declaredDeviceIdentity.DeviceFamilyMsb = 0x01;
+            declaredDeviceIdentity.DeviceFamilyLsb = 0x02;
+            declaredDeviceIdentity.DeviceFamilyModelNumberMsb = 0x03;
+            declaredDeviceIdentity.DeviceFamilyModelNumberLsb = 0x04;
+            declaredDeviceIdentity.SoftwareRevisionLevelByte1 = 0x05;
+            declaredDeviceIdentity.SoftwareRevisionLevelByte2 = 0x06;
+            declaredDeviceIdentity.SoftwareRevisionLevelByte3 = 0x07;
+            declaredDeviceIdentity.SoftwareRevisionLevelByte4 = 0x08;
+            declaredDeviceIdentity.SystemExclusiveIdByte1 = 0x09;
+            declaredDeviceIdentity.SystemExclusiveIdByte2 = 0x0A;
+            declaredDeviceIdentity.SystemExclusiveIdByte3 = 0x0B;
+
 
             var userSuppliedInfo = new MidiEndpointUserSuppliedInfo() ;
             userSuppliedInfo.Name = userSuppliedName;           // for names, this will bubble to the top in priority
@@ -221,15 +242,19 @@ namespace MidiSample.AppToAppMidi
                 transportSuppliedManufacturerName,              // transport-supplied company name
                 declaredEndpointInfo,                           // for endpoint discovery
                 declaredDeviceIdentity,                         // for endpoint discovery
-                userSuppliedInfo
-    
+                userSuppliedInfo    
             );
 
             // if set to true, WinMM / WinRT MIDI 1.0 backwards-compat endpoints won't be created
+            // when that feature is available in the service
             config.CreateOnlyUmpEndpoints = false;
 
             // Function blocks. The MIDI 2 UMP specification covers the meanings
             // of these values
+
+            // Note: the number of blocks needs to match the number declared for the endpoint
+            // and function blocks must start at 0 and go up from there, without any gaps
+
             var block1 = new MidiFunctionBlock();
             block1.Number = 0;
             block1.Name = "Pads Output";
@@ -246,17 +271,31 @@ namespace MidiSample.AppToAppMidi
 
             var block2 = new MidiFunctionBlock();
             block2.Number = 1;
-            block2.Name = "A Function Block";
+            block2.Name = "Second Function Block";
             block2.IsActive = true;
             block2.UIHint = MidiFunctionBlockUIHint.Sender;
             block2.FirstGroupIndex = 1;
-            block2.GroupCount = 2;
+            block2.GroupCount = 4;
             block2.Direction = MidiFunctionBlockDirection.Bidirectional;
             block2.RepresentsMidi10Connection = MidiFunctionBlockRepresentsMidi10Connection.Not10;
             block2.MaxSystemExclusive8Streams = 0;
             block2.MidiCIMessageVersionFormat = 0;
 
             config.FunctionBlocks.Add(block2);
+
+            var block3 = new MidiFunctionBlock();
+            block3.Number = 2;
+            block3.Name = "Third Function Block";
+            block3.IsActive = false;                // function blocks can be marked as inactive.
+            block3.UIHint = MidiFunctionBlockUIHint.Receiver;
+            block3.FirstGroupIndex = 5;
+            block3.GroupCount = 1;
+            block3.Direction = MidiFunctionBlockDirection.BlockInput;
+            block3.RepresentsMidi10Connection = MidiFunctionBlockRepresentsMidi10Connection.Not10;
+            block3.MaxSystemExclusive8Streams = 0;
+            block3.MidiCIMessageVersionFormat = 0;
+
+            config.FunctionBlocks.Add(block3);
 
             return config;
         }

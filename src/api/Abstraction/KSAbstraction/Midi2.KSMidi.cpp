@@ -35,10 +35,10 @@ CMidi2KSMidi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingHexUInt32(creationParams->DataFormat, "MidiDataFormats"),
         TraceLoggingHexUInt32(flow, "MidiFlow"),
-        TraceLoggingHexUInt32(*mmcssTaskId, "mmcssTaskId"),
         TraceLoggingPointer(callback, "callback")
         );
 
@@ -184,7 +184,8 @@ CMidi2KSMidi::Shutdown()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
     if (m_MidiOutDevice)

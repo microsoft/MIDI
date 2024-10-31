@@ -105,8 +105,8 @@ MidiEndpointTable::OnClientConnected(
                 // add the client
                 //entry.MidiClientConnections.push_back(clientBiDi);
                 entry.MidiClientBiDi = clientBiDi;
-                entry.MidiDeviceBiDi->LinkAssociatedCallback(entry.MidiClientBiDi);
-                entry.MidiClientBiDi->LinkAssociatedCallback(entry.MidiDeviceBiDi);
+                LOG_IF_FAILED(entry.MidiDeviceBiDi->LinkAssociatedCallback(entry.MidiClientBiDi));
+                LOG_IF_FAILED(entry.MidiClientBiDi->LinkAssociatedCallback(entry.MidiDeviceBiDi));
 
                 m_endpoints[associationId] = entry;
             }
@@ -155,7 +155,7 @@ MidiEndpointTable::OnClientDisconnected(
     {
         std::wstring associationId = internal::GetSwdPropertyVirtualEndpointAssociationId(clientEndpointInterfaceId);
 
-        if (associationId != L"")
+        if (!associationId.empty())
         {
             auto lock = m_entriesLock.lock();
 
@@ -165,9 +165,16 @@ MidiEndpointTable::OnClientDisconnected(
                 auto entry = m_endpoints[associationId];
 
                 // we unlink the two, but only remove the client
-                entry.MidiDeviceBiDi->UnlinkAssociatedCallback();
-                entry.MidiClientBiDi->UnlinkAssociatedCallback();
-                entry.MidiClientBiDi.reset();
+                if (entry.MidiDeviceBiDi != nullptr)
+                {
+                    LOG_IF_FAILED(entry.MidiDeviceBiDi->UnlinkAssociatedCallback());
+                }
+
+                if (entry.MidiClientBiDi != nullptr)
+                {
+                    LOG_IF_FAILED(entry.MidiClientBiDi->UnlinkAssociatedCallback());
+                    entry.MidiClientBiDi.reset();
+                }
 
                 m_endpoints[associationId] = entry;
 
@@ -246,7 +253,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(
                 if (entry.MidiDeviceBiDi == nullptr)
                 {
                     entry.MidiDeviceBiDi = deviceBiDi;
-                //    m_endpoints[associationId] = entry;
+                    m_endpoints[associationId] = entry;
                 }
                 else
                 {
@@ -376,20 +383,18 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(
                             TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                         );
 
-                        // unlink the bidi devices
-                        //entry.MidiDeviceBiDi->UnlinkAssociatedBiDi();
-                        entry.MidiDeviceBiDi->UnlinkAssociatedCallback();
+
+                        if (entry.MidiClientBiDi != nullptr)
+                        {
+                            LOG_IF_FAILED(entry.MidiClientBiDi->UnlinkAssociatedCallback());
+                            entry.MidiClientBiDi.reset();
+                        }
+
+                        LOG_IF_FAILED(entry.MidiDeviceBiDi->UnlinkAssociatedCallback());
                         entry.MidiDeviceBiDi.reset();
 
-                        entry.MidiClientBiDi->UnlinkAssociatedCallback();
-                        entry.MidiClientBiDi.reset();
 
                         RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));
-
-                        //entry.CreatedClientEndpointId = L"";
-                        //entry.CreatedShortClientInstanceId = L"";
-
-                        //m_endpoints[entry.VirtualEndpointAssociationId] = entry;
 
                         // deactivate the device
                         // TODO: Should this really be done on device disconnect vs an explicit delete command?
