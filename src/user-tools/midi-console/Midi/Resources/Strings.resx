@@ -124,7 +124,7 @@
     <value>MIDI Console (Preview)</value>
   </data>
   <data name="AppTitle" xml:space="preserve">
-    <value>Microsoft Windows MIDI Services Console (Preview)</value>
+    <value>Microsoft Windows MIDI Services Console</value>
   </data>
   <data name="CommandDiagnosticsReportDescription" xml:space="preserve">
     <value>Generate a report, typically for a support request, or for use when filing a bug</value>

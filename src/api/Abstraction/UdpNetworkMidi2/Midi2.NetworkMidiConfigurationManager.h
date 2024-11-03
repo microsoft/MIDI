@@ -20,7 +20,7 @@ public:
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _Out_ LPWSTR* Response));
     STDMETHOD(Shutdown)();
 
-    STDMETHOD(ValidateHostDefinition(_In_ MidiNetworkUdpHostDefinition& definition, _Out_ winrt::hstring& errorMessage));
+    STDMETHOD(ValidateHostDefinition(_In_ MidiNetworkHostDefinition& definition, _Out_ winrt::hstring& errorMessage));
 //    STDMETHOD(ValidateClientDefinition(_In_ MidiNetworkUdpClientDefinition& definition));
 
 private:

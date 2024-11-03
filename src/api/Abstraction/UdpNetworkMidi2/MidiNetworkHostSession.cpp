@@ -8,8 +8,9 @@
 
 #include "pch.h"
 
-HRESULT 
-MidiNetworkHostSession::Initialize()
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHostSession::Initialize(IMidiCallback* callback)
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -20,7 +21,9 @@ MidiNetworkHostSession::Initialize()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
+    m_callback = callback;
 
     return S_OK;
 }
@@ -35,15 +38,27 @@ MidiNetworkHostSession::ReceiveMidiMessagesFromNetwork(uint16_t const sequenceNu
     // receive a block of message data from the network, parse them, and begin sending 
     // them to the BiDi callback, one message at a time
 
+    // timestamps are generated here
+
 
 
     return S_OK;
 }
 
 
-HRESULT 
-MidiNetworkHostSession::SendMidiMessageToNetwork()
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHostSession::SendMidiMessage(
+    PVOID message,
+    UINT size,
+    LONGLONG timestamp
+)
 {
+    UNREFERENCED_PARAMETER(message);
+    UNREFERENCED_PARAMETER(size);
+    UNREFERENCED_PARAMETER(timestamp);
+
+
     // we simply enqueue messages so the host can send them
 
 

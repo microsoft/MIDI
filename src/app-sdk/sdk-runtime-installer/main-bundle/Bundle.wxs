@@ -111,7 +111,7 @@
                 SourceFile="WindowsMIDIServicesConsoleStandAloneSetup.msi">
             </MsiPackage>
 
-            <!--
+            
             <MsiPackage
                 Id="MidiServicesSettingsSetup"
                 Vital="yes"
@@ -119,7 +119,7 @@
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesSettingsAppStandAloneSetup.msi">
             </MsiPackage>
-            -->
+            
             
         </PackageGroup>
         

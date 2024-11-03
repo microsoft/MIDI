@@ -116,6 +116,8 @@ namespace msgs = ::winrt::Microsoft::Windows::Devices::Midi2::Messages;
 namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry {};
 namespace ci = ::winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
 
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network {};
+namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network;
 
 
 #define SAFE_COTASKMEMFREE(p) \
@@ -124,6 +126,7 @@ namespace ci = ::winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
         (p) = NULL; \
     }
 
+#include <WindowsMidiServicesVersion.h>
 
 #include "resource.h"
 
@@ -178,6 +181,15 @@ namespace ci = ::winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
 #include "MidiVirtualDevice.h"
 #include "MidiVirtualDeviceCreationConfig.h"
 #include "MidiVirtualDeviceManager.h"
+
+#include "MidiNetworkHostEndpointCreationConfig.h"
+#include "MidiNetworkHostEndpointRemovalConfig.h"
+#include "MidiNetworkClientEndpointCreationConfig.h"
+#include "MidiNetworkClientEndpointRemovalConfig.h"
+#include "MidiNetworkEndpointManager.h"
+
+
+
 
 #include "MidiDiagnostics.h"
 #include "MidiServicePingResponseSummary.h"

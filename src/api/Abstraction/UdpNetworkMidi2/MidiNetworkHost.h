@@ -14,50 +14,61 @@ using namespace winrt::Windows::Networking::ServiceDiscovery::Dnssd;
 
 #include <queue>
 
-enum MidiNetworkUdpHostConnectionPolicy
+enum MidiNetworkHostConnectionPolicy
 {
-    AllowAllConnections = 0,
-    AllowFromIpList,
-    AllowFromIpRange,
+    PolicyAllowAllConnections = 0,
+    PolicyAllowFromIpList,
+    PolicyAllowFromIpRange,
 };
 
-enum MidiNetworkUdpHostAuthentication
+enum MidiNetworkHostAuthentication
 {
     NoAuthentication = 0,
     PasswordAuthentication,
     UserAuthentication,
 };
 
-struct MidiNetworkUdpHostDefinition
+enum MidiNetworkHostProtocol
+{
+    ProtocolDefault = 0,
+    ProtocolUdp,
+};
+
+struct MidiNetworkHostDefinition
 {
     winrt::hstring EntryIdentifier;         // internal 
 
-    uint16_t Port;
+    bool UseAutomaticPortAllocation{ true };
+    winrt::hstring Port;
 
     winrt::hstring UmpEndpointName;
     winrt::hstring ProductInstanceId;
 
     bool UmpOnly{ true };
     bool Enabled{ true };
+    bool Advertise{ true };
 
     // connection rules
-    MidiNetworkUdpHostConnectionPolicy ConnectionPolicy{ MidiNetworkUdpHostConnectionPolicy::AllowAllConnections };
+    MidiNetworkHostConnectionPolicy ConnectionPolicy{ MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections };
 
     // network adapter (the id is a guid)
 
+
+    // protocol
+    MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
 
     // ip information
     std::vector<winrt::Windows::Networking::HostName> IpAddresses{};
 
     // authentication
-    MidiNetworkUdpHostAuthentication Authentication{ MidiNetworkUdpHostAuthentication::NoAuthentication };
+    MidiNetworkHostAuthentication Authentication{ MidiNetworkHostAuthentication::NoAuthentication };
 
     // auth lookup key
 
 
     // generated properties
     winrt::hstring ServiceInstanceName;     // instance name for the PTR record
-    winrt::hstring HostName;                      // must include the .local domain
+    winrt::hstring HostName;                // must include the .local domain
 
 };
 
@@ -66,7 +77,7 @@ struct MidiNetworkUdpHostDefinition
 class MidiNetworkHost
 {
 public:
-    HRESULT Initialize(_In_ MidiNetworkUdpHostDefinition& hostDefinition);
+    HRESULT Initialize(_In_ MidiNetworkHostDefinition& hostDefinition);
 
     HRESULT Start();
 
@@ -88,7 +99,7 @@ private:
         _In_ DatagramSocket const& sender,
         _In_ DatagramSocketMessageReceivedEventArgs const& args);
 
-    MidiNetworkUdpHostDefinition m_hostDefinition{};
+    MidiNetworkHostDefinition m_hostDefinition{};
 
     std::shared_ptr<MidiNetworkAdvertiser> m_advertiser;
 

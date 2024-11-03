@@ -79,7 +79,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Microsoft Windows MIDI Services Console (Preview).
+        ///   Looks up a localized string similar to Microsoft Windows MIDI Services Console.
         /// </summary>
         internal static string AppTitle {
             get {

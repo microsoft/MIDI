@@ -43,11 +43,11 @@ TransportState::ConstructConfigurationManager()
 
 _Use_decl_annotations_
 HRESULT 
-TransportState::AddHost(MidiNetworkHost* host)
+TransportState::AddHost(std::shared_ptr<MidiNetworkHost> host)
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, host);
 
-
+    m_hosts.push_back(host);
 
     return S_OK;
 }

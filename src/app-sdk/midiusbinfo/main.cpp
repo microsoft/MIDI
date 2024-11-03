@@ -38,6 +38,15 @@ int __cdecl main()
     std::cout << dye::aqua(" that you stop the midisrv service before running this tool.") << std::endl;
     std::cout << dye::grey("===================================================================") << std::endl;
 
+    std::wcout 
+        << WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME 
+        << L" ("
+        << WINDOWS_MIDI_SERVICES_BUILD_SOURCE 
+        << L")"
+        << std::endl;
+
+    std::wcout << WINDOWS_MIDI_SERVICES_BUILD_VERSION_FULL << std::endl;
+
     // enumerate all in-scope devices
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");

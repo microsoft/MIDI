@@ -13,7 +13,7 @@
 _Use_decl_annotations_
 HRESULT 
 MidiNetworkHost::Initialize(
-    MidiNetworkUdpHostDefinition& hostDefinition
+    MidiNetworkHostDefinition& hostDefinition
 )
 {
     TraceLoggingWrite(
@@ -26,19 +26,27 @@ MidiNetworkHost::Initialize(
     );
 
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.HostName.empty());
-    RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.empty());
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ServiceInstanceName.empty());
-    RETURN_HR_IF(E_INVALIDARG, hostDefinition.UmpEndpointName.empty());
 
+    RETURN_HR_IF(E_INVALIDARG, hostDefinition.UmpEndpointName.empty());
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.UmpEndpointName.size() > MAX_UMP_ENDPOINT_NAME_LENGTH);
+
+    RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.empty());
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.size() > MAX_UMP_PRODUCT_INSTANCE_ID_LENGTH);
+
+    if (!hostDefinition.UseAutomaticPortAllocation)
+    {
+        RETURN_HR_IF(E_INVALIDARG, hostDefinition.Port.empty());
+    }
 
     m_hostDefinition = hostDefinition;
 
+    // TODO: If we are to automatically pick a port, then do so here.
+
+
+
     m_advertiser = std::make_shared<MidiNetworkAdvertiser>();
-
     RETURN_HR_IF_NULL(E_POINTER, m_advertiser);
-
     RETURN_IF_FAILED(m_advertiser->Initialize());
 
     return S_OK;
@@ -48,7 +56,6 @@ HRESULT
 MidiNetworkHost::Start()
 {
     winrt::Windows::Foundation::TimeSpan timeout = std::chrono::seconds(5);
-
     auto status = m_socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).wait_for(timeout);
 
     if (status != winrt::Windows::Foundation::AsyncStatus::Completed)
@@ -60,7 +67,7 @@ MidiNetworkHost::Start()
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Timed out trying to bind service to socket.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt16(m_hostDefinition.Port, "port")
+            TraceLoggingWideString(m_hostDefinition.Port.c_str(), "port")
         );
     
         RETURN_IF_FAILED(E_FAIL);
@@ -68,23 +75,31 @@ MidiNetworkHost::Start()
 
     HostName hostName(m_hostDefinition.HostName);
 
-    RETURN_IF_FAILED(m_advertiser->Advertise(
-        m_hostDefinition.ServiceInstanceName,
-        hostName,
-        m_socket,
-        m_hostDefinition.Port,
-        m_hostDefinition.UmpEndpointName,
-        m_hostDefinition.ProductInstanceId
-    ));
+    // this should have error checking
+    auto portNumber = static_cast<uint16_t>(std::stoi(winrt::to_string(m_hostDefinition.Port)));
 
 
-    // TODO: start listening on a new thread.
+    // open the port
+    // TODO: This can specify encryption level, which we may want to add to params
+    m_socket.BindServiceNameAsync(m_hostDefinition.Port).get();
+
+    // advertise
+    if (m_hostDefinition.Advertise)
+    {
+        RETURN_IF_FAILED(m_advertiser->Advertise(
+            m_hostDefinition.ServiceInstanceName,
+            hostName,
+            m_socket,
+            portNumber,
+            m_hostDefinition.UmpEndpointName,
+            m_hostDefinition.ProductInstanceId
+        ));
+    }
+
+
+    // TODO: spin up new thread and start listening
     //ProcessIncomingPackets();
     
-
-
-
-
 
 
     return S_OK;
@@ -295,7 +310,11 @@ MidiNetworkHost::EstablishNewSession()
     );
 
 
-    // need to add a new session to the session list
+    // TODO: Add a new session to the session list
+
+    // TODO: Let the endpoint manager know to enumerate this new endpoint
+
+    // TODO: We'll need to make sure we can instantiate this before getting the SWD ID back, so protocol negotiation works
 
 
     return S_OK;
@@ -314,15 +333,14 @@ MidiNetworkHost::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-
-    // TODO: when done, stop advertising, send "bye" to all sessions, and then unbind the socket
-
-
-
     if (m_advertiser)
     {
         m_advertiser->Shutdown();
     }
+
+    // TODO: send "bye" to all sessions, and then unbind the socket
+
+    // TODO: Stop packet processing thread
 
 
     return S_OK;

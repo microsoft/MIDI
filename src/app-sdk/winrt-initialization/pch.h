@@ -57,6 +57,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2 {};
 namespace internal = ::WindowsMidiServicesInternal;
 namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
+#include <WindowsMidiServicesVersion.h>
 
 #include <Devpropdef.h>
 #include <MidiDefs.h>

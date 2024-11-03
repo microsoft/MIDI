@@ -67,6 +67,8 @@ namespace collections = winrt::Windows::Foundation::Collections;
 
 #include "wstring_util.h"
 
+#include <WindowsMidiServicesVersion.h>
+
 
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"

@@ -51,7 +51,7 @@ public:
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
 
-    HRESULT AddHost(_In_ MidiNetworkHost* host);
+    HRESULT AddHost(_In_ std::shared_ptr<MidiNetworkHost>);
 
 
 private:
@@ -63,6 +63,6 @@ private:
     wil::com_ptr<CMidi2NetworkMidiConfigurationManager> m_configurationManager;
 
     // key is the host identifier
-    std::map<winrt::hstring, std::shared_ptr<MidiNetworkHost>> m_hosts;
+    std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{};
 
 };
