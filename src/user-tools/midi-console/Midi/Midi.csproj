@@ -37,9 +37,13 @@
 
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="..\..\..\..\build\staging\version\WindowsMidiServicesVersion.cs" Link="WindowsMidiServicesVersion.cs" />
+  </ItemGroup>
+
   <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*"  />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.6" />
     <PackageReference Include="Spectre.Console" Version="0.49.1" />

@@ -15,6 +15,10 @@ namespace Microsoft.Midi.ConsoleApp
     {
         public sealed class Settings : CommandSettings
         {
+            [LocalizedDescription("ParameterEnumSessionsIncludeAll")]
+            [CommandOption("-a|--all")]
+            [DefaultValue(false)]
+            public bool All { get; set; }
         }
 
         public override int Execute(CommandContext context, Settings settings)
@@ -42,11 +46,18 @@ namespace Microsoft.Midi.ConsoleApp
 
                 var sessionList = MidiReporting.GetActiveSessions();
 
+                uint reportedSessionCount = 0;
 
                 if (sessionList.Count > 0)
                 {
                     foreach (var session in sessionList)
                     {
+                        // if session has no open connections, and we haven't specified to include all, then skip
+                        if (!settings.All && session.Connections.Count == 0)
+                        {
+                            continue;
+                        }
+
                         table.AddRow(
                             $"{AnsiMarkupFormatter.FormatProcessName(session.ProcessName)} [[{AnsiMarkupFormatter.FormatProcessId(session.ProcessId)}]]",
                             $"Session {AnsiMarkupFormatter.FormatSessionName(session.SessionName)} open since {AnsiMarkupFormatter.FormatLongDateTime(session.StartTime)}"
@@ -54,6 +65,8 @@ namespace Microsoft.Midi.ConsoleApp
 
                         if (session.Connections.Count > 0)
                         {
+                            reportedSessionCount++;
+
                             //table.AddEmptyRow();
 
                             string connectionCountMessage = string.Empty;
@@ -106,16 +119,24 @@ namespace Microsoft.Midi.ConsoleApp
 
                                 table.AddRow("", $"{connectionInfoString} {AnsiMarkupFormatter.FormatFullEndpointInterfaceId(connection.EndpointDeviceId)}");
                                 table.AddEmptyRow();
-
                             }
+
                         }
                         else
                         {
-                            table.AddRow("", "No open endpoint connections.");
+                            table.AddRow("", "No open endpoint connections");
                         }
 
                         table.AddEmptyRow();
                     }
+
+                    if (reportedSessionCount == 0)
+                    {
+                        table.AddRow("", "No active sessions with open connections (use --all to see all sessions)");
+                    }
+
+
+
                 }
                 else
                 {

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="WixToolset.Sdk/4.0.2">
   <PropertyGroup>
     <OutputType>Bundle</OutputType>
-    <OutputName>WindowsMidiServicesInBoxComponentsSetup</OutputName>
+    <OutputName>WindowsMidiServicesInDevelopmentServiceComponentsSetup</OutputName>
     <BuildDate>$([System.DateTime]::Now.ToString("yyyyMMddhhmm"))</BuildDate>
     <DefineConstants>BuildDate=$(BuildDate)</DefineConstants>
   </PropertyGroup>

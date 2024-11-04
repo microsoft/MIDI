@@ -71,10 +71,13 @@
               "BuildConsoleApp",
               "BuildCppSamples",
               "BuildCSharpSamples",
+              "BuildInDevelopmentServicePlugins",
+              "BuildInDevelopmentServicePluginsInstaller",
               "BuildServiceAndPlugins",
               "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
               "BuildUserToolsSharedComponents",
+              "CreateVersionIncludes",
               "Prerequisites"
             ]
           }
@@ -92,10 +95,13 @@
               "BuildConsoleApp",
               "BuildCppSamples",
               "BuildCSharpSamples",
+              "BuildInDevelopmentServicePlugins",
+              "BuildInDevelopmentServicePluginsInstaller",
               "BuildServiceAndPlugins",
               "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
               "BuildUserToolsSharedComponents",
+              "CreateVersionIncludes",
               "Prerequisites"
             ]
           }

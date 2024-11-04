@@ -126,9 +126,9 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc;$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc;$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc;$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,9 +156,9 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc;$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc;$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalIncludeDirectories);..\..\api\VSFiles\intermediate\idl\$(Platform)\$(Configuration);..\..\api\inc;$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

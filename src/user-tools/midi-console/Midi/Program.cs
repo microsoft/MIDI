@@ -223,6 +223,8 @@ app.Configure(config =>
 // app title
 AnsiConsole.WriteLine();
 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppTitle(Strings.AppTitle));
+AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation($"{Microsoft.Midi.Common.MidiBuildInformation.Name} ({Microsoft.Midi.Common.MidiBuildInformation.Source})"));
+AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft.Midi.Common.MidiBuildInformation.BuildFullVersion));
 AnsiConsole.WriteLine();
 
 if (args.Length == 0)

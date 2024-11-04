@@ -15,6 +15,10 @@
 
 #define MIDIDIAG_MAX_FIELD_LABEL_WIDTH                                   25
 
+#define MIDIDIAG_HEADER_FIELD_LABEL_VERSION_BUILD_SOURCE                 L"ver_build_source"
+#define MIDIDIAG_HEADER_FIELD_LABEL_VERSION_NAME                         L"ver_build_name"
+#define MIDIDIAG_HEADER_FIELD_LABEL_VERSION_FULL                         L"ver_build_full"
+
 #define MIDIDIAG_FIELD_SEPARATOR                                         L" : "
 #define MIDIDIAG_SECTION_HEADER_SEPARATOR_CHAR                           '='
 #define MIDIDIAG_ITEM_SEPARATOR_CHAR                                     '-'

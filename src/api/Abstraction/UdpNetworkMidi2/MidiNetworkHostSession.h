@@ -19,18 +19,29 @@
 //
 
 
+
+
+// TODO: Should the session just be 1:1 with IMidiBiDi / ICallback and then simply implemented in there?
+
+
 class MidiNetworkHostSession
 {
 public:
-    HRESULT Initialize(/* TODO: Linked IMidiCallback and IMidiBiDi */);
+    HRESULT Initialize(_In_ IMidiCallback* callback  /* TODO: Linked IMidiCallback and IMidiBiDi */);
 
     HRESULT ReceiveMidiMessagesFromNetwork(_In_ uint16_t const sequenceNumber, _In_ std::vector<uint32_t> const& words);
-    HRESULT SendMidiMessageToNetwork();
+    HRESULT SendMidiMessage(
+        _In_ PVOID message,
+        _In_ UINT size,
+        _In_ LONGLONG timestamp
+    );
 
     HRESULT Shutdown();
 
 
 private:
+
+    wil::com_ptr<IMidiCallback> m_callback;
 
     // client information
 

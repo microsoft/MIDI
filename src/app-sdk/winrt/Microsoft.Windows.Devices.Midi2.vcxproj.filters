@@ -46,6 +46,21 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <Filter>SDK\CapabilityInquiry</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkHostEndpointRemovalConfig.cpp">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkHostEndpointCreationConfig.cpp">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkClientEndpointCreationConfig.cpp">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkClientEndpointRemovalConfig.cpp">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkEndpointManager.cpp">
+      <Filter>SDK\Endpoints\Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -91,6 +106,21 @@
     </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
       <Filter>SDK\CapabilityInquiry</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostEndpointRemovalConfig.h">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostEndpointCreationConfig.h">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClientEndpointCreationConfig.h">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClientEndpointRemovalConfig.h">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkEndpointManager.h">
+      <Filter>SDK\Endpoints\Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -373,6 +403,39 @@
     <Midl Include="MidiMessageBuilder.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
+    <Midl Include="MidiNetworkEndpointManager.idl">
+      <Filter>SDK\Endpoints\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientEndpointCreationConfig.idl">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientEndpointCreationResult.idl">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientEndpointRemovalConfig.idl">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientEndpointRemovalResult.idl">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostEndpointCreationConfig.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostEndpointCreationResult.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostEndpointRemovalConfig.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostEndpointRemovalResult.idl">
+      <Filter>SDK\Endpoints\Network\Host</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAuthenticationTypeEnum.idl">
+      <Filter>SDK\Endpoints\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl">
+      <Filter>SDK\Endpoints\Network</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-api.def" />
@@ -460,6 +523,15 @@
     </Filter>
     <Filter Include="SDK\CapabilityInquiry">
       <UniqueIdentifier>{440006ae-c234-49ce-aae1-65bd4354b22d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Endpoints\Network">
+      <UniqueIdentifier>{285ad19a-e3d4-4572-842e-d316ceb1f42c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Endpoints\Network\Host">
+      <UniqueIdentifier>{8375564e-aa3f-4bd5-bded-2e89f5b4a708}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Endpoints\Network\Client">
+      <UniqueIdentifier>{0224a83d-4dbc-4f65-9e50-e0ba99c5ba6a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -58,6 +58,7 @@ namespace svc = winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include <wil/com.h>
 #include <wil/registry.h>
 
+#include <WindowsMidiServicesVersion.h>
 
 #include "wstring_util.h"
 #include "MidiDefs.h"

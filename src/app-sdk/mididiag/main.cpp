@@ -787,6 +787,9 @@ int __cdecl main()
     OutputHeader(MIDIDIAG_PRODUCT_NAME);
     OutputHeader(L"This application Copyright (c) 2024- Microsoft Corporation");
     OutputHeader(L"Information, license, and source available at https://aka.ms/midi");
+    OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_BUILD_SOURCE, std::wstring{ WINDOWS_MIDI_SERVICES_BUILD_SOURCE });
+    OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_NAME, std::wstring{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME });
+    OutputStringField(MIDIDIAG_HEADER_FIELD_LABEL_VERSION_FULL, std::wstring{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_FULL });
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_HEADER);
 

@@ -40,50 +40,50 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
 
 
 
-MidiNetworkUdpHostAuthentication MidiNetworkUdpHostAuthenticationFromJsonString(_In_ winrt::hstring const& jsonString)
+MidiNetworkHostAuthentication MidiNetworkHostAuthenticationFromJsonString(_In_ winrt::hstring const& jsonString)
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
     if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE)
     {
-        return MidiNetworkUdpHostAuthentication::NoAuthentication;
+        return MidiNetworkHostAuthentication::NoAuthentication;
     }
     else if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_PASSWORD)
     {
-        return MidiNetworkUdpHostAuthentication::PasswordAuthentication;
+        return MidiNetworkHostAuthentication::PasswordAuthentication;
     }
     else if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_USER)
     {
-        return MidiNetworkUdpHostAuthentication::UserAuthentication;
+        return MidiNetworkHostAuthentication::UserAuthentication;
     }
     else
     {
         // default is any
-        return MidiNetworkUdpHostAuthentication::NoAuthentication;
+        return MidiNetworkHostAuthentication::NoAuthentication;
     }
 }
 
 
-MidiNetworkUdpHostConnectionPolicy MidiNetworkUdpHostConnectionPolicyFromJsonString(_In_ winrt::hstring const& jsonString)
+MidiNetworkHostConnectionPolicy MidiNetworkHostConnectionPolicyFromJsonString(_In_ winrt::hstring const& jsonString)
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
     if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY)
     {
-        return MidiNetworkUdpHostConnectionPolicy::AllowAllConnections;
+        return MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections;
     }
     else if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_LIST)
     {
-        return MidiNetworkUdpHostConnectionPolicy::AllowFromIpList;
+        return MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList;
     }
     else if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_RANGE)
     {
-        return MidiNetworkUdpHostConnectionPolicy::AllowFromIpRange;
+        return MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange;
     }
     else
     {
         // default is any
-        return MidiNetworkUdpHostConnectionPolicy::AllowAllConnections;
+        return MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections;
     }
 }
 
@@ -92,7 +92,7 @@ MidiNetworkUdpHostConnectionPolicy MidiNetworkUdpHostConnectionPolicyFromJsonStr
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
-    MidiNetworkUdpHostDefinition& definition,
+    MidiNetworkHostDefinition& definition,
     winrt::hstring& errorMessage)
 {
     errorMessage = L"";
@@ -120,7 +120,7 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
         return E_INVALIDARG;
     }
 
-    if (definition.ConnectionPolicy == MidiNetworkUdpHostConnectionPolicy::AllowFromIpRange)
+    if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange)
     {
         // validate that there are exactly two entries
 
@@ -130,7 +130,7 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
             return E_INVALIDARG;
         }
     }
-    else if (definition.ConnectionPolicy == MidiNetworkUdpHostConnectionPolicy::AllowFromIpList)
+    else if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList)
     {
         // validate that there is at least one entry
 
@@ -194,6 +194,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     //                        "networkPort" : "auto",
     //                        "umpOnly" : true,
     //                        "enabled" : true,
+    //                        "advertise" : true,
     //                        "connectionRulesIpv4" :
     //                        {
     //                          "allow" : "list",
@@ -278,7 +279,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
             // are we defining a host?
             if (auto hostEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_KEY, nullptr); hostEntry != nullptr)
             {
-                MidiNetworkUdpHostDefinition definition;
+                MidiNetworkHostDefinition definition;
                 winrt::hstring validationErrorMessage{};
 
                 // currently, UDP is the only allowed protocol
@@ -296,11 +297,11 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 definition.UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
                 definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
 
-                definition.Authentication = MidiNetworkUdpHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, L""));
-                definition.ConnectionPolicy = MidiNetworkUdpHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY, L""));
+                definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, L""));
+                definition.ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY, L""));
 
                 // read the list of ip info
-                if (definition.ConnectionPolicy != MidiNetworkUdpHostConnectionPolicy::AllowAllConnections)
+                if (definition.ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
                 {
                     auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
 
@@ -315,14 +316,14 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 }
 
                 // read authentication information
-                if (definition.Authentication != MidiNetworkUdpHostAuthentication::NoAuthentication)
+                if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
                 {
 
-                    if (definition.Authentication == MidiNetworkUdpHostAuthentication::PasswordAuthentication)
+                    if (definition.Authentication == MidiNetworkHostAuthentication::PasswordAuthentication)
                     {
                         // TODO: Read the password vault key
                     }
-                    else if (definition.Authentication == MidiNetworkUdpHostAuthentication::UserAuthentication)
+                    else if (definition.Authentication == MidiNetworkHostAuthentication::UserAuthentication)
                     {
                         // TODO: Read username/password vault key
                     }
@@ -355,7 +356,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 definition.ServiceInstanceName = serviceInstanceNamePrefix;
 
-                // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number
+                // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number. Keep trying until unused one is found
 
 
 
@@ -371,7 +372,13 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     RETURN_HR_IF_NULL(E_POINTER, host);
                     RETURN_IF_FAILED(host->Initialize(definition));
 
-                    host->Start();
+                    // TODO: add to our collection of hosts
+
+
+                    TransportState::Current().AddHost(host);
+                    
+                    // start the network host
+                    RETURN_IF_FAILED(host->Start());
                 }
                 else
                 {
@@ -386,24 +393,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 // TODO: Add to the client reconnect table
             }
 
-
-
-        //    internal::JsonStringifyObjectToOutParam(responseObject, &Response);
-
-        //    // create the device-side endpoint. This is a critical step
-        //    RETURN_IF_FAILED(AbstractionState::Current().GetEndpointManager()->CreateDeviceSideEndpoint(deviceEntry));
-
-        //    // mark success
-        //    responseObject.SetNamedValue(
-        //        MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-        //        jsonTrue);
-
-        //    // TODO: This should have the association Id or something in it for the client to make sense of it
-        //    auto singleResponse = internal::JsonCreateSingleWStringPropertyObject(
-        //        MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY,
-        //        deviceEntry.CreatedDeviceEndpointId);
-
-        //    createdDevicesResponseArray.Append(singleResponse);
         }
     }
 

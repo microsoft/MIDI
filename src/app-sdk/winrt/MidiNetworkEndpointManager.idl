@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiNetworkHostEndpointCreationResult.idl";
+import "MidiNetworkHostEndpointCreationConfig.idl";
+
+import "MidiNetworkHostEndpointRemovalResult.idl";
+import "MidiNetworkHostEndpointRemovalConfig.idl";
+
+import "MidiNetworkClientEndpointCreationResult.idl";
+import "MidiNetworkClientEndpointCreationConfig.idl";
+
+import "MidiNetworkClientEndpointRemovalResult.idl";
+import "MidiNetworkClientEndpointRemovalConfig.idl";
+
+
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
+{
+    [default_interface]
+    [experimental]
+    static runtimeclass MidiNetworkEndpointManager
+    {
+        static Boolean IsTransportAvailable{ get; };
+        static Guid AbstractionId{ get; };
+
+        static MidiNetworkHostEndpointCreationResult CreateNetworkHost(
+            MidiNetworkHostEndpointCreationConfig creationConfig);
+
+        static MidiNetworkHostEndpointRemovalResult RemoveNetworkHost(
+            MidiNetworkHostEndpointRemovalConfig removalConfig);
+
+
+        static MidiNetworkClientEndpointCreationResult CreateNetworkClient(
+            MidiNetworkClientEndpointCreationConfig creationConfig);
+
+        static MidiNetworkClientEndpointRemovalResult RemoveNetworkClient(
+            MidiNetworkClientEndpointRemovalConfig removalConfig);
+
+
+    }
+}
