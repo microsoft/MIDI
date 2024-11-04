@@ -30,7 +30,7 @@ CMidiPort::~CMidiPort()
     else
     {
         // unsafe to release COM objects while process is terminating.
-        static_cast<void>(m_MidiAbstraction.detach());
+        static_cast<void>(m_MidiTransport.detach());
         static_cast<void>(m_MidiIn.detach());
         static_cast<void>(m_MidiOut.detach());
     }
@@ -51,7 +51,7 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
         TraceLoggingValue((int)flow, "MidiFlow"),
         TraceLoggingValue(flags, "flags"));
 
-    TRANSPORTCREATIONPARAMS abstractionCreationParams { MidiDataFormats_ByteStream };
+    TRANSPORTCREATIONPARAMS transportCreationParams { MidiDataFormats_ByteStream };
     DWORD mmcssTaskId {0};
     LARGE_INTEGER qpc{ 0 };
     
@@ -63,17 +63,17 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
     m_Flags = flags;
     m_InterfaceId = interfaceId;
 
-    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidiAbstraction)));
+    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidiTransport)));
 
     if (flow == MidiFlowIn)
     {
-        RETURN_IF_FAILED(m_MidiAbstraction->Activate(__uuidof(IMidiIn), (void **) &m_MidiIn));
-        RETURN_IF_FAILED(m_MidiIn->Initialize(m_InterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, this, 0, sessionId));
+        RETURN_IF_FAILED(m_MidiTransport->Activate(__uuidof(IMidiIn), (void **) &m_MidiIn));
+        RETURN_IF_FAILED(m_MidiIn->Initialize(m_InterfaceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, sessionId));
     }
     else
     {
-        RETURN_IF_FAILED(m_MidiAbstraction->Activate(__uuidof(IMidiOut), (void **) &m_MidiOut));
-        RETURN_IF_FAILED(m_MidiOut->Initialize(m_InterfaceId.c_str(), &abstractionCreationParams, &mmcssTaskId, sessionId));
+        RETURN_IF_FAILED(m_MidiTransport->Activate(__uuidof(IMidiOut), (void **) &m_MidiOut));
+        RETURN_IF_FAILED(m_MidiOut->Initialize(m_InterfaceId.c_str(), &transportCreationParams, &mmcssTaskId, sessionId));
     }
 
     WinmmClientCallback(m_Flow == MidiFlowIn?MIM_OPEN:MOM_OPEN, 0, 0);
@@ -102,7 +102,7 @@ CMidiPort::Shutdown()
 
         m_MidiIn.reset();
         m_MidiOut.reset();
-        m_MidiAbstraction.reset();
+        m_MidiTransport.reset();
         std::swap(m_InBuffers, emptyQueue);
         m_InterfaceId.clear();
 
@@ -622,7 +622,7 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
         // This should be on an initialized midi out port
         RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidiOut);
 
-        // send the message to the abstraction
+        // send the message to the transport
         // pass a timestamp of 0 to bypass scheduler
         RETURN_IF_FAILED(m_MidiOut->SendMidiMessage(&midiMessage, sizeof(midiMessage), 0));
     }
@@ -665,7 +665,7 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         RETURN_HR_IF(E_INVALIDARG, nullptr == buffer);
         RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_INVALFLAG), !(buffer->dwFlags & MHDR_PREPARED));
 
-        // send the message to the abstraction
+        // send the message to the transport
         // pass a timestamp of 0 to bypass scheduler
         // TODO: based on the buffer length, this message may require chunking into smaller
         // pieces to ensure it fits into the cross process queue.

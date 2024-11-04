@@ -22,7 +22,7 @@
 #include "wstring_util.h"
 #include "swd_helpers.h"
 
-#include "Midi2MidiSrvAbstraction.h"
+#include "Midi2MidiSrvTransport.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -47,7 +47,7 @@ MidiSWDeviceEnum::EnumerateDevices(
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
+    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
     additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
 
@@ -57,18 +57,18 @@ MidiSWDeviceEnum::EnumerateDevices(
     {
         auto name = device.Name();
         auto deviceId = device.Id();
-        winrt::guid abstractionGuid;
+        winrt::guid transportGuid;
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
         MidiDataFormats supportedDataFormats { MidiDataFormats_Invalid };
 
-        auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
+        auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
         if (prop)
         {
-            abstractionGuid = winrt::unbox_value<winrt::guid>(prop);
+            transportGuid = winrt::unbox_value<winrt::guid>(prop);
         }
         else
         {
-            // TODO: SWD's created by AudioEndpointBuilder lack an abstraction guid entirely,
+            // TODO: SWD's created by AudioEndpointBuilder lack an transport guid entirely,
             // we don't currently know how to use these endpoints. Skip for now.
             return S_OK;
         }
@@ -89,7 +89,7 @@ MidiSWDeviceEnum::EnumerateDevices(
         
         RETURN_IF_NULL_ALLOC(midiDevice);
 
-        midiDevice->AbstractionLayer = abstractionGuid;
+        midiDevice->TransportLayer = transportGuid;
         midiDevice->InterfaceClass = interfaceClass;
         midiDevice->DeviceId = deviceId;
         midiDevice->DeviceInstanceId = WindowsMidiServicesInternal::NormalizeDeviceInstanceIdWStringCopy(deviceInstanceId);

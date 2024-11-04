@@ -1,0 +1,22 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+import "WindowsMidiServices.idl";
+
+[
+    uuid(74174a03-30ce-4a50-a440-bc969cb4d475),
+    version(1.0),
+]
+library Midi2KSAggregateTransportLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(0f273b18-e372-4d95-87ac-c31c3d22e937), version(1.0)]
+    coclass Midi2KSAggregateTransport
+    {
+        [default] interface IMidiTransport;
+    }
+};
+

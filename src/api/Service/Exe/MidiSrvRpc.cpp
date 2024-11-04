@@ -449,19 +449,19 @@ MidiSrvGetTransportList(
 
         json::JsonObject transportObject;
        
-        if (metadata.Name != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_NAME_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Name));
-        if (metadata.TransportCode != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.TransportCode));
-        if (metadata.Description != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Description));
-        if (metadata.Author != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Author));
-        if (metadata.SmallImagePath != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.SmallImagePath));
-        if (metadata.Version != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_VERSION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Version));
-        transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsRuntimeCreatableByApps));
-        transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsRuntimeCreatableBySettings));
-        transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsSystemManaged));
-        transportObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsClientConfigurable));
-//        if (metadata.ClientConfigurationAssemblyName != NULL) abstractionObject.SetNamedValue(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.ClientConfigurationAssemblyName));
+        if (metadata.Name != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Name));
+        if (metadata.TransportCode != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.TransportCode));
+        if (metadata.Description != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Description));
+        if (metadata.Author != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Author));
+        if (metadata.SmallImagePath != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.SmallImagePath));
+        if (metadata.Version != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.Version));
+        transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsRuntimeCreatableByApps));
+        transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsRuntimeCreatableBySettings));
+        transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsSystemManaged));
+        transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, json::JsonValue::CreateBooleanValue(metadata.Flags & MetadataFlags_IsClientConfigurable));
+//        if (metadata.ClientConfigurationAssemblyName != NULL) transportObject.SetNamedValue(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, json::JsonValue::CreateStringValue(metadata.ClientConfigurationAssemblyName));
 
-        // add the abstraction metadata to the root, using the abstraction id as the key
+        // add the transport metadata to the root, using the transport id as the key
         rootObject.SetNamedValue(internal::GuidToString(metadata.TransportId).c_str(), transportObject);
 
         // We need to free all the strings in the struct. 

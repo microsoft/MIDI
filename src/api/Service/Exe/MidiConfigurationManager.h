@@ -53,7 +53,7 @@ public:
         );
 
     // Uses the internal cache of config file entries and returns any matching update json for the 
-    // specified abstraction. This is needed for abstractions that create devices after the initial
+    // specified transport. This is needed for transports that create devices after the initial
     // configuration has been read.
     STDMETHOD(GetCachedEndpointUpdateEntry)(
         _In_ GUID transportId,
@@ -77,10 +77,10 @@ public:
 
 
     std::wstring GetSavedConfigurationForTransport(
-        _In_ GUID abstractionGuid) const noexcept;
+        _In_ GUID transportGuid) const noexcept;
 
     std::wstring GetSavedConfigurationForEndpointProcessingTransform(
-        _In_ GUID abstractionGuid) const noexcept;
+        _In_ GUID transportGuid) const noexcept;
 
 
     std::map<GUID, std::wstring, GUIDCompare> GetTransportSettingsFromJsonString(

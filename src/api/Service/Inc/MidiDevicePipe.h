@@ -34,7 +34,7 @@ public:
 
 private:
     wil::critical_section m_DevicePipeLock;
-    winrt::guid m_AbstractionGuid{};
+    winrt::guid m_TransportGuid{};
     wil::com_ptr_nothrow<IMidiBiDi> m_MidiBiDiDevice;
     wil::com_ptr_nothrow<IMidiIn> m_MidiInDevice;
     wil::com_ptr_nothrow<IMidiOut> m_MidiOutDevice;

@@ -32,7 +32,7 @@ CMidiPorts::~CMidiPorts()
     else
     {
         // unsafe to release COM objects while process is terminating.
-        static_cast<void>(m_MidisrvAbstraction.detach());
+        static_cast<void>(m_MidisrvTransport.detach());
         static_cast<void>(m_MidiSessionTracker.detach());
     }
 }
@@ -50,8 +50,8 @@ CMidiPorts::RuntimeClassInitialize()
         );
 
     RETURN_IF_FAILED(CoCreateGuid(&m_SessionId));
-    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvAbstraction), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidisrvAbstraction)));
-    RETURN_IF_FAILED(m_MidisrvAbstraction->Activate(__uuidof(IMidiSessionTracker), (void **) &m_MidiSessionTracker));
+    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidisrvTransport)));
+    RETURN_IF_FAILED(m_MidisrvTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &m_MidiSessionTracker));
 
     RETURN_IF_FAILED(m_MidiSessionTracker->AddClientSession(m_SessionId, m_SessionName.c_str()));
 

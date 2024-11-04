@@ -7,7 +7,7 @@
 // ============================================================================
 
 #include "stdafx.h"
-//#include "Midi2MidiSrvAbstraction.h"
+//#include "Midi2MidiSrvTransport.h"
 
 
 // Note: This class only works if these type F messages aren't swallowed up

@@ -42,12 +42,12 @@
       </Stacks>
     </SystemProvider>
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrv" Name="f42d2441-aac3-5216-0150-3c0f50006b64" Level="5" NonPagedMemory="false" />
-    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrvAbstraction" Name="6e9d2090-31a4-5a2c-da35-fd606d7d6ac3" Level="5" NonPagedMemory="false" />
-    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSAbstraction" Name="62a41de5-442c-5fe3-c088-1138121d82a8" Level="5" NonPagedMemory="false" />
-    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSAggregateAbstraction" Name="c82e6dbe-4018-531e-3dc6-7a5df14b1d22" Level="5" NonPagedMemory="false" />
-    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsAbstraction" Name="29251cdc-995a-53e6-b1a3-fe11e7ffe893" Level="5" NonPagedMemory="false" />
-    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.LoopbackMidiAbstraction" Name="5a36c0b3-5d4c-545b-b9e7-461470957699" Level="5" NonPagedMemory="false" />
-    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiAbstraction" Name="9ce595de-7672-55c3-6529-204eaae0bd29" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrvTransport" Name="c22d26fd-947b-5df1-a0f8-bc62d26d188d" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSTransport" Name="a8d144fe-be0c-5484-25a9-512d2f6445d5" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSAggregateTransport" Name="07e90998-c326-56f8-e99b-20afb12e1b4f" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsTransport" Name="84856b86-fe14-51a3-96fa-b9683533d40b" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.LoopbackMidiTransport" Name="23324529-7840-5bb4-9d74-c61e306f00d0" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiTransport" Name="64ed8ddd-0036-5739-8591-ffc4c2eaa975" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.BS2UMPTransform" Name="b4d50468-e9d8-5080-5b75-e49eb39fee9c" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.SchedulerTransform" Name="8e536c97-6c77-5695-9dbe-ff05129b564e" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform" Name="98249e74-b9b4-5c91-d52e-e44464686064" Level="5" NonPagedMemory="false" />
@@ -67,12 +67,12 @@
         <EventCollectorId Value="PagedPoolCollector">
           <EventProviders>
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrv" />
-            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrvAbstraction" />
-            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSAbstraction" />
-            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSAggregateAbstraction" />
-            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsAbstraction" />
-            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.LoopbackMidiAbstraction" />
-            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiAbstraction" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrvTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSAggregateTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.LoopbackMidiTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiTransport" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.BS2UMPTransform" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.SchedulerTransform" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform" />

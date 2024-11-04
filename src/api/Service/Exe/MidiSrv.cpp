@@ -84,7 +84,7 @@ CMidiSrv::Initialize()
     RETURN_IF_FAILED(m_ConfigurationManager->Initialize());
     RETURN_IF_FAILED(m_ClientManager->Initialize(m_PerformanceManager, m_ProcessManager, m_DeviceManager, m_SessionTracker));
 
-    // initialize this last because it starts enumerating endpoints for all the abstractions
+    // initialize this last because it starts enumerating endpoints for all the transports
     RETURN_IF_FAILED(m_DeviceManager->Initialize(m_PerformanceManager, m_EndpointProtocolManager, m_ConfigurationManager));
 
 

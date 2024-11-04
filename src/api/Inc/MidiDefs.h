@@ -150,15 +150,15 @@ DEFINE_GUID(DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI, 0xe7cce071, 0x3c03, 0x423f, 0
 // The single space before the index is important for these to 
 // match the keys returned from Windows.Devices.Enumeration in the client API
 
-// required so MidiSrv knows which abstraction layer to call into for any given endpoint
-#define STRING_PKEY_MIDI_AbstractionLayer MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AbstractionLayer, 1); // DEVPROP_TYPE_GUID
+// required so MidiSrv knows which transport layer to call into for any given endpoint
+#define STRING_PKEY_MIDI_TransportLayer MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportLayer, 1); // DEVPROP_TYPE_GUID
 
 // Provided as a property for convenience. BLE, NET, USB, etc.
 #define STRING_PKEY_MIDI_TransportCode MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"2"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_TransportCode, 2);     // DEVPROP_TYPE_STRING
 
-// The data format that the connected device uses to talk to the abstraction layer
+// The data format that the connected device uses to talk to the transport layer
 // For a MIDI 1 device, it is MIDI_NATIVEDATAFORMAT_BYTESTREAM
 // For a MIDI 2 device, it is MIDI_NATIVEDATAFORMAT_UMP
 #define STRING_PKEY_MIDI_NativeDataFormat MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"3"
@@ -171,7 +171,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NativeDataFormat, 3);     // DEVPROP_TYPE_BYTE u
 #define STRING_PKEY_MIDI_SupportsMulticlient MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"5"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportsMulticlient, 5);     // DEVPROP_TYPE_BOOLEAN
 
-// A bitmask of the data format(s) the abstraction layer can use to talk to the system
+// A bitmask of the data format(s) the transport layer can use to talk to the system
 #define STRING_PKEY_MIDI_SupportedDataFormats MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"6"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_SupportedDataFormats, 6);     // DEVPROP_TYPE_UINT32
 

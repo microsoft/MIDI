@@ -13,7 +13,7 @@
 #include "Midi2ServiceTests.h"
 #include "MidiSwEnum.h"
 
-#include "Midi2MidiSrvAbstraction.h"
+#include "Midi2MidiSrvTransport.h"
 
 _Use_decl_annotations_
 void * midl_user_allocate(size_t size)

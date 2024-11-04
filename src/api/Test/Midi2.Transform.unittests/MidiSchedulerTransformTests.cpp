@@ -8,7 +8,7 @@
 
 #include "stdafx.h"
 #include "Midi2SchedulerTransform.h"
-#include "Midi2MidiSrvAbstraction.h"
+#include "Midi2MidiSrvTransport.h"
 
 #include "MidiSchedulerTransformTests.h"
 
