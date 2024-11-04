@@ -222,7 +222,7 @@ class Build : NukeBuild
         .DependsOn(Prerequisites)
         .Executes(() =>
     {
-        foreach (var platform in ServiceAndApiPlatforms)
+        foreach (var platform in ServiceAndApiPlatformsAll)
         {
             string solutionDir = ApiSolutionFolder.ToString() + @"\";
 
@@ -251,11 +251,14 @@ class Build : NukeBuild
             // copy binaries to staging folder
             var stagingFiles = new List<AbsolutePath>();
 
+            // This abstraction gets compiled to Arm64X and x64. The Arm64X output is in the Arm64EC folder
+       //     var midiSrvAbstractionPlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64EC" : "x64";
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.MidiSrvAbstraction.dll");
 
-            // only in-proc files, like the MidiSrvAbstraction, are Arm64EC
-            //var servicePlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64" : "x64";
-            var servicePlatform = platform;
+
+            // only in-proc files, like the MidiSrvAbstraction, are Arm64EC. For all the others
+            // any reference to Arm64EC is just Arm64. We don't use any of the Arm64X output
+            var servicePlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64" : "x64";
 
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midisrv.exe");
 
@@ -461,9 +464,10 @@ class Build : NukeBuild
             {
                 string sourcePlatform;
 
+                // the solution compiles these apps to x64 when target is EC.
                 if (targetPlatform.ToLower() == "arm64ec")
                 {
-                    sourcePlatform = "Arm64";
+                    sourcePlatform = "x64";
                 }
                 else
                 {
@@ -479,7 +483,6 @@ class Build : NukeBuild
 
                 // sample manifest
                 FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
-
             }
 
         });
