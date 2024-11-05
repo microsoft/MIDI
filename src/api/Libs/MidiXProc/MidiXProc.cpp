@@ -248,7 +248,7 @@ CMidiXProc::Initialize(DWORD* mmcssTaskId,
     // we never timestamp outgoing messages TO the device, because 0 has
     // "send immediately" semantics, similar to other operating systems.
     // This is ultimately set by the client manager using a value from
-    // the property store, which was written by the abstraction at
+    // the property store, which was written by the transport at
     // enumeration time
     m_OverwriteZeroTimestamp = overwriteZeroTimestamp;
 

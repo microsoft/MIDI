@@ -31,15 +31,15 @@ CMidiDevicePipe::Initialize(
 
     auto deviceLock = m_DevicePipeLock.lock();
 
-    TRANSPORTCREATIONPARAMS abstractionCreationParams;
+    TRANSPORTCREATIONPARAMS transportCreationParams;
 
     RETURN_IF_FAILED(CMidiPipe::Initialize(device, creationParams->Flow));
 
-    abstractionCreationParams.DataFormat = creationParams->DataFormat;
+    transportCreationParams.DataFormat = creationParams->DataFormat;
 
-    // retrieve the abstraction layer GUID for this peripheral
+    // retrieve the transport layer GUID for this peripheral
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
+    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient));
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(
@@ -47,9 +47,9 @@ CMidiDevicePipe::Initialize(
         additionalProperties, 
         winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AbstractionLayer));
+    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-    m_AbstractionGuid = winrt::unbox_value<winrt::guid>(prop);
+    m_TransportGuid = winrt::unbox_value<winrt::guid>(prop);
 
     GUID dummySessionId{};
 
@@ -65,11 +65,11 @@ CMidiDevicePipe::Initialize(
             TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
 
-        RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
-        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(device, &abstractionCreationParams, mmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
+        RETURN_IF_FAILED(CoCreateInstance(m_TransportGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+        RETURN_IF_FAILED(midiTransport->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
+        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(device, &transportCreationParams, mmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
     }
     else if (MidiFlowIn == creationParams->Flow)
     {
@@ -84,11 +84,11 @@ CMidiDevicePipe::Initialize(
         );
 
 
-        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
 
-        RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiIn), (void**)&m_MidiInDevice));
-        RETURN_IF_FAILED(m_MidiInDevice->Initialize(device, &abstractionCreationParams, mmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
+        RETURN_IF_FAILED(CoCreateInstance(m_TransportGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+        RETURN_IF_FAILED(midiTransport->Activate(__uuidof(IMidiIn), (void**)&m_MidiInDevice));
+        RETURN_IF_FAILED(m_MidiInDevice->Initialize(device, &transportCreationParams, mmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
     }
     else if (MidiFlowOut == creationParams->Flow)
     {
@@ -102,11 +102,11 @@ CMidiDevicePipe::Initialize(
             TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
 
-        RETURN_IF_FAILED(CoCreateInstance(m_AbstractionGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
-        RETURN_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiOut), (void**)&m_MidiOutDevice));
-        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(device, &abstractionCreationParams, mmcssTaskId, dummySessionId));
+        RETURN_IF_FAILED(CoCreateInstance(m_TransportGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
+        RETURN_IF_FAILED(midiTransport->Activate(__uuidof(IMidiOut), (void**)&m_MidiOutDevice));
+        RETURN_IF_FAILED(m_MidiOutDevice->Initialize(device, &transportCreationParams, mmcssTaskId, dummySessionId));
     }
     else
     {
@@ -118,12 +118,12 @@ CMidiDevicePipe::Initialize(
     // same.
     if (IsFlowSupported(MidiFlowIn))
     {
-        RETURN_IF_FAILED(SetDataFormatIn(abstractionCreationParams.DataFormat));
+        RETURN_IF_FAILED(SetDataFormatIn(transportCreationParams.DataFormat));
     }
 
     if (IsFlowSupported(MidiFlowOut))
     {
-        RETURN_IF_FAILED(SetDataFormatOut(abstractionCreationParams.DataFormat));
+        RETURN_IF_FAILED(SetDataFormatOut(transportCreationParams.DataFormat));
     }
 
     // Check to see if the device supports multi-client. This value is used

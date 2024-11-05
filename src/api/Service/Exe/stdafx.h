@@ -48,7 +48,7 @@
 #include "ump_helpers.h"
 #include "midi_ump_message_defs.h"
 
-// AbstractionUtilities
+// TransportUtilities
 #include "wstring_util.h"
 namespace internal = ::WindowsMidiServicesInternal;
 
@@ -78,11 +78,11 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "MidiSrvRpc.h"
 
-// Abstractions. Only the Diagnostics abstraction is known to the service
+// Transports. Only the Diagnostics transport is known to the service
 // All the others are discovered through COM activation of registry entries
 
-//#include "Midi2DiagnosticsAbstraction_i.c"
-#include "Midi2DiagnosticsAbstraction.h"
+//#include "Midi2DiagnosticsTransport_i.c"
+#include "Midi2DiagnosticsTransport.h"
 
 // Transforms
 

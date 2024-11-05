@@ -23,12 +23,12 @@
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
 std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexcept
 {
-    std::vector<GUID> availableAbstractionLayers;
+    std::vector<GUID> availableTransportLayers;
 
-    // the diagnostics abstraction is always instantiated. We don't want to take the
+    // the diagnostics transport is always instantiated. We don't want to take the
     // chance someone removes this from the registry, so it's hard-coded here. It's
     // needed for support, tools, diagnostics, etc.
-    availableAbstractionLayers.push_back(__uuidof(Midi2DiagnosticsAbstraction));
+    availableTransportLayers.push_back(__uuidof(Midi2DiagnosticsTransport));
 
     try
     {
@@ -90,7 +90,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
 
                 if (retCode == ERROR_SUCCESS)
                 {
-                    DWORD abstractionEnabled = 1;
+                    DWORD transportEnabled = 1;
 
                     // Check to see if that sub key has an Enabled value.
 
@@ -102,25 +102,25 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
 
                     try
                     {
-                        // is the abstraction layer enabled? > 0 or missing Enabled value mean it is
-                        abstractionEnabled = wil::reg::get_value<DWORD>(pluginKey.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
+                        // is the transport layer enabled? > 0 or missing Enabled value mean it is
+                        transportEnabled = wil::reg::get_value<DWORD>(pluginKey.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
                     }
                     catch (...)
                     {
                         // value doesn't exist, so we default to enabled
-                        abstractionEnabled = (DWORD)1;
+                        transportEnabled = (DWORD)1;
                     }
 
-                    // we only proceed with this abstraction entry if it's enabled
-                    if (abstractionEnabled > 0)
+                    // we only proceed with this transport entry if it's enabled
+                    if (transportEnabled > 0)
                     {
                         try
                         {
-                            GUID abstractionLayerGuid;
+                            GUID transportLayerGuid;
 
                             auto clsidString = wil::reg::get_value<std::wstring>(pluginKey.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
 
-                            auto result = CLSIDFromString((LPCTSTR)clsidString.c_str(), (LPGUID)&abstractionLayerGuid);
+                            auto result = CLSIDFromString((LPCTSTR)clsidString.c_str(), (LPGUID)&transportLayerGuid);
 
                             LOG_IF_FAILED(result);
 
@@ -128,10 +128,10 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
                             {
                                 // verify that there are no existing entries for this class id
 
-                                if (std::find(availableAbstractionLayers.begin(), availableAbstractionLayers.end(), abstractionLayerGuid) == availableAbstractionLayers.end())
+                                if (std::find(availableTransportLayers.begin(), availableTransportLayers.end(), transportLayerGuid) == availableTransportLayers.end())
                                 {
                                     // Doesn't already exist, so add to the vector
-                                    availableAbstractionLayers.push_back(abstractionLayerGuid);
+                                    availableTransportLayers.push_back(transportLayerGuid);
                                 }
                                 else
                                 {
@@ -141,7 +141,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
                                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                         TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                                         TraceLoggingWideString(L"Duplicate transport GUID in registry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                        TraceLoggingGuid(abstractionLayerGuid, "id"),
+                                        TraceLoggingGuid(transportLayerGuid, "id"),
                                         TraceLoggingPointer(this, "this")
                                     );
                                 }
@@ -158,7 +158,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledTransports() const noexce
     CATCH_LOG()
 
     // return a copy
-    return availableAbstractionLayers;
+    return availableTransportLayers;
 }
 
 // TODO: Refactor these two methods and abstract out the registry code. Do this once wil adds the enumeration helpers to the NuGet
@@ -253,7 +253,7 @@ std::vector<GUID> CMidiConfigurationManager::GetEnabledEndpointProcessingTransfo
                         transformEnabled = (DWORD)1;
                     }
 
-                    // we only proceed with this abstraction entry if it's enabled
+                    // we only proceed with this transport entry if it's enabled
                     if (transformEnabled > 0)
                     {
                         try
@@ -320,7 +320,7 @@ std::vector<TRANSPORTMETADATA> CMidiConfigurationManager::GetAllEnabledTransport
 
     auto transportIdList = GetEnabledTransports();
 
-    // for each item in the list, activate the MidiServiceAbstractionPlugin and get the metadata
+    // for each item in the list, activate the MidiServiceTransportPlugin and get the metadata
 
     for (auto const& transportId : transportIdList)
     {
@@ -350,7 +350,7 @@ std::vector<TRANSPORTMETADATA> CMidiConfigurationManager::GetAllEnabledTransport
                     MIDI_TRACE_EVENT_ERROR,
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingWideString(L"Unable to activate IMidiServiceAbstractionPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Unable to activate IMidiServiceTransportPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                     TraceLoggingGuid(transportId, "transport id"),
                     TraceLoggingPointer(this, "this")
                 );
@@ -424,8 +424,8 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
     );
 
 
-    //std::map<winrt::guid, std::wstring> abstractionSettings{};
-    std::map<GUID, std::wstring, GUIDCompare> abstractionSettings{};
+    //std::map<winrt::guid, std::wstring> transportSettings{};
+    std::map<GUID, std::wstring, GUIDCompare> transportSettings{};
 
     try
     {       
@@ -446,7 +446,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 );
 
                 // return the empty map
-                return abstractionSettings;
+                return transportSettings;
             }
         }
         catch (...)
@@ -460,7 +460,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 TraceLoggingWideString(L"JSON Object parsing failed. Exception.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
-            return abstractionSettings;
+            return transportSettings;
         }
 
 
@@ -476,11 +476,11 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
             );
 
             // return the empty map
-            return abstractionSettings;
+            return transportSettings;
         }
 
 
-        // we treat this as an object where each abstraction id is a property
+        // we treat this as an object where each transport id is a property
         auto plugins = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, nullptr);
 
         if (plugins == nullptr)
@@ -495,10 +495,10 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
             );
 
             // return the empty map
-            return abstractionSettings;
+            return transportSettings;
         }
 
-        // Iterate through nodes and find each transport abstraction entry. Parse the GUID. Add to results.
+        // Iterate through nodes and find each transport transport entry. Parse the GUID. Add to results.
 
         auto it = plugins.First();
 
@@ -512,16 +512,16 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(key.c_str(), "AbstractionIdGuidString", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                TraceLoggingWideString(key.c_str(), "TransportIdGuidString", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
             std::wstring transportJson = it.Current().Value().GetObject().Stringify().c_str();
 
-            GUID abstractionId;
+            GUID transportId;
 
             try
             {
-                abstractionId = internal::StringToGuid(key);
+                transportId = internal::StringToGuid(key);
             }
             catch (...)
             {
@@ -535,10 +535,10 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 );
             }
 
-            // TODO: Should verify the abstractionId is for an enabled abstraction
+            // TODO: Should verify the transportId is for an enabled transport
             // before adding it to the returned map
 
-            abstractionSettings.insert_or_assign(abstractionId, transportJson);
+            transportSettings.insert_or_assign(transportId, transportJson);
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
@@ -547,7 +547,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(transportJson.c_str()),
-                TraceLoggingGuid(abstractionId)
+                TraceLoggingGuid(transportId)
             );
 
             it.MoveNext();
@@ -556,7 +556,7 @@ std::map<GUID, std::wstring, GUIDCompare> CMidiConfigurationManager::GetTranspor
     }
     CATCH_LOG();
 
-    return abstractionSettings;
+    return transportSettings;
 }
 #pragma pop_macro("GetObject")
 
@@ -641,7 +641,7 @@ CMidiConfigurationManager::LoadCurrentConfigurationFile()
                 }
 
 
-                // TODO: Cache the settings for each abstraction in the internal dictionary
+                // TODO: Cache the settings for each transport in the internal dictionary
 
 
 
@@ -835,7 +835,7 @@ CMidiConfigurationManager::GetCachedEndpointUpdateEntry(
     try
     {
         auto jsonSearchKeySets = json::JsonArray::Parse(searchKeyValuePairsJson);
-        auto abstractionKey = internal::GuidToString(transportId);
+        auto transportKey = internal::GuidToString(transportId);
 
         if (m_jsonObject != nullptr)
         {
@@ -843,9 +843,9 @@ CMidiConfigurationManager::GetCachedEndpointUpdateEntry(
             {
                 auto plugins = m_jsonObject.GetNamedObject(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT);
 
-                if (plugins.HasKey(abstractionKey))
+                if (plugins.HasKey(transportKey))
                 {
-                    auto thisPlugin = plugins.GetNamedObject(abstractionKey);
+                    auto thisPlugin = plugins.GetNamedObject(transportKey);
                     auto updateList = thisPlugin.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, json::JsonArray{});
 
                     // now, search for property matches. The search json is set up so there is an array of objects, each one

@@ -1230,7 +1230,7 @@
                                                 {
                                                     "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_A72A3078B74D48CAAE8A1F10DC363856"
                                                     {
-                                                    "Name" = "8:Midi2VirtualMidiAbstraction"
+                                                    "Name" = "8:Midi2VirtualMidiTransport"
                                                     "Condition" = "8:"
                                                     "AlwaysCreate" = "11:FALSE"
                                                     "DeleteAtUninstall" = "11:FALSE"
@@ -1260,7 +1260,7 @@
                                                     }
                                                     "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_BB64881FFF2D4A5AA13229C4C03865CA"
                                                     {
-                                                    "Name" = "8:Midi2KSAbstraction"
+                                                    "Name" = "8:Midi2KSTransport"
                                                     "Condition" = "8:"
                                                     "AlwaysCreate" = "11:FALSE"
                                                     "DeleteAtUninstall" = "11:FALSE"
@@ -1797,7 +1797,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_1D3C83321B67411EA0904B305816D102"
             {
-            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.VirtualMidiAbstraction.dll"
+            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.VirtualMidiTransport.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_1DC960FE630C406E9A1F93C99C1E099A"
@@ -1853,7 +1853,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_382F643D576543949E3A3257F6CBB94C"
             {
-            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.DiagnosticsAbstraction.dll"
+            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.DiagnosticsTransport.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_1DC960FE630C406E9A1F93C99C1E099A"
@@ -1993,7 +1993,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_A3DE8E463AFE466BB9AF6E4875B67114"
             {
-            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.LoopbackMidiAbstraction.dll"
+            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.LoopbackMidiTransport.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_1DC960FE630C406E9A1F93C99C1E099A"
@@ -2021,7 +2021,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_BEC36957B0E941E2B1B4D6498BD81706"
             {
-            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.KSAbstraction.dll"
+            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.KSTransport.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_1DC960FE630C406E9A1F93C99C1E099A"
@@ -2049,7 +2049,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_C6A35D2DD48E420BB1F3FCA3D80AC851"
             {
-            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.MidiSrvAbstraction.dll"
+            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.MidiSrvTransport.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_1DC960FE630C406E9A1F93C99C1E099A"
@@ -2105,7 +2105,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_FD5D2644595C450D8F22EE4474811BF1"
             {
-            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.KSAggregateAbstraction.dll"
+            "SourcePath" = "8:..\\VSFiles\\x64\\Release\\Midi2.KSAggregateTransport.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_1DC960FE630C406E9A1F93C99C1E099A"

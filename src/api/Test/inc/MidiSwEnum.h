@@ -4,7 +4,7 @@
 typedef class _MIDIU_DEVICE
 {
 public:
-    GUID AbstractionLayer;
+    GUID TransportLayer;
     GUID InterfaceClass;
     std::wstring DeviceId;
     std::wstring DeviceInstanceId;

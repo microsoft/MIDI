@@ -26,7 +26,7 @@ public:
     BEGIN_TEST_CLASS(MidiSchedulerTransformTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.SchedulerTransform.dll")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.MidiSrvAbstraction.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.MidiSrvTransport.dll")
     END_TEST_CLASS()
 
     //TEST_CLASS_SETUP(ClassSetup);

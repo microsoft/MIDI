@@ -51,14 +51,14 @@ typedef enum
     MetadataFlags_IsClientConfigurable = 8
 } MetadataFlags;
 
-// Structure used during abstraction initialization to communicate format information and other configuration
+// Structure used during transport initialization to communicate format information and other configuration
 typedef struct
 {
     MidiDataFormats DataFormat;
 } TRANSPORTCREATIONPARAMS, * PTRANSPORTCREATIONPARAMS;
 
 
-// This serves as the starting point for activating the various other methods implemented by the abstraction layer. 
+// This serves as the starting point for activating the various other methods implemented by the transport layer. 
 [
     object,
     local,
@@ -75,16 +75,16 @@ interface IMidiTransport : IUnknown
 // ============================================================================================
 // Endpoint types: In/Out/Bidirectional and the Callback
 
-// Used for sending data from an abstraction to the client using the abstraction.
+// Used for sending data from an transport to the client using the transport.
 // Also used in transforms.
 // Due to this usage, data flowing through IMidiCallback may be MidiIn data, or MidiOut data.
 //
-// The format of the data sent in the callback is determined by the initialization of the MidiAbstraction,
+// The format of the data sent in the callback is determined by the initialization of the MidiTransport,
 // or MidiTransform that is performing the callback. 
 //
 // The position is specified as either 0, or a QPC.
 // Usage of the position depends upon the context of the callback, whether MidiIn or MidiOut.
-// For MidiIn, the position should be the QPC at the time the midi message was recieved from the abstraction, or 
+// For MidiIn, the position should be the QPC at the time the midi message was recieved from the transport, or 
 // the QPC when it was first received by the service.
 // For MidiOut, the position should either be 0 indicating that it should be delivered immediately, or the QPC 
 // that it should be delivered at for scheduled playback.
@@ -106,8 +106,8 @@ interface IMidiCallback : IUnknown
     );
 };
 
-// Represents a MidiIn abstraction instance, which is used to move data from a peripheral to the client
-// using the abstraction.
+// Represents a MidiIn transport instance, which is used to move data from a peripheral to the client
+// using the transport.
 [
     object,
         local,
@@ -128,7 +128,7 @@ interface IMidiIn : IUnknown
     HRESULT Shutdown();
 };
 
-// Represents a MidiOut abstraction instance, which is used to move data from a client to the abstraction
+// Represents a MidiOut transport instance, which is used to move data from a client to the transport
 [
     object,
     local,
@@ -160,7 +160,7 @@ interface IMidiOut : IUnknown
 };
 
 // Represents a bidirectional midi connection, which is used to move data both to and from the midi 
-// abstraction. This is the primary interface for MIDI 2.0 endpoint communication.
+// transport. This is the primary interface for MIDI 2.0 endpoint communication.
 [
     object,
     local,
@@ -245,7 +245,7 @@ typedef struct
     MidiEndpointCapabilities Capabilities;
 } MIDIENDPOINTCOMMONPROPERTIES, * PMIDIENDPOINTCOMMONPROPERTIES;
 
-// Used for communicating midi endpoint information from an abstraction to MidiSrv, for publishing the SWD's which represent
+// Used for communicating midi endpoint information from an transport to MidiSrv, for publishing the SWD's which represent
 // the endpoint(s) and are enumerated by client applications.
 [
     object,
@@ -305,9 +305,9 @@ interface IMidiDeviceManagerInterface : IUnknown
 };
 
 // ============================================================================================
-// Service (and Abstraction/Transform) Configuration
+// Service (and Transport/Transform) Configuration
 
-// Provides common functionality implemented in the service, and used by abstractions and transforms
+// Provides common functionality implemented in the service, and used by transports and transforms
 [
     object,
     local,
@@ -341,7 +341,7 @@ interface IMidiServiceConfigurationManagerInterface : IUnknown
 
     // these get cached entries from the config file. This is
     // needed for cases when the configuration happens before
-    // the abstraction has actually created the device interface
+    // the transport has actually created the device interface
 
     HRESULT GetCachedEndpointUpdateEntry(
         [in, annotation("_In_")] GUID transportId,
@@ -351,7 +351,7 @@ interface IMidiServiceConfigurationManagerInterface : IUnknown
 
 };
 
-// Used for sending configuration information to the abstraction from a client (for runtime updates) 
+// Used for sending configuration information to the transport from a client (for runtime updates) 
 // or from the device manager in the service (for global configuration file updates), which may 
 // affect the published endpoints
 [
@@ -451,7 +451,7 @@ typedef struct
     LPCWSTR Name;                   // this type is only used within the service process, so string pointers are fine
 } DISCOVEREDFUNCTIONBLOCK, *PDISCOVEREDFUNCTIONBLOCK;
 
-// Used between the MIDI Service and the loaded MIDI 2.0 abstractions. This contains the
+// Used between the MIDI Service and the loaded MIDI 2.0 transports. This contains the
 // results of the required MIDI 2.0 discovery and protocol negotiation steps, and is used
 // to inform the creation of the backwards-compatible API endpoints for these devices.
 // 
@@ -508,7 +508,7 @@ interface IMidiProtocolNegotiationCompleteCallback : IUnknown
     );
 };
 
-// Endpoint abstractions for MIDI 2.0 devices need to access the protocol 
+// Endpoint transports for MIDI 2.0 devices need to access the protocol 
 // manager in the service. This interface facilitates that.
 [
     object,
@@ -532,8 +532,8 @@ interface IMidiEndpointProtocolManagerInterface : IUnknown
 // Endpoint manager in the service
 
 
-// IMidiEndpointManager is implemented by midi endpoint abstractions, and is called by MidiSrv 
-// during service startup to allow the endpoint abstraction to coordinate with MidiSrv for 
+// IMidiEndpointManager is implemented by midi endpoint transports, and is called by MidiSrv 
+// during service startup to allow the endpoint transport to coordinate with MidiSrv for 
 // configuring and publishing midi endpoints.
 [
     object,
@@ -553,7 +553,7 @@ interface IMidiEndpointManager : IUnknown
 // ============================================================================================
 // Service Plugin Reporting
 
-// Information provided by the abstraction to self-identify itself to the user. This 
+// Information provided by the transport to self-identify itself to the user. This 
 // information is supplied through the diagnostics and reporting SDK primarily to the MIDI 
 // Settings and MIDI Console apps. 
 typedef struct
@@ -586,8 +586,8 @@ typedef struct
     MetadataFlags Flags;
 } TRANSFORMMETADATA, * PTRANSFORMMETADATA;
 
-// Interface used to obtain the abstraction metadata for reporting to the user. 
-// This is implemented by each abstraction in the service.
+// Interface used to obtain the transport metadata for reporting to the user. 
+// This is implemented by each transport in the service.
 [
     object,
     local,
@@ -622,7 +622,7 @@ interface IMidiServiceTransformPluginMetadataProvider : IUnknown
     HRESULT Shutdown();
 };
 
-// Used by the client to request the abstraction and transform metadata.
+// Used by the client to request the transport and transform metadata.
 [
     object,
         local,
