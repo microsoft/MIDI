@@ -14,7 +14,7 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
     <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
-    <Bundle Name="Windows MIDI Services (In-Development Service Components) $(SetupVersionName) $(SetupVersionNumber)" 
+    <Bundle Name="Windows MIDI Services (Preview Service Plugins) $(SetupVersionName) $(SetupVersionNumber)" 
             Manufacturer="Microsoft Corporation" 
             Version="$(SetupVersionNumber)" 
             UpgradeCode="92fb6982-e97d-476f-8d27-44500086a690">

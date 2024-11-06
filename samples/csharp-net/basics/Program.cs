@@ -20,7 +20,7 @@ if (!MidiServicesInitializer.EnsureServiceAvailable())
 else
 {
     // bootstrap the SDK runtime. Should check the return result here
-    MidiServicesInitializer.InitializeSdkRuntime();
+    MidiServicesInitializer.InitializeDesktopAppSdkRuntime();
 
 
     Console.WriteLine("Creating session");

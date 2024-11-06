@@ -68,13 +68,13 @@
                    Directory="SDK_Arm64X_INSTALLFOLDER"
                    Guid="7ce28fd9-252d-4ae7-ad9e-7de049ab6c94">
 
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.winmd" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.winmd" />
             
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
             
         </Component>
 
@@ -90,8 +90,10 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
 
+            <!--
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" />
+            -->
 
             <!-- Add folder to path -->
             <Environment Id="AddMidiDiagUtilityToSystemPath"

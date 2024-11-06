@@ -97,7 +97,7 @@ int main()
         std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
 
         // bootstrap the SDK runtime
-        MidiServicesInitializer::InitializeSdkRuntime();
+        MidiServicesInitializer::InitializeDesktopAppSdkRuntime();
     }
 
 

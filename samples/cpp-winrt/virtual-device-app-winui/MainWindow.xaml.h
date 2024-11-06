@@ -19,7 +19,7 @@ namespace winrt::virtual_device_app_winui::implementation
             else
             {
                 // bootstrap the SDK runtime. Should check the return result here
-                init::MidiServicesInitializer::InitializeSdkRuntime();
+                init::MidiServicesInitializer::InitializeDesktopAppSdkRuntime();
 
                 StartVirtualDevice();
 

@@ -22,8 +22,8 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    IMidiCallback* m_callback;
-    LONGLONG m_context;
+    IMidiCallback* m_callback{ nullptr };
+    LONGLONG m_context{ 0 };
 };
 
 

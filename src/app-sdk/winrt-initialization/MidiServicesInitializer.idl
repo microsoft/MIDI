@@ -13,16 +13,18 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
     static runtimeclass MidiServicesInitializer
     {
         static Boolean IsOperatingSystemSupported();
-
         static Boolean EnsureServiceAvailable();
-        static Boolean InitializeSdkRuntime();
 
+        // These should be called only by desktop applications, not by packaged apps that
+        // will contain the SDK binaries in the package
+        static Boolean InitializeDesktopAppSdkRuntime();
+        static Boolean ShutdownDesktopAppSdkRuntime();
         static Boolean IsCompatibleDesktopAppSdkRuntimeInstalled();
 
 
-        static Windows.Foundation.Uri GetLatestRuntimeReleaseInstallerUri();
-        static Windows.Foundation.Uri GetLatestSettingsAppReleaseInstallerUri();
-        static Windows.Foundation.Uri GetLatestConsoleAppReleaseInstallerUri();
+        static Windows.Foundation.Uri GetLatestDesktopAppSdkRuntimeReleaseInstallerUri();
+        //static Windows.Foundation.Uri GetLatestSettingsAppReleaseInstallerUri();
+        //static Windows.Foundation.Uri GetLatestConsoleAppReleaseInstallerUri();
 
     }
 }

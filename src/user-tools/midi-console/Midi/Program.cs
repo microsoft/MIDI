@@ -235,6 +235,8 @@ if (args.Length == 0)
     AnsiConsole.WriteLine();
 }
 
+MidiServicesInitializer.InitializeDesktopAppSdkRuntime();
+
 
 MidiClock.BeginLowLatencySystemTimerPeriod();
 

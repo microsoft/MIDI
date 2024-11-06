@@ -55,7 +55,7 @@ namespace MidiSample.AppToAppMidi
             else
             {
                 // bootstrap the SDK runtime. Should check the return result here
-                MidiServicesInitializer.InitializeSdkRuntime();
+                MidiServicesInitializer.InitializeDesktopAppSdkRuntime();
 
                 if (StartVirtualDevice())
                 {

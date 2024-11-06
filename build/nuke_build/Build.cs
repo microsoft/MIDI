@@ -358,7 +358,7 @@ class Build : NukeBuild
                 var servicePlatform = platform;
 
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.NetworkMidiTransport.dll");
-                // stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualPatchBayAbstraction.dll");
+                // stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualPatchBay.dll");
 
                 foreach (var file in stagingFiles)
                 {
@@ -416,15 +416,15 @@ class Build : NukeBuild
 
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
 
-            foreach (var platform in SdkPlatforms)
+            foreach (var sourcePlatform in SdkPlatforms)
             {
                 var sdkBinaries = new List<AbsolutePath>();
 
                 foreach (var ns in AppSdkAssemblies)
                 {
-                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / platform / Configuration.Release / $"{ns}.winmd");
-                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / platform / Configuration.Release / $"{ns}.dll");
-                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / platform / Configuration.Release / $"{ns}.pri");
+                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / sourcePlatform / Configuration.Release / $"{ns}.winmd");
+                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / sourcePlatform / Configuration.Release / $"{ns}.dll");
+                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / sourcePlatform / Configuration.Release / $"{ns}.pri");
 
                     // todo: CS projection dll
                 }
@@ -443,10 +443,16 @@ class Build : NukeBuild
                 );
 
 
+                string stagingPlatform = sourcePlatform;
+                if (sourcePlatform.ToLower() == "arm64ec")
+                {
+                    stagingPlatform = "Arm64";
+                }
+
                 // copy the files over to the reference location
                 foreach (var file in sdkBinaries)
                 {
-                    FileSystemTasks.CopyFileToDirectory(file, AppSdkStagingFolder / platform, FileExistsPolicy.Overwrite, true);
+                    FileSystemTasks.CopyFileToDirectory(file, AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 }
 
             }
@@ -460,31 +466,25 @@ class Build : NukeBuild
                 true);
 
 
-            foreach (var targetPlatform in SdkPlatforms)
+            foreach (var sourcePlatform in SdkPlatforms)
             {
-                string sourcePlatform;
-
-                // the solution compiles these apps to x64 when target is EC.
-                if (targetPlatform.ToLower() == "arm64ec")
+                // the solution compiles these apps to Arm64 when target is EC.
+                string stagingPlatform = sourcePlatform;
+                if (sourcePlatform.ToLower() == "arm64ec")
                 {
-                    sourcePlatform = "x64";
-                }
-                else
-                {
-                    sourcePlatform = targetPlatform;
+                    stagingPlatform = "Arm64";
                 }
 
                 // MIDI diagnostics app
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / sourcePlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / sourcePlatform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
 
                 // MIDI USB info utility
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / sourcePlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / stagingPlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
 
                 // sample manifest
-                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / targetPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
-
         });
 
 
@@ -532,7 +532,7 @@ class Build : NukeBuild
 
                 FileSystemTasks.CopyFile(
                     AppSdkSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
-                    ThisReleaseFolder / $"Windows MIDI Services (Tools and SDKs) {SetupBundleFullVersionString}-{platform.ToLower()}.exe");
+                    ThisReleaseFolder / $"Windows MIDI Services (SDK Runtime and Tools) {SetupBundleFullVersionString}-{platform.ToLower()}.exe");
 
             }
 
@@ -616,7 +616,7 @@ class Build : NukeBuild
             Console.Out.WriteLine($"Platform:    {platform}");
 
             var output = MSBuildTasks.MSBuild(_ => _
-                .SetTargetPath(InDevelopmentServiceComponentsSetupSolutionFolder / "midi-services-in-box-in-dev-setup.sln")
+                .SetTargetPath(InDevelopmentServiceComponentsSetupSolutionFolder / "midi-services-in-box-preview-setup.sln")
                 .SetMaxCpuCount(14)
                 /*.SetOutDir(outputFolder) */
                 /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
@@ -720,9 +720,9 @@ class Build : NukeBuild
                 var msftExtensionsFiles = Globbing.GlobFiles(settingsOutputFolder, "Microsoft.Extensions*.dll");
                 var midiSdkFiles = Globbing.GlobFiles(
                     settingsOutputFolder, 
-                    "Microsoft.Windows.Devices.Midi2*.dll",
-                    "Microsoft.Windows.Devices.Midi2*.winmd",
-                    "Microsoft.Windows.Devices.Midi2*.pri"
+                    "Microsoft.Windows.Devices.Midi2.Initialization.dll",
+                    /* "Microsoft.Windows.Devices.Midi2.Initialization.winmd", */
+                    "Microsoft.Windows.Devices.Midi2.Initialization.pri"
                     );
 
                 List<AbsolutePath> paths = new List<AbsolutePath>(toolkitFiles.Count + msftExtensionsFiles.Count + midiSdkFiles.Count + 40);
@@ -937,12 +937,9 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(consoleOutputFolder / "System.ServiceProcess.ServiceController.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
 
 
-                foreach (var ns in AppSdkAssemblies)
-                {
-                    FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".dll", stagingFolder, FileExistsPolicy.Overwrite, true);
-                    FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".pri", stagingFolder, FileExistsPolicy.Overwrite, true);
-                    //FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
-                }
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
 
             }
 

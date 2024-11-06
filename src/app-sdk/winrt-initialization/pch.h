@@ -12,14 +12,29 @@
 
 //#define _VSDESIGNER_DONT_LOAD_AS_DLL
 
-
 #include <unknwn.h>
 
 #include <Windows.h>
 
+#include <optional>
+#include <string>
+#include <stdint.h>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+#include <cwctype>
+#include <queue>
+#include <mutex>
+#include <format>
+#include <filesystem>
+
+#include <chrono>
+
+
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
+#include <wil\registry.h>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
@@ -36,18 +51,6 @@ namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 
 
-#include <stdint.h>
-#include <sstream>
-#include <iomanip>
-#include <algorithm>
-#include <string>
-#include <cwctype>
-#include <queue>
-#include <mutex>
-#include <format>
-#include <filesystem>
-
-#include <chrono>
 
 // pre-declare namespaces
 
