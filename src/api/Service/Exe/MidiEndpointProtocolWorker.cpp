@@ -30,7 +30,7 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    m_abstractionId = transportId;
+    m_transportId = transportId;
     m_sessionId = sessionId;
     m_deviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
@@ -172,27 +172,27 @@ CMidiEndpointProtocolWorker::Start(
         // we do this here instead of in initialize so this is created on the worker thread
         if (!m_midiBiDiDevice)
         {
-            wil::com_ptr_nothrow<IMidiTransport> serviceAbstraction{ nullptr };
+            wil::com_ptr_nothrow<IMidiTransport> serviceTransport{ nullptr };
 
             // we only support UMP data format for protocol negotiation
-            TRANSPORTCREATIONPARAMS abstractionCreationParams{ };
-            abstractionCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
+            TRANSPORTCREATIONPARAMS transportCreationParams{ };
+            transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
 
             DWORD mmcssTaskId{ 0 };
             LONGLONG context{ 0 };
 
             // this is not a good idea, but we don't have a reference to the COM lib here
-            GUID midi2MidiSrvAbstractionIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
-            RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvAbstractionIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceAbstraction)));
-            RETURN_IF_NULL_ALLOC(serviceAbstraction);
+            GUID midi2MidiSrvTransportIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
+            RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvTransportIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport)));
+            RETURN_IF_NULL_ALLOC(serviceTransport);
 
             // create the bidi device
-            RETURN_IF_FAILED(serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
+            RETURN_IF_FAILED(serviceTransport->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
             RETURN_IF_NULL_ALLOC(m_midiBiDiDevice);
 
             RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(
                 (LPCWSTR)(m_deviceInterfaceId.c_str()),
-                &abstractionCreationParams,
+                &transportCreationParams,
                 &mmcssTaskId,
                 (IMidiCallback*)(this),
                 context,
@@ -462,7 +462,7 @@ CMidiEndpointProtocolWorker::Start(
             );
 
             LOG_IF_FAILED(m_negotiationCompleteCallback->ProtocolNegotiationCompleteCallback(
-                m_abstractionId, 
+                m_transportId, 
                 m_deviceInterfaceId.c_str(), 
                 &m_mostRecentResults
                 )

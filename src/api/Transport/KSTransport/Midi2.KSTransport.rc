@@ -1,0 +1,120 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include <SDKDDKVer.h>
+#endif
+#include "winres.h"
+#include "verrsrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""winres.h""\r\n"
+    "#include ""verrsrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "1 TYPELIB ""Midi2KSTransport.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_DLL
+ FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "Microsoft Corporation"
+            VALUE "FileDescription", "Windows MIDI Services Plugin"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "LegalCopyright", "Copyright (c) Microsoft Corporation.  All rights reserved."
+            VALUE "InternalName", "Midi2.KSTransport.dll"
+            VALUE "OriginalFilename", "Midi2.KSTransport.dll"
+            VALUE "ProductName", "Windows MIDI Services"
+            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "OLESelfRegister", ""
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PROJNAME                    "Midi2.KSTransport"
+
+    IDS_PLUGIN_METADATA_VERSION         "1.0.0.0"
+    IDS_PLUGIN_METADATA_NAME            "KS MIDI (UMP Drivers)"
+    IDS_PLUGIN_METADATA_DESCRIPTION     "Provides Kernel Streaming (KS) support for USB MIDI 1.0 and USB MIDI 2.0 using the new MIDI 2.0/UMP class driver."
+    IDS_PLUGIN_METADATA_AUTHOR          "Microsoft"
+END
+
+IDR_MIDI2KSTRANSPORT REGISTRY "Midi2.KSTransport.rgs"
+////////////////////////////////////////////////////////////////////////////
+
+
+#endif
+
+#if 0
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+1 TYPELIB "Midi2KSTransport.tlb"
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+#endif
+

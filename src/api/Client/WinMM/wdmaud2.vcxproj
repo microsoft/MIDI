@@ -98,7 +98,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvtransport\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -115,7 +115,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvtransport\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -132,7 +132,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvtransport\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -151,7 +151,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvabstraction\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(ProjectDir)\..\Inc;$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\MidiSrv\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midi2.midisrvtransport\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

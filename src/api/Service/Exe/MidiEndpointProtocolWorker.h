@@ -44,7 +44,7 @@ private:
     //std::wstring m_deviceInstanceId;
     GUID m_sessionId{};
     DWORD m_clientProcessId{};
-    GUID m_abstractionId{};
+    GUID m_transportId{};
 
     LONGLONG m_context{ 0 };
 

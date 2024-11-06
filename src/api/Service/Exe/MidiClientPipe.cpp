@@ -210,7 +210,7 @@ CMidiClientPipe::SendMidiMessageNow(
     auto lock = m_ClientPipeLock.lock();
     if (m_MidiPump)
     {
-        // TODO: add a SendMidiMessageNow routine to the abstraction layers.
+        // TODO: add a SendMidiMessageNow routine to the transport layers.
         return m_MidiPump->SendMidiMessage(data, length, position);
     }
     return E_ABORT;

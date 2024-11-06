@@ -57,13 +57,13 @@ CMidiDeviceManager::Initialize(
     //wil::com_ptr_nothrow<IMidiServiceConfigurationManagerInterface> serviceConfigManagerInterface;
     //RETURN_IF_FAILED(configurationManager->QueryInterface(__uuidof(IMidiServiceConfigurationManagerInterface), (void**)&serviceConfigManagerInterface));
 
-    // Get the enabled abstraction layers from the registry
+    // Get the enabled transport layers from the registry
 
-    for (auto const& AbstractionLayer : m_configurationManager->GetEnabledTransports())
+    for (auto const& TransportLayer : m_configurationManager->GetEnabledTransports())
     {
-        wil::com_ptr_nothrow<IMidiTransport> midiAbstraction;
+        wil::com_ptr_nothrow<IMidiTransport> midiTransport;
         wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
-        wil::com_ptr_nothrow<IMidiTransportConfigurationManager> abstractionConfigurationManager;
+        wil::com_ptr_nothrow<IMidiTransportConfigurationManager> transportConfigurationManager;
 
         try
         {
@@ -73,12 +73,12 @@ CMidiDeviceManager::Initialize(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Getting abstraction configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                TraceLoggingWideString(L"Getting transport configuration JSON", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingGuid(TransportLayer, "transport layer")
             );
 
             // provide the initial settings for these transports
-            auto transportSettingsJson = m_configurationManager->GetSavedConfigurationForTransport(AbstractionLayer);
+            auto transportSettingsJson = m_configurationManager->GetSavedConfigurationForTransport(TransportLayer);
 
             TraceLoggingWrite(
                 MidiSrvTelemetryProvider::Provider(),
@@ -86,16 +86,16 @@ CMidiDeviceManager::Initialize(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"CoCreating abstraction layer", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                TraceLoggingWideString(L"CoCreating transport layer", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingGuid(TransportLayer, "transport layer")
             );
 
             // changed these from a return-on-fail to just log, so we don't prevent service startup
-            // due to one bad abstraction
+            // due to one bad transport
 
-            LOG_IF_FAILED(CoCreateInstance(AbstractionLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiAbstraction)));
+            LOG_IF_FAILED(CoCreateInstance(TransportLayer, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
 
-            if (midiAbstraction != nullptr)
+            if (midiTransport != nullptr)
             {
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
@@ -103,22 +103,22 @@ CMidiDeviceManager::Initialize(
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating abstraction configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                    TraceLoggingWideString(L"Activating transport configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
                 );
 
                 // we only log. This interface is optional
-                // If present, an abstraction device manager may make use of its configuration manager, so activate
+                // If present, an transport device manager may make use of its configuration manager, so activate
                 // and initialize the configuration manager before activating the device manager so that configuration
                 // is present.
-                auto configHR = midiAbstraction->Activate(__uuidof(IMidiTransportConfigurationManager), (void**)&abstractionConfigurationManager);
+                auto configHR = midiTransport->Activate(__uuidof(IMidiTransportConfigurationManager), (void**)&transportConfigurationManager);
                 if (SUCCEEDED(configHR))
                 {
-                    if (abstractionConfigurationManager != nullptr)
+                    if (transportConfigurationManager != nullptr)
                     {
-                        // init the abstraction's config manager
-                        auto initializeResult = abstractionConfigurationManager->Initialize(
-                            AbstractionLayer,
+                        // init the transport's config manager
+                        auto initializeResult = transportConfigurationManager->Initialize(
+                            TransportLayer,
                             this, 
                             m_configurationManager.get());
 
@@ -132,15 +132,15 @@ CMidiDeviceManager::Initialize(
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Failed to initialize abstraction configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(L"Failed to initialize transport configuration manager.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingHResult(initializeResult, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                                TraceLoggingGuid(TransportLayer, "transport layer")
                             );
                         }
                         else
                         {
                             // don't std::move this because we sill need it
-                            m_midiTransportConfigurationManagers[AbstractionLayer] = abstractionConfigurationManager;
+                            m_midiTransportConfigurationManagers[TransportLayer] = transportConfigurationManager;
 
                             if (!transportSettingsJson.empty())
                             {
@@ -150,13 +150,13 @@ CMidiDeviceManager::Initialize(
                                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                     TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(L"Updating abstraction configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                                    TraceLoggingWideString(L"Updating transport configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingGuid(TransportLayer, "transport layer")
                                 );
 
                                 LPWSTR response{};
 
-                                auto updateConfigHR = abstractionConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response);
+                                auto updateConfigHR = transportConfigurationManager->UpdateConfiguration(transportSettingsJson.c_str(), &response);
 
                                 if (FAILED(updateConfigHR))
                                 {
@@ -168,9 +168,9 @@ CMidiDeviceManager::Initialize(
                                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                                             TraceLoggingPointer(this, "this"),
-                                            TraceLoggingWideString(L"Config update not implemented for this abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                            TraceLoggingWideString(L"Config update not implemented for this transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                             TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                                            TraceLoggingGuid(TransportLayer, "transport layer")
                                         );
                                     }
                                     else
@@ -185,7 +185,7 @@ CMidiDeviceManager::Initialize(
                                             TraceLoggingPointer(this, "this"),
                                             TraceLoggingWideString(L"Failed to update configuration.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                             TraceLoggingHResult(updateConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                                            TraceLoggingGuid(TransportLayer, "transport layer")
                                         );
                                     }
                                 }
@@ -199,7 +199,7 @@ CMidiDeviceManager::Initialize(
                                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                         TraceLoggingPointer(this, "this"),
                                         TraceLoggingWideString(L"Configuration updated.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                                        TraceLoggingGuid(TransportLayer, "transport layer")
                                     );
                                 }
 
@@ -216,8 +216,8 @@ CMidiDeviceManager::Initialize(
                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Transport abstraction configuration manager activation failed with null result.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                            TraceLoggingWideString(L"Transport transport configuration manager activation failed with null result.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(TransportLayer, "transport layer")
                         );
                     }
                 }
@@ -230,8 +230,8 @@ CMidiDeviceManager::Initialize(
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
                         TraceLoggingHResult(configHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                        TraceLoggingWideString(L"Transport abstraction configuration manager activation failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                        TraceLoggingWideString(L"Transport transport configuration manager activation failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(TransportLayer, "transport layer")
                     );
                 }
 
@@ -241,11 +241,11 @@ CMidiDeviceManager::Initialize(
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating abstraction layer IMidiEndpointManager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                    TraceLoggingWideString(L"Activating transport layer IMidiEndpointManager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
                 );
 
-                LOG_IF_FAILED(midiAbstraction->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
+                LOG_IF_FAILED(midiTransport->Activate(__uuidof(IMidiEndpointManager), (void**)&endpointManager));
 
                 if (endpointManager != nullptr)
                 {
@@ -257,15 +257,15 @@ CMidiDeviceManager::Initialize(
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Initializing abstraction layer Midi Endpoint Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                        TraceLoggingWideString(L"Initializing transport layer Midi Endpoint Manager", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(TransportLayer, "transport layer")
                     );
 
                     auto initializeResult = endpointManager->Initialize(this, protocolManager.get());
 
                     if (SUCCEEDED(initializeResult))
                     {
-                        m_midiEndpointManagers.emplace(AbstractionLayer, std::move(endpointManager));
+                        m_midiEndpointManagers.emplace(TransportLayer, std::move(endpointManager));
 
                         TraceLoggingWrite(
                             MidiSrvTelemetryProvider::Provider(),
@@ -274,7 +274,7 @@ CMidiDeviceManager::Initialize(
                             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                             TraceLoggingPointer(this, "this"),
                             TraceLoggingWideString(L"Midi Endpoint Manager initialized", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                            TraceLoggingGuid(TransportLayer, "transport layer")
                         );
                     }
                     else
@@ -285,8 +285,8 @@ CMidiDeviceManager::Initialize(
                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Transport abstraction initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                            TraceLoggingWideString(L"Transport transport initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(TransportLayer, "transport layer")
                         );
                     }
 
@@ -299,8 +299,8 @@ CMidiDeviceManager::Initialize(
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Transport abstraction endpoint manager initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                        TraceLoggingWideString(L"Transport transport endpoint manager initialization failed.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(TransportLayer, "transport layer")
                     );
 
                 }
@@ -313,8 +313,8 @@ CMidiDeviceManager::Initialize(
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Transport Abstraction activation failed (nullptr return).", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                    TraceLoggingWideString(L"Transport Transport activation failed (nullptr return).", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(TransportLayer, "transport layer")
                 );
             }
 
@@ -328,10 +328,10 @@ CMidiDeviceManager::Initialize(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Result Exception loading transport abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Result Exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingString(rex.what(), "error"),
                 TraceLoggingHResult(rex.GetErrorCode(), MIDI_TRACE_EVENT_HRESULT_FIELD),
-                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                TraceLoggingGuid(TransportLayer, "transport layer")
             );
 
         }
@@ -343,9 +343,9 @@ CMidiDeviceManager::Initialize(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Runtime error loading transport abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Runtime error loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingString(err.what(), "error"),
-                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                TraceLoggingGuid(TransportLayer, "transport layer")
             );
         }
         catch (const std::exception& ex)
@@ -356,9 +356,9 @@ CMidiDeviceManager::Initialize(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Exception loading transport abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingString(ex.what(), "exception"),
-                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                TraceLoggingGuid(TransportLayer, "transport layer")
             );
         }        
         catch (...)
@@ -369,8 +369,8 @@ CMidiDeviceManager::Initialize(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unknown exception loading transport abstraction.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(AbstractionLayer, "abstraction layer")
+                TraceLoggingWideString(L"Unknown exception loading transport transport.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingGuid(TransportLayer, "transport layer")
             );
 
         }
@@ -681,7 +681,7 @@ CMidiDeviceManager::ActivateEndpoint
             );
 
 
-            allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
+            allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->TransportId)) });
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointDevicePurpose, DEVPROP_STORE_SYSTEM, nullptr},
@@ -1116,14 +1116,14 @@ CMidiDeviceManager::ActivateEndpoint
                     DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
-            // The abstraction layer GUID is required for various tests for targeting the tests on this SWD.
-            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
+            // The transport layer GUID is required for various tests for targeting the tests on this SWD.
+            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->TransportId)) });
 
-            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_AbstractionLayer, DEVPROP_STORE_SYSTEM, nullptr},
+            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->TransportId)) });
 
-            // The Midi 1 ports are an abstraction generated and handled by Midisrv, as such it can do both bytestream
+            // The Midi 1 ports are an transport generated and handled by Midisrv, as such it can do both bytestream
             // and UMP.
             MidiDataFormats supportedDataFormats { MidiDataFormats_Any };
 
@@ -1163,7 +1163,7 @@ CMidiDeviceManager::ActivateEndpoint
                 // don't know that until we get the function blocks. We know a little due to
                 // the Group Terminal Blocks in the case of USB, but that's only for one transport
                 // 
-                // It may be easier to have the abstraction create the MIDI 1.0 SWDs by calling
+                // It may be easier to have the transport create the MIDI 1.0 SWDs by calling
                 // functions when it's ready? That way it can get the info it needs first, and then
                 // create the MIDI 1.0 interfaces. Need to think through that flow.
 
@@ -1818,7 +1818,7 @@ CMidiDeviceManager::UpdateTransportConfiguration
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingGuid(transportId, "abstraction id"),
+            TraceLoggingGuid(transportId, "transport id"),
             TraceLoggingWideString(configurationJson, "config json")
         );
 
@@ -1839,7 +1839,7 @@ CMidiDeviceManager::UpdateTransportConfiguration
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Failed to find the referenced abstraction by its GUID", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Failed to find the referenced transport by its GUID", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingGuid(transportId, "transport id")
             );
 
@@ -1858,7 +1858,7 @@ CMidiDeviceManager::UpdateTransportConfiguration
     }
 
 
-    // failed to find the abstraction or its related endpoint manager
+    // failed to find the transport or its related endpoint manager
     return E_FAIL;
 }
 

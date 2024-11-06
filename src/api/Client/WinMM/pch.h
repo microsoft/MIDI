@@ -47,7 +47,7 @@ using namespace winrt;
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
 
-#include "Midi2MidiSrvAbstraction.h"
+#include "Midi2MidiSrvTransport.h"
 
 class WdmAud2TelemetryProvider : public wil::TraceLoggingProvider
 {

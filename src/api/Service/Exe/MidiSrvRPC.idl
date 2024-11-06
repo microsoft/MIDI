@@ -127,7 +127,7 @@ interface MidiSrvRPC
         [out, string] LPWSTR* sessionListJson);
 
 
-    // Abstractions and Transforms metadata reporting only
+    // Transports and Transforms metadata reporting only
 
     HRESULT MidiSrvGetTransportList(
         [in] handle_t bindingHandle,

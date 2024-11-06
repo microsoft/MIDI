@@ -68,7 +68,7 @@
 
 
 
-// Virtual MIDI abstraction configuration
+// Virtual MIDI transport configuration
 
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY                L"associationIdentifier"
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN                          32
@@ -79,7 +79,7 @@
 
 
 
-// loopback MIDI abstraction configuration
+// loopback MIDI transport configuration
 
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY                            L"endpointA"
 #define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY                            L"endpointB"
@@ -90,7 +90,7 @@
 
 
 
-// Virtual patch bay abstraction configuration
+// Virtual patch bay transport configuration
 
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_PATCH_BAY_SOURCES_KEY                             L"sources"
 #define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_PATCH_BAY_DESTINATIONS_KEY                        L"destinations"
@@ -118,17 +118,17 @@
 
 // plugin information reporting 
 
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_NAME_PROPERTY_KEY                         L"name"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY               L"transportCode"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY                  L"description"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY                       L"author"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY             L"smallImagePath"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_VERSION_PROPERTY_KEY                      L"version"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY         L"isRuntimeCreatableByApps"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY     L"isRuntimeCreatableBySettings"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY            L"isSystemManaged"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY       L"isClientConfigurable"
-#define MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY       L"clientConfigAssembly"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY                         L"name"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY               L"transportCode"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY                  L"description"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY                       L"author"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY             L"smallImagePath"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY                      L"version"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY         L"isRuntimeCreatableByApps"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY     L"isRuntimeCreatableBySettings"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY            L"isSystemManaged"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY       L"isClientConfigurable"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY       L"clientConfigAssembly"
 
 
 #define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_NAME_PROPERTY_KEY                           L"name"
