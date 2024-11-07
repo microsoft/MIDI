@@ -5,12 +5,13 @@ namespace Microsoft.Midi.Common
 	public static class MidiBuildInformation
 	{
 		public const string Source = "GitHub Preview";
-		public const string Name = "Unknown";
-		public const string BuildFullVersion = "0.0.0-unknown.0.00000.0000";
-		public const string VersionMajor = "0";
+		public const string Name = "Developer Preview 8";
+		public const string BuildFullVersion = "1.0.1-preview.8.24312.53";
+		public const string VersionMajor = "1";
 		public const string VersionMinor = "0";
-		public const string VersionRevision = "0";
-		public const string VersionDateNumber = "00000";
-		public const string VersionTimeNumber = "0000";
+		public const string VersionRevision = "1";
+		public const string VersionDateNumber = "24312";
+		public const string VersionTimeNumber = "53";
 	}
 }
+

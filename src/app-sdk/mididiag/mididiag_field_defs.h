@@ -96,6 +96,9 @@
 #define MIDIDIAG_SECTION_LABEL_SERVICE_STATUS                            L"service_status"
 #define MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE                           L"available"
 
+#define MIDIDIAG_SECTION_LABEL_SDK_STATUS                                L"sdk_runtime_status"
+#define MIDIDIAG_FIELD_LABEL_SDK_INITIALIZED                             L"sdk_runtime_initialized"
+
 #define MIDIDIAG_SECTION_LABEL_OS                                        L"os"
 #define MIDIDIAG_FIELD_LABEL_OS_VERSION                                  L"os_version"
 

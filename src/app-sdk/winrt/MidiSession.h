@@ -71,9 +71,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool m_useMmcss{ false };
         DWORD m_mmcssTaskId{ 0 };
 
-        // everything in the session needs to use this service abstraction because the
+        // everything in the session needs to use this service transport because the
         // context handle is tied to it.
-        winrt::com_ptr<IMidiTransport> m_serviceAbstraction;
+        winrt::com_ptr<IMidiTransport> m_serviceTransport;
         winrt::com_ptr<IMidiSessionTracker> m_sessionTracker;
 
         // key is the unique guid for the connection

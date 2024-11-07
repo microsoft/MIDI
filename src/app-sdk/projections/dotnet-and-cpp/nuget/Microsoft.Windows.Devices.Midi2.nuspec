@@ -72,43 +72,25 @@
         <file target="runtimes\win-x64\lib\net8.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
         <file target="runtimes\win-x64\lib\net9.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
-        <!-- Intel/AMD x64 Initializer -->
-        <file target="runtimes\win-x64\native"       src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-        <file target="runtimes\win-x64\native"       src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
-
-        <file target="runtimes\win-x64\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-        <file target="runtimes\win-x64\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
-
-        <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->
 
         <file target="runtimes\win-arm64\lib\net7.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
         <file target="runtimes\win-arm64\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
         <file target="runtimes\win-arm64\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-
-        <!-- Arm64 Initializer (it's Arm64X) Same file for Arm64EC and Arm64 -->
-        <file target="runtimes\win-arm64\native"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-        <file target="runtimes\win-arm64\native"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
-
-        <file target="runtimes\win-arm64\lib\net6.0"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-        <file target="runtimes\win-arm64\lib\net6.0"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
 
         <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->
         <file target="runtimes\win-arm64ec\lib\net7.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
         <file target="runtimes\win-arm64ec\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
         <file target="runtimes\win-arm64ec\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
-        <!-- Arm64 Initializer (it's Arm64X) Same file for Arm64EC and Arm64 -->
-        <file target="runtimes\win-arm64ec\native"   src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-        <file target="runtimes\win-arm64ec\native"   src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
-
-        <file target="runtimes\win-arm64ec\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-        <file target="runtimes\win-arm64ec\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
-
-
+        
         <!-- Build-time files ================================================ -->
 
 		<file target="build\native\"                    src="Microsoft.Windows.Devices.Midi2.targets"  />
 		<file target="build\native\"                    src="Microsoft.Windows.Devices.Midi2.props" />
+
+        <!-- Build-time header files ================================================ -->
+
+        <file target="build\native\include"             src="..\..\..\client-initialization-redist\MidiDesktopAppSdkBootstrapper.hpp" />
 
         <file target="build\native\include\midi2"       src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\Microsoft.Windows.Devices.Midi2*.h" />
         <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.0.h" />

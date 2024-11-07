@@ -16,7 +16,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     {
         throw hresult_not_implemented();
     }
-    winrt::guid MidiNetworkEndpointManager::AbstractionId()
+    winrt::guid MidiNetworkEndpointManager::TransportId()
     {
         throw hresult_not_implemented();
     }

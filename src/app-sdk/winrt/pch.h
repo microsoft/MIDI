@@ -79,7 +79,7 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 // service interface
 #include <WindowsMidiServices.h>
 #include <WindowsMidiServices_i.c>
-#include <Midi2MidiSrvAbstraction.h>
+#include <Midi2MidiSrvTransport.h>
 
 // SDK shared
 #include <SdkTraceLogging.h>

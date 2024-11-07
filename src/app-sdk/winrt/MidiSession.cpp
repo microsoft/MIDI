@@ -73,17 +73,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         }
     }
 
-    // Internal method called inside the API to connect to the abstraction. Called by the code which creates
+    // Internal method called inside the API to connect to the transport. Called by the code which creates
     // the session instance
     _Use_decl_annotations_
     bool MidiSession::InternalStart()
     {
         try
         {
-            // We're talking to the service, so use the MIDI Service abstraction, not a KS or other one
-            m_serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            // We're talking to the service, so use the MIDI Service transport, not a KS or other one
+            m_serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
 
-            if (m_serviceAbstraction != nullptr)
+            if (m_serviceTransport != nullptr)
             {
                 // the session id is created on the client and provided in calls to the endpoints
                 m_id = foundation::GuidHelper::CreateNewGuid();
@@ -93,7 +93,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
                 // register the session
 
-                if (SUCCEEDED(m_serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&m_sessionTracker)))
+                if (SUCCEEDED(m_serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&m_sessionTracker)))
                 {
                     auto initHR = m_sessionTracker->Initialize();
                     if (FAILED(initHR))
@@ -156,7 +156,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Error starting session. Service abstraction is nullptr", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Error starting session. Service transport is nullptr", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
 
                 return false;
@@ -257,7 +257,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (m_serviceAbstraction != nullptr)
+            if (m_serviceTransport != nullptr)
             {
                 // TODO: Call any cleanup method on the service
                 for (auto connection : m_connections)
@@ -269,7 +269,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     c->InternalClose();
                 }
 
-                m_serviceAbstraction = nullptr;
+                m_serviceTransport = nullptr;
             }
 
             if (m_sessionTracker != nullptr)

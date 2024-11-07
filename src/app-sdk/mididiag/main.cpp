@@ -272,7 +272,6 @@ bool DoSectionCOMComponents(_In_ bool const verbose)
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_COM);
 
-
     return true;
 
 }
@@ -621,6 +620,21 @@ bool DoSectionClock(_In_ bool const verbose)
     return true;
 }
 
+bool DoSectionSdkStatus(_In_ bool const verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SDK_STATUS);
+
+
+    // next, try to init the SDK
+    bool initialized = init::MidiServicesInitializer::InitializeDesktopAppSdkRuntime();
+
+    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SDK_INITIALIZED, initialized);
+
+    return initialized;
+}
+
 bool DoSectionServiceStatus(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
@@ -800,18 +814,21 @@ int __cdecl main()
     {
         DoSectionSystemInfo(verbose);
 
+        DoSectionRegistryEntries(verbose);
+
+//        DoSectionCOMComponents(verbose);
+
+        // check the service first
+        if (!DoSectionServiceStatus(verbose)) RETURN_FAIL;
+
+        if (!DoSectionSdkStatus(verbose)) RETURN_FAIL;
+
+        // only show midi clock info if the sdk init has worked
         if (midiClock)
         {
             if (!DoSectionClock(verbose)) RETURN_FAIL;
         }
 
-
-        DoSectionRegistryEntries(verbose);
-
-        DoSectionCOMComponents(verbose);
-
-
-        if (!DoSectionServiceStatus(verbose)) RETURN_FAIL;
 
         auto transportsWorked = DoSectionTransports(verbose);
 
@@ -824,8 +841,6 @@ int __cdecl main()
 
         DoSectionWinMMMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 
-
-
         if (transportsWorked)
         {
             // ping the service
@@ -836,6 +851,7 @@ int __cdecl main()
                 if (!DoSectionPingTest(verbose, pingCount)) RETURN_FAIL;
             }
         }
+
     }
     catch (...)
     {
@@ -848,4 +864,3 @@ int __cdecl main()
 
     RETURN_SUCCESS;
 }
-

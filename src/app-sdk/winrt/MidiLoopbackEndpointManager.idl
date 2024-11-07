@@ -18,7 +18,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
     {
         static Boolean IsTransportAvailable{ get; };
 
-        static Guid AbstractionId{ get; };
+        static Guid TransportId{ get; };
 
         static MidiLoopbackEndpointCreationResult CreateTransientLoopbackEndpoints(
             MidiLoopbackEndpointCreationConfig creationConfig);

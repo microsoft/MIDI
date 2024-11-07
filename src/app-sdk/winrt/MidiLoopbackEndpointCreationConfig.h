@@ -22,7 +22,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             _In_ loop::MidiLoopbackEndpointDefinition endpointDefinitionB
             );
 
-        winrt::guid TransportId() { return loop::MidiLoopbackEndpointManager::AbstractionId(); }
+        winrt::guid TransportId() { return loop::MidiLoopbackEndpointManager::TransportId(); }
         bool IsFromCurrentConfigFile() { return false; }
         winrt::hstring GetConfigJson();
 

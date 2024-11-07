@@ -17,7 +17,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
     {
         static Boolean IsTransportAvailable{ get; };
 
-        static Guid AbstractionId{ get; };
+        static Guid TransportId{ get; };
 
         static MidiVirtualDevice CreateVirtualDevice(
             MidiVirtualDeviceCreationConfig creationConfig);

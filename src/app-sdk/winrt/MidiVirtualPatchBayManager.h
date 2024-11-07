@@ -16,7 +16,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
         MidiVirtualPatchBayManager() = default;
 
         static bool IsTransportAvailable();
-        static winrt::guid AbstractionId();
+        static winrt::guid TransportId();
 
 
         static vpb::MidiVirtualPatchBayRouteCreationResult CreateRoute(

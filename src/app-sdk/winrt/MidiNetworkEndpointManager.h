@@ -17,7 +17,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         MidiNetworkEndpointManager() = default;
 
         static bool IsTransportAvailable();
-        static winrt::guid AbstractionId();
+        static winrt::guid TransportId();
         static winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkHostEndpointCreationResult CreateNetworkHost(winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkHostEndpointCreationConfig const& creationConfig);
         static winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkHostEndpointRemovalResult RemoveNetworkHost(winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkHostEndpointRemovalConfig const& removalConfig);
         static winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkClientEndpointCreationResult CreateNetworkClient(winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkClientEndpointCreationConfig const& creationConfig);

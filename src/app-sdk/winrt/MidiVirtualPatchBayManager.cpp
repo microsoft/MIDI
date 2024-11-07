@@ -16,7 +16,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementa
     {
         throw hresult_not_implemented();
     }
-    winrt::guid MidiVirtualPatchBayManager::AbstractionId()
+    winrt::guid MidiVirtualPatchBayManager::TransportId()
     {
         throw hresult_not_implemented();
     }

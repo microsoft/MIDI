@@ -1,0 +1,83 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "unknwn.idl";
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+
+typedef enum
+{
+    Platform_x64,
+    Platform_Arm64X,
+} MidiAppSDKPlatform;
+
+// these values are provided by the build system used by Microsoft for
+// both github preview builds and also for internal signed builds
+typedef struct
+{
+    MidiAppSDKPlatform Platform;    // x64, Arm64
+    LPCWSTR BuildSource;            // source, like "GitHub Preview"
+    LPCWSTR VersionName;            // name like "Developer Preview 8"
+    DWORD VersionMajor;             // Major.<minor>.<revision>
+    DWORD VersionMinor;             // <major>.Minor.<revision>
+    DWORD VersionRevision;          // <major>.<minor>.Revision
+    DWORD VersionDateNumber;        // YYddd where ddd is the day number in the year (Julian date)
+    DWORD VersionTimeNumber;        // HHMM for build time
+
+    LPCWSTR VersionFullString;
+
+} WINDOWSMIDISERVICESAPPSDKVERSION, *PWINDOWSMIDISERVICESAPPSDKVERSION;
+
+
+[
+    object,
+    local,
+    uuid(8087b303-d551-bce2-1ead-a2500d50c580)
+]
+interface IMidiClientInitializer : IUnknown
+{
+    // ensures the service is running and also starts up WinRT activation redirection
+    HRESULT Initialize();
+
+    // provide a reference to a WINDOWSMIDISERVICESSDKVERSION struct to get information
+    // about what is installed. An app which relies on a later version of the SDK can 
+    // use this information to prompt the user to download and install the latest version
+    // using the known URI for versions (this is included in the header file and the .cs)
+    // file. Developers using other languages will need to adapt that information
+    HRESULT GetInstalledWindowsMidiServicesSdkVersion(
+        [in, annotation("_In_")] PWINDOWSMIDISERVICESAPPSDKVERSION sdkVersion
+    );
+
+    // demand-starts the service if present
+    HRESULT EnsureServiceAvailable();
+
+    // this cleans up WinRT type activation redirection
+    HRESULT Shutdown();
+
+    // TODO: Method to check service version as well
+
+};
+
+
+[
+    uuid(abacab11-1984-5150-0812-ac8675309b04),
+    version(1.0),
+]
+library WindowsMidiServicesClientInitializationLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(c3263827-c3b0-bdbd-2500-ce63a3f3f2c3), version(1.0)]
+    coclass MidiClientInitializer
+    {
+        [default] interface IMidiClientInitializer;
+    }
+};
+

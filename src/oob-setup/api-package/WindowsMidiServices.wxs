@@ -44,16 +44,16 @@
         <!-- Transport and other Service Plugins -->
         <!-- Setting the SelfRegCost attribute to any positive number causes DLL Self Registration -->
     
-        <Component Id="WindowsServiceAbstractions"
+        <Component Id="WindowsServiceTransports"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="76dbd487-7646-4c4b-a5c7-fde28a2102c7"  >
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.MidiSrvAbstraction.dll"                  SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAbstraction.dll"                       SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateAbstraction.dll"              SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsAbstraction.dll"              SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualMidiAbstraction.dll"              SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.LoopbackMidiAbstraction.dll"             SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.MidiSrvTransport.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSTransport.dll"                       SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateTransport.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsTransport.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualMidiTransport.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.LoopbackMidiTransport.dll"             SelfRegCost="1" Vital="true" />
 
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BS2UMPTransform.dll"                     SelfRegCost="1" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
@@ -175,7 +175,7 @@
                       ExeCommand="[SERVICE_INSTALLFOLDER]midisrv uninstall" />
 
         <Feature Id="WindowsMIDIServices">
-            <ComponentRef Id="WindowsServiceAbstractions"/>
+            <ComponentRef Id="WindowsServiceTransports"/>
             <ComponentRef Id="WindowsService"/>
             <ComponentRef Id="WinMMCompatRegistryEntries"/>
 

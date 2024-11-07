@@ -52,7 +52,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj" />
     <ProjectReference Include="..\..\winrt\Microsoft.Windows.Devices.Midi2.vcxproj" />
   </ItemGroup>
 

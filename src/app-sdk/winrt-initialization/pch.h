@@ -19,18 +19,14 @@
 #include <optional>
 #include <string>
 #include <stdint.h>
-#include <sstream>
-#include <iomanip>
-#include <algorithm>
 #include <cwctype>
-#include <queue>
-#include <mutex>
-#include <format>
-#include <filesystem>
 
 #include <chrono>
 
+#include <wrl\module.h>
+#include <wrl\event.h>
 
+#include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
@@ -76,7 +72,7 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 // service interface
 #include <WindowsMidiServices.h>
 #include <WindowsMidiServices_i.c>
-#include <Midi2MidiSrvAbstraction.h>
+#include <Midi2MidiSrvTransport.h>
 
 // SDK shared
 #include <SdkTraceLogging.h>

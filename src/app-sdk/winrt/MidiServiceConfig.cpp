@@ -22,14 +22,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         auto iid = __uuidof(IMidiTransportConfigurationManager);
         winrt::com_ptr<IMidiTransportConfigurationManager> configManager;
 
-        auto serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+        auto serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
 
         // default to failed
         auto response = internal::BuildConfigurationResponseObject(false);
 
-        if (serviceAbstraction)
+        if (serviceTransport)
         {
-            auto activateConfigManagerResult = serviceAbstraction->Activate(iid, (void**)&configManager);
+            auto activateConfigManagerResult = serviceTransport->Activate(iid, (void**)&configManager);
 
             if (FAILED(activateConfigManagerResult) || configManager == nullptr)
             {
@@ -151,7 +151,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Failed to create service abstraction", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Failed to create service transport", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
             return response;

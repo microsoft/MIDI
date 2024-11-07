@@ -150,11 +150,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementat
     {
         try
         {
-            auto serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            auto serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
 
             // winrt::try_create_instance indicates failure by returning an empty com ptr
             // winrt::create_instance indicates failure with an exception
-            if (serviceAbstraction == nullptr)
+            if (serviceTransport == nullptr)
             {
                 LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
 
@@ -164,7 +164,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementat
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Error contacting service. Service abstraction is nullptr", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    TraceLoggingWideString(L"Error contacting service. Service transport is nullptr", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );                
                 
                 return false;
@@ -172,7 +172,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementat
 
             winrt::com_ptr<IMidiSessionTracker> tracker;
 
-            auto sessionTrackerResult = serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&tracker);
+            auto sessionTrackerResult = serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&tracker);
             if (FAILED(sessionTrackerResult))
             {
                 LOG_IF_FAILED(sessionTrackerResult);   // this also generates a fallback error with file and line number info

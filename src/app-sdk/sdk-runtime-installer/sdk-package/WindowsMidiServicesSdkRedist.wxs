@@ -39,10 +39,14 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.winmd" />
 
+            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\WindowsMidiServicesClientInitialization.dll" Vital="true" SelfRegCost="1"/>
+
+            <!--
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
-
+            -->
+            
         </Component>
 
         <!--
@@ -71,10 +75,14 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.winmd" />
-            
+
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\WindowsMidiServicesClientInitialization.dll" Vital="true" SelfRegCost="1"/>
+
+            <!--
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
+            -->
             
         </Component>
 
@@ -85,12 +93,11 @@
                    Directory="MIDIDIAG_INSTALLFOLDER"
                    Guid="a10cb6cb-571a-462e-9df7-f388460da50f"  >
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe.manifest" Vital="true" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
+            <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe.manifest" Vital="true" />-->
 
             <!--
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" />
             -->

@@ -251,23 +251,21 @@ class Build : NukeBuild
             // copy binaries to staging folder
             var stagingFiles = new List<AbsolutePath>();
 
-            // This abstraction gets compiled to Arm64X and x64. The Arm64X output is in the Arm64EC folder
-       //     var midiSrvAbstractionPlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64EC" : "x64";
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.MidiSrvAbstraction.dll");
+            // This transport gets compiled to Arm64X and x64. The Arm64X output is in the Arm64EC folder
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.MidiSrvTransport.dll");
 
 
-            // only in-proc files, like the MidiSrvAbstraction, are Arm64EC. For all the others
+            // only in-proc files, like the MidiSrvTransport, are Arm64EC. For all the others
             // any reference to Arm64EC is just Arm64. We don't use any of the Arm64X output
             var servicePlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64" : "x64";
 
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midisrv.exe");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.DiagnosticsAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.KSAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.KSAggregateAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualMidiAbstraction.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.LoopbackMidiAbstraction.dll");
-            // stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualPatchBayAbstraction.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.DiagnosticsTransport.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.KSTransport.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.KSAggregateTransport.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualMidiTransport.dll");
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.LoopbackMidiTransport.dll");
 
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.BS2UMPTransform.dll");
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.UMP2BSTransform.dll");
@@ -306,7 +304,7 @@ class Build : NukeBuild
             referenceFiles.Add(intermediateFolder / "idl" / sourcePlatform / Configuration.Release / "WindowsMidiServices_i.c");
 
             // this is the only one that needs Arm64X
-            referenceFiles.Add(intermediateFolder / "Midi2.MidiSrvAbstraction" / sourcePlatform / Configuration.Release / "Midi2MidiSrvAbstraction.h");
+            referenceFiles.Add(intermediateFolder / "Midi2.MidiSrvTransport" / sourcePlatform / Configuration.Release / "Midi2MidiSrvTransport.h");
 
             // copy the files over to the reference location
             foreach (var file in referenceFiles)
@@ -353,7 +351,7 @@ class Build : NukeBuild
                 // copy binaries to staging folder
                 var stagingFiles = new List<AbsolutePath>();
 
-                // only in-proc files, like the MidiSrvAbstraction, are Arm64EC
+                // only in-proc files, like the MidiSrvTransport, are Arm64EC
                 //var servicePlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64" : "x64";
                 var servicePlatform = platform;
 
@@ -420,14 +418,13 @@ class Build : NukeBuild
             {
                 var sdkBinaries = new List<AbsolutePath>();
 
-                foreach (var ns in AppSdkAssemblies)
-                {
-                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / sourcePlatform / Configuration.Release / $"{ns}.winmd");
-                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / sourcePlatform / Configuration.Release / $"{ns}.dll");
-                    sdkBinaries.Add(sdkOutputRootFolder / "coalesce" / sourcePlatform / Configuration.Release / $"{ns}.pri");
+                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.winmd");
+                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.dll");
+                sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.pri");
 
-                    // todo: CS projection dll
-                }
+                // todo: if other DLLs are required here, add them
+                sdkBinaries.Add(sdkOutputRootFolder / "WindowsMidiServicesClientInitialization" / sourcePlatform / Configuration.Release / $"WindowsMidiServicesClientInitialization.dll");
+
 
                 // create the nuget package
                 // todo: it would be better to see if any of the generated winmds have changed and only
@@ -484,6 +481,10 @@ class Build : NukeBuild
 
                 // sample manifest
                 FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+
+                // bootstrap files
+                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.hpp", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
         });
 

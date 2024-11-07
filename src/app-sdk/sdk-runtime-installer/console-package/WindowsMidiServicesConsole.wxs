@@ -35,7 +35,7 @@
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.dll" />
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.deps.json" />
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.runtimeconfig.json" />
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.exe.manifest" />
+            <!--<File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.exe.manifest" />-->
 
             <!-- C# / WinRT -->
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\WinRT.Runtime.dll" />
@@ -45,7 +45,7 @@
             <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
             <!--            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" /> -->
-            <File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" />
+            <!--<File Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" />-->
 
 
 
