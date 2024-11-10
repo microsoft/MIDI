@@ -106,7 +106,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist;$(SolutionDir)vsfiles\intermediate\WindowsMidiServicesClientInitialization\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -117,7 +117,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist;$(SolutionDir)vsfiles\intermediate\WindowsMidiServicesClientInitialization\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -128,7 +128,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist;$(SolutionDir)vsfiles\intermediate\WindowsMidiServicesClientInitialization\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -139,7 +139,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(WindowsSdkDir)\Testing\Development\inc;$(GeneratedFilesDir);$(SolutionDir)client-initialization-redist;$(SolutionDir)vsfiles\intermediate\WindowsMidiServicesClientInitialization\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <Optimization>Disabled</Optimization>
@@ -190,9 +190,6 @@
     </Manifest>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj">
-      <Project>{0ca9273a-0bae-4ac4-8290-a72a985dd264}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\..\winrt\Microsoft.Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>

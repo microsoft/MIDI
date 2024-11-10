@@ -12,7 +12,6 @@ namespace Microsoft.Windows.Devices.Midi2
     [default_interface]
     runtimeclass MidiChannel
     {
-        //MidiChannel();
         MidiChannel(UInt8 index);
 
         static String ShortLabel{ get; };

@@ -30,6 +30,12 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            //if (!MidiServicesInitializer.EnsureServiceAvailable())
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            //}
+
             bool atLeastOneEndpointFound = false;
 
             var table = new Table();

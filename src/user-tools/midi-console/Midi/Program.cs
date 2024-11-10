@@ -235,13 +235,32 @@ if (args.Length == 0)
     AnsiConsole.WriteLine();
 }
 
-MidiServicesInitializer.InitializeDesktopAppSdkRuntime();
 
 
-MidiClock.BeginLowLatencySystemTimerPeriod();
+using (var initializer = new Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer())
+{
+    // initialize SDK runtime
+    if (!initializer.InitializeSdkRuntime())
+    {
+        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializationFailed));
 
-var result = app.Run(args);
+        return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
+    }
 
-MidiClock.EndLowLatencySystemTimerPeriod();
+    // start the service
+    if (!initializer.EnsureServiceAvailable())
+    {
+        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
 
-return result;
+        return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+    }
+
+    MidiClock.BeginLowLatencySystemTimerPeriod();
+
+    var result = app.Run(args);
+
+    MidiClock.EndLowLatencySystemTimerPeriod();
+
+    return result;
+}
+

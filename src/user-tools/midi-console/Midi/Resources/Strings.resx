@@ -869,4 +869,7 @@ Timestamp</value>
   <data name="CommonStringCanceled" xml:space="preserve">
     <value>Canceled</value>
   </data>
+  <data name="ErrorSdkInitializationFailed" xml:space="preserve">
+    <value>Windows MIDI Services SDK runtime failed to initialize. Is it installed?</value>
+  </data>
 </root>

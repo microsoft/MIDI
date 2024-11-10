@@ -10,12 +10,12 @@
 
 namespace Microsoft.Midi.ConsoleApp
 {
-    public enum MidiConsoleReturnCode
+    public enum MidiConsoleReturnCode : int
     {
         Success = 0,
 
         ErrorWinRTTypeActivationFailure = 10,
-        ErrorMidiServicesNotInstalled = 12,
+        ErrorMidiServicesSdkNotInstalled = 12,
 
         ErrorCreatingSession = 100,
 

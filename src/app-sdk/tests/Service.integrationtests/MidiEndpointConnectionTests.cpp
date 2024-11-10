@@ -14,7 +14,7 @@ void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnC
 {
     LOG_OUTPUT(L"TestSendMessageInvalidConnectionFailureReturnCode **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -44,7 +44,7 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
 {
     LOG_OUTPUT(L"TestSendMessageValidationFailureReturnCode **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -126,7 +126,7 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 {
     LOG_OUTPUT(L"TestCreateBiDiLoopbackA **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -154,7 +154,7 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 {
     LOG_OUTPUT(L"TestCreateBiDiLoopbackB **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -180,7 +180,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 {
     LOG_OUTPUT(L"TestSendAndReceiveUmpStruct **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -264,7 +264,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 {
     LOG_OUTPUT(L"TestSendAndReceiveUmp32 **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+ //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -362,7 +362,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 {
     LOG_OUTPUT(L"TestSendAndReceiveWords **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -491,7 +491,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
 {
     LOG_OUTPUT(L"TestSendAndReceiveMultipleMessageWordsList **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -606,7 +606,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
 {
     LOG_OUTPUT(L"TestSendAndReceiveMultipleMessageWordsList **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -729,7 +729,7 @@ void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
 {
     LOG_OUTPUT(L"TestSendWordArrayBoundsError **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -765,7 +765,7 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
 {
     LOG_OUTPUT(L"TestSendAndReceiveWordArray **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+ //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();

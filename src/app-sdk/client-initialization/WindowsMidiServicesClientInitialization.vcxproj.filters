@@ -10,6 +10,18 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RoDetours.cpp">
+      <Filter>Source Files\WinRTDetour</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiAppSdkRuntimeComponentCatalog.cpp">
+      <Filter>Source Files\WinRTDetour</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiAppSdkRuntimeComponent.cpp">
+      <Filter>Source Files\WinRTDetour</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiAppSdkRuntimeTypeResolution.cpp">
+      <Filter>Source Files\WinRTDetour</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h">
@@ -26,6 +38,21 @@
     </ClInclude>
     <ClInclude Include="Resource.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiAppSdkRuntimeComponentCatalog.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="RoDetours.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiAppSdkRuntimeComponent.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiAppSdkRuntimeTypeResolution.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiAppSdkManifest.h">
+      <Filter>Header Files\WinRTDetour</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -46,6 +73,12 @@
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{5a2a4923-714b-4d2c-8d95-4644e2916f59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WinRTDetour">
+      <UniqueIdentifier>{d473e6aa-5098-4a30-a578-705a185676de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\WinRTDetour">
+      <UniqueIdentifier>{96aa0e7c-e4c5-4f2b-a824-fd7620f8b05f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -15,7 +15,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiStreamMessageBuilder
     {
-        MidiStreamMessageBuilder() = default;
+        //MidiStreamMessageBuilder() = default;
 
         static midi2::IMidiUniversalPacket BuildEndpointDiscoveryMessage(
             _In_ internal::MidiTimestamp const timestamp,

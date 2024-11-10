@@ -12,7 +12,6 @@ import "MidiVirtualDevice.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
-    [default_interface]
     static runtimeclass MidiVirtualDeviceManager
     {
         static Boolean IsTransportAvailable{ get; };

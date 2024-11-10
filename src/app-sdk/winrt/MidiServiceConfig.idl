@@ -13,7 +13,6 @@ import "MidiServiceConfigResponse.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
-    [default_interface]
     static runtimeclass MidiServiceConfig
     {
         static MidiServiceConfigResponse UpdateTransportPluginConfig(

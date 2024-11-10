@@ -14,7 +14,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiMessageConverter
     {
-        MidiMessageConverter() = default;
+        //MidiMessageConverter() = default;
 
         static midi2::MidiMessage32 ConvertMidi1Message(
             _In_ internal::MidiTimestamp timestamp,

@@ -19,7 +19,7 @@ using WinUIEx;
 using Microsoft.Windows.Devices.Midi2;
 using Microsoft.Windows.Devices.Midi2.Messages;
 using Microsoft.Windows.Devices.Midi2.Endpoints.Virtual;
-using Microsoft.Windows.Devices.Midi2.Initialization;
+//using Microsoft.Windows.Devices.Midi2.Initialization;
 using Windows.UI.Popups;
 
 
@@ -31,6 +31,8 @@ namespace MidiSample.AppToAppMidi
         private MidiSession _session;
         private MidiEndpointConnection _connection;
         private MidiVirtualDevice _virtualDevice;
+
+        private Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer _initializer;
 
         public List<Note> Notes { get; }
 
@@ -45,33 +47,41 @@ namespace MidiSample.AppToAppMidi
             this.SetWindowSize(500, 600);
             this.Closed += MainWindow_Closed;
 
-            if (!MidiServicesInitializer.EnsureServiceAvailable())
-            {
-                // In your application, you may decide it is appropriate to fall back to an older MIDI API
-                Console.WriteLine("Windows MIDI Services is not available");
-                this.AppWindow.Title = "(MIDI not available)";
+            // the initializer implements the Dispose pattern, so will shut down WinRT type redirection when disposed
+            _initializer = new Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer();
 
-            }
-            else
+            // initialize SDK runtime
+            if (_initializer.InitializeSdkRuntime())
             {
-                // bootstrap the SDK runtime. Should check the return result here
-                MidiServicesInitializer.InitializeDesktopAppSdkRuntime();
-
-                if (StartVirtualDevice())
+                // start the service
+                if (_initializer.EnsureServiceAvailable())
                 {
-                    var notes = new byte[] { 50, 52, 53, 55, 57, 58, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76 };
-                    Notes = notes.Select(n => new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
+                    if (StartVirtualDevice())
+                    {
+                        var notes = new byte[] { 50, 52, 53, 55, 57, 58, 60, 62, 64, 65, 67, 69, 70, 72, 74, 76 };
+                        Notes = notes.Select(n => new Note() { NoteNumber = n, Connection = _connection, GroupIndex = 0, ChannelIndex = 0 }).ToList();
 
-                    this.SetIsAlwaysOnTop(true);
+                        this.SetIsAlwaysOnTop(true);
 
-                    UpdateName.IsEnabled = true;
-                    EndpointNameEntry.IsEnabled = true;
-                    PadContainer.Visibility = Visibility.Visible;
+                        UpdateName.IsEnabled = true;
+                        EndpointNameEntry.IsEnabled = true;
+                        PadContainer.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        this.AppWindow.Title = "(failed to start virtual device)";
+                    }
                 }
                 else
                 {
-                    this.AppWindow.Title = "(failed to start virtual device)";
+                    this.AppWindow.Title = "(failed to get service running)";
+                    Console.WriteLine("!Failed to get service running");
                 }
+            }
+            else
+            {
+                this.AppWindow.Title = "(failed to get initialize SDK runtime)";
+                Console.WriteLine("!Failed to initialize SDK Runtime");
             }
 
         }
@@ -84,8 +94,12 @@ namespace MidiSample.AppToAppMidi
             {
                 _session.DisconnectEndpointConnection(_connection.ConnectionId);
             }
-
             _session.Dispose();
+
+            if (_initializer != null)
+            {
+                _initializer.Dispose();
+            }
         }
 
         private bool StartVirtualDevice()

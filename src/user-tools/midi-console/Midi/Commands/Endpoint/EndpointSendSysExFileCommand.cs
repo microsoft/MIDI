@@ -78,12 +78,12 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
         {
-            if (!MidiServicesInitializer.EnsureServiceAvailable())
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+            //if (!MidiServicesInitializer.EnsureServiceAvailable())
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
 
-                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
-            }
+            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            //}
 
 
             string endpointId = string.Empty;

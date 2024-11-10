@@ -10,7 +10,6 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
@@ -22,15 +21,6 @@
 #include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
 
 using namespace winrt::Microsoft::Windows::Devices::Midi2;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include <iostream>
 
@@ -43,7 +33,9 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include "loopback_ids.h"
 #include "MidiDefs.h"
 
-
+#include "WindowsMidiServicesClientInitialization.h"
+#include "WindowsMidiServicesClientInitialization_i.c"
+#include "MidiDesktopAppSdkBootstrapper.hpp"
 
 #include "MidiAppSdkInitializationTests.h"
 

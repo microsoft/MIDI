@@ -6,7 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Initialization;
+//using Microsoft.Windows.Devices.Midi2.Initialization;
 using System.Management;
 using System.ServiceProcess;
 
@@ -33,14 +33,14 @@ namespace Microsoft.Midi.ConsoleApp
             // check to see if the service is running. 
             // NOTE: Equivalent code can't be moved to the SDK due to Desktop/WinRT limitations.
 
-            if (MidiServicesInitializer.EnsureServiceAvailable())
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Service reported as available by API."));
-            }
-            else
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Service reported as NOT available by API."));
-            }
+            //if (MidiServicesInitializer.EnsureServiceAvailable())
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess("Service reported as available by API."));
+            //}
+            //else
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Service reported as NOT available by API."));
+            //}
 
             ServiceController controller;
 
@@ -60,7 +60,7 @@ namespace Microsoft.Midi.ConsoleApp
             catch (InvalidOperationException)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{MidiServiceHelper.GetServiceName()}'. Is Windows MIDI Services installed?\n"));
-                return (int)MidiConsoleReturnCode.ErrorMidiServicesNotInstalled;
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
             }
 
 

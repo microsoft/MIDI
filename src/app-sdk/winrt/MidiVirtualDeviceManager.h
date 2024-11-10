@@ -13,9 +13,9 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::implementation
 {
-    struct MidiVirtualDeviceManager : MidiVirtualDeviceManagerT<MidiVirtualDeviceManager>
+    struct MidiVirtualDeviceManager
     {
-        MidiVirtualDeviceManager() = default;
+        //MidiVirtualDeviceManager() = default;
 
         static bool IsTransportAvailable() noexcept;
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{8FEAAD91-70E1-4A19-997A-377720A719C1}"); }

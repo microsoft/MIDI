@@ -21,7 +21,6 @@ import "MidiNetworkClientEndpointRemovalConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
-    [default_interface]
     [experimental]
     static runtimeclass MidiNetworkEndpointManager
     {

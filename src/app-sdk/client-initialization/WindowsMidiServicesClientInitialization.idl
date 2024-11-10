@@ -22,7 +22,7 @@ typedef enum
 // both github preview builds and also for internal signed builds
 typedef struct
 {
-    MidiAppSDKPlatform Platform;    // x64, Arm64
+    MidiAppSDKPlatform Platform;    // x64, Arm64X
     LPCWSTR BuildSource;            // source, like "GitHub Preview"
     LPCWSTR VersionName;            // name like "Developer Preview 8"
     DWORD VersionMajor;             // Major.<minor>.<revision>

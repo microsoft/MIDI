@@ -14,13 +14,20 @@
 // add additional features, find bugs, or otherwise have recommended changes,
 // we are happy to take PRs at https://aka.ms/midirepo
 
+#pragma once
+
+#ifndef MIDIDESKTOPAPPSDKBOOTSTRAPPER_HPP
+#define MIDIDESKTOPAPPSDKBOOTSTRAPPER_HPP
+
 #include <string>           // for wstring
 #include <combaseapi.h>     // for COM activation CoCreateInstance etc.
 
 // these are files generated from the MIDL compiler and are
 // provided alongside this file for use in your apps
-#include "WindowsMidiServicesClientInitialization.h"
-#include "WindowsMidiServicesClientInitialization_i.c"
+// they should be included in your app before this file. They
+// are not included here because that can result in dups
+//#include "WindowsMidiServicesClientInitialization.h"
+//#include "WindowsMidiServicesClientInitialization_i.c"
 
 namespace Microsoft::Windows::Devices::Midi2::Initialization
 {
@@ -39,7 +46,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         // this URL will not be changed, but the underlying location it redirects to
         // will change regularly. The aka will always point to a page where the latest SDK
         // runtime can be installed.
-        const std::wstring LatestMidiAppSDKDownloadURL{ L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller" };
+        const std::wstring LatestMidiAppSdkDownloadUrl{ L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller" };
 
         // guid for the initializer
 
@@ -169,3 +176,4 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
 
 }
 
+#endif

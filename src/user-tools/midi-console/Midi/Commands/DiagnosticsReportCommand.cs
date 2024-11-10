@@ -8,7 +8,7 @@
 
 
 
-using Microsoft.Windows.Devices.Midi2.Initialization;
+//using Microsoft.Windows.Devices.Midi2.Initialization;
 
 namespace Microsoft.Midi.ConsoleApp
 {
@@ -39,45 +39,14 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiServicesInitializer.EnsureServiceAvailable())
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
-                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
-            }
+            //if (!MidiServicesInitializer.EnsureServiceAvailable())
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            //}
 
 
-            // TODO: This code should be moved to the SDK (as C++) so the UI and apps can use it
-            // Either that, or just share an assembly
-
-            // Keep private information out, so no machine names, IP addresses, user names, etc.
-
-
-            // To avoid using this to exploit, do not overwrite existing files, ever
-
-
-            // OS Information ==============================================================
-
-            // OS Name
-
-            // OS Version
-
-            // Nothing else for OS. If there's more desired, an app like MSINFO will provide it
-
-
-
-            // MIDI Information ============================================================
-
-            // Version of Windows MIDI Services installed
-
-            // Ids and names of all MIDI devices recognized by the API and their driver information
-
-            // Ids and names of all MIDI 1.0 API devices
-
-
-
-
-
-
+            // TODO: this should just shell out and run mididiag.exe
 
 
 

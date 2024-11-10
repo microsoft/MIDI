@@ -13,7 +13,6 @@ import "MidiLoopbackEndpointRemovalConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
-    [default_interface]
     static runtimeclass MidiLoopbackEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };

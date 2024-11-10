@@ -620,6 +620,8 @@ bool DoSectionClock(_In_ bool const verbose)
     return true;
 }
 
+init::MidiDesktopAppSdkInitializer initializer;
+
 bool DoSectionSdkStatus(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
@@ -628,7 +630,7 @@ bool DoSectionSdkStatus(_In_ bool const verbose)
 
 
     // next, try to init the SDK
-    bool initialized = init::MidiServicesInitializer::InitializeDesktopAppSdkRuntime();
+    bool initialized = initializer.InitializeSdkRuntime();
 
     OutputBooleanField(MIDIDIAG_FIELD_LABEL_SDK_INITIALIZED, initialized);
 
@@ -643,7 +645,7 @@ bool DoSectionServiceStatus(_In_ bool const verbose)
 
     // this needs to be done before any other service calls
 
-    bool available = init::MidiServicesInitializer::EnsureServiceAvailable();
+    bool available = initializer.EnsureServiceAvailable();
 
     OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, available);
 

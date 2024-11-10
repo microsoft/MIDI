@@ -12,9 +12,9 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
-    struct MidiLoopbackEndpointManager : MidiLoopbackEndpointManagerT<MidiLoopbackEndpointManager>
+    struct MidiLoopbackEndpointManager
     {
-        MidiLoopbackEndpointManager() = default;
+        //MidiLoopbackEndpointManager() = default;
 
         static bool IsTransportAvailable() noexcept;
 

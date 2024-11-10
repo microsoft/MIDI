@@ -12,11 +12,9 @@
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 
 using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK Core
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;  // for code to check if the service is installed/running
 
 
 // where you find types like IAsyncOperation, IInspectable, etc.
@@ -34,21 +32,21 @@ int main()
 {
     winrt::init_apartment();
 
-    // Check to see if Windows MIDI Services is installed and running on this PC
-    if (!MidiServicesInitializer::EnsureServiceAvailable())
-    {
-        // you may wish to fallback to an older MIDI API if it suits your application's workflow
-        std::cout << std::endl << "** Windows MIDI Services is not running on this PC **" << std::endl;
+    //// Check to see if Windows MIDI Services is installed and running on this PC
+    //if (!MidiServicesInitializer::EnsureServiceAvailable())
+    //{
+    //    // you may wish to fallback to an older MIDI API if it suits your application's workflow
+    //    std::cout << std::endl << "** Windows MIDI Services is not running on this PC **" << std::endl;
 
-        return 1;
-    }
-    else
-    {
-        std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
+    //    return 1;
+    //}
+    //else
+    //{
+    //    std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
 
-        // bootstrap the SDK runtime
-        MidiServicesInitializer::InitializeDesktopAppSdkRuntime();
-    }
+    //    // bootstrap the SDK runtime
+    //    MidiServicesInitializer::InitializeDesktopAppSdkRuntime();
+    //}
 
 
     bool includeDiagnosticsEndpoints = true;

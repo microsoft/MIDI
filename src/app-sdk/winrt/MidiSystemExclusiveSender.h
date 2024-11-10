@@ -13,7 +13,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysExTransfer::i
 {
     struct MidiSystemExclusiveSender
     {
-        MidiSystemExclusiveSender() = default;
+        //MidiSystemExclusiveSender() = default;
 
         static foundation::IAsyncOperationWithProgress<bool, sysex::MidiSystemExclusiveSendProgress> SendDataAsync(
             _In_ midi2::MidiEndpointConnection destination, 

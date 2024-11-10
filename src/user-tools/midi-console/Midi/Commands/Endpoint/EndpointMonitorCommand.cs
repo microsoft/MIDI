@@ -8,7 +8,7 @@
 
 
 
-using Microsoft.Windows.Devices.Midi2.Initialization;
+//using Microsoft.Windows.Devices.Midi2.Initialization;
 using Microsoft.Windows.Devices.Midi2.Messages;
 using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 
@@ -166,11 +166,11 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiServicesInitializer.EnsureServiceAvailable())
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
-                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
-            }
+            //if (!MidiServicesInitializer.EnsureServiceAvailable())
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
+            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            //}
 
 
             using AutoResetEvent m_displayMessageThreadWakeup = new AutoResetEvent(false);

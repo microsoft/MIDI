@@ -47,7 +47,6 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.pri" /> 
       <File Id="ShortcutTargetExe" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.exe" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.dll" /> 
-      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.exe.manifest" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.deps.json" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.runtimeconfig.json" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\resources.pri" /> 

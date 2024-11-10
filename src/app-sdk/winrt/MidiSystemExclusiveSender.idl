@@ -19,7 +19,7 @@ import "MidiEndpointConnection.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
 {
-    runtimeclass MidiSystemExclusiveSender
+    static runtimeclass MidiSystemExclusiveSender
     {
         // progress result is true if succeeded. Progress is number of units 
         // of data sent (for byte format, it's bytes, for UMP format, it's words)

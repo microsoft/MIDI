@@ -37,7 +37,7 @@
 
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.winmd" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.winmd" Vital="true" />
 
             <File Source="$(StagingSourceRootFolder)\app-sdk\x64\WindowsMidiServicesClientInitialization.dll" Vital="true" SelfRegCost="1"/>
 
@@ -74,7 +74,7 @@
 
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.winmd" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.winmd" Vital="true" />
 
             <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\WindowsMidiServicesClientInitialization.dll" Vital="true" SelfRegCost="1"/>
 

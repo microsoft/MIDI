@@ -14,7 +14,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 {
     struct MidiReporting
     {
-        MidiReporting() = default;
+        //MidiReporting() = default;
 
         static collections::IVector<rept::MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
         static collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
@@ -23,7 +23,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::factory_implementation
 {
-    struct MidiReporting : MidiReportingT<MidiReporting, implementation::MidiReporting>
+    struct MidiReporting : MidiReportingT<MidiReporting, implementation::MidiReporting, winrt::static_lifetime>
     {
     };
 }

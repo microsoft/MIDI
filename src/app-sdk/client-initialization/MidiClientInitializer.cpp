@@ -10,20 +10,7 @@
 #include "pch.h"
 #include "MidiClientInitializer.h"
 
-std::optional<std::wstring> GetMidiSdkPath()
-{
-#if defined(_M_ARM64EC) || defined(_M_ARM64)
-    // Arm64 and Arm64EC use same Arm64X binaries
-    const std::optional<std::wstring> sdkLocation = wil::reg::try_get_value_string(HKEY_LOCAL_MACHINE, MIDI_ROOT_ENDPOINT_APP_SDK_REG_KEY, MIDI_APP_SDK_ARM64X_REG_VALUE);
-#elif defined(_M_AMD64)
-    // other 64 bit Intel/AMD
-    const std::optional<std::wstring> sdkLocation = wil::reg::try_get_value_string(HKEY_LOCAL_MACHINE, MIDI_ROOT_ENDPOINT_APP_SDK_REG_KEY, MIDI_APP_SDK_X64_REG_VALUE);
-#else
-    // unsupported compile target architecture
-#endif
 
-    return sdkLocation;
-}
 
 
 HRESULT
@@ -39,6 +26,22 @@ CMidiClientInitializer::Initialize(
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         
     );
+
+ //   DisableThreadLibraryCalls(hmodule);
+
+    try
+    {
+        if (!SUCCEEDED(InstallHooks()) || !SUCCEEDED(ExtRoLoadCatalog()))
+            return false;
+    }
+    catch (...)
+    {
+        LOG_CAUGHT_EXCEPTION();
+        return false;
+    }
+
+
+
 
 
     // TODO: set up the type resolver, detours, etc.
@@ -84,13 +87,6 @@ CMidiClientInitializer::Initialize(
     //m_moduleHandle = module;
 
     //
-
-
-
-
-
-
-
 
 
 
@@ -206,7 +202,9 @@ CMidiClientInitializer::Shutdown()
     );
 
 
-    // TODO: Remove activation hooks
+    // Remove activation hooks
+    RemoveHooks();
+
 
     return S_OK;
 }

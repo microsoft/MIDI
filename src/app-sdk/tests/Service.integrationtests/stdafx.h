@@ -13,7 +13,6 @@
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
@@ -25,7 +24,6 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
 
 using namespace winrt::Microsoft::Windows::Devices::Midi2;
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins;
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;
@@ -46,6 +44,9 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include "loopback_ids.h"
 #include "MidiDefs.h"
 
+#include "WindowsMidiServicesClientInitialization.h"
+#include "WindowsMidiServicesClientInitialization_i.c"
+#include "MidiDesktopAppSdkBootstrapper.hpp"
 
 #include "MidiEndpointConnectionBufferTests.h"
 #include "MidiEndpointConnectionTests.h"

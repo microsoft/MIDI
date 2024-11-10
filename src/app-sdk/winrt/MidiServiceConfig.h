@@ -12,9 +12,9 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementation
 {
-    struct MidiServiceConfig : MidiServiceConfigT<MidiServiceConfig>
+    struct MidiServiceConfig
     {
-        MidiServiceConfig() = default;
+        //MidiServiceConfig() = default;
 
         static svc::MidiServiceConfigResponse UpdateTransportPluginConfig(
             _In_ svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept;

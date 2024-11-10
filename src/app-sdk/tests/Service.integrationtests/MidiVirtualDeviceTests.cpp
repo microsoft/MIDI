@@ -14,7 +14,7 @@ void MidiVirtualDeviceTests::TestCreateVirtualDevice()
 {
     LOG_OUTPUT(L"TestCreateVirtualDevice **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+ //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
 
     winrt::hstring endpointSuppliedName = L"Endpoint From Test";

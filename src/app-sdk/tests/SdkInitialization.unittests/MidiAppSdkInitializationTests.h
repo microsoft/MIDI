@@ -16,7 +16,7 @@ public:
 
     BEGIN_TEST_CLASS(MidiAppSdkInitializationTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.Initialization.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"WindowsMidiServicesClientInitialization.dll")
         END_TEST_CLASS()
 
         //TEST_CLASS_SETUP(ClassSetup);

@@ -26,7 +26,6 @@
       <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
       
       <AssemblyVersion></AssemblyVersion>
-      <ApplicationManifest>midi.exe.manifest</ApplicationManifest>
 
         <!-- needed to copy the required winrt implmentation dlls to bin folder -->
       <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -34,6 +33,8 @@
       <RollForward>LatestMinor</RollForward>
 
       <WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion>
+
+      <NoWin32Manifest>true</NoWin32Manifest>
 
   </PropertyGroup>
 
@@ -65,12 +66,6 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>Strings.Designer.cs</LastGenOutput>
         </EmbeddedResource>
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Update="midi.exe.manifest">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
     </ItemGroup>
 
   
