@@ -134,6 +134,15 @@ class Build : NukeBuild
     string[] InstallerPlatforms => new string[] { "x64", "Arm64" };
 
 
+
+    Dictionary<string, string> BuiltSdkRuntimeInstallers = new Dictionary<string, string>();
+    Dictionary<string, string> BuiltInBoxInstallers = new Dictionary<string, string>();
+    Dictionary<string, string> BuiltPreviewInBoxInstallers = new Dictionary<string, string>();
+
+
+
+
+
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
 
@@ -531,10 +540,12 @@ class Build : NukeBuild
                 // todo: it would be better to see if any of the sdk files have changed and only
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
 
+                string newInstallerName = $"Windows MIDI Services (SDK Runtime and Tools) {SetupBundleFullVersionString}-{platform.ToLower()}.exe";
                 FileSystemTasks.CopyFile(
                     AppSdkSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
-                    ThisReleaseFolder / $"Windows MIDI Services (SDK Runtime and Tools) {SetupBundleFullVersionString}-{platform.ToLower()}.exe");
+                    ThisReleaseFolder / newInstallerName);
 
+                BuiltSdkRuntimeInstallers[platform.ToLower()] = newInstallerName;
             }
 
         });
@@ -588,9 +599,13 @@ class Build : NukeBuild
 
                 // todo: it would be better to see if any of the sdk files have changed and only
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
+                string newInstallerName = $"Windows MIDI Services (In-Box Service) {SetupBundleFullVersionString}-{platform.ToLower()}.exe";
+
                 FileSystemTasks.CopyFile(
                     InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
-                    ThisReleaseFolder / $"Windows MIDI Services (In-Box Service) {SetupBundleFullVersionString}-{platform.ToLower()}.exe");
+                    ThisReleaseFolder / newInstallerName);
+
+                BuiltInBoxInstallers[platform.ToLower()] = newInstallerName;
             }
         });
 
@@ -627,9 +642,14 @@ class Build : NukeBuild
                 .EnableNodeReuse()
             );
 
+            string newInstallerName = $"Windows MIDI Services (Preview Service Plugins) {SetupBundleFullVersionString}-{platform.ToLower()}.exe";
+
             FileSystemTasks.CopyFile(
                 InDevelopmentServiceComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInDevelopmentServiceComponentsSetup.exe",
-                ThisReleaseFolder / $"Windows MIDI Services (Preview Service Plugins) {SetupBundleFullVersionString}-{platform.ToLower()}.exe");
+                ThisReleaseFolder / newInstallerName);
+
+            BuiltPreviewInBoxInstallers[platform.ToLower()] = newInstallerName;
+
         }
     });
 
@@ -1442,6 +1462,48 @@ class Build : NukeBuild
         .DependsOn(BuildCSharpSamples)
         .Executes(() =>
         {
+            if (BuiltInBoxInstallers.Count > 0)
+            {
+                Console.WriteLine("\nBuilt in-box installers:");
+
+                foreach (var item in BuiltInBoxInstallers)
+                {
+                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No in-box installers built.");
+            }
+
+            if (BuiltPreviewInBoxInstallers.Count > 0)
+            {
+                Console.WriteLine("\nBuilt in-box preview installers:");
+
+                foreach (var item in BuiltPreviewInBoxInstallers)
+                {
+                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No in-box preview installers built.");
+            }
+
+            if (BuiltSdkRuntimeInstallers.Count > 0)
+            {
+                Console.WriteLine("\nBuilt SDK runtime installers:");
+
+                foreach (var item in BuiltSdkRuntimeInstallers)
+                {
+                    Console.WriteLine($"  {item.Key.PadRight(5)} {item.Value}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No SDK runtime installers built.");
+            }
+
         });
 
 
