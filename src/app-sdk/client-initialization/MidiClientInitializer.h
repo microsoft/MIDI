@@ -18,6 +18,9 @@ class MidiClientInitializerTelemetryProvider : public wil::TraceLoggingProvider
         (0x34818be8,0x1464,0x5725,0x0c,0xc6,0xd2,0x28,0x9a,0x28,0xb8,0xfb))
 };
 
+#define MIDI_SDK_IMPL_DLL_NAME      L"Microsoft.Windows.Devices.Midi2.dll"
+#define MIDI_SDK_METADATA_NAME      L"Microsoft.Windows.Devices.Midi2.winmd"
+
 using namespace ATL;
 
 class ATL_NO_VTABLE CMidiClientInitializer :
@@ -46,6 +49,10 @@ public:
     // TODO: Method to check service version as well
 
 private:
+
+
+
+
 };
 
 OBJECT_ENTRY_AUTO(__uuidof(MidiClientInitializer), CMidiClientInitializer)

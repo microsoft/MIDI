@@ -12,10 +12,69 @@
 
 #pragma once
 
+typedef enum
+{
+    TRO_NONE = 0x00,
+    TRO_RESOLVE_TYPE = 0x01,
+    TRO_RESOLVE_NAMESPACE = 0x02,
+    TRO_RESOLVE_TYPE_AND_NAMESPACE = TRO_RESOLVE_TYPE | TRO_RESOLVE_NAMESPACE
+} TYPE_RESOLUTION_OPTIONS;
 
-static std::unordered_map<std::wstring, std::shared_ptr<MidiAppSdkRuntimeComponent>> g_types;
+struct MidiAppSdkManifestEntry
+{
+    std::wstring ActivatableClassName{};
+    std::wstring FileName{};
+    ABI::Windows::Foundation::ThreadingType ThreadingModel{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
+};
 
-HRESULT LoadMidiComponentTypes();
+class MidiSdkComponentCatalog
+{
+public:
+
+    STDMETHOD(Initialize)();
+
+    STDMETHOD(GetActivationFactory)(
+        _In_ HSTRING activatableClassId,
+        _In_ REFIID  iid,
+        _COM_Outptr_ void** factory
+        );
+
+    STDMETHOD(GetThreadingModel)(
+        _In_ HSTRING activatableClassId,
+        _In_ ABI::Windows::Foundation::ThreadingType* threading_model
+        );
+
+    STDMETHOD(GetMetadataFile)(
+        _In_ const HSTRING name,
+        _In_ IMetaDataDispenserEx* metaDataDispenser,
+        _In_ HSTRING* metaDataFilePath,
+        _In_ IMetaDataImport2** metaDataImport,
+        _In_ mdTypeDef* typeDefToken
+        );
+
+    STDMETHOD(FindTypeInMetaDataFile)(
+        _In_ IMetaDataDispenserEx* pMetaDataDispenser,
+        _In_ PCWSTR pszFullName,
+        _In_ PCWSTR pszCandidateFilePath,
+        _In_ TYPE_RESOLUTION_OPTIONS resolutionOptions,
+        _COM_Outptr_opt_result_maybenull_ IMetaDataImport2** ppMetaDataImport,
+        _Out_opt_ mdTypeDef* pmdTypeDef
+        );
+
+    bool TypeIsInScope(_In_ HSTRING const typeOrNamespace);
+
+    STDMETHOD(Shutdown)();
+
+private:
+    std::unordered_map<std::wstring, std::shared_ptr<MidiAppSdkRuntimeComponent>> m_types;
+
+    std::vector<MidiAppSdkManifestEntry> GetMidiAppSdkManifestTypes();
+
+    std::wstring m_sdkDirectory{};
+    std::wstring m_sdkImplementationFullFilename{};
+    std::wstring m_sdkMetadataFullFilename{};
+
+};
 
 //HRESULT LoadManifestFromPath(std::wstring path);
 
@@ -31,12 +90,7 @@ HRESULT LoadMidiComponentTypes();
 
 //HRESULT ParseActivatableClassTag(wil::com_ptr<IXmlReader> xmlReader, PCWSTR fileName);
 
-HRESULT WinRTGetThreadingModel(HSTRING activatableClassId, ABI::Windows::Foundation::ThreadingType* threading_model);
-
-HRESULT WinRTGetActivationFactory(
-    HSTRING activatableClassId,
-    REFIID  iid,
-    void** factory);
+//HRESULT WinRTGetThreadingModel(HSTRING activatableClassId, ABI::Windows::Foundation::ThreadingType* threading_model);
 
 //HRESULT WinRTGetMetadataFile(
 //    const HSTRING        name,
@@ -45,9 +99,4 @@ HRESULT WinRTGetActivationFactory(
 //    IMetaDataImport2** metaDataImport,
 //    mdTypeDef* typeDefToken);
 
-HRESULT MidiSdkGetMetadataFile(
-    const HSTRING        name,
-    IMetaDataDispenserEx* metaDataDispenser,
-    HSTRING* metaDataFilePath,
-    IMetaDataImport2** metaDataImport,
-    mdTypeDef* typeDefToken);
+

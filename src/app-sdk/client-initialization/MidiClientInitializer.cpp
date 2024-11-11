@@ -29,16 +29,16 @@ CMidiClientInitializer::Initialize(
 
  //   DisableThreadLibraryCalls(hmodule);
 
-    try
-    {
-        if (!SUCCEEDED(InstallHooks()) || !SUCCEEDED(ExtRoLoadCatalog()))
-            return false;
-    }
-    catch (...)
-    {
-        LOG_CAUGHT_EXCEPTION();
-        return false;
-    }
+    //try
+    //{
+    //    if (!SUCCEEDED(InstallHooks()) || !SUCCEEDED(ExtRoLoadCatalog()))
+    //        return false;
+    //}
+    //catch (...)
+    //{
+    //    LOG_CAUGHT_EXCEPTION();
+    //    return false;
+    //}
 
 
 

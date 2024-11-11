@@ -11,24 +11,17 @@
 
 #pragma once
 
-typedef enum
-{
-    TRO_NONE = 0x00,
-    TRO_RESOLVE_TYPE = 0x01,
-    TRO_RESOLVE_NAMESPACE = 0x02,
-    TRO_RESOLVE_TYPE_AND_NAMESPACE = TRO_RESOLVE_TYPE | TRO_RESOLVE_NAMESPACE
-} TYPE_RESOLUTION_OPTIONS;
 
 // Returned string is cached globally, and should not be freed by the caller.
 //HRESULT GetProcessExeDir(PCWSTR* path);
 
-HRESULT FindTypeInMetaDataFile(
-    _In_ IMetaDataDispenserEx* pMetaDataDispenser,
-    _In_ PCWSTR pszFullName,
-    _In_ PCWSTR pszCandidateFilePath,
-    _In_ TYPE_RESOLUTION_OPTIONS resolutionOptions,
-    _COM_Outptr_opt_result_maybenull_ IMetaDataImport2** ppMetaDataImport,
-    _Out_opt_ mdTypeDef* pmdTypeDef);
+//HRESULT FindTypeInMetaDataFile(
+//    _In_ IMetaDataDispenserEx* pMetaDataDispenser,
+//    _In_ PCWSTR pszFullName,
+//    _In_ PCWSTR pszCandidateFilePath,
+//    _In_ TYPE_RESOLUTION_OPTIONS resolutionOptions,
+//    _COM_Outptr_opt_result_maybenull_ IMetaDataImport2** ppMetaDataImport,
+//    _Out_opt_ mdTypeDef* pmdTypeDef);
 
 //HRESULT FindTypeInDirectory(
 //    _In_ IMetaDataDispenserEx* pMetaDataDispenser,
