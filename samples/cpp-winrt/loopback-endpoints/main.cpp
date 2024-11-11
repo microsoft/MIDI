@@ -8,8 +8,6 @@
 #include <iostream>
 
 #include <winrt/Windows.Foundation.h>
-#include <winrt/Windows.Foundation.Collections.h>
-#include <winrt/Windows.Devices.Enumeration.h>
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.h>
@@ -23,7 +21,19 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;            
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
 
+// the bootstrapper is included in the nuget package under build\native\include
+// which the targets file adds as an additional include directory at compile time
+// The first two includes are for the COM interface that is used for initialization.
+#include "winmidi/init/WindowsMidiServicesClientInitialization.h"
+#include "winmidi/init/WindowsMidiServicesClientInitialization_i.c"
 
+// This include file has a wrapper for the bootstrapper code. You are welcome to
+// use the .hpp as-is, or work the functionality into your code in whatever way
+// makes the most sense for your application.
+// 
+// The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
+#include "winmidi/init/MidiDesktopAppSdkBootstrapper.hpp"
+namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 // we'll use these to keep track of the ids of the created endpoints
 winrt::hstring m_endpointAId{};
@@ -82,21 +92,31 @@ int main()
 {
     winrt::init_apartment();
 
-    //// Check to see if Windows MIDI Services is installed and running on this PC
-    //if (!MidiServicesInitializer::EnsureServiceAvailable())
-    //{
-    //    // you may wish to fallback to an older MIDI API if it suits your application's workflow
-    //    std::cout << std::endl << "** Windows MIDI Services is not running on this PC **" << std::endl;
+    // this is the initializer in the bootstrapper hpp file
+    std::shared_ptr<init::MidiDesktopAppSdkInitializer> initializer = std::make_shared<init::MidiDesktopAppSdkInitializer>();
 
-    //    return 1;
-    //}
-    //else
-    //{
-    //    std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
+    // you can, of course, use guard macros instead of this check
+    if (initializer != nullptr)
+    {
+        if (!initializer->InitializeSdkRuntime())
+        {
+            std::cout << "Could not initialize SDK runtime" << std::endl;
+            std::wcout << "Install the latest SDK runtime installer from " << initializer->LatestMidiAppSdkDownloadUrl << std::endl;
+            return 1;
+        }
 
-    //    // bootstrap the SDK runtime
-    //    MidiServicesInitializer::InitializeDesktopAppSdkRuntime();
-    //}
+        if (!initializer->EnsureServiceAvailable())
+        {
+            std::cout << "Could not demand-start the MIDI service" << std::endl;
+            return 1;
+        }
+    }
+    else
+    {
+        // This shouldn't happen, but good to guard
+        std::cout << "Unable to create initializer" << std::endl;
+        return 1;
+    }
 
 
     // create the MIDI session, giving us access to Windows MIDI Services. An app may open 
@@ -119,7 +139,7 @@ int main()
         // MidiMessageReceivedEventArgs class provides the different ways to access the data
         // Your event handlers should return quickly as they are called synchronously.
 
-        auto MessageReceivedHandler = [&](foundation::IInspectable const& /*sender*/, MidiMessageReceivedEventArgs const& args)
+        auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& /*sender*/, MidiMessageReceivedEventArgs const& args)
             {
                 // there are several ways to get the message data from the arguments. If you want to use
                 // strongly-typed UMP classes, then you may start with the GetUmp() method. The GetXXX calls 
@@ -154,7 +174,6 @@ int main()
 
         // the returned token is used to deregister the event later.
         auto eventRevokeToken = receiveEndpoint.MessageReceived(MessageReceivedHandler);
-
 
         std::cout << std::endl << "Opening endpoint connection" << std::endl;
 
@@ -193,8 +212,11 @@ int main()
 
         std::cout << std::endl << "Deregistering event handler..." << std::endl;
 
-        // deregister the event by passing in the revoke token
-        receiveEndpoint.MessageReceived(eventRevokeToken);
+        if (eventRevokeToken)
+        {
+            // deregister the event by passing in the revoke token
+            receiveEndpoint.MessageReceived(eventRevokeToken);
+        }
 
         std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
 
@@ -221,5 +243,13 @@ int main()
         {
             std::cout << "There was a problem removing the endpoints. You may want to restart the service." << std::endl;
         }
+    }
+
+
+    // clean up the SDK WinRT redirection
+    if (initializer != nullptr)
+    {
+        initializer->ShutdownSdkRuntime();
+        initializer.reset();
     }
 }

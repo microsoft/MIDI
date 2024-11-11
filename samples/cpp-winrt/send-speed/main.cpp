@@ -10,7 +10,6 @@
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
-#include <winrt/Windows.Devices.Enumeration.h>
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
@@ -24,6 +23,20 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::Messages;        // F
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
+
+// the bootstrapper is included in the nuget package under build\native\include
+// which the targets file adds as an additional include directory at compile time
+// The first two includes are for the COM interface that is used for initialization.
+#include "winmidi/init/WindowsMidiServicesClientInitialization.h"
+#include "winmidi/init/WindowsMidiServicesClientInitialization_i.c"
+
+// This include file has a wrapper for the bootstrapper code. You are welcome to
+// use the .hpp as-is, or work the functionality into your code in whatever way
+// makes the most sense for your application.
+// 
+// The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
+#include "winmidi/init/MidiDesktopAppSdkBootstrapper.hpp"
+namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 void DisplaySingleResult(std::wstring label, uint64_t totalTime, uint64_t errorCount, uint32_t totalMessageCount)
 {
@@ -53,21 +66,32 @@ int main()
 {
     winrt::init_apartment();
 
-    //// Check to see if Windows MIDI Services is installed and running on this PC
-    //if (!MidiServicesInitializer::EnsureServiceAvailable())
-    //{
-    //    // you may wish to fallback to an older MIDI API if it suits your application's workflow
-    //    std::cout << std::endl << "** Windows MIDI Services is not running on this PC **" << std::endl;
+    // this is the initializer in the bootstrapper hpp file
+    std::shared_ptr<init::MidiDesktopAppSdkInitializer> initializer = std::make_shared<init::MidiDesktopAppSdkInitializer>();
 
-    //    return 1;
-    //}
-    //else
-    //{
-    //    std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
+    // you can, of course, use guard macros instead of this check
+    if (initializer != nullptr)
+    {
+        if (!initializer->InitializeSdkRuntime())
+        {
+            std::cout << "Could not initialize SDK runtime" << std::endl;
+            std::wcout << "Install the latest SDK runtime installer from " << initializer->LatestMidiAppSdkDownloadUrl << std::endl;
+            return 1;
+        }
 
-    //    // bootstrap the SDK runtime
-    //    MidiServicesInitializer::InitializeDesktopAppSdkRuntime();
-    //}
+        if (!initializer->EnsureServiceAvailable())
+        {
+            std::cout << "Could not demand-start the MIDI service" << std::endl;
+            return 1;
+        }
+    }
+    else
+    {
+        // This shouldn't happen, but good to guard
+        std::cout << "Unable to create initializer" << std::endl;
+        return 1;
+    }
+
 
     auto endpointId = MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId();
 
@@ -372,4 +396,11 @@ int main()
     // You can also disconnect individual Endpoint Connections when you are done with them, as we did above
     session.Close();
 
+
+    // clean up the SDK WinRT redirection
+    if (initializer != nullptr)
+    {
+        initializer->ShutdownSdkRuntime();
+        initializer.reset();
+    }
 }

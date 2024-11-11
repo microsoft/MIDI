@@ -88,14 +88,14 @@
 
         <!-- Build-time header files ================================================ -->
         
-        <file target="build\native\include\midi2init"   src="..\..\..\client-initialization-redist\MidiDesktopAppSdkBootstrapper.hpp" />
-        <file target="build\native\include\midi2init"   src="..\..\..\client-initialization-redist\WindowsMidiServicesClientInitialization.h" />
-        <file target="build\native\include\midi2init"   src="..\..\..\client-initialization-redist\WindowsMidiServicesClientInitialization_i.c" />
+        <file target="build\native\include\winmidi\init"   src="..\..\..\client-initialization-redist\MidiDesktopAppSdkBootstrapper.hpp" />
+        <file target="build\native\include\winmidi\init"   src="..\..\..\client-initialization-redist\WindowsMidiServicesClientInitialization.h" />
+        <file target="build\native\include\winmidi\init"   src="..\..\..\client-initialization-redist\WindowsMidiServicesClientInitialization_i.c" />
 
-        <file target="build\native\include\midi2"       src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\Microsoft.Windows.Devices.Midi2*.h" />
-        <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.0.h" />
-        <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.1.h" />
-        <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.2.h" />
+        <file target="build\native\include\winmidi\winrt"       src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\Microsoft.Windows.Devices.Midi2*.h" />
+        <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.0.h" />
+        <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.1.h" />
+        <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.2.h" />
 
         <!-- Standard Windows SDK headers should come from the Windows SDK. But we may want to include them for other compilers? -->
         
