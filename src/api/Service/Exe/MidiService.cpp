@@ -8,8 +8,9 @@
 
 #include "stdafx.h"
 
+// This says "(Preview)" so self-builds show up correctly in SCM
 #define SVCNAME L"MidiSrv"
-#define SVCDISPLAYNAME L"Microsoft Windows MIDI Service"
+#define SVCDISPLAYNAME L"Windows MIDI Service (Preview)"
 #define SVCDESCRIPTION L"Microsoft Windows MIDI Services core service for MIDI 1.0 and MIDI 2.0 message routing and device discovery / enumeration"
 
 //#ifdef _DEBUG
