@@ -186,6 +186,11 @@ void OutputError(_In_ std::wstring const& errorMessage)
 #define RETURN_FAIL return 1
 
 
+
+
+
+
+
 void OutputRegStringValue(std::wstring label, HKEY const key, std::wstring value)
 {
     auto keyValue = wil::reg::try_get_value_string(key, value.c_str());
@@ -211,6 +216,13 @@ void OutputRegDWordBooleanValue(std::wstring label, HKEY const key, std::wstring
     {
         OutputStringField(label, std::wstring{ L"Not present" });
     }
+}
+
+
+
+std::wstring PathFromClassId(winrt::guid classid)
+{
+
 }
 
 bool DoSectionRegistryEntries(_In_ bool const verbose)
@@ -253,8 +265,77 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
             OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
             OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED, key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
 
+
+            // resolve the DLL path for the transport
+
+            auto midiClsid = wil::reg::try_get_value_string(key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
+
+            if (midiClsid.has_value())
+            {
+                // InprocServer32 Value
+
+                std::wstring inprocServerKeyLocation = std::wstring{ L"CLSID\\" } + midiClsid.value() + std::wstring{ L"\\InprocServer32" };
+                wil::unique_hkey pathKey{ };    // the path is the "(default)" entry
+
+                if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_CLASSES_ROOT, inprocServerKeyLocation.c_str(), pathKey, wil::reg::key_access::read)))
+                {
+                    auto path = wil::reg::try_get_value_string(pathKey.get(), nullptr);
+
+                    if (path.has_value())
+                    {
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, path.value());
+                    }
+                }
+                else
+                {
+                    OutputError(L"Could not find in-proc server value under HKEY_CLASSES_ROOT, " + inprocServerKeyLocation);
+                }
+            }
+            else
+            {
+                OutputError(L"No clsid found in MIDI transport entry");
+            }
+
             OutputItemSeparator();
         }
+
+
+        // list all MIDI values under Drivers32
+
+        std::wstring drivers32KeyLocation = std::wstring{ L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32" };
+        wil::unique_hkey drivers32Key{ };
+
+        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, drivers32KeyLocation.c_str(), drivers32Key, wil::reg::key_access::read)))
+        {
+            for (const auto& valueData : wil::make_range(wil::reg::value_iterator{ drivers32Key.get() }, wil::reg::value_iterator{}))
+            {
+                //valueData.name;
+                //valueData.type;
+
+                if (valueData.name.starts_with(L"midi") && valueData.name != L"midimapper")
+                {
+                    auto val = wil::reg::try_get_value_string(drivers32Key.get(), valueData.name.c_str());
+
+                    if (val.has_value())
+                    {
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + val.value());
+                    }
+                }
+                else if (valueData.name == L"MidisrvTransferComplete")
+                {
+                    auto val = wil::reg::try_get_value_dword(drivers32Key.get(), valueData.name.c_str());
+
+                    if (val.has_value())
+                    {
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + std::to_wstring(val.value()));
+                    }
+                }
+
+            }
+        }
+
+
+
     }
     catch (...)
     {
@@ -265,17 +346,6 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
 
     return true;
 }
-
-bool DoSectionCOMComponents(_In_ bool const verbose)
-{
-    UNREFERENCED_PARAMETER(verbose);
-
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_COM);
-
-    return true;
-
-}
-
 
 
 bool DoSectionTransports(_In_ bool const verbose)
@@ -817,6 +887,8 @@ int __cdecl main()
         DoSectionSystemInfo(verbose);
 
         DoSectionRegistryEntries(verbose);
+
+        return 0;
 
 //        DoSectionCOMComponents(verbose);
 

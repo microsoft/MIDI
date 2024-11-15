@@ -42,9 +42,12 @@
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME                     L"reg_transport_name"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID                    L"reg_transport_clsid"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED                  L"reg_transport_enabled"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME                  L"reg_transport_dll"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_PROGID                   L"reg_transport_progid"
 
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSFORMS                         L"reg_transforms"
 
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY                    L"reg_drivers32_entry"
 
 #define MIDIDIAG_SECTION_LABEL_ENUM_COM                                  L"enum_com"
 
