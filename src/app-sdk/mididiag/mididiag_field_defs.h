@@ -38,6 +38,8 @@
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_ARM64X                         L"reg_sdk_arm64x"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_X64                            L"registry_sdk_x64"
 
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_MIDISRV_EXENAME                    L"reg_midisrv_exe"
+
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORTS                         L"reg_transports"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME                     L"reg_transport_name"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID                    L"reg_transport_clsid"
