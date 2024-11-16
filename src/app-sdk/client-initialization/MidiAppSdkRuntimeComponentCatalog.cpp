@@ -23,7 +23,7 @@ static const UINT32 g_uiMaxTypeName = 512;
 //
 
 std::vector<MidiAppSdkManifestEntry>
-MidiSdkComponentCatalog::GetMidiAppSdkManifestTypes()
+MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 {
     std::vector<MidiAppSdkManifestEntry> types{};
 
@@ -82,7 +82,7 @@ MidiSdkComponentCatalog::GetMidiAppSdkManifestTypes()
 
 
 HRESULT
-MidiSdkComponentCatalog::Initialize()
+MidiAppSdkRuntimeComponentCatalog::Initialize()
 {
 
 #if defined(_M_ARM64EC) || defined(_M_ARM64)
@@ -122,15 +122,16 @@ MidiSdkComponentCatalog::Initialize()
 }
 
 HRESULT
-MidiSdkComponentCatalog::Shutdown()
+MidiAppSdkRuntimeComponentCatalog::Shutdown()
 {
 
+    return S_OK;
 }
 
 
 _Use_decl_annotations_
 bool 
-MidiSdkComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace)
+MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace)
 {
     if (typeOrNamespace != NULL)
     {
@@ -158,7 +159,7 @@ MidiSdkComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace)
 
 _Use_decl_annotations_
 HRESULT 
-MidiSdkComponentCatalog::GetThreadingModel(
+MidiAppSdkRuntimeComponentCatalog::GetThreadingModel(
     HSTRING activatableClassId, 
     ABI::Windows::Foundation::ThreadingType* threading_model
 )
@@ -178,7 +179,7 @@ MidiSdkComponentCatalog::GetThreadingModel(
 
 _Use_decl_annotations_
 HRESULT 
-MidiSdkComponentCatalog::GetActivationFactory(
+MidiAppSdkRuntimeComponentCatalog::GetActivationFactory(
     HSTRING activatableClassId,
     REFIID  iid,
     void** factory
@@ -198,7 +199,7 @@ MidiSdkComponentCatalog::GetActivationFactory(
 // has been validated to be a MIDI SDK type
 _Use_decl_annotations_
 HRESULT
-MidiSdkComponentCatalog::GetMetadataFile(
+MidiAppSdkRuntimeComponentCatalog::GetMetadataFile(
     const HSTRING name,
     IMetaDataDispenserEx* metaDataDispenser,
     HSTRING* metaDataFilePath,
@@ -250,7 +251,7 @@ MidiSdkComponentCatalog::GetMetadataFile(
 
 _Use_decl_annotations_
 HRESULT 
-MidiSdkComponentCatalog::FindTypeInMetaDataFile(
+MidiAppSdkRuntimeComponentCatalog::FindTypeInMetaDataFile(
     _In_ IMetaDataDispenserEx* pMetaDataDispenser,
     _In_ PCWSTR pszFullName,
     _In_ PCWSTR pszCandidateFilePath,
@@ -259,7 +260,7 @@ MidiSdkComponentCatalog::FindTypeInMetaDataFile(
     _Out_opt_ mdTypeDef* pmdTypeDef)
 {
     HRESULT hr = S_OK;
-    Microsoft::WRL::ComPtr<IMetaDataImport2> spMetaDataImport;
+    wil::com_ptr<IMetaDataImport2> spMetaDataImport;
     MetaDataImportersLRUCache* pMetaDataImporterCache = MetaDataImportersLRUCache::GetMetaDataImportersLRUCacheInstance();
     if (pMetaDataImporterCache != nullptr)
     {
@@ -326,7 +327,7 @@ MidiSdkComponentCatalog::FindTypeInMetaDataFile(
                     }
                     if (ppMetaDataImport != nullptr)
                     {
-                        *ppMetaDataImport = spMetaDataImport.Detach();
+                        *ppMetaDataImport = spMetaDataImport.detach();
                     }
                 }
             }

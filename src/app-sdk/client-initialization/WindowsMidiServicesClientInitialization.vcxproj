@@ -291,7 +291,7 @@
     <ClCompile Include="MidiAppSdkRuntimeTypeResolution.cpp" />
     <ClCompile Include="MidiClientInitializer.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="RoDetours.cpp" />
+    <ClCompile Include="MidiRoDetours.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="WindowsMidiServicesClientInitialization.idl" />
@@ -310,7 +310,7 @@
     <ClInclude Include="MidiClientInitializer.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="RoDetours.h" />
+    <ClInclude Include="MidiRoDetours.h" />
     <ClInclude Include="ScheduledUmpMessage.h" />
   </ItemGroup>
   <ItemGroup>

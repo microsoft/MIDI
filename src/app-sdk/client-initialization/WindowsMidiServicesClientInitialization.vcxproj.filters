@@ -10,7 +10,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RoDetours.cpp">
+    <ClCompile Include="MidiRoDetours.cpp">
       <Filter>Source Files\WinRTDetour</Filter>
     </ClCompile>
     <ClCompile Include="MidiAppSdkRuntimeComponentCatalog.cpp">
@@ -42,7 +42,7 @@
     <ClInclude Include="MidiAppSdkRuntimeComponentCatalog.h">
       <Filter>Header Files\WinRTDetour</Filter>
     </ClInclude>
-    <ClInclude Include="RoDetours.h">
+    <ClInclude Include="MidiRoDetours.h">
       <Filter>Header Files\WinRTDetour</Filter>
     </ClInclude>
     <ClInclude Include="MidiAppSdkRuntimeComponent.h">

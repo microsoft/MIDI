@@ -203,7 +203,7 @@ CMidiClientInitializer::Shutdown()
 
 
     // Remove activation hooks
-    RemoveHooks();
+ //   RemoveHooks();
 
 
     return S_OK;

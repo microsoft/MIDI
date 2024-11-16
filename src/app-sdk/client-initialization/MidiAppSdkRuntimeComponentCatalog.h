@@ -27,7 +27,7 @@ struct MidiAppSdkManifestEntry
     ABI::Windows::Foundation::ThreadingType ThreadingModel{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
 };
 
-class MidiSdkComponentCatalog
+class MidiAppSdkRuntimeComponentCatalog
 {
 public:
 
@@ -64,6 +64,11 @@ public:
     bool TypeIsInScope(_In_ HSTRING const typeOrNamespace);
 
     STDMETHOD(Shutdown)();
+
+    std::wstring GetSdkDirectory() { return m_sdkDirectory; }
+    std::wstring GetSdkImplementationFullFilename() { return m_sdkImplementationFullFilename; }
+    std::wstring GetSdkMetadataFullFilename() { return m_sdkMetadataFullFilename; }
+
 
 private:
     std::unordered_map<std::wstring, std::shared_ptr<MidiAppSdkRuntimeComponent>> m_types;

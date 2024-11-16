@@ -51,12 +51,34 @@ extern "C"
         BOOL* present);
 }
 
+// keep the original function pointers
 static decltype(RoActivateInstance)* TrueRoActivateInstance = RoActivateInstance;
 static decltype(RoGetActivationFactory)* TrueRoGetActivationFactory = RoGetActivationFactory;
 static decltype(RoGetMetaDataFile)* TrueRoGetMetaDataFile = RoGetMetaDataFile;
 static decltype(RoResolveNamespace)* TrueRoResolveNamespace = RoResolveNamespace;
 
 
+
+HRESULT
+MidiRoDetours::Initialize()
+{
+    m_catalog = std::make_shared<MidiAppSdkRuntimeComponentCatalog>();
+
+    RETURN_HR_IF_NULL(E_POINTER, m_catalog);
+
+    return S_OK;
+}
+
+HRESULT
+MidiRoDetours::Shutdown()
+{
+
+    return S_OK;
+
+}
+
+
+_Use_decl_annotations_
 VOID CALLBACK EnsureMTAInitializedCallBack
 (
     PTP_CALLBACK_INSTANCE instance,
@@ -79,7 +101,8 @@ outside of the NTA and blocks all others. The workaround for this is to spin up 
 thread that is not been CoInitialize. COM treats this thread as a implicit MTA and
 when we call CoGetObjectContext on it we implicitly initialized the MTA.
 */
-HRESULT EnsureMTAInitialized()
+HRESULT 
+MidiRoDetours::EnsureMTAInitialized()
 {
     TP_CALLBACK_ENVIRON callBackEnviron;
     InitializeThreadpoolEnvironment(&callBackEnviron);
@@ -117,14 +140,20 @@ HRESULT EnsureMTAInitialized()
     return S_OK;
 }
 
-HRESULT GetActivationLocation(HSTRING activatableClassId, ActivationLocation& activationLocation)
+_Use_decl_annotations_
+HRESULT 
+MidiRoDetours::GetActivationLocation(
+    HSTRING activatableClassId, 
+    ActivationLocation& activationLocation)
 {
+    RETURN_HR_IF_NULL(E_POINTER, m_catalog);
+
     APTTYPE aptType;
     APTTYPEQUALIFIER aptQualifier;
     RETURN_IF_FAILED(CoGetApartmentType(&aptType, &aptQualifier));
 
     ABI::Windows::Foundation::ThreadingType threading_model;
-    RETURN_IF_FAILED(WinRTGetThreadingModel(activatableClassId, &threading_model)); //REGDB_E_CLASSNOTREG
+    RETURN_IF_FAILED(m_catalog->GetThreadingModel(activatableClassId, &threading_model)); //REGDB_E_CLASSNOTREG
 
     switch (threading_model)
     {
@@ -157,14 +186,17 @@ HRESULT GetActivationLocation(HSTRING activatableClassId, ActivationLocation& ac
 
 
 
-
-HRESULT WINAPI RoActivateInstanceDetour(HSTRING activatableClassId, IInspectable** instance)
+_Use_decl_annotations_
+HRESULT WINAPI 
+MidiRoDetours::ActivateInstanceDetour(
+    HSTRING activatableClassId, 
+    IInspectable** instance)
 {
     // If not in the MIDI namespace, then call the TrueRoActivateInstance function instead
     if (activatableClassId != NULL)
     {
         // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
-        if (!ClassOrNamespaceIsInWindowsMidiServicesNamespace(activatableClassId))
+        if (m_catalog && !m_catalog->TypeIsInScope(activatableClassId))
         {
             // not in-scope, so we fall back to the default implementation
             return TrueRoActivateInstance(activatableClassId, instance);
@@ -187,8 +219,8 @@ HRESULT WINAPI RoActivateInstanceDetour(HSTRING activatableClassId, IInspectable
     // Activate in current apartment
     if (location == ActivationLocation::CurrentApartment)
     {
-        Microsoft::WRL::ComPtr<IActivationFactory> pFactory;
-        RETURN_IF_FAILED(WinRTGetActivationFactory(activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
+        wil::com_ptr<IActivationFactory> pFactory;
+        RETURN_IF_FAILED(m_catalog->GetActivationFactory(activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
         return pFactory->ActivateInstance(instance);
     }
 
@@ -202,37 +234,47 @@ HRESULT WINAPI RoActivateInstanceDetour(HSTRING activatableClassId, IInspectable
     CO_MTA_USAGE_COOKIE mtaUsageCookie;
     RETURN_IF_FAILED(CoIncrementMTAUsage(&mtaUsageCookie));
     RETURN_IF_FAILED(EnsureMTAInitialized());
+
     wil::com_ptr<IContextCallback> defaultContext;
     ComCallData data;
     data.pUserDefined = &cbdata;
     RETURN_IF_FAILED(CoGetDefaultContext(APTTYPE_MTA, IID_PPV_ARGS(&defaultContext)));
 
     RETURN_IF_FAILED(defaultContext->ContextCallback(
-        [](_In_ ComCallData* pComCallData) -> HRESULT
+        [/*&catalog = m_catalog*/](ComCallData* pComCallData) -> HRESULT
         {
-            CrossApartmentMTAActData* data = reinterpret_cast<CrossApartmentMTAActData*>(pComCallData->pUserDefined);
-            wil::com_ptr<IInspectable> instance;
+            CrossApartmentMTAActData* mtadata = reinterpret_cast<CrossApartmentMTAActData*>(pComCallData->pUserDefined);
+            wil::com_ptr<IInspectable> instanceToActivate;
             wil::com_ptr<IActivationFactory> pFactory;
 
-            RETURN_IF_FAILED(WinRTGetActivationFactory(data->activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
-            RETURN_IF_FAILED(pFactory->ActivateInstance(&instance));
-            RETURN_IF_FAILED(CoMarshalInterThreadInterfaceInStream(IID_IInspectable, instance.get(), &data->stream));
+        //    RETURN_IF_FAILED(catalog->GetActivationFactory(mtadata->activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
+            RETURN_IF_FAILED(pFactory->ActivateInstance(&instanceToActivate));
+            RETURN_IF_FAILED(CoMarshalInterThreadInterfaceInStream(IID_IInspectable, instanceToActivate.get(), &mtadata->stream));
 
             return S_OK;
         },
-        &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5, nullptr)); // 5 is meaningless.
+        &data, 
+        IID_ICallbackWithNoReentrancyToApplicationSTA, 
+        5, 
+        nullptr)); // 5 is meaningless.
 
     RETURN_IF_FAILED(CoGetInterfaceAndReleaseStream(cbdata.stream, IID_IInspectable, (LPVOID*)instance));
+
     return S_OK;
 }
 
-HRESULT WINAPI RoGetActivationFactoryDetour(HSTRING activatableClassId, REFIID iid, void** factory)
+_Use_decl_annotations_
+HRESULT WINAPI 
+MidiRoDetours::GetActivationFactoryDetour(
+    HSTRING activatableClassId, 
+    REFIID iid, 
+    void** factory)
 {
     // If not in the MIDI namespace, then call the TrueRoGetActivationFactory function instead
     if (activatableClassId != NULL)
     {
         // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
-        if (!ClassOrNamespaceIsInWindowsMidiServicesNamespace(activatableClassId))
+        if (m_catalog && !m_catalog->TypeIsInScope(activatableClassId))
         {
             // not in-scope, so we fall back to the default implementation
             return TrueRoGetActivationFactory(activatableClassId, iid, factory);
@@ -256,14 +298,16 @@ HRESULT WINAPI RoGetActivationFactoryDetour(HSTRING activatableClassId, REFIID i
     // Activate in current apartment
     if (location == ActivationLocation::CurrentApartment)
     {
-        RETURN_IF_FAILED(WinRTGetActivationFactory(activatableClassId, iid, factory));
+        RETURN_IF_FAILED(m_catalog->GetActivationFactory(activatableClassId, iid, factory));
         return S_OK;
     }
+
     // Cross apartment MTA activation
     struct CrossApartmentMTAActData {
         HSTRING activatableClassId;
         IStream* stream;
     };
+
     CrossApartmentMTAActData cbdata{ activatableClassId };
     CO_MTA_USAGE_COOKIE mtaUsageCookie;
     RETURN_IF_FAILED(CoIncrementMTAUsage(&mtaUsageCookie));
@@ -274,23 +318,28 @@ HRESULT WINAPI RoGetActivationFactoryDetour(HSTRING activatableClassId, REFIID i
 
     RETURN_IF_FAILED(CoGetDefaultContext(APTTYPE_MTA, IID_PPV_ARGS(&defaultContext)));
     defaultContext->ContextCallback(
-        [](_In_ ComCallData* pComCallData) -> HRESULT
+        [/*&catalog = m_catalog*/](_In_ ComCallData* pComCallData) -> HRESULT
         {
             CrossApartmentMTAActData* data = reinterpret_cast<CrossApartmentMTAActData*>(pComCallData->pUserDefined);
             wil::com_ptr<IActivationFactory> pFactory;
-            RETURN_IF_FAILED(WinRTGetActivationFactory(data->activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
+        //    RETURN_IF_FAILED(catalog->GetActivationFactory(data->activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
             RETURN_IF_FAILED(CoMarshalInterThreadInterfaceInStream(IID_IActivationFactory, pFactory.get(), &data->stream));
 
             return S_OK;
         },
-        &data, IID_ICallbackWithNoReentrancyToApplicationSTA, 5, nullptr); // 5 is meaningless.
+        &data, 
+        IID_ICallbackWithNoReentrancyToApplicationSTA, 
+        5, 
+        nullptr); // 5 is meaningless.
 
     RETURN_IF_FAILED(CoGetInterfaceAndReleaseStream(cbdata.stream, IID_IActivationFactory, factory));
 
     return S_OK;
 }
 
-HRESULT WINAPI RoGetMetaDataFileDetour(
+_Use_decl_annotations_
+HRESULT WINAPI 
+MidiRoDetours::GetMetaDataFileDetour(
     const HSTRING name,
     IMetaDataDispenserEx* metaDataDispenser,
     HSTRING* metaDataFilePath,
@@ -301,7 +350,7 @@ HRESULT WINAPI RoGetMetaDataFileDetour(
     if (name != NULL)
     {
         // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
-        if (!ClassOrNamespaceIsInWindowsMidiServicesNamespace(name))
+        if (m_catalog && !m_catalog->TypeIsInScope(name))
         {
             // not in-scope, so we fall back to the default implementation
             return TrueRoGetMetaDataFile(name, metaDataDispenser, metaDataFilePath, metaDataImport, typeDefToken);
@@ -313,7 +362,7 @@ HRESULT WINAPI RoGetMetaDataFileDetour(
         return E_INVALIDARG;
     }
 
-    HRESULT hr = MidiSdkGetMetadataFile(name, metaDataDispenser, metaDataFilePath, metaDataImport, typeDefToken);
+    HRESULT hr = m_catalog->GetMetadataFile(name, metaDataDispenser, metaDataFilePath, metaDataImport, typeDefToken);
 
     // Don't fallback on RO_E_METADATA_NAME_IS_NAMESPACE failure. This is the intended behavior for namespace names.
     if (FAILED(hr) && hr != RO_E_METADATA_NAME_IS_NAMESPACE)
@@ -323,7 +372,9 @@ HRESULT WINAPI RoGetMetaDataFileDetour(
     return hr;
 }
 
-HRESULT WINAPI RoResolveNamespaceDetour(
+_Use_decl_annotations_
+HRESULT WINAPI 
+MidiRoDetours::ResolveNamespaceDetour(
     const HSTRING name,
     const HSTRING windowsMetaDataDir,
     const DWORD packageGraphDirsCount,
@@ -337,7 +388,7 @@ HRESULT WINAPI RoResolveNamespaceDetour(
     if (name != NULL)
     {
         // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
-        if (!ClassOrNamespaceIsInWindowsMidiServicesNamespace(name))
+        if (m_catalog && !m_catalog->TypeIsInScope(name))
         {
             // not in-scope, so we fall back to the default implementation
             return TrueRoResolveNamespace(
@@ -358,42 +409,32 @@ HRESULT WINAPI RoResolveNamespaceDetour(
     }
 
     // otherwise, set to the SDK install information, not the process information below
-    auto sdkPath = GetMidiSdkPath();
+    auto sdkPath = m_catalog->GetSdkDirectory();
 
-    if (sdkPath.has_value())
-    {
-        PCWSTR sdkFilePath = sdkPath.value().c_str();
-        auto pathReference = Microsoft::WRL::Wrappers::HStringReference(sdkFilePath);
+    PCWSTR sdkFilePath = sdkPath.c_str();
+    auto pathReference = Microsoft::WRL::Wrappers::HStringReference(sdkFilePath);
 
-        HSTRING packageGraphDirectories[] = { pathReference.Get() };
+    HSTRING packageGraphDirectories[] = { pathReference.Get() };
 
-        HRESULT hr = TrueRoResolveNamespace(
-            name,
-            pathReference.Get(),
-            ARRAYSIZE(packageGraphDirectories),
-            packageGraphDirectories,
-            metaDataFilePathsCount,
-            metaDataFilePaths,
-            subNamespacesCount,
-            subNamespaces);
+    HRESULT hr = TrueRoResolveNamespace(
+        name,
+        pathReference.Get(),
+        ARRAYSIZE(packageGraphDirectories),
+        packageGraphDirectories,
+        metaDataFilePathsCount,
+        metaDataFilePaths,
+        subNamespacesCount,
+        subNamespaces);
 
-        return hr;
-    }
-    else
-    {
-        // no sdk installed. How did we get this far?
-        return E_FAIL;
-    }
+    return hr;
 }
 
-HRESULT InstallHooks()
+HRESULT 
+MidiRoDetours::InstallHooks()
 {
     // TODO: Should read the registry stuff here, and then cache it
     // This is also where we should check for the SDK install. If it's
     // not present, then we don't install the hooks
-
-
-
 
 
 
@@ -416,7 +457,7 @@ HRESULT InstallHooks()
     return S_OK;
 }
 
-void RemoveHooks()
+void MidiRoDetours::RemoveHooks()
 {
 
     DetourTransactionBegin();
@@ -445,7 +486,7 @@ void RemoveHooks()
 //}
 
 
-extern "C" void WINAPI winrtact_Initialize()
-{
-    return;
-}
+//extern "C" void WINAPI winrtact_Initialize()
+//{
+//    return;
+//}

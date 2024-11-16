@@ -84,10 +84,10 @@
 #include "WindowsMidiServicesClientInitialization.h"
 
 #include "MidiAppSdkManifest.h"
-#include "RoDetours.h"
 #include "MidiAppSdkRuntimeComponent.h"
 #include "MidiAppSdkRuntimeComponentCatalog.h"
 #include "MidiAppSdkRuntimeTypeResolution.h"
+#include "MidiRoDetours.h"
 
 #include "MidiClientInitializer.h"
 
