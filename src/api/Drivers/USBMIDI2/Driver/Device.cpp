@@ -1025,10 +1025,14 @@ Return Value:
         pSettingPairs[interfaceCount].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
 
         // Determine Version of the selected MIDI Interface
-        PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptor(
+        PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
             pConfigurationDescriptor,               // Descriptor Buffer
+            pConfigurationDescriptor,               // Start Position
             pDeviceContext->UsbMIDIInterfaceNumber, // Interface Number
-            pDeviceContext->UsbMIDIStreamingAlt     // Alternate Setting
+            pDeviceContext->UsbMIDIStreamingAlt,    // Alternate Setting
+            -1,                                     // Interface Class
+            -1,                                     // Interface Subclass
+            -1                                      // Interfae Protocol
         );
         if (!pInterfaceDescriptor)
         {
@@ -1639,11 +1643,16 @@ Return Value:
     }
 
     // Find the relevant interface
-    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptor(
+    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
         pConfigurationDescriptor,        // Descriptor Buffer
+        pConfigurationDescriptor,        // Start Position
         pDevCtx->UsbMIDIInterfaceNumber, // Interface Number
-        pDevCtx->UsbMIDIStreamingAlt     // Alternate Setting
+        pDevCtx->UsbMIDIStreamingAlt,    // Alternate Setting
+        -1,                              // Interface Class
+        -1,                              // Interface Subclass
+        -1                               // Interfae Protocol
     );
+
     if (!pInterfaceDescriptor)
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1940,10 +1949,14 @@ Return Value:
     }
  
     // Find the relevant interface
-    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptor(
+    PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
         pConfigurationDescriptor,        // Descriptor Buffer
+        pConfigurationDescriptor,        // Start Position
         pDevCtx->UsbMIDIInterfaceNumber, // Interface Number
-        pDevCtx->UsbMIDIStreamingAlt     // Alternate Setting
+        pDevCtx->UsbMIDIStreamingAlt,    // Alternate Setting
+        -1,                              // Interface Class
+        -1,                              // Interface Subclass
+        -1                               // Interfae Protocol
     );
     if (!pInterfaceDescriptor)
     {

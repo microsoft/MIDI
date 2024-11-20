@@ -255,6 +255,174 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
 
 }
 
+void Midi2ServiceTests::TestMidiServiceInvalidCreationParams()
+{
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    wil::unique_rpc_binding bindingHandle;
+
+    // create the client session on the service before calling EnumerateDevices, which will kickstart
+    // the service if it's not already running.
+    LOG_OUTPUT(L"Retrieving binding handle");
+    VERIFY_SUCCEEDED(GetMidiSrvBindingHandle(&bindingHandle));
+
+    GUID dummySessionId{};
+    PVOID contextHandle{ nullptr };
+
+    VERIFY_SUCCEEDED(CoCreateGuid(&dummySessionId));
+
+    VERIFY_SUCCEEDED([&](){
+        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+        // with structured exception handling.
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(bindingHandle.get(), dummySessionId, L"TestMidiServiceBufferSizes", &contextHandle));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+    LOG_OUTPUT(L"Enumerating devices");
+
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> testDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(testDevices, [&](PMIDIU_DEVICE device)
+    {
+        if (device->Flow == MidiFlowBidirectional &&
+            (std::wstring::npos != device->ParentDeviceInstanceId.find(L"MINMIDI") ||
+            std::wstring::npos != device->ParentDeviceInstanceId.find(L"VID_CAFE&PID_4001&MI_02")) &&
+            !device->MidiOne)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }));
+
+    if (testDevices.size() == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 MinMidi bidi endpoint.");
+        return;
+    }
+
+    VERIFY_IS_TRUE(testDevices.size() > 0);
+
+    std::wstring midiDevice = testDevices[0]->DeviceId;
+    PMIDISRV_CLIENT client {nullptr};
+
+    MIDISRV_CLIENTCREATION_PARAMS creationParams[] = {
+            { MidiDataFormats_UMP, MidiFlowBidirectional, 0 },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + 1 },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + 2 },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + PAGE_SIZE },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - 1 },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - 2 },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE - 1 },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE - 2 },
+            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX/2 + 1 },
+            { (MidiDataFormats) 0, MidiFlowBidirectional, PAGE_SIZE },
+            { (MidiDataFormats) 4, MidiFlowBidirectional, PAGE_SIZE },  // 1, 2, and 3 are valid formats
+            { (MidiDataFormats) (MidiDataFormats_Any - 1), MidiFlowBidirectional, PAGE_SIZE },  // 1, 2, and 3 are valid formats
+            { MidiDataFormats_UMP, (MidiFlow) (MidiFlowBidirectional + 1), PAGE_SIZE },
+            { MidiDataFormats_UMP, (MidiFlow) (MidiFlowBidirectional + 2), PAGE_SIZE },
+        };
+
+    // In the event that a creation does succeed, clean it up on our way out.
+    auto cleanupOnExit = wil::scope_exit([&]() {
+        if (client)
+        {
+            SAFE_CLOSEHANDLE(client->MidiInDataFileMapping);
+            SAFE_CLOSEHANDLE(client->MidiInRegisterFileMapping);
+            SAFE_CLOSEHANDLE(client->MidiInWriteEvent);
+            SAFE_CLOSEHANDLE(client->MidiInReadEvent);
+            SAFE_CLOSEHANDLE(client->MidiOutDataFileMapping);
+            SAFE_CLOSEHANDLE(client->MidiOutRegisterFileMapping);
+            SAFE_CLOSEHANDLE(client->MidiOutWriteEvent);
+            SAFE_CLOSEHANDLE(client->MidiOutReadEvent);
+
+            if (0 != client->ClientHandle)
+            {
+                HRESULT hr = ([&]()
+                {
+                    // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+                    // with structured exception handling.
+                    RpcTryExcept RETURN_IF_FAILED(MidiSrvDestroyClient(bindingHandle.get(), client->ClientHandle));
+                    RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+                    RpcEndExcept
+                        return S_OK;
+                }());
+        
+                if (FAILED(hr))
+                {
+                    LOG_OUTPUT(L"MidiSrvDestroyClient failed 0x%08x", hr);
+                }
+            }
+
+            MIDL_user_free(client);
+            client = nullptr;
+        }
+    });
+
+    for (UINT i = 0; i < _countof(creationParams); i++)
+    {
+        LOG_OUTPUT(L"Testing index %d, data format %d, flow %d, buffer size %lu", i, creationParams[i].DataFormat, creationParams[i].Flow, creationParams[i].BufferSize);
+
+        VERIFY_FAILED([&]() {
+            // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+            // with structured exception handling.
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParams[i], dummySessionId, &client));
+            RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+            RpcEndExcept
+            return S_OK;
+        }());
+    }
+
+    MIDISRV_CLIENTCREATION_PARAMS creationParam = { MidiDataFormats_UMP, MidiFlowBidirectional, PAGE_SIZE };
+
+    LOG_OUTPUT(L"Testing invalid binding handle");
+    VERIFY_FAILED([&]() {
+        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+        // with structured exception handling.
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(NULL, midiDevice.c_str(), &creationParam, dummySessionId, &client));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+    LOG_OUTPUT(L"Testing invalid device");
+    VERIFY_FAILED([&]() {
+        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+        // with structured exception handling.
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), nullptr, &creationParam, dummySessionId, &client));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+    LOG_OUTPUT(L"Testing invalid creation params");
+    VERIFY_FAILED([&]() {
+        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+        // with structured exception handling.
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), nullptr, dummySessionId, &client));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+    LOG_OUTPUT(L"Testing invalid client");
+    VERIFY_FAILED([&]() {
+        // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
+        // with structured exception handling.
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvCreateClient(bindingHandle.get(), midiDevice.c_str(), &creationParam, dummySessionId, nullptr));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+}
+
+
 bool Midi2ServiceTests::TestSetup()
 {
     m_MidiInCallback = nullptr;
