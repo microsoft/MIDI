@@ -13,6 +13,9 @@ using namespace winrt::Windows::Devices::Enumeration;
 const WCHAR driver32Path[]    = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
 const WCHAR midisrvTransferComplete[] =  L"MidisrvTransferComplete";
 
+const WCHAR szzMidiDeviceHardwareId[] =  L"MIDISRV\\MidiEndpoints" L"\0";
+const WCHAR szzMidiDeviceCompatibleId[] =  L"GenericMidiEndpoint" L"\0";
+
 // a cap to ensure we don't have runaway port numbers
 #define MAX_WINMM_PORT_NUMBER 5000
 
@@ -1309,6 +1312,7 @@ CMidiDeviceManager::ActivateEndpointInternal
         TraceLoggingULong(devPropertyCount, "device prop count")
     );
 
+    SW_DEVICE_CREATE_INFO internalCreateInfo = *createInfo;
 
     std::unique_ptr<MIDIPORT> midiPort = std::make_unique<MIDIPORT>();
 
@@ -1354,6 +1358,9 @@ CMidiDeviceManager::ActivateEndpointInternal
     midiPort->Enumerator = midiOne ? AUDIO_DEVICE_ENUMERATOR : MIDI_DEVICE_ENUMERATOR;
     midiPort->MidiOne = midiOne;
 
+    internalCreateInfo.pszzCompatibleIds = nullptr;
+    internalCreateInfo.pszzHardwareIds = nullptr;
+
     if (midiOne)
     {
         if (flow == MidiFlowOut)
@@ -1373,6 +1380,9 @@ CMidiDeviceManager::ActivateEndpointInternal
     }
     else
     {
+        internalCreateInfo.pszzCompatibleIds = szzMidiDeviceCompatibleId;
+        internalCreateInfo.pszzHardwareIds = szzMidiDeviceHardwareId;
+
         if (flow == MidiFlowOut)
         {
             midiPort->InterfaceCategory = &DEVINTERFACE_UNIVERSALMIDIPACKET_OUTPUT;
@@ -1403,7 +1413,7 @@ CMidiDeviceManager::ActivateEndpointInternal
     midiPort->hr = SwDeviceCreate(
         midiPort->Enumerator.c_str(),
         parentInstanceId,
-        createInfo,
+        &internalCreateInfo,
         devPropertyCount,
         devPropertyCount == 0 ? (DEVPROPERTY*)nullptr : deviceDevProperties,
         SwMidiPortCreateCallback,

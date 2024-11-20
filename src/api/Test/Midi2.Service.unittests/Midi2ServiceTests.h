@@ -33,6 +33,7 @@ public:
 
     //Generic Tests
     TEST_METHOD(TestMidiServiceClientRPC);
+    TEST_METHOD(TestMidiServiceInvalidCreationParams);
 
     Midi2ServiceTests()
     {}

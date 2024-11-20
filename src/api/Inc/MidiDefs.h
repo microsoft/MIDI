@@ -49,6 +49,10 @@
 // per message
 #define MAXIMUM_LIBMIDI2_BYTESTREAM_DATASIZE 20
 
+// maximum buffer size is 0x100 pages.
+#define MAXIMUM_LOOPED_BUFFER_SIZE (PAGE_SIZE * 0x100)
+static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped buffer size may not exceed 1/2 MAX_ULONG");
+
 // speed of a standard MIDI 1.0 connection. Used in the SDK, and will be used in
 // transforms or service in the future when we introduce optional throttling
 #define MIDI_1_STANDARD_BITS_PER_SECOND 31250

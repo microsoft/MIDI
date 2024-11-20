@@ -918,6 +918,11 @@ CMidiClientManager::CreateMidiClient(
     BOOL internalProtocolNegotiationUseOnly
 )
 {
+    // Reject invalid data flows
+    RETURN_HR_IF(E_INVALIDARG, creationParams->Flow != MidiFlowIn && 
+                                creationParams->Flow != MidiFlowOut && 
+                                creationParams->Flow != MidiFlowBidirectional);
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
