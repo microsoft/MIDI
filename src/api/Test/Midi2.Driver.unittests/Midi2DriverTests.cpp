@@ -4,6 +4,11 @@
 #include "WindowsMidiServices_i.c"
 #include "WindowsMidiServices.h"
 
+#include <devioctl.h>
+#include <ks.h>
+#include <ksmedia.h>
+#include <avrt.h>
+
 #include <Devpkey.h>
 #include "MidiDefs.h"
 #include "MidiKsDef.h"
@@ -161,7 +166,7 @@ void Midi2DriverTests::TestStandardMidiIO()
     TestMidiIO(MidiTransport_StandardByteStream);
 }
 
-void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport transport)
+void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport transport, ULONG bufferSize)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -216,7 +221,7 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport transport)
         return;
     }
 
-    ULONG requestedBufferSize = PAGE_SIZE;
+    ULONG requestedBufferSize = bufferSize;
     VERIFY_SUCCEEDED(GetRequiredBufferSize(requestedBufferSize));
 
     LOG_OUTPUT(L"Initializing midi in");
@@ -277,17 +282,38 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport transport)
 
 void Midi2DriverTests::TestCyclicUMPMidiIO_ManyMessages()
 {
-    TestMidiIO_ManyMessages(MidiTransport_CyclicUMP);
+    TestMidiIO_ManyMessages(MidiTransport_CyclicUMP, PAGE_SIZE);
 }
 
 void Midi2DriverTests::TestCyclicByteStreamMidiIO_ManyMessages()
 {
-    TestMidiIO_ManyMessages(MidiTransport_CyclicByteStream);
+    TestMidiIO_ManyMessages(MidiTransport_CyclicByteStream, PAGE_SIZE);
 }
 
 void Midi2DriverTests::TestStandardMidiIO_ManyMessages()
 {
-    TestMidiIO_ManyMessages(MidiTransport_StandardByteStream);
+    TestMidiIO_ManyMessages(MidiTransport_StandardByteStream, PAGE_SIZE);
+}
+
+void Midi2DriverTests::TestCyclicUMPMidiIO_ManyMessages_BufferSizes()
+{
+    // Valid, but corner case buffer sizes
+    ULONG bufferSizes[] = {
+                            1,
+                            PAGE_SIZE - 1,
+                            PAGE_SIZE + 1,
+                            PAGE_SIZE + 2,
+                            MAXIMUM_LOOPED_BUFFER_SIZE - 1,
+                            MAXIMUM_LOOPED_BUFFER_SIZE - 2,
+                            MAXIMUM_LOOPED_BUFFER_SIZE - PAGE_SIZE
+                            };
+
+    for (UINT i = 0; i < _countof(bufferSizes); i++)
+    {
+        LOG_OUTPUT(L"Verifying a buffer size of %lu", bufferSizes[i]);
+
+        TestMidiIO_ManyMessages(MidiTransport_CyclicUMP, bufferSizes[i]);
+    }
 }
 
 void Midi2DriverTests::TestMidiIO_Latency(MidiTransport transport, BOOL delayedMessages)
@@ -593,6 +619,417 @@ void Midi2DriverTests::TestCyclicByteStreamMidiIOSlowMessages_Latency()
 void Midi2DriverTests::TestStandardMidiIOSlowMessages_Latency()
 {
     TestMidiIO_Latency(MidiTransport_StandardByteStream, TRUE);
+}
+
+void Midi2DriverTests::TestBufferAllocationLimits()
+{
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    KSMidiDeviceEnum midiDeviceEnum;
+    UINT inPinIndex {0};
+    UINT outPinIndex{0};
+
+    KSMidiOutDevice midiOutDevice;
+    KSMidiInDevice midiInDevice;
+    DWORD mmcssTaskId {0};
+
+
+    m_MidiInCallback = [&](PVOID, UINT32, LONGLONG, LONGLONG)
+    {
+    };
+
+    VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateFilters());
+
+    if (!GetPins(MidiTransport_CyclicUMP, midiDeviceEnum, outPinIndex, inPinIndex))
+    {
+        return;
+    }
+
+    // invalid corner case buffer sizes
+    ULONG bufferSizes[] = {
+                            0,
+                            MAXIMUM_LOOPED_BUFFER_SIZE + 1,
+                            MAXIMUM_LOOPED_BUFFER_SIZE + 2,
+                            MAXIMUM_LOOPED_BUFFER_SIZE + PAGE_SIZE,
+                            ULONG_MAX,
+                            ULONG_MAX - 1,
+                            ULONG_MAX - 2,
+                            ULONG_MAX - PAGE_SIZE,
+                            ULONG_MAX - PAGE_SIZE - 1,
+                            ULONG_MAX - PAGE_SIZE - 2,
+                            ULONG_MAX/2 + 1,
+                            };
+
+    for (UINT i = 0; i < _countof(bufferSizes); i++)
+    {
+        ULONG requestedBufferSize = bufferSizes[i];
+
+        LOG_OUTPUT(L"Verifying a buffer size of %lu", bufferSizes[i]);
+
+        VERIFY_FAILED(GetRequiredBufferSize(requestedBufferSize));
+
+        // driver initialization with all buffer sizes, for both midi in and out, should fail.
+        requestedBufferSize = bufferSizes[i];
+        VERIFY_FAILED(midiInDevice.Initialize(midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId, MidiTransport_CyclicUMP, requestedBufferSize, &mmcssTaskId, this, 0));
+
+        requestedBufferSize = bufferSizes[i];
+        VERIFY_FAILED(midiOutDevice.Initialize(midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get(), NULL, midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId, MidiTransport_CyclicUMP, requestedBufferSize, &mmcssTaskId));
+    }
+}
+
+class KSMidiTest : public KSMidiDevice
+{
+public:
+
+    HRESULT
+    Initialize(
+        _In_ LPCWSTR device,
+        _In_ UINT pinId,
+        _In_ MidiTransport transport
+    )
+    {
+        m_Transport = transport;
+
+        m_FilterFilename = wil::make_cotaskmem_string_nothrow(device);
+        RETURN_IF_NULL_ALLOC(m_FilterFilename);
+
+        RETURN_IF_FAILED(FilterInstantiate(m_FilterFilename.get(), &m_Filter));
+        m_PinID = pinId;
+
+        RETURN_IF_FAILED(InstantiateMidiPin(m_Filter.get(), m_PinID, m_Transport, &m_Pin));
+
+        return S_OK;
+    }
+
+    HRESULT
+    InstantiatePinCall(
+        _In_ HANDLE *CreatedPinHandle
+    )
+    {
+        return InstantiateMidiPin(m_Filter.get(), m_PinID, m_Transport, CreatedPinHandle);
+    }
+
+    HRESULT
+    SetStateCall(
+        _In_ KSSTATE pinState
+    )
+    {
+        KSPROPERTY property {0};
+        ULONG propertySize {sizeof(property)};
+    
+        property.Set    = KSPROPSETID_Connection; 
+        property.Id     = KSPROPERTY_CONNECTION_STATE;       
+        property.Flags  = KSPROPERTY_TYPE_SET;
+    
+        RETURN_IF_FAILED(SyncIoctl(
+            m_Pin.get(),
+            IOCTL_KS_PROPERTY,
+            &property,
+            propertySize,
+            &pinState,
+            sizeof(KSSTATE),
+            nullptr));
+    
+        return S_OK;
+    }
+
+    HRESULT
+    LoopedBufferCall(
+        _In_ ULONG& bufferSize
+    )
+    {
+        KSMIDILOOPED_BUFFER_PROPERTY property {0};
+        KSMIDILOOPED_BUFFER buffer{0};
+        ULONG propertySize {sizeof(property)};
+
+        property.Property.Set           = KSPROPSETID_MidiLoopedStreaming; 
+        property.Property.Id            = KSPROPERTY_MIDILOOPEDSTREAMING_BUFFER;       
+        property.Property.Flags         = KSPROPERTY_TYPE_GET;
+        property.RequestedBufferSize    = bufferSize;
+
+        RETURN_IF_FAILED(SyncIoctl(
+            m_Pin.get(),
+            IOCTL_KS_PROPERTY,
+            &property,
+            propertySize,
+            &buffer,
+            sizeof(buffer),
+            nullptr));
+
+        bufferSize = buffer.ActualBufferSize;
+
+        return S_OK;
+    }
+
+    HRESULT
+    LoopedRegisterCall(
+        _In_ PULONG& ReadPosition,
+        _In_ PULONG& WritePosition
+    )
+    {
+        KSPROPERTY property {0};
+        KSMIDILOOPED_REGISTERS registers {0};
+        ULONG propertySize {sizeof(property)};
+
+        property.Set    = KSPROPSETID_MidiLoopedStreaming; 
+        property.Id     = KSPROPERTY_MIDILOOPEDSTREAMING_REGISTERS;       
+        property.Flags  = KSPROPERTY_TYPE_GET;
+
+        RETURN_IF_FAILED(SyncIoctl(
+            m_Pin.get(),
+            IOCTL_KS_PROPERTY,
+            &property,
+            propertySize,
+            &registers,
+            sizeof(registers),
+            nullptr));
+
+        ReadPosition = (PULONG) registers.ReadPosition;
+        WritePosition = (PULONG) registers.WritePosition;
+
+        return S_OK;
+    }
+
+    HRESULT
+    LoopedEventCall(
+        _In_ HANDLE WriteEvent,
+        _In_ HANDLE ReadEvent
+    )
+    {
+        KSPROPERTY property {0};
+        ULONG propertySize {sizeof(property)};
+        KSMIDILOOPED_EVENT2 LoopedEvent {0};
+
+        LoopedEvent.WriteEvent = WriteEvent;
+        LoopedEvent.ReadEvent = ReadEvent;
+
+        property.Set    = KSPROPSETID_MidiLoopedStreaming; 
+        property.Id     = KSPROPERTY_MIDILOOPEDSTREAMING_NOTIFICATION_EVENT;       
+        property.Flags  = KSPROPERTY_TYPE_SET;
+
+        RETURN_IF_FAILED(SyncIoctl(
+            m_Pin.get(),
+            IOCTL_KS_PROPERTY,
+            &property,
+            propertySize,
+            &LoopedEvent,
+            sizeof(LoopedEvent),
+            nullptr));
+
+        return S_OK;
+    }
+};
+
+void
+RunDriverTest(_In_ std::function<void(KSMidiTest *)>&& predicate)
+{
+    WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
+
+    MidiFlow testFlows[] = { MidiFlowIn, MidiFlowOut };
+
+    for (UINT i = 0; i < _countof(testFlows); i++)
+    {
+        LOG_OUTPUT(L"Testing flow %d.", testFlows[i]);
+
+        KSMidiDeviceEnum midiDeviceEnum;
+        UINT inPinIndex {0};
+        UINT outPinIndex{0};
+
+        KSMidiTest midiTestDevice;
+
+        LPCWSTR selectedDevice {nullptr};
+        UINT selectedPinId {0};
+        MidiTransport selectedTransport {MidiTransport_CyclicUMP};
+
+        VERIFY_SUCCEEDED(midiDeviceEnum.EnumerateFilters());
+
+        if (!GetPins(selectedTransport, midiDeviceEnum, outPinIndex, inPinIndex))
+        {
+            return;
+        }
+
+        if (testFlows[i] == MidiFlowIn)
+        {
+            selectedDevice = midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].FilterName.get();
+            selectedPinId = midiDeviceEnum.m_AvailableMidiInPins[inPinIndex].PinId;
+        }
+        else
+        {
+            selectedDevice = midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].FilterName.get();
+            selectedPinId = midiDeviceEnum.m_AvailableMidiOutPins[outPinIndex].PinId;
+        }
+
+        VERIFY_SUCCEEDED(midiTestDevice.Initialize(selectedDevice, selectedPinId, selectedTransport));
+
+        predicate(&midiTestDevice);
+
+        VERIFY_SUCCEEDED(midiTestDevice.Shutdown());
+    }
+}
+
+void Midi2DriverTests::TestExtraPinCreation()
+{
+    RunDriverTest([&](KSMidiTest * midiTestDevice){
+            wil::unique_handle createdPin;
+
+            LOG_OUTPUT(L"Verifying extra pin creation fails.");
+
+            // Creating a second pin should fail.
+            VERIFY_FAILED(midiTestDevice->InstantiatePinCall(&createdPin));
+        });
+}
+
+void Midi2DriverTests::TestLoopedBufferInitialization()
+{
+    RunDriverTest([&](KSMidiTest * midiTestDevice){
+            ULONG selectedBufferSize {PAGE_SIZE};
+
+            LOG_OUTPUT(L"Creating looped buffer.");
+
+            // The first call to create the looped buffer should succeed.
+            VERIFY_SUCCEEDED(midiTestDevice->LoopedBufferCall(selectedBufferSize));
+
+            LOG_OUTPUT(L"Verifying second looped buffer fails.");
+
+            // Subsequent calls should fail.
+            selectedBufferSize = PAGE_SIZE;
+            VERIFY_FAILED(midiTestDevice->LoopedBufferCall(selectedBufferSize));
+        });
+}
+
+void Midi2DriverTests::TestLoopedRegisterInitialization()
+{
+    RunDriverTest([&](KSMidiTest * midiTestDevice){
+            PULONG readPosition {nullptr};
+            PULONG writePosition {nullptr};
+            PULONG readPosition2 {nullptr};
+            PULONG writePosition2 {nullptr};
+            ULONG selectedBufferSize {PAGE_SIZE};
+
+            LOG_OUTPUT(L"Verifying looped register without a buffer first fails.");
+
+            // creating the looped register prior to creating the looped buffer should fail.
+            VERIFY_FAILED(midiTestDevice->LoopedRegisterCall(readPosition, writePosition));
+
+            LOG_OUTPUT(L"Creating looped buffer and registers.");
+
+            // create the looped buffer and looped register
+            VERIFY_SUCCEEDED(midiTestDevice->LoopedBufferCall(selectedBufferSize));
+            VERIFY_SUCCEEDED(midiTestDevice->LoopedRegisterCall(readPosition, writePosition));
+
+            LOG_OUTPUT(L"Verifying second looped register fails.");
+
+            // A second call to create the looped register should fail.
+            VERIFY_FAILED(midiTestDevice->LoopedRegisterCall(readPosition2, writePosition2));
+        });
+}
+
+void Midi2DriverTests::TestLoopedEventInitialization()
+{
+    RunDriverTest([&](KSMidiTest * midiTestDevice){
+            PULONG readPosition {nullptr};
+            PULONG writePosition {nullptr};
+            ULONG selectedBufferSize {PAGE_SIZE};
+
+            wil::unique_event readEvent;
+            wil::unique_event writeEvent;
+
+            readEvent.create(wil::EventOptions::ManualReset);
+            writeEvent.create(wil::EventOptions::ManualReset);
+
+            LOG_OUTPUT(L"Verifying invalid looped register parameters fail.");
+
+            // invalid events should fail if no looped buffer exists
+            VERIFY_FAILED(midiTestDevice->LoopedEventCall(NULL, NULL));
+            VERIFY_FAILED(midiTestDevice->LoopedEventCall(readEvent.get(), NULL));            
+            VERIFY_FAILED(midiTestDevice->LoopedEventCall(NULL, writeEvent.get()));
+
+            LOG_OUTPUT(L"Verifying looped events without a buffer first fails.");
+
+            // initializing the looped event should fail if the looped buffer is not yet initialized.
+            VERIFY_FAILED(midiTestDevice->LoopedEventCall(readEvent.get(), writeEvent.get()));
+
+            LOG_OUTPUT(L"Creating looped buffer and registers.");
+
+            // create the looped buffer and looped register
+            VERIFY_SUCCEEDED(midiTestDevice->LoopedBufferCall(selectedBufferSize));
+            VERIFY_SUCCEEDED(midiTestDevice->LoopedRegisterCall(readPosition, writePosition));
+
+            LOG_OUTPUT(L"Verifying invalid looped register parameters fail.");
+
+            // invalid events should still fail if looped buffer exists
+            VERIFY_FAILED(midiTestDevice->LoopedEventCall(NULL, NULL));
+            VERIFY_FAILED(midiTestDevice->LoopedEventCall(readEvent.get(), NULL));            
+            VERIFY_FAILED(midiTestDevice->LoopedEventCall(NULL, writeEvent.get()));
+        });
+}
+
+void Midi2DriverTests::TestSetState()
+{
+    RunDriverTest([&](KSMidiTest * midiTestDevice){
+        PULONG readPosition {nullptr};
+        PULONG writePosition {nullptr};
+        ULONG selectedBufferSize {PAGE_SIZE};
+        
+        wil::unique_event readEvent;
+        wil::unique_event writeEvent;
+        
+        readEvent.create(wil::EventOptions::ManualReset);
+        writeEvent.create(wil::EventOptions::ManualReset);
+
+        LOG_OUTPUT(L"Creating looped buffer and registers.");
+
+        // create the looped buffer and looped register
+        VERIFY_SUCCEEDED(midiTestDevice->LoopedBufferCall(selectedBufferSize));
+        VERIFY_SUCCEEDED(midiTestDevice->LoopedRegisterCall(readPosition, writePosition));
+        VERIFY_SUCCEEDED(midiTestDevice->LoopedEventCall(readEvent.get(), writeEvent.get()));
+
+        
+        LOG_OUTPUT(L"Moving to an invalid state should fail");
+        // valid values are 0 through 3, for stop through run.
+        VERIFY_FAILED(midiTestDevice->SetStateCall((KSSTATE)4));
+        VERIFY_FAILED(midiTestDevice->SetStateCall((KSSTATE)5));
+        VERIFY_FAILED(midiTestDevice->SetStateCall((KSSTATE)0xFF));
+        VERIFY_FAILED(midiTestDevice->SetStateCall((KSSTATE)0xFFFF));
+        VERIFY_FAILED(midiTestDevice->SetStateCall((KSSTATE)0xFFFFFFFF));
+
+        // Test out the transitions from each state to every other state
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_STOP));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_STOP));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_ACQUIRE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_STOP));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_PAUSE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_STOP));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_RUN));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_STOP));
+
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_ACQUIRE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_ACQUIRE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_STOP));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_ACQUIRE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_PAUSE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_ACQUIRE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_RUN));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_ACQUIRE));
+
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_PAUSE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_PAUSE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_STOP));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_PAUSE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_ACQUIRE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_PAUSE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_RUN));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_PAUSE));
+
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_RUN));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_RUN));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_PAUSE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_RUN));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_ACQUIRE));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_RUN));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_STOP));
+        VERIFY_SUCCEEDED(midiTestDevice->SetStateCall(KSSTATE_RUN));
+    });
 }
 
 bool Midi2DriverTests::TestSetup()

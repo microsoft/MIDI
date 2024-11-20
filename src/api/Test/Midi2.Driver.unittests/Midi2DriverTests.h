@@ -34,6 +34,7 @@ public:
     TEST_METHOD(TestCyclicUMPMidiIO_ManyMessages);
     TEST_METHOD(TestCyclicByteStreamMidiIO_ManyMessages);
     TEST_METHOD(TestStandardMidiIO_ManyMessages);
+    TEST_METHOD(TestCyclicUMPMidiIO_ManyMessages_BufferSizes);
 
     TEST_METHOD(TestCyclicUMPMidiIO_Latency);
     TEST_METHOD(TestCyclicByteStreamMidiIO_Latency);
@@ -42,6 +43,14 @@ public:
     TEST_METHOD(TestCyclicUMPMidiIOSlowMessages_Latency);
     TEST_METHOD(TestCyclicByteStreamMidiIOSlowMessages_Latency);
     TEST_METHOD(TestStandardMidiIOSlowMessages_Latency);
+
+    TEST_METHOD(TestBufferAllocationLimits);
+
+    TEST_METHOD(TestExtraPinCreation);
+    TEST_METHOD(TestLoopedBufferInitialization);
+    TEST_METHOD(TestLoopedRegisterInitialization);
+    TEST_METHOD(TestLoopedEventInitialization);
+    TEST_METHOD(TestSetState);
 
     Midi2DriverTests()
     {}
@@ -62,7 +71,7 @@ public:
 
 private:
     void TestMidiIO(MidiTransport transport);
-    void TestMidiIO_ManyMessages(MidiTransport transport);
+    void TestMidiIO_ManyMessages(MidiTransport transport, ULONG bufferSize);
     void TestMidiIO_Latency(MidiTransport transport, BOOL delayedMessages);
     
     std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;

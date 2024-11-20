@@ -7,6 +7,7 @@
 #include <ks.h>
 #include <ksmedia.h>
 #include <wil\resource.h>
+#include <ntintsafe.h>
 
 #include "NewDelete.h"
 

@@ -25,8 +25,6 @@
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 
-
-
 _Use_decl_annotations_
 HRESULT
 GetRequiredBufferSize(ULONG& requestedSize
@@ -34,7 +32,19 @@ GetRequiredBufferSize(ULONG& requestedSize
 {
     SYSTEM_INFO systemInfo;
     GetSystemInfo(&systemInfo);
+
+    // a 0 buffer size is invalid.
+    RETURN_HR_IF(E_INVALIDARG, requestedSize == 0);
+
+    // if adding one allocation granularity to the requested size causes overflow, the requested size
+    // is invalid.
+    RETURN_HR_IF(E_INVALIDARG, (requestedSize + systemInfo.dwAllocationGranularity) < requestedSize);
+
+    // Requested size is rounded up to the nearest dwAllocationGranularity
     requestedSize = ((requestedSize + systemInfo.dwAllocationGranularity - 1) & ~(systemInfo.dwAllocationGranularity - 1));
+
+    // If the adjusted buffer size is larger than the maximum permitted, fail the request.
+    RETURN_HR_IF(E_INVALIDARG, requestedSize > MAXIMUM_LOOPED_BUFFER_SIZE);
 
     return S_OK;
 }

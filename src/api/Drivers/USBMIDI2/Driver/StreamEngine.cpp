@@ -49,6 +49,10 @@ Environment:
 // UMP 128 is 16 bytes
 #define MAXIMUM_UMP_DATASIZE 16
 
+// maximum buffer size is 0x100 pages.
+#define MAXIMUM_LOOPED_BUFFER_SIZE (PAGE_SIZE * 0x100)
+static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped buffer size may not exceed 1/2 MAX_ULONG");
+
 _Use_decl_annotations_
 StreamEngine::StreamEngine(
     _In_ ACXPIN Pin
@@ -656,6 +660,9 @@ StreamEngine::GetSingleBufferMapping(
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
+    // The allocation must not be 0
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, BufferSize == 0);
+
     // The allocation must be a multiple of the page size,
     // as entire pages are mapped.
     NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, (BufferSize % PAGE_SIZE) != 0);
@@ -998,13 +1005,23 @@ StreamEngine::GetLoopedStreamingBuffer(
     // so that we can double map it on the page boundary, so we're
     // going to round this number up to the nearest page.
     ULONG bufferSize = BufferSize;
+    ULONG testResult {0};
+
+    // The allocation must not be 0
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, bufferSize == 0);
 
     // if adding a page to the buffer size causes it to overflow, the requested size is
     // an invalid parameter.
-    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, (bufferSize + PAGE_SIZE) < bufferSize);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, !NT_SUCCESS(RtlULongAdd(bufferSize, PAGE_SIZE, &testResult)));
 
     // round to the nearest page
     bufferSize = ROUND_TO_PAGES(bufferSize);
+
+    // If the adjusted buffer size is larger than the maximum permitted, fail the request.
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, bufferSize > MAXIMUM_LOOPED_BUFFER_SIZE);
+
+    // If the adjusted buffer size cannot be doubled, fail the request.
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, !NT_SUCCESS(RtlULongMult(bufferSize, 2, &testResult)));
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Allocating %lu for %s", bufferSize, AcxPinGetId(m_Pin) == MidiPinTypeMidiIn?"MidiIn":"MidiOut");
 
@@ -1046,6 +1063,9 @@ StreamEngine::GetLoopedStreamingRegisters(
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
     ASSERT(m_Process == IoGetCurrentProcess());
+
+    // registers already created, can't create again.
+    NT_RETURN_NTSTATUS_IF(STATUS_ALREADY_INITIALIZED, nullptr != m_ReadRegister);
 
     // in the event of failure, clean up any partial mappings.
     auto cleanupOnFailure = wil::scope_exit([&]() {
@@ -1099,7 +1119,7 @@ StreamEngine::SetLoopedStreamingNotificationEvent(
     NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(Buffer->WriteEvent,
                                               EVENT_MODIFY_STATE,
                                               *ExEventObjectType,
-                                              ExGetPreviousMode(),
+                                              UserMode,
                                               (PVOID*)&m_WriteEvent,
                                               nullptr));
 
@@ -1110,7 +1130,7 @@ StreamEngine::SetLoopedStreamingNotificationEvent(
     NT_RETURN_IF_NTSTATUS_FAILED(ObReferenceObjectByHandle(Buffer->ReadEvent,
                                               EVENT_MODIFY_STATE,
                                               *ExEventObjectType,
-                                              ExGetPreviousMode(),
+                                              UserMode,
                                               (PVOID*)&m_ReadEvent,
                                               nullptr));
 
