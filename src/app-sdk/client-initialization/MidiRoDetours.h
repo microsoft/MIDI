@@ -20,12 +20,6 @@ enum class ActivationLocation
 };
 
 
-class MidiRoDetours
-{
-public:
-    HRESULT Initialize();
-    HRESULT Shutdown();
-
 
     //VERSIONHELPERAPI IsWindowsVersionOrGreaterEx(WORD wMajorVersion, WORD wMinorVersion, WORD wServicePackMajor, WORD wBuildNumber);
     //VERSIONHELPERAPI IsWindows1019H1OrGreater();
@@ -37,48 +31,16 @@ public:
     thread that is not been CoInitialize. COM treats this thread as a implicit MTA and
     when we call CoGetObjectContext on it we implicitly initialized the MTA.
     */
-    HRESULT EnsureMTAInitialized();
+HRESULT EnsureMTAInitialized();
 
-    HRESULT GetActivationLocation(
-        _In_ HSTRING activatableClassId, 
-        _In_ ActivationLocation& activationLocation);
+HRESULT GetActivationLocation(
+    _In_ HSTRING activatableClassId, 
+    _Inout_ ActivationLocation& activationLocation);
 
-    HRESULT WINAPI ActivateInstanceDetour(
-        _In_ HSTRING activatableClassId, 
-        _Inout_ IInspectable** instance);
-
-    HRESULT WINAPI GetActivationFactoryDetour(
-        _In_ HSTRING activatableClassId, 
-        _In_ REFIID iid, 
-        _Inout_ void** factory);
-
-    HRESULT WINAPI GetMetaDataFileDetour(
-        _In_ const HSTRING name,
-        _In_opt_ IMetaDataDispenserEx* metaDataDispenser,
-        _In_ HSTRING* metaDataFilePath,
-        _In_ IMetaDataImport2** metaDataImport,
-        _In_ mdTypeDef* typeDefToken);
-
-    HRESULT WINAPI ResolveNamespaceDetour(
-        _In_ const HSTRING name,
-        _In_ const HSTRING windowsMetaDataDir,
-        _In_ const DWORD packageGraphDirsCount,
-        _In_ const HSTRING* packageGraphDirs,
-        _In_ DWORD* metaDataFilePathsCount,
-        _In_ HSTRING** metaDataFilePaths,
-        _In_ DWORD* subNamespacesCount,
-        _In_ HSTRING** subNamespaces);
-
-    HRESULT InstallHooks();
-    void RemoveHooks();
-
-//    HRESULT ExtRoLoadCatalog();
-
-private:
-    std::shared_ptr<MidiAppSdkRuntimeComponentCatalog> m_catalog;
+HRESULT InstallHooks();
+void RemoveHooks();
 
 
-};
 
 VOID CALLBACK EnsureMTAInitializedCallBack(
     _In_ PTP_CALLBACK_INSTANCE instance,
@@ -88,45 +50,24 @@ VOID CALLBACK EnsureMTAInitializedCallBack(
 
 
 
-inline HRESULT WINAPI RoActivateInstanceDetour(
+HRESULT WINAPI RoActivateInstanceDetour(
     _In_ HSTRING activatableClassId,
-    _Inout_ IInspectable** instance)
-{
-    UNREFERENCED_PARAMETER(activatableClassId);
-    UNREFERENCED_PARAMETER(instance);
+    _Inout_ IInspectable** instance);
 
-    return S_OK;
-}
 
-inline HRESULT WINAPI RoGetActivationFactoryDetour(
+HRESULT WINAPI RoGetActivationFactoryDetour(
     _In_ HSTRING activatableClassId,
     _In_ REFIID iid,
-    _Inout_ void** factory)
-{
-    UNREFERENCED_PARAMETER(activatableClassId);
-    UNREFERENCED_PARAMETER(iid);
-    UNREFERENCED_PARAMETER(factory);
+    _Inout_ void** factory);
 
-    return S_OK;
-}
-
-inline HRESULT WINAPI RoGetMetaDataFileDetour(
+HRESULT WINAPI RoGetMetaDataFileDetour(
     _In_ const HSTRING name,
     _In_ IMetaDataDispenserEx* metaDataDispenser,
     _In_ HSTRING* metaDataFilePath,
     _In_ IMetaDataImport2** metaDataImport,
-    _In_ mdTypeDef* typeDefToken)
-{
-    UNREFERENCED_PARAMETER(name);
-    UNREFERENCED_PARAMETER(metaDataDispenser);
-    UNREFERENCED_PARAMETER(metaDataFilePath);
-    UNREFERENCED_PARAMETER(metaDataImport);
-    UNREFERENCED_PARAMETER(typeDefToken);
+    _In_ mdTypeDef* typeDefToken);
 
-    return S_OK;
-}
-
-inline HRESULT WINAPI RoResolveNamespaceDetour(
+HRESULT WINAPI RoResolveNamespaceDetour(
     _In_ const HSTRING name,
     _In_ const HSTRING windowsMetaDataDir,
     _In_ const DWORD packageGraphDirsCount,
@@ -134,19 +75,7 @@ inline HRESULT WINAPI RoResolveNamespaceDetour(
     _In_ DWORD* metaDataFilePathsCount,
     _In_ HSTRING** metaDataFilePaths,
     _In_ DWORD* subNamespacesCount,
-    _In_ HSTRING** subNamespaces)
-{
-    UNREFERENCED_PARAMETER(name);
-    UNREFERENCED_PARAMETER(windowsMetaDataDir);
-    UNREFERENCED_PARAMETER(packageGraphDirsCount);
-    UNREFERENCED_PARAMETER(packageGraphDirs);
-    UNREFERENCED_PARAMETER(metaDataFilePathsCount);
-    UNREFERENCED_PARAMETER(metaDataFilePaths);
-    UNREFERENCED_PARAMETER(subNamespacesCount);
-    UNREFERENCED_PARAMETER(subNamespaces);
-
-    return S_OK;
-}
+    _In_ HSTRING** subNamespaces);
 
 
 

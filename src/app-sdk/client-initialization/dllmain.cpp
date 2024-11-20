@@ -13,11 +13,14 @@ CMidiClientInitializerModule _AtlModule;
 
 extern "C" BOOL WINAPI
 DllMain(
-    HINSTANCE /* hInstance */,
+    HINSTANCE hInstance,
     DWORD reason,
     LPVOID reserved
 )
 {
+    // we cache this because it's needed elsewhere
+    _AtlModule.HModuleInstance = hInstance;
+
     if (reason == DLL_PROCESS_ATTACH)
     {
         wil::SetResultTelemetryFallback(MidiClientInitializerTelemetryProvider::FallbackTelemetryCallback);

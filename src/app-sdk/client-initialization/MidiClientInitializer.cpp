@@ -24,80 +24,51 @@ CMidiClientInitializer::Initialize(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(nullptr, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        
     );
 
- //   DisableThreadLibraryCalls(hmodule);
+    if (DisableThreadLibraryCalls(_AtlModule.HModuleInstance))
+    {
+        g_runtimeComponentCatalog = std::make_shared<MidiAppSdkRuntimeComponentCatalog>();
+        RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
 
-    //try
-    //{
-    //    if (!SUCCEEDED(InstallHooks()) || !SUCCEEDED(ExtRoLoadCatalog()))
-    //        return false;
-    //}
-    //catch (...)
-    //{
-    //    LOG_CAUGHT_EXCEPTION();
-    //    return false;
-    //}
+        RETURN_IF_FAILED(g_runtimeComponentCatalog->Initialize());
 
+        try
+        {
+            RETURN_IF_FAILED(InstallHooks());
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            return E_FAIL;
+        }
 
+        // TODO: set up the type resolver, detours, etc.
+        // Note: May need to change something about detours to support Arm64EC. TBD.
 
-
-
-    // TODO: set up the type resolver, detours, etc.
-// Note: May need to change something about detours to support Arm64EC. TBD.
-
-    //auto sdkLocation = GetMidiSdkPath();
-
-    //if (!sdkLocation.has_value())
-    //{
-    //    // no entry for the SDK location
-    //    return false;
-    //}
-
-    //m_sdkLocation = sdkLocation.value();
-
-    //std::wstring libraryName = L"Microsoft.Windows.Devices.Midi2.dll";
-
-    //// calling SetDllDirectory changes the loader search path. We then load
-    //// the module to get it into the app's process space so that further
-    //// attempts to use the DLL will simply use this. Note that if the app
-    //// ships the SDK implementation DLL with the app itself, that is the
-    //// version that will load, because current application directory is 
-    //// always on the top of the list.
-    //// 
-    //// Calling the function again with NULL restores the default search
-    //// order for LoadLibrary
-    //// 
-    //// Info on SetDllDirectoryW and its path: 
-    //// https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setdlldirectoryw
-    ////
-    //SetDllDirectoryW(sdkLocation.value().c_str());
-    //auto module = LoadLibraryW(libraryName.c_str());
-    //SetDllDirectoryW(NULL);
-
-    //// TODO: GetLastError etc.
-
-    //if (!module)
-    //{
-    //    m_moduleHandle = nullptr;
-    //    return false;
-    //}
-
-    //m_moduleHandle = module;
-
-    //
-
-
-
-    return S_OK;
+        return S_OK;
+    }
+    else
+    {
+        // unable to disable thread library calls
+        return E_FAIL;
+    }
 }
+
 
 
 _Use_decl_annotations_
 HRESULT 
 CMidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
-    PWINDOWSMIDISERVICESAPPSDKVERSION sdkVersion
+    MidiAppSDKPlatform* buildPlatform,
+    DWORD* versionMajor,
+    DWORD* versionMinor,
+    DWORD* versionRevision,
+    DWORD* versionDateNumber,
+    DWORD* versionTimeNumber,
+    LPWSTR* buildSource,
+    LPWSTR* versionName,
+    LPWSTR* versionFullString
 )
 {
     TraceLoggingWrite(
@@ -109,49 +80,114 @@ CMidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, sdkVersion);
-
     try
     {
-        std::wstring versionMajor{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_MAJOR };
-        std::wstring versionMinor{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_MINOR };
-        std::wstring versionRevision{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_REVISION };
-
-        // we need these three values at a minimum
-        if (versionMajor.empty() || versionMinor.empty() || versionRevision.empty()) return E_FAIL;
-
-        sdkVersion->VersionMajor = static_cast<DWORD>(std::stol(versionMajor));
-        sdkVersion->VersionMinor = static_cast<DWORD>(std::stol(versionMinor));
-        sdkVersion->VersionRevision = static_cast<DWORD>(std::stol(versionRevision));
-
-
-        std::wstring versionDateNumber{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_DATE_NUMBER };
-        std::wstring versionTimeNumber{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_TIME_NUMBER };
-
-        if (!versionDateNumber.empty() && !versionTimeNumber.empty())
+        if (versionMajor != nullptr)
         {
-            sdkVersion->VersionDateNumber = static_cast<DWORD>(std::stol(versionDateNumber));
-            sdkVersion->VersionTimeNumber = static_cast<DWORD>(std::stol(versionTimeNumber));
-        }
-        else
-        {
-            sdkVersion->VersionDateNumber = 0;
-            sdkVersion->VersionTimeNumber = 0;
+            std::wstring versionMajorTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_MAJOR };
+
+            if (!versionMajorTempString.empty())
+            {
+                *versionMajor = static_cast<DWORD>(std::stol(versionMajorTempString));
+            }
+            else
+            {
+                *versionMajor = 0;
+            }
         }
 
-        sdkVersion->BuildSource = WINDOWS_MIDI_SERVICES_BUILD_SOURCE;
-        sdkVersion->VersionName = WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME;
-        sdkVersion->VersionFullString = WINDOWS_MIDI_SERVICES_BUILD_VERSION_FULL;
+        if (versionMinor != nullptr)
+        {
+            std::wstring versionMinorTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_MINOR };
 
+            if (!versionMinorTempString.empty())
+            {
+                *versionMinor = static_cast<DWORD>(std::stol(versionMinorTempString));
+            }
+            else
+            {
+                *versionMinor = 0;
+            }
+        }
+
+        if (versionRevision != nullptr)
+        {
+            std::wstring versionRevisionTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_REVISION };
+
+            if (!versionRevisionTempString.empty())
+            {
+                *versionRevision = static_cast<DWORD>(std::stol(versionRevisionTempString));
+            }
+            else
+            {
+                *versionRevision = 0;
+            }
+        }
+
+        if (versionDateNumber != nullptr)
+        {
+            std::wstring versionDateNumberTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_DATE_NUMBER };
+
+            if (!versionDateNumberTempString.empty())
+            {
+                *versionDateNumber = static_cast<DWORD>(std::stol(versionDateNumberTempString));
+            }
+            else
+            {
+                *versionDateNumber = 0;
+            }
+        }
+
+        if (versionTimeNumber != nullptr)
+        {
+            std::wstring versionTimeNumberTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_TIME_NUMBER };
+
+            if (!versionTimeNumberTempString.empty())
+            {
+                *versionTimeNumber = static_cast<DWORD>(std::stol(versionTimeNumberTempString));
+            }
+            else
+            {
+                *versionTimeNumber = 0;
+            }
+        }
+
+        if (buildSource != nullptr)
+        {
+            wil::unique_cotaskmem_string tempString;
+            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_BUILD_SOURCE);
+            RETURN_IF_NULL_ALLOC(tempString.get());
+            *buildSource = static_cast<LPWSTR>(tempString.release());
+        }
+
+        if (versionName != nullptr)
+        {
+            wil::unique_cotaskmem_string tempString;
+            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME);
+            RETURN_IF_NULL_ALLOC(tempString.get());
+            *versionName = static_cast<LPWSTR>(tempString.release());
+        }
+
+        if (versionFullString != nullptr)
+        {
+            wil::unique_cotaskmem_string tempString;
+            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_BUILD_VERSION_FULL);
+            RETURN_IF_NULL_ALLOC(tempString.get());
+            *versionFullString = static_cast<LPWSTR>(tempString.release());
+        }
+
+        if (buildPlatform != nullptr)
+        {
 #if defined(_M_ARM64EC) || defined(_M_ARM64)
-        // Arm64 and Arm64EC use same Arm64X binaries
-        sdkVersion->Platform = MidiAppSDKPlatform::Platform_Arm64X;
+            // Arm64 and Arm64EC use same Arm64X binaries
+            *buildPlatform = MidiAppSDKPlatform::Platform_Arm64X;
 #elif defined(_M_AMD64)
-        // other 64 bit Intel/AMD
-        sdkVersion->Platform = MidiAppSDKPlatform::Platform_x64;
+            // other 64 bit Intel/AMD
+            *buildPlatform = MidiAppSDKPlatform::Platform_x64;
 #else
-        // unsupported compile target architecture
+            // unsupported compile target architecture
 #endif
+        }
 
         return S_OK;
     }
@@ -165,6 +201,7 @@ CMidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
         // if someone has enormous numbers in the strings
         return E_FAIL;
     }
+
 
 }
 
@@ -203,8 +240,14 @@ CMidiClientInitializer::Shutdown()
 
 
     // Remove activation hooks
- //   RemoveHooks();
+    RemoveHooks();
 
+
+    if (g_runtimeComponentCatalog != nullptr)
+    {
+        g_runtimeComponentCatalog->Shutdown();
+        g_runtimeComponentCatalog.reset();
+    }
 
     return S_OK;
 }

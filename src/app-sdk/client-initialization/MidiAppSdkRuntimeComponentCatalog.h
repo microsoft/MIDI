@@ -12,6 +12,9 @@
 
 #pragma once
 
+#define MIDI_SDK_IMPL_DLL_NAME      L"Microsoft.Windows.Devices.Midi2.dll"
+#define MIDI_SDK_METADATA_NAME      L"Microsoft.Windows.Devices.Midi2.winmd"
+
 typedef enum
 {
     TRO_NONE = 0x00,
@@ -23,7 +26,6 @@ typedef enum
 struct MidiAppSdkManifestEntry
 {
     std::wstring ActivatableClassName{};
-    std::wstring FileName{};
     ABI::Windows::Foundation::ThreadingType ThreadingModel{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
 };
 
@@ -37,12 +39,12 @@ public:
         _In_ HSTRING activatableClassId,
         _In_ REFIID  iid,
         _COM_Outptr_ void** factory
-        );
+        ) const;
 
     STDMETHOD(GetThreadingModel)(
         _In_ HSTRING activatableClassId,
-        _In_ ABI::Windows::Foundation::ThreadingType* threading_model
-        );
+        _Out_ ABI::Windows::Foundation::ThreadingType* threading_model
+        ) const;
 
     STDMETHOD(GetMetadataFile)(
         _In_ const HSTRING name,
@@ -50,7 +52,7 @@ public:
         _In_ HSTRING* metaDataFilePath,
         _In_ IMetaDataImport2** metaDataImport,
         _In_ mdTypeDef* typeDefToken
-        );
+        ) const;
 
     STDMETHOD(FindTypeInMetaDataFile)(
         _In_ IMetaDataDispenserEx* pMetaDataDispenser,
@@ -59,9 +61,9 @@ public:
         _In_ TYPE_RESOLUTION_OPTIONS resolutionOptions,
         _COM_Outptr_opt_result_maybenull_ IMetaDataImport2** ppMetaDataImport,
         _Out_opt_ mdTypeDef* pmdTypeDef
-        );
+        ) const;
 
-    bool TypeIsInScope(_In_ HSTRING const typeOrNamespace);
+    bool TypeIsInScope(_In_ HSTRING const typeOrNamespace) const;
 
     STDMETHOD(Shutdown)();
 
@@ -71,7 +73,7 @@ public:
 
 
 private:
-    std::unordered_map<std::wstring, std::shared_ptr<MidiAppSdkRuntimeComponent>> m_types;
+    std::unordered_map<std::wstring, std::shared_ptr<MidiAppSdkRuntimeComponent>> m_types{};
 
     std::vector<MidiAppSdkManifestEntry> GetMidiAppSdkManifestTypes();
 
@@ -80,6 +82,10 @@ private:
     std::wstring m_sdkMetadataFullFilename{};
 
 };
+
+
+extern std::shared_ptr<MidiAppSdkRuntimeComponentCatalog> g_runtimeComponentCatalog;
+
 
 //HRESULT LoadManifestFromPath(std::wstring path);
 

@@ -16,11 +16,21 @@
 
 #pragma once
 
-#ifndef MIDIDESKTOPAPPSDKBOOTSTRAPPER_HPP
-#define MIDIDESKTOPAPPSDKBOOTSTRAPPER_HPP
+#ifndef MICROSOFT_WINDOWS_DEVICES_MIDI2_INITIALIZATION_HPP
+#define MICROSOFT_WINDOWS_DEVICES_MIDI2_INITIALIZATION_HPP
 
 #include <string>           // for wstring
 #include <combaseapi.h>     // for COM activation CoCreateInstance etc.
+// we also use macros like SUCCEEDED
+
+
+#define SAFE_COTASKMEMFREE(p) \
+    if (NULL != p) { \
+        CoTaskMemFree(p); \
+        (p) = NULL; \
+    }
+
+
 
 // these are files generated from the MIDL compiler and are
 // provided alongside this file for use in your apps
@@ -129,15 +139,25 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         {
             if (m_initializer != nullptr)
             {
-                WINDOWSMIDISERVICESAPPSDKVERSION installedVersion{ };
+                DWORD installedVersionMajor{ 0 };
+                DWORD installedVersionMinor{ 0 };
+                DWORD installedVersionRevision{ 0 };
 
-                // the returned structure has additional information should the app
-                // need it. Full version string, compile architecture, etc.
-                m_initializer->GetInstalledWindowsMidiServicesSdkVersion(&installedVersion);
+                m_initializer->GetInstalledWindowsMidiServicesSdkVersion(
+                    nullptr,                    // build platform
+                    &installedVersionMajor,     // major
+                    &installedVersionMinor,     // minor
+                    &installedVersionRevision,  // revision
+                    nullptr,                    // date number
+                    nullptr,                    // time number
+                    nullptr,                    // buildSource string. Remember to cotaskmemfree if provided
+                    nullptr,                    // versionName string. Remember to cotaskmemfree if provided
+                    nullptr                     // versionFullString string. Remember to cotaskmemfree if provided
+                    );
 
-                if (minRequiredVersionMajor > installedVersion.VersionMajor) return false;
-                if (minRequiredVersionMinor > installedVersion.VersionMinor) return false;
-                if (minRequiredVersionRevision > installedVersion.VersionRevision) return false;
+                if (minRequiredVersionMajor > installedVersionMajor) return false;
+                if (minRequiredVersionMinor > installedVersionMinor) return false;
+                if (minRequiredVersionRevision > installedVersionRevision) return false;
 
                 return true;
             }
@@ -149,6 +169,22 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             }
         }
 
+        //// TODO: function to return the installed SDK version
+        //bool GetSdkVersion(PWINDOWSMIDISERVICESAPPSDKVERSION installedVersion)
+        //{
+        //    if (m_initializer != nullptr)
+        //    {
+        //        if (SUCCEEDED(m_initializer->GetInstalledWindowsMidiServicesSdkVersion(installedVersion)))
+        //        {
+        //            return true;
+        //        }
+        //    }
+
+        //    return false;
+        //}
+
+
+
         void ShutdownSdkRuntime()
         {
             if (m_initializer != nullptr)
@@ -156,7 +192,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 // release the COM component. When it shuts down, it will clean up
                 // the activation hooks.
 
-                m_initializer->Shutdown();
+                m_initializer->Shutdown();  // if you are using wil error logging, this is a good place to use LOG_IF_FAILED(m_initializer->Shutdown())
                 m_initializer->Release();   // if using wil::com_ptr_nothrow, you can remove this
 
                 m_initializer = nullptr;

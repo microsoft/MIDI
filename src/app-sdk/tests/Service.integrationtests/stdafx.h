@@ -46,7 +46,8 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 
 #include "WindowsMidiServicesClientInitialization.h"
 #include "WindowsMidiServicesClientInitialization_i.c"
-#include "MidiDesktopAppSdkBootstrapper.hpp"
+#include "Microsoft.Windows.Devices.Midi2.Initialization.hpp"
+namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 #include "MidiEndpointConnectionBufferTests.h"
 #include "MidiEndpointConnectionTests.h"

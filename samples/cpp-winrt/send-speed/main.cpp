@@ -35,7 +35,7 @@ namespace collections = winrt::Windows::Foundation::Collections;
 // makes the most sense for your application.
 // 
 // The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
-#include "winmidi/init/MidiDesktopAppSdkBootstrapper.hpp"
+#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
 namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 void DisplaySingleResult(std::wstring label, uint64_t totalTime, uint64_t errorCount, uint32_t totalMessageCount)

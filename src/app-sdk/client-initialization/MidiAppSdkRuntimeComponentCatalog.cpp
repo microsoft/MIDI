@@ -14,12 +14,17 @@
 
 static const UINT32 g_uiMaxTypeName = 512;
 
+// created and initialized by the MidiClientInitializer
+std::shared_ptr<MidiAppSdkRuntimeComponentCatalog> g_runtimeComponentCatalog{ nullptr };
 
-// this exists so we don't need to ship a manifest or require apps to have a manifest
+
+// this exists so we don't need to ship a manifest or require apps to have a manifest.
 // yes, it requires manually keeping in sync with the winmd and implementation types
 // 
-// TODO: We could include args here for things like contract and if we should include
-// experimental, to allow multiple versions of the DLL to ship to Windows customers.
+// 
+// TODO: We could include args here for things like contract version and if we should 
+// include experimental types, to allow multiple versions of the DLL to ship to Windows 
+// customers.
 //
 
 std::vector<MidiAppSdkManifestEntry>
@@ -27,54 +32,54 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 {
     std::vector<MidiAppSdkManifestEntry> types{};
 
-    const std::wstring dllName{ MIDI_SDK_IMPL_DLL_NAME };
+    //const std::wstring dllName{ MIDI_SDK_IMPL_DLL_NAME };
     const std::wstring rootNS{ MIDI_SDK_ROOT_NAMESPACE };
     const auto defaultThreading{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiChannel", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiGroup", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiClock", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiChannel", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiGroup", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiClock", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceInformation", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceWatcher", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceInformation", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceWatcher", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiFunctionBlock", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiFunctionBlock", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage32", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage64", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage96", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage128", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage32", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage64", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage96", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage128", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointConnection", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiSession", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointConnection", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiSession", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".CapabilityInquiry.MidiUniqueId", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".CapabilityInquiry.MidiUniqueId", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ClientPlugins.MidiChannelEndpointListener", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ClientPlugins.MidiGroupEndpointListener", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ClientPlugins.MidiMessageTypeEndpointListener", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ClientPlugins.MidiChannelEndpointListener", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ClientPlugins.MidiGroupEndpointListener", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ClientPlugins.MidiMessageTypeEndpointListener", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Diagnostics.MidiDiagnostics", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Reporting.MidiReporting", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Diagnostics.MidiDiagnostics", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Reporting.MidiReporting", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiMessageBuilder", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiMessageConverter", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiMessageHelper", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiStreamMessageBuilder", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiMessageBuilder", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiMessageConverter", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiMessageHelper", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiStreamMessageBuilder", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfig", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfig", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointCreationConfig", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointManager", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointCreationConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointManager", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceCreationConfig", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceManager", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceCreationConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceManager", defaultThreading });
 
     // todo: add network
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper", dllName, defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveSender", dllName, defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveSender", defaultThreading });
 
     return types;
 }
@@ -97,11 +102,12 @@ MidiAppSdkRuntimeComponentCatalog::Initialize()
 
     if (!sdkLocation.has_value())
     {
-        return E_FAIL;
+        RETURN_IF_FAILED(E_FAIL);
     }
 
     m_sdkDirectory = sdkLocation.value();
 
+    // TODO: Do we harden and do any validation here? Check for path size or anything?
     m_sdkMetadataFullFilename = m_sdkDirectory + L"\\" + std::wstring{ MIDI_SDK_METADATA_NAME };
     m_sdkImplementationFullFilename = m_sdkDirectory + L"\\" + std::wstring{ MIDI_SDK_IMPL_DLL_NAME };
 
@@ -112,7 +118,7 @@ MidiAppSdkRuntimeComponentCatalog::Initialize()
     {
         auto component = std::make_shared<MidiAppSdkRuntimeComponent>();
 
-        component->module_name = t.FileName;
+        component->module_name = GetSdkImplementationFullFilename();
         component->threading_model = t.ThreadingModel;
 
         m_types[t.ActivatableClassName] = component;
@@ -131,13 +137,14 @@ MidiAppSdkRuntimeComponentCatalog::Shutdown()
 
 _Use_decl_annotations_
 bool 
-MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace)
+MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace) const
 {
     if (typeOrNamespace != NULL)
     {
         UINT32 typeLength{ 0 };
         auto typeOrNamespaceBuffer = WindowsGetStringRawBuffer(typeOrNamespace, &typeLength);
 
+        // fail fast if the type name is not at least as long as the root namespace
         if (typeLength >= MIDI_SDK_ROOT_NAMESPACE_LENGTH)
         {
             // we compare only up to the length of the namespace, so we use that
@@ -162,7 +169,7 @@ HRESULT
 MidiAppSdkRuntimeComponentCatalog::GetThreadingModel(
     HSTRING activatableClassId, 
     ABI::Windows::Foundation::ThreadingType* threading_model
-)
+) const
 {
     auto raw_class_name = WindowsGetStringRawBuffer(activatableClassId, nullptr);
     auto component_iter = m_types.find(raw_class_name);
@@ -183,7 +190,7 @@ MidiAppSdkRuntimeComponentCatalog::GetActivationFactory(
     HSTRING activatableClassId,
     REFIID  iid,
     void** factory
-)
+) const
 {
     auto raw_class_name = WindowsGetStringRawBuffer(activatableClassId, nullptr);
     auto component_iter = m_types.find(raw_class_name);
@@ -204,8 +211,20 @@ MidiAppSdkRuntimeComponentCatalog::GetMetadataFile(
     IMetaDataDispenserEx* metaDataDispenser,
     HSTRING* metaDataFilePath,
     IMetaDataImport2** metaDataImport,
-    mdTypeDef* typeDefToken)
+    mdTypeDef* typeDefToken) const
 {
+    wchar_t folderPrefix[9];
+    PCWSTR pszFullName = WindowsGetStringRawBuffer(name, nullptr);
+    HRESULT hr = StringCchCopyW(folderPrefix, _countof(folderPrefix), pszFullName);
+    if (hr != S_OK && hr != STRSAFE_E_INSUFFICIENT_BUFFER)
+    {
+        return hr;
+    }
+    if (CompareStringOrdinal(folderPrefix, -1, L"Windows.", -1, false) == CSTR_EQUAL)
+    {
+        return RO_E_METADATA_NAME_NOT_FOUND;
+    }
+
     if (metaDataFilePath != nullptr) *metaDataFilePath = nullptr;
     if (metaDataImport != nullptr) *metaDataImport = nullptr;
     if (typeDefToken != nullptr) *typeDefToken = mdTypeDefNil;
@@ -216,30 +235,26 @@ MidiAppSdkRuntimeComponentCatalog::GetMetadataFile(
         return E_INVALIDARG;
     }
 
-    PCWSTR pszFullName = WindowsGetStringRawBuffer(name, nullptr);
-
-    //wil::com_ptr<IMetaDataDispenserEx> spMetaDataDispenser;
+//    wil::com_ptr<IMetaDataDispenserEx> spMetaDataDispenser;
     // The API uses the caller's passed-in metadata dispenser. If null, it
     // will create an instance of the metadata reader to dispense metadata files.
-    //if (metaDataDispenser == nullptr)
-    //{
-    //    RETURN_IF_FAILED(MetaDataGetDispenser(CLSID_CorMetaDataDispenser,
-    //        IID_IMetaDataDispenser,
-    //        (LPVOID*)&spMetaDataDispenser));
-    //    {
-    //        variant_t version{ L"WindowsRuntime 1.4" };
-    //        RETURN_IF_FAILED(spMetaDataDispenser->SetOption(MetaDataRuntimeVersion, &version.GetVARIANT()));
-    //    }
-    //}
 
-    // TODO: The original code says it uses the passed-in metadata dispenser, but it 
-    // doesn't. It calls ResolveThirdPartyType while always passing in spMetaDataDispenser, 
-    // which could be nullptr. This needs to use it if available.
+    if (metaDataDispenser == nullptr)
+    {
+        //RETURN_IF_FAILED(MetaDataGetDispenser(
+        //    CLSID_CorMetaDataDispenser,
+        //    IID_IMetaDataDispenser,
+        //    (LPVOID*)&spMetaDataDispenser));
+        //{
+        //    variant_t version{ L"WindowsRuntime 1.4" };
+        //    RETURN_IF_FAILED(spMetaDataDispenser->SetOption(MetaDataRuntimeVersion, &version.GetVARIANT()));
+        //}
+    }
 
-    // all we need to do here is validate that the type exists in the winmd
+    // TODO: Seems this *always* uses the newly created metadata dispenser instead of using it only when the existing is nullptr
 
     return FindTypeInMetaDataFile(
-        metaDataDispenser,
+        metaDataDispenser /*spMetaDataDispenser.get()*/,
         pszFullName,
         m_sdkMetadataFullFilename.c_str(),
         TYPE_RESOLUTION_OPTIONS::TRO_RESOLVE_TYPE_AND_NAMESPACE,
@@ -257,7 +272,7 @@ MidiAppSdkRuntimeComponentCatalog::FindTypeInMetaDataFile(
     _In_ PCWSTR pszCandidateFilePath,
     _In_ TYPE_RESOLUTION_OPTIONS resolutionOptions,
     _COM_Outptr_opt_result_maybenull_ IMetaDataImport2** ppMetaDataImport,
-    _Out_opt_ mdTypeDef* pmdTypeDef)
+    _Out_opt_ mdTypeDef* pmdTypeDef) const
 {
     HRESULT hr = S_OK;
     wil::com_ptr<IMetaDataImport2> spMetaDataImport;

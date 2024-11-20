@@ -9,9 +9,6 @@
 
 #include "stdafx.h"
 
-#include "MidiDesktopAppSdkBootstrapper.hpp"
-
-
 void MidiAppSdkInitializationTests::TestInitialization()
 {
     // check to see if SDK is installed. Obviously, for this test to work, it has to 

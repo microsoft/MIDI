@@ -182,6 +182,7 @@ void OutputError(_In_ std::wstring const& errorMessage)
         << std::endl;
 }
 
+
 #define RETURN_SUCCESS return 0
 #define RETURN_FAIL return 1
 
@@ -293,13 +294,17 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
         OutputItemSeparator();
 
 
-        //  List midisrvtransport info
+        //  List midisrvtransport info, even though it is not in the Windows MIDI Services registry key
 
         std::wstring midisrvTransportClsidString{ L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}" };
         OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, std::wstring{ L"(Midisrv Transport)" });
         OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, midisrvTransportClsidString);
         OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, midisrvTransportClsidString);
         OutputItemSeparator();
+
+        //  TODO: List diagnostics transport info, even though it is not in the Windows MIDI Services registry key
+
+
 
 
         // TODO: list all values under the desktop app sdk runtime
@@ -732,20 +737,32 @@ bool DoSectionClock(_In_ bool const verbose)
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI_CLOCK);
 
-    OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_FREQUENCY, midi2::MidiClock::TimestampFrequency());
-    OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_NOW, midi2::MidiClock::Now());
+    try
+    {
+        OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_FREQUENCY, midi2::MidiClock::TimestampFrequency());
+        OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_NOW, midi2::MidiClock::Now());
 
-    return true;
+        return true;
+    }
+    catch (winrt::hresult_error ex)
+    {
+        OutputError(ex.message().c_str());
+        OutputError(L"winrt::hresult_error getting clock information. Likely an issue with SDK activation.");
+
+        return false;
+    }
 }
 
-init::MidiDesktopAppSdkInitializer initializer;
+
+
+
+init::MidiDesktopAppSdkInitializer initializer{ };
 
 bool DoSectionSdkStatus(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SDK_STATUS);
-
 
     // next, try to init the SDK
     bool initialized = initializer.InitializeSdkRuntime();
@@ -951,6 +968,17 @@ int __cdecl main()
         // the service status uses the SDK initializer to try to start
         // the windows service.
         if (!DoSectionSdkStatus(verbose)) goto abort_run;
+
+        // we've made it past initializing the SDK, so make sure we shut it down
+        // when we exit. The initializer also has a destructor to do this, but 
+        // I like being explicit
+        auto cleanup = wil::scope_exit([&]
+            {
+                initializer.ShutdownSdkRuntime();
+            });
+
+
+
         if (!DoSectionServiceStatus(verbose)) goto abort_run;
 
         // only show midi clock info if the sdk init has worked

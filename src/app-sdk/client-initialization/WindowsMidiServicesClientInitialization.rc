@@ -103,7 +103,7 @@ BEGIN
     IDS_PROJNAME                    "WindowsMidiServicesClientInitialization"
 END
 
-IDR_MIDI2SCHEDULERTRANSFORM REGISTRY "WindowsMidiServicesClientInitialization.rgs"
+IDR_MIDICLIENTINITIALIZER REGISTRY "WindowsMidiServicesClientInitialization.rgs"
 ////////////////////////////////////////////////////////////////////////////
 
 

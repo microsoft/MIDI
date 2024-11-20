@@ -84,27 +84,12 @@ extern "C"{
 /* interface __MIDL_itf_WindowsMidiServicesClientInitialization_0000_0000 */
 /* [local] */ 
 
-typedef /* [public][public][public][public] */ 
+typedef /* [public][public] */ 
 enum __MIDL___MIDL_itf_WindowsMidiServicesClientInitialization_0000_0000_0001
     {
-        Platform_x64	= 0,
-        Platform_Arm64X	= ( Platform_x64 + 1 ) 
+        Platform_x64	= 1,
+        Platform_Arm64X	= 4
     } 	MidiAppSDKPlatform;
-
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServicesClientInitialization_0000_0000_0002
-    {
-    MidiAppSDKPlatform Platform;
-    LPCWSTR BuildSource;
-    LPCWSTR VersionName;
-    DWORD VersionMajor;
-    DWORD VersionMinor;
-    DWORD VersionRevision;
-    DWORD VersionDateNumber;
-    DWORD VersionTimeNumber;
-    LPCWSTR VersionFullString;
-    } 	WINDOWSMIDISERVICESAPPSDKVERSION;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServicesClientInitialization_0000_0000_0002 *PWINDOWSMIDISERVICESAPPSDKVERSION;
 
 
 
@@ -115,7 +100,7 @@ extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServicesClientInitialization_0000_000
 #define __IMidiClientInitializer_INTERFACE_DEFINED__
 
 /* interface IMidiClientInitializer */
-/* [uuid][local][object] */ 
+/* [helpstring][uuid][local][object] */ 
 
 
 EXTERN_C const IID IID_IMidiClientInitializer;
@@ -126,15 +111,22 @@ EXTERN_C const IID IID_IMidiClientInitializer;
     IMidiClientInitializer : public IUnknown
     {
     public:
-        virtual HRESULT STDMETHODCALLTYPE Initialize( void) = 0;
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Initialize( void) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE GetInstalledWindowsMidiServicesSdkVersion( 
-            /* [annotation][in] */ 
-            _In_  PWINDOWSMIDISERVICESAPPSDKVERSION sdkVersion) = 0;
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE GetInstalledWindowsMidiServicesSdkVersion( 
+            /* [optional][out] */ MidiAppSDKPlatform *buildPlatform,
+            /* [optional][out] */ DWORD *versionMajor,
+            /* [optional][out] */ DWORD *versionMinor,
+            /* [optional][out] */ DWORD *versionRevision,
+            /* [optional][out] */ DWORD *versionDateNumber,
+            /* [optional][out] */ DWORD *versionTimeNumber,
+            /* [optional][string][out] */ LPWSTR *buildSource,
+            /* [optional][string][out] */ LPWSTR *versionName,
+            /* [optional][string][out] */ LPWSTR *versionFullString) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE EnsureServiceAvailable( void) = 0;
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE EnsureServiceAvailable( void) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
+        virtual /* [helpstring] */ HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
     };
     
@@ -161,21 +153,28 @@ EXTERN_C const IID IID_IMidiClientInitializer;
             IMidiClientInitializer * This);
         
         DECLSPEC_XFGVIRT(IMidiClientInitializer, Initialize)
-        HRESULT ( STDMETHODCALLTYPE *Initialize )( 
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Initialize )( 
             IMidiClientInitializer * This);
         
         DECLSPEC_XFGVIRT(IMidiClientInitializer, GetInstalledWindowsMidiServicesSdkVersion)
-        HRESULT ( STDMETHODCALLTYPE *GetInstalledWindowsMidiServicesSdkVersion )( 
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *GetInstalledWindowsMidiServicesSdkVersion )( 
             IMidiClientInitializer * This,
-            /* [annotation][in] */ 
-            _In_  PWINDOWSMIDISERVICESAPPSDKVERSION sdkVersion);
+            /* [optional][out] */ MidiAppSDKPlatform *buildPlatform,
+            /* [optional][out] */ DWORD *versionMajor,
+            /* [optional][out] */ DWORD *versionMinor,
+            /* [optional][out] */ DWORD *versionRevision,
+            /* [optional][out] */ DWORD *versionDateNumber,
+            /* [optional][out] */ DWORD *versionTimeNumber,
+            /* [optional][string][out] */ LPWSTR *buildSource,
+            /* [optional][string][out] */ LPWSTR *versionName,
+            /* [optional][string][out] */ LPWSTR *versionFullString);
         
         DECLSPEC_XFGVIRT(IMidiClientInitializer, EnsureServiceAvailable)
-        HRESULT ( STDMETHODCALLTYPE *EnsureServiceAvailable )( 
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *EnsureServiceAvailable )( 
             IMidiClientInitializer * This);
         
         DECLSPEC_XFGVIRT(IMidiClientInitializer, Shutdown)
-        HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
+        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
             IMidiClientInitializer * This);
         
         END_INTERFACE
@@ -204,8 +203,8 @@ EXTERN_C const IID IID_IMidiClientInitializer;
 #define IMidiClientInitializer_Initialize(This)	\
     ( (This)->lpVtbl -> Initialize(This) ) 
 
-#define IMidiClientInitializer_GetInstalledWindowsMidiServicesSdkVersion(This,sdkVersion)	\
-    ( (This)->lpVtbl -> GetInstalledWindowsMidiServicesSdkVersion(This,sdkVersion) ) 
+#define IMidiClientInitializer_GetInstalledWindowsMidiServicesSdkVersion(This,buildPlatform,versionMajor,versionMinor,versionRevision,versionDateNumber,versionTimeNumber,buildSource,versionName,versionFullString)	\
+    ( (This)->lpVtbl -> GetInstalledWindowsMidiServicesSdkVersion(This,buildPlatform,versionMajor,versionMinor,versionRevision,versionDateNumber,versionTimeNumber,buildSource,versionName,versionFullString) ) 
 
 #define IMidiClientInitializer_EnsureServiceAvailable(This)	\
     ( (This)->lpVtbl -> EnsureServiceAvailable(This) ) 
@@ -229,7 +228,7 @@ EXTERN_C const IID IID_IMidiClientInitializer;
 #define __WindowsMidiServicesClientInitializationLib_LIBRARY_DEFINED__
 
 /* library WindowsMidiServicesClientInitializationLib */
-/* [version][uuid] */ 
+/* [helpstring][version][uuid] */ 
 
 
 EXTERN_C const IID LIBID_WindowsMidiServicesClientInitializationLib;

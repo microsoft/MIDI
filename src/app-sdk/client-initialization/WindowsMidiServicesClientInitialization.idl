@@ -14,51 +14,49 @@ import "ocidl.idl";
 
 typedef enum
 {
-    Platform_x64,
-    Platform_Arm64X,
+    Platform_x64 = 1,
+//    Platform_Arm64 = 2,
+//    Platform_Arm64EC = 3,
+    Platform_Arm64X = 4,
 } MidiAppSDKPlatform;
-
-// these values are provided by the build system used by Microsoft for
-// both github preview builds and also for internal signed builds
-typedef struct
-{
-    MidiAppSDKPlatform Platform;    // x64, Arm64X
-    LPCWSTR BuildSource;            // source, like "GitHub Preview"
-    LPCWSTR VersionName;            // name like "Developer Preview 8"
-    DWORD VersionMajor;             // Major.<minor>.<revision>
-    DWORD VersionMinor;             // <major>.Minor.<revision>
-    DWORD VersionRevision;          // <major>.<minor>.Revision
-    DWORD VersionDateNumber;        // YYddd where ddd is the day number in the year (Julian date)
-    DWORD VersionTimeNumber;        // HHMM for build time
-
-    LPCWSTR VersionFullString;
-
-} WINDOWSMIDISERVICESAPPSDKVERSION, *PWINDOWSMIDISERVICESAPPSDKVERSION;
 
 
 [
     object,
     local,
-    uuid(8087b303-d551-bce2-1ead-a2500d50c580)
+    uuid(8087b303-d551-bce2-1ead-a2500d50c580),
+    helpstring("Windows MIDI Services Desktop App SDK Initializer interface")
 ]
 interface IMidiClientInitializer : IUnknown
 {
     // ensures the service is running and also starts up WinRT activation redirection
+    [helpstring("Initializes the SDK runtime, and set up WinRT type activation detours")]
     HRESULT Initialize();
 
-    // provide a reference to a WINDOWSMIDISERVICESSDKVERSION struct to get information
-    // about what is installed. An app which relies on a later version of the SDK can 
-    // use this information to prompt the user to download and install the latest version
-    // using the known URI for versions (this is included in the header file and the .cs)
-    // file. Developers using other languages will need to adapt that information
+
+    // changed from a struct to individual parameters so that .NET 8+ COM source generation
+    // can actually use the function without a bunch of custom COM marshalling code
+    [helpstring("Returns the version of the SDK this component was activated from. If provided, strings must be freed after use.")]
     HRESULT GetInstalledWindowsMidiServicesSdkVersion(
-        [in, annotation("_In_")] PWINDOWSMIDISERVICESAPPSDKVERSION sdkVersion
-    );
+        [out, optional] MidiAppSDKPlatform* buildPlatform,
+        [out, optional] DWORD* versionMajor,
+        [out, optional] DWORD* versionMinor,
+        [out, optional] DWORD* versionRevision,
+
+        [out, optional] DWORD* versionDateNumber,
+        [out, optional] DWORD* versionTimeNumber,
+
+        [out, string, optional] LPWSTR *buildSource,
+        [out, string, optional] LPWSTR *versionName,
+        [out, string, optional] LPWSTR *versionFullString
+        );
 
     // demand-starts the service if present
+    [helpstring("Demand-starts the Windows MIDI Service if it isn't already running")]
     HRESULT EnsureServiceAvailable();
 
     // this cleans up WinRT type activation redirection
+    [helpstring("Shuts down the SDK, and stop redirecting WinRT type activation")]
     HRESULT Shutdown();
 
     // TODO: Method to check service version as well
@@ -69,12 +67,17 @@ interface IMidiClientInitializer : IUnknown
 [
     uuid(abacab11-1984-5150-0812-ac8675309b04),
     version(1.0),
+    helpstring("Windows MIDI Services Desktop App SDK Initialization type library")
 ]
 library WindowsMidiServicesClientInitializationLib
 {
     importlib("stdole2.tlb");
 
-    [uuid(c3263827-c3b0-bdbd-2500-ce63a3f3f2c3), version(1.0)]
+    [
+        uuid(c3263827-c3b0-bdbd-2500-ce63a3f3f2c3), 
+        version(1.0),
+        helpstring("Windows MIDI Services Desktop App SDK Initializer class")
+    ]
     coclass MidiClientInitializer
     {
         [default] interface IMidiClientInitializer;

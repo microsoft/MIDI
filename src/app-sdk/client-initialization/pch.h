@@ -67,7 +67,7 @@
 #include <Appmodel.h>
 #include <comdef.h>
 #include <RoMetadataApi.h>
-//#include <RoMetadata.h>
+#include <RoMetadata.h>
 #include "../undocked-reg-free-winrt/detours/detours.h"
 
 #include "wstring_util.h"

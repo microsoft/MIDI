@@ -23,9 +23,9 @@ extern "C"
 // other layers already cache.
 struct MidiAppSdkRuntimeComponent
 {
-    std::wstring module_name;
-    std::wstring xmlns;
-    HMODULE handle = nullptr;
+    std::wstring module_name{ };
+    //std::wstring xmlns{ };
+    HMODULE handle{ nullptr };
     activation_factory_type get_activation_factory{};
     ABI::Windows::Foundation::ThreadingType threading_model{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
 
@@ -37,36 +37,6 @@ struct MidiAppSdkRuntimeComponent
         }
     }
 
-    HRESULT LoadModule()
-    {
-        if (handle == nullptr)
-        {
-            handle = LoadLibraryExW(module_name.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
-            if (handle == nullptr)
-            {
-                return HRESULT_FROM_WIN32(GetLastError());
-            }
-            this->get_activation_factory = (activation_factory_type)GetProcAddress(handle, "DllGetActivationFactory");
-            if (this->get_activation_factory == nullptr)
-            {
-                return HRESULT_FROM_WIN32(GetLastError());
-            }
-        }
-        return (handle != nullptr && this->get_activation_factory != nullptr) ? S_OK : E_FAIL;
-    }
-
-    HRESULT GetActivationFactory(HSTRING className, REFIID  iid, void** factory)
-    {
-        RETURN_IF_FAILED(LoadModule());
-
-        IActivationFactory* ifactory = nullptr;
-        HRESULT hr = this->get_activation_factory(className, &ifactory);
-        // optimize for IActivationFactory?
-        if (SUCCEEDED(hr))
-        {
-            hr = ifactory->QueryInterface(iid, factory);
-            ifactory->Release();
-        }
-        return hr;
-    }
+    HRESULT LoadModule();
+    HRESULT GetActivationFactory(_In_ HSTRING className, _In_ REFIID  iid, _Out_ void** factory);
 };

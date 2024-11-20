@@ -59,25 +59,6 @@ static decltype(RoResolveNamespace)* TrueRoResolveNamespace = RoResolveNamespace
 
 
 
-HRESULT
-MidiRoDetours::Initialize()
-{
-    m_catalog = std::make_shared<MidiAppSdkRuntimeComponentCatalog>();
-
-    RETURN_HR_IF_NULL(E_POINTER, m_catalog);
-
-    return S_OK;
-}
-
-HRESULT
-MidiRoDetours::Shutdown()
-{
-
-    return S_OK;
-
-}
-
-
 _Use_decl_annotations_
 VOID CALLBACK EnsureMTAInitializedCallBack
 (
@@ -102,7 +83,7 @@ thread that is not been CoInitialize. COM treats this thread as a implicit MTA a
 when we call CoGetObjectContext on it we implicitly initialized the MTA.
 */
 HRESULT 
-MidiRoDetours::EnsureMTAInitialized()
+EnsureMTAInitialized()
 {
     TP_CALLBACK_ENVIRON callBackEnviron;
     InitializeThreadpoolEnvironment(&callBackEnviron);
@@ -142,18 +123,18 @@ MidiRoDetours::EnsureMTAInitialized()
 
 _Use_decl_annotations_
 HRESULT 
-MidiRoDetours::GetActivationLocation(
+GetActivationLocation(
     HSTRING activatableClassId, 
     ActivationLocation& activationLocation)
 {
-    RETURN_HR_IF_NULL(E_POINTER, m_catalog);
+    RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
 
     APTTYPE aptType;
     APTTYPEQUALIFIER aptQualifier;
     RETURN_IF_FAILED(CoGetApartmentType(&aptType, &aptQualifier));
 
-    ABI::Windows::Foundation::ThreadingType threading_model;
-    RETURN_IF_FAILED(m_catalog->GetThreadingModel(activatableClassId, &threading_model)); //REGDB_E_CLASSNOTREG
+    ABI::Windows::Foundation::ThreadingType threading_model{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
+    RETURN_IF_FAILED(g_runtimeComponentCatalog->GetThreadingModel(activatableClassId, &threading_model)); //REGDB_E_CLASSNOTREG
 
     switch (threading_model)
     {
@@ -185,28 +166,22 @@ MidiRoDetours::GetActivationLocation(
 }
 
 
-
 _Use_decl_annotations_
 HRESULT WINAPI 
-MidiRoDetours::ActivateInstanceDetour(
+RoActivateInstanceDetour(
     HSTRING activatableClassId, 
     IInspectable** instance)
 {
-    // If not in the MIDI namespace, then call the TrueRoActivateInstance function instead
-    if (activatableClassId != NULL)
+    RETURN_HR_IF_NULL(E_INVALIDARG, activatableClassId);
+    RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
+
+    // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
+    if (!g_runtimeComponentCatalog->TypeIsInScope(activatableClassId))
     {
-        // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
-        if (m_catalog && !m_catalog->TypeIsInScope(activatableClassId))
-        {
-            // not in-scope, so we fall back to the default implementation
-            return TrueRoActivateInstance(activatableClassId, instance);
-        }
+        // not in-scope, so we fall back to the default implementation
+        return TrueRoActivateInstance(activatableClassId, instance);
     }
-    else
-    {
-        // null activatableClassId
-        return E_INVALIDARG;
-    }
+
 
     ActivationLocation location;
     HRESULT hr = GetActivationLocation(activatableClassId, location);
@@ -220,7 +195,7 @@ MidiRoDetours::ActivateInstanceDetour(
     if (location == ActivationLocation::CurrentApartment)
     {
         wil::com_ptr<IActivationFactory> pFactory;
-        RETURN_IF_FAILED(m_catalog->GetActivationFactory(activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
+        RETURN_IF_FAILED(g_runtimeComponentCatalog->GetActivationFactory(activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
         return pFactory->ActivateInstance(instance);
     }
 
@@ -241,13 +216,13 @@ MidiRoDetours::ActivateInstanceDetour(
     RETURN_IF_FAILED(CoGetDefaultContext(APTTYPE_MTA, IID_PPV_ARGS(&defaultContext)));
 
     RETURN_IF_FAILED(defaultContext->ContextCallback(
-        [/*&catalog = m_catalog*/](ComCallData* pComCallData) -> HRESULT
+        [](_In_ ComCallData* pComCallData) -> HRESULT
         {
             CrossApartmentMTAActData* mtadata = reinterpret_cast<CrossApartmentMTAActData*>(pComCallData->pUserDefined);
             wil::com_ptr<IInspectable> instanceToActivate;
             wil::com_ptr<IActivationFactory> pFactory;
 
-        //    RETURN_IF_FAILED(catalog->GetActivationFactory(mtadata->activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
+            RETURN_IF_FAILED(g_runtimeComponentCatalog->GetActivationFactory(mtadata->activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
             RETURN_IF_FAILED(pFactory->ActivateInstance(&instanceToActivate));
             RETURN_IF_FAILED(CoMarshalInterThreadInterfaceInStream(IID_IInspectable, instanceToActivate.get(), &mtadata->stream));
 
@@ -265,25 +240,19 @@ MidiRoDetours::ActivateInstanceDetour(
 
 _Use_decl_annotations_
 HRESULT WINAPI 
-MidiRoDetours::GetActivationFactoryDetour(
+RoGetActivationFactoryDetour(
     HSTRING activatableClassId, 
     REFIID iid, 
     void** factory)
 {
-    // If not in the MIDI namespace, then call the TrueRoGetActivationFactory function instead
-    if (activatableClassId != NULL)
+    RETURN_HR_IF_NULL(E_INVALIDARG, activatableClassId);
+    RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
+
+    // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
+    if (!g_runtimeComponentCatalog->TypeIsInScope(activatableClassId))
     {
-        // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
-        if (m_catalog && !m_catalog->TypeIsInScope(activatableClassId))
-        {
-            // not in-scope, so we fall back to the default implementation
-            return TrueRoGetActivationFactory(activatableClassId, iid, factory);
-        }
-    }
-    else
-    {
-        // null activatableClassId
-        return E_INVALIDARG;
+        // not in-scope, so we fall back to the default implementation
+        return TrueRoGetActivationFactory(activatableClassId, iid, factory);
     }
 
 
@@ -298,7 +267,7 @@ MidiRoDetours::GetActivationFactoryDetour(
     // Activate in current apartment
     if (location == ActivationLocation::CurrentApartment)
     {
-        RETURN_IF_FAILED(m_catalog->GetActivationFactory(activatableClassId, iid, factory));
+        RETURN_IF_FAILED(g_runtimeComponentCatalog->GetActivationFactory(activatableClassId, iid, factory));
         return S_OK;
     }
 
@@ -318,11 +287,11 @@ MidiRoDetours::GetActivationFactoryDetour(
 
     RETURN_IF_FAILED(CoGetDefaultContext(APTTYPE_MTA, IID_PPV_ARGS(&defaultContext)));
     defaultContext->ContextCallback(
-        [/*&catalog = m_catalog*/](_In_ ComCallData* pComCallData) -> HRESULT
+        [](_In_ ComCallData* pComCallData) -> HRESULT
         {
             CrossApartmentMTAActData* data = reinterpret_cast<CrossApartmentMTAActData*>(pComCallData->pUserDefined);
             wil::com_ptr<IActivationFactory> pFactory;
-        //    RETURN_IF_FAILED(catalog->GetActivationFactory(data->activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
+            RETURN_IF_FAILED(g_runtimeComponentCatalog->GetActivationFactory(data->activatableClassId, __uuidof(IActivationFactory), (void**)&pFactory));
             RETURN_IF_FAILED(CoMarshalInterThreadInterfaceInStream(IID_IActivationFactory, pFactory.get(), &data->stream));
 
             return S_OK;
@@ -339,30 +308,24 @@ MidiRoDetours::GetActivationFactoryDetour(
 
 _Use_decl_annotations_
 HRESULT WINAPI 
-MidiRoDetours::GetMetaDataFileDetour(
+RoGetMetaDataFileDetour(
     const HSTRING name,
     IMetaDataDispenserEx* metaDataDispenser,
     HSTRING* metaDataFilePath,
     IMetaDataImport2** metaDataImport,
     mdTypeDef* typeDefToken)
 {
-    // If not in the MIDI namespace, then call the TrueRoGetActivationFactory function instead
-    if (name != NULL)
+    RETURN_HR_IF_NULL(E_INVALIDARG, name);
+    RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
+
+    // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
+    if (!g_runtimeComponentCatalog->TypeIsInScope(name))
     {
-        // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
-        if (m_catalog && !m_catalog->TypeIsInScope(name))
-        {
-            // not in-scope, so we fall back to the default implementation
-            return TrueRoGetMetaDataFile(name, metaDataDispenser, metaDataFilePath, metaDataImport, typeDefToken);
-        }
-    }
-    else
-    {
-        // null type or namespace
-        return E_INVALIDARG;
+        // not in-scope, so we fall back to the default implementation
+        return TrueRoGetMetaDataFile(name, metaDataDispenser, metaDataFilePath, metaDataImport, typeDefToken);
     }
 
-    HRESULT hr = m_catalog->GetMetadataFile(name, metaDataDispenser, metaDataFilePath, metaDataImport, typeDefToken);
+    HRESULT hr = g_runtimeComponentCatalog->GetMetadataFile(name, metaDataDispenser, metaDataFilePath, metaDataImport, typeDefToken);
 
     // Don't fallback on RO_E_METADATA_NAME_IS_NAMESPACE failure. This is the intended behavior for namespace names.
     if (FAILED(hr) && hr != RO_E_METADATA_NAME_IS_NAMESPACE)
@@ -374,7 +337,7 @@ MidiRoDetours::GetMetaDataFileDetour(
 
 _Use_decl_annotations_
 HRESULT WINAPI 
-MidiRoDetours::ResolveNamespaceDetour(
+RoResolveNamespaceDetour(
     const HSTRING name,
     const HSTRING windowsMetaDataDir,
     const DWORD packageGraphDirsCount,
@@ -384,62 +347,57 @@ MidiRoDetours::ResolveNamespaceDetour(
     DWORD* subNamespacesCount,
     HSTRING** subNamespaces)
 {
-    // TODO: If not in the MIDI namespace, then call the TrueRoResolveNamespace function instead
-    if (name != NULL)
+    RETURN_HR_IF_NULL(E_INVALIDARG, name);
+    RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
+
+    // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
+    if (!g_runtimeComponentCatalog->TypeIsInScope(name))
     {
-        // Check for MIDI_SDK_ROOT_NAMESPACE in the activatableClassId
-        if (m_catalog && !m_catalog->TypeIsInScope(name))
-        {
-            // not in-scope, so we fall back to the default implementation
-            return TrueRoResolveNamespace(
-                name, 
-                windowsMetaDataDir, 
-                packageGraphDirsCount, 
-                packageGraphDirs, 
-                metaDataFilePathsCount, 
-                metaDataFilePaths, 
-                subNamespacesCount, 
-                subNamespaces);
-        }
-    }
-    else
-    {
-        // null type or namespace
-        return E_INVALIDARG;
+        // not in-scope, so we fall back to the default implementation
+        return TrueRoResolveNamespace(
+            name,
+            windowsMetaDataDir,
+            packageGraphDirsCount,
+            packageGraphDirs,
+            metaDataFilePathsCount,
+            metaDataFilePaths,
+            subNamespacesCount,
+            subNamespaces);
     }
 
     // otherwise, set to the SDK install information, not the process information below
-    auto sdkPath = m_catalog->GetSdkDirectory();
+    auto sdkPath = g_runtimeComponentCatalog->GetSdkDirectory();
 
-    PCWSTR sdkFilePath = sdkPath.c_str();
-    auto pathReference = Microsoft::WRL::Wrappers::HStringReference(sdkFilePath);
+    //PCWSTR sdkFilePath = sdkPath.c_str();
+    //auto pathReference = Microsoft::WRL::Wrappers::HStringReference(sdkFilePath);
+    //HSTRING packageGraphDirectories[] = { pathReference.Get() };
 
-    HSTRING packageGraphDirectories[] = { pathReference.Get() };
+    PCWSTR sdkMetadataFilePath = g_runtimeComponentCatalog->GetSdkMetadataFullFilename().c_str();
+    auto winmdPathReference = Microsoft::WRL::Wrappers::HStringReference(sdkMetadataFilePath);
+    HSTRING winmdPaths[] = { winmdPathReference.Get() };
 
-    HRESULT hr = TrueRoResolveNamespace(
-        name,
-        pathReference.Get(),
-        ARRAYSIZE(packageGraphDirectories),
-        packageGraphDirectories,
-        metaDataFilePathsCount,
-        metaDataFilePaths,
-        subNamespacesCount,
-        subNamespaces);
+    // we have a single winmd for Windows MIDI Services
+    *metaDataFilePathsCount = ARRAYSIZE(winmdPaths);
+    *metaDataFilePaths = winmdPaths;
 
-    return hr;
+    return S_OK;
+
+    //HRESULT hr = TrueRoResolveNamespace(
+    //    name,
+    //    pathReference.Get(),
+    //    ARRAYSIZE(packageGraphDirectories),
+    //    packageGraphDirectories,
+    //    metaDataFilePathsCount,
+    //    metaDataFilePaths,
+    //    subNamespacesCount,
+    //    subNamespaces);
+
+    //return hr;
 }
 
 HRESULT 
-MidiRoDetours::InstallHooks()
+InstallHooks()
 {
-    // TODO: Should read the registry stuff here, and then cache it
-    // This is also where we should check for the SDK install. If it's
-    // not present, then we don't install the hooks
-
-
-
-
-
     // If this is loaded in a Detours helper process and not the actual process
     // to be hooked, just return without performing any other operations.
     if (DetourIsHelperProcess())
@@ -457,9 +415,8 @@ MidiRoDetours::InstallHooks()
     return S_OK;
 }
 
-void MidiRoDetours::RemoveHooks()
+void RemoveHooks()
 {
-
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
     DetourDetach(&(PVOID&)TrueRoActivateInstance, RoActivateInstanceDetour);
@@ -468,23 +425,6 @@ void MidiRoDetours::RemoveHooks()
     DetourDetach(&(PVOID&)TrueRoResolveNamespace, RoResolveNamespaceDetour);
     DetourTransactionCommit();
 }
-
-//HRESULT ExtRoLoadCatalog()
-//{
-//    // TODO: This is where we'll build the catalog of MIDI types
-//
-//    // Get path from registry
-//
-//    // set the filepath to that path
-//
-//    // no manifest - or perhaps we include the manifest in with the SDK impl and winmd files?
-//
-//   // return LoadMidiComponentTypes();
-//
-//    return S_OK;
-//
-//}
-
 
 //extern "C" void WINAPI winrtact_Initialize()
 //{

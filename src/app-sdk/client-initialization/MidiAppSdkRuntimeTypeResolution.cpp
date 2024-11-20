@@ -11,13 +11,13 @@
 
 #include "pch.h"
 
-#define METADATA_FILE_EXTENSION L"winmd"
-#define METADATA_FILE_PATH_FORMAT L"%s%s."  METADATA_FILE_EXTENSION
-#define METADATA_FILE_SEARCH_FORMAT L"%s%s*."  METADATA_FILE_EXTENSION
-
+//#define METADATA_FILE_EXTENSION L"winmd"
+//#define METADATA_FILE_PATH_FORMAT L"%s%s."  METADATA_FILE_EXTENSION
+//#define METADATA_FILE_SEARCH_FORMAT L"%s%s*."  METADATA_FILE_EXTENSION
+//
 
 //static wil::unique_process_heap_string g_cachedProcessExeDir;
-
+//
 //BOOL CALLBACK GetProcessExeDirInitOnceCallback(
 //    _Inout_     PINIT_ONCE,
 //    _Inout_opt_ PVOID,
@@ -43,7 +43,7 @@
 //    g_cachedProcessExeDir = std::move(localExePath);
 //    return TRUE;
 //}
-
+//
 //// Returned string is cached globally, and should not be freed by the caller.
 //HRESULT GetProcessExeDir(PCWSTR* path)
 //{

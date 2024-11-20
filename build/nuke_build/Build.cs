@@ -44,17 +44,18 @@ class Build : NukeBuild
     const string BuildVersionRevision = "1";
     const string BuildMajorMinorRevision = $"{BuildVersionMajor}.{BuildVersionMinor}.{BuildVersionRevision}";
 
-    string BuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
+    //string BuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
+    string BuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.Month.ToString("00") + DateTime.Now.Day.ToString("00");
     string BuildTimeNumber = UInt32.Parse(DateTime.Now.ToString("HHmm")).ToString();     // HHmm
 
 
-    string NugetVersionString => BuildMajorMinorRevision + "-" + NuGetVersionName + "." + BuildDateNumber + "." + BuildTimeNumber ;
+    string NugetVersionString => BuildMajorMinorRevision + "-" + NuGetVersionName + "." + BuildDateNumber + "-" + BuildTimeNumber ;
     string NugetPackageId => "Microsoft.Windows.Devices.Midi2";
 
     string NugetFullPackageIdWithVersion => NugetPackageId + "." + NugetVersionString;
 
 
-    string SetupBundleFullVersionString => BuildMajorMinorRevision + "-" + NuGetVersionName + "." + BuildDateNumber + "." + BuildTimeNumber;
+    string SetupBundleFullVersionString => BuildMajorMinorRevision + "-" + NuGetVersionName + "." + BuildDateNumber + "-" + BuildTimeNumber;
 
 
     AbsolutePath _thisReleaseFolder;
@@ -483,7 +484,7 @@ class Build : NukeBuild
 
                 // MIDI diagnostics app
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
 
                 // MIDI USB info utility
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / stagingPlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
@@ -492,7 +493,7 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
 
                 // bootstrap files
-                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.hpp", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 //FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
         });

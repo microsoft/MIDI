@@ -31,7 +31,7 @@ namespace foundation = winrt::Windows::Foundation;
 // makes the most sense for your application.
 // 
 // The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
-#include "winmidi/init/MidiDesktopAppSdkBootstrapper.hpp"
+#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
 namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 
