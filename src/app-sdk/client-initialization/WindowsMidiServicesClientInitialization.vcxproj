@@ -103,7 +103,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration)\;$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\;$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration)\</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration)\;$(SolutionDir)VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\;$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration)\</LibraryPath>
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -115,7 +115,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration)\;$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\;$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration)\</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration)\;$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\;$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration)\</LibraryPath>
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

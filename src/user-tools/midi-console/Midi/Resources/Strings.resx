@@ -872,4 +872,7 @@ Timestamp</value>
   <data name="ErrorSdkInitializationFailed" xml:space="preserve">
     <value>Windows MIDI Services SDK runtime failed to initialize. Is it installed?</value>
   </data>
+  <data name="ErrorSdkInitializerInitializationFailed" xml:space="preserve">
+    <value>Failed to start up the SDK initializer (COM object may not be available or registered)</value>
+  </data>
 </root>

@@ -363,6 +363,16 @@ HRESULT MetaDataImportersLRUCache::GetMetaDataImporter(
     _In_ PCWSTR pszCandidateFilePath,
     _Outptr_opt_ IMetaDataImport2** ppMetaDataImporter)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(pszCandidateFilePath, "Candidate file path")
+    );
+
     if (ppMetaDataImporter == nullptr)
     {
         return ERROR_BAD_ARGUMENTS;
@@ -402,6 +412,17 @@ HRESULT MetaDataImportersLRUCache::GetNewMetaDataImporter(
     _In_ PCWSTR pszCandidateFilePath,
     _Outptr_opt_ IMetaDataImport2** ppMetaDataImporter)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(pszCandidateFilePath, "Candidate file path")
+    );
+
+
     if (pMetaDataDispenser == nullptr)
     {
         return E_INVALIDARG;
@@ -442,6 +463,17 @@ HRESULT MetaDataImportersLRUCache::GetNewMetaDataImporter(
 
 HRESULT MetaDataImportersLRUCache::AddNewFilePathToList(PCWSTR pszFilePath)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(pszFilePath, "File path")
+    );
+
+
     HRESULT hr = RemoveLeastRecentlyUsedItemIfListIsFull();
 
     if (SUCCEEDED(hr))
@@ -465,6 +497,16 @@ HRESULT MetaDataImportersLRUCache::AddNewFilePathToList(PCWSTR pszFilePath)
 
 bool MetaDataImportersLRUCache::IsFilePathCached(PCWSTR pszFilePath)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     int filePathIndex = GetFilePathIndex(pszFilePath);
 
     if (filePathIndex != -1)
@@ -480,6 +522,16 @@ bool MetaDataImportersLRUCache::IsFilePathCached(PCWSTR pszFilePath)
 
 int MetaDataImportersLRUCache::GetFilePathIndex(PCWSTR pszFilePath)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     int filePathIndex = -1;
 
     for (int i = 0; (i < g_dwMetaDataImportersLRUCacheSize) && (_arFilePaths[i] != nullptr); i++)
@@ -496,6 +548,16 @@ int MetaDataImportersLRUCache::GetFilePathIndex(PCWSTR pszFilePath)
 
 void MetaDataImportersLRUCache::MoveElementToFrontOfList(int elementIndex)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     PWSTR pszFoundFilePath = _arFilePaths[elementIndex];
 
     for (int i = elementIndex - 1; i >= 0; i--)
@@ -508,6 +570,16 @@ void MetaDataImportersLRUCache::MoveElementToFrontOfList(int elementIndex)
 
 HRESULT MetaDataImportersLRUCache::RemoveLeastRecentlyUsedItemIfListIsFull()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     HRESULT hr = S_OK;
     PWSTR pszLastFilePathInList = _arFilePaths[g_dwMetaDataImportersLRUCacheSize - 1];
 

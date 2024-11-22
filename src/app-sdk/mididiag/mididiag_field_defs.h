@@ -35,8 +35,7 @@
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_CURRENT_CONFIG                L"reg_current_config"
 
 
-#define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_ARM64X                         L"reg_sdk_arm64x"
-#define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_X64                            L"registry_sdk_x64"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_INSTALLED                      L"reg_sdk_installed"
 
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_MIDISRV_EXENAME                    L"reg_midisrv_exe"
 

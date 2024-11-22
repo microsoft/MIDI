@@ -72,7 +72,7 @@ VOID CALLBACK EnsureMTAInitializedCallBack
     UNREFERENCED_PARAMETER(work);
 
     wil::com_ptr<IComThreadingInfo> spThreadingInfo;
-    CoGetObjectContext(IID_PPV_ARGS(&spThreadingInfo));
+    LOG_IF_FAILED(CoGetObjectContext(IID_PPV_ARGS(&spThreadingInfo)));
 }
 
 /*
@@ -85,6 +85,15 @@ when we call CoGetObjectContext on it we implicitly initialized the MTA.
 HRESULT 
 EnsureMTAInitialized()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     TP_CALLBACK_ENVIRON callBackEnviron;
     InitializeThreadpoolEnvironment(&callBackEnviron);
     PTP_POOL pool = CreateThreadpool(nullptr);
@@ -127,6 +136,16 @@ GetActivationLocation(
     HSTRING activatableClassId, 
     ActivationLocation& activationLocation)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, NULL), "class")
+    );
+
     RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
 
     APTTYPE aptType;
@@ -172,6 +191,17 @@ RoActivateInstanceDetour(
     HSTRING activatableClassId, 
     IInspectable** instance)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, NULL), "class")
+    );
+
+
     RETURN_HR_IF_NULL(E_INVALIDARG, activatableClassId);
     RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
 
@@ -245,6 +275,16 @@ RoGetActivationFactoryDetour(
     REFIID iid, 
     void** factory)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, NULL), "class")
+    );
+
     RETURN_HR_IF_NULL(E_INVALIDARG, activatableClassId);
     RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
 
@@ -315,6 +355,17 @@ RoGetMetaDataFileDetour(
     IMetaDataImport2** metaDataImport,
     mdTypeDef* typeDefToken)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(name, NULL), "name")
+    );
+
+
     RETURN_HR_IF_NULL(E_INVALIDARG, name);
     RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
 
@@ -347,6 +398,16 @@ RoResolveNamespaceDetour(
     DWORD* subNamespacesCount,
     HSTRING** subNamespaces)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(name, NULL), "name")
+    );
+
     RETURN_HR_IF_NULL(E_INVALIDARG, name);
     RETURN_HR_IF_NULL(E_POINTER, g_runtimeComponentCatalog);
 
@@ -398,6 +459,15 @@ RoResolveNamespaceDetour(
 HRESULT 
 InstallHooks()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     // If this is loaded in a Detours helper process and not the actual process
     // to be hooked, just return without performing any other operations.
     if (DetourIsHelperProcess())
@@ -412,11 +482,31 @@ InstallHooks()
     RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoGetMetaDataFile, RoGetMetaDataFileDetour));
     RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoResolveNamespace, RoResolveNamespaceDetour));
     RETURN_IF_WIN32_ERROR(DetourTransactionCommit());
+
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     return S_OK;
 }
 
 void RemoveHooks()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     DetourTransactionBegin();
     DetourUpdateThread(GetCurrentThread());
     DetourDetach(&(PVOID&)TrueRoActivateInstance, RoActivateInstanceDetour);
@@ -424,6 +514,16 @@ void RemoveHooks()
     DetourDetach(&(PVOID&)TrueRoGetMetaDataFile, RoGetMetaDataFileDetour);
     DetourDetach(&(PVOID&)TrueRoResolveNamespace, RoResolveNamespaceDetour);
     DetourTransactionCommit();
+
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
 }
 
 //extern "C" void WINAPI winrtact_Initialize()

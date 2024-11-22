@@ -16,10 +16,7 @@
 
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
-                <Directory Id="SDK_INSTALLROOT" Name="Desktop App SDK Runtime">
-                    <Directory Id="SDK_x64_INSTALLFOLDER" Name="x64" />
-                    <!--<Directory Id="SDK_Arm64_INSTALLFOLDER" Name="Arm64" />-->
-                    <Directory Id="SDK_Arm64X_INSTALLFOLDER" Name="Arm64X" />
+                <Directory Id="SDK_INSTALLFOLDER" Name="Desktop App SDK Runtime">
                 </Directory>
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <Directory Id="MIDIDIAG_INSTALLFOLDER" Name="Diagnostics" />
@@ -32,7 +29,7 @@
 
         <Component Id="WindowsMidiServicesAppSDK"
                    Bitness="always64"
-                   Directory="SDK_x64_INSTALLFOLDER"
+                   Directory="SDK_INSTALLFOLDER"
                    Guid="8016a59d-d844-4984-93e8-fa53f279abba">
 
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
@@ -74,15 +71,12 @@
         <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
         <Component Id="WindowsMidiServicesAppSdkImplementationRegEntries"
                    Bitness="always64"
-                   Directory="SDK_INSTALLROOT"
+                   Directory="SDK_INSTALLFOLDER"
                    Guid="0ce8cde5-b1b8-4825-854d-c31427b91cb5">
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
 
-                <!-- TODO: Need to only include what we actually install. Maybe simplify reg entries -->
-                
-                <RegistryValue Type="string" Name="x64"         Value="[SDK_x64_INSTALLFOLDER]" />
-                <RegistryValue Type="string" Name="Arm64X"     Value="[SDK_Arm64X_INSTALLFOLDER]" />
+                <RegistryValue Type="string" Name="Installed" Value="[SDK_INSTALLFOLDER]" />
 
             </RegistryKey>
         </Component>

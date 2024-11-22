@@ -101,7 +101,7 @@ BEGIN
     IDS_PLUGIN_METADATA_AUTHOR          "Microsoft"
 END
 
-IDR_MIDI2NETWORKMIDIABSTRACTION REGISTRY "Midi2.NetworkMidiTransport.rgs"
+IDR_MIDI2NETWORKMIDITRANSPORT REGISTRY "Midi2.NetworkMidiTransport.rgs"
 ////////////////////////////////////////////////////////////////////////////
 
 

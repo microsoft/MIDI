@@ -35,13 +35,13 @@ class Build : NukeBuild
 
 
     string VersionName => "Developer Preview 8";
-    string NuGetVersionName => "preview.8";
+    string NuGetVersionName => "preview-8";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
 
     const string BuildVersionMajor = "1";
     const string BuildVersionMinor = "0";
-    const string BuildVersionRevision = "1";
+    const string BuildVersionRevision = "2";
     const string BuildMajorMinorRevision = $"{BuildVersionMajor}.{BuildVersionMinor}.{BuildVersionRevision}";
 
     //string BuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year

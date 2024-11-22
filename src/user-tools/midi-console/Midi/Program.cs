@@ -10,6 +10,8 @@ using System.Runtime.Versioning;
 
 using Microsoft.Midi.ConsoleApp;
 
+using sdkinit = Microsoft.Windows.Devices.Midi2.Initialization;
+
 
 
 
@@ -227,18 +229,16 @@ AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation($"{Micros
 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft.Midi.Common.MidiBuildInformation.BuildFullVersion));
 AnsiConsole.WriteLine();
 
-if (args.Length == 0)
+
+using (var initializer = sdkinit.MidiDesktopAppSdkInitializer.Create())
 {
-    // show app description only when no arguments supplied
+    if (initializer == null)
+    {
+        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailed));
 
-    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppDescription(Strings.AppDescription));
-    AnsiConsole.WriteLine();
-}
+        return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
+    }
 
-
-
-using (var initializer = new Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer())
-{
     // initialize SDK runtime
     if (!initializer.InitializeSdkRuntime())
     {
@@ -254,6 +254,18 @@ using (var initializer = new Microsoft.Windows.Devices.Midi2.Initialization.Midi
 
         return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
     }
+
+    if (args.Length == 0)
+    {
+        // show app description only when no arguments supplied
+
+        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppDescription(Strings.AppDescription));
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("Installed MIDI SDK: " + AnsiMarkupFormatter.FormatSdkVersionInformation(initializer.GetInstalledSdkDescription(true, true, true)));
+        AnsiConsole.WriteLine();
+    }
+
 
     MidiClock.BeginLowLatencySystemTimerPeriod();
 

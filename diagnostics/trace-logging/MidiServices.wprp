@@ -7,19 +7,20 @@
     </EventCollector>
 
     <EventProvider Id="EventProvider_MidiSrv" Name="*Microsoft.Windows.Midi2.MidiSrv"/>
-    <EventProvider Id="EventProvider_MidiSrvAbstraction" Name="*Microsoft.Windows.Midi2.MidiSrvAbstraction"/>
+    <EventProvider Id="EventProvider_MidiSrvTransport" Name="*Microsoft.Windows.Midi2.MidiSrvTransport"/>
 
-    <EventProvider Id="EventProvider_KSAbstraction" Name="*Microsoft.Windows.Midi2.KSAbstraction"/>
-    <EventProvider Id="EventProvider_KSAggregateAbstraction" Name="*Microsoft.Windows.Midi2.KSAggregateAbstraction"/>
-    <EventProvider Id="EventProvider_DiagnosticsAbstraction" Name="*Microsoft.Windows.Midi2.DiagnosticsAbstraction"/>
-    <EventProvider Id="EventProvider_SampleAbstraction" Name="*Microsoft.Windows.Midi2.SampleAbstraction"/>
-    <EventProvider Id="EventProvider_VirtualMidiAbstraction" Name="*Microsoft.Windows.Midi2.VirtualMidiAbstraction"/>
-    <EventProvider Id="EventProvider_VirtualPatchBayAbstraction" Name="*Microsoft.Windows.Midi2.VirtualPatchBayAbstraction"/>
-    <EventProvider Id="EventProvider_NetworkMidiAbstraction" Name="*Microsoft.Windows.Midi2.NetworkMidiAbstraction"/>
-    <EventProvider Id="EventProvider_BluetoothMidiAbstraction" Name="*Microsoft.Windows.Midi2.BluetoothMidiAbstraction"/>
-    <EventProvider Id="EventProvider_LoopbackMidiAbstraction" Name="*Microsoft.Windows.Midi2.LoopbackMidiAbstraction"/>
+    <EventProvider Id="EventProvider_KSTransport" Name="*Microsoft.Windows.Midi2.KSTransport"/>
+    <EventProvider Id="EventProvider_KSAggregateTransport" Name="*Microsoft.Windows.Midi2.KSAggregateTransport"/>
+    <EventProvider Id="EventProvider_DiagnosticsTransport" Name="*Microsoft.Windows.Midi2.DiagnosticsTransport"/>
+    <EventProvider Id="EventProvider_SampleTransport" Name="*Microsoft.Windows.Midi2.SampleTransport"/>
+    <EventProvider Id="EventProvider_VirtualMidiTransport" Name="*Microsoft.Windows.Midi2.VirtualMidiTransport"/>
+    <EventProvider Id="EventProvider_VirtualPatchBayTransport" Name="*Microsoft.Windows.Midi2.VirtualPatchBayTransport"/>
+    <EventProvider Id="EventProvider_NetworkMidiTransport" Name="*Microsoft.Windows.Midi2.NetworkMidiTransport"/>
+    <EventProvider Id="EventProvider_BluetoothMidiTransport" Name="*Microsoft.Windows.Midi2.BluetoothMidiTransport"/>
+    <EventProvider Id="EventProvider_LoopbackMidiTransport" Name="*Microsoft.Windows.Midi2.LoopbackMidiTransport"/>
     <EventProvider Id="EventProvider_WdmAud2" Name="*Microsoft.Windows.Midi2.WdmAud2" />
     <EventProvider Id="EventProvider_SDK" Name="*Microsoft.Windows.Midi2.Sdk"/>
+    <EventProvider Id="EventProvider_SDKInitialization" Name="*Microsoft.Windows.Midi2.MidiClientInitializer"/>
 
     <EventProvider Id="EventProvider_BS2UMPTransform" Name="*Microsoft.Windows.Midi2.BS2UMPTransform"/>
     <EventProvider Id="EventProvider_EndpointMetadataListenerTransform" Name="*Microsoft.Windows.Midi2.EndpointMetadataListenerTransform"/>
@@ -36,20 +37,21 @@
         <EventCollectorId Value="EventCollector_MidiSrvSimple">
           <EventProviders>
             <EventProviderId Value="EventProvider_MidiSrv"/>
-            <EventProviderId Value="EventProvider_MidiSrvAbstraction"/>
+            <EventProviderId Value="EventProvider_MidiSrvTransport"/>
 
-            <EventProviderId Value="EventProvider_KSAbstraction"/>
-            <EventProviderId Value="EventProvider_KSAggregateAbstraction"/>
-            <EventProviderId Value="EventProvider_DiagnosticsAbstraction"/>
-            <EventProviderId Value="EventProvider_SampleAbstraction"/>
-            <EventProviderId Value="EventProvider_VirtualMidiAbstraction"/>
-            <EventProviderId Value="EventProvider_VirtualPatchBayAbstraction"/>
-            <EventProviderId Value="EventProvider_NetworkMidiAbstraction"/>
-            <EventProviderId Value="EventProvider_BluetoothMidiAbstraction"/>
-            <EventProviderId Value="EventProvider_LoopbackMidiAbstraction"/>
+            <EventProviderId Value="EventProvider_KSTransport"/>
+            <EventProviderId Value="EventProvider_KSAggregateTransport"/>
+            <EventProviderId Value="EventProvider_DiagnosticsTransport"/>
+            <EventProviderId Value="EventProvider_SampleTransport"/>
+            <EventProviderId Value="EventProvider_VirtualMidiTransport"/>
+            <EventProviderId Value="EventProvider_VirtualPatchBayTransport"/>
+            <EventProviderId Value="EventProvider_NetworkMidiTransport"/>
+            <EventProviderId Value="EventProvider_BluetoothMidiTransport"/>
+            <EventProviderId Value="EventProvider_LoopbackMidiTransport"/>
             <EventProviderId Value="EventProvider_WdmAud2"/>
 
             <EventProviderId Value="EventProvider_SDK"/>
+            <EventProviderId Value="EventProvider_SDKInitialization"/>
 
             <EventProviderId Value="EventProvider_BS2UMPTransform"/>
             <EventProviderId Value="EventProvider_EndpointMetadataListenerTransform"/>

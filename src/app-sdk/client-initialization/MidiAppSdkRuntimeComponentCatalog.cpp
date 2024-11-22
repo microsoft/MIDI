@@ -30,11 +30,23 @@ std::shared_ptr<MidiAppSdkRuntimeComponentCatalog> g_runtimeComponentCatalog{ nu
 std::vector<MidiAppSdkManifestEntry>
 MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     std::vector<MidiAppSdkManifestEntry> types{};
 
     //const std::wstring dllName{ MIDI_SDK_IMPL_DLL_NAME };
     const std::wstring rootNS{ MIDI_SDK_ROOT_NAMESPACE };
     const auto defaultThreading{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
+
+ //   types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".IMidiClockStatics", defaultThreading });
+
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiChannel", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiGroup", defaultThreading });
@@ -89,16 +101,16 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 HRESULT
 MidiAppSdkRuntimeComponentCatalog::Initialize()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
-#if defined(_M_ARM64EC) || defined(_M_ARM64)
-    // Arm64 and Arm64EC use same Arm64X binaries
-    const std::optional<std::wstring> sdkLocation = wil::reg::try_get_value_string(HKEY_LOCAL_MACHINE, MIDI_ROOT_ENDPOINT_APP_SDK_REG_KEY, MIDI_APP_SDK_ARM64X_REG_VALUE);
-#elif defined(_M_AMD64)
-    // other 64 bit Intel/AMD
-    const std::optional<std::wstring> sdkLocation = wil::reg::try_get_value_string(HKEY_LOCAL_MACHINE, MIDI_ROOT_ENDPOINT_APP_SDK_REG_KEY, MIDI_APP_SDK_X64_REG_VALUE);
-#else
-    // unsupported compile target architecture
-#endif
+    const std::optional<std::wstring> sdkLocation = wil::reg::try_get_value_string(HKEY_LOCAL_MACHINE, MIDI_ROOT_APP_SDK_REG_KEY, MIDI_APP_SDK_INSTALLED_REG_VALUE);
 
     if (!sdkLocation.has_value())
     {
@@ -106,6 +118,9 @@ MidiAppSdkRuntimeComponentCatalog::Initialize()
     }
 
     m_sdkDirectory = sdkLocation.value();
+
+    // TODO: Check to see if files we need exist in this location? May be overkill.
+
 
     // TODO: Do we harden and do any validation here? Check for path size or anything?
     m_sdkMetadataFullFilename = m_sdkDirectory + L"\\" + std::wstring{ MIDI_SDK_METADATA_NAME };
@@ -130,6 +145,14 @@ MidiAppSdkRuntimeComponentCatalog::Initialize()
 HRESULT
 MidiAppSdkRuntimeComponentCatalog::Shutdown()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
@@ -139,6 +162,16 @@ _Use_decl_annotations_
 bool 
 MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace) const
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
+    );
+
     if (typeOrNamespace != NULL)
     {
         UINT32 typeLength{ 0 };
@@ -171,6 +204,16 @@ MidiAppSdkRuntimeComponentCatalog::GetThreadingModel(
     ABI::Windows::Foundation::ThreadingType* threading_model
 ) const
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, nullptr), "class id")
+    );
+
     auto raw_class_name = WindowsGetStringRawBuffer(activatableClassId, nullptr);
     auto component_iter = m_types.find(raw_class_name);
 
@@ -192,6 +235,17 @@ MidiAppSdkRuntimeComponentCatalog::GetActivationFactory(
     void** factory
 ) const
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, nullptr), "class id")
+    );
+
+
     auto raw_class_name = WindowsGetStringRawBuffer(activatableClassId, nullptr);
     auto component_iter = m_types.find(raw_class_name);
     if (component_iter != m_types.end())
@@ -213,6 +267,16 @@ MidiAppSdkRuntimeComponentCatalog::GetMetadataFile(
     IMetaDataImport2** metaDataImport,
     mdTypeDef* typeDefToken) const
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(name, nullptr), "name")
+    );
+
     wchar_t folderPrefix[9];
     PCWSTR pszFullName = WindowsGetStringRawBuffer(name, nullptr);
     HRESULT hr = StringCchCopyW(folderPrefix, _countof(folderPrefix), pszFullName);
@@ -274,6 +338,17 @@ MidiAppSdkRuntimeComponentCatalog::FindTypeInMetaDataFile(
     _COM_Outptr_opt_result_maybenull_ IMetaDataImport2** ppMetaDataImport,
     _Out_opt_ mdTypeDef* pmdTypeDef) const
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(pszFullName, "full name"),
+        TraceLoggingWideString(pszCandidateFilePath, "candidate file path")
+        );
+
     HRESULT hr = S_OK;
     wil::com_ptr<IMetaDataImport2> spMetaDataImport;
     MetaDataImportersLRUCache* pMetaDataImporterCache = MetaDataImportersLRUCache::GetMetaDataImportersLRUCacheInstance();

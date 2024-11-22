@@ -11,36 +11,127 @@
 
 #include "pch.h"
 
-HRESULT MidiAppSdkRuntimeComponent::LoadModule()
+HRESULT 
+MidiAppSdkRuntimeComponent::LoadModule()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(module_name.c_str(), "module_name"),
+        TraceLoggingPointer(handle, "module handle")
+    );
+
     if (handle == nullptr)
     {
         handle = LoadLibraryExW(module_name.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+
         if (handle == nullptr)
         {
-            return HRESULT_FROM_WIN32(GetLastError());
+            auto hr = HRESULT_FROM_WIN32(GetLastError());
+
+            TraceLoggingWrite(
+                MidiClientInitializerTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"LoadLibraryExW failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                TraceLoggingWideString(module_name.c_str(), "module_name")
+            );
+
+            return hr;
         }
+
         this->get_activation_factory = (activation_factory_type)GetProcAddress(handle, "DllGetActivationFactory");
+
         if (this->get_activation_factory == nullptr)
         {
-            return HRESULT_FROM_WIN32(GetLastError());
+            auto hr = HRESULT_FROM_WIN32(GetLastError());
+
+            TraceLoggingWrite(
+                MidiClientInitializerTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"GetProcAddress(DllGetActivationFactory) failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                TraceLoggingWideString(module_name.c_str(), "module_name"),
+                TraceLoggingPointer(handle, "module handle")
+            );
+
+            return hr;
         }
     }
+
     return (handle != nullptr && this->get_activation_factory != nullptr) ? S_OK : E_FAIL;
 }
 
+
 _Use_decl_annotations_
-HRESULT MidiAppSdkRuntimeComponent::GetActivationFactory(HSTRING className, REFIID  iid, void** factory)
+HRESULT 
+MidiAppSdkRuntimeComponent::GetActivationFactory(
+    HSTRING className, 
+    REFIID  iid, 
+    void** factory
+)
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     RETURN_IF_FAILED(LoadModule());
 
     IActivationFactory* ifactory = nullptr;
     HRESULT hr = this->get_activation_factory(className, &ifactory);
+
     // optimize for IActivationFactory?
     if (SUCCEEDED(hr))
     {
         hr = ifactory->QueryInterface(iid, factory);
         ifactory->Release();
+
+        if (!SUCCEEDED(hr))
+        {
+            LOG_IF_FAILED(hr);
+
+            TraceLoggingWrite(
+                MidiClientInitializerTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"QueryInterface failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(module_name.c_str(), "module_name"),
+                TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+            );
+        }
     }
+    else
+    {
+        LOG_IF_FAILED(hr);
+
+        TraceLoggingWrite(
+            MidiClientInitializerTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"get_activation_factory failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(module_name.c_str(), "module_name"),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+    }
+
     return hr;
 }

@@ -22,8 +22,8 @@ CMidiClientInitializer::Initialize(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(nullptr, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     if (DisableThreadLibraryCalls(_AtlModule.HModuleInstance))
@@ -76,7 +76,7 @@ CMidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
@@ -209,6 +209,15 @@ CMidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
 HRESULT
 CMidiClientInitializer::EnsureServiceAvailable()
 {
+    TraceLoggingWrite(
+        MidiClientInitializerTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     wil::com_ptr_nothrow<IMidiTransport> serviceTransport;
     wil::com_ptr_nothrow<IMidiSessionTracker> sessionTracker;
 
@@ -234,7 +243,7 @@ CMidiClientInitializer::Shutdown()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 

@@ -293,6 +293,31 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
 
         OutputItemSeparator();
 
+        // list values under the desktop app sdk runtime
+
+        const auto sdkRuntimeRootKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_APP_SDK_REG_KEY);
+
+        if (sdkRuntimeRootKey.is_valid())
+        {
+            auto sdkRuntimeInstalledValue = wil::reg::try_get_value_string(sdkRuntimeRootKey.get(), MIDI_APP_SDK_INSTALLED_REG_VALUE);
+
+            if (sdkRuntimeInstalledValue.has_value())
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_INSTALLED, sdkRuntimeInstalledValue.value());
+            }
+            else
+            {
+                OutputError(L"No MIDI Desktop app SDK runtime registry 'Installed' value.");
+            }
+
+        }
+        else
+        {
+            OutputError(L"No MIDI Desktop app SDK runtime registry root key.");
+        }
+
+        OutputItemSeparator();
+
 
         //  List midisrvtransport info, even though it is not in the Windows MIDI Services registry key
 
@@ -303,12 +328,6 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
         OutputItemSeparator();
 
         //  TODO: List diagnostics transport info, even though it is not in the Windows MIDI Services registry key
-
-
-
-
-        // TODO: list all values under the desktop app sdk runtime
-
 
         // TODO: list all values under message processing plugins
 
