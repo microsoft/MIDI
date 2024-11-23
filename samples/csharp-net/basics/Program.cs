@@ -13,7 +13,7 @@ using Microsoft.VisualBasic;
 Console.WriteLine("Checking for Windows MIDI Services");
 
 // the initializer implements the Dispose pattern, so will shut down WinRT type redirection when disposed
-using (var initializer = new Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer())
+using (var initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create())
 {
     // initialize SDK runtime
     if (!initializer.InitializeSdkRuntime())

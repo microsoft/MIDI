@@ -48,7 +48,7 @@ namespace MidiSample.AppToAppMidi
             this.Closed += MainWindow_Closed;
 
             // the initializer implements the Dispose pattern, so will shut down WinRT type redirection when disposed
-            _initializer = new Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer();
+            _initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create();
 
             // initialize SDK runtime
             if (_initializer.InitializeSdkRuntime())

@@ -19,6 +19,7 @@
       
       <!-- Use .41 for .NET 8 -->
     <WindowsSdkPackageVersion>10.0.22621.41</WindowsSdkPackageVersion>
+      <!--<WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion> -->
     <UseRidGraph>true</UseRidGraph>
 
       <CsWinRTEnabled>false</CsWinRTEnabled>
@@ -60,12 +61,6 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
     <PackageReference Include="WinUIEx" Version="2.4.0" />
     <Manifest Include="$(ApplicationManifest)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="virtual-device-app-winui-cs.exe.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
