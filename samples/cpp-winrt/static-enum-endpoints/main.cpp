@@ -18,12 +18,6 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // S
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
 
-// the bootstrapper is included in the nuget package under build\native\include
-// which the targets file adds as an additional include directory at compile time
-// The first two includes are for the COM interface that is used for initialization.
-#include "winmidi/init/WindowsMidiServicesClientInitialization.h"
-#include "winmidi/init/WindowsMidiServicesClientInitialization_i.c"
-
 // This include file has a wrapper for the bootstrapper code. You are welcome to
 // use the .hpp as-is, or work the functionality into your code in whatever way
 // makes the most sense for your application.
