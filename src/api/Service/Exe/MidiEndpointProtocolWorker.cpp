@@ -720,6 +720,9 @@ CMidiEndpointProtocolWorker::ProcessStreamMessage(internal::PackedUmp128 ump)
             TraceLoggingWideString(L"Received Function Block Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
+        // TODO: This logic is wrong. Same function block info notification could be sent multiple
+        // times and that shouldn't increment counter. Similarly, notifications sent after initial 
+        // discovery shouldn't change this counter.
         m_countFunctionBlocksReceived += 1;
 
         DISCOVEREDFUNCTIONBLOCK block{};
