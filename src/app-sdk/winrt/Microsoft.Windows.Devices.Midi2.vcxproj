@@ -102,7 +102,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -110,7 +110,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -119,7 +119,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
@@ -128,7 +128,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
@@ -138,7 +138,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
@@ -147,7 +147,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -163,7 +163,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <ModuleDefinitionFile>midi-app-api.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>midi-app-winrt-sdk.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -183,17 +183,17 @@
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -239,9 +239,9 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -269,6 +269,12 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Initialization\MidiAppSdkManifest.h" />
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeComponent.h" />
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeComponentCatalog.h" />
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeTypeResolution.h" />
+    <ClInclude Include="Initialization\MidiClientInitializer.h" />
+    <ClInclude Include="Initialization\MidiRoDetours.h" />
     <ClInclude Include="MidiNetworkClientEndpointCreationConfig.h">
       <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
     </ClInclude>
@@ -438,6 +444,12 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeComponent.cpp" />
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeComponentCatalog.cpp" />
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeTypeResolution.cpp" />
+    <ClCompile Include="Initialization\MidiClientInitializer.cpp" />
+    <ClCompile Include="Initialization\MidiRoDetours.cpp" />
     <ClCompile Include="MidiNetworkClientEndpointCreationConfig.cpp">
       <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
     </ClCompile>
@@ -799,7 +811,7 @@
     <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="midi-app-api.def" />
+    <None Include="midi-app-winrt-sdk.def" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

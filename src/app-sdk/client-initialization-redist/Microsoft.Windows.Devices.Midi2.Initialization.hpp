@@ -36,11 +36,49 @@
 // provided alongside this file for use in your apps
 // they should be included in your app before this file. They
 // are not included here because that can result in dups
-//#include "WindowsMidiServicesClientInitialization.h"
-//#include "WindowsMidiServicesClientInitialization_i.c"
+
 
 namespace Microsoft::Windows::Devices::Midi2::Initialization
 {
+    typedef enum
+    {
+        Platform_x64 = 1,
+        //    Platform_Arm64 = 2,
+        //    Platform_Arm64EC = 3,
+        Platform_Arm64X = 4,
+    } MidiAppSDKPlatform;
+
+    struct __declspec(uuid("8087b303-d551-bce2-1ead-a2500d50c580")) IMidiClientInitializer : ::IUnknown
+    {
+        // initialize the SDK runtime, and set up WinRT detours
+        STDMETHOD(Initialize)() = 0;
+
+        // clean up
+        STDMETHOD(Shutdown)() = 0;
+
+        // returns the SDK version info. Supply nullptr for arguments you don't care about
+        STDMETHOD(GetInstalledWindowsMidiServicesSdkVersion)(
+            MidiAppSDKPlatform* buildPlatform,
+            DWORD* versionMajor,
+            DWORD* versionMinor,
+            DWORD* versionRevision,
+
+            DWORD* versionDateNumber,
+            DWORD* versionTimeNumber,
+
+            LPWSTR* buildSource,
+            LPWSTR* versionName,
+            LPWSTR* versionFullString
+            ) = 0;
+
+        // demand-starts the service if present
+        STDMETHOD(EnsureServiceAvailable)() = 0;
+    };
+
+    struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitializerUuid
+    {
+    };
+
     class MidiDesktopAppSdkInitializer
     {
     private:
@@ -86,10 +124,10 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             if (m_initializer != nullptr) return false;
 
             if (SUCCEEDED(CoCreateInstance(
-                    __uuidof(MidiClientInitializer),
+                    __uuidof(MidiClientInitializerUuid),
                     NULL,
                     CLSCTX::CLSCTX_INPROC_SERVER | CLSCTX::CLSCTX_FROM_DEFAULT_CONTEXT,
-                    IID_IMidiClientInitializer,
+                    __uuidof(IMidiClientInitializer),
                     (LPVOID*)&m_initializer
                 )))
             {
@@ -192,7 +230,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 // release the COM component. When it shuts down, it will clean up
                 // the activation hooks.
 
-                m_initializer->Shutdown();  // if you are using wil error logging, this is a good place to use LOG_IF_FAILED(m_initializer->Shutdown())
+            //    m_initializer->Shutdown();  // if you are using wil error logging, this is a good place to use LOG_IF_FAILED(m_initializer->Shutdown())
                 m_initializer->Release();   // if using wil::com_ptr_nothrow, you can remove this
 
                 m_initializer = nullptr;

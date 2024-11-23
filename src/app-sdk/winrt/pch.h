@@ -12,13 +12,27 @@
 //#define _VSDESIGNER_DONT_LOAD_AS_DLL
 
 
-#include <unknwn.h>
 
 #include <Windows.h>
 
+#include <optional>
+#include <stdint.h>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+#include <string>
+#include <cwctype>
+#include <queue>
+#include <mutex>
+#include <format>
+#include <filesystem>
+
+#include <wil\cppwinrt.h>
+#include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
+#include <wil\registry.h>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
@@ -35,17 +49,6 @@ namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 namespace streams = ::winrt::Windows::Storage::Streams;
 
-
-#include <stdint.h>
-#include <sstream>
-#include <iomanip>
-#include <algorithm>
-#include <string>
-#include <cwctype>
-#include <queue>
-#include <mutex>
-#include <format>
-#include <filesystem>
 
 
 // pre-declare namespaces
@@ -202,3 +205,27 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 
 #include "MidiServiceConfig.h"
 
+// Initialization-specific
+
+#include <combaseapi.h>
+//#include <comdef.h>
+#include <ctxtcall.h>
+#include <hstring.h>
+#include <roapi.h>
+#include <activationregistration.h>
+#include <activation.h>
+#include <Appmodel.h>
+#include <RoMetadataApi.h>
+#include <RoMetadata.h>
+#include "../undocked-reg-free-winrt/detours/detours.h"
+
+//#include <wrl/module.h>
+//#include <wrl/event.h>
+
+#include "Initialization/MidiAppSdkManifest.h"
+#include "Initialization/MidiAppSdkRuntimeComponent.h"
+#include "Initialization/MidiAppSdkRuntimeComponentCatalog.h"
+#include "Initialization/MidiAppSdkRuntimeTypeResolution.h"
+#include "Initialization/MidiRoDetours.h"
+
+#include "Initialization/MidiClientInitializer.h"

@@ -1,0 +1,12 @@
+﻿LIBRARY
+
+EXPORTS
+;DllCanUnloadNow = WINRT_CanUnloadNow                    PRIVATE
+
+DllGetActivationFactory = WINRT_GetActivationFactory    PRIVATE
+
+    DllCanUnloadNow      PRIVATE
+    DllGetClassObject    PRIVATE
+    DllRegisterServer    PRIVATE
+    DllUnregisterServer  PRIVATE
+    DllInstall           PRIVATE

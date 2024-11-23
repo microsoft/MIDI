@@ -433,7 +433,7 @@ class Build : NukeBuild
                 sdkBinaries.Add(sdkOutputRootFolder / "Microsoft.Windows.Devices.Midi2" / sourcePlatform / Configuration.Release / $"Microsoft.Windows.Devices.Midi2.pri");
 
                 // todo: if other DLLs are required here, add them
-                sdkBinaries.Add(sdkOutputRootFolder / "WindowsMidiServicesClientInitialization" / sourcePlatform / Configuration.Release / $"WindowsMidiServicesClientInitialization.dll");
+            //    sdkBinaries.Add(sdkOutputRootFolder / "WindowsMidiServicesClientInitialization" / sourcePlatform / Configuration.Release / $"WindowsMidiServicesClientInitialization.dll");
 
 
                 // create the nuget package

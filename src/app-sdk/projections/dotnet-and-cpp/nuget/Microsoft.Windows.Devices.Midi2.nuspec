@@ -83,8 +83,6 @@
         <!-- Build-time header files ================================================ -->
         
         <file target="build\native\include\winmidi\init"   src="..\..\..\client-initialization-redist\Microsoft.Windows.Devices.Midi2.Initialization.hpp" />
-        <file target="build\native\include\winmidi\init"   src="..\..\..\client-initialization-redist\WindowsMidiServicesClientInitialization.h" />
-        <file target="build\native\include\winmidi\init"   src="..\..\..\client-initialization-redist\WindowsMidiServicesClientInitialization_i.c" />
 
         <file target="build\native\include\winmidi\winrt"       src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\Microsoft.Windows.Devices.Midi2*.h" />
         <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.0.h" />
