@@ -360,9 +360,8 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
 
         // list values under the desktop app sdk runtime
 
-        const auto sdkRuntimeRootKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_APP_SDK_REG_KEY);
-
-        if (sdkRuntimeRootKey.is_valid())
+        wil::unique_hkey sdkRuntimeRootKey{ };
+        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_APP_SDK_REG_KEY, sdkRuntimeRootKey)))
         {
             auto sdkRuntimeInstalledValue = wil::reg::try_get_value_string(sdkRuntimeRootKey.get(), MIDI_APP_SDK_INSTALLED_REG_VALUE);
 
@@ -374,7 +373,6 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
             {
                 OutputError(L"No MIDI Desktop app SDK runtime registry 'Installed' value.");
             }
-
         }
         else
         {
@@ -408,32 +406,33 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
 
         // list all values under transport plugins
 
-        const auto transportPluginsKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY);
-
-        if (transportPluginsKey.is_valid())
+        wil::unique_hkey transportPluginsKey{ };
+        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY, transportPluginsKey)))
         {
             for (const auto& keyData : wil::make_range(wil::reg::key_iterator{ transportPluginsKey.get() }, wil::reg::key_iterator{}))
             {
                 // name of the transport in the registry (this doesn't really mean anything)
                 OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, keyData.name);
 
-                const auto key = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, std::wstring(std::wstring(MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY) + L"\\" + keyData.name).c_str());
-
-                OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
-                OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED, key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
-
-
-                // resolve the DLL path for the transport
-
-                auto midiClsid = wil::reg::try_get_value_string(key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
-
-                if (midiClsid.has_value())
+                wil::unique_hkey key{ };
+                if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, std::wstring(std::wstring(MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY) + L"\\" + keyData.name).c_str(), key)))
                 {
-                    OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, midiClsid.value());
-                }
-                else
-                {
-                    OutputError(L"No clsid found in MIDI transport entry");
+                    OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
+                    OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED, key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
+
+                    // resolve the DLL path for the transport
+
+                    auto midiClsid = wil::reg::try_get_value_string(key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
+
+                    if (midiClsid.has_value())
+                    {
+                        OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, midiClsid.value());
+                    }
+                    else
+                    {
+                        OutputError(L"No clsid found in MIDI transport entry");
+                    }
+
                 }
 
                 OutputItemSeparator();
@@ -484,7 +483,7 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
     }
     catch (...)
     {
-        OutputError(L"Could not open required registry key(s).");
+        OutputError(L"Exception enumerating registry keys and values.");
 
         return false;
     }
