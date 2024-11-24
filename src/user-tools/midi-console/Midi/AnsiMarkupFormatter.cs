@@ -86,6 +86,13 @@ namespace Microsoft.Midi.ConsoleApp
             return "[grey35]" + EscapeString(versionInformation) + "[/]";
         }
 
+        public static string FormatSdkVersionInformation(string versionInformation)
+        {
+            return "[darkseagreen3]" + EscapeString(versionInformation) + "[/]";
+        }
+
+        
+
         public static string FormatAppDescription(string description)
         {
             return "[deepskyblue2]" + EscapeString(description) + "[/]";

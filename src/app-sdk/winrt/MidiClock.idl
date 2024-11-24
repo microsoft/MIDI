@@ -10,8 +10,7 @@ import "MidiSystemTimerSettings.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
-    [default_interface]
-    runtimeclass MidiClock
+    static runtimeclass MidiClock
     {
         static UInt64 Now{ get; };
 

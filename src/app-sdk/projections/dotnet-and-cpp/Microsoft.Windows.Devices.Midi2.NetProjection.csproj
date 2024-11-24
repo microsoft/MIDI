@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0-windows10.0.20348.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<Platform>x64</Platform>
@@ -52,7 +52,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\winrt-initialization\Microsoft.Windows.Devices.Midi2.Initialization.vcxproj" />
     <ProjectReference Include="..\..\winrt\Microsoft.Windows.Devices.Midi2.vcxproj" />
   </ItemGroup>
 

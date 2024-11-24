@@ -34,7 +34,7 @@
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="3727cc9a-c427-4237-a733-5c6b10b33a9d"  >
 
-       <!--     <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" /> -->
+       <!--     <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBay.dll"          SelfRegCost="1" Vital="true" /> -->
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll"                SelfRegCost="1" Vital="true" />
 
 

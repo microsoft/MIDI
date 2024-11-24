@@ -94,9 +94,8 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 #define MIDI_DISCOVERY_ENABLED_REG_DEFAULT_VALUE        0x00000001
 
 
-#define MIDI_ROOT_ENDPOINT_APP_SDK_REG_KEY              MIDI_ROOT_REG_KEY L"\\Desktop App SDK Runtime"
-#define MIDI_APP_SDK_ARM64X_REG_VALUE                   L"Arm64X"
-#define MIDI_APP_SDK_X64_REG_VALUE                      L"x64"
+#define MIDI_ROOT_APP_SDK_REG_KEY                       MIDI_ROOT_REG_KEY L"\\Desktop App SDK Runtime"
+#define MIDI_APP_SDK_INSTALLED_REG_VALUE                L"Installed"
 
 
 #define MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY             MIDI_ROOT_REG_KEY L"\\Transport Plugins"

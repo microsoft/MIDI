@@ -30,7 +30,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
     // "endpointTransportPluginSettings":
     // {
-    //   endpoint abstraction guid :
+    //   endpoint transport guid :
     //   {
     //     "create"
     //     {
@@ -56,7 +56,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         json::JsonObject endpointDeviceBObject;
 
         json::JsonObject endpointCreationObject;
-        json::JsonObject abstractionObject;
+        json::JsonObject transportObject;
         json::JsonObject topLevelTransportPluginSettingsObject;
         json::JsonObject outerWrapperObject;
 
@@ -104,17 +104,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             internal::GuidToString(m_associationId),
             endpointAssociationObject);
 
-        // create the abstraction object with the child creation node
+        // create the transport object with the child creation node
 
-        abstractionObject.SetNamedValue(
+        transportObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
             endpointCreationObject);
 
         // create the main node
 
         topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(loop::MidiLoopbackEndpointManager::AbstractionId()),
-            abstractionObject);
+            internal::GuidToString(loop::MidiLoopbackEndpointManager::TransportId()),
+            transportObject);
 
         // wrap it all up so the json is valid
 

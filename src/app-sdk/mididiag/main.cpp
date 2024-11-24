@@ -170,6 +170,67 @@ void OutputHexNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t con
 }
 
 
+bool OutputFileVersion(_In_ std::wstring const& fieldName, _In_ std::wstring const& fileName)
+{
+    DWORD handle{ 0 };
+
+    if (DWORD bufferSize = GetFileVersionInfoSize(fileName.c_str(), &handle); bufferSize > 0)
+    {
+        std::vector<byte> buffer;
+        buffer.resize(bufferSize);
+
+        if (GetFileVersionInfo(fileName.c_str(), handle, bufferSize, buffer.data()))
+        {
+            LPBYTE verInfoBuffer{ nullptr };
+            UINT verInfoBufferSize{ 0 };
+
+            if (VerQueryValue(buffer.data(), L"\\", (LPVOID*)&verInfoBuffer, &verInfoBufferSize))
+            {
+                if (verInfoBufferSize > 0 && verInfoBufferSize >= sizeof(VS_FIXEDFILEINFO))
+                {
+                    VS_FIXEDFILEINFO* verInfo = (VS_FIXEDFILEINFO*)(verInfoBuffer);
+
+                    OutputFieldLabel(fieldName);
+
+                    // major.minor.build.revision format
+                    std::wcout
+                        << fieldSeparator
+                        << std::dec
+                        << static_cast<uint16_t>((verInfo->dwFileVersionMS >> 16) & 0xffff)
+                        << L"."
+                        << static_cast<uint16_t>((verInfo->dwFileVersionMS) & 0xffff)
+                        << L"."
+                        << static_cast<uint16_t>((verInfo->dwFileVersionLS >> 16) & 0xffff)
+                        << L"."
+                        << static_cast<uint16_t>((verInfo->dwFileVersionLS) & 0xffff)
+                        << std::endl;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+
+void OutputError(_In_ winrt::hresult_error const& error)
+{
+    const std::wstring errorLabel = L"ERROR";
+
+    OutputFieldLabel(errorLabel);
+
+    std::wcout
+        << fieldSeparator
+        << std::hex
+        << error.code()
+        << L" : ";
+
+    std::cout
+        << winrt::to_string(error.message())
+        << std::endl;
+
+}
+
 void OutputError(_In_ std::wstring const& errorMessage)
 {
     const std::wstring errorLabel = L"ERROR";
@@ -182,8 +243,14 @@ void OutputError(_In_ std::wstring const& errorMessage)
         << std::endl;
 }
 
+
 #define RETURN_SUCCESS return 0
 #define RETURN_FAIL return 1
+
+
+
+
+
 
 
 void OutputRegStringValue(std::wstring label, HKEY const key, std::wstring value)
@@ -213,6 +280,33 @@ void OutputRegDWordBooleanValue(std::wstring label, HKEY const key, std::wstring
     }
 }
 
+
+
+void OutputCOMComponentInfo(std::wstring const dllNameFieldName, std::wstring const classid)
+{
+    // InprocServer32 Value
+
+    std::wstring inprocServerKeyLocation = std::wstring{ L"CLSID\\" } + classid + std::wstring{ L"\\InprocServer32" };
+    wil::unique_hkey pathKey{ };    // the path is the "(default)" entry
+
+    if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_CLASSES_ROOT, inprocServerKeyLocation.c_str(), pathKey, wil::reg::key_access::read)))
+    {
+        auto path = wil::reg::try_get_value_string(pathKey.get(), nullptr);
+
+        if (path.has_value())
+        {
+            OutputStringField(dllNameFieldName, path.value());
+            OutputFileVersion(MIDIDIAG_FIELD_LABEL_FILE_VERSION, path.value());
+        }
+    }
+    else
+    {
+        OutputError(L"Could not find in-proc server value under HKEY_CLASSES_ROOT, " + inprocServerKeyLocation);
+    }
+}
+
+
+
 bool DoSectionRegistryEntries(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
@@ -232,8 +326,81 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
         OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS, rootKey.get(), MIDI_USE_MMCSS_REG_VALUE);
         OutputItemSeparator();
 
-        // TODO: list all values under the desktop app sdk runtime
+        // List midisrv info
 
+        wil::unique_hkey midisrvkey{ };
+        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Midisrv", midisrvkey, wil::reg::key_access::read)))
+        {
+            if (midisrvkey.is_valid())
+            {
+                auto midisrvImagePath = wil::reg::try_get_value_string(midisrvkey.get(), L"ImagePath");
+
+                if (midisrvImagePath.has_value())
+                {
+                    OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_MIDISRV_EXENAME, midisrvImagePath.value());
+               //     OutputFileVersion(MIDIDIAG_FIELD_LABEL_FILE_VERSION, midisrvImagePath.value());
+                }
+                else
+                {
+                    OutputError(L"Found midisrv service entry in registry, but it does not have an ImagePath");
+                }
+
+            }
+            else
+            {
+                OutputError(L"Found midisrv service entry in registry, but it does not have an ImagePath");
+            }
+        }
+        else
+        {
+            OutputError(L"Unable to find Midisrv entry in registry services key");
+        }
+
+        OutputItemSeparator();
+
+        // list values under the desktop app sdk runtime
+
+        const auto sdkRuntimeRootKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_APP_SDK_REG_KEY);
+
+        if (sdkRuntimeRootKey.is_valid())
+        {
+            auto sdkRuntimeInstalledValue = wil::reg::try_get_value_string(sdkRuntimeRootKey.get(), MIDI_APP_SDK_INSTALLED_REG_VALUE);
+
+            if (sdkRuntimeInstalledValue.has_value())
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_INSTALLED, sdkRuntimeInstalledValue.value());
+            }
+            else
+            {
+                OutputError(L"No MIDI Desktop app SDK runtime registry 'Installed' value.");
+            }
+
+        }
+        else
+        {
+            OutputError(L"No MIDI Desktop app SDK runtime registry root key.");
+        }
+
+        OutputItemSeparator();
+
+
+        //  List midisrvtransport info, even though it is not in the Windows MIDI Services registry key
+
+        std::wstring midisrvTransportClsidString{ L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}" };
+        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, std::wstring{ L"(Midisrv Transport)" });
+        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, midisrvTransportClsidString);
+        OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, midisrvTransportClsidString);
+        OutputItemSeparator();
+
+
+        std::wstring diagnosticsTransportClsidString{ L"{ac9b5417-3fe0-4e62-960f-034ee4235a1a}" };
+        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, std::wstring{ L"(Diagnostics Transport)" });
+        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, diagnosticsTransportClsidString);
+        OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, diagnosticsTransportClsidString);
+        OutputItemSeparator();
+
+
+        //  TODO: List diagnostics transport info, even though it is not in the Windows MIDI Services registry key
 
         // TODO: list all values under message processing plugins
 
@@ -243,17 +410,76 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
 
         const auto transportPluginsKey = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY);
 
-        for (const auto& keyData : wil::make_range(wil::reg::key_iterator{ transportPluginsKey.get() }, wil::reg::key_iterator{}))
+        if (transportPluginsKey.is_valid())
         {
-            // name of the transport in the registry (this doesn't really mean anything)
-            OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, keyData.name);
+            for (const auto& keyData : wil::make_range(wil::reg::key_iterator{ transportPluginsKey.get() }, wil::reg::key_iterator{}))
+            {
+                // name of the transport in the registry (this doesn't really mean anything)
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, keyData.name);
 
-            const auto key = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, std::wstring(std::wstring(MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY) + L"\\" + keyData.name).c_str());
+                const auto key = wil::reg::open_unique_key(HKEY_LOCAL_MACHINE, std::wstring(std::wstring(MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY) + L"\\" + keyData.name).c_str());
 
-            OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
-            OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED, key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
+                OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
+                OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED, key.get(), MIDI_PLUGIN_ENABLED_REG_VALUE);
 
-            OutputItemSeparator();
+
+                // resolve the DLL path for the transport
+
+                auto midiClsid = wil::reg::try_get_value_string(key.get(), MIDI_PLUGIN_CLSID_REG_VALUE);
+
+                if (midiClsid.has_value())
+                {
+                    OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, midiClsid.value());
+                }
+                else
+                {
+                    OutputError(L"No clsid found in MIDI transport entry");
+                }
+
+                OutputItemSeparator();
+            }
+        }
+        else
+        {
+            OutputError(L"Unable to enumerate transport plugins from registry.");
+        }
+
+        // list all MIDI values under Drivers32
+
+        std::wstring drivers32KeyLocation = std::wstring{ L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32" };
+        wil::unique_hkey drivers32Key{ };
+
+        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, drivers32KeyLocation.c_str(), drivers32Key, wil::reg::key_access::read)))
+        {
+            for (const auto& valueData : wil::make_range(wil::reg::value_iterator{ drivers32Key.get() }, wil::reg::value_iterator{}))
+            {
+                //valueData.name;
+                //valueData.type;
+
+                if (valueData.name.starts_with(L"midi") && valueData.name != L"midimapper")
+                {
+                    auto val = wil::reg::try_get_value_string(drivers32Key.get(), valueData.name.c_str());
+
+                    if (val.has_value())
+                    {
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + val.value());
+                    }
+                }
+                else if (valueData.name == L"MidisrvTransferComplete")
+                {
+                    auto val = wil::reg::try_get_value_dword(drivers32Key.get(), valueData.name.c_str());
+
+                    if (val.has_value())
+                    {
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + std::to_wstring(val.value()));
+                    }
+                }
+
+            }
+        }
+        else
+        {
+            OutputError(L"Could not open Drivers32 Key " + drivers32KeyLocation);
         }
     }
     catch (...)
@@ -265,18 +491,6 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
 
     return true;
 }
-
-bool DoSectionCOMComponents(_In_ bool const verbose)
-{
-    UNREFERENCED_PARAMETER(verbose);
-
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_ENUM_COM);
-
-
-    return true;
-
-}
-
 
 
 bool DoSectionTransports(_In_ bool const verbose)
@@ -615,10 +829,45 @@ bool DoSectionClock(_In_ bool const verbose)
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI_CLOCK);
 
-    OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_FREQUENCY, midi2::MidiClock::TimestampFrequency());
-    OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_NOW, midi2::MidiClock::Now());
+    try
+    {
+        OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_FREQUENCY, midi2::MidiClock::TimestampFrequency());
+        OutputTimestampField(MIDIDIAG_FIELD_LABEL_CLOCK_NOW, midi2::MidiClock::Now());
 
-    return true;
+        return true;
+    }
+    catch (winrt::hresult_error ex)
+    {
+        OutputError(ex.message().c_str());
+        OutputError(L"winrt::hresult_error getting clock information. Likely an issue with SDK activation.");
+
+        return false;
+    }
+}
+
+
+
+
+init::MidiDesktopAppSdkInitializer initializer{ };
+
+bool DoSectionSdkStatus(_In_ bool const verbose)
+{
+    UNREFERENCED_PARAMETER(verbose);
+
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SDK_STATUS);
+
+    
+    // next, try to init the SDK
+    bool initialized = initializer.InitializeSdkRuntime();
+
+    OutputBooleanField(MIDIDIAG_FIELD_LABEL_SDK_INITIALIZED, initialized);
+
+    if (!initialized)
+    {
+        OutputError(L"Failed to initialize Windows MIDI Services SDK runtime.");
+    }
+
+    return initialized;
 }
 
 bool DoSectionServiceStatus(_In_ bool const verbose)
@@ -629,9 +878,14 @@ bool DoSectionServiceStatus(_In_ bool const verbose)
 
     // this needs to be done before any other service calls
 
-    bool available = init::MidiServicesInitializer::EnsureServiceAvailable();
+    bool available = initializer.EnsureServiceAvailable();
 
     OutputBooleanField(MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE, available);
+
+    if (!available)
+    {
+        OutputError(L"Failed to start MIDI Service");
+    }
 
     return available;
 }
@@ -798,33 +1052,44 @@ int __cdecl main()
 
     try
     {
+        // do anything which doesn't rely on the service or SDK
+
         DoSectionSystemInfo(verbose);
-
-        if (midiClock)
-        {
-            if (!DoSectionClock(verbose)) RETURN_FAIL;
-        }
-
-
         DoSectionRegistryEntries(verbose);
 
-        DoSectionCOMComponents(verbose);
+        // check the service and SDK installs. Do SDK first because
+        // the service status uses the SDK initializer to try to start
+        // the windows service.
+        if (!DoSectionSdkStatus(verbose)) goto abort_run;
+
+        // we've made it past initializing the SDK, so make sure we shut it down
+        // when we exit. The initializer also has a destructor to do this, but 
+        // I like being explicit
+        auto cleanup = wil::scope_exit([&]
+            {
+                initializer.ShutdownSdkRuntime();
+            });
 
 
-        if (!DoSectionServiceStatus(verbose)) RETURN_FAIL;
+
+        if (!DoSectionServiceStatus(verbose)) goto abort_run;
+
+        // only show midi clock info if the sdk init has worked
+        if (midiClock)
+        {
+            if (!DoSectionClock(verbose)) goto abort_run;
+        }
 
         auto transportsWorked = DoSectionTransports(verbose);
 
         if (transportsWorked)
         {
-            if (!DoSectionMidi2ApiEndpoints(verbose)) RETURN_FAIL;
+            if (!DoSectionMidi2ApiEndpoints(verbose)) goto abort_run;
         }
 
         DoSectionWinRTMidi1ApiEndpoints(verbose);  // we don't bail if this fails
 
         DoSectionWinMMMidi1ApiEndpoints(verbose);  // we don't bail if this fails
-
-
 
         if (transportsWorked)
         {
@@ -833,9 +1098,10 @@ int __cdecl main()
             {
                 const uint8_t pingCount = 10;
 
-                if (!DoSectionPingTest(verbose, pingCount)) RETURN_FAIL;
+                if (!DoSectionPingTest(verbose, pingCount)) goto abort_run;
             }
         }
+
     }
     catch (...)
     {
@@ -844,8 +1110,15 @@ int __cdecl main()
         RETURN_FAIL;
     }
 
+    OutputSectionHeader(L"Successful Run");
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
 
     RETURN_SUCCESS;
-}
 
+abort_run:
+    OutputSectionHeader(L"Aborted Run");
+    OutputError(L"Aborting MIDI Diag run due to failure(s).");
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_END_OF_FILE);
+
+    RETURN_FAIL;
+}

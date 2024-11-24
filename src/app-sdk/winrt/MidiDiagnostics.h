@@ -15,7 +15,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation
 {
     struct MidiDiagnostics
     {
-        MidiDiagnostics() = default;
+        //MidiDiagnostics() = default;
 
         // these would be more robust if they did an enumeration lookup on the loopback/ping properties
         static winrt::hstring DiagnosticsLoopbackAEndpointDeviceId() noexcept { return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDI_DIAGNOSTICS_LOOPBACK_BIDI_ID_A).c_str(); }
@@ -29,7 +29,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::factory_implementation
 {
-    struct MidiDiagnostics : MidiDiagnosticsT<MidiDiagnostics, implementation::MidiDiagnostics>
+    struct MidiDiagnostics : MidiDiagnosticsT<MidiDiagnostics, implementation::MidiDiagnostics, winrt::static_lifetime>
     {
     };
 }

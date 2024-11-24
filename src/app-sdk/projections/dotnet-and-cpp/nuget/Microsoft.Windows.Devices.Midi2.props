@@ -17,11 +17,7 @@
 		<Reference Include="WindowsMidiServicesAppSDK">
 			<HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.winmd</HintPath>
 		</Reference>
-
-        <Reference Include="WindowsMidiServicesAppSDKInitialization">
-            <HintPath>$(NugetRoot)\ref\native\Microsoft.Windows.Devices.Midi2.Initialization.winmd</HintPath>
-        </Reference>
-        
+       
         
     </ItemGroup>
 </Project>

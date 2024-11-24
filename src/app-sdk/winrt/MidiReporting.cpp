@@ -19,14 +19,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 
         try
         {
-            winrt::com_ptr<IMidiTransport> serviceAbstraction;
+            winrt::com_ptr<IMidiTransport> serviceTransport;
             winrt::com_ptr<IMidiServicePluginMetadataReporterInterface> metadataReporter;
 
-            serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
 
-            if (serviceAbstraction != nullptr)
+            if (serviceTransport != nullptr)
             {
-                if (SUCCEEDED(serviceAbstraction->Activate(__uuidof(IMidiServicePluginMetadataReporterInterface), (void**)&metadataReporter)))
+                if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiServicePluginMetadataReporterInterface), (void**)&metadataReporter)))
                 {
                     LPWSTR rpcCallJson{ nullptr };
                     auto callStatus = metadataReporter->GetTransportList(&rpcCallJson);
@@ -52,18 +52,18 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
                                     auto transport = transportKV.Value().GetObject();
 
                                     info.Id = internal::StringToGuid(transportKV.Key().c_str());
-                                    info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
-                                    info.TransportCode = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L"");
-                                    info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
-                                    info.SmallImagePath = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, L"");
-                                    info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
-                                    info.Version = transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_VERSION_PROPERTY_KEY, L"");
-                                    info.IsSystemManaged = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false);
-                                    info.IsRuntimeCreatableByApps = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false);
-                                    info.IsRuntimeCreatableBySettings = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false);
-                                    info.CanConfigure = transport.GetNamedBoolean(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false);
+                                    info.Name = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY, L"");
+                                    info.TransportCode = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY, L"");
+                                    info.Description = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY, L"");
+                                    info.SmallImagePath = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_SMALL_IMAGE_PATH_PROPERTY_KEY, L"");
+                                    info.Author = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY, L"");
+                                    info.Version = transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY, L"");
+                                    info.IsSystemManaged = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY, false);
+                                    info.IsRuntimeCreatableByApps = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY, false);
+                                    info.IsRuntimeCreatableBySettings = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY, false);
+                                    info.CanConfigure = transport.GetNamedBoolean(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY, false);
 
-                                    //transport.GetNamedString(MIDI_SERVICE_JSON_ABSTRACTION_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, L"");
+                                    //transport.GetNamedString(MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY, L"");
 
                                     transportList.Append(std::move(info));
                                 }
@@ -124,14 +124,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 
         try
         {
-            winrt::com_ptr<IMidiTransport> serviceAbstraction;
+            winrt::com_ptr<IMidiTransport> serviceTransport;
             winrt::com_ptr<IMidiSessionTracker> sessionTracker;
 
-            serviceAbstraction = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvAbstraction), CLSCTX_ALL);
+            serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
 
-            if (serviceAbstraction != nullptr)
+            if (serviceTransport != nullptr)
             {
-                if (SUCCEEDED(serviceAbstraction->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker)))
+                if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker)))
                 {
                     LPWSTR rpcSessionListJson{ nullptr };
                     auto callStatus = sessionTracker->GetSessionList(&rpcSessionListJson);

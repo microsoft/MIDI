@@ -17,7 +17,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 {
     bool MidiVirtualDeviceManager::IsTransportAvailable() noexcept
     {
-        // TODO: Check to see if service abstraction is installed and running. May require a new service call
+        // TODO: Check to see if service transport is installed and running. May require a new service call
         return true;
     }
 

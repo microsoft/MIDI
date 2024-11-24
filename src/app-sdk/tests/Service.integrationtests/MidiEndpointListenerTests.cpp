@@ -14,7 +14,7 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
 {
     LOG_OUTPUT(L"TestMessageTypeListener **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -122,7 +122,7 @@ void MidiEndpointListenerTests::TestGroupListener()
 {
     LOG_OUTPUT(L"TestGroupListener **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+ //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -241,7 +241,7 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
 {
     LOG_OUTPUT(L"TestGroupAndChannelListener **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();

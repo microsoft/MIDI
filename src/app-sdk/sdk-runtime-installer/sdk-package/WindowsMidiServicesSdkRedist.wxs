@@ -16,10 +16,7 @@
 
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
-                <Directory Id="SDK_INSTALLROOT" Name="Desktop App SDK Runtime">
-                    <Directory Id="SDK_x64_INSTALLFOLDER" Name="x64" />
-                    <!--<Directory Id="SDK_Arm64_INSTALLFOLDER" Name="Arm64" />-->
-                    <Directory Id="SDK_Arm64X_INSTALLFOLDER" Name="Arm64X" />
+                <Directory Id="SDK_INSTALLFOLDER" Name="Desktop App SDK Runtime">
                 </Directory>
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <Directory Id="MIDIDIAG_INSTALLFOLDER" Name="Diagnostics" />
@@ -30,68 +27,26 @@
         
         <!-- Install SDK -->
 
-        <Component Id="WindowsMidiServicesAppSDKx64"
+        <Component Id="WindowsMidiServicesAppSDK"
                    Bitness="always64"
-                   Directory="SDK_x64_INSTALLFOLDER"
-                   Guid="7016a59d-d844-4984-93e8-fa53f279abb4">
+                   Directory="SDK_INSTALLFOLDER"
+                   Guid="8016a59d-d844-4984-93e8-fa53f279abba">
 
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.winmd" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" SelfRegCost="1"/>
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.winmd" Vital="true" />
 
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\x64\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
+            <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\WindowsMidiServicesClientInitialization.dll" Vital="true" SelfRegCost="1"/>-->
+            <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\WindowsMidiServicesClientInitialization.tlb" Vital="true"/>-->
 
-        </Component>
-
-        <!--
-        <Component Id="WindowsAppSDKArm64"
-                   Bitness="always64"
-                   Directory="SDK_Arm64_INSTALLFOLDER"
-                   Guid="e14e94ef-1974-43b5-a587-b07ef930143d">
-            
-            
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.winmd" />
-            
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
-            
-        </Component>
-        -->
-
-        <Component Id="WindowsMidiServicesAppSDKArm64X"
-                   Bitness="always64"
-                   Directory="SDK_Arm64X_INSTALLFOLDER"
-                   Guid="7ce28fd9-252d-4ae7-ad9e-7de049ab6c94">
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.winmd" />
-            
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\Arm64EC\Microsoft.Windows.Devices.Midi2.Initialization.winmd" />
-            
         </Component>
 
         <!-- Install MIDI Diag Utility -->
-        <!-- TODO: This doesn't account for Arm64X -->
         <Component Id="MidiDiagUtility"
                    Bitness="always64"
                    Directory="MIDIDIAG_INSTALLFOLDER"
                    Guid="a10cb6cb-571a-462e-9df7-f388460da50f"  >
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe.manifest" Vital="true" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.Initialization.pri" />
-
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" />
 
             <!-- Add folder to path -->
             <Environment Id="AddMidiDiagUtilityToSystemPath"
@@ -100,7 +55,6 @@
         </Component>
 
         <!-- Install MIDI USB Utility -->
-        <!-- TODO: This doesn't account for Arm64X -->
         <Component Id="MidiUsbUtility"
                    Bitness="always64"
                    Directory="MIDIUSB_INSTALLFOLDER"
@@ -117,23 +71,19 @@
         <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
         <Component Id="WindowsMidiServicesAppSdkImplementationRegEntries"
                    Bitness="always64"
-                   Directory="SDK_INSTALLROOT"
+                   Directory="SDK_INSTALLFOLDER"
                    Guid="0ce8cde5-b1b8-4825-854d-c31427b91cb5">
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
 
-                <RegistryValue Type="string" Name="x64"         Value="[SDK_x64_INSTALLFOLDER]" />
-                <!--<RegistryValue Type="string" Name="Arm64"       Value="[SDK_Arm64_INSTALLFOLDER]" />-->
-                <RegistryValue Type="string" Name="Arm64X"     Value="[SDK_Arm64X_INSTALLFOLDER]" />
+                <RegistryValue Type="string" Name="Installed" Value="[SDK_INSTALLFOLDER]" />
 
             </RegistryKey>
         </Component>
 
 
         <Feature Id="WindowsMIDIServices">
-            <ComponentRef Id="WindowsMidiServicesAppSDKx64" />
-            <!--<ComponentRef Id="WindowsAppSDKArm64"/>-->
-            <ComponentRef Id="WindowsMidiServicesAppSDKArm64X"/>
+            <ComponentRef Id="WindowsMidiServicesAppSDK" />
             <ComponentRef Id="WindowsMidiServicesAppSdkImplementationRegEntries"/>
             <ComponentRef Id="MidiDiagUtility"/>
             <ComponentRef Id="MidiUsbUtility"/>

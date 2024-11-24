@@ -11,12 +11,12 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::VirtualPatchBay::implementation
 {
-    struct MidiVirtualPatchBayManager : MidiVirtualPatchBayManagerT<MidiVirtualPatchBayManager>
+    struct MidiVirtualPatchBayManager
     {
-        MidiVirtualPatchBayManager() = default;
+        //MidiVirtualPatchBayManager() = default;
 
         static bool IsTransportAvailable();
-        static winrt::guid AbstractionId();
+        static winrt::guid TransportId();
 
 
         static vpb::MidiVirtualPatchBayRouteCreationResult CreateRoute(

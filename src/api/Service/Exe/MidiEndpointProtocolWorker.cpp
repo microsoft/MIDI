@@ -720,6 +720,9 @@ CMidiEndpointProtocolWorker::ProcessStreamMessage(internal::PackedUmp128 ump)
             TraceLoggingWideString(L"Received Function Block Info Notification", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
+        // TODO: This logic is wrong. Same function block info notification could be sent multiple
+        // times and that shouldn't increment counter. Similarly, notifications sent after initial 
+        // discovery shouldn't change this counter.
         m_countFunctionBlocksReceived += 1;
 
         DISCOVEREDFUNCTIONBLOCK block{};
@@ -923,9 +926,12 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
     auto endpointRxJR = internal::GetStreamConfigurationNotificationReceiveJRFromFirstWord(ump.word0);
     auto endpointTxJR = internal::GetStreamConfigurationNotificationTransmitJRFromFirstWord(ump.word0);
 
-    // TODO: See bugs 279/280. We should only negotiate protocol if the device supports both m1 and m2.
+    // TODO: See bugs GH 279/280. We should only negotiate protocol if the device supports both m1 and m2.
     // if it only supports m1, we should stick with that. If only m2, we should stick with that.
     // but JR timestamps can still be negotiated
+
+    // TODO: See bug #440. This may be ending up skipped because the flags set during initial negotiation.
+    // New negotiation messages can happen at any time.
 
     if (protocol != m_preferredMidiProtocol ||
         endpointRxJR != m_preferToSendJRTimestampsToEndpoint ||

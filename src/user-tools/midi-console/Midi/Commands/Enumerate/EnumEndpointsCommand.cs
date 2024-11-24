@@ -8,7 +8,7 @@
 
 
 
-using Microsoft.Windows.Devices.Midi2.Initialization;
+//using Microsoft.Windows.Devices.Midi2.Initialization;
 using Spectre.Console;
 
 namespace Microsoft.Midi.ConsoleApp
@@ -44,11 +44,11 @@ namespace Microsoft.Midi.ConsoleApp
         {
             bool atLeastOneEndpointFound = false;
 
-            if (!MidiServicesInitializer.EnsureServiceAvailable())
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
-                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
-            }
+            //if (!MidiServicesInitializer.EnsureServiceAvailable())
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            //}
 
             AnsiConsole.Status()
                 .Start("Enumerating endpoints...", ctx =>

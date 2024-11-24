@@ -149,7 +149,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         additionalProperties.Append(L"System.Devices.Present");
 
         // Basics ============================================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_AbstractionLayer);
+        additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
         additionalProperties.Append(STRING_PKEY_MIDI_TransportCode);
 
         additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
@@ -685,7 +685,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 //        info.LargeImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedLargeImagePath, L"");
 //        info.SmallImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedSmallImagePath, L"");
 
-        info.TransportId = GetProperty<winrt::guid>(STRING_PKEY_MIDI_AbstractionLayer, winrt::guid{});
+        info.TransportId = GetProperty<winrt::guid>(STRING_PKEY_MIDI_TransportLayer, winrt::guid{});
         info.TransportCode = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_TransportCode, L"");
         info.SupportsMultiClient = GetProperty<bool>(STRING_PKEY_MIDI_SupportsMulticlient, true);
 

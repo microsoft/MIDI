@@ -14,7 +14,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiMessageHelper
     {
-        MidiMessageHelper() = default;
+        //MidiMessageHelper() = default;
 
         static bool ValidateMessage32MessageType(_In_ uint32_t const word0) noexcept;
         static bool ValidateMessage64MessageType(_In_ uint32_t const word0) noexcept;

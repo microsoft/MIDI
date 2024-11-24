@@ -43,7 +43,7 @@ namespace Microsoft.Midi.ConsoleApp
             catch (Exception)
             {
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to find service '{MidiServiceHelper.GetServiceName()}'. Is Windows MIDI Services installed?"));
-                return (int)MidiConsoleReturnCode.ErrorMidiServicesNotInstalled;
+                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
             }
 
 

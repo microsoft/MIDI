@@ -15,6 +15,9 @@
     "Endpoint Properties": {
       "commandName": "Project",
       "commandLineArgs": "endpoint properties --verbose"
+    },
+    "No Arguments": {
+      "commandName": "Project"
     }
   }
 }

@@ -12,12 +12,12 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    struct MidiNetworkEndpointManager : MidiNetworkEndpointManagerT<MidiNetworkEndpointManager>
+    struct MidiNetworkEndpointManager
     {
-        MidiNetworkEndpointManager() = default;
+        //MidiNetworkEndpointManager() = default;
 
         static bool IsTransportAvailable();
-        static winrt::guid AbstractionId();
+        static winrt::guid TransportId();
         static winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkHostEndpointCreationResult CreateNetworkHost(winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkHostEndpointCreationConfig const& creationConfig);
         static winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkHostEndpointRemovalResult RemoveNetworkHost(winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkHostEndpointRemovalConfig const& removalConfig);
         static winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkClientEndpointCreationResult CreateNetworkClient(winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::MidiNetworkClientEndpointCreationConfig const& creationConfig);
@@ -26,7 +26,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation
 {
-    struct MidiNetworkEndpointManager : MidiNetworkEndpointManagerT<MidiNetworkEndpointManager, implementation::MidiNetworkEndpointManager>
+    struct MidiNetworkEndpointManager : MidiNetworkEndpointManagerT<MidiNetworkEndpointManager, implementation::MidiNetworkEndpointManager, winrt::static_lifetime>
     {
     };
 }

@@ -179,7 +179,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalInitialize(
             _In_ winrt::guid sessionId,
-            _In_ winrt::com_ptr<IMidiTransport> serviceAbstraction,
+            _In_ winrt::com_ptr<IMidiTransport> serviceTransport,
             _In_ winrt::guid const connectionId,
             _In_ winrt::hstring const endpointDeviceId,
             _In_ midi2::IMidiEndpointConnectionSettings connectionSettings,
@@ -214,8 +214,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool m_hasHadDisconnect{ false };
         bool m_closeHasBeenCalled{ false };
 
-        winrt::com_ptr<IMidiTransport> m_serviceAbstraction{ nullptr };
-        winrt::com_ptr<IMidiBiDi> m_endpointAbstraction{ nullptr };
+        winrt::com_ptr<IMidiTransport> m_serviceTransport{ nullptr };
+        winrt::com_ptr<IMidiBiDi> m_endpointTransport{ nullptr };
 
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;

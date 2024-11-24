@@ -62,7 +62,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         auto byteLength = (uint8_t)(wordCount * sizeof(uint32_t));
 
-        return SendMessageRaw(m_endpointAbstraction, (void*)(&message), byteLength, timestamp);
+        return SendMessageRaw(m_endpointTransport, (void*)(&message), byteLength, timestamp);
     }
 
 
@@ -153,7 +153,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 }
 
                 // send the ump
-                return SendMessageRaw(m_endpointAbstraction, (void*)(dataPointer + byteOffset), byteCount, timestamp);
+                return SendMessageRaw(m_endpointTransport, (void*)(dataPointer + byteOffset), byteCount, timestamp);
             }
             else
             {
@@ -286,7 +286,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             // if the service goes down, this will fail
 
-            return SendMessageRaw(m_endpointAbstraction, (void*)(words.data() + startIndex), umpDataSize, timestamp);
+            return SendMessageRaw(m_endpointTransport, (void*)(words.data() + startIndex), umpDataSize, timestamp);
 
         }
         catch (winrt::hresult_error const& ex)
@@ -379,7 +379,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             // if the service goes down, this will fail
 
-            return SendMessageRaw(m_endpointAbstraction, (void*)&word0, umpByteCount, timestamp);
+            return SendMessageRaw(m_endpointTransport, (void*)&word0, umpByteCount, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -477,7 +477,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             // if the service goes down, this will fail
 
-            return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
+            return SendMessageRaw(m_endpointTransport, (void*)&ump, umpByteCount, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -577,7 +577,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             // if the service goes down, this will fail
 
-            return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
+            return SendMessageRaw(m_endpointTransport, (void*)&ump, umpByteCount, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -679,7 +679,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             // if the service goes down, this will fail
 
-            return SendMessageRaw(m_endpointAbstraction, (void*)&ump, umpByteCount, timestamp);
+            return SendMessageRaw(m_endpointTransport, (void*)&ump, umpByteCount, timestamp);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -743,7 +743,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         try
         {
-            return SendUmpInternal(m_endpointAbstraction, message);
+            return SendUmpInternal(m_endpointTransport, message);
 
         }
         catch (winrt::hresult_error const& ex)

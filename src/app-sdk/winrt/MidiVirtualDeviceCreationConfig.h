@@ -42,7 +42,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         );
 
         bool IsFromCurrentConfigFile() const noexcept { return false; }
-        winrt::guid TransportId() const noexcept { return virt::MidiVirtualDeviceManager::AbstractionId(); }
+        winrt::guid TransportId() const noexcept { return virt::MidiVirtualDeviceManager::TransportId(); }
         winrt::hstring GetConfigJson() const noexcept;
 
 

@@ -16,20 +16,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization::implementat
     {
         MidiServicesInitializer() = default;
 
+        static bool InitializeDesktopAppSdkRuntime();
+        static bool ShutdownDesktopAppSdkRuntime();
         static bool IsCompatibleDesktopAppSdkRuntimeInstalled();
 
         static bool IsOperatingSystemSupported();
-
-        static bool InitializeSdkRuntime();
         static bool EnsureServiceAvailable();
 
 
-        static foundation::Uri GetLatestRuntimeReleaseInstallerUri();
-        static foundation::Uri GetLatestSettingsAppReleaseInstallerUri();
-        static foundation::Uri GetLatestConsoleAppReleaseInstallerUri();
+        static foundation::Uri GetLatestDesktopAppSdkRuntimeReleaseInstallerUri();
+        //static foundation::Uri GetLatestSettingsAppReleaseInstallerUri();
+        //static foundation::Uri GetLatestConsoleAppReleaseInstallerUri();
 
     private:
-
+        static std::wstring m_sdkLocation;
+        static HMODULE m_moduleHandle;
 
     };
 }

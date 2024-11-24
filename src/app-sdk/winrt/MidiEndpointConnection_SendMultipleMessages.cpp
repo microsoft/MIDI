@@ -92,7 +92,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
                 if (bytesProcessed + bytesInThisMessage <= byteCount)
                 {
-                    auto result = SendMessageRaw(m_endpointAbstraction, (void*)(byteDataPointer), bytesInThisMessage, timestamp);
+                    auto result = SendMessageRaw(m_endpointTransport, (void*)(byteDataPointer), bytesInThisMessage, timestamp);
 
                     if (SendMessageFailed(result))
                     {
@@ -221,7 +221,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 iter.MoveNext();
             }
 
-            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)(messageWords), messageWordCount * sizeof(uint32_t), timestamp);
+            auto sendMessageResult = SendMessageRaw(m_endpointTransport, (VOID*)(messageWords), messageWordCount * sizeof(uint32_t), timestamp);
 
             if (SendMessageFailed(sendMessageResult))
             {
@@ -286,7 +286,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             if (i + messageWordCount <= words.size())
             {
-                auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)(words.data() + i), messageWordCount * sizeof(uint32_t), timestamp);
+                auto sendMessageResult = SendMessageRaw(m_endpointTransport, (VOID*)(words.data() + i), messageWordCount * sizeof(uint32_t), timestamp);
 
                 if (SendMessageFailed(sendMessageResult))
                 {
@@ -361,7 +361,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         for (auto const& message : messages)
         {
             auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(message.Word0);
-            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)&message, messageWordCount * sizeof(uint32_t), timestamp);
+            auto sendMessageResult = SendMessageRaw(m_endpointTransport, (VOID*)&message, messageWordCount * sizeof(uint32_t), timestamp);
 
             if (SendMessageFailed(sendMessageResult))
             {
@@ -417,7 +417,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         while (iterator < messages.end() && iterator < endpoint)
         {
             auto messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(iterator->Word0);
-            auto sendMessageResult = SendMessageRaw(m_endpointAbstraction, (VOID*)iterator, messageWordCount * sizeof(uint32_t), timestamp);
+            auto sendMessageResult = SendMessageRaw(m_endpointTransport, (VOID*)iterator, messageWordCount * sizeof(uint32_t), timestamp);
 
             if (SendMessageFailed(sendMessageResult))
             {
@@ -465,7 +465,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 #endif
         for (auto const& ump : messages)
         {
-            auto result = SendUmpInternal(m_endpointAbstraction, ump);
+            auto result = SendUmpInternal(m_endpointTransport, ump);
 
             if (!MidiEndpointConnection::SendMessageSucceeded(result))
             {

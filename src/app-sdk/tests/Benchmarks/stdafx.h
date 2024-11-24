@@ -12,7 +12,6 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
-#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
@@ -43,6 +42,9 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include <Objbase.h>
 #include "loopback_ids.h"
 #include "MidiDefs.h"
+
+#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
+namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 
 #include "MidiBenchmarks.h"

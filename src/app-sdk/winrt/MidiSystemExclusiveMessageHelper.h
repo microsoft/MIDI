@@ -13,7 +13,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysExTransfer::i
 {
     struct MidiSystemExclusiveMessageHelper
     {
-        MidiSystemExclusiveMessageHelper() = default;
+        //MidiSystemExclusiveMessageHelper() = default;
 
         static collections::IVector<uint8_t> GetDataBytesFromMultipleSystemExclusive7Messages(
             _In_ collections::IIterable<midi2::MidiMessage64> const& messages) noexcept;

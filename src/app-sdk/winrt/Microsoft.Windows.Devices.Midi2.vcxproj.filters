@@ -61,6 +61,24 @@
     <ClCompile Include="MidiNetworkEndpointManager.cpp">
       <Filter>SDK\Endpoints\Network</Filter>
     </ClCompile>
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeComponent.cpp">
+      <Filter>Initializer\WinRT Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeComponentCatalog.cpp">
+      <Filter>Initializer\WinRT Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeTypeResolution.cpp">
+      <Filter>Initializer\WinRT Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="Initialization\MidiRoDetours.cpp">
+      <Filter>Initializer\WinRT Detour</Filter>
+    </ClCompile>
+    <ClCompile Include="Initialization\MidiClientInitializer.cpp">
+      <Filter>Initializer\Init</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Initializer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -121,6 +139,24 @@
     </ClInclude>
     <ClInclude Include="MidiNetworkEndpointManager.h">
       <Filter>SDK\Endpoints\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeComponent.h">
+      <Filter>Initializer\WinRT Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeComponentCatalog.h">
+      <Filter>Initializer\WinRT Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeTypeResolution.h">
+      <Filter>Initializer\WinRT Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="Initialization\MidiRoDetours.h">
+      <Filter>Initializer\WinRT Detour</Filter>
+    </ClInclude>
+    <ClInclude Include="Initialization\MidiAppSdkManifest.h">
+      <Filter>Initializer\Manifest</Filter>
+    </ClInclude>
+    <ClInclude Include="Initialization\MidiClientInitializer.h">
+      <Filter>Initializer\Init</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -438,7 +474,7 @@
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <None Include="midi-app-api.def" />
+    <None Include="midi-app-winrt-sdk.def" />
     <None Include="packages.config" />
     <None Include="PropertySheet.props" />
   </ItemGroup>
@@ -532,6 +568,18 @@
     </Filter>
     <Filter Include="SDK\Endpoints\Network\Client">
       <UniqueIdentifier>{0224a83d-4dbc-4f65-9e50-e0ba99c5ba6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Initializer">
+      <UniqueIdentifier>{da9507ff-dd40-44e5-aaaf-f88b776d9ba7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Initializer\WinRT Detour">
+      <UniqueIdentifier>{ec9a58b0-1e03-4825-a263-7213ebb8b500}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Initializer\Manifest">
+      <UniqueIdentifier>{ebaa3bc4-b83f-4fec-a903-82bd0d8abebc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Initializer\Init">
+      <UniqueIdentifier>{2abca8b5-6d62-4dfd-91a2-4686707eec5a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

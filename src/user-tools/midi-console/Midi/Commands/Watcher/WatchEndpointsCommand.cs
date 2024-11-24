@@ -6,7 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Initialization;
+//using Microsoft.Windows.Devices.Midi2.Initialization;
 
 namespace Microsoft.Midi.ConsoleApp
 {
@@ -24,11 +24,11 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiServicesInitializer.EnsureServiceAvailable())
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
-                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
-            }
+            //if (!MidiServicesInitializer.EnsureServiceAvailable())
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
+            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            //}
 
             MidiEndpointDeviceInformationFilters filter =
                 MidiEndpointDeviceInformationFilters.StandardNativeUniversalMidiPacketFormat |

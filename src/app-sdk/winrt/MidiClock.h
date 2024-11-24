@@ -13,9 +13,9 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
-    struct MidiClock : MidiClockT<MidiClock>
+    struct MidiClock
     {
-        MidiClock() = default;
+        //MidiClock() = default;
 
         static internal::MidiTimestamp Now();
 

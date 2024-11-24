@@ -10,6 +10,8 @@ using System.Runtime.Versioning;
 
 using Microsoft.Midi.ConsoleApp;
 
+using sdkInit = Microsoft.Windows.Devices.Midi2.Initialization;
+
 
 
 
@@ -227,19 +229,51 @@ AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation($"{Micros
 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft.Midi.Common.MidiBuildInformation.BuildFullVersion));
 AnsiConsole.WriteLine();
 
-if (args.Length == 0)
-{
-    // show app description only when no arguments supplied
 
-    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppDescription(Strings.AppDescription));
-    AnsiConsole.WriteLine();
+var initializer = sdkInit.MidiDesktopAppSdkInitializer.Create();
+
+if (initializer == null)
+{
+    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailed));
+
+    return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
 }
 
+using (initializer)
+{
+    // initialize SDK runtime
+    if (!initializer.InitializeSdkRuntime())
+    {
+        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializationFailed));
 
-MidiClock.BeginLowLatencySystemTimerPeriod();
+        return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
+    }
 
-var result = app.Run(args);
+    // start the service
+    if (!initializer.EnsureServiceAvailable())
+    {
+        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
 
-MidiClock.EndLowLatencySystemTimerPeriod();
+        return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+    }
 
-return result;
+    if (args.Length == 0)
+    {
+        // show app description only when no arguments supplied
+
+        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppDescription(Strings.AppDescription));
+        AnsiConsole.WriteLine();
+
+        AnsiConsole.MarkupLine("Installed MIDI SDK: " + AnsiMarkupFormatter.FormatSdkVersionInformation(initializer.GetInstalledSdkDescription(true, true, true)));
+        AnsiConsole.WriteLine();
+    }
+
+
+    MidiClock.BeginLowLatencySystemTimerPeriod();
+
+    var result = app.Run(args);
+
+    MidiClock.EndLowLatencySystemTimerPeriod();
+
+    return result;
+}

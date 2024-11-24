@@ -21,12 +21,11 @@ import "MidiNetworkClientEndpointRemovalConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
-    [default_interface]
     [experimental]
     static runtimeclass MidiNetworkEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };
-        static Guid AbstractionId{ get; };
+        static Guid TransportId{ get; };
 
         static MidiNetworkHostEndpointCreationResult CreateNetworkHost(
             MidiNetworkHostEndpointCreationConfig creationConfig);

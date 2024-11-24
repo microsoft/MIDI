@@ -18,11 +18,10 @@ import "MidiVirtualPatchBayRouteDefinition.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
-    [default_interface]
     static runtimeclass MidiVirtualPatchBayManager
     {
         static Boolean IsTransportAvailable{ get; };
-        static Guid AbstractionId{ get; };
+        static Guid TransportId{ get; };
 
         static IVectorView<MidiVirtualPatchBayRouteDefinition> GetRoutes();
         static MidiVirtualPatchBayRouteDefinition GetRoute(Guid routeId);

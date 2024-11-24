@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+    <WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion>
     <RootNamespace>sdk_client_basics_cs</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -13,12 +14,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.6" />
     <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="client-basics-cs.exe.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

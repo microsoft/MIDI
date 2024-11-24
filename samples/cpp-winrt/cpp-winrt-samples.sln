@@ -13,8 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "static-enum-endpoints-cpp",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "watch-endpoints-cpp", "watch-endpoints\watch-endpoints-cpp.vcxproj", "{7BF3149C-DFA9-4419-B8E0-6E821875F83B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "virtual-device-app-winui", "virtual-device-app-winui\virtual-device-app-winui.vcxproj", "{AE87FDF9-202F-4B21-B4D1-D83886C29053}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -107,30 +105,6 @@ Global
 		{7BF3149C-DFA9-4419-B8E0-6E821875F83B}.Release|x64.Build.0 = Release|x64
 		{7BF3149C-DFA9-4419-B8E0-6E821875F83B}.Release|x86.ActiveCfg = Release|x64
 		{7BF3149C-DFA9-4419-B8E0-6E821875F83B}.Release|x86.Build.0 = Release|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|ARM64.Build.0 = Debug|ARM64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|ARM64.Deploy.0 = Debug|ARM64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|ARM64EC.Deploy.0 = Debug|ARM64EC
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|x64.ActiveCfg = Debug|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|x64.Build.0 = Debug|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|x64.Deploy.0 = Debug|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|x86.ActiveCfg = Debug|Win32
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|x86.Build.0 = Debug|Win32
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Debug|x86.Deploy.0 = Debug|Win32
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|ARM64.ActiveCfg = Release|ARM64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|ARM64.Build.0 = Release|ARM64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|ARM64.Deploy.0 = Release|ARM64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|ARM64EC.ActiveCfg = Release|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|ARM64EC.Build.0 = Release|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|ARM64EC.Deploy.0 = Release|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|x64.ActiveCfg = Release|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|x64.Build.0 = Release|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|x64.Deploy.0 = Release|x64
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|x86.ActiveCfg = Release|Win32
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|x86.Build.0 = Release|Win32
-		{AE87FDF9-202F-4B21-B4D1-D83886C29053}.Release|x86.Deploy.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

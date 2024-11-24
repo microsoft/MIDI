@@ -121,6 +121,7 @@
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -129,6 +130,7 @@
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -206,9 +208,9 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
@@ -244,20 +246,23 @@
     </PostBuildEvent>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
@@ -292,12 +297,15 @@
     </PostBuildEvent>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

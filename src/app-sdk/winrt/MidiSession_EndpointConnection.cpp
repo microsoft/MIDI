@@ -28,7 +28,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
 
-            if (endpointConnection->InternalInitialize(m_id, m_serviceAbstraction, connectionInstanceId, normalizedDeviceId, settings, autoReconnect))
+            if (endpointConnection->InternalInitialize(m_id, m_serviceTransport, connectionInstanceId, normalizedDeviceId, settings, autoReconnect))
             {
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 

@@ -9,6 +9,7 @@
 
 namespace Microsoft.Windows.Devices.Midi2.CapabilityInquiry
 {
+    [default_interface]
     runtimeclass MidiUniqueId
     {
         MidiUniqueId();

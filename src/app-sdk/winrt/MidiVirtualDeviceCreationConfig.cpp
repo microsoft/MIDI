@@ -74,7 +74,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         json::JsonObject endpointDefinitionObject;
 
         json::JsonArray virtualDevicesCreationArray;
-        json::JsonObject abstractionObject;
+        json::JsonObject transportObject;
         json::JsonObject topLevelTransportPluginSettingsObject;
         json::JsonObject outerWrapperObject;
 
@@ -110,17 +110,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         virtualDevicesCreationArray.Append(endpointDefinitionObject);
 
-        // create the abstraction object with the child creation node
+        // create the transport object with the child creation node
 
-        abstractionObject.SetNamedValue(
+        transportObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY,
             virtualDevicesCreationArray);
 
-        // create the main node with the abstraction id property as key to the array
+        // create the main node with the transport id property as key to the array
 
         topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(virt::MidiVirtualDeviceManager::AbstractionId()),
-            abstractionObject);
+            internal::GuidToString(virt::MidiVirtualDeviceManager::TransportId()),
+            transportObject);
 
         // wrap it all up so the json is valid
 

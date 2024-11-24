@@ -12,8 +12,6 @@
 		<requireLicenseAcceptance>false</requireLicenseAcceptance>
 		<tags>midi midi2 windows music audio native</tags>
 		<dependencies>
-            <group targetFramework="net6.0-windows10.0.20348.0" />
-            <group targetFramework="net7.0-windows10.0.20348.0" />
             <group targetFramework="net8.0-windows10.0.20348.0" />
             <group targetFramework="net9.0-windows10.0.20348.0" />
             <group targetFramework="uap10.0" />
@@ -34,18 +32,15 @@
 
         
         <!-- Compile-time References  ================================================ -->
-		
-        <file target="ref\net6.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
-        <file target="ref\net7.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
-        <file target="ref\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
-        <file target="ref\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
+
+        <file target="ref\uap10.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
+        <file target="ref\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
+        <file target="ref\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"/>
 
         <!-- Reference winmds -->
         
         <file target="ref\uap10.0\" src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
         <file target="ref\native\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="ref\net6.0\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
-        <file target="ref\net7.0\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
         <file target="ref\net8.0\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
         <file target="ref\net9.0\"  src="..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.winmd" />
 
@@ -68,57 +63,31 @@
 
         <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->
         <!--<file target="runtimes\win-x64\lib\net6.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />-->
-        <file target="runtimes\win-x64\lib\net7.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-x64\lib\net8.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-x64\lib\net9.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-x64\lib\net8.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-x64\lib\net9.0" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
-        <!-- Temporarily including implementation in NuGet file for Preview 6 -->
-        <file target="runtimes\win-x64\native"       src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-x64\native"       src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.dll" />
 
-        <file target="runtimes\win-x64\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-x64\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\x64\Release\Microsoft.Windows.Devices.Midi2*.dll" />
-
+        <file target="runtimes\win-arm64\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
         <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->
-        <!--<file target="runtimes\win-arm64\lib\net6.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />-->
-        <file target="runtimes\win-arm64\lib\net7.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-arm64\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-arm64\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64ec\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
+        <file target="runtimes\win-arm64ec\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net8.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
 
-        <!-- Temporarily including implementation in NuGet file for Preview 6 -->
-        <!-- The files in the Arm64EC folder are fat Arm64X binaries, covering Arm64 and Arm64EC -->
-        <file target="runtimes\win-arm64\native"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-arm64\native"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.dll" />
-
-        <file target="runtimes\win-arm64\lib\net6.0"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-arm64\lib\net6.0"     src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.dll" />
-
-
-        <!-- Normally, other than projections, this is the only implementation file included in the nuget package -->
-        <!--<file target="runtimes\win-arm64ec\lib\net6.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />-->
-        <file target="runtimes\win-arm64ec\lib\net7.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-arm64ec\lib\net8.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-        <file target="runtimes\win-arm64ec\lib\net9.0\" src="..\..\..\vsfiles\out\Microsoft.Windows.Devices.Midi2.NetProjection\AnyCPU\Release\net6.0-windows10.0.20348.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll" />
-
-        <!-- Temporarily including implementation in NuGet file for Preview 6 -->
-        <file target="runtimes\win-arm64ec\native"   src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-arm64ec\native"   src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.dll" />
-
-        <file target="runtimes\win-arm64ec\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.pri" />
-        <file target="runtimes\win-arm64ec\lib\net6.0"   src =" ..\..\..\vsfiles\out\coalesce\Arm64EC\Release\Microsoft.Windows.Devices.Midi2*.dll" />
-
-
-
+        
         <!-- Build-time files ================================================ -->
 
 		<file target="build\native\"                    src="Microsoft.Windows.Devices.Midi2.targets"  />
 		<file target="build\native\"                    src="Microsoft.Windows.Devices.Midi2.props" />
 
-        <file target="build\native\include\midi2"       src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\Microsoft.Windows.Devices.Midi2*.h" />
-        <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.0.h" />
-        <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.1.h" />
-        <file target="build\native\include\midi2\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.2.h" />
+        <!-- Build-time header files ================================================ -->
+        
+        <file target="build\native\include\winmidi\init"   src="..\..\..\client-initialization-redist\Microsoft.Windows.Devices.Midi2.Initialization.hpp" />
+
+        <file target="build\native\include\winmidi\winrt"       src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\Microsoft.Windows.Devices.Midi2*.h" />
+        <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.0.h" />
+        <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.1.h" />
+        <file target="build\native\include\winmidi\winrt\impl"  src="..\..\..\vsfiles\intermediate\coalesce\x64\Release\Generated Files\winrt\impl\Microsoft.Windows.Devices.Midi2*.2.h" />
 
         <!-- Standard Windows SDK headers should come from the Windows SDK. But we may want to include them for other compilers? -->
         

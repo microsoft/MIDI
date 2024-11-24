@@ -12,15 +12,23 @@
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.Diagnostics.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
 
 using namespace winrt::Microsoft::Windows::Devices::Midi2;                  // SDK Core
 using namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics;     // For diagnostics loopback endpoints
-using namespace winrt::Microsoft::Windows::Devices::Midi2::Initialization;  // for code to check if the service is installed/running
 
 
 // where you find types like IAsyncOperation, IInspectable, etc.
 namespace foundation = winrt::Windows::Foundation;
+
+// This include file has a wrapper for the bootstrapper code. You are welcome to
+// use the .hpp as-is, or work the functionality into your code in whatever way
+// makes the most sense for your application.
+// 
+// The namespace defined in the .hpp is not a WinRT namespace, just a regular C++ namespace
+#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
+namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
+
+
 
 std::string BooleanToString(bool value)
 {
@@ -34,21 +42,32 @@ int main()
 {
     winrt::init_apartment();
 
-    // Check to see if Windows MIDI Services is installed and running on this PC
-    if (!MidiServicesInitializer::EnsureServiceAvailable())
-    {
-        // you may wish to fallback to an older MIDI API if it suits your application's workflow
-        std::cout << std::endl << "** Windows MIDI Services is not running on this PC **" << std::endl;
+    // this is the initializer in the bootstrapper hpp file
+    std::shared_ptr<init::MidiDesktopAppSdkInitializer> initializer = std::make_shared<init::MidiDesktopAppSdkInitializer>();
 
-        return 1;
+    // you can, of course, use guard macros instead of this check
+    if (initializer != nullptr)
+    {
+        if (!initializer->InitializeSdkRuntime())
+        {
+            std::cout << "Could not initialize SDK runtime" << std::endl;
+            std::wcout << "Install the latest SDK runtime installer from " << initializer->LatestMidiAppSdkDownloadUrl << std::endl;
+            return 1;
+        }
+
+        if (!initializer->EnsureServiceAvailable())
+        {
+            std::cout << "Could not demand-start the MIDI service" << std::endl;
+            return 1;
+        }
     }
     else
     {
-        std::cout << std::endl << "Verified that the MIDI Service is available and started" << std::endl;
-
-        // bootstrap the SDK runtime
-        MidiServicesInitializer::InitializeSdkRuntime();
+        // This shouldn't happen, but good to guard
+        std::cout << "Unable to create initializer" << std::endl;
+        return 1;
     }
+
 
 
     bool includeDiagnosticsEndpoints = true;
@@ -70,13 +89,15 @@ int main()
     auto watcher = MidiEndpointDeviceWatcher::Create(filter);
 
 
-
+    // if the watcher's Stop method is called
     auto OnWatcherStopped = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
         {
             std::cout << std::endl;
             std::cout << "Watcher stopped." << std::endl;
         };
 
+    // called when initial enumeration has completed. Endpoints can appear or disappear at any time afterwards. For example,
+    // a user can plug in a USB device after enumeration has completed.
     auto OnWatcherEnumerationCompleted = [&](MidiEndpointDeviceWatcher const& /*sender*/, foundation::IInspectable const& /*args*/)
         {
             std::cout << std::endl;
@@ -84,13 +105,14 @@ int main()
         };
 
 
-
+    // Endpoints can be removed at any time, including after enumeration has completed. This event will fire when they are removed
     auto OnWatcherDeviceRemoved = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationRemovedEventArgs const& args)
         {
             std::cout << std::endl;
             std::cout << "Removed: " << winrt::to_string(args.EndpointDeviceId()) << std::endl;
         };
 
+    // Endpoints can be updated at any time, typically due to protocol negotiation, discovery, or changes the user has made in the settings app
     auto OnWatcherDeviceUpdated = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationUpdatedEventArgs const& args)
         {
             std::cout << std::endl;
@@ -108,6 +130,8 @@ int main()
 
         };
 
+    // During initial enumeration, this event fires for each endpoint found. After initial enumeration, this will fire
+    // for any new endpoints added (examples: USB Device plugged in, Virtual Device created by an app, etc.
     auto OnWatcherDeviceAdded = [&](MidiEndpointDeviceWatcher const& /*sender*/, MidiEndpointDeviceInformationAddedEventArgs const& args)
         {
             std::cout << std::endl;
@@ -116,6 +140,7 @@ int main()
         };
 
 
+    // these are each winrt::event_token, which can be checked like a boolean for validity
     auto revokeOnWatcherStopped = watcher.Stopped(OnWatcherStopped);
     auto revokeOnWatcherEnumerationCompleted = watcher.EnumerationCompleted(OnWatcherEnumerationCompleted);
     auto revokeOnWatcherDeviceRemoved = watcher.Removed(OnWatcherDeviceRemoved);
@@ -132,10 +157,17 @@ int main()
 
     // unwire events
 
-    watcher.Stopped(revokeOnWatcherStopped);
-    watcher.EnumerationCompleted(revokeOnWatcherEnumerationCompleted);
-    watcher.Removed(revokeOnWatcherDeviceRemoved);
-    watcher.Updated(revokeOnWatcherDeviceUpdated);
-    watcher.Added(revokeOnWatcherDeviceAdded);
+    if (revokeOnWatcherStopped) watcher.Stopped(revokeOnWatcherStopped);
+    if (revokeOnWatcherEnumerationCompleted) watcher.EnumerationCompleted(revokeOnWatcherEnumerationCompleted);
+    if (revokeOnWatcherDeviceRemoved) watcher.Removed(revokeOnWatcherDeviceRemoved);
+    if (revokeOnWatcherDeviceUpdated) watcher.Updated(revokeOnWatcherDeviceUpdated);
+    if (revokeOnWatcherDeviceAdded) watcher.Added(revokeOnWatcherDeviceAdded);
 
+
+    // clean up the SDK WinRT redirection
+    if (initializer != nullptr)
+    {
+        initializer->ShutdownSdkRuntime();
+        initializer.reset();
+    }
 }

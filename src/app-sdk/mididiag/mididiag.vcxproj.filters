@@ -31,9 +31,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="mididiag.exe.manifest" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

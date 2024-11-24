@@ -12,14 +12,25 @@
 
 //#define _VSDESIGNER_DONT_LOAD_AS_DLL
 
-
 #include <unknwn.h>
 
 #include <Windows.h>
 
+#include <optional>
+#include <string>
+#include <stdint.h>
+#include <cwctype>
+
+#include <chrono>
+
+#include <wrl\module.h>
+#include <wrl\event.h>
+
+#include <wil\com.h>
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
+#include <wil\registry.h>
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
@@ -36,18 +47,6 @@ namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 
 
-#include <stdint.h>
-#include <sstream>
-#include <iomanip>
-#include <algorithm>
-#include <string>
-#include <cwctype>
-#include <queue>
-#include <mutex>
-#include <format>
-#include <filesystem>
-
-#include <chrono>
 
 // pre-declare namespaces
 
@@ -73,7 +72,7 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 // service interface
 #include <WindowsMidiServices.h>
 #include <WindowsMidiServices_i.c>
-#include <Midi2MidiSrvAbstraction.h>
+#include <Midi2MidiSrvTransport.h>
 
 // SDK shared
 #include <SdkTraceLogging.h>

@@ -29,6 +29,6 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <winrt/Microsoft.Windows.Devices.Midi2.Messages.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ClientPlugins.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.ServiceConfig.h>
-#include <winrt/Microsoft.Windows.Devices.Midi2.Initialization.h>
+
 
 //#include "combaseapi.h"

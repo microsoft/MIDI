@@ -8,7 +8,7 @@
 
 
 
-using Microsoft.Windows.Devices.Midi2.Initialization;
+//using Microsoft.Windows.Devices.Midi2.Initialization;
 using Microsoft.Windows.Devices.Midi2.Messages;
 
 namespace Microsoft.Midi.ConsoleApp
@@ -83,11 +83,11 @@ namespace Microsoft.Midi.ConsoleApp
 
         public override int Execute(CommandContext context, Settings settings)
         {
-            if (!MidiServicesInitializer.EnsureServiceAvailable())
-            {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
-                return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
-            }
+            //if (!MidiServicesInitializer.EnsureServiceAvailable())
+            //{
+            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
+            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
+            //}
 
 
             string endpointId = string.Empty;

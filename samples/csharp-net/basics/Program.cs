@@ -1,32 +1,39 @@
 ﻿using Microsoft.Windows.Devices.Midi2;
-using Microsoft.Windows.Devices.Midi2.Initialization;
+//using Microsoft.Windows.Devices.Midi2.Initialization;
 using Microsoft.Windows.Devices.Midi2.Diagnostics;
 using Microsoft.Windows.Devices.Midi2.Messages;
 
 using Windows.Devices.Enumeration;
 using System;
+using Microsoft.VisualBasic;
 
 // for comments on what each step does, please see the C++/WinRT sample
 // the code is almost identical
 
 Console.WriteLine("Checking for Windows MIDI Services");
 
-// you only need to check this once
-if (!MidiServicesInitializer.EnsureServiceAvailable())
+// the initializer implements the Dispose pattern, so will shut down WinRT type redirection when disposed
+using (var initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create())
 {
-    // In your application, you may decide it is appropriate to fall back to an older MIDI API
-    Console.WriteLine("Windows MIDI Services is not available");
-}
-else
-{
-    // bootstrap the SDK runtime. Should check the return result here
-    MidiServicesInitializer.InitializeSdkRuntime();
+    // initialize SDK runtime
+    if (!initializer.InitializeSdkRuntime())
+    {
+        Console.WriteLine("Failed to initialize SDK Runtime");
+        return 1;
+    }
 
+    // start the service
+    if (!initializer.EnsureServiceAvailable())
+    {
+        Console.WriteLine("Failed to get service running");
+
+        return 1;
+    }
 
     Console.WriteLine("Creating session");
 
     // session implements IDisposable
-    using (var session = MidiSession.Create("API Sample Session"))
+    using (MidiSession session = MidiSession.Create("API Sample Session"))
     {
         var endpointAId = MidiDiagnostics.DiagnosticsLoopbackAEndpointDeviceId;
         var endpointBId = MidiDiagnostics.DiagnosticsLoopbackBEndpointDeviceId;
@@ -40,7 +47,7 @@ else
 
 
         // c# allows local functions. This is nicer than anonymous because we can unregister it by name
-        void MessageReceivedHandler(object sender, MidiMessageReceivedEventArgs args)
+        void MessageReceivedHandler(IMidiMessageReceivedEventSource sender, MidiMessageReceivedEventArgs args)
         {
             var ump = args.GetMessagePacket();
 
@@ -69,9 +76,17 @@ else
         // You can open the connection. Doing this will query the cache for the in-protocol 
         // endpoint information and function blocks. If not there, it will send out the requests
         // which will come back asynchronously with responses.
-        receiveEndpoint.Open();
-        sendEndpoint.Open();
+        if (!receiveEndpoint.Open())
+        {
+            Console.WriteLine("Could not open receive endpoint");
+            return 1;
+        }
 
+        if (!sendEndpoint.Open())
+        {
+            Console.WriteLine("Could not open send endpoint");
+            return 1;
+        }
 
         Console.WriteLine("Creating MIDI 1.0 Channel Voice 32-bit UMP...");
 
@@ -96,5 +111,5 @@ else
         session.DisconnectEndpointConnection(receiveEndpoint.ConnectionId);
     }
 
-
+    return 0;
 }

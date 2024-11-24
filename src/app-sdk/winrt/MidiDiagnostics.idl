@@ -11,7 +11,7 @@ import "MidiServicePingResponseSummary.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Diagnostics
 {
-    runtimeclass MidiDiagnostics
+    static runtimeclass MidiDiagnostics
     {
         static String DiagnosticsLoopbackAEndpointDeviceId{ get; };
         static String DiagnosticsLoopbackBEndpointDeviceId{ get; };

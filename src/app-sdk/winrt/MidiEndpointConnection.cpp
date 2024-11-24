@@ -16,14 +16,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
         winrt::guid sessionId,
-        winrt::com_ptr<IMidiTransport> serviceAbstraction,
+        winrt::com_ptr<IMidiTransport> serviceTransport,
         winrt::guid const connectionId,
         winrt::hstring const endpointDeviceId,
         midi2::IMidiEndpointConnectionSettings connectionSettings,
         bool autoReconnect
     )
     {
-        if (serviceAbstraction == nullptr)
+        if (serviceTransport == nullptr)
         {
             LOG_IF_FAILED(E_FAIL);
 
@@ -33,7 +33,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Error initializing endpoint. Service abstraction is null", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Error initializing endpoint. Service transport is null", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
 
@@ -46,7 +46,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             m_connectionId = connectionId;
             m_endpointDeviceId = endpointDeviceId;
 
-            m_serviceAbstraction = serviceAbstraction;
+            m_serviceTransport = serviceTransport;
 
             m_connectionSettings = connectionSettings;
             m_autoReconnect = autoReconnect;
@@ -104,7 +104,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
 
-        if (m_endpointAbstraction == nullptr)
+        if (m_endpointTransport == nullptr)
         {
             LOG_IF_FAILED(E_POINTER);  // force reporting of file/line number
 
@@ -114,7 +114,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Failed to open connection. endpoint abstraction is null", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Failed to open connection. endpoint transport is null", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
 
@@ -129,13 +129,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             connectionSettingsJsonString = static_cast<LPCWSTR>(m_connectionSettings.SettingsJson().c_str());
         }
 
-        TRANSPORTCREATIONPARAMS abstractionCreationParams{ };
-        abstractionCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
-        //abstractionCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
+        TRANSPORTCREATIONPARAMS transportCreationParams{ };
+        transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
+        //transportCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
 
-        auto result = m_endpointAbstraction->Initialize(
+        auto result = m_endpointTransport->Initialize(
             (LPCWSTR)(ConnectedEndpointDeviceId().c_str()),
-            &abstractionCreationParams,
+            &transportCreationParams,
             &mmcssTaskId,
             (IMidiCallback*)(this),
             0,
@@ -168,7 +168,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Failed to initialize endpoint abstraction", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Failed to initialize endpoint transport", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(result, MIDI_SDK_TRACE_HRESULT_FIELD)
             );
@@ -198,7 +198,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         {
             if (!ActivateMidiStream()) return false;
 
-            if (m_endpointAbstraction != nullptr)
+            if (m_endpointTransport != nullptr)
             {
                 try
                 {
@@ -245,7 +245,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
                     );
 
-                    m_endpointAbstraction = nullptr;
+                    m_endpointTransport = nullptr;
 
                     return false;
                 }
@@ -263,7 +263,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                     );
 
-                    m_endpointAbstraction = nullptr;
+                    m_endpointTransport = nullptr;
 
                     return false;
                 }
@@ -278,7 +278,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Endpoint abstraction interface is nullptr.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Endpoint transport interface is nullptr.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
 
@@ -367,12 +367,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
 
-        if (m_endpointAbstraction != nullptr)
+        if (m_endpointTransport != nullptr)
         {
             // todo: some error / hresult handling here
 
-            auto hr = m_endpointAbstraction->Shutdown();
-            m_endpointAbstraction == nullptr;
+            auto hr = m_endpointTransport->Shutdown();
+            m_endpointTransport == nullptr;
 
             if (FAILED(hr))
             {
@@ -384,7 +384,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Failed HRESULT cleaning up endpoint abstraction", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Failed HRESULT cleaning up endpoint transport", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                     TraceLoggingHResult(hr, MIDI_SDK_TRACE_HRESULT_FIELD)
                 );
@@ -417,7 +417,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
         );
 
-        if (m_serviceAbstraction == nullptr)
+        if (m_serviceTransport == nullptr)
         {
             LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
 
@@ -427,7 +427,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Service abstraction is null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Service transport is null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
 
@@ -436,14 +436,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         try
         {
-            if (m_endpointAbstraction != nullptr)
+            if (m_endpointTransport != nullptr)
             {
-                m_endpointAbstraction = nullptr;
+                m_endpointTransport = nullptr;
             }
 
-            auto result = m_serviceAbstraction->Activate(__uuidof(IMidiBiDi), (void**) &m_endpointAbstraction);
+            auto result = m_serviceTransport->Activate(__uuidof(IMidiBiDi), (void**) &m_endpointTransport);
 
-            if (SUCCEEDED(result) && m_endpointAbstraction != nullptr)
+            if (SUCCEEDED(result) && m_endpointTransport != nullptr)
             {
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -468,7 +468,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Endpoint Abstraction failed to Activate and returned null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Endpoint Transport failed to Activate and returned null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                     TraceLoggingHResult(result, MIDI_SDK_TRACE_HRESULT_FIELD)
                     );

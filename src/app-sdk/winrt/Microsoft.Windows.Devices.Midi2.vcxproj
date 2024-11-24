@@ -57,7 +57,6 @@
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '15.0'">v141</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '14.0'">v140</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <GenerateManifest>true</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -103,7 +102,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -111,7 +110,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -120,7 +119,8 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <BuildAsX>false</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -128,7 +128,8 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <BuildAsX>false</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -137,7 +138,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64EC'">
@@ -146,7 +147,7 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -162,7 +163,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <ModuleDefinitionFile>midi-app-api.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>midi-app-winrt-sdk.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -173,26 +174,27 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">MachineARM64X</TargetMachine>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -208,20 +210,23 @@
     </PostBuildEvent>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvAbstraction\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
@@ -235,9 +240,9 @@
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">false</RegisterOutput>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</RegisterOutput>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
-      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -253,30 +258,39 @@
     </PostBuildEvent>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
     <ResourceCompile>
       <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Yes</ShowProgress>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-      <ClInclude Include="MidiNetworkClientEndpointCreationConfig.h">
-          <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiNetworkClientEndpointRemovalConfig.h">
-          <DependentUpon>MidiNetworkClientEndpointRemovalConfig.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiNetworkEndpointManager.h">
-          <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiNetworkHostEndpointCreationConfig.h">
-          <DependentUpon>MidiNetworkHostEndpointCreationConfig.idl</DependentUpon>
-      </ClInclude>
-      <ClInclude Include="MidiNetworkHostEndpointRemovalConfig.h">
-          <DependentUpon>MidiNetworkHostEndpointRemovalConfig.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="Initialization\MidiAppSdkManifest.h" />
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeComponent.h" />
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeComponentCatalog.h" />
+    <ClInclude Include="Initialization\MidiAppSdkRuntimeTypeResolution.h" />
+    <ClInclude Include="Initialization\MidiClientInitializer.h" />
+    <ClInclude Include="Initialization\MidiRoDetours.h" />
+    <ClInclude Include="MidiNetworkClientEndpointCreationConfig.h">
+      <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClientEndpointRemovalConfig.h">
+      <DependentUpon>MidiNetworkClientEndpointRemovalConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkEndpointManager.h">
+      <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostEndpointCreationConfig.h">
+      <DependentUpon>MidiNetworkHostEndpointCreationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostEndpointRemovalConfig.h">
+      <DependentUpon>MidiNetworkHostEndpointRemovalConfig.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="libmidi2\include\bytestreamToUMP.h" />
     <ClInclude Include="libmidi2\include\mcoded7.h" />
     <ClInclude Include="libmidi2\include\midiCIMessageCreate.h" />
@@ -369,7 +383,7 @@
       <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
-        <DependentUpon>MidiUniqueId.idl</DependentUpon>
+      <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiVirtualDevice.h">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
@@ -431,22 +445,27 @@
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-      <ClCompile Include="MidiNetworkClientEndpointCreationConfig.cpp">
-          <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiNetworkClientEndpointRemovalConfig.cpp">
-          <DependentUpon>MidiNetworkClientEndpointRemovalConfig.idl</DependentUpon>
-      </ClCompile>
-      <ClCompile Include="MidiNetworkEndpointManager.cpp">
-          <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeComponent.cpp" />
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeComponentCatalog.cpp" />
+    <ClCompile Include="Initialization\MidiAppSdkRuntimeTypeResolution.cpp" />
+    <ClCompile Include="Initialization\MidiClientInitializer.cpp" />
+    <ClCompile Include="Initialization\MidiRoDetours.cpp" />
+    <ClCompile Include="MidiNetworkClientEndpointCreationConfig.cpp">
+      <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkClientEndpointRemovalConfig.cpp">
+      <DependentUpon>MidiNetworkClientEndpointRemovalConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkEndpointManager.cpp">
+      <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkHostEndpointCreationConfig.cpp">
-        <DependentUpon>MidiNetworkHostEndpointCreationConfig.idl</DependentUpon>
+      <DependentUpon>MidiNetworkHostEndpointCreationConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiNetworkHostEndpointRemovalConfig.cpp">
-        <DependentUpon>MidiNetworkHostEndpointRemovalConfig.idl</DependentUpon>
+      <DependentUpon>MidiNetworkHostEndpointRemovalConfig.idl</DependentUpon>
     </ClCompile>
-               
     <ClCompile Include="libmidi2\src\bytestreamToUMP.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">NotUsing</PrecompiledHeader>
@@ -628,9 +647,9 @@
     <ClCompile Include="MidiStreamConfigRequestReceivedEventArgs.cpp">
       <DependentUpon>MidiStreamConfigRequestReceivedEventArgs.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiUniqueId.cpp">
-          <DependentUpon>MidiUniqueId.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiUniqueId.cpp">
+      <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiVirtualDevice.cpp">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClCompile>
@@ -793,7 +812,7 @@
     <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="midi-app-api.def" />
+    <None Include="midi-app-winrt-sdk.def" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

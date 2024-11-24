@@ -1,0 +1,13 @@
+﻿LIBRARY Microsoft.Windows.Devices.Midi2
+
+EXPORTS
+
+    DllGetActivationFactory = WINRT_GetActivationFactory    PRIVATE
+    ;DllCanUnloadNow = WINRT_CanUnloadNow                   PRIVATE
+    DllCanUnloadNow                                         PRIVATE
+    
+    DllRegisterServer                                       PRIVATE
+    DllUnregisterServer                                     PRIVATE
+
+    DllGetClassObject                                       PRIVATE
+    DllInstall                                              PRIVATE

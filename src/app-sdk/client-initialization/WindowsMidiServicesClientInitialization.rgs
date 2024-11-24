@@ -1,0 +1,14 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {c3263827-c3b0-bdbd-2500-ce63a3f3f2c3} = s 'MidiClientInitializer Class'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+			'Version' = s '1.0'
+		}
+	}
+}

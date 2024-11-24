@@ -21,7 +21,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
     // "endpointTransportPluginSettings":
     // {
-    //   loopback endpoint abstraction guid :
+    //   loopback endpoint transport guid :
     //   {
     //     "remove"
     //     {
@@ -32,24 +32,24 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
     winrt::hstring MidiLoopbackEndpointRemovalConfig::GetConfigJson()
     {
         json::JsonArray endpointDeletionArray;
-        json::JsonObject abstractionObject;
+        json::JsonObject transportObject;
         json::JsonObject topLevelTransportPluginSettingsObject;
         json::JsonObject outerWrapperObject;
 
         json::JsonValue endpointDeletionAssociationId = json::JsonValue::CreateStringValue(internal::GuidToString(m_associationId));
         endpointDeletionArray.Append(endpointDeletionAssociationId);
 
-        // create the abstraction object with the child creation node
+        // create the transport object with the child creation node
 
-        abstractionObject.SetNamedValue(
+        transportObject.SetNamedValue(
             MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY,
             endpointDeletionArray);
 
         // create the main node
 
         topLevelTransportPluginSettingsObject.SetNamedValue(
-            internal::GuidToString(loop::MidiLoopbackEndpointManager::AbstractionId()),
-            abstractionObject);
+            internal::GuidToString(loop::MidiLoopbackEndpointManager::TransportId()),
+            transportObject);
 
         // wrap it all up so the json is valid
 

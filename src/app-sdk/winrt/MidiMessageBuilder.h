@@ -14,7 +14,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
 {
     struct MidiMessageBuilder
     {
-        MidiMessageBuilder() = default;
+        //MidiMessageBuilder() = default;
 
         
         static midi2::MidiMessage32 BuildUtilityMessage(

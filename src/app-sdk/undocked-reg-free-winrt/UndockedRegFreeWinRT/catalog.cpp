@@ -7,6 +7,7 @@
 // ============================================================================
 // This file modified from
 // https://github.com/microsoft/xlang/tree/master/src/UndockedRegFreeWinRT
+// which retains its own copyrights as described in the xlang repo
 
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING 
 
@@ -108,6 +109,9 @@ HRESULT LoadManifestFromPath(std::wstring path)
     }
     std::wstring ext(path.substr(path.size() - 4, path.size()));
     wstr_tolower(ext);
+
+    ext = WindowsMidiServicesInternal::
+
     if (ext.compare(L".exe") == 0 || ext.compare(L".dll") == 0)
     {
         return LoadFromEmbeddedManifest(path.c_str());
@@ -405,6 +409,7 @@ HRESULT WinRTGetMetadataFile(
             RETURN_IF_FAILED(spMetaDataDispenser->SetOption(MetaDataRuntimeVersion, &version.GetVARIANT()));
         }
     }
+
     return UndockedRegFreeWinRT::ResolveThirdPartyType(
         spMetaDataDispenser.Get(),
         pszFullName,

@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiClientInitializer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiRoDetours.cpp">
+      <Filter>Source Files\WinRTDetour</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiAppSdkRuntimeComponentCatalog.cpp">
+      <Filter>Source Files\WinRTDetour</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiAppSdkRuntimeComponent.cpp">
+      <Filter>Source Files\WinRTDetour</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiAppSdkRuntimeTypeResolution.cpp">
+      <Filter>Source Files\WinRTDetour</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dllmain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiClientInitializer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScheduledUmpMessage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiAppSdkRuntimeComponentCatalog.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiRoDetours.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiAppSdkRuntimeComponent.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiAppSdkRuntimeTypeResolution.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiAppSdkManifest.h">
+      <Filter>Header Files\WinRTDetour</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="WindowsMidiServicesClientInitialization.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="WindowsMidiServicesClientInitialization.rgs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{f44ec8b9-493c-4f53-bccc-0dd1a2483fe3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{4b74b5ab-c2ca-4924-bc8a-3691e06e0738}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{5a2a4923-714b-4d2c-8d95-4644e2916f59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\WinRTDetour">
+      <UniqueIdentifier>{d473e6aa-5098-4a30-a578-705a185676de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\WinRTDetour">
+      <UniqueIdentifier>{96aa0e7c-e4c5-4f2b-a824-fd7620f8b05f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="WindowsMidiServicesClientInitialization.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="WindowsMidiServicesClientInitialization.idl">
+      <Filter>Source Files</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+</Project>

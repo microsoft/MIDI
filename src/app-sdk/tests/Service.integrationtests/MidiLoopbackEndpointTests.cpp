@@ -14,7 +14,7 @@ void MidiLoopbackEndpointTests::TestCreateLoopbackEndpoints()
 {
     LOG_OUTPUT(L"TestCreateLoopbackEndpoints **********************************************************************");
 
-    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     winrt::hstring endpointAId{};
     winrt::hstring endpointBId{};

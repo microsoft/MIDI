@@ -15,6 +15,10 @@
 
 #define MIDIDIAG_MAX_FIELD_LABEL_WIDTH                                   25
 
+
+#define MIDIDIAG_FIELD_LABEL_FILE_VERSION                                L"file_version"
+
+
 #define MIDIDIAG_HEADER_FIELD_LABEL_VERSION_BUILD_SOURCE                 L"ver_build_source"
 #define MIDIDIAG_HEADER_FIELD_LABEL_VERSION_NAME                         L"ver_build_name"
 #define MIDIDIAG_HEADER_FIELD_LABEL_VERSION_FULL                         L"ver_build_full"
@@ -35,16 +39,20 @@
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_CURRENT_CONFIG                L"reg_current_config"
 
 
-#define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_ARM64X                         L"reg_sdk_arm64x"
-#define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_X64                            L"registry_sdk_x64"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_INSTALLED                      L"reg_sdk_installed"
+
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_MIDISRV_EXENAME                    L"reg_midisrv_exe"
 
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORTS                         L"reg_transports"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME                     L"reg_transport_name"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID                    L"reg_transport_clsid"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_ENABLED                  L"reg_transport_enabled"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME                  L"reg_transport_dll"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_PROGID                   L"reg_transport_progid"
 
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSFORMS                         L"reg_transforms"
 
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY                    L"reg_drivers32_entry"
 
 #define MIDIDIAG_SECTION_LABEL_ENUM_COM                                  L"enum_com"
 
@@ -95,6 +103,9 @@
 
 #define MIDIDIAG_SECTION_LABEL_SERVICE_STATUS                            L"service_status"
 #define MIDIDIAG_FIELD_LABEL_SERVICE_AVAILABLE                           L"available"
+
+#define MIDIDIAG_SECTION_LABEL_SDK_STATUS                                L"sdk_runtime_status"
+#define MIDIDIAG_FIELD_LABEL_SDK_INITIALIZED                             L"sdk_runtime_initialized"
 
 #define MIDIDIAG_SECTION_LABEL_OS                                        L"os"
 #define MIDIDIAG_FIELD_LABEL_OS_VERSION                                  L"os_version"

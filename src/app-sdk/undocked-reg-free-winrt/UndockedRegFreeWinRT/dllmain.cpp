@@ -7,6 +7,7 @@
 // ============================================================================
 // This file modified from
 // https://github.com/microsoft/xlang/tree/master/src/UndockedRegFreeWinRT
+// which retains its own copyrights as described in the xlang repo
 
 #include <Windows.h>
 #include <synchapi.h>
