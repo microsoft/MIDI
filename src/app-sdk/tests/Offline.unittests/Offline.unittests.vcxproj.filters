@@ -116,7 +116,4 @@
       <Filter>Support</Filter>
     </ResourceCompile>
   </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="te.exe.manifest" />
-  </ItemGroup>
 </Project>

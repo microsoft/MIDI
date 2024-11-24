@@ -76,7 +76,9 @@
     <ClCompile Include="Initialization\MidiClientInitializer.cpp">
       <Filter>Initializer\Init</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Initializer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />

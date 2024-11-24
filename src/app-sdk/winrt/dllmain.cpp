@@ -52,7 +52,8 @@ BOOL WINAPI DllMain(HINSTANCE hmodule, DWORD reason, LPVOID /*lpvReserved*/)
 }
 
 _Use_decl_annotations_
-HRESULT __stdcall DllCanUnloadNow()
+STDAPI
+DllCanUnloadNow()
 {
     // TODO: See if the initializer has any references. If not, then forward to the WinRT function
 
@@ -60,7 +61,8 @@ HRESULT __stdcall DllCanUnloadNow()
 }
 
 _Use_decl_annotations_
-HRESULT __stdcall DllGetClassObject(GUID const& clsid, GUID const& iid, void** result)
+STDAPI
+DllGetClassObject(GUID const& clsid, GUID const& iid, void** result)
 {
     TraceLoggingWrite(
         Midi2SdkTelemetryProvider::Provider(),
@@ -141,7 +143,7 @@ DllRegisterServer(void)
     wil::shared_hkey hkeyInitializerInprocServer32;
     RETURN_IF_FAILED(wil::reg::create_shared_key_nothrow(hkeyInitializerClsidRoot.get(), L"InprocServer32", hkeyInitializerInprocServer32, wil::reg::key_access::readwrite));
     RETURN_IF_FAILED(wil::reg::set_value_string_nothrow(hkeyInitializerInprocServer32.get(), nullptr, moduleFileName.c_str()));
-    RETURN_IF_FAILED(wil::reg::set_value_string_nothrow(hkeyInitializerInprocServer32.get(), L"ThreadingModel", L"Apartment"));
+    RETURN_IF_FAILED(wil::reg::set_value_string_nothrow(hkeyInitializerInprocServer32.get(), L"ThreadingModel", L"Both"));
 
     // Register the progid for the coclass --------------------------
     wil::shared_hkey hkeyInitializerProgIdRoot;

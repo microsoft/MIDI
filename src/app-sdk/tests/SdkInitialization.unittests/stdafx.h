@@ -33,9 +33,7 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2;
 #include "loopback_ids.h"
 #include "MidiDefs.h"
 
-#include "WindowsMidiServicesClientInitialization.h"
-#include "WindowsMidiServicesClientInitialization_i.c"
-#include "Microsoft.Windows.Devices.Midi2.Initialization.hpp"
+#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
 namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 #include "MidiAppSdkInitializationTests.h"

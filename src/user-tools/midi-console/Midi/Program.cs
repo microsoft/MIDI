@@ -10,7 +10,7 @@ using System.Runtime.Versioning;
 
 using Microsoft.Midi.ConsoleApp;
 
-using sdkinit = Microsoft.Windows.Devices.Midi2.Initialization;
+using sdkInit = Microsoft.Windows.Devices.Midi2.Initialization;
 
 
 
@@ -230,15 +230,17 @@ AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft
 AnsiConsole.WriteLine();
 
 
-using (var initializer = sdkinit.MidiDesktopAppSdkInitializer.Create())
+var initializer = sdkInit.MidiDesktopAppSdkInitializer.Create();
+
+if (initializer == null)
 {
-    if (initializer == null)
-    {
-        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailed));
+    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailed));
 
-        return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
-    }
+    return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
+}
 
+using (initializer)
+{
     // initialize SDK runtime
     if (!initializer.InitializeSdkRuntime())
     {
@@ -275,4 +277,3 @@ using (var initializer = sdkinit.MidiDesktopAppSdkInitializer.Create())
 
     return result;
 }
-

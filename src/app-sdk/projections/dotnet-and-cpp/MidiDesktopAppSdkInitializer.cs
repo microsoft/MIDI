@@ -37,8 +37,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
     internal partial interface IMidiClientInitializer
     {
         void Initialize();
-        //void GetInstalledWindowsMidiServicesSdkVersion(
-        //    ref WindowsMidiServicesAppSdkVersion sdkVersion);
+        void Shutdown();
 
         void GetInstalledWindowsMidiServicesSdkVersion(
             ref MidiAppSDKPlatform buildPlatform,
@@ -53,7 +52,6 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         );
 
         void EnsureServiceAvailable();
-        void Shutdown();
     }
 
     public class MidiDesktopAppSdkInitializer : IDisposable

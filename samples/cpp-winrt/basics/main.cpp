@@ -147,12 +147,12 @@ int main()
         std::cout << std::endl << "Creating MIDI 1.0 Channel Voice 32-bit UMP..." << std::endl;
 
         MidiMessage32 ump32 = MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
-            MidiClock::Now(), // use current timestamp
-            MidiGroup(5),      // group 5
-            Midi1ChannelVoiceMessageStatus::NoteOn,     // 9
-            MidiChannel(3),      // channel 3
-            120,    // note 120 - hex 0x78
-            100);   // velocity 100 hex 0x64
+            MidiClock::TimestampConstantSendImmediately(),  // bypass message scheduling
+            MidiGroup(5),                                   // group 6, index 5
+            Midi1ChannelVoiceMessageStatus::NoteOn,         // 9
+            MidiChannel(3),                                 // channel 4, index 3
+            120,                                            // note 120 - hex 0x78
+            100);                                           // velocity 100 hex 0x64
 
         // here you would set other values in the UMP word(s)
 

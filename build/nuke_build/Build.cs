@@ -482,13 +482,6 @@ class Build : NukeBuild
                     stagingPlatform = "Arm64";
                 }
 
-                // MIDI diagnostics app
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-
-                // MIDI USB info utility
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / stagingPlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-
                 // sample manifest
                 FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
 
@@ -499,6 +492,104 @@ class Build : NukeBuild
         });
 
 
+    Target BuildAppSDKToolsAndTests => _ => _
+        .DependsOn(BuildAndPackAllAppSDKs)
+        .Executes(() =>
+        {
+
+            foreach (var platform in SdkPlatforms)
+            {
+                string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
+
+                var msbuildProperties = new Dictionary<string, object>();
+                msbuildProperties.Add("Platform", platform);
+                msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+                msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+
+                Console.Out.WriteLine($"----------------------------------------------------------------------");
+                Console.Out.WriteLine($"SolutionDir:   {solutionDir}");
+                Console.Out.WriteLine($"Platform:      {platform}");
+
+                string[] toolsDirectories =
+                    {
+                        Path.Combine(solutionDir, "mididiag"),
+                        Path.Combine(solutionDir, "midiusbinfo"),
+                    };
+
+                foreach (var projectFolder in toolsDirectories)
+                {
+                    // only send paths that have a packages config in them
+
+                    var configFilePath = Path.Combine(projectFolder, "packages.config");
+
+                    if (File.Exists(configFilePath))
+                    {
+                        Console.WriteLine($"Updating {configFilePath}");
+                        UpdatePackagesConfigForCPPProject(configFilePath);
+
+                        var vcxprojFilePaths = Directory.GetFiles(projectFolder, "*.vcxproj");
+
+                        foreach (var path in vcxprojFilePaths)
+                        {
+                            Console.WriteLine($"Updating {path}");
+                            UpdateWindowsMidiServicesSdkPackagePropertyForCppProject(path);
+
+                            // nuget restore
+                            RestoreNuGetPackagesForCPPProject(path, AppSdkSolutionFolder, configFilePath);
+
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Not a project folder {projectFolder}");
+                    }
+
+                }
+
+
+
+
+
+
+
+
+
+
+
+                MSBuildTasks.MSBuild(_ => _
+                    .SetTargetPath(AppSdkSolutionFolder / "app-sdk-tools-and-tests.sln")
+                    .SetMaxCpuCount(14)
+                    /*.SetOutDir(outputFolder) */
+                    /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
+                    /*.SetTargets("Build") */
+                    .SetProperties(msbuildProperties)
+                    .SetConfiguration(Configuration.Release)
+                    //.SetVerbosity(MSBuildVerbosity.Minimal)
+                    .EnableNodeReuse()
+                );
+
+            }
+
+            var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
+
+            foreach (var sourcePlatform in SdkPlatforms)
+            {
+                // the solution compiles these apps to Arm64 when target is EC.
+                string stagingPlatform = sourcePlatform;
+                if (sourcePlatform.ToLower() == "arm64ec")
+                {
+                    stagingPlatform = "Arm64";
+                }
+
+                // MIDI diagnostics app
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                //FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+
+                // MIDI USB info utility
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / stagingPlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+            }
+        });
+
 
     Target BuildAppSdkRuntimeAndToolsInstaller => _ => _
         .DependsOn(Prerequisites)
@@ -506,6 +597,7 @@ class Build : NukeBuild
         .DependsOn(BuildConsoleApp)
         //.DependsOn(BuildSettingsApp)
         .DependsOn(BuildAndPackAllAppSDKs)
+        .DependsOn(BuildAppSDKToolsAndTests)
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here

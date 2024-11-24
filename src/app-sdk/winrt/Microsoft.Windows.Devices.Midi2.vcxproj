@@ -120,7 +120,7 @@
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <BuildAsX>true</BuildAsX>
+    <BuildAsX>false</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Arm64'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -129,7 +129,7 @@
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <GeneratedFilesDir>$(SolutionDir)VSFiles\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\GeneratedFiles\</GeneratedFilesDir>
     <LibraryPath>$(SolutionDir)vsfiles\out\Detours\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <BuildAsX>true</BuildAsX>
+    <BuildAsX>false</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Arm64EC'">
     <IncludePath>$(IncludePath)</IncludePath>
@@ -184,6 +184,7 @@
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</Profile>
       <RegisterOutput Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">false</RegisterOutput>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);ntdll.lib;Detours.lib</AdditionalDependencies>
+      <TargetMachine Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">MachineARM64X</TargetMachine>
     </Link>
     <Link>
       <Profile Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">false</Profile>

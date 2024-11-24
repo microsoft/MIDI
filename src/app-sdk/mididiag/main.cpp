@@ -170,6 +170,67 @@ void OutputHexNumericField(_In_ std::wstring const& fieldName, _In_ uint32_t con
 }
 
 
+bool OutputFileVersion(_In_ std::wstring const& fieldName, _In_ std::wstring const& fileName)
+{
+    DWORD handle{ 0 };
+
+    if (DWORD bufferSize = GetFileVersionInfoSize(fileName.c_str(), &handle); bufferSize > 0)
+    {
+        std::vector<byte> buffer;
+        buffer.resize(bufferSize);
+
+        if (GetFileVersionInfo(fileName.c_str(), handle, bufferSize, buffer.data()))
+        {
+            LPBYTE verInfoBuffer{ nullptr };
+            UINT verInfoBufferSize{ 0 };
+
+            if (VerQueryValue(buffer.data(), L"\\", (LPVOID*)&verInfoBuffer, &verInfoBufferSize))
+            {
+                if (verInfoBufferSize > 0 && verInfoBufferSize >= sizeof(VS_FIXEDFILEINFO))
+                {
+                    VS_FIXEDFILEINFO* verInfo = (VS_FIXEDFILEINFO*)(verInfoBuffer);
+
+                    OutputFieldLabel(fieldName);
+
+                    // major.minor.build.revision format
+                    std::wcout
+                        << fieldSeparator
+                        << std::dec
+                        << static_cast<uint16_t>((verInfo->dwFileVersionMS >> 16) & 0xffff)
+                        << L"."
+                        << static_cast<uint16_t>((verInfo->dwFileVersionMS) & 0xffff)
+                        << L"."
+                        << static_cast<uint16_t>((verInfo->dwFileVersionLS >> 16) & 0xffff)
+                        << L"."
+                        << static_cast<uint16_t>((verInfo->dwFileVersionLS) & 0xffff)
+                        << std::endl;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+
+void OutputError(_In_ winrt::hresult_error const& error)
+{
+    const std::wstring errorLabel = L"ERROR";
+
+    OutputFieldLabel(errorLabel);
+
+    std::wcout
+        << fieldSeparator
+        << std::hex
+        << error.code()
+        << L" : ";
+
+    std::cout
+        << winrt::to_string(error.message())
+        << std::endl;
+
+}
+
 void OutputError(_In_ std::wstring const& errorMessage)
 {
     const std::wstring errorLabel = L"ERROR";
@@ -235,6 +296,7 @@ void OutputCOMComponentInfo(std::wstring const dllNameFieldName, std::wstring co
         if (path.has_value())
         {
             OutputStringField(dllNameFieldName, path.value());
+            OutputFileVersion(MIDIDIAG_FIELD_LABEL_FILE_VERSION, path.value());
         }
     }
     else
@@ -242,6 +304,8 @@ void OutputCOMComponentInfo(std::wstring const dllNameFieldName, std::wstring co
         OutputError(L"Could not find in-proc server value under HKEY_CLASSES_ROOT, " + inprocServerKeyLocation);
     }
 }
+
+
 
 bool DoSectionRegistryEntries(_In_ bool const verbose)
 {
@@ -274,6 +338,7 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
                 if (midisrvImagePath.has_value())
                 {
                     OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_MIDISRV_EXENAME, midisrvImagePath.value());
+               //     OutputFileVersion(MIDIDIAG_FIELD_LABEL_FILE_VERSION, midisrvImagePath.value());
                 }
                 else
                 {
@@ -326,6 +391,14 @@ bool DoSectionRegistryEntries(_In_ bool const verbose)
         OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, midisrvTransportClsidString);
         OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, midisrvTransportClsidString);
         OutputItemSeparator();
+
+
+        std::wstring diagnosticsTransportClsidString{ L"{ac9b5417-3fe0-4e62-960f-034ee4235a1a}" };
+        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_NAME, std::wstring{ L"(Diagnostics Transport)" });
+        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_CLSID, diagnosticsTransportClsidString);
+        OutputCOMComponentInfo(MIDIDIAG_FIELD_LABEL_REGISTRY_TRANSPORT_DLLNAME, diagnosticsTransportClsidString);
+        OutputItemSeparator();
+
 
         //  TODO: List diagnostics transport info, even though it is not in the Windows MIDI Services registry key
 
@@ -783,6 +856,7 @@ bool DoSectionSdkStatus(_In_ bool const verbose)
 
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_SDK_STATUS);
 
+    
     // next, try to init the SDK
     bool initialized = initializer.InitializeSdkRuntime();
 

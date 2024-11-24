@@ -65,14 +65,16 @@
 
 
         </Component>
-        
+
+        <!--
         <Component Id="WinMMAPIRedirectDriver"
                    Bitness="always64"
                    Directory="System64Folder"
                    Guid="8b7aef76-de74-4a61-8c76-d5315f5a60c9"
-                   >
+                   NeverOverwrite="true">
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\wdmaud2.drv"                     Vital="true" />
         </Component>
+        -->
 
         <Component Id="WindowsService"
                    Bitness="always64"
@@ -86,7 +88,7 @@
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="baa5b390-f949-4d92-a1da-42942f199e06"
-                   NeverOverwrite="false">
+                   NeverOverwrite="true">
             <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32">
                 <RegistryValue Type="integer" Name="MidisrvTransferComplete" Value="0" />
             </RegistryKey>
@@ -104,9 +106,7 @@
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
                 <RegistryValue Type="string" Name="CurrentConfig" Value="Default.midiconfig.json" />
-
                 <RegistryValue Type="integer" Name="Midi2DiscoveryEnabled" Value="1" />
-
                 <RegistryValue Type="integer" Name="UseMMCSS" Value="0" />
 
                 <RegistryKey Key="Endpoint Processing Plugins">
@@ -134,18 +134,6 @@
                         <RegistryValue Type="string" Name="CLSID" Value="{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" />
                         <RegistryValue Type="integer" Name="Enabled" Value="1" />
                     </RegistryKey>
-
-                    <!--
-                    <RegistryKey Key="Midi2VirtualPatchBayTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{B7C8E2D2-EE3B-4044-B9CF-6F29528AB46D}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
-                    </RegistryKey>
-
-                    <RegistryKey Key="Midi2NetworkMidiTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
-                    </RegistryKey>
-                    -->
 
                 </RegistryKey>
             </RegistryKey>
@@ -179,7 +167,7 @@
             <ComponentRef Id="WindowsService"/>
             <ComponentRef Id="WinMMCompatRegistryEntries"/>
 
-            <ComponentRef Id="WinMMAPIRedirectDriver"/>
+            <!-- <ComponentRef Id="WinMMAPIRedirectDriver"/> -->
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>
             
