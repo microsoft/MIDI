@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.10.34825.169
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Windows.Devices.Midi2", "winrt\Microsoft.Windows.Devices.Midi2.vcxproj", "{9EAA3AF3-7328-4F67-A011-E2DD8FBAA4C4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{787EC629-C0FB-4BA9-9746-4A82CD06B73E} = {787EC629-C0FB-4BA9-9746-4A82CD06B73E}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0 Shared", "0 Shared", "{78B3E981-FFD4-4C8D-9575-B288DED97905}"
 	ProjectSection(SolutionItems) = preProject
