@@ -30,14 +30,6 @@
         (p) = NULL; \
     }
 
-
-
-// these are files generated from the MIDL compiler and are
-// provided alongside this file for use in your apps
-// they should be included in your app before this file. They
-// are not included here because that can result in dups
-
-
 namespace Microsoft::Windows::Devices::Midi2::Initialization
 {
     typedef enum
@@ -181,7 +173,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 DWORD installedVersionMinor{ 0 };
                 DWORD installedVersionRevision{ 0 };
 
-                m_initializer->GetInstalledWindowsMidiServicesSdkVersion(
+                if (SUCCEEDED(m_initializer->GetInstalledWindowsMidiServicesSdkVersion(
                     nullptr,                    // build platform
                     &installedVersionMajor,     // major
                     &installedVersionMinor,     // minor
@@ -191,13 +183,16 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                     nullptr,                    // buildSource string. Remember to cotaskmemfree if provided
                     nullptr,                    // versionName string. Remember to cotaskmemfree if provided
                     nullptr                     // versionFullString string. Remember to cotaskmemfree if provided
-                    );
+                )))
+                {
+                    if (minRequiredVersionMajor > installedVersionMajor) return false;
+                    if (minRequiredVersionMinor > installedVersionMinor) return false;
+                    if (minRequiredVersionRevision > installedVersionRevision) return false;
 
-                if (minRequiredVersionMajor > installedVersionMajor) return false;
-                if (minRequiredVersionMinor > installedVersionMinor) return false;
-                if (minRequiredVersionRevision > installedVersionRevision) return false;
+                    return true;
+                }
 
-                return true;
+                return false;
             }
             else
             {
@@ -206,21 +201,6 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 return false;
             }
         }
-
-        //// TODO: function to return the installed SDK version
-        //bool GetSdkVersion(PWINDOWSMIDISERVICESAPPSDKVERSION installedVersion)
-        //{
-        //    if (m_initializer != nullptr)
-        //    {
-        //        if (SUCCEEDED(m_initializer->GetInstalledWindowsMidiServicesSdkVersion(installedVersion)))
-        //        {
-        //            return true;
-        //        }
-        //    }
-
-        //    return false;
-        //}
-
 
 
         void ShutdownSdkRuntime()
