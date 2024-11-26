@@ -23,6 +23,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry::implemen
 {
     struct MidiUniqueId : MidiUniqueIdT<MidiUniqueId>
     {
+        static winrt::hstring ShortLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_SHORT); }
+        static winrt::hstring ShortLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_SHORT_PLURAL); }
+        static winrt::hstring LongLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_FULL); }
+        static winrt::hstring LongLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_FULL_PLURAL); }
+
+
         MidiUniqueId() = default;
 
         MidiUniqueId(
@@ -56,10 +62,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry::implemen
         uint8_t Byte4() const noexcept { return m_byte4; }
         void Byte4(_In_ uint8_t value) noexcept { m_byte4 = internal::CleanupByte7(value); }
 
-        static winrt::hstring ShortLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_SHORT); }
-        static winrt::hstring LongLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_MUID_FULL); }
-        
         uint32_t AsCombined28BitValue () const noexcept;
+
+        // IStringable
+        winrt::hstring ToString();
+
 
         bool IsBroadcast() noexcept { return (AsCombined28BitValue() == MIDI_MUID_BROADCAST); }
         bool IsReserved() noexcept { return AsCombined28BitValue() >= MIDI_MUID_RESERVED_START && AsCombined28BitValue() <= MIDI_MUID_RESERVED_END; }

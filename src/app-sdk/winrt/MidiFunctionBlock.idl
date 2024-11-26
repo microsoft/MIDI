@@ -16,9 +16,14 @@ import "MidiGroup.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiFunctionBlock
+    runtimeclass MidiFunctionBlock : Windows.Foundation.IStringable
     {
         MidiFunctionBlock();
+
+        static String ShortLabel{ get; };
+        static String ShortLabelPlural{ get; };
+        static String LongLabel{ get; };
+        static String LongLabelPlural{ get; };
 
         Boolean IsReadOnly { get; };
 
@@ -32,7 +37,8 @@ namespace Microsoft.Windows.Devices.Midi2
 
         MidiFunctionBlockRepresentsMidi10Connection RepresentsMidi10Connection;
 
-        UInt8 FirstGroupIndex;
+        MidiGroup FirstGroup;
+        //UInt8 FirstGroupIndex;
         UInt8 GroupCount;
 
         Boolean IncludesGroup(MidiGroup group);

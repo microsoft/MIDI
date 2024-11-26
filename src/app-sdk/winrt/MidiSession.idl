@@ -13,7 +13,7 @@ import "IMidiEndpointConnectionSettings.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiSession : Windows.Foundation.IClosable
+    runtimeclass MidiSession : Windows.Foundation.IClosable, Windows.Foundation.IStringable
     {
         Guid SessionId { get; };
         String Name{ get; };

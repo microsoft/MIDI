@@ -13,6 +13,11 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::CapabilityInquiry::implementation
 {
+    winrt::hstring MidiUniqueId::ToString()
+    {
+        return winrt::to_hstring(std::format("{} {}", winrt::to_string(MidiUniqueId::LongLabel()), AsCombined28BitValue()));
+    }
+
     ci::MidiUniqueId MidiUniqueId::CreateBroadcast()
     {
         //return winrt::make<MidiUniqueId>(MIDI_MUID_BROADCAST);

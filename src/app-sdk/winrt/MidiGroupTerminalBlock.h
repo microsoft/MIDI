@@ -10,21 +10,26 @@
 #pragma once
 #include "MidiGroupTerminalBlock.g.h"
 
-
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiGroupTerminalBlock : MidiGroupTerminalBlockT<MidiGroupTerminalBlock>
     {
         MidiGroupTerminalBlock() = default;
 
+        static winrt::hstring ShortLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_TERMINAL_BLOCK_SHORT); }
+        static winrt::hstring ShortLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_TERMINAL_BLOCK_SHORT_PLURAL); }
+        static winrt::hstring LongLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_TERMINAL_BLOCK_FULL); }
+        static winrt::hstring LongLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_TERMINAL_BLOCK_FULL_PLURAL); }
+
         uint8_t Number() { return m_block.Number; }
         winrt::hstring Name() { return m_block.Name.c_str(); }
         midi2::MidiGroupTerminalBlockDirection Direction() { return (midi2::MidiGroupTerminalBlockDirection)m_block.Direction; }
         midi2::MidiGroupTerminalBlockProtocol Protocol() { return (midi2::MidiGroupTerminalBlockProtocol)m_block.Protocol; }
 
-        uint8_t FirstGroupIndex() { return m_block.FirstGroupIndex; }
+        midi2::MidiGroup FirstGroup() const noexcept { return winrt::make<midi2::implementation::MidiGroup>(m_block.FirstGroupIndex); }
+
         uint8_t GroupCount() { return m_block.GroupCount; }
-        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + GroupCount(); }
+        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= m_block.FirstGroupIndex && group.Index() < m_block.FirstGroupIndex + GroupCount(); }
 
 
         uint16_t MaxDeviceInputBandwidthIn4KBitsPerSecondUnits() { return m_block.MaxInputBandwidth; }
@@ -39,6 +44,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         midi2::MidiFunctionBlock AsEquivalentFunctionBlock();
 
+        winrt::hstring ToString();
+
 
     private:
         internal::GroupTerminalBlockInternal m_block;
@@ -47,9 +54,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     };
 }
-//namespace MIDI_CPP_NAMESPACE::factory_implementation
-//{
-//    struct MidiGroupTerminalBlock : MidiGroupTerminalBlockT<MidiGroupTerminalBlock, implementation::MidiGroupTerminalBlock>
-//    {
-//    };
-//}
+namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation
+{
+    struct MidiGroupTerminalBlock : MidiGroupTerminalBlockT<MidiGroupTerminalBlock, implementation::MidiGroupTerminalBlock>
+    {
+    };
+}

@@ -59,6 +59,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         _Success_(return == true)
         bool InternalStart();
 
+
+        winrt::hstring ToString();
+
     private:
         // this helps us clean up when/if a client crashes or otherwise
         // doesn't clean up its session before closing

@@ -10,12 +10,15 @@
 namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiChannel
+    runtimeclass MidiChannel : Windows.Foundation.IStringable
     {
+        MidiChannel();
         MidiChannel(UInt8 index);
 
         static String ShortLabel{ get; };
+        static String ShortLabelPlural{ get; };
         static String LongLabel{ get; };
+        static String LongLabelPlural{ get; };
 
         UInt8 Index;
         UInt8 DisplayValue{ get; };

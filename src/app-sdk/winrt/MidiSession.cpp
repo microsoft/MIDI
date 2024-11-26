@@ -18,6 +18,11 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
 
+    winrt::hstring MidiSession::ToString()
+    {
+        return Name();
+    }
+
     _Use_decl_annotations_
     midi2::MidiSession MidiSession::Create(
         winrt::hstring const& sessionName

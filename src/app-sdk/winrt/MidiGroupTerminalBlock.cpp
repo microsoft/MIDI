@@ -13,6 +13,32 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+    winrt::hstring MidiGroupTerminalBlock::ToString()
+    {
+        winrt::hstring baseName{ midi2::MidiFunctionBlock::LongLabel() };
+
+        if (Name().empty())
+        {
+            // TODO: Move to resources
+            baseName = baseName + L"(Unnamed)";
+        }
+        else
+        {
+            baseName = baseName + Name();
+        }
+
+        if (m_block.GroupCount != 1)
+        {
+            baseName = baseName + std::format(L" ({} {} to {})", MidiGroup::LongLabelPlural(), m_block.FirstGroupIndex + 1, m_block.FirstGroupIndex + m_block.GroupCount);
+        }
+        else
+        {
+            baseName = baseName + std::format(L" ({} {})", MidiGroup::LongLabel(), m_block.FirstGroupIndex + 1);
+        }
+
+        return baseName;
+    }
+
     // this conversion will never be 100% because the GTBs just contain slightly
     // different data than Function Blocks. However, it will provide enough information
     // to enable consuming code to represent the GTB properly in the absence of
@@ -26,7 +52,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         fb->IsActive(true);
         fb->Number(max(0, m_block.Number - 1));     // group terminal blocks are numbered 1-255. Function blocks start with 0 as the id.
         fb->Name(m_block.Name.c_str());
-        fb->FirstGroupIndex(m_block.FirstGroupIndex);
+        fb->FirstGroup(winrt::make<implementation::MidiGroup>(m_block.FirstGroupIndex));
         fb->GroupCount(m_block.GroupCount);
 
         switch ((midi2::MidiGroupTerminalBlockDirection)m_block.Direction)

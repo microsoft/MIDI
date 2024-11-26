@@ -15,19 +15,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiGroup : MidiGroupT<MidiGroup>
     {
-        //MidiGroup() = default;
-        MidiGroup(_In_ uint8_t index) noexcept { Index(index); }
+        static winrt::hstring ShortLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_SHORT); }
+        static winrt::hstring ShortLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_SHORT_PLURAL); }
+        static winrt::hstring LongLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_FULL); }
+        static winrt::hstring LongLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_FULL_PLURAL); }
 
+        MidiGroup() noexcept { Index(0); }
+        MidiGroup(_In_ uint8_t index) noexcept { Index(index); }
 
         uint8_t Index() const noexcept { return m_index; }
         void Index(_In_ uint8_t value) noexcept { m_index = (value & 0x0F); }
 
-        static winrt::hstring ShortLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_SHORT); }
-        static winrt::hstring LongLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_GROUP_FULL); }
-
-
         uint8_t DisplayValue() const noexcept { return m_index + 1; }
 
+        // IStringable
+        winrt::hstring ToString();
 
         static bool IsValidIndex(_In_ uint8_t const index) noexcept { return index >= 0 && index <= 15; }
 

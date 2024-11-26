@@ -17,7 +17,8 @@ namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
     runtimeclass MidiEndpointConnection : IMidiMessageReceivedEventSource,
-                                          IMidiEndpointConnectionSource
+                                          IMidiEndpointConnectionSource,
+                                          Windows.Foundation.IStringable
     {
         static String GetDeviceSelector();
 

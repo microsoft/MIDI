@@ -14,5 +14,9 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+    winrt::hstring MidiChannel::ToString()
+    {
+        return winrt::to_hstring(std::format("{} {}", winrt::to_string(midi2::MidiChannel::ShortLabel()), DisplayValue()));
+    }
 
 }

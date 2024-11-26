@@ -13,6 +13,11 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+    winrt::hstring MidiEndpointConnection::ToString()
+    {
+        return ConnectedEndpointDeviceId();
+    }
+
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
         winrt::guid sessionId,
