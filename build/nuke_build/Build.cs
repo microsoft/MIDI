@@ -1536,6 +1536,15 @@ class Build : NukeBuild
 
 
 
+    Target ZipPowershellDevUtilities => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(CreateVersionIncludes)
+        .Executes(() =>
+        {
+            var regHelpersFolder = RootDirectory / "src" / "dev-tools" / "reg-helpers";
+
+            regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
+        });
 
 
 
@@ -1553,6 +1562,7 @@ class Build : NukeBuild
       //  .DependsOn(BuildAndPackageElectronProjection)
         .DependsOn(BuildCppSamples)
         .DependsOn(BuildCSharpSamples)
+        .DependsOn(ZipPowershellDevUtilities)
         .Executes(() =>
         {
             if (BuiltInBoxInstallers.Count > 0)

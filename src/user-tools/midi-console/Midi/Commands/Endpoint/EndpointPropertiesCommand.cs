@@ -249,13 +249,13 @@ namespace Microsoft.Midi.ConsoleApp
                                 if (functionBlock.GroupCount == 1)
                                 {
                                     functionInformation +=
-                                        $"[grey]{Strings.CommonStringGroupSingular}[/] {functionBlock.FirstGroupIndex + 1} ({Strings.CommonStringIndexSingular} {functionBlock.FirstGroupIndex})";
+                                        $"[grey]{Strings.CommonStringGroupSingular}[/] {functionBlock.FirstGroup.DisplayValue} ({Strings.CommonStringIndexSingular} {functionBlock.FirstGroup.Index})";
                                 }
                                 else
                                 {
-                                    int stopGroupIndex = functionBlock.FirstGroupIndex + functionBlock.GroupCount - 1;
+                                    int stopGroupIndex = functionBlock.FirstGroup.Index + functionBlock.GroupCount - 1;
                                     functionInformation +=
-                                        $"[grey]{Strings.CommonStringGroupPlural}[/] {functionBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {functionBlock.FirstGroupIndex}-{stopGroupIndex})";
+                                        $"[grey]{Strings.CommonStringGroupPlural}[/] {functionBlock.FirstGroup.DisplayValue}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {functionBlock.FirstGroup.Index}-{stopGroupIndex})";
 
                                 }
 
@@ -286,17 +286,17 @@ namespace Microsoft.Midi.ConsoleApp
                                 table.AddEmptyRow();
                                 table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlock, AnsiMarkupFormatter.FormatBlockNumber(functionBlock.Number) + " " + AnsiMarkupFormatter.FormatBlockName(functionBlock.Name));
                                 table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockActive, functionBlock.IsActive.ToString());
-                                table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockFirstGroupIndex, functionBlock.FirstGroupIndex.ToString());
+                                table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockFirstGroupIndex, functionBlock.FirstGroup.Index.ToString());
                                 table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockGroupCount, functionBlock.GroupCount.ToString());
 
                                 if (functionBlock.GroupCount == 1)
                                 {
-                                    table.AddRow(Strings.CommonStringGroupSingular, $"{functionBlock.FirstGroupIndex + 1} ({Strings.CommonStringIndexSingular} {functionBlock.FirstGroupIndex})");
+                                    table.AddRow(Strings.CommonStringGroupSingular, $"{functionBlock.FirstGroup.DisplayValue} ({Strings.CommonStringIndexSingular} {functionBlock.FirstGroup.Index})");
                                 }
                                 else
                                 {
-                                    int stopGroupIndex = functionBlock.FirstGroupIndex + functionBlock.GroupCount - 1;
-                                    table.AddRow(Strings.CommonStringGroupPlural, $"{functionBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {functionBlock.FirstGroupIndex}-{stopGroupIndex})");
+                                    int stopGroupIndex = functionBlock.FirstGroup.Index + functionBlock.GroupCount - 1;
+                                    table.AddRow(Strings.CommonStringGroupPlural, $"{functionBlock.FirstGroup.DisplayValue}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {functionBlock.FirstGroup.Index}-{stopGroupIndex})");
                                 }
 
                                 if (settings.Verbose)
@@ -353,13 +353,13 @@ namespace Microsoft.Midi.ConsoleApp
                             if (groupTerminalBlock.GroupCount == 1)
                             {
                                 groupInformation +=
-                                    $"[grey]{Strings.CommonStringGroupSingular}[/] {groupTerminalBlock.FirstGroupIndex + 1} ({Strings.CommonStringIndexSingular} {groupTerminalBlock.FirstGroupIndex})";
+                                    $"[grey]{Strings.CommonStringGroupSingular}[/] {groupTerminalBlock.FirstGroup.DisplayValue} ({Strings.CommonStringIndexSingular} {groupTerminalBlock.FirstGroup.Index})";
                             }
                             else
                             {
-                                int stopGroupIndex = groupTerminalBlock.FirstGroupIndex + groupTerminalBlock.GroupCount - 1;
+                                int stopGroupIndex = groupTerminalBlock.FirstGroup.Index + groupTerminalBlock.GroupCount - 1;
                                 groupInformation +=
-                                    $"[grey]{Strings.CommonStringGroupPlural}[/] {groupTerminalBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {groupTerminalBlock.FirstGroupIndex}-{stopGroupIndex})";
+                                    $"[grey]{Strings.CommonStringGroupPlural}[/] {groupTerminalBlock.FirstGroup.DisplayValue}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {groupTerminalBlock.FirstGroup.Index}-{stopGroupIndex})";
 
                             }
 
@@ -379,12 +379,12 @@ namespace Microsoft.Midi.ConsoleApp
 
                             if (groupTerminalBlock.GroupCount == 1)
                             {
-                                table.AddRow(Strings.CommonStringGroupSingular, $"{groupTerminalBlock.FirstGroupIndex + 1} ({Strings.CommonStringIndexSingular} {groupTerminalBlock.FirstGroupIndex})");
+                                table.AddRow(Strings.CommonStringGroupSingular, $"{groupTerminalBlock.FirstGroup.DisplayValue} ({Strings.CommonStringIndexSingular} {groupTerminalBlock.FirstGroup.Index})");
                             }
                             else
                             {
-                                int stopGroupIndex = groupTerminalBlock.FirstGroupIndex + groupTerminalBlock.GroupCount - 1;
-                                table.AddRow(Strings.CommonStringGroupPlural, $"{groupTerminalBlock.FirstGroupIndex + 1}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {groupTerminalBlock.FirstGroupIndex}-{stopGroupIndex})");
+                                int stopGroupIndex = groupTerminalBlock.FirstGroup.Index + groupTerminalBlock.GroupCount - 1;
+                                table.AddRow(Strings.CommonStringGroupPlural, $"{groupTerminalBlock.FirstGroup.DisplayValue}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {groupTerminalBlock.FirstGroup.Index}-{stopGroupIndex})");
                             }
 
                             table.AddRow(Strings.PropertyTablePropertyLabelGTBGroupCount, groupTerminalBlock.GroupCount.ToString());

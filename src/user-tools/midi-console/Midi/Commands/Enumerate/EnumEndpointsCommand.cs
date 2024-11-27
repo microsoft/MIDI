@@ -184,7 +184,7 @@ namespace Microsoft.Midi.ConsoleApp
                         blockTable.AddRow(
                             AnsiMarkupFormatter.FormatBlockName(block.Name),
                             block.Direction.ToString(),
-                            AnsiMarkupFormatter.FormatGroupSpan(block.FirstGroupIndex, block.GroupCount),
+                            AnsiMarkupFormatter.FormatGroupSpan(block.FirstGroup.Index, block.GroupCount),
                             block.IsActive.ToString()
                             );
                     }
@@ -206,7 +206,7 @@ namespace Microsoft.Midi.ConsoleApp
                         blockTable.AddRow(
                             AnsiMarkupFormatter.FormatBlockName(block.Name),
                             block.Direction.ToString(),
-                            AnsiMarkupFormatter.FormatGroupSpan(block.FirstGroupIndex, block.GroupCount)
+                            AnsiMarkupFormatter.FormatGroupSpan(block.FirstGroup.Index, block.GroupCount)
                             );
                     }
 

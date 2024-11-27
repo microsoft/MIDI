@@ -40,7 +40,8 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
 
 
 
-MidiNetworkHostAuthentication MidiNetworkHostAuthenticationFromJsonString(_In_ winrt::hstring const& jsonString)
+MidiNetworkHostAuthentication 
+MidiNetworkHostAuthenticationFromJsonString(_In_ winrt::hstring const& jsonString)
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
@@ -64,7 +65,8 @@ MidiNetworkHostAuthentication MidiNetworkHostAuthenticationFromJsonString(_In_ w
 }
 
 
-MidiNetworkHostConnectionPolicy MidiNetworkHostConnectionPolicyFromJsonString(_In_ winrt::hstring const& jsonString)
+MidiNetworkHostConnectionPolicy 
+MidiNetworkHostConnectionPolicyFromJsonString(_In_ winrt::hstring const& jsonString)
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
@@ -88,6 +90,7 @@ MidiNetworkHostConnectionPolicy MidiNetworkHostConnectionPolicyFromJsonString(_I
 }
 
 
+// TODO: Move all strings to resources
 
 _Use_decl_annotations_
 HRESULT
@@ -171,9 +174,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     // if we're passed a null or empty json, we just quietly exit
     if (configurationJsonSection == nullptr) return S_OK;
 
-    // default to failure
-
-
     // Json Format for network UDP midi
     //
     //{
@@ -254,153 +254,151 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     }
 
     auto createArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, nullptr);
+    auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
+    auto removeArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY, nullptr);
 
-    if (createArray == nullptr || createArray.Size() == 0)
+    if (createArray != nullptr && createArray.Size() > 0)
     {
-        // nothing in the array. Maybe we're looking at update or delete 
-
-        // TODO: Set the response to something meaningful here
-
-        internal::JsonStringifyObjectToOutParam(responseObject, response);
-
-        // once we enable update/delete we need to move this
-        return S_OK;
-    }
-
-
-    // iterate through all the work we need to do. Just 
-    // "create" instructions, in this case.
-    for (uint32_t i = 0; i < createArray.Size(); i++)
-    {
-        auto jsonEntry = (createArray.GetObjectAt(i));
-
-        if (jsonEntry)
+        // iterate through all the work we need to do. Just 
+        // "create" instructions, in this case.
+        for (uint32_t i = 0; i < createArray.Size(); i++)
         {
-            // are we defining a host?
-            if (auto hostEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_KEY, nullptr); hostEntry != nullptr)
+            auto jsonEntry = (createArray.GetObjectAt(i));
+
+            if (jsonEntry)
             {
-                MidiNetworkHostDefinition definition;
-                winrt::hstring validationErrorMessage{};
-
-                // currently, UDP is the only allowed protocol
-
-                auto protocol = internal::ToLowerTrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
-
-                if (protocol != MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
+                // are we defining a host?
+                if (auto hostEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_KEY, nullptr); hostEntry != nullptr)
                 {
-                    validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
+                    MidiNetworkHostDefinition definition;
+                    winrt::hstring validationErrorMessage{};
 
-                }
+                    // currently, UDP is the only allowed protocol
 
-                definition.EntryIdentifier = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENTRY_IDENTIFIER_KEY, L""));
+                    auto protocol = internal::ToLowerTrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
 
-                definition.UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
-                definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
-
-                definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, L""));
-                definition.ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY, L""));
-
-                // read the list of ip info
-                if (definition.ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
-                {
-                    auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
-
-                    for (uint32_t j = 0; j < addressArray.Size(); j++)
+                    if (protocol != MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                     {
-                        auto addressEntry = addressArray.GetStringAt(j);
+                        validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
 
-                        HostName address(addressEntry);
-
-                        definition.IpAddresses.push_back(address);
                     }
-                }
 
-                // read authentication information
-                if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
-                {
+                    definition.EntryIdentifier = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENTRY_IDENTIFIER_KEY, L""));
 
-                    if (definition.Authentication == MidiNetworkHostAuthentication::PasswordAuthentication)
+                    definition.UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
+                    definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
+
+                    definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, L""));
+                    definition.ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY, L""));
+
+                    // read the list of ip info
+                    if (definition.ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
                     {
-                        // TODO: Read the password vault key
+                        auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
+
+                        for (uint32_t j = 0; j < addressArray.Size(); j++)
+                        {
+                            auto addressEntry = addressArray.GetStringAt(j);
+
+                            HostName address(addressEntry);
+
+                            definition.IpAddresses.push_back(address);
+                        }
                     }
-                    else if (definition.Authentication == MidiNetworkHostAuthentication::UserAuthentication)
+
+                    // read authentication information
+                    if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
                     {
-                        // TODO: Read username/password vault key
+
+                        if (definition.Authentication == MidiNetworkHostAuthentication::PasswordAuthentication)
+                        {
+                            // TODO: Read the password vault key
+                        }
+                        else if (definition.Authentication == MidiNetworkHostAuthentication::UserAuthentication)
+                        {
+                            // TODO: Read username/password vault key
+                        }
+                        else
+                        {
+                            // no authentication provided
+                        }
+                    }
+
+                    // generate host name and other info
+
+                    auto serviceInstanceNamePrefix = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
+
+                    // if the provided service instance name is empty, default to 
+                    // machine name. If that name is already in use, add an additional
+                    // disambiguation value
+                    if (serviceInstanceNamePrefix.empty())
+                    {
+                        std::wstring buffer{};
+                        DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
+                        buffer.resize(bufferSize);
+
+                        bool validName = GetComputerName(buffer.data(), &bufferSize);
+                        if (validName)
+                        {
+                            serviceInstanceNamePrefix = buffer;
+                        }
+                    }
+
+                    definition.ServiceInstanceName = serviceInstanceNamePrefix;
+
+                    // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number. Keep trying until unused one is found
+
+
+
+
+                    // validate the entry
+
+                    if (SUCCEEDED(ValidateHostDefinition(definition, validationErrorMessage)))
+                    {
+                        // create the host
+
+                        auto host = std::make_shared<MidiNetworkHost>();
+
+                        RETURN_HR_IF_NULL(E_POINTER, host);
+                        RETURN_IF_FAILED(host->Initialize(definition));
+
+                        // add to our collection of hosts
+                        TransportState::Current().AddHost(host);
+
+                        // start the network host asynchonously
+                        RETURN_IF_FAILED(host->Start());
                     }
                     else
                     {
-                        // no authentication provided
+                        // invalid entry
                     }
 
+
+
                 }
-
-                // generate host name and other info
-
-                auto serviceInstanceNamePrefix = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
-
-                // if the provided service instance name is empty, default to 
-                // machine name. If that name is already in use, add an additional
-                // disambiguation value
-                if (serviceInstanceNamePrefix.empty())
+                else if (auto clientEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CLIENT_KEY, nullptr); clientEntry != nullptr)
                 {
-                    std::wstring buffer{};
-                    DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
-                    buffer.resize(bufferSize);
-
-                    bool validName = GetComputerName(buffer.data(), &bufferSize);
-                    if (validName)
-                    {
-                        serviceInstanceNamePrefix = buffer;
-                    }
+                    // TODO: Add to the client reconnect table
                 }
-
-                definition.ServiceInstanceName = serviceInstanceNamePrefix;
-
-                // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number. Keep trying until unused one is found
-
-
-
-
-                // validate the entry
-
-                if (SUCCEEDED(ValidateHostDefinition(definition, validationErrorMessage)))
-                {
-                    // create the host
-
-                    auto host = std::make_shared<MidiNetworkHost>();
-
-                    RETURN_HR_IF_NULL(E_POINTER, host);
-                    RETURN_IF_FAILED(host->Initialize(definition));
-
-                    // TODO: add to our collection of hosts
-
-
-                    TransportState::Current().AddHost(host);
-                    
-                    // start the network host
-                    RETURN_IF_FAILED(host->Start());
-                }
-                else
-                {
-                    // invalid entry
-                }
-
-
 
             }
-            else if (auto clientEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CLIENT_KEY, nullptr); clientEntry != nullptr)
-            {
-                // TODO: Add to the client reconnect table
-            }
-
         }
     }
+
+    if (updateArray != nullptr && updateArray.Size() > 0)
+    {
+        // TODO: Implement update
+    }
+
+    if (removeArray != nullptr && removeArray.Size() > 0)
+    {
+        // TODO: Implement remove
+    }
+
 
     //responseObject.SetNamedValue(
     //    MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY,
     //    createdDevicesResponseArray);
-
-    // TODO: Process all "update" and "remove" instructions
 
 
     TraceLoggingWrite(
