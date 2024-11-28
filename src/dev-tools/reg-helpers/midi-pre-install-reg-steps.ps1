@@ -7,6 +7,8 @@
 #   https://powertoe.wordpress.com/2010/08/28/controlling-registry-acl-permissions-with-powershell/
 
 
+#Requires -RunAsAdministrator
+#Requires -Version 6.0
 
 function Take-Permissions 
 {
@@ -86,13 +88,17 @@ Write-Host "Windows MIDI Services Developer Prep Script" -ForegroundColor DarkCy
 Write-Host "=========================================================================" -ForegroundColor DarkGray
 Write-Host "This script is for developers and power users who need to run development" -ForegroundColor DarkCyan
 Write-Host "builds of Windows MIDI Services on a Windows PC which has the public" -ForegroundColor DarkCyan
-Write-Host "release already installed. This must be run in administrator mode." -ForegroundColor DarkCyan
+Write-Host "release already installed." -ForegroundColor DarkCyan
 Write-Host
-Write-Host "Running this script will change registry permissions to enable the" -ForegroundColor DarkCyan
-Write-Host "installer to install developer bits, and will also de-register the in-box" -ForegroundColor DarkCyan
-Write-Host "'Midisrv' Windows MIDI Service." -ForegroundColor DarkCyan
+Write-Host "Running this script will change registry permissions to take ownership of " -ForegroundColor DarkCyan
+Write-Host "the component registry entries from Trusted Installer and grant them to you" -ForegroundColor DarkCyan
+Write-Host "to enable the Developer Preview installer to install developer bits. This" -ForegroundColor DarkCyan
+Write-Host "will also de-register the in-box 'Midisrv' Windows MIDI Service." -ForegroundColor DarkCyan
 Write-Host
-Write-Host "These actions are not easily reversible without reinstalling Windows." -ForegroundColor Cyan
+Write-Host "This script must be run from an elevated command prompt using the " -ForegroundColor LightkCyan
+Write-Host "'Run as Administrator' feature or (if enabled) 'sudo'. " -ForegroundColor LightCyan
+Write-Host
+Write-Host "These actions are not easily reversible without reinstalling Windows." -ForegroundColor DarkCyan
 Write-Host
 
 $confirmation = Read-Host "Do you want to continue? (y/n)"
