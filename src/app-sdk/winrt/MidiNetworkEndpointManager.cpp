@@ -52,4 +52,68 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         UNREFERENCED_PARAMETER(removalConfig);
         throw hresult_not_implemented();
     }
+
+
+
+
+
+    collections::IVector<midi2::Endpoints::Network::MidiAdvertisedHost> MidiNetworkEndpointManager::GetAdvertisedHosts()
+    {
+        //var askFor = new String[]{ "System.Devices.Dnssd.HostName",
+        //                    "System.Devices.Dnssd.ServiceName",
+        //                    "System.Devices.Dnssd.InstanceName",
+        //                    "System.Devices.IpAddress",
+        //                    "System.Devices.Dnssd.PortNumber",
+        //                    "System.Devices.Dnssd.TextAttributes",
+        //};
+
+
+        auto results = enumeration::DeviceInformation::FindAllAsync(
+            MidiNetworkUdpDnsSdQueryString(), 
+            MidiNetworkUdpDnsSdQueryAdditionalProperties()).get();
+
+        if (results && results.Size() > 0)
+        {
+            for (auto const& result : results)
+            {
+                if (result.Properties().HasKey(L"System.Devices.Dnssd.ServiceName"))
+                {
+
+                }
+
+                if (result.Properties().HasKey(L"System.Devices.Dnssd.InstanceName"))
+                {
+
+                }
+
+                if (result.Properties().HasKey(L"System.Devices.IpAddress"))
+                {
+
+                }
+
+                if (result.Properties().HasKey(L"System.Devices.Dnssd.PortNumber"))
+                {
+
+                }
+
+                if (result.Properties().HasKey(L"System.Devices.Dnssd.TextAttributes"))
+                {
+
+                }
+            }
+
+        }
+
+        //var askFor = new String[]{ "System.Devices.Dnssd.HostName",
+        //                    "System.Devices.Dnssd.ServiceName",
+        //                    "System.Devices.Dnssd.InstanceName",
+        //                    "System.Devices.IpAddress",
+        //                    "System.Devices.Dnssd.PortNumber",
+        //                    "System.Devices.Dnssd.TextAttributes",
+        //};
+        //dw = DeviceInformation.CreateWatcher(queryString, askFor, DeviceInformationKind.AssociationEndpointService);
+
+        throw hresult_not_implemented();
+
+    }
 }

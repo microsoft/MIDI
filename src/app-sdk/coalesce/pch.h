@@ -19,7 +19,7 @@
 
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
-
+namespace enumeration = winrt::Windows::Devices::Enumeration;
 
 #include <winrt/Microsoft.Windows.Devices.Midi2.h>
 #include <winrt/Microsoft.Windows.Devices.Midi2.CapabilityInquiry.h>
