@@ -110,11 +110,13 @@
 #define MIDIDIAG_SECTION_LABEL_OS                                        L"os"
 #define MIDIDIAG_FIELD_LABEL_OS_VERSION                                  L"os_version"
 
-#define MIDIDIAG_SECTION_LABEL_APPARENT_SYSTEM_INFO                      L"apparent_system_info"
+#define MIDIDIAG_SECTION_LABEL_PROCESSOR_ENV                             L"processor_env"
 #define MIDIDIAG_SECTION_LABEL_NATIVE_SYSTEM_INFO                        L"native_system_info"
 #define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_ARCH                  L"processor_architecture"
 #define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_LEVEL                 L"processor_level"
 #define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_REVISION              L"processor_revision"
+#define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_EMULATION             L"running_emulated"
+
 
 #define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMECAPS_ERROR                 L"timecaps_error"
 #define MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMECAPS_MIN_PERIOD            L"timecaps_min_period"
