@@ -131,7 +131,7 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
 
     if (Get-Process -Name "midisrv" -ErrorAction SilentlyContinue)
     {
-        Stop-Process -Name -Force "midisrv"
+        Stop-Process -Name "midisrv" -Force
         Write-Host "Stopped midisrv process" -ForegroundColor DarkCyan
     }
     else
