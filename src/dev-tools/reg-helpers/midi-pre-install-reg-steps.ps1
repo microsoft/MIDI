@@ -95,9 +95,6 @@ Write-Host "the component registry entries from Trusted Installer and grant them
 Write-Host "to enable the Developer Preview installer to install developer bits. This" -ForegroundColor DarkCyan
 Write-Host "will also de-register the in-box 'Midisrv' Windows MIDI Service." -ForegroundColor DarkCyan
 Write-Host
-Write-Host "This script must be run from an elevated command prompt using the " -ForegroundColor LightkCyan
-Write-Host "'Run as Administrator' feature or (if enabled) 'sudo'. " -ForegroundColor LightCyan
-Write-Host
 Write-Host "These actions are not easily reversible without reinstalling Windows." -ForegroundColor DarkCyan
 Write-Host
 
