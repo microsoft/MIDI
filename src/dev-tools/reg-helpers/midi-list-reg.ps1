@@ -27,6 +27,13 @@
     Write-Host "you will need to run the dev-prep script before running the installer." -ForegroundColor DarkCyan
     Write-Host
     
+    if (!([Environment]::Is64BitProcess))
+{
+    Write-Host
+    Write-Host "This appears to be a 32-bit host. This script must be run from a 64-bit elevated shell." -ForegroundColor Red
+    Write-Host
+    Exit
+}
 
     # display info about the MIDI Service that is installed
 

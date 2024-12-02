@@ -98,6 +98,16 @@ Write-Host
 Write-Host "These actions are not easily reversible without reinstalling Windows." -ForegroundColor DarkCyan
 Write-Host
 
+if (!([Environment]::Is64BitProcess))
+{
+    Write-Host
+    Write-Host "This appears to be a 32-bit host. This script must be run from a 64-bit elevated shell." -ForegroundColor Red
+    Write-Host
+    Exit
+}
+
+
+
 $confirmation = Read-Host "Do you want to continue? (y/n)"
 if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
 {
