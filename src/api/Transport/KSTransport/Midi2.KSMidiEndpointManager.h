@@ -24,10 +24,8 @@ public:
     MidiFlow Flow{ MidiFlowOut };
     BOOL CreateUMPOnly{ FALSE };
     HRESULT SwdCreation{ S_OK };
-    std::unique_ptr<BYTE> GroupTerminalBlockDataOut;
-    ULONG GroupTerminalBlockDataSizeOut {0};
-    std::unique_ptr<BYTE> GroupTerminalBlockDataIn;
-    ULONG GroupTerminalBlockDataSizeIn {0};
+    std::unique_ptr<BYTE> GroupTerminalBlockData;
+    ULONG GroupTerminalBlockDataSize {0};
     GUID NativeDataFormat{0};
 
     std::wstring SerialNumber;

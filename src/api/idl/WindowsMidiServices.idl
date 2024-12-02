@@ -232,7 +232,6 @@ typedef struct
 
     LPCWSTR CustomEndpointName;
     LPCWSTR CustomEndpointDescription;
-    UINT32  CustomEndpointPortNumber;
 
     // Contents varies by transport, contains a unique identifier that is repeatable
     // for this endpoint, possibly a guid or peripheral serial number.

@@ -48,10 +48,13 @@ typedef struct _MIDIPORT
     unique_swd_string DeviceInterfaceId; // SWD interface ID for the MIDI port
     std::wstring InstanceId;
     std::wstring Enumerator;
-    UINT32 UserAssignedPortNumber {0};
-    UINT32 ServiceAssignedPortNumber {0};
+    std::wstring ParentInstanceId;
+    std::wstring DeviceDescription;
+    GUID ContainerId;
     HRESULT hr{ S_OK };
     bool MidiOne {false};
+    UINT32 GroupIndex{0};
+    UINT32 CustomPortNumber {0};
     std::wstring AssociatedInterfaceId;
 } MIDIPORT, *PMIDIPORT;
 
@@ -66,7 +69,15 @@ typedef struct _MIDIPARENTDEVICE
 
 } MIDIPARENTDEVICE, * PMIDIPARENTDEVICE;
 
-
+typedef struct _PORT_INFO
+{
+    bool InUse {false};
+    bool IsEnabled {false};
+    bool HasCustomPortNumber{false};
+    UINT32 CustomPortNumber {0};
+    std::wstring InterfaceId;
+    MidiFlow Flow {MidiFlowIn};
+} PORT_INFO;
 
 class CMidiDeviceManager  : 
     public Microsoft::WRL::RuntimeClass<
@@ -142,19 +153,40 @@ private:
         _In_ PCWSTR,
         _In_opt_ PCWSTR,
         _In_ BOOL,
+        _In_ UINT32,
         _In_ MidiFlow,
         _In_ ULONG,
         _In_ ULONG,
         _In_ const DEVPROPERTY*,
         _In_ const DEVPROPERTY*,
         _In_ const SW_DEVICE_CREATE_INFO*,
-        _In_opt_ std::wstring*
+        _In_opt_ std::wstring*,
+        _Out_ PMIDIPORT* createdPort
     );
 
     HRESULT AssignPortNumber(
         _In_ HSWDEVICE,
         _In_ PWSTR,
         _In_ MidiFlow
+    );
+
+    HRESULT GetFunctionBlockPortInfo(
+        _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ std::map<UINT32, PORT_INFO> portInfo[2]
+    );
+
+    HRESULT GetGroupTerminalBlockPortInfo(
+        _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ std::map<UINT32, PORT_INFO> portInfo[2]
+    );
+
+    HRESULT GetCustomPortMapping(
+        _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ std::map<UINT32, PORT_INFO> portInfo[2]
+    );
+
+    HRESULT SyncMidi1Ports(
+        PMIDIPORT umpMidiPort
     );
 
     std::shared_ptr<CMidiPerformanceManager> m_performanceManager;

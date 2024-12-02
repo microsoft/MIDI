@@ -75,7 +75,7 @@ MidiSWDeviceEnum::EnumerateDevices(
 
         prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-        supportedDataFormats = (MidiDataFormats) winrt::unbox_value<UINT32>(prop);
+        supportedDataFormats = (MidiDataFormats) winrt::unbox_value<uint8_t>(prop);
 
         prop = device.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
