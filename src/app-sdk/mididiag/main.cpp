@@ -986,8 +986,8 @@ void OutputSystemInfo(_In_ SYSTEM_INFO const& sysinfo)
 
 void OutputProcessAndNativeMachine()
 {
-    USHORT processMachine;
-    USHORT nativeMachine;
+    USHORT processMachine{ 0 };
+    USHORT nativeMachine{ 0 };
 
     HANDLE hProcess = ::GetCurrentProcess();
 

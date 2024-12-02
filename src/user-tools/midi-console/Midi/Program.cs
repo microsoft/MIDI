@@ -69,6 +69,16 @@ app.Configure(config =>
             .WithAlias("transports")
             .WithDescription(Strings.CommandEnumerateTransportPluginsDescription)
             .WithExample("enumerate", "transport-plugins")
+            .WithExample("enumerate", "transports")
+            ;
+
+        enumerate.AddCommand<EnumMdnsAdvertisementsCommand>("mdns-advertisements")
+            .WithAlias("mdns")
+            .WithAlias("network-midi")
+            .WithDescription(Strings.CommandEnumerateMdnsAdvertisementsDescription)
+            .WithExample("enumerate", "mdns-advertisements")
+            .WithExample("enumerate", "mdns")
+            .WithExample("enumerate", "network-midi")
             ;
 
 

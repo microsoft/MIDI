@@ -65,7 +65,20 @@
                             Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
         </Component>
 
-        
+        <!-- Install MIDI mDNS Utility -->
+        <Component Id="MidiMdnsUtility"
+                   Bitness="always64"
+                   Directory="TOOLSROOT_INSTALLFOLDER"
+                   Guid="246488ea-a9de-45bc-82a0-a01a61c434ff"  >
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midimdnsinfo.exe" Vital="true" />
+
+            <!-- Add folder to path -->
+            <Environment Id="AddMidiMdnsUtilityToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes"
+                            Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
+        </Component>
+
+
         <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
         <Component Id="WindowsMidiServicesAppSdkImplementationRegEntries"
                    Bitness="always64"
@@ -85,6 +98,7 @@
             <ComponentRef Id="WindowsMidiServicesAppSdkImplementationRegEntries"/>
             <ComponentRef Id="MidiDiagUtility"/>
             <ComponentRef Id="MidiUsbUtility"/>
+            <ComponentRef Id="MidiMdnsUtility"/>
         </Feature>
 
     </Package>

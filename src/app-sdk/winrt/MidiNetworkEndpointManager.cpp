@@ -59,61 +59,52 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
     collections::IVector<midi2::Endpoints::Network::MidiAdvertisedHost> MidiNetworkEndpointManager::GetAdvertisedHosts()
     {
-        //var askFor = new String[]{ "System.Devices.Dnssd.HostName",
-        //                    "System.Devices.Dnssd.ServiceName",
-        //                    "System.Devices.Dnssd.InstanceName",
-        //                    "System.Devices.IpAddress",
-        //                    "System.Devices.Dnssd.PortNumber",
-        //                    "System.Devices.Dnssd.TextAttributes",
-        //};
+        auto results = winrt::single_threaded_vector<MidiAdvertisedHost>();
 
-
-        auto results = enumeration::DeviceInformation::FindAllAsync(
+        auto entries = enumeration::DeviceInformation::FindAllAsync(
             MidiNetworkUdpDnsSdQueryString(), 
             MidiNetworkUdpDnsSdQueryAdditionalProperties()).get();
 
-        if (results && results.Size() > 0)
+        if (entries && entries.Size() > 0)
         {
-            for (auto const& result : results)
+
+            for (auto const& entry : entries)
             {
-                if (result.Properties().HasKey(L"System.Devices.Dnssd.ServiceName"))
+                MidiAdvertisedHost host;
+
+                if (entry.Properties().HasKey(L"System.Devices.Dnssd.ServiceName"))
                 {
+                    host.ServiceType = L"Test Service Name";
+                }
+
+                if (entry.Properties().HasKey(L"System.Devices.Dnssd.InstanceName"))
+                {
+                    host.ServiceInstanceName = L"Test Instance Name";
+                }
+
+                if (entry.Properties().HasKey(L"System.Devices.IpAddress"))
+                {
+                    //host.Address = L"";
+                }
+
+                if (entry.Properties().HasKey(L"System.Devices.Dnssd.PortNumber"))
+                {
+                    //host.Port = L"";
+                }
+
+                if (entry.Properties().HasKey(L"System.Devices.Dnssd.TextAttributes"))
+                {
+                    // TODO: Parse out the text entries
 
                 }
 
-                if (result.Properties().HasKey(L"System.Devices.Dnssd.InstanceName"))
-                {
-
-                }
-
-                if (result.Properties().HasKey(L"System.Devices.IpAddress"))
-                {
-
-                }
-
-                if (result.Properties().HasKey(L"System.Devices.Dnssd.PortNumber"))
-                {
-
-                }
-
-                if (result.Properties().HasKey(L"System.Devices.Dnssd.TextAttributes"))
-                {
-
-                }
+                results.Append(host);
             }
 
         }
 
-        //var askFor = new String[]{ "System.Devices.Dnssd.HostName",
-        //                    "System.Devices.Dnssd.ServiceName",
-        //                    "System.Devices.Dnssd.InstanceName",
-        //                    "System.Devices.IpAddress",
-        //                    "System.Devices.Dnssd.PortNumber",
-        //                    "System.Devices.Dnssd.TextAttributes",
-        //};
-        //dw = DeviceInformation.CreateWatcher(queryString, askFor, DeviceInformationKind.AssociationEndpointService);
-
-        throw hresult_not_implemented();
+        // empty collection if nothing found
+        return results;
 
     }
 }

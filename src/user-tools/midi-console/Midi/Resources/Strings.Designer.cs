@@ -178,6 +178,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List discovered MDNS advertisements for Network MIDI 2.0 (UDP) services on the network..
+        /// </summary>
+        internal static string CommandEnumerateMdnsAdvertisementsDescription {
+            get {
+                return ResourceManager.GetString("CommandEnumerateMdnsAdvertisementsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to List all MIDI transport plugins installed on this PC..
         /// </summary>
         internal static string CommandEnumerateTransportPluginsDescription {
