@@ -287,7 +287,7 @@
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2VirtualPatchBayATransport.idl" />
+    <Midl Include="Midi2VirtualPatchBayTransport.idl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Midi2.VirtualPatchBayTransport.def" />

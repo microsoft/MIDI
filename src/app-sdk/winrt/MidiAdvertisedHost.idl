@@ -6,17 +6,21 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-#include "pch.h"
-#include "MidiChannel.h"
-#include "MidiChannel.g.cpp"
-
-
-namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
-    winrt::hstring MidiChannel::ToString()
+    [experimental]
+    struct MidiAdvertisedHost
     {
-        return winrt::to_hstring(std::format("{} {}", winrt::to_string(midi2::MidiChannel::ShortLabel()), DisplayValue()));
-    }
+        // from SRV record 
+        String ServiceInstanceName;
+        String ServiceType;
+        String HostName;
+        UInt16 Port;
 
+        // from TXT record
+        String UmpEndpointName;
+        String ProductInstanceId;
+
+        // TODO: A/AAAA IP records
+    };
 }

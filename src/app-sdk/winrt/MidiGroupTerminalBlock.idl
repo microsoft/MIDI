@@ -12,12 +12,18 @@ import "MidiGroupTerminalBlockProtocolEnum.idl";
 import "MidiGroup.idl";
 
 import "MidiFunctionBlock.idl";
+import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiGroupTerminalBlock
+    runtimeclass MidiGroupTerminalBlock : Windows.Foundation.IStringable
     {
+        static String ShortLabel{ get; };
+        static String ShortLabelPlural{ get; };
+        static String LongLabel{ get; };
+        static String LongLabelPlural{ get; };
+
         UInt8 Number{ get; };
 
         String Name{ get; };
@@ -25,7 +31,7 @@ namespace Microsoft.Windows.Devices.Midi2
         MidiGroupTerminalBlockDirection Direction { get; };
         MidiGroupTerminalBlockProtocol Protocol { get; };
 
-        UInt8 FirstGroupIndex{ get; };
+        MidiGroup FirstGroup{ get; };
         UInt8 GroupCount{ get; };
 
         Boolean IncludesGroup(MidiGroup group);

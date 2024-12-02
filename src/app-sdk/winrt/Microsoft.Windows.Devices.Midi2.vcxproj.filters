@@ -472,6 +472,9 @@
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl">
       <Filter>SDK\Endpoints\Network</Filter>
     </Midl>
+    <Midl Include="MidiAdvertisedHost.idl">
+      <Filter>SDK\Endpoints\Network</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

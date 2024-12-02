@@ -24,7 +24,7 @@ import "MidiEndpointDeviceInformationFiltersEnum.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [default_interface]
-    runtimeclass MidiEndpointDeviceInformation
+    runtimeclass MidiEndpointDeviceInformation : Windows.Foundation.IStringable
     {
         static MidiEndpointDeviceInformation CreateFromEndpointDeviceId(String endpointDeviceId);
 

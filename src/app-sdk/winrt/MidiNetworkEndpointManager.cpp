@@ -52,4 +52,59 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         UNREFERENCED_PARAMETER(removalConfig);
         throw hresult_not_implemented();
     }
+
+
+
+
+
+    collections::IVector<midi2::Endpoints::Network::MidiAdvertisedHost> MidiNetworkEndpointManager::GetAdvertisedHosts()
+    {
+        auto results = winrt::single_threaded_vector<MidiAdvertisedHost>();
+
+        auto entries = enumeration::DeviceInformation::FindAllAsync(
+            MidiNetworkUdpDnsSdQueryString(), 
+            MidiNetworkUdpDnsSdQueryAdditionalProperties()).get();
+
+        if (entries && entries.Size() > 0)
+        {
+
+            for (auto const& entry : entries)
+            {
+                MidiAdvertisedHost host;
+
+                if (entry.Properties().HasKey(L"System.Devices.Dnssd.ServiceName"))
+                {
+                    host.ServiceType = L"Test Service Name";
+                }
+
+                if (entry.Properties().HasKey(L"System.Devices.Dnssd.InstanceName"))
+                {
+                    host.ServiceInstanceName = L"Test Instance Name";
+                }
+
+                if (entry.Properties().HasKey(L"System.Devices.IpAddress"))
+                {
+                    //host.Address = L"";
+                }
+
+                if (entry.Properties().HasKey(L"System.Devices.Dnssd.PortNumber"))
+                {
+                    //host.Port = L"";
+                }
+
+                if (entry.Properties().HasKey(L"System.Devices.Dnssd.TextAttributes"))
+                {
+                    // TODO: Parse out the text entries
+
+                }
+
+                results.Append(host);
+            }
+
+        }
+
+        // empty collection if nothing found
+        return results;
+
+    }
 }

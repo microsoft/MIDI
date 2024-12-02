@@ -45,6 +45,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         void Tag(_In_ foundation::IInspectable value) noexcept { m_tag = value; }
 
 
+        winrt::hstring ToString();
+
         midi2::MidiSendMessageResults SendSingleMessagePacket(
             _In_ midi2::IMidiUniversalPacket const& ump) noexcept;
 

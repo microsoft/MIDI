@@ -10,14 +10,16 @@
 namespace Microsoft.Windows.Devices.Midi2.CapabilityInquiry
 {
     [default_interface]
-    runtimeclass MidiUniqueId
+    runtimeclass MidiUniqueId : Windows.Foundation.IStringable
     {
         MidiUniqueId();
         MidiUniqueId(UInt32 combined28BitValue);
         MidiUniqueId(UInt8 sevenBitByte1, UInt8 sevenBitByte2, UInt8 sevenBitByte3, UInt8 sevenBitByte4);
 
         static String ShortLabel{ get; };
+        static String ShortLabelPlural{ get; };
         static String LongLabel{ get; };
+        static String LongLabelPlural{ get; };
 
         static MidiUniqueId CreateBroadcast();
         static MidiUniqueId CreateRandom();

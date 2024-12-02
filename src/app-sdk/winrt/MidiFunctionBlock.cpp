@@ -12,9 +12,37 @@
 #include "MidiFunctionBlock.h"
 #include "MidiFunctionBlock.g.cpp"
 
+#include "MidiGroup.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+    winrt::hstring MidiFunctionBlock::ToString()
+    {
+        winrt::hstring baseName{ midi2::MidiFunctionBlock::LongLabel() };
+
+        if (Name().empty())
+        {
+            // TODO: Move to resources
+            baseName = baseName + L"(Unnamed)";
+        }
+        else
+        {
+            baseName = baseName + Name();
+        }
+
+        if (m_numberOfGroupsSpanned != 1)
+        {
+            baseName = baseName + std::format(L" ({} {} to {})", MidiGroup::LongLabelPlural(), m_firstGroup.DisplayValue(), (m_firstGroup.Index() + m_numberOfGroupsSpanned));
+        }
+        else
+        {
+            baseName = baseName + std::format(L" ({} {})", MidiGroup::LongLabel(), m_firstGroup.DisplayValue());
+        }
+
+        return baseName;
+    }
+
+
 #if false
     _Use_decl_annotations_
     bool MidiFunctionBlock::UpdateFromMessages(collections::IIterable<midi2::IMidiUniversalPacket> messages) noexcept
@@ -115,7 +143,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         if (json.HasKey(JSON_KEY_FB_UIHINT)) m_uiHint = (MidiFunctionBlockUIHint)json.GetNamedNumber(JSON_KEY_FB_UIHINT, (int)MidiFunctionBlockUIHint::Unknown);
         if (json.HasKey(JSON_KEY_FB_MIDI10)) m_midi10Connection = (MidiFunctionBlockRepresentsMidi10Connection)json.GetNamedNumber(JSON_KEY_FB_MIDI10, (int)MidiFunctionBlockRepresentsMidi10Connection::Not10);
         if (json.HasKey(JSON_KEY_FB_DIRECTION)) m_direction = (MidiFunctionBlockDirection)json.GetNamedNumber(JSON_KEY_FB_DIRECTION, (int)MidiFunctionBlockDirection::Undefined);
-        if (json.HasKey(JSON_KEY_FB_FIRSTGROUP)) m_firstGroupIndex = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_FIRSTGROUP, 0);
+        if (json.HasKey(JSON_KEY_FB_FIRSTGROUP)) m_firstGroup = winrt::make<implementation::MidiGroup>((uint8_t)json.GetNamedNumber(JSON_KEY_FB_FIRSTGROUP, 0));
         if (json.HasKey(JSON_KEY_FB_NUMGROUPSSPANNED)) m_numberOfGroupsSpanned = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_NUMGROUPSSPANNED, 0);
         if (json.HasKey(JSON_KEY_FB_MIDICIFORMAT)) m_midiCIMessageVersionFormat = (uint8_t)json.GetNamedNumber(JSON_KEY_FB_MIDICIFORMAT, 0);
 
@@ -152,7 +180,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         jsonObject.SetNamedValue(JSON_KEY_FB_UIHINT, json::JsonValue::CreateNumberValue((int)UIHint()));
         jsonObject.SetNamedValue(JSON_KEY_FB_MIDI10, json::JsonValue::CreateNumberValue((int)RepresentsMidi10Connection()));
         jsonObject.SetNamedValue(JSON_KEY_FB_DIRECTION, json::JsonValue::CreateNumberValue((int)Direction()));
-        jsonObject.SetNamedValue(JSON_KEY_FB_FIRSTGROUP, json::JsonValue::CreateNumberValue(FirstGroupIndex()));
+        jsonObject.SetNamedValue(JSON_KEY_FB_FIRSTGROUP, json::JsonValue::CreateNumberValue(FirstGroup().Index()));
         jsonObject.SetNamedValue(JSON_KEY_FB_NUMGROUPSSPANNED, json::JsonValue::CreateNumberValue(GroupCount()));
         jsonObject.SetNamedValue(JSON_KEY_FB_MIDICIFORMAT, json::JsonValue::CreateNumberValue(MidiCIMessageVersionFormat()));
         
@@ -166,7 +194,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         m_number = prop.BlockNumber;
         m_isActive = prop.IsActive;
         m_direction = (midi2::MidiFunctionBlockDirection)prop.Direction;
-        m_firstGroupIndex = prop.FirstGroup;
+        m_firstGroup = winrt::make<implementation::MidiGroup>(prop.FirstGroup);
         m_numberOfGroupsSpanned = prop.NumberOfGroupsSpanned;
         m_maxSysEx8Streams = prop.MaxSysEx8Streams;
         m_uiHint = (midi2::MidiFunctionBlockUIHint)prop.UIHint;

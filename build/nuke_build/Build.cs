@@ -514,6 +514,7 @@ class Build : NukeBuild
                     {
                         Path.Combine(solutionDir, "mididiag"),
                         Path.Combine(solutionDir, "midiusbinfo"),
+                        Path.Combine(solutionDir, "midimdnsinfo"),
                     };
 
                 foreach (var projectFolder in toolsDirectories)
@@ -547,15 +548,6 @@ class Build : NukeBuild
                 }
 
 
-
-
-
-
-
-
-
-
-
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk-tools-and-tests.sln")
                     .SetMaxCpuCount(14)
@@ -581,12 +573,10 @@ class Build : NukeBuild
                     stagingPlatform = "Arm64";
                 }
 
-                // MIDI diagnostics app
+                // MIDI utilities
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                //FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-
-                // MIDI USB info utility
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / stagingPlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midimdnsinfo" / stagingPlatform / Configuration.Release / $"midimdnsinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
         });
 
@@ -1536,6 +1526,15 @@ class Build : NukeBuild
 
 
 
+    Target ZipPowershellDevUtilities => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(CreateVersionIncludes)
+        .Executes(() =>
+        {
+            var regHelpersFolder = RootDirectory / "src" / "dev-tools" / "reg-helpers";
+
+            regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
+        });
 
 
 
@@ -1553,6 +1552,7 @@ class Build : NukeBuild
       //  .DependsOn(BuildAndPackageElectronProjection)
         .DependsOn(BuildCppSamples)
         .DependsOn(BuildCSharpSamples)
+        .DependsOn(ZipPowershellDevUtilities)
         .Executes(() =>
         {
             if (BuiltInBoxInstallers.Count > 0)

@@ -58,6 +58,12 @@ void DisplaySingleResult(std::wstring label, uint64_t totalTime, uint64_t errorC
 
 int main()
 {
+    // initialize the thread before calling the bootstrapper or any WinRT code. You may also
+    // be able to leave this out and call RoInitialize() or CoInitializeEx() before creating
+    // the initializer.
+    //winrt::init_apartment(winrt::apartment_type::single_threaded);
+
+    // MTA by default
     winrt::init_apartment();
 
     // this is the initializer in the bootstrapper hpp file

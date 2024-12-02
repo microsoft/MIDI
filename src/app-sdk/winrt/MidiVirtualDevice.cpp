@@ -185,7 +185,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
             fb.UIHint(),
             fb.RepresentsMidi10Connection(),
             fb.Direction(),
-            fb.FirstGroupIndex(),
+            fb.FirstGroup().Index(),
             fb.GroupCount(),
             fb.MidiCIMessageVersionFormat(),
             fb.MaxSystemExclusive8Streams()

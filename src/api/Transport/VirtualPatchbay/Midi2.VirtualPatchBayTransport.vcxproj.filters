@@ -24,9 +24,6 @@
     <ClCompile Include="MidiPatchBayTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Midi2.VirtualPatchBayAbstraction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Midi2.VirtualPatchBayEndpointManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -34,9 +31,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Midi2.VirtualPatchBayConfigurationManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AbstractionState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Midi2.VirtualPatchBayRoutingDestination.cpp">
@@ -48,15 +42,21 @@
     <ClCompile Include="Midi2.VirtualPatchBayRoutingEntry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TransportState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Midi2.VirtualPatchBayTransport.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Midi2.VirtualPatchBayAbstraction.def">
+    <None Include="packages.config" />
+    <None Include="Midi2.VirtualPatchBayTransport.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="Midi2.VirtualPatchBayAbstraction.rgs">
+    <None Include="Midi2.VirtualPatchBayTransport.rgs">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dllmain.h">
@@ -71,12 +71,6 @@
     <ClInclude Include="MidiPatchBayTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="abstraction_defs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Midi2.VirtualPatchBayAbstraction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Midi2.VirtualPatchBayEndpointManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -84,9 +78,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.VirtualPatchBayConfigurationManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AbstractionState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Midi2.VirtualPatchBayRoutingEntry.h">
@@ -98,17 +89,26 @@
     <ClInclude Include="Midi2.VirtualPatchBayRoutingDestination.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TransportState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="transport_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Midi2.VirtualPatchBayTransport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Midi2.VirtualPatchBayAbstraction.rc">
+    <ResourceCompile Include="Midi2.VirtualPatchBayTransport.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2VirtualPatchBayAbstraction.idl">
+    <Midl Include="Midi2VirtualPatchBayTransport.idl">
       <Filter>Source Files</Filter>
     </Midl>
   </ItemGroup>

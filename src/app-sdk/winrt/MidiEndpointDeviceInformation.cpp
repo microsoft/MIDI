@@ -13,6 +13,23 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+    winrt::hstring MidiEndpointDeviceInformation::ToString()
+    {
+        winrt::hstring baseName{ };
+
+        if (Name().empty())
+        {
+            // TODO: Move to resources
+            baseName = baseName + L"Unnamed endpoint";
+        }
+        else
+        {
+            baseName = baseName + Name();
+        }
+
+        return baseName;
+    }
+
 #define MIDI_DEVICE_PARENT_PROPERTY_KEY L"System.Devices.Parent"
 
     winrt::Windows::Devices::Enumeration::DeviceInformation MidiEndpointDeviceInformation::GetContainerDeviceInformation() const noexcept

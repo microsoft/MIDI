@@ -875,4 +875,7 @@ Timestamp</value>
   <data name="ErrorSdkInitializerInitializationFailed" xml:space="preserve">
     <value>Failed to start up the SDK initializer (COM object may not be available or registered)</value>
   </data>
+  <data name="CommandEnumerateMdnsAdvertisementsDescription" xml:space="preserve">
+    <value>List discovered MDNS advertisements for Network MIDI 2.0 (UDP) services on the network.</value>
+  </data>
 </root>

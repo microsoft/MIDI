@@ -77,6 +77,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }
 
 
+        winrt::hstring ToString();
+
         bool UpdateFromDeviceInformation(
             _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInformation) noexcept;
 

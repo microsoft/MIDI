@@ -17,6 +17,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         MidiFunctionBlock() = default;
 
+        static winrt::hstring ShortLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_FUNCTION_BLOCK_SHORT); }
+        static winrt::hstring ShortLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_FUNCTION_BLOCK_SHORT_PLURAL); }
+        static winrt::hstring LongLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_FUNCTION_BLOCK_FULL); }
+        static winrt::hstring LongLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_FUNCTION_BLOCK_FULL_PLURAL); }
+
+
+
         bool IsReadOnly() { return m_isReadOnly; }
 
         uint8_t Number() const noexcept { return m_number; }
@@ -43,15 +50,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         uint8_t MaxSystemExclusive8Streams() const noexcept { return m_maxSysEx8Streams; }
         void MaxSystemExclusive8Streams(_In_ uint8_t const value) noexcept { if (!m_isReadOnly) m_maxSysEx8Streams = value; }
 
-        uint8_t FirstGroupIndex() { return m_firstGroupIndex; }
-        void FirstGroupIndex(_In_ uint8_t const value) noexcept { if (!m_isReadOnly) m_firstGroupIndex = value; }
+        midi2::MidiGroup FirstGroup() const noexcept { return m_firstGroup; }
+        void FirstGroup(_In_ midi2::MidiGroup const& value) noexcept { if (!m_isReadOnly) m_firstGroup = value; }
 
-        uint8_t GroupCount() { return m_numberOfGroupsSpanned; }
+        uint8_t GroupCount() const noexcept { return m_numberOfGroupsSpanned; }
         void GroupCount(_In_ uint8_t const value) noexcept { if (!m_isReadOnly) m_numberOfGroupsSpanned = value; }
 
-        bool IncludesGroup(_In_ midi2::MidiGroup const& group) { return group.Index() >= FirstGroupIndex() && group.Index() < FirstGroupIndex() + GroupCount(); }
+        bool IncludesGroup(_In_ midi2::MidiGroup const& group) const noexcept { return (group.Index() >= m_firstGroup.Index()) && (group.Index() < m_firstGroup.Index() + GroupCount()); }
 
 
+        winrt::hstring ToString();
 
 
         bool UpdateFromJson(_In_ winrt::Windows::Data::Json::JsonObject const json) noexcept;
@@ -62,8 +70,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         bool UpdateFromDevPropertyStruct(_In_ MidiFunctionBlockProperty prop);
 
-        void InternalSetName(_In_ winrt::hstring name) { m_name = name; }
-        void InternalSetisReadOnly(_In_ bool isReadOnly) { m_isReadOnly = isReadOnly; }
+        void InternalSetName(_In_ winrt::hstring name) noexcept { m_name = name; }
+        void InternalSetisReadOnly(_In_ bool isReadOnly) noexcept { m_isReadOnly = isReadOnly; }
 
     private:
         bool m_isReadOnly{ false };
@@ -76,7 +84,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         uint8_t m_midiCIMessageVersionFormat{ 0 };
         uint8_t m_maxSysEx8Streams{ 0 };
 
-        uint8_t m_firstGroupIndex{ 0 };
+        //uint8_t m_firstGroupIndex{ 0 };
+        midi2::MidiGroup m_firstGroup;
         uint8_t m_numberOfGroupsSpanned{ 0 };
 
     };

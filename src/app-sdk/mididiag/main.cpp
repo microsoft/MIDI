@@ -957,6 +957,21 @@ std::wstring GetProcessorArchitectureString(WORD const arch)
 
 }
 
+#define ENV_PROCESSOR_ARCHITECTURE  L"PROCESSOR_ARCHITECTURE"
+#define ENV_PROCESSOR_IDENTIFIER    L"PROCESSOR_IDENTIFIER"
+#define ENV_PROCESSOR_LEVEL         L"PROCESSOR_LEVEL"
+#define ENV_PROCESSOR_REVISION      L"PROCESSOR_REVISION"
+
+
+void OutputProcessorEnvVariables()
+{
+    OutputStringField(ENV_PROCESSOR_ARCHITECTURE, std::wstring{ _wgetenv(ENV_PROCESSOR_ARCHITECTURE)});
+    OutputStringField(ENV_PROCESSOR_IDENTIFIER, std::wstring{ _wgetenv(ENV_PROCESSOR_IDENTIFIER) });
+    OutputStringField(ENV_PROCESSOR_LEVEL, std::wstring{ _wgetenv(ENV_PROCESSOR_LEVEL) });
+    OutputStringField(ENV_PROCESSOR_REVISION, std::wstring{ _wgetenv(ENV_PROCESSOR_REVISION) });
+}
+
+
 void OutputSystemInfo(_In_ SYSTEM_INFO const& sysinfo)
 {
     // that sysinfo.dwNumberOfProcessors can return some strange results.
@@ -969,6 +984,51 @@ void OutputSystemInfo(_In_ SYSTEM_INFO const& sysinfo)
     OutputHexNumericField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_REVISION, sysinfo.wProcessorRevision);
 }
 
+void OutputProcessAndNativeMachine()
+{
+    USHORT processMachine{ 0 };
+    USHORT nativeMachine{ 0 };
+
+    HANDLE hProcess = ::GetCurrentProcess();
+
+    if (hProcess)
+    {
+        auto worked = ::IsWow64Process2(hProcess, &processMachine, &nativeMachine);
+
+        if (worked)
+        {
+            // if not running emulated, IsWow64Process2 returns machine unknown for the process.
+            if ((processMachine == IMAGE_FILE_MACHINE_UNKNOWN || processMachine == IMAGE_FILE_MACHINE_ARM64) && nativeMachine == IMAGE_FILE_MACHINE_ARM64)
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_EMULATION, std::wstring{ L"Native Arm64 process on Arm64 PC (Note Emulated)" });
+            }
+            else if ((processMachine == IMAGE_FILE_MACHINE_UNKNOWN || processMachine == IMAGE_FILE_MACHINE_AMD64) && nativeMachine == IMAGE_FILE_MACHINE_AMD64)
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_EMULATION, std::wstring{ L"Native Intel/AMD x64 on x64 PC (Not Emulated)" });
+            }
+            else if (processMachine == IMAGE_FILE_MACHINE_AMD64 && nativeMachine == IMAGE_FILE_MACHINE_ARM64)
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_EMULATION, std::wstring{ L"Intel/AMD x64 process on Arm64 PC (Emulated)" });
+            }
+            else if (processMachine == IMAGE_FILE_MACHINE_ARM64 && nativeMachine == IMAGE_FILE_MACHINE_AMD64)
+            {
+                // not supported today, but here in case it is some day
+                OutputStringField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_EMULATION, std::wstring{ L"Arm64 process on Intel/AMD x64 PC (Emulated)" });
+            }
+            else
+            {
+                OutputError(L"Unidentified process and/or machine architecture");
+            }
+        }
+        else
+        {
+            OutputError(L"Unable to query process and machine architecture.");
+        }
+
+    }
+}
+
+
 bool DoSectionSystemInfo(_In_ bool verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
@@ -978,18 +1038,18 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 
 
     // if running under emulation on Arm64, this is going to return the emulated sys info
-    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_APPARENT_SYSTEM_INFO);
+    OutputSectionHeader(MIDIDIAG_SECTION_LABEL_PROCESSOR_ENV);
+    OutputProcessorEnvVariables();
 
-    SYSTEM_INFO sysinfo;
-    ::GetNativeSystemInfo(&sysinfo);
-    OutputSystemInfo(sysinfo);
-
-    // if running under emulation on Arm64, this is going to return the Arm info
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_NATIVE_SYSTEM_INFO);
 
     SYSTEM_INFO sysinfoNative;
     ::GetNativeSystemInfo(&sysinfoNative);
     OutputSystemInfo(sysinfoNative);
+
+    OutputItemSeparator();
+    OutputProcessAndNativeMachine();
+    OutputItemSeparator();
 
     TIMECAPS timecaps;
     auto tcresult = ::timeGetDevCaps(&timecaps, sizeof(timecaps));
