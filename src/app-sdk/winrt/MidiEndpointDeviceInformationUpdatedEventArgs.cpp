@@ -24,7 +24,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool const updatedStreamConfiguration,
         bool const updatedFunctionBlocks,
         bool const updatedUserMetadata,
-        bool const updatedAdditionalCapabilities
+        bool const updatedAdditionalCapabilities,
+        bool const updatedUniqueIds
     ) noexcept
     {
 
@@ -38,6 +39,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         m_endpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
         m_deviceInformationUpdate = deviceInformationUpdate;
+
+        m_updatedUniqueIds = updatedUniqueIds;
     }
 
 }

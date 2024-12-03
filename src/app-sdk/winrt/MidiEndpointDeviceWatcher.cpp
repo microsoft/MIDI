@@ -153,35 +153,47 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     bool updatedFunctionBlocks{ false };
                     bool updatedUserMetadata{ false };
                     bool updatedAdditionalCapabilities{ false };
+                    bool updatedUniqueIds{ false };
 
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointName) ||
                         args.Properties().HasKey(L"System.ItemNameDisplay") ||
                         args.Properties().HasKey(L"System.Devices.FriendlyName") ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomEndpointName))
+                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomEndpointName) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime)
+                        )
                     {
                         updatedName = true;
                     }
 
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_SerialNumber)
+                        )
+                    {
+                        updatedUniqueIds = true;
+                    }
 
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMajor) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMinor) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMajor) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMinor) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocksAreStatic) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlockCount)
+                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlockCount) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointInformationLastUpdateTime)
                         )
                     {
                         updatedInProtocolEndpointInformation = true;
                     }
 
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_DeviceIdentity)
+                    if (args.Properties().HasKey(STRING_PKEY_MIDI_DeviceIdentity) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime)
                         )
                     {
                         updatedDeviceIdentity = true;
@@ -190,12 +202,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
                     if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredProtocol) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps))
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime)
+                        )
                     {
                         updatedStreamConfiguration = true;
                     }
 
-                    if (internal::PropertyMapContainsAnyFunctionBlockProperty(args.Properties()))
+                    if (internal::PropertyMapContainsAnyFunctionBlockProperty(args.Properties()) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime)
+                        )
                     {
                         updatedFunctionBlocks = true;
                     }
@@ -226,7 +242,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         updatedStreamConfiguration,
                         updatedFunctionBlocks,
                         updatedUserMetadata,
-                        updatedAdditionalCapabilities
+                        updatedAdditionalCapabilities,
+                        updatedUniqueIds
                         );
 
                     m_deviceUpdatedEvent(*this, *newArgs);

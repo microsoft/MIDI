@@ -37,7 +37,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ bool const updatedStreamConfiguration,
             _In_ bool const updatedFunctionBlocks,
             _In_ bool const updatedUserMetadata,
-            _In_ bool const updatedAdditionalCapabilities
+            _In_ bool const updatedAdditionalCapabilities,
+            _In_ bool const updatedUniqueIds
         ) noexcept;
 
     private:
@@ -48,6 +49,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool m_updatedFunctionBlocks{ false };
         bool m_updatedUserMetadata{ false };
         bool m_updatedAdditionalCapabilities{ false };
+        bool m_updatedUniqueIds{ false };
 
         winrt::hstring m_endpointDeviceId{};
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
