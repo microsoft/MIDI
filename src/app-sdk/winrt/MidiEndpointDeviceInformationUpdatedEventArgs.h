@@ -25,6 +25,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool AreFunctionBlocksUpdated() const noexcept { return m_updatedFunctionBlocks; }
         bool IsUserMetadataUpdated() const noexcept { return m_updatedUserMetadata; }
         bool AreAdditionalCapabilitiesUpdated() const noexcept { return m_updatedAdditionalCapabilities; }
+        bool AreUniqueIdsUpdated() const noexcept { return m_updatedUniqueIds; }
 
         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate DeviceInformationUpdate() const noexcept { return m_deviceInformationUpdate; }
 

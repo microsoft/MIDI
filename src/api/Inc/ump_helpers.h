@@ -713,6 +713,37 @@ namespace WindowsMidiServicesInternal
         return false;
     }
 
+    inline std::uint32_t BuildStreamConfigurationNotificationFirstWord(
+        _In_ std::uint8_t const protocol,
+        _In_ bool const sendingEndpointWillReceiveJR,
+        _In_ bool const sendingEndpointWillSendJR
+    )
+    {
+        uint32_t word{ 0 };
+
+        SetUmpMessageType(word, 0xF);
+        SetUmpStreamMessageForm(word, 0);
+        SetUmpStreamMessageStatus(word, 6);
+
+        SetMidiWordMostSignificantByte3(word, protocol);
+
+        uint8_t flags{ 0 };
+
+        if (sendingEndpointWillReceiveJR)
+        {
+            flags |= 0x2;
+        }
+
+        if (sendingEndpointWillSendJR)
+        {
+            flags |= 0x1;
+        }
+
+        SetMidiWordMostSignificantByte4(word, flags);
+
+        return word;
+    }
+
     inline std::uint32_t BuildStreamConfigurationRequestFirstWord(
         _In_ std::uint8_t const protocol,
         _In_ bool const endpointShouldExpectToReceiveJR,

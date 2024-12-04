@@ -21,7 +21,7 @@ namespace Microsoft.Windows.Devices.Midi2
         Boolean AreFunctionBlocksUpdated{ get; };
         Boolean IsUserMetadataUpdated{ get; };
         Boolean AreAdditionalCapabilitiesUpdated{ get; };
-        Boolean AreUniqueIdsUpdate{ get; };
+        Boolean AreUniqueIdsUpdated{ get; };
 
         Windows.Devices.Enumeration.DeviceInformationUpdate DeviceInformationUpdate{ get; };
     }
