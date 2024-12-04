@@ -2041,10 +2041,10 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlockCount));
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
     ULONG functionBlockCount {0};
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlockCount));
-    if (prop)
+    auto fbCountProp = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlockCount));
+    if (fbCountProp)
     {
-        functionBlockCount = winrt::unbox_value<uint32_t>(prop);
+        functionBlockCount = winrt::unbox_value<uint32_t>(fbCountProp);
     }
 
     RETURN_HR_IF_EXPECTED(E_NOTFOUND, functionBlockCount == 0);
@@ -2053,9 +2053,9 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
     // build up the property keys to query for the function blocks
     std::wstring functionBlockBaseString = MIDI_STRING_PKEY_GUID;
     functionBlockBaseString += MIDI_STRING_PKEY_PID_SEPARATOR;
-    for (UINT i = MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START; i < functionBlockCount && i < (MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + MIDI_MAX_FUNCTION_BLOCKS); i++)
+    for (UINT j = MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START; j < functionBlockCount && j < (MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + MIDI_MAX_FUNCTION_BLOCKS); j++)
     {
-        std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(i);
+        std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(j);
         additionalProperties.Append(winrt::to_hstring(functionBlockString.c_str()));
     }
 
@@ -2063,9 +2063,9 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
     deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
     // now process each available function block
-    for (UINT i = 0; i < functionBlockCount && i < MIDI_MAX_FUNCTION_BLOCKS; i++)
+    for (UINT fbi = 0; fbi < functionBlockCount && fbi < MIDI_MAX_FUNCTION_BLOCKS; fbi++)
     {
-        std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + i);
+        std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + fbi);
         auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(functionBlockString.c_str()));
 
         // The property should always be present, since it was within the reported available function blocks.
@@ -2124,7 +2124,7 @@ CMidiDeviceManager::GetGroupTerminalBlockPortInfo(
 
     PBYTE gtbMemory = (data + sizeof(KSMULTIPLE_ITEM));
     PBYTE nextGtb = gtbMemory;
-    for (UINT i = 0; i < gtbMultItemHeader->Count; i++)
+    for (UINT gti = 0; gti < gtbMultItemHeader->Count; gti++)
     {
         PUMP_GROUP_TERMINAL_BLOCK_DEFINITION gtb = (PUMP_GROUP_TERMINAL_BLOCK_DEFINITION)gtbMemory;
         nextGtb = gtbMemory + gtb->GrpTrmBlock.Size;
