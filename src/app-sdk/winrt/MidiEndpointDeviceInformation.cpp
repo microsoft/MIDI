@@ -816,7 +816,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         info.SpecificationVersionMajor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0);
         info.SpecificationVersionMinor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0);
 
-        info.HasStaticFunctionBlocks = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
+        info.HasStaticFunctionBlocks = GetProperty<bool>(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
         info.DeclaredFunctionBlockCount = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlockCount, (uint8_t)0);
 
         return info;
