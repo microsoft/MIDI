@@ -181,7 +181,7 @@ GetDeviceSupportedDataFormat(_In_ std::wstring midiDevice, _Inout_ MidiDataForma
         try
         {
             // this interface is pointing to a UMP interface, so use that instance id.
-            dataFormat = (MidiDataFormats)winrt::unbox_value<UINT32>(prop);
+            dataFormat = (MidiDataFormats)winrt::unbox_value<uint8_t>(prop);
         }
         CATCH_LOG();
     }

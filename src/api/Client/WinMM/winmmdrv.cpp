@@ -50,6 +50,7 @@ MMRESULT MMRESULT_FROM_HRESULT(HRESULT hResult)
 
 // MidiPorts singleton, which manages enumeration and open ports.
 wil::com_ptr_nothrow<CMidiPorts> g_MidiPorts;
+wil::critical_section g_MidiPortsLock;
 
 LRESULT CALLBACK DriverProc
 (
@@ -91,6 +92,22 @@ DWORD APIENTRY midMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR par
         TraceLoggingValue(param1, "param1"),
         TraceLoggingValue(param2, "param2"));
 
+    if (nullptr == g_MidiPorts)
+    {
+        // This creation cannot happen in DLL_PROCESS_ATTACH because shell loads winmm, which loads
+        // all of the winmm devices, whether or not they're going to be used. So, limit creation to
+        // clients that are actually using winmm midi.
+
+        // If g_MidiPorts singleton does not yet exist, MakeAndInitialize while holding the lock, to
+        // ensure that if 2 or more callers happen to call midMessage or modMessage at the same time,
+        // only 1 singleton will be created.
+        auto lock = g_MidiPortsLock.lock();
+        if (nullptr == g_MidiPorts)
+        {
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPorts>(&g_MidiPorts));
+        }
+    }
+
     // Forward the command to the global MidiPorts singleton
     return g_MidiPorts->MidMessage(deviceID, msg, user, param1, param2);
 }
@@ -106,6 +123,22 @@ DWORD APIENTRY modMessage(UINT deviceId, UINT msg, DWORD_PTR user, DWORD_PTR par
         TraceLoggingValue(user, "user"),
         TraceLoggingValue(param1, "param1"),
         TraceLoggingValue(param2, "param2"));
+
+    if (nullptr == g_MidiPorts)
+    {
+        // This creation cannot happen in DLL_PROCESS_ATTACH because shell loads winmm, which loads
+        // all of the winmm devices, whether or not they're going to be used. So, limit creation to
+        // clients that are actually using winmm midi.
+
+        // If g_MidiPorts singleton does not yet exist, MakeAndInitialize while holding the lock, to
+        // ensure that if 2 or more callers happen to call midMessage or modMessage at the same time,
+        // only 1 singleton will be created.
+        auto lock = g_MidiPortsLock.lock();
+        if (nullptr == g_MidiPorts)
+        {
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPorts>(&g_MidiPorts));
+        }
+    }
 
     // Forward the command to the global MidiPorts singleton
     return g_MidiPorts->ModMessage(deviceId, msg, user, param1, param2);
@@ -128,16 +161,7 @@ BOOL WINAPI DllMain
 
     if (DLL_PROCESS_ATTACH == reason)
     {
-        // Create the MidiPorts singleton, this assumes that DLL_PROCESS_ATTACH calls are serialized.
-        if (nullptr == g_MidiPorts)
-        {
-            if (FAILED(Microsoft::WRL::MakeAndInitialize<CMidiPorts>(&g_MidiPorts)))
-            {
-                return FALSE;
-            }
-
-            wil::SetResultTelemetryFallback(WdmAud2TelemetryProvider::FallbackTelemetryCallback);
-        }
+        wil::SetResultTelemetryFallback(WdmAud2TelemetryProvider::FallbackTelemetryCallback);
     }
     else if ((DLL_PROCESS_DETACH == reason) && ( NULL != reserved))
     {
@@ -145,6 +169,8 @@ BOOL WINAPI DllMain
     }
     else if ((DLL_PROCESS_DETACH == reason) && ( NULL == reserved))
     {
+        auto lock = g_MidiPortsLock.lock();
+
         // if present, clean up and release the global MidiPorts singleton
         if (nullptr != g_MidiPorts)
         {
