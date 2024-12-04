@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "stdafx.h"
+#include "ks.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -18,6 +19,33 @@ const WCHAR szzMidiDeviceCompatibleId[] =  L"GenericMidiEndpoint" L"\0";
 
 // a cap to ensure we don't have runaway port numbers
 #define MAX_WINMM_PORT_NUMBER 5000
+#define MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX (32-6)
+
+#define MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL 0x00
+#define MIDI_GROUP_TERMINAL_BLOCK_INPUT         0x01
+#define MIDI_GROUP_TERMINAL_BLOCK_OUTPUT        0x02
+
+#pragma pack(push)
+#pragma pack(1)
+typedef struct
+{
+    WORD                            Size;
+    BYTE                            Number;             // Group Terminal Block ID
+    BYTE                            Direction;          // Group Terminal Block Type
+    BYTE                            FirstGroupIndex;    // The first group in this block
+    BYTE                            GroupCount;         // The number of groups spanned
+    BYTE                            Protocol;           // The MIDI Protocol
+    WORD                            MaxInputBandwidth;  ///< Maximum Input Bandwidth Capability in 4KB/second
+    WORD                            MaxOutputBandwidth; ///< Maximum Output Bandwidth Capability in 4KB/second
+} UMP_GROUP_TERMINAL_BLOCK_HEADER;
+
+typedef struct
+{
+    UMP_GROUP_TERMINAL_BLOCK_HEADER GrpTrmBlock;
+    WCHAR                           Name[1];             // NULL Terminated string, blank indicates none available
+    // from USB Device
+} UMP_GROUP_TERMINAL_BLOCK_DEFINITION, * PUMP_GROUP_TERMINAL_BLOCK_DEFINITION;
+#pragma pack(pop)
 
 _Use_decl_annotations_
 HRESULT
@@ -872,7 +900,7 @@ CMidiDeviceManager::ActivateEndpoint
                 DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(commonProperties->NativeDataFormat)) });
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->SupportedDataFormats)) });
+                DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(commonProperties->SupportedDataFormats)) });
 
             // Protocol defaults for cases when protocol negotiation may not happen or may not complete
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_EndpointSupportsMidi1Protocol, DEVPROP_STORE_SYSTEM, nullptr},
@@ -888,18 +916,6 @@ CMidiDeviceManager::ActivateEndpoint
 
             allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportsMulticlient, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), (PVOID)((commonProperties->Capabilities & MidiEndpointCapabilities_SupportsMultiClient) ? &devPropTrue : &devPropFalse) });
-        
-            if (commonProperties->CustomEndpointPortNumber > 0)
-            {
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->CustomEndpointPortNumber)) });
-            }
-            else
-            {
-                // this is needed to clear any cached property, or garbage value
-                allInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_EMPTY, 0, nullptr });
-            }
         }
         else
         {
@@ -992,6 +1008,7 @@ CMidiDeviceManager::ActivateEndpoint
             );
 
         std::wstring deviceInterfaceId{ };
+        PMIDIPORT createdMidiPort {};
 
         auto cleanupOnFailure = wil::scope_exit([&]()
         {
@@ -1014,14 +1031,16 @@ CMidiDeviceManager::ActivateEndpoint
         auto activationResult = ActivateEndpointInternal(
             parentInstanceId, 
             nullptr, 
-            FALSE, 
+            FALSE,
+            0,
             flow, 
             (ULONG)allInterfaceProperties.size(),
             devPropertyCount, 
             (DEVPROPERTY*)(allInterfaceProperties.data()),
             (DEVPROPERTY*)deviceDevProperties, 
             (SW_DEVICE_CREATE_INFO*)createInfo, 
-            &deviceInterfaceId);
+            &deviceInterfaceId,
+            &createdMidiPort);
 
         if (FAILED(activationResult))
         {
@@ -1039,229 +1058,9 @@ CMidiDeviceManager::ActivateEndpoint
             RETURN_IF_FAILED(activationResult);
         }
 
-
         if (!umpOnly)
         {
-            std::wstring friendlyName;
-            std::vector<DEVPROPERTY> midi1OutInterfaceProperties{};
-            std::vector<DEVPROPERTY> midi1InInterfaceProperties{};
-
-            if (commonProperties->CustomEndpointName)
-            {
-                friendlyName = commonProperties->CustomEndpointName;
-            }
-            else
-            {
-                if (commonProperties->ManufacturerName)
-                {
-                    friendlyName += commonProperties->ManufacturerName;
-                    friendlyName += L" ";
-                }
-
-                if (commonProperties->EndpointName)
-                {
-                    friendlyName += commonProperties->EndpointName;
-                }
-
-#define MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX (32-6)
-
-                if (friendlyName.size() > MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX)
-                {
-                    // if the size of name + " O-nn\0" > 32, we need to lose the manufacturer name for WinMM compat
-
-                    std::wstring shortName{ commonProperties->EndpointName };
-                    shortName.resize(MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX);
-
-                    friendlyName = shortName.c_str();
-                }
-
-            }
-
-            // O for Output, I for input, then the group number after that.
-            // we have to economize space due to 32 character WinMM name limit
-            // Group numbers should be 1-16 here, so index+1
-            std::wstring midiOutFriendlyName = friendlyName + L" O-1";
-            std::wstring midiInFriendlyName = friendlyName + L" I-1";
-
-
-            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(midiOutFriendlyName.c_str()) + 1)), (PVOID)midiOutFriendlyName.c_str() });
-
-            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(midiInFriendlyName.c_str()) + 1)), (PVOID)midiInFriendlyName.c_str() });
-
-            if (commonProperties->CustomEndpointPortNumber > 0 && commonProperties->CustomEndpointPortNumber <= MAX_WINMM_PORT_NUMBER)
-            {
-                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->CustomEndpointPortNumber)) });
-
-                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(commonProperties->CustomEndpointPortNumber)) });
-            }
-            else
-            {
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(parentInstanceId),
-                    TraceLoggingWideString(L"Clearing User supplied port number properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
-
-                // if you don't clear the values, the next time the same SWD is created, the old values will be pulled from cache
-
-                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_EMPTY, 0, nullptr });
-
-                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_EMPTY, 0, nullptr });
-            }
-
-            // The transport layer GUID is required for various tests for targeting the tests on this SWD.
-            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->TransportId)) });
-
-            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(commonProperties->TransportId)) });
-
-            // The Midi 1 ports are an transport generated and handled by Midisrv, as such it can do both bytestream
-            // and UMP.
-            MidiDataFormats supportedDataFormats { MidiDataFormats_Any };
-
-            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(supportedDataFormats)) });
-
-            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(supportedDataFormats)) });
-
-            if (commonProperties->NativeDataFormat > 0)
-            {
-                // Native data format is used by various tests to determine which messages are valid to send to the device,
-                // copy it over if we have it.
-                midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(commonProperties->NativeDataFormat)) });
-
-                midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(commonProperties->NativeDataFormat)) });
-            }
-
-            // TODO: temporary hard coded group index value
-            // group index of 0 is group 1. Use group 1 so that messages sent through
-            // the usbmidi2 driver to legacy peripherals will loop back correctly for now, until
-            // the real group indexes are plumbed.
-            UINT32 groupIndex = 0;
-
-            midi1OutInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(groupIndex)) });
-            
-            midi1InInterfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(groupIndex)) });
-
-            // now activate the midi 1 SWD's for this endpoint
-            if (flow == MidiFlowBidirectional)
-            {
-                // This logic will need to change. We need one endpoint for each group, but we
-                // don't know that until we get the function blocks. We know a little due to
-                // the Group Terminal Blocks in the case of USB, but that's only for one transport
-                // 
-                // It may be easier to have the transport create the MIDI 1.0 SWDs by calling
-                // functions when it's ready? That way it can get the info it needs first, and then
-                // create the MIDI 1.0 interfaces. Need to think through that flow.
-
-                // if this is a bidirectional endpoint, it gets an in and an out midi 1 swd's.
-
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating MIDI 1.0 Output Endpoint for BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
-
-                RETURN_IF_FAILED(ActivateEndpointInternal(
-                    parentInstanceId,
-                    deviceInterfaceId.c_str(),
-                    TRUE,
-                    MidiFlowOut,
-                    (ULONG)midi1OutInterfaceProperties.size(),
-                    0,
-                    (DEVPROPERTY*)(midi1OutInterfaceProperties.data()),
-                    nullptr,
-                    (SW_DEVICE_CREATE_INFO*)createInfo,
-                    nullptr));
-
-
-
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating MIDI 1.0 Input Endpoint for BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
-
-                RETURN_IF_FAILED(ActivateEndpointInternal(
-                    parentInstanceId,
-                    deviceInterfaceId.c_str(),
-                    TRUE,
-                    MidiFlowIn,
-                    (ULONG)midi1InInterfaceProperties.size(),
-                    0,
-                    (DEVPROPERTY*)(midi1InInterfaceProperties.data()),
-                    nullptr,
-                    (SW_DEVICE_CREATE_INFO*)createInfo, 
-                    nullptr));
-            }
-            else if (flow == MidiFlowOut)
-            {
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating MIDI 1.0 Output Endpoint for MidiFlowOut", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
-
-                RETURN_IF_FAILED(ActivateEndpointInternal(
-                    parentInstanceId,
-                    deviceInterfaceId.c_str(),
-                    TRUE,
-                    MidiFlowOut,
-                    (ULONG)midi1OutInterfaceProperties.size(),
-                    0,
-                    (DEVPROPERTY*)(midi1OutInterfaceProperties.data()),
-                    nullptr,
-                    (SW_DEVICE_CREATE_INFO*)createInfo, 
-                    nullptr));
-            }
-            else if (flow == MidiFlowIn)
-            {
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Activating MIDI 1.0 Input Endpoint for MidiFlowIn", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
-
-                RETURN_IF_FAILED(ActivateEndpointInternal(
-                    parentInstanceId,
-                    deviceInterfaceId.c_str(),
-                    TRUE,
-                    MidiFlowIn,
-                    (ULONG)midi1InInterfaceProperties.size(),
-                    0,
-                    (DEVPROPERTY*)(midi1InInterfaceProperties.data()),
-                    nullptr,
-                    (SW_DEVICE_CREATE_INFO*)createInfo, 
-                    nullptr));
-            }
+            SyncMidi1Ports(createdMidiPort);
         }
 
         // return the created device interface Id. This is needed for anything that will 
@@ -1286,13 +1085,15 @@ CMidiDeviceManager::ActivateEndpointInternal
     PCWSTR parentInstanceId,
     PCWSTR associatedInterfaceId,
     BOOL midiOne,
+    UINT32 groupIndex,
     MidiFlow flow,
     ULONG intPropertyCount,
     ULONG devPropertyCount,
     const DEVPROPERTY *interfaceDevProperties,
     const DEVPROPERTY *deviceDevProperties,
     const SW_DEVICE_CREATE_INFO *createInfo,
-    std::wstring *deviceInterfaceId
+    std::wstring *deviceInterfaceId,
+    PMIDIPORT* createdPort
 )
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, interfaceDevProperties);
@@ -1357,20 +1158,34 @@ CMidiDeviceManager::ActivateEndpointInternal
     midiPort->Flow = flow;
     midiPort->Enumerator = midiOne ? AUDIO_DEVICE_ENUMERATOR : MIDI_DEVICE_ENUMERATOR;
     midiPort->MidiOne = midiOne;
+    midiPort->ParentInstanceId = parentInstanceId;
+    midiPort->DeviceDescription = createInfo->pszDeviceDescription;
+    if (nullptr != createInfo->pContainerId)
+    {
+        midiPort->ContainerId = *(createInfo->pContainerId);
+    }
 
     internalCreateInfo.pszzCompatibleIds = nullptr;
     internalCreateInfo.pszzHardwareIds = nullptr;
 
     if (midiOne)
     {
+        midiPort->GroupIndex = groupIndex;
+
+        // append the group index to the instance id, so we an get a separate SWD for
+        // each group, otherwise we'll only get 1 SWD per flow.
+        midiPort->InstanceId += L"_";
+        midiPort->InstanceId += std::to_wstring(groupIndex);
+
+        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&groupIndex) });
+
         if (flow == MidiFlowOut)
         {
-            //midiPort->InstanceId += L"_O";
             midiPort->InterfaceCategory = &DEVINTERFACE_MIDI_OUTPUT;
         }
         else if (flow == MidiFlowIn)
         {
-            //midiPort->InstanceId += L"_I";
             midiPort->InterfaceCategory = &DEVINTERFACE_MIDI_INPUT;
         }
         else
@@ -1400,6 +1215,9 @@ CMidiDeviceManager::ActivateEndpointInternal
             RETURN_IF_FAILED(E_INVALIDARG);
         }
     }
+
+    // create using the normalized, and possibly updated, instance id that is on the midiPort.
+    internalCreateInfo.pszInstanceId = midiPort->InstanceId.c_str();
 
     // lambdas can only be converted to a function pointer if they
     // don't do capture, so copy everything into the CREATECONTEXT
@@ -1561,6 +1379,11 @@ CMidiDeviceManager::ActivateEndpointInternal
     }
 
     // success, transfer the midiPort to the list
+    // and provide a copy of it to the caller if requested
+    if (createdPort)
+    {
+        *createdPort = midiPort.get();
+    }
     m_midiPorts.push_back(std::move(midiPort));
 
     return S_OK;
@@ -1591,6 +1414,10 @@ CMidiDeviceManager::UpdateEndpointProperties
     );
 
     auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
+
+    // Can't have the available midi ports changing while updating this, 
+    // take the midi ports lock.
+    auto lock = m_midiPortsLock.lock();
 
     // locate the MIDIPORT 
     auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
@@ -1641,15 +1468,14 @@ CMidiDeviceManager::UpdateEndpointProperties
                 TraceLoggingULong(intPropertyCount, "property count")
             );
 
-            // update/refresh the port numbers for all affected midi1 ports
-            for (auto const& MidiPort : m_midiPorts)
-            {
-                if (MidiPort->AssociatedInterfaceId == requestedInterfaceId &&
-                    MidiPort->MidiOne)
-                {
-                    RETURN_IF_FAILED(AssignPortNumber(MidiPort->SwDevice.get(), MidiPort->DeviceInterfaceId.get(), MidiPort->Flow));
-                }
-            }
+            // TODO: if interfaceDevProperties contains function blocks, group terminal blocks, or
+            // custom port number, then we need to resync the midi 1 ports.
+
+            // Resync all of the midi 1 ports associated with this UMP endpoint.
+            RETURN_IF_FAILED(SyncMidi1Ports(item->get()));
+
+            // TODO: if the custom name has changed, then it seems like we'd we'll need to iterate all of the midi 1 ports
+            // and update that as well?
 
             return S_OK;
         }
@@ -1910,16 +1736,6 @@ CMidiDeviceManager::Shutdown()
 #define MIDI1_INPUT_DEVICES \
     L"System.Devices.InterfaceClassGuid:=\"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}\""
 
-typedef struct _PORT_INFO
-{
-    bool inUse {false};
-    bool isEnabled {false};
-    bool hasCustomPortNumber{false};
-    UINT32 customPortNumber {0};
-    std::wstring interfaceId;
-} PORT_INFO;
-
-
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::AssignPortNumber(
@@ -2030,13 +1846,14 @@ CMidiDeviceManager::AssignPortNumber(
             // ports that are in use even if inactive to prevent future conflicts.
             // There may be inactive users on the same port as an active user, so prefer to track
             // the currently active user of a given port in case we need to move them.
-            if (!portInfo[servicePortNum].inUse || (!portInfo[servicePortNum].isEnabled && device.IsEnabled()))
+            if (!portInfo[servicePortNum].InUse || (!portInfo[servicePortNum].IsEnabled && device.IsEnabled()))
             {
-                portInfo[servicePortNum].inUse = true;
-                portInfo[servicePortNum].isEnabled = device.IsEnabled();
-                portInfo[servicePortNum].interfaceId = processingInterface;
-                portInfo[servicePortNum].hasCustomPortNumber = userPortNumValid;
-                portInfo[servicePortNum].customPortNumber = userPortNum;
+                portInfo[servicePortNum].InUse = true;
+                portInfo[servicePortNum].IsEnabled = device.IsEnabled();
+                portInfo[servicePortNum].InterfaceId = processingInterface;
+                portInfo[servicePortNum].HasCustomPortNumber = userPortNumValid;
+                portInfo[servicePortNum].CustomPortNumber = userPortNum;
+                portInfo[servicePortNum].Flow = flow;
             }
         }
     });
@@ -2066,8 +1883,8 @@ CMidiDeviceManager::AssignPortNumber(
     // by either and active port, or an inactive port and we're currently active (meaning this port
     // was requested to relocate), move this port somewhere else.
     bool serviceAssignedPortInUse = (hasServiceAssignedPortNumber &&
-                                        portInfo[serviceAssignedPortNumber].inUse && 
-                                        (interfaceEnabled || portInfo[serviceAssignedPortNumber].isEnabled));
+                                        portInfo[serviceAssignedPortNumber].InUse && 
+                                        (interfaceEnabled || portInfo[serviceAssignedPortNumber].IsEnabled));
 
     // if this port is already enabled, but not on it's ideal user assigned endpoint,
     // then an update to our user assigned port is desired (but not guaranteed).
@@ -2082,10 +1899,10 @@ CMidiDeviceManager::AssignPortNumber(
     // that was also assigned this same port number, otherwise we would end up in a recursion
     // loop with each port reassigning the other.
     bool optimalPortAvailable = (hasCustomPortNumber &&
-                                    (!portInfo[customPortNumber].inUse || 
-                                    !portInfo[customPortNumber].isEnabled ||
-                                    !portInfo[customPortNumber].hasCustomPortNumber ||
-                                    portInfo[customPortNumber].customPortNumber != customPortNumber));
+                                    (!portInfo[customPortNumber].InUse || 
+                                    !portInfo[customPortNumber].IsEnabled ||
+                                    !portInfo[customPortNumber].HasCustomPortNumber ||
+                                    portInfo[customPortNumber].CustomPortNumber != customPortNumber));
 
     bool interfaceDeactivated{false};
     auto restoreInterfaceStateOnExit = wil::scope_exit([&]()
@@ -2135,7 +1952,7 @@ CMidiDeviceManager::AssignPortNumber(
 
         // first we figure out what the default new port number will be, assuming the first available,
         // this will be our fallback in the event of any errors or the user assigned port isn't available.
-        for(firstAvailablePortNumber = 1; portInfo[firstAvailablePortNumber].inUse;firstAvailablePortNumber++);
+        for(firstAvailablePortNumber = 1; portInfo[firstAvailablePortNumber].InUse;firstAvailablePortNumber++);
         assignedPortNumber = firstAvailablePortNumber;
 
         auto cleanupOnFailure = wil::scope_exit([&]()
@@ -2173,14 +1990,14 @@ CMidiDeviceManager::AssignPortNumber(
         // assigned to this port was in use by an enabled port and needs to have a previous user reassigned.
         if (hasCustomPortNumber && 
             assignedPortNumber == customPortNumber &&
-            portInfo[customPortNumber].inUse &&
-            portInfo[customPortNumber].isEnabled)
+            portInfo[customPortNumber].InUse &&
+            portInfo[customPortNumber].IsEnabled)
         {
             // First, we need to locate the MIDIPORT for the current user of this port, so we have the SW handle,
             // the MIDIPORT should exist, since the port is active.
             // If the MIDIPORT does not exist, then we can not move the conflicting port, exit with failure and fall back to the
             // next available for the assigning port.
-            auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(portInfo[customPortNumber].interfaceId);
+            auto requestedInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(portInfo[customPortNumber].InterfaceId);
             auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
             {
                 auto portInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(Port->DeviceInterfaceId.get());
@@ -2210,3 +2027,374 @@ CMidiDeviceManager::AssignPortNumber(
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::GetFunctionBlockPortInfo(
+    LPCWSTR umpDeviceInterfaceId,
+    std::map<UINT32, PORT_INFO> portInfo[2]
+)
+{
+    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+
+    // step 1, retrieve the function block count to determine if we need to build up the list of function
+    // blocks to retrieve.
+    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlockCount));
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+    ULONG functionBlockCount {0};
+    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlockCount));
+    if (prop)
+    {
+        functionBlockCount = winrt::unbox_value<uint32_t>(prop);
+    }
+
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, functionBlockCount == 0);
+
+    // We have function blocks to retrieve
+    // build up the property keys to query for the function blocks
+    std::wstring functionBlockBaseString = MIDI_STRING_PKEY_GUID;
+    functionBlockBaseString += MIDI_STRING_PKEY_PID_SEPARATOR;
+    for (UINT i = MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START; i < functionBlockCount && i < (MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + MIDI_MAX_FUNCTION_BLOCKS); i++)
+    {
+        std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(i);
+        additionalProperties.Append(winrt::to_hstring(functionBlockString.c_str()));
+    }
+
+    // retrieve the function block properties
+    deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+    // now process each available function block
+    for (UINT i = 0; i < functionBlockCount && i < MIDI_MAX_FUNCTION_BLOCKS; i++)
+    {
+        std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + i);
+        auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(functionBlockString.c_str()));
+
+        // The property should always be present, since it was within the reported available function blocks.
+        RETURN_IF_NULL_ALLOC(prop);
+
+        auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop);
+        auto data = refArray.Value();
+        auto fb = (PDISCOVEREDFUNCTIONBLOCK)(data.data());
+
+        for (UINT i = fb->FirstGroup; i < (UINT)(fb->FirstGroup + fb->NumberOfGroupsSpanned); i++)
+        {
+            if (fb->IsMIDIMessageSource)
+            {
+                portInfo[MidiFlowIn][i].InUse = true;
+                portInfo[MidiFlowIn][i].Flow = (MidiFlow) MidiFlowIn;
+                portInfo[MidiFlowIn][i].IsEnabled = portInfo[MidiFlowIn][i].IsEnabled || fb->IsActive;
+                portInfo[MidiFlowIn][i].InterfaceId = umpDeviceInterfaceId;
+            }
+
+            if(fb->IsMIDIMessageDestination)
+            {
+                portInfo[MidiFlowOut][i].InUse = true;
+                portInfo[MidiFlowOut][i].Flow = (MidiFlow) MidiFlowOut;
+                portInfo[MidiFlowOut][i].IsEnabled = portInfo[MidiFlowOut][i].IsEnabled || fb->IsActive;
+                portInfo[MidiFlowOut][i].InterfaceId = umpDeviceInterfaceId;
+            }
+        }
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::GetGroupTerminalBlockPortInfo(
+    LPCWSTR umpDeviceInterfaceId,
+    std::map<UINT32, PORT_INFO> portInfo[2]
+)
+{
+    // This is the first creation, so we need to do some additional work to prepare.
+    // Retrieve all of the required properties from the UMP interface and save them in the
+    // vector.
+    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_GroupTerminalBlocks));
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_GroupTerminalBlocks));
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, !prop);
+
+    auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop);
+    auto refData = refArray.Value();
+    PBYTE data = refData.data();
+    PKSMULTIPLE_ITEM gtbMultItemHeader = (PKSMULTIPLE_ITEM)(data);
+
+    RETURN_HR_IF(E_UNEXPECTED, gtbMultItemHeader->Count == 0);
+
+    PBYTE gtbMemory = (data + sizeof(KSMULTIPLE_ITEM));
+    PBYTE nextGtb = gtbMemory;
+    for (UINT i = 0; i < gtbMultItemHeader->Count; i++)
+    {
+        PUMP_GROUP_TERMINAL_BLOCK_DEFINITION gtb = (PUMP_GROUP_TERMINAL_BLOCK_DEFINITION)gtbMemory;
+        nextGtb = gtbMemory + gtb->GrpTrmBlock.Size;
+
+        for (UINT i = gtb->GrpTrmBlock.FirstGroupIndex; i < (UINT)(gtb->GrpTrmBlock.FirstGroupIndex + gtb->GrpTrmBlock.GroupCount); i++)
+        {
+            // If the flow of this gtb matches the flow we're processing
+            if (gtb->GrpTrmBlock.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
+                gtb->GrpTrmBlock.Direction == MIDI_GROUP_TERMINAL_BLOCK_OUTPUT)
+            {
+                portInfo[MidiFlowIn][i].InUse = true;
+                portInfo[MidiFlowIn][i].IsEnabled = true;
+                portInfo[MidiFlowIn][i].Flow = (MidiFlow) MidiFlowIn;
+                portInfo[MidiFlowIn][i].InterfaceId = umpDeviceInterfaceId;
+            }
+
+            if (gtb->GrpTrmBlock.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
+                gtb->GrpTrmBlock.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT)
+            {
+                portInfo[MidiFlowOut][i].InUse = true;
+                portInfo[MidiFlowOut][i].IsEnabled = true;
+                portInfo[MidiFlowOut][i].Flow = (MidiFlow) MidiFlowOut;
+                portInfo[MidiFlowOut][i].InterfaceId = umpDeviceInterfaceId;
+            }
+        }
+
+        gtbMemory = nextGtb;
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::GetCustomPortMapping(
+    PCWSTR umpDeviceInterfaceId,
+    std::map<UINT32, PORT_INFO> portInfo[2]
+)
+{
+    UNREFERENCED_PARAMETER(umpDeviceInterfaceId);
+    UNREFERENCED_PARAMETER(portInfo);
+
+    // TODO: get the group index->custom port number mapping from the UMP SWD, if present,
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::SyncMidi1Ports(
+    PMIDIPORT umpMidiPort
+)
+{
+    HRESULT hrTemp;
+
+    std::map<UINT32, PORT_INFO> portInfo[2];
+
+    // get the current function block information from the UMP SWD, if present, else fall back to
+    // GTB if that is present. If neither, then there's nothing more to do.
+    hrTemp = GetFunctionBlockPortInfo(umpMidiPort->DeviceInterfaceId.get(), portInfo);
+    RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
+    if (E_NOTFOUND == hrTemp)
+    {
+        hrTemp = GetGroupTerminalBlockPortInfo(umpMidiPort->DeviceInterfaceId.get(), portInfo);
+        RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
+    }
+
+    // Now retrieve the custom port mappings, if they are present
+    RETURN_IF_FAILED(GetCustomPortMapping(umpMidiPort->DeviceInterfaceId.get(), portInfo));
+
+    // First walk the midi ports list, identifying ports that have already been
+    // created, updating the assigned custom number, deactivating any
+    // which were previously active but no longer active due to a function block
+    // change.
+    for (auto midiPort = m_midiPorts.begin(); midiPort != m_midiPorts.end();)
+    {
+        if (midiPort->get()->MidiOne && 
+            midiPort->get()->AssociatedInterfaceId == umpMidiPort->DeviceInterfaceId.get())
+        {
+            // If this port is a midi 1 port, and is associated to the parent UMP device
+            // we are processing, we need to process it.
+            std::vector<DEVPROPERTY> newProperties{};
+
+            // We know that it's the device interface id for this group index
+            portInfo[midiPort->get()->Flow][midiPort->get()->GroupIndex].InterfaceId = midiPort->get()->DeviceInterfaceId.get();
+
+            // We need to update the custom port numbers on it, in case that has changed.
+            if (portInfo[midiPort->get()->Flow][midiPort->get()->GroupIndex].HasCustomPortNumber)
+            {
+                newProperties.push_back({{ PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&portInfo[midiPort->get()->Flow][midiPort->get()->GroupIndex].CustomPortNumber) });
+            }
+            else
+            {
+                newProperties.push_back({{ PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_EMPTY, 0, NULL });
+            }
+
+            RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+                midiPort->get()->SwDevice.get(),
+                midiPort->get()->DeviceInterfaceId.get(),
+                1,
+                (const DEVPROPERTY*)newProperties.data()));
+
+            // if it's supposed to be disabled, then disable it, and remove the port from
+            // the system.
+            if (!portInfo[midiPort->get()->Flow][midiPort->get()->GroupIndex].IsEnabled)
+            {
+                LOG_IF_FAILED(SwDeviceInterfaceSetState(midiPort->get()->SwDevice.get(), midiPort->get()->DeviceInterfaceId.get(), FALSE));
+                midiPort = m_midiPorts.erase(midiPort);
+                continue;
+            }
+        }
+
+        midiPort++;
+    }
+
+    std::vector<DEVPROPERTY> interfaceProperties{};
+    std::wstring baseFriendlyName;
+    SW_DEVICE_CREATE_INFO createInfo{};
+    GUID transportGUID{};
+    MidiDataFormats dataFormats{};
+    MidiDataFormats nativeDataFormat{};
+    createInfo.cbSize = sizeof(createInfo);
+    createInfo.pszInstanceId = umpMidiPort->InstanceId.c_str();
+    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+    createInfo.pszDeviceDescription = umpMidiPort->DeviceDescription.c_str();
+    if (GUID_NULL != umpMidiPort->ContainerId)
+    {
+        createInfo.pContainerId = &(umpMidiPort->ContainerId);
+    }
+
+    for (UINT flow = 0; flow <= 1; flow++)
+    {
+        for (UINT groupIndex = 0; groupIndex < 32; groupIndex++)
+        {
+            if (portInfo[flow][groupIndex].IsEnabled && !portInfo[flow][groupIndex].InterfaceId.empty())
+            {
+                if (interfaceProperties.empty())
+                {
+                    // This is the first creation, so we need to do some additional work to prepare.
+                    // Retrieve all of the required properties from the UMP interface and save them in the
+                    // vector.
+                    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_CustomEndpointName));
+                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_ManufacturerName));
+                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_EndpointName));
+                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
+                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
+                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_NativeDataFormat));
+                    auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpMidiPort->DeviceInterfaceId.get(), additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+                    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_CustomEndpointName));
+                    if (prop)
+                    {
+                        baseFriendlyName = winrt::unbox_value<winrt::hstring>(prop).c_str();
+                    }
+                    else
+                    {
+                        std::wstring shortName{};
+
+                        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_ManufacturerName));
+                        if (prop)
+                        {
+                            baseFriendlyName += winrt::unbox_value<winrt::hstring>(prop).c_str();
+                            baseFriendlyName += L" ";
+                        }
+
+                        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointName));
+                        if (prop)
+                        {
+                            shortName = winrt::unbox_value<winrt::hstring>(prop).c_str();
+                            baseFriendlyName += shortName;
+                        }
+        
+                        if (baseFriendlyName.size() > MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX)
+                        {
+                            // if the size of name + " O-nn\0" > 32, we need to lose the manufacturer name for WinMM compat
+                            shortName.resize(MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX);        
+                            baseFriendlyName = shortName.c_str();
+                        }
+                    }
+
+                    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
+                    if (prop)
+                    {                    
+                        transportGUID = winrt::unbox_value<winrt::guid>(prop);
+                        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
+                            DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(transportGUID)) });
+                    }
+
+                    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
+                    if (prop)
+                    {
+                        dataFormats = (MidiDataFormats) winrt::unbox_value<uint8_t>(prop);
+                        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
+                            DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(dataFormats)) });
+                    }
+
+                    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_NativeDataFormat));
+                    if (prop)
+                    {
+                        nativeDataFormat = (MidiDataFormats) winrt::unbox_value<uint8_t>(prop);
+                        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
+                            DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
+                    }
+                }
+
+
+                // Create the friendly name for this interface and add it to the properties list
+                std::wstring friendlyName;
+                if (MidiFlowIn == (MidiFlow) flow)
+                {
+                    friendlyName = baseFriendlyName + L" I-" + std::to_wstring(groupIndex);
+                }
+                else
+                {
+                    friendlyName = baseFriendlyName + L" O-" + std::to_wstring(groupIndex);
+                }
+                interfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(friendlyName.c_str()) + 1)), (PVOID)friendlyName.c_str() });
+
+                // Now add (or remove) the custom port number from the interface
+                if (portInfo[flow][groupIndex].HasCustomPortNumber)
+                {
+                    interfaceProperties.push_back({{ PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr },
+                        DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&portInfo[flow][groupIndex].CustomPortNumber) });
+                }
+                else
+                {
+                    interfaceProperties.push_back({{ PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr },
+                        DEVPROP_TYPE_EMPTY, 0, NULL });
+                }
+
+                // Finally, add the group index that is assigned to this interface
+                interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&groupIndex) });
+
+                // create the midi 1 interface
+                RETURN_IF_FAILED(ActivateEndpointInternal(
+                    umpMidiPort->ParentInstanceId.c_str(),
+                    umpMidiPort->DeviceInterfaceId.get(),
+                    TRUE,
+                    groupIndex,
+                    (MidiFlow) flow,
+                    (ULONG)interfaceProperties.size(),
+                    0,
+                    (DEVPROPERTY*)(interfaceProperties.data()),
+                    nullptr,
+                    (SW_DEVICE_CREATE_INFO*)&createInfo,
+                    nullptr,
+                    nullptr));
+
+                // We want to reuse interfaceProperties for the next creation,
+                // so pop the endpoint specific properties off in preparation.
+                interfaceProperties.pop_back(); // customized endpoint name
+                interfaceProperties.pop_back(); // custom port number
+                interfaceProperties.pop_back(); // group index
+            }
+        }
+    }
+
+    // Finally, we need to update/refresh the port numbers for all affected midi1 ports
+    for (auto const& MidiPort : m_midiPorts)
+    {
+        if (MidiPort->MidiOne && 
+            MidiPort->AssociatedInterfaceId == umpMidiPort->DeviceInterfaceId.get())
+        {
+            RETURN_IF_FAILED(AssignPortNumber(MidiPort->SwDevice.get(), MidiPort->DeviceInterfaceId.get(), MidiPort->Flow));
+        }
+    }
+
+    return S_OK;
+}

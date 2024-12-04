@@ -209,12 +209,10 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_PortAssignedGroupIndex, 18);     // DEVPROP_TYPE
 // USB / KS Properties ============================================================================
 // Starts at 50
 
-// TODO: May need to combine these into one, depending on what comes back from the driver
-#define STRING_PKEY_MIDI_IN_GroupTerminalBlocks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"50"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_IN_GroupTerminalBlocks, 50);     // DEVPROP_TYPE_BINARY
+#define STRING_PKEY_MIDI_GroupTerminalBlocks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"50"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_GroupTerminalBlocks, 50);     // DEVPROP_TYPE_BINARY
 
-#define STRING_PKEY_MIDI_OUT_GroupTerminalBlocks MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"51"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_OUT_GroupTerminalBlocks, 51);     // DEVPROP_TYPE_BINARY
+// 51 is currently unused
 
 #define STRING_PKEY_MIDI_AssociatedUMP MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"52"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_AssociatedUMP, 52);     // DEVPROP_TYPE_STRING

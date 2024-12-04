@@ -316,17 +316,8 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         midiPin->PID = devicePID;
 
         // Group Terminal Blocks from the MIDI 2 driver
-
-        if (midiPin->Flow == MidiFlowOut)
-        {
-            midiPin->GroupTerminalBlockDataOut = std::move(groupTerminalBlockData);
-            midiPin->GroupTerminalBlockDataSizeOut = groupTerminalBlockDataSize;
-        }
-        else
-        {
-            midiPin->GroupTerminalBlockDataIn = std::move(groupTerminalBlockData);
-            midiPin->GroupTerminalBlockDataSizeIn = groupTerminalBlockDataSize;
-        }
+        midiPin->GroupTerminalBlockData = std::move(groupTerminalBlockData);
+        midiPin->GroupTerminalBlockDataSize = groupTerminalBlockDataSize;
 
         // Native Data format (UMP or bytestream) from the driver
 
@@ -463,22 +454,14 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         midiPin->SerialNumber = newMidiPins[midiInPinIndex]->SerialNumber;
         midiPin->ManufacturerName = newMidiPins[midiInPinIndex]->ManufacturerName;
 
-        if (newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut > 0)
+        // in and out pins should have the same GTB's, pick one.
+        if (newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSize > 0)
         {
-            std::unique_ptr<BYTE> groupTerminalBlockData(new (std::nothrow) BYTE[newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut]);
+            std::unique_ptr<BYTE> groupTerminalBlockData(new (std::nothrow) BYTE[newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSize]);
             RETURN_IF_NULL_ALLOC(groupTerminalBlockData);
-            memcpy(groupTerminalBlockData.get(), newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataOut.get(), newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut);
-            midiPin->GroupTerminalBlockDataOut = std::move(groupTerminalBlockData);
-            midiPin->GroupTerminalBlockDataSizeOut = newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSizeOut;
-        }
-
-        if (newMidiPins[midiInPinIndex]->GroupTerminalBlockDataSizeIn > 0)
-        {
-            std::unique_ptr<BYTE> groupTerminalBlockData(new (std::nothrow) BYTE[newMidiPins[midiInPinIndex]->GroupTerminalBlockDataSizeIn]);
-            RETURN_IF_NULL_ALLOC(groupTerminalBlockData);
-            memcpy(groupTerminalBlockData.get(), newMidiPins[midiInPinIndex]->GroupTerminalBlockDataIn.get(), newMidiPins[midiInPinIndex]->GroupTerminalBlockDataSizeIn);
-            midiPin->GroupTerminalBlockDataIn = std::move(groupTerminalBlockData);
-            midiPin->GroupTerminalBlockDataSizeIn = newMidiPins[midiInPinIndex]->GroupTerminalBlockDataSizeIn;
+            memcpy(groupTerminalBlockData.get(), newMidiPins[midiOutPinIndex]->GroupTerminalBlockData.get(), newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSize);
+            midiPin->GroupTerminalBlockData = std::move(groupTerminalBlockData);
+            midiPin->GroupTerminalBlockDataSize = newMidiPins[midiOutPinIndex]->GroupTerminalBlockDataSize;
         }
 
         midiPin->NativeDataFormat = newMidiPins[midiOutPinIndex]->NativeDataFormat;
@@ -619,16 +602,10 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
-        if (MidiPin->GroupTerminalBlockDataSizeOut > 0)
+        if (MidiPin->GroupTerminalBlockDataSize > 0)
         {
-            interfaceDevProperties.push_back({ { PKEY_MIDI_OUT_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSizeOut, (PVOID)MidiPin->GroupTerminalBlockDataOut.get() });
-        }
-
-        if (MidiPin->GroupTerminalBlockDataSizeIn > 0)
-        {
-            interfaceDevProperties.push_back({ { PKEY_MIDI_IN_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSizeIn, (PVOID)MidiPin->GroupTerminalBlockDataIn.get() });
+            interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSize, (PVOID)MidiPin->GroupTerminalBlockData.get() });
         }
 
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.
