@@ -1,4 +1,5 @@
-
+#Requires -RunAsAdministrator
+#Requires -Version 7.0
     
     function Show-MidiRegInproc32([String] $key, [String] $comment)    
     {

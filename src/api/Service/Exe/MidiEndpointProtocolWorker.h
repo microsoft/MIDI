@@ -40,7 +40,7 @@ public:
     void EndProcessing() { if (m_endProcessing.is_valid() && !m_endProcessing.is_signaled()) m_endProcessing.SetEvent(); }
 
 private:
-    std::wstring m_deviceInterfaceId;
+    std::wstring m_endpointDeviceInterfaceId;
     //std::wstring m_deviceInstanceId;
     GUID m_sessionId{};
     DWORD m_clientProcessId{};
@@ -48,7 +48,7 @@ private:
 
     LONGLONG m_context{ 0 };
 
-    bool m_initialNegotiation{ false }; // true if we're in the initial negotiation phase where we need to call callback
+    bool m_inInitialDiscoveryAndNegotiation{ false }; // true if we're in the initial discovery and negotiation phase where we need to call callback
 
     wil::unique_event_nothrow m_endProcessing;
     wil::unique_event_nothrow m_allNegotiationMessagesReceived;
@@ -99,17 +99,19 @@ private:
     //we keep these here so the pointer stays valid
     ENDPOINTPROTOCOLNEGOTIATIONRESULTS m_mostRecentResults{ };
     std::vector<DISCOVEREDFUNCTIONBLOCK> m_discoveredFunctionBlocks{ };
+    //std::map<uint8_t, DISCOVEREDFUNCTIONBLOCK> m_discoveredFunctionBlocks{ };
 
 
     HRESULT RequestAllFunctionBlocks();
     HRESULT RequestAllEndpointDiscoveryInformation();
 
-    HRESULT HandleFunctionBlockNameMessage(_In_ internal::PackedUmp128& functionBlockNameMessage);
-    HRESULT HandleEndpointNameMessage(_In_ internal::PackedUmp128& endpointNameMessage);
-    HRESULT HandleProductInstanceIdMessage(_In_ internal::PackedUmp128& productInstanceIdMessage);
-
-    HRESULT ProcessStreamConfigurationRequest(_In_ internal::PackedUmp128 ump);
-    HRESULT ProcessStreamMessage(_In_ internal::PackedUmp128 ump);
+    HRESULT ProcessDeviceIdentityNotificationMessage(_In_ internal::PackedUmp128& ump);
+    HRESULT ProcessEndpointInfoNotificationMessage(_In_ internal::PackedUmp128& ump);
+    HRESULT ProcessEndpointNameNotificationMessage(_In_ internal::PackedUmp128& ump);
+    HRESULT ProcessProductInstanceIdNotificationMessage(_In_ internal::PackedUmp128& ump);
+    HRESULT ProcessFunctionBlockInfoNotificationMessage(_In_ internal::PackedUmp128& ump);
+    HRESULT ProcessFunctionBlockNameNotificationMessage(_In_ internal::PackedUmp128& ump);
+    HRESULT ProcessStreamConfigurationRequest(_In_ internal::PackedUmp128& ump);
 
 
     std::wstring ParseStreamTextMessage(_In_ internal::PackedUmp128& message);

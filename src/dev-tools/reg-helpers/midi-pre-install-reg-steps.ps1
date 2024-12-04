@@ -8,7 +8,7 @@
 
 
 #Requires -RunAsAdministrator
-#Requires -Version 6.0
+#Requires -Version 7.0
 
 function Take-Permissions 
 {
