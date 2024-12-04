@@ -937,7 +937,6 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0005_00
     LPCWSTR EndpointDescription;
     LPCWSTR CustomEndpointName;
     LPCWSTR CustomEndpointDescription;
-    UINT32 CustomEndpointPortNumber;
     LPCWSTR UniqueIdentifier;
     LPCWSTR ManufacturerName;
     MidiDataFormats SupportedDataFormats;

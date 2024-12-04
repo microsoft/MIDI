@@ -183,8 +183,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // USB / KS Properties ===============================================================
         // TODO: Group Terminal Blocks will likely be a single property
-        additionalProperties.Append(STRING_PKEY_MIDI_IN_GroupTerminalBlocks);
-        additionalProperties.Append(STRING_PKEY_MIDI_OUT_GroupTerminalBlocks);
+        additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
         additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
         additionalProperties.Append(STRING_PKEY_MIDI_UsbVID);
@@ -816,7 +815,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         info.SpecificationVersionMajor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0);
         info.SpecificationVersionMinor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0);
 
-        info.HasStaticFunctionBlocks = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
+        info.HasStaticFunctionBlocks = GetProperty<bool>(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
         info.DeclaredFunctionBlockCount = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlockCount, (uint8_t)0);
 
         return info;
@@ -836,7 +835,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             m_properties.Insert(key, value);
 
-            if (key == STRING_PKEY_MIDI_IN_GroupTerminalBlocks)
+            if (key == STRING_PKEY_MIDI_GroupTerminalBlocks)
             {
                 ReadGroupTerminalBlocks();
             }
@@ -876,7 +875,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             m_properties.Insert(key, value);
 
-            if (key == STRING_PKEY_MIDI_IN_GroupTerminalBlocks)
+            if (key == STRING_PKEY_MIDI_GroupTerminalBlocks)
             {
                 // this shouldn't happen because these should be static
                 ReadGroupTerminalBlocks();
@@ -941,7 +940,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             // in groups property
             // STRING_PKEY_MIDI_IN_GroupTerminalBlocks
 
-            for (auto key : { STRING_PKEY_MIDI_IN_GroupTerminalBlocks /*, STRING_PKEY_MIDI_OUT_GroupTerminalBlocks*/ })
+            for (auto key : { STRING_PKEY_MIDI_GroupTerminalBlocks /*, STRING_PKEY_MIDI_OUT_GroupTerminalBlocks*/ })
             {
                 auto refArray = GetBinaryProperty(key);
 
