@@ -305,8 +305,8 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime,
 // starts at 180
 
 // value provided during endpoint discovery. Need this to know when we receive all function block data
-#define STRING_PKEY_MIDI_FunctionBlockCount MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"180"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlockCount, 180);     // DEVPROP_TYPE_BYTE
+#define STRING_PKEY_MIDI_FunctionBlockDeclaredCount MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"180"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_FunctionBlockDeclaredCount, 180);     // DEVPROP_TYPE_BYTE
 
 // true if function blocks are static
 #define STRING_PKEY_MIDI_FunctionBlocksAreStatic MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"182"

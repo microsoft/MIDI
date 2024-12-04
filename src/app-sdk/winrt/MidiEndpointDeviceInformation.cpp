@@ -182,7 +182,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
 
         // USB / KS Properties ===============================================================
-        // TODO: Group Terminal Blocks will likely be a single property
         additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
         additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
         additionalProperties.Append(STRING_PKEY_MIDI_SerialNumber);
@@ -213,7 +212,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps);
 
         // Function Blocks ===================================================================
-        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockCount);
+        additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockDeclaredCount);
         additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlocksAreStatic);
 
         // User-supplied metadata ============================================================
@@ -816,7 +815,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         info.SpecificationVersionMinor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0);
 
         info.HasStaticFunctionBlocks = GetProperty<bool>(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
-        info.DeclaredFunctionBlockCount = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlockCount, (uint8_t)0);
+        info.DeclaredFunctionBlockCount = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlockDeclaredCount, (uint8_t)0);
 
         return info;
     }
