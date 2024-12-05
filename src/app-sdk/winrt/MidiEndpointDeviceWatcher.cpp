@@ -185,7 +185,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocksAreStatic) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlockCount) ||
+                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlockDeclaredCount) ||
                         args.Properties().HasKey(STRING_PKEY_MIDI_EndpointInformationLastUpdateTime)
                         )
                     {
