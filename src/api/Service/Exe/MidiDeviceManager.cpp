@@ -2235,8 +2235,16 @@ CMidiDeviceManager::SyncMidi1Ports(
 
     // get the current function block information from the UMP SWD, if present, else fall back to
     // GTB if that is present. If neither, then there's nothing more to do.
-    hrTemp = GetFunctionBlockPortInfo(umpMidiPort->DeviceInterfaceId.get(), portInfo);
-    RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
+
+    // TODO: This cannot be called until the protocol negotiation callback in the endpoint manager 
+    // returns. Otherwise, the declared function block count could be present, but not the function 
+    // blocks, or other data could be half-present or even old. Instead, a public function that calls
+    // SyncMidi1Ports should be called from the protocol negotiation callback.
+
+//    hrTemp = GetFunctionBlockPortInfo(umpMidiPort->DeviceInterfaceId.get(), portInfo);
+//    RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
+    hrTemp = E_NOTFOUND;
+
     if (E_NOTFOUND == hrTemp)
     {
         hrTemp = GetGroupTerminalBlockPortInfo(umpMidiPort->DeviceInterfaceId.get(), portInfo);
