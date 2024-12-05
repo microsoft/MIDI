@@ -2051,69 +2051,69 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
     // NOTE: this is the number of function blocks the device *declares* which may not be the number it
     // actually transmits. It's possible a device may declare, for example 5 blocks, and then due to a bug
     // or problem tranmitting, only send 3.
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlockDeclaredCount));
+    additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockDeclaredCount);
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
-    ULONG functionBlockCount {0};
-    auto fbCountProp = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlockDeclaredCount));
+    ULONG declaredFunctionBlockCount {0};
+    auto fbCountProp = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_FunctionBlockDeclaredCount);
     if (fbCountProp)
     {
-        functionBlockCount = winrt::unbox_value<uint32_t>(fbCountProp);
+        declaredFunctionBlockCount = winrt::unbox_value<uint32_t>(fbCountProp);
     }
 
-    RETURN_HR_IF_EXPECTED(E_NOTFOUND, functionBlockCount == 0);
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, declaredFunctionBlockCount == 0);
 
     // We have function blocks to retrieve
     // build up the property keys to query for the function blocks
     std::wstring functionBlockBaseString = MIDI_STRING_PKEY_GUID;
     functionBlockBaseString += MIDI_STRING_PKEY_PID_SEPARATOR;
-    for (UINT j = MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START; j < functionBlockCount && j < (MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + MIDI_MAX_FUNCTION_BLOCKS); j++)
+    for (UINT j = MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START; j < declaredFunctionBlockCount && j < (MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + MIDI_MAX_FUNCTION_BLOCKS); j++)
     {
         std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(j);
-        additionalProperties.Append(winrt::to_hstring(functionBlockString.c_str()));
+        additionalProperties.Append(functionBlockString);
     }
 
     // retrieve the function block properties
     deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
     // now process each available function block
-    for (UINT fbi = 0; fbi < functionBlockCount && fbi < MIDI_MAX_FUNCTION_BLOCKS; fbi++)
+    for (UINT fbi = 0; fbi < declaredFunctionBlockCount && fbi < MIDI_MAX_FUNCTION_BLOCKS; fbi++)
     {
         std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + fbi);
-        auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(functionBlockString.c_str()));
+        auto prop = deviceInfo.Properties().Lookup(functionBlockString);
 
-        // This can be null if we didn't get a complete list of function blocks from the device
-        //RETURN_IF_NULL_ALLOC(prop);
+        // This property can be null if we didn't get a complete list of function blocks from the device
 
-        if (prop != nullptr)
+        if (prop == nullptr)
         {
-            auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop);
+            continue;
+        }
 
-            if (refArray == nullptr)
+        auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop);
+
+        if (refArray == nullptr)
+        {
+            continue;
+        }
+
+        auto data = refArray.Value();
+        auto fb = (MidiFunctionBlockProperty*)(data.data());
+
+        for (UINT i = fb->FirstGroup; i < (UINT)(fb->FirstGroup + fb->NumberOfGroupsSpanned); i++)
+        {
+            if (fb->Direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_OUTPUT)    // message source
             {
-                continue;
+                portInfo[MidiFlowIn][i].InUse = true;
+                portInfo[MidiFlowIn][i].Flow = (MidiFlow)MidiFlowIn;
+                portInfo[MidiFlowIn][i].IsEnabled = portInfo[MidiFlowIn][i].IsEnabled || fb->IsActive;
+                portInfo[MidiFlowIn][i].InterfaceId = umpDeviceInterfaceId;
             }
 
-            auto data = refArray.Value();
-            //auto fb = (PDISCOVEREDFUNCTIONBLOCK)(data.data());
-            auto fb = (MidiFunctionBlockProperty*)(data.data());
-
-            for (UINT i = fb->FirstGroup; i < (UINT)(fb->FirstGroup + fb->NumberOfGroupsSpanned); i++)
+            if (fb->Direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_INPUT) // message destination
             {
-                if (fb->Direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_OUTPUT)    // message source
-                {
-                    portInfo[MidiFlowIn][i].InUse = true;
-                    portInfo[MidiFlowIn][i].Flow = (MidiFlow)MidiFlowIn;
-                    portInfo[MidiFlowIn][i].IsEnabled = portInfo[MidiFlowIn][i].IsEnabled || fb->IsActive;
-                    portInfo[MidiFlowIn][i].InterfaceId = umpDeviceInterfaceId;
-                }
-
-                if (fb->Direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_INPUT) // message destination
-                {
-                    portInfo[MidiFlowOut][i].InUse = true;
-                    portInfo[MidiFlowOut][i].Flow = (MidiFlow)MidiFlowOut;
-                    portInfo[MidiFlowOut][i].IsEnabled = portInfo[MidiFlowOut][i].IsEnabled || fb->IsActive;
-                    portInfo[MidiFlowOut][i].InterfaceId = umpDeviceInterfaceId;
-                }
+                portInfo[MidiFlowOut][i].InUse = true;
+                portInfo[MidiFlowOut][i].Flow = (MidiFlow)MidiFlowOut;
+                portInfo[MidiFlowOut][i].IsEnabled = portInfo[MidiFlowOut][i].IsEnabled || fb->IsActive;
+                portInfo[MidiFlowOut][i].InterfaceId = umpDeviceInterfaceId;
             }
         }
     }
