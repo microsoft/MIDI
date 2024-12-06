@@ -34,8 +34,9 @@ int __cdecl main()
     std::cout << dye::aqua(" Typically, these are USB, but other KS drivers will be included") << std::endl;
     std::cout << dye::grey("-------------------------------------------------------------------") << std::endl;
     std::cout << dye::aqua(" If the MIDI service is running when you run this utility, some") << std::endl;
-    std::cout << dye::aqua(" devices may not report all pin properties. It is recommended") << std::endl;
-    std::cout << dye::aqua(" that you stop the midisrv service before running this tool.") << std::endl;
+    std::cout << dye::aqua(" devices may not report all pin properties because they are in-use.") << std::endl;
+    std::cout << dye::aqua(" by apps or by protocol negotiation. It is recommended that you") << std::endl;
+    std::cout << dye::aqua(" stop the midisrv service before running this tool.") << std::endl;
     std::cout << dye::grey("===================================================================") << std::endl;
 
     std::wcout 
@@ -58,6 +59,7 @@ int __cdecl main()
         for (auto const& device : allDevices)
         {
             std::cout << std::endl;
+            std::cout << dye::grey("-------------------------------------------------------------------") << std::endl;
 
             wil::unique_handle hFilter;
             std::string deviceName;
@@ -80,15 +82,15 @@ int __cdecl main()
                 additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
             deviceName = winrt::to_string(parentDeviceInfo.Name());
 
-            WriteBrightLabel("Filter Name");
-            std::cout << dye::light_yellow(winrt::to_string(device.Name())) << std::endl;
-            WriteBrightLabel("Filter Id");
-            std::cout << dye::aqua(winrt::to_string(device.Id())) << std::endl;
+            WriteLabel("Filter Name");
+            std::cout << dye::light_aqua(winrt::to_string(device.Name())) << std::endl;
+            WriteLabel("Filter Id");
+            std::cout << dye::yellow(winrt::to_string(device.Id())) << std::endl;
 
-            WriteBrightLabel("Parent Name");
+            WriteLabel("Parent Name");
             std::cout << dye::aqua(deviceName) << std::endl;
-            WriteBrightLabel("Parent Id");
-            std::cout << dye::aqua(winrt::to_string(parentDeviceInfo.Id())) << std::endl;
+            WriteLabel("Parent Id");
+            std::cout << dye::green(winrt::to_string(parentDeviceInfo.Id())) << std::endl;
 
             // instantiate the interface
             if (FAILED(FilterInstantiate(deviceId.c_str(), &hFilter)))
@@ -127,7 +129,7 @@ int __cdecl main()
 
                 if (FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION))))
                 {
-                    std::cout << "Failed to get pin communication property." << std::endl;
+                    std::cout << dye::red("Failed to get pin communication property.") << std::endl;
                     continue;
                 }
 
@@ -166,7 +168,7 @@ int __cdecl main()
                     isMidiPin = true;
 
                     WriteLabel(" - Communication Format");
-                    std::cout << "UMP cyclic format" << std::endl;
+                    std::cout << dye::light_purple("MIDI UMP cyclic format") << std::endl;
 
                     auto hr = PinPropertySimple(hPin.get(),
                         i,
@@ -208,7 +210,7 @@ int __cdecl main()
                     ULONG pinNameDataSize{ 0 };
 
                     WriteLabel(" - Communication Format");
-                    std::cout << "MIDI 1.0 byte format" << std::endl;
+                    std::cout << dye::light_purple("MIDI 1.0 byte format") << std::endl;
 
                     auto pinNameHR = PinPropertyAllocate(
                             hFilter.get(),
@@ -226,7 +228,9 @@ int __cdecl main()
                         if (pinNameDataSize > 0)
                         {
                             std::wstring pinName{ pinNameData.get() };
-                            std::wcout << pinName << std::endl;
+                            std::cout << hue::light_aqua;
+                            std::wcout << pinName;
+                            std::cout << hue::reset << std::endl;
                         }
                         else
                         {
@@ -257,12 +261,12 @@ int __cdecl main()
                     {
                         if (dataFlow == KSPIN_DATAFLOW_IN)
                         {
-                            std::cout << "KSPIN_DATAFLOW_IN " << dye::light_purple("(MIDI Out from PC)") << std::endl;
+                            std::cout << "KSPIN_DATAFLOW_IN " << dye::purple("(MIDI Out from PC to device)") << std::endl;
 
                         }
                         else if (dataFlow == KSPIN_DATAFLOW_OUT)
                         {
-                            std::cout << "KSPIN_DATAFLOW_OUT " << dye::light_green("(MIDI In to PC)") << std::endl;
+                            std::cout << "KSPIN_DATAFLOW_OUT " << dye::purple("(MIDI In to PC from device)") << std::endl;
 
                         }
                         else

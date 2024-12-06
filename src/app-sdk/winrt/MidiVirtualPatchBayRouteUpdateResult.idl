@@ -9,6 +9,7 @@
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
+    [experimental]
     struct MidiVirtualPatchBayRouteUpdateResult
     {
         Boolean Success;

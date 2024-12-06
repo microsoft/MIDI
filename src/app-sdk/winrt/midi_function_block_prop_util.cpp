@@ -40,5 +40,4 @@ namespace WindowsMidiServicesInternal
         return false;
     }
 
-
 }

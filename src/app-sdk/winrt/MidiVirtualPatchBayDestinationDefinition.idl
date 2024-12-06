@@ -10,6 +10,7 @@ import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
+    [experimental]
     [default_interface]
     runtimeclass MidiVirtualPatchBayDestinationDefinition
     {

@@ -205,6 +205,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Send MIDI 1.0 note on and off messages to the endpoint.
+        /// </summary>
+        internal static string CommandPlayMidi1NotesDescription {
+            get {
+                return ResourceManager.GetString("CommandPlayMidi1NotesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Send a single message to a UMP endpoint as a list of up to four 32 bit MIDI words.
         /// </summary>
         internal static string CommandSendMessageDescription {
@@ -1020,6 +1029,60 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ParameterMonitorEndpointVerbose {
             get {
                 return ResourceManager.GetString("ParameterMonitorEndpointVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Index (0-15 decimal) of the channel to send the messages to.
+        /// </summary>
+        internal static string ParameterPlayNotesChannelIndex {
+            get {
+                return ResourceManager.GetString("ParameterPlayNotesChannelIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set to true to play the notes until you press the escape key.
+        /// </summary>
+        internal static string ParameterPlayNotesForever {
+            get {
+                return ResourceManager.GetString("ParameterPlayNotesForever", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Index (0-15 decimal) for the group to send the messages to.
+        /// </summary>
+        internal static string ParameterPlayNotesGroupIndex {
+            get {
+                return ResourceManager.GetString("ParameterPlayNotesGroupIndex", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of space-separated MIDI 1.0 note indexes (0-127 decimal).
+        /// </summary>
+        internal static string ParameterPlayNotesIndexes {
+            get {
+                return ResourceManager.GetString("ParameterPlayNotesIndexes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length / duration of the note in whole decimal milliseconds..
+        /// </summary>
+        internal static string ParameterPlayNotesLengthMilliseconds {
+            get {
+                return ResourceManager.GetString("ParameterPlayNotesLengthMilliseconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note velocity (0-127 decimal). A velocity of 0 becomes a note-off message..
+        /// </summary>
+        internal static string ParameterPlayNotesVelocity {
+            get {
+                return ResourceManager.GetString("ParameterPlayNotesVelocity", resourceCulture);
             }
         }
         

@@ -42,7 +42,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         }
 
         static bool IsTransportAvailable();
-        static winrt::guid TransportId();
+        
+        static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{c95dcd1f-cde3-4c2d-913c-528cb8a4cbe6}"); }
+
+
         static midi2::Endpoints::Network::MidiNetworkHostEndpointCreationResult CreateNetworkHost(midi2::Endpoints::Network::MidiNetworkHostEndpointCreationConfig const& creationConfig);
         static midi2::Endpoints::Network::MidiNetworkHostEndpointRemovalResult RemoveNetworkHost(midi2::Endpoints::Network::MidiNetworkHostEndpointRemovalConfig const& removalConfig);
         static midi2::Endpoints::Network::MidiNetworkClientEndpointCreationResult CreateNetworkClient(midi2::Endpoints::Network::MidiNetworkClientEndpointCreationConfig const& creationConfig);
