@@ -154,7 +154,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public static string FormatBlockNumber(int number)
         {
-            return "[orange3]" + number + "[/]";
+            return "[orange3]" + number.ToString("##") + "[/]";
         }
 
         public static string FormatBlockName(string name)

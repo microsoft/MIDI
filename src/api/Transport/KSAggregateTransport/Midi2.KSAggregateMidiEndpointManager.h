@@ -25,6 +25,8 @@ struct KsAggregateEndpointMidiPinDefinition
 
 struct KsAggregateEndpointDefinition
 {
+    std::wstring ManufacturerName; 
+
     std::wstring EndpointName;
     std::wstring EndpointDeviceInstanceId;
 

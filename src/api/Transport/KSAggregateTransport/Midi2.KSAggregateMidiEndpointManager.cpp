@@ -59,7 +59,14 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     winrt::hstring parentDeviceSelector(
         L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\"");
 
-    m_watcher = DeviceInformation::CreateWatcher(parentDeviceSelector, nullptr, DeviceInformationKind::Device);
+    auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
+
+    additionalProps.Append(L"System.Devices.DeviceManufacturer");
+    additionalProps.Append(L"System.Devices.Manufacturer");
+
+
+
+    m_watcher = DeviceInformation::CreateWatcher(parentDeviceSelector, additionalProps, DeviceInformationKind::Device);
 
     auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded);
     auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved);
@@ -104,15 +111,25 @@ CreateGroupTerminalBlockName(
     }
 
     // the double and triple space entries need to be last
-    std::wstring wordsToRemove[] = { parentDeviceName, filterName, L"  ", L"   "};
+    // there are other ways to do this with pattern matching, 
+    // but just banging this through for this version
+    std::wstring wordsToRemove[] = 
+    { 
+        parentDeviceName, filterName, 
+        L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
+        L"  ", L"   ", L"    "
+    };
 
     for (auto const& word : wordsToRemove)
     {
-        auto itr = cleanedPinName.find(word);
-
-        if (itr != std::wstring::npos)
+        if (cleanedPinName.length() >= word.length())
         {
-            cleanedPinName.erase(itr, word.length());
+            auto idx = cleanedPinName.find(word);
+
+            if (idx != std::wstring::npos)
+            {
+                cleanedPinName = cleanedPinName.erase(idx, word.length());
+            }
         }
     }
 
@@ -156,11 +173,11 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     commonProperties.CustomEndpointName = nullptr;
     commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = nullptr;
-    commonProperties.ManufacturerName = nullptr;
+    commonProperties.ManufacturerName = masterEndpointDefinition.ManufacturerName.empty() ? nullptr : masterEndpointDefinition.ManufacturerName.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
     commonProperties.NativeDataFormat = MidiDataFormats_ByteStream;
     
-    UINT32 capabilities {0};
+    UINT32 capabilities { 0 };
     capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
     capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
     capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
@@ -423,7 +440,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
     std::wstring transportCode(TRANSPORT_CODE);
 
-    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    //auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     auto properties = parentDevice.Properties();
 
     KsAggregateEndpointDefinition endpointDefinition{ };
@@ -565,6 +582,16 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
         if (isCompatibleMidi1Device)
         {
+            // only some vendor drivers provide an actual manufacturer
+            // and all the in-box drivers just provide the Generic USB Audio string
+            // TODO: Is "Generic USB Audio" a string that is localized? If so, this
+            // code will not have the intended effect outside of en-US
+            auto manufacturer = GetStringProperty(parentDevice, L"System.Devices.DeviceManufacturer", L"");
+            if (!manufacturer.empty() && manufacturer != L"(Generic USB Audio)")
+            {
+                endpointDefinition.ManufacturerName = manufacturer;
+            }
+
             // default hash is the device id. We don't have an iSerial here.
             std::hash<std::wstring> hasher;
             std::wstring hash;
