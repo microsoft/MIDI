@@ -11,26 +11,28 @@
 using namespace winrt::Windows::Devices::Enumeration;
 
 
-struct KsAggregateEndpointPinDefinition
+struct KsAggregateEndpointMidiPinDefinition
 {
+    std::wstring FilterDeviceId;
+    std::wstring FilterName;
+
     ULONG PinNumber;
-    std::wstring Name;
-    MidiFlow DataFlowFromClientPerspective;
+    std::wstring PinName;
+
+    uint8_t GroupIndex{ 0 };
+
 };
 
 struct KsAggregateEndpointDefinition
 {
     std::wstring EndpointName;
-    std::wstring FilterName;
-    std::wstring ParentDeviceName;
-
-    std::wstring FilterDeviceId;
-    std::wstring ParentDeviceInstanceId;
     std::wstring EndpointDeviceInstanceId;
 
-    MidiTransport TransportCapability;
+    std::wstring ParentDeviceName;
+    std::wstring ParentDeviceInstanceId;
 
-    std::vector<KsAggregateEndpointPinDefinition> Pins;
+    std::vector<KsAggregateEndpointMidiPinDefinition> MidiOutPins{ };
+    std::vector<KsAggregateEndpointMidiPinDefinition> MidiInPins{ };
 };
 
 
@@ -46,8 +48,6 @@ public:
 
 private:
     STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& masterEndpointDefinition);
-    STDMETHOD(CreateMidiBytestreamEndpoints)(_In_ KsAggregateEndpointDefinition& masterEndpointDefinition);
-
     
     HRESULT OnDeviceAdded(_In_ DeviceWatcher, _In_ DeviceInformation);
     HRESULT OnDeviceRemoved(_In_ DeviceWatcher, _In_ DeviceInformationUpdate);
@@ -58,7 +58,7 @@ private:
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_midiProtocolManager;
 
-    std::vector<KsAggregateEndpointDefinition> m_availableEndpointDefinitions;
+    std::map<std::wstring, KsAggregateEndpointDefinition> m_availableEndpointDefinitions;
     
     DeviceWatcher m_watcher{0};
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_DeviceAdded;
@@ -67,6 +67,8 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Stopped_revoker m_DeviceStopped;
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
     wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
+
+
 
 
 };

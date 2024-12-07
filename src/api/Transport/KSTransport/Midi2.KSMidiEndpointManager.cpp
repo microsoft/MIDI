@@ -751,7 +751,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                         __uuidof(Midi2KSTransport),
                         newDeviceInterfaceId.get(),
                         negotiationParams,
-                        this
+                        nullptr
                     ));
                 }
             }
@@ -788,41 +788,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         TraceLoggingWideString(L"KS Device processing complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(device.Id().c_str(), "device id")
     );
-
-    return S_OK;
-}
-
-
-_Use_decl_annotations_
-HRESULT CMidi2KSMidiEndpointManager::ProtocolNegotiationCompleteCallback(
-    GUID transportId,
-    LPCWSTR endpointDeviceInterfaceId,
-    PENDPOINTPROTOCOLNEGOTIATIONRESULTS results)
-{
-    // this is not a centralized callback in this case, but is on the transport itself
-    // so no need to use the parameter here
-    UNREFERENCED_PARAMETER(transportId);
-
-    RETURN_HR_IF_NULL(E_INVALIDARG, results);
-    RETURN_HR_IF_NULL(E_INVALIDARG, endpointDeviceInterfaceId);
-
-    // iterate through returned function blocks.
-
-    if (results->DiscoveredFunctionBlocks != nullptr && results->CountFunctionBlocksReceived > 0)
-    {
-        for (uint32_t fbIndex = 0; fbIndex < results->CountFunctionBlocksReceived; fbIndex++)
-        {
-            auto pFunctionBlock = results->DiscoveredFunctionBlocks + fbIndex;
-
-            // TODO: use this function block information to create the compatible ports
-            UNREFERENCED_PARAMETER(pFunctionBlock);
-        }
-    }
-    else
-    {
-        // TODO: no function blocks. Fall back to group terminal blocks 
-        // when creating MIDI 1.0 ports
-    }
 
     return S_OK;
 }

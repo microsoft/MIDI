@@ -38,18 +38,12 @@ public:
 class CMidi2KSMidiEndpointManager : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiEndpointManager,
-        IMidiProtocolNegotiationCompleteCallback>
+        IMidiEndpointManager>
 {
 public:
 
     STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
     STDMETHOD(Shutdown)();
-
-    STDMETHOD(ProtocolNegotiationCompleteCallback(
-        _In_ GUID transportId,
-        _In_ LPCWSTR endpointDeviceInterfaceId,
-        _In_ PENDPOINTPROTOCOLNEGOTIATIONRESULTS results));
 
 private:
 
