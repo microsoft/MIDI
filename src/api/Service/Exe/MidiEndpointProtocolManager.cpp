@@ -158,8 +158,7 @@ HRESULT
 CMidiEndpointProtocolManager::DiscoverAndNegotiate(
     GUID transportId,
     LPCWSTR endpointDeviceInterfaceId,
-    ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
-    IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
+    ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams
 ) noexcept
 {
     TraceLoggingWrite(
@@ -192,6 +191,8 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
 
         // todo: re-request negotiation
 
+
+
     }
     else if (worker == nullptr)
     {
@@ -220,8 +221,7 @@ CMidiEndpointProtocolManager::DiscoverAndNegotiate(
     newEntry.Worker = worker;
 
     newEntry.Thread = std::make_shared<std::thread>(&CMidiEndpointProtocolWorker::Start, newEntry.Worker,
-        negotiationParams,
-        negotiationCompleteCallback);
+        negotiationParams);
 
     m_endpointWorkers[cleanEndpointDeviceInterfaceId] = newEntry;
     m_endpointWorkers[cleanEndpointDeviceInterfaceId].Thread->detach();

@@ -122,13 +122,6 @@ typedef interface IMidiDataTransform IMidiDataTransform;
 #endif 	/* __IMidiDataTransform_FWD_DEFINED__ */
 
 
-#ifndef __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__
-#define __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__
-typedef interface IMidiProtocolNegotiationCompleteCallback IMidiProtocolNegotiationCompleteCallback;
-
-#endif 	/* __IMidiProtocolNegotiationCompleteCallback_FWD_DEFINED__ */
-
-
 #ifndef __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__
 #define __IMidiEndpointProtocolManagerInterface_FWD_DEFINED__
 typedef interface IMidiEndpointProtocolManagerInterface IMidiEndpointProtocolManagerInterface;
@@ -917,7 +910,7 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0005_0001
         MidiEndpointDeviceType_DiagnosticPing	= 510
     } 	MidiEndpointDeviceType;
 
-typedef /* [public][public][public][public][public][public][public] */ 
+typedef /* [public][public][public][public] */ 
 enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0005_0002
     {
         MidiEndpointCapabilities_None	= 0,
@@ -1717,141 +1710,19 @@ EXTERN_C const IID IID_IMidiDataTransform;
 /* interface __MIDL_itf_WindowsMidiServices_0000_0010 */
 /* [local] */ 
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0001
-    {
-    BYTE Number;
-    BYTE FirstGroup;
-    BYTE NumberOfGroupsSpanned;
-    BOOL IsActive;
-    BOOL IsMIDIMessageDestination;
-    BOOL IsMIDIMessageSource;
-    LPCWSTR Name;
-    } 	DISCOVEREDFUNCTIONBLOCK;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0001 *PDISCOVEREDFUNCTIONBLOCK;
-
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0002
-    {
-    BOOL AllEndpointInformationReceived;
-    MidiEndpointCapabilities EndpointCapabilities;
-    LPCWSTR EndpointSuppliedName;
-    LPCWSTR EndpointSuppliedProductInstanceId;
-    BYTE CountFunctionBlocksDeclared;
-    BYTE CountFunctionBlocksReceived;
-    BOOL FunctionBlocksAreStatic;
-    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;
-    } 	ENDPOINTPROTOCOLNEGOTIATIONRESULTS;
-
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0002 *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
-
-typedef /* [public][public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0003
+typedef /* [public][public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0001
     {
     BOOL PreferToSendJitterReductionTimestampsToEndpoint;
     BOOL PreferToReceiveJitterReductionTimestampsFromEndpoint;
     BYTE PreferredMidiProtocol;
-    WORD TimeoutMilliseconds;
     } 	ENDPOINTPROTOCOLNEGOTIATIONPARAMS;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0003 *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0010_0001 *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
 
 
 
 extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0010_v0_0_c_ifspec;
 extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0010_v0_0_s_ifspec;
-
-#ifndef __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
-#define __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__
-
-/* interface IMidiProtocolNegotiationCompleteCallback */
-/* [uuid][local][object] */ 
-
-
-EXTERN_C const IID IID_IMidiProtocolNegotiationCompleteCallback;
-
-#if defined(__cplusplus) && !defined(CINTERFACE)
-    
-    MIDL_INTERFACE("f948dc64-e03a-4e24-bc6e-437ad729cd50")
-    IMidiProtocolNegotiationCompleteCallback : public IUnknown
-    {
-    public:
-        virtual HRESULT STDMETHODCALLTYPE ProtocolNegotiationCompleteCallback( 
-            /* [annotation][in] */ 
-            _In_  GUID transportId,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR endpointDeviceInterfaceId,
-            /* [annotation][in] */ 
-            _In_  PENDPOINTPROTOCOLNEGOTIATIONRESULTS results) = 0;
-        
-    };
-    
-    
-#else 	/* C style interface */
-
-    typedef struct IMidiProtocolNegotiationCompleteCallbackVtbl
-    {
-        BEGIN_INTERFACE
-        
-        DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiProtocolNegotiationCompleteCallback * This,
-            /* [in] */ REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            _COM_Outptr_  void **ppvObject);
-        
-        DECLSPEC_XFGVIRT(IUnknown, AddRef)
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiProtocolNegotiationCompleteCallback * This);
-        
-        DECLSPEC_XFGVIRT(IUnknown, Release)
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiProtocolNegotiationCompleteCallback * This);
-        
-        DECLSPEC_XFGVIRT(IMidiProtocolNegotiationCompleteCallback, ProtocolNegotiationCompleteCallback)
-        HRESULT ( STDMETHODCALLTYPE *ProtocolNegotiationCompleteCallback )( 
-            IMidiProtocolNegotiationCompleteCallback * This,
-            /* [annotation][in] */ 
-            _In_  GUID transportId,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR endpointDeviceInterfaceId,
-            /* [annotation][in] */ 
-            _In_  PENDPOINTPROTOCOLNEGOTIATIONRESULTS results);
-        
-        END_INTERFACE
-    } IMidiProtocolNegotiationCompleteCallbackVtbl;
-
-    interface IMidiProtocolNegotiationCompleteCallback
-    {
-        CONST_VTBL struct IMidiProtocolNegotiationCompleteCallbackVtbl *lpVtbl;
-    };
-
-    
-
-#ifdef COBJMACROS
-
-
-#define IMidiProtocolNegotiationCompleteCallback_QueryInterface(This,riid,ppvObject)	\
-    ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
-
-#define IMidiProtocolNegotiationCompleteCallback_AddRef(This)	\
-    ( (This)->lpVtbl -> AddRef(This) ) 
-
-#define IMidiProtocolNegotiationCompleteCallback_Release(This)	\
-    ( (This)->lpVtbl -> Release(This) ) 
-
-
-#define IMidiProtocolNegotiationCompleteCallback_ProtocolNegotiationCompleteCallback(This,transportId,endpointDeviceInterfaceId,results)	\
-    ( (This)->lpVtbl -> ProtocolNegotiationCompleteCallback(This,transportId,endpointDeviceInterfaceId,results) ) 
-
-#endif /* COBJMACROS */
-
-
-#endif 	/* C style interface */
-
-
-
-
-#endif 	/* __IMidiProtocolNegotiationCompleteCallback_INTERFACE_DEFINED__ */
-
 
 #ifndef __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
 #define __IMidiEndpointProtocolManagerInterface_INTERFACE_DEFINED__
@@ -1874,9 +1745,7 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
             /* [annotation][string][in] */ 
             _In_  LPCWSTR endpointDeviceInterfaceId,
             /* [annotation][in] */ 
-            _In_  ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
-            /* [annotation][in] */ 
-            _In_  IMidiProtocolNegotiationCompleteCallback *negotiationCompleteCallback) = 0;
+            _In_  ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams) = 0;
         
         virtual BOOL STDMETHODCALLTYPE IsEnabled( void) = 0;
         
@@ -1912,9 +1781,7 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
             /* [annotation][string][in] */ 
             _In_  LPCWSTR endpointDeviceInterfaceId,
             /* [annotation][in] */ 
-            _In_  ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
-            /* [annotation][in] */ 
-            _In_  IMidiProtocolNegotiationCompleteCallback *negotiationCompleteCallback);
+            _In_  ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams);
         
         DECLSPEC_XFGVIRT(IMidiEndpointProtocolManagerInterface, IsEnabled)
         BOOL ( STDMETHODCALLTYPE *IsEnabled )( 
@@ -1943,8 +1810,8 @@ EXTERN_C const IID IID_IMidiEndpointProtocolManagerInterface;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiEndpointProtocolManagerInterface_DiscoverAndNegotiate(This,transportId,endpointDeviceInterfaceId,negotiationParams,negotiationCompleteCallback)	\
-    ( (This)->lpVtbl -> DiscoverAndNegotiate(This,transportId,endpointDeviceInterfaceId,negotiationParams,negotiationCompleteCallback) ) 
+#define IMidiEndpointProtocolManagerInterface_DiscoverAndNegotiate(This,transportId,endpointDeviceInterfaceId,negotiationParams)	\
+    ( (This)->lpVtbl -> DiscoverAndNegotiate(This,transportId,endpointDeviceInterfaceId,negotiationParams) ) 
 
 #define IMidiEndpointProtocolManagerInterface_IsEnabled(This)	\
     ( (This)->lpVtbl -> IsEnabled(This) ) 
@@ -2059,10 +1926,10 @@ EXTERN_C const IID IID_IMidiEndpointManager;
 #endif 	/* __IMidiEndpointManager_INTERFACE_DEFINED__ */
 
 
-/* interface __MIDL_itf_WindowsMidiServices_0000_0013 */
+/* interface __MIDL_itf_WindowsMidiServices_0000_0012 */
 /* [local] */ 
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0001
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0012_0001
     {
     GUID TransportId;
     LPWSTR TransportCode;
@@ -2074,9 +1941,9 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_00
     MetadataFlags Flags;
     } 	TRANSPORTMETADATA;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0001 *PTRANSPORTMETADATA;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0012_0001 *PTRANSPORTMETADATA;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0002
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0012_0002
     {
     GUID TransformId;
     LPWSTR Name;
@@ -2087,12 +1954,12 @@ typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_00
     MetadataFlags Flags;
     } 	TRANSFORMMETADATA;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0013_0002 *PTRANSFORMMETADATA;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0012_0002 *PTRANSFORMMETADATA;
 
 
 
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0013_v0_0_c_ifspec;
-extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0013_v0_0_s_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0012_v0_0_c_ifspec;
+extern RPC_IF_HANDLE __MIDL_itf_WindowsMidiServices_0000_0012_v0_0_s_ifspec;
 
 #ifndef __IMidiServiceTransportPluginMetadataProvider_INTERFACE_DEFINED__
 #define __IMidiServiceTransportPluginMetadataProvider_INTERFACE_DEFINED__

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.ConsoleApp
 {
-    internal class EndpointPlayMidi1NotesCommand : Command<EndpointPlayMidi1NotesCommand.Settings>
+    internal class EndpointPlayNotesCommand : Command<EndpointPlayNotesCommand.Settings>
     {
         public sealed class Settings : EndpointCommandSettings
         {
@@ -41,13 +41,17 @@ namespace Microsoft.Midi.ConsoleApp
             [LocalizedDescription("ParameterPlayNotesVelocity")]
             [CommandOption("-v|--velocity")]
             [DefaultValue(127)]
-            public int Velocity { get; set; }
+            public UInt32 Velocity { get; set; }
 
             [LocalizedDescription("ParameterPlayNotesForever")]
             [CommandOption("-f|--forever|--repeat-forever")]
             [DefaultValue(false)]
             public bool Forever { get; set; }
 
+            [LocalizedDescription("ParameterPlayNotesMidi2")]
+            [CommandOption("-m|--midi2")]
+            [DefaultValue(false)]
+            public bool Midi2 { get; set; }
         }
 
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
@@ -63,9 +67,12 @@ namespace Microsoft.Midi.ConsoleApp
                 return ValidationResult.Error("Channel index must be between 0 and 15 inclusive.");
             }
 
-            if (settings.Velocity > 127 || settings.Velocity < 0)
+            if (!settings.Midi2)
             {
-                return ValidationResult.Error("Velocity must be between 0 and 127 inclusive.");
+                if (settings.Velocity > 127 || settings.Velocity < 0)
+                {
+                    return ValidationResult.Error("Velocity must be between 0 and 127 inclusive for MIDI 1.0 messages.");
+                }
             }
 
             // todo: validate notes
@@ -180,15 +187,32 @@ namespace Microsoft.Midi.ConsoleApp
                             break;
                         }
 
-                        var noteOnMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
-                                                            MidiClock.TimestampConstantSendImmediately,
-                                                            group,
-                                                            Midi1ChannelVoiceMessageStatus.NoteOn,
-                                                            channel,
-                                                            (byte)settings.NoteIndexes![noteArrayIndex],
-                                                            velocity);
+                        MidiSendMessageResults noteOnSendResult;
 
-                        var noteOnSendResult = connection.SendSingleMessagePacket(noteOnMessage);
+                        if (settings.Midi2)
+                        {
+                            var noteOnMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
+                                                                MidiClock.TimestampConstantSendImmediately,
+                                                                group,
+                                                                Midi2ChannelVoiceMessageStatus.NoteOn,
+                                                                channel,
+                                                                (ushort)settings.NoteIndexes![noteArrayIndex],
+                                                                velocity);
+
+                            noteOnSendResult = connection.SendSingleMessagePacket(noteOnMessage);
+                        }
+                        else
+                        {
+                            var noteOnMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
+                                                                MidiClock.TimestampConstantSendImmediately,
+                                                                group,
+                                                                Midi1ChannelVoiceMessageStatus.NoteOn,
+                                                                channel,
+                                                                (byte)settings.NoteIndexes![noteArrayIndex],
+                                                                velocity);
+
+                            noteOnSendResult = connection.SendSingleMessagePacket(noteOnMessage);
+                        }
 
                         // don't check still-sending here, or we can end up with a stuck note.
                         if (MidiEndpointConnection.SendMessageSucceeded(noteOnSendResult))
@@ -203,7 +227,23 @@ namespace Microsoft.Midi.ConsoleApp
                                 m_messageDispatcherThreadWakeup.WaitOne(settings.Length);
                             }
 
-                            var noteOffMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
+                            MidiSendMessageResults noteOffSendResult;
+
+                            if (settings.Midi2)
+                            {
+                                var noteOffMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
+                                                                MidiClock.TimestampConstantSendImmediately,
+                                                                group,
+                                                                Midi2ChannelVoiceMessageStatus.NoteOff,
+                                                                channel,
+                                                                (ushort)settings.NoteIndexes![noteArrayIndex],
+                                                                velocity);
+
+                                noteOffSendResult = connection.SendSingleMessagePacket(noteOffMessage);
+                            }
+                            else
+                            {
+                                var noteOffMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
                                                                 group,
                                                                 Midi1ChannelVoiceMessageStatus.NoteOff,
@@ -211,7 +251,8 @@ namespace Microsoft.Midi.ConsoleApp
                                                                 (byte)settings.NoteIndexes![noteArrayIndex],
                                                                 velocity);
 
-                            var noteOffSendResult = connection.SendSingleMessagePacket(noteOffMessage);
+                                noteOffSendResult = connection.SendSingleMessagePacket(noteOffMessage);
+                            }
 
                             if (MidiEndpointConnection.SendMessageSucceeded(noteOffSendResult))
                             {

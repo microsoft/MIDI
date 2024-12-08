@@ -32,8 +32,7 @@ public:
     STDMETHOD(DiscoverAndNegotiate)(
         _In_ GUID transportId,
         _In_ LPCWSTR endpointDeviceInterfaceId,
-        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
-        _In_ IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
+        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams
         );
 
     STDMETHOD_(BOOL,IsEnabled)() { return m_discoveryAndProtocolNegotiationEnabled; }

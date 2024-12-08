@@ -274,7 +274,7 @@ namespace MidiSample.AppToAppMidi
             block1.Name = "Pads Output";
             block1.IsActive = true;
             block1.UIHint = MidiFunctionBlockUIHint.Sender;
-            block1.FirstGroupIndex = 0;
+            block1.FirstGroup = new MidiGroup(0);
             block1.GroupCount = 1;
             block1.Direction = MidiFunctionBlockDirection.Bidirectional;
             block1.RepresentsMidi10Connection = MidiFunctionBlockRepresentsMidi10Connection.Not10;
@@ -288,7 +288,7 @@ namespace MidiSample.AppToAppMidi
             block2.Name = "Second Function Block";
             block2.IsActive = true;
             block2.UIHint = MidiFunctionBlockUIHint.Sender;
-            block2.FirstGroupIndex = 1;
+            block2.FirstGroup = new MidiGroup(1);
             block2.GroupCount = 4;
             block2.Direction = MidiFunctionBlockDirection.Bidirectional;
             block2.RepresentsMidi10Connection = MidiFunctionBlockRepresentsMidi10Connection.Not10;
@@ -302,7 +302,7 @@ namespace MidiSample.AppToAppMidi
             block3.Name = "Third Function Block";
             block3.IsActive = false;                // function blocks can be marked as inactive.
             block3.UIHint = MidiFunctionBlockUIHint.Receiver;
-            block3.FirstGroupIndex = 5;
+            block3.FirstGroup = new MidiGroup(5);
             block3.GroupCount = 1;
             block3.Direction = MidiFunctionBlockDirection.BlockInput;
             block3.RepresentsMidi10Connection = MidiFunctionBlockRepresentsMidi10Connection.Not10;

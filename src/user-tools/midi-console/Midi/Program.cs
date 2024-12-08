@@ -126,9 +126,9 @@ app.Configure(config =>
             .WithDescription(Strings.CommandSendSysExFileDescription)
             ;
 
-        endpoint.AddCommand<EndpointPlayMidi1NotesCommand>("play-midi1-notes")
-            .WithAlias("play-midi1")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "play-midi1-notes", "127 32 56 98", "--length", "500", "--velocity", "50", "--forever")
+        endpoint.AddCommand<EndpointPlayNotesCommand>("play-notes")
+            .WithAlias("play")
+            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "play-notes", "127 32 56 98", "--length", "500", "--velocity", "50", "--forever", "--midi2")
             .WithDescription(Strings.CommandPlayMidi1NotesDescription)
             ;
 

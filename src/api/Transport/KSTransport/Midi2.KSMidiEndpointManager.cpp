@@ -745,13 +745,11 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                     negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
                     negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
                     negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
-                    negotiationParams.TimeoutMilliseconds = 5000;
 
                     LOG_IF_FAILED(m_midiProtocolManager->DiscoverAndNegotiate(
                         __uuidof(Midi2KSTransport),
                         newDeviceInterfaceId.get(),
-                        negotiationParams,
-                        nullptr
+                        negotiationParams
                     ));
                 }
             }
