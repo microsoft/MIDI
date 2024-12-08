@@ -2190,7 +2190,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Byte Stream (MIDI 1.0).
+        ///   Looks up a localized string similar to Byte Data Format (MIDI 1.0).
         /// </summary>
         internal static string PropertyValueNativeDataFormatByteStream {
             get {

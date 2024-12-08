@@ -114,8 +114,11 @@ int __cdecl main()
                     bool isMidi1Filter{ false };
 
                     WriteLabel(" - KS Filter Name");
-
                     std::cout << dye::light_aqua(winrt::to_string(filterDevice.Name())) << std::endl;
+
+                    WriteLabel(" - Filter Id");
+                    std::cout << dye::yellow(winrt::to_string(filterDevice.Id())) << std::endl;
+
 
                     // instantiate the filter and then enumerate the pins
 
@@ -205,12 +208,12 @@ int __cdecl main()
                             {
                                 if (dataFlow == KSPIN_DATAFLOW_IN)
                                 {
-                                    std::cout << dye::purple("KSPIN_DATAFLOW_IN") << " (MIDI 1.0 Out from PC to device)" << std::endl;
+                                    std::cout << dye::purple("KSPIN_DATAFLOW_IN") << " Message Destination (MIDI 1.0 Out from PC to device)" << std::endl;
 
                                 }
                                 else if (dataFlow == KSPIN_DATAFLOW_OUT)
                                 {
-                                    std::cout << dye::green("KSPIN_DATAFLOW_OUT") << " (MIDI 1.0 In to PC from device)" << std::endl;
+                                    std::cout << dye::green("KSPIN_DATAFLOW_OUT") << " Message Source (MIDI 1.0 In to PC from device)" << std::endl;
 
                                 }
                                 else

@@ -19,6 +19,8 @@ struct KsAggregateEndpointMidiPinDefinition
     ULONG PinNumber;
     std::wstring PinName;
 
+    MidiFlow PinDataFlow;
+
     uint8_t GroupIndex{ 0 };
 
 };
@@ -33,8 +35,7 @@ struct KsAggregateEndpointDefinition
     std::wstring ParentDeviceName;
     std::wstring ParentDeviceInstanceId;
 
-    std::vector<KsAggregateEndpointMidiPinDefinition> MidiOutPins{ };
-    std::vector<KsAggregateEndpointMidiPinDefinition> MidiInPins{ };
+    std::vector<KsAggregateEndpointMidiPinDefinition> MidiPins{ };
 };
 
 

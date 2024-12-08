@@ -759,7 +759,7 @@ Timestamp</value>
     <value>Function blocks are also present, and will be more accurate.</value>
   </data>
   <data name="PropertyValueNativeDataFormatByteStream" xml:space="preserve">
-    <value>Byte Stream (MIDI 1.0)</value>
+    <value>Byte Data Format (MIDI 1.0)</value>
   </data>
   <data name="PropertyValueNativeDataFormatUmp" xml:space="preserve">
     <value>Universal MIDI Packet (MIDI 1.0 or MIDI 2.0 protocol)</value>

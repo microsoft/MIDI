@@ -953,7 +953,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     for (auto gtb : gtbs)
                     {
                         auto block = winrt::make_self<MidiGroupTerminalBlock>();
-                        block->InternalUpdateFromPropertyData(std::move(gtb));
+                        block->InternalUpdateFromPropertyData(gtb);
 
                         m_groupTerminalBlocks.Append(*block);
                     }

@@ -194,7 +194,7 @@ namespace Microsoft.Midi.ConsoleApp
                         if (MidiEndpointConnection.SendMessageSucceeded(noteOnSendResult))
                         {
                             Console.Write("[");
-                            AnsiConsole.Write(AnsiMarkupFormatter.FormatMidi1Note((byte)settings.NoteIndexes![noteArrayIndex]));
+                            AnsiConsole.Markup(AnsiMarkupFormatter.FormatMidi1Note((byte)settings.NoteIndexes![noteArrayIndex]));
 
                             // a note length of 0 is not allowed, so we go right to waiting
 

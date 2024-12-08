@@ -139,6 +139,12 @@ CreateGroupTerminalBlockName(
 }
 
 
+typedef struct {
+    BYTE GroupIndex;                        // index (0-15) of the group this pin maps to
+    UINT32 PinId;                           // KS Pin number
+    MidiFlow PinDataFlow;                   // an input pin is MidiFlowIn, and from the user's perspective, a MIDI Output
+    std::wstring FilterId;                 // full filter id for this pin
+} PinMapEntryStagingEntry;
 
 
 _Use_decl_annotations_
@@ -153,13 +159,13 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Creating aggregate UMP endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
         );
 
 
     // we require at least one valid pin
-    RETURN_HR_IF(E_INVALIDARG, masterEndpointDefinition.MidiInPins.size() < 1 && masterEndpointDefinition.MidiOutPins.size() < 1);
+    RETURN_HR_IF(E_INVALIDARG, masterEndpointDefinition.MidiPins.size() < 1);
 
     std::vector<DEVPROPERTY> interfaceDevProperties;
 
@@ -193,70 +199,56 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
     // create group terminal blocks and the pin map
 
+
+    //TraceLoggingWrite(
+    //    MidiKSAggregateTransportTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Building group terminal blocks and pin map", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    //);
+
     uint8_t currentGtbInputGroupIndex{ 0 };
     uint8_t currentGtbOutputGroupIndex{ 0 };
     uint8_t currentBlockNumber{ 0 };
 
-    KSMIDI_PIN_MAP pinMap{ };
-    std::vector<internal::GroupTerminalBlockInternal> blocks;
+    std::vector<internal::GroupTerminalBlockInternal> blocks{ };
+    std::vector<PinMapEntryStagingEntry> pinMapEntries{ };
 
-    for (auto const& pin : masterEndpointDefinition.MidiOutPins)
+    for (auto const& pin : masterEndpointDefinition.MidiPins)
     {
+        RETURN_HR_IF(E_INVALIDARG, pin.FilterDeviceId.empty());
+
         internal::GroupTerminalBlockInternal gtb;
 
         gtb.Number = ++currentBlockNumber;
         gtb.GroupCount = 1; // always a single group for aggregate devices
 
+        PinMapEntryStagingEntry pinMapEntry{ };
 
-        if (currentGtbInputGroupIndex >= KSMIDI_PIN_MAP_ENTRY_COUNT)
-            continue;
+        pinMapEntry.PinId = pin.PinNumber;
+        pinMapEntry.FilterId = pin.FilterDeviceId;
+        pinMapEntry.PinDataFlow = pin.PinDataFlow;
+        pinMapEntry.GroupIndex = currentGtbInputGroupIndex;
 
-        pinMap.OutputEntries[currentGtbInputGroupIndex].IsValid = true;
-        pinMap.OutputEntries[currentGtbInputGroupIndex].PinId = pin.PinNumber;
-        // TODO: Pin Map will need the filter ID as well
-
-        gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
-        gtb.FirstGroupIndex = currentGtbInputGroupIndex;
-
-        currentGtbInputGroupIndex++;
-
-        LOG_IF_FAILED(CreateGroupTerminalBlockName(masterEndpointDefinition.ParentDeviceName, pin.FilterName, pin.PinName, gtb.Name));
-
-        //if (pin.PinName.empty())
-        //{
-        //    gtb.Name = L"Out " + std::to_wstring(gtb.FirstGroupIndex + 1);
-        //}
-        //else
-        //{
-        //    gtb.Name = pin.PinName;
-        //}
-
-        // default values as defined in the MIDI 2.0 USB spec
-        gtb.Protocol = 0x01;                // midi 1.0
-        gtb.MaxInputBandwidth = 0x0001;     // 31.25 kbps
-        gtb.MaxOutputBandwidth = 0x0001;    // 31.25 kbps
-
-        blocks.push_back(gtb);
-    }
-
-    for (auto const& pin : masterEndpointDefinition.MidiInPins)
-    {
-        internal::GroupTerminalBlockInternal gtb;
-
-        gtb.Number = ++currentBlockNumber;
-        gtb.GroupCount = 1; // always a single group for aggregate devices
-
-        if (currentGtbOutputGroupIndex >= KSMIDI_PIN_MAP_ENTRY_COUNT)
-            continue;
-
-        pinMap.InputEntries[currentGtbOutputGroupIndex].IsValid = true;
-        pinMap.InputEntries[currentGtbOutputGroupIndex].PinId = pin.PinNumber;
-        // TODO: Pin Map will need the filter ID as well
-
-        gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
-        gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
-
-        currentGtbOutputGroupIndex++;
+        if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
+        {
+            gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
+            gtb.FirstGroupIndex = currentGtbInputGroupIndex;
+            currentGtbInputGroupIndex++;
+        }
+        else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)
+        {
+            gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
+            gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
+            currentGtbOutputGroupIndex++;
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
 
         LOG_IF_FAILED(CreateGroupTerminalBlockName(masterEndpointDefinition.ParentDeviceName, pin.FilterName, pin.PinName, gtb.Name));
 
@@ -266,7 +258,86 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         gtb.MaxOutputBandwidth = 0x0001;    // 31.25 kbps
 
         blocks.push_back(gtb);
+        pinMapEntries.push_back(pinMapEntry);
     }
+
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Building pin map property", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    );
+
+    // build the pin map property value
+    KSAGGMIDI_PIN_MAP_PROPERTY_VALUE pinMap{ };
+
+    size_t totalStringSizesIncludingNulls{ 0 };
+    for (auto const& entry : pinMapEntries)
+    {
+        totalStringSizesIncludingNulls += ((entry.FilterId.length() + 1) * sizeof(wchar_t));
+    }
+
+    size_t totalMemoryBytes{ 
+        SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_VALUE_HEADER + 
+        SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY_WITHOUT_STRING * pinMapEntries.size() +
+        totalStringSizesIncludingNulls };
+
+    auto pinMapData = std::make_shared<byte[]>(totalMemoryBytes);
+    RETURN_IF_NULL_ALLOC(pinMapData);
+    memset(pinMapData.get(), 0, totalMemoryBytes);
+
+    auto currentPos = pinMapData.get();
+
+    // header
+    auto pinMapHeader = (PKSAGGMIDI_PIN_MAP_PROPERTY_VALUE)currentPos;
+    pinMapHeader->TotalByteCount = (UINT32)totalMemoryBytes;
+    currentPos += SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_VALUE_HEADER;
+
+    for (auto const& entry : pinMapEntries)
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Processing Pin Map entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name"),
+            TraceLoggingUInt32(entry.PinId, "Pin Id"),
+            TraceLoggingWideString(entry.FilterId.c_str(), "Filter Id")
+        );
+
+        PKSAGGMIDI_PIN_MAP_PROPERTY_ENTRY propEntry = (PKSAGGMIDI_PIN_MAP_PROPERTY_ENTRY)currentPos;
+
+        propEntry->ByteCount = (UINT)(SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY_WITHOUT_STRING + ((entry.FilterId.length()+1) * sizeof(wchar_t)));
+        propEntry->GroupIndex = entry.GroupIndex;
+        propEntry->PinDataFlow = entry.PinDataFlow;
+        propEntry->PinId = entry.PinId;
+
+        if (!entry.FilterId.empty())
+        {
+            wcscpy_s((wchar_t*)propEntry->FilterId, entry.FilterId.length() + 1, entry.FilterId.c_str());
+        }
+
+        currentPos += propEntry->ByteCount;
+    }
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"All pin map entries copied to property memory", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    );
+
+    interfaceDevProperties.push_back({ { DEVPKEY_KsAggMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_BINARY, (UINT32)totalMemoryBytes, pinMapData.get() });
 
 
     std::vector<std::byte> groupTerminalBlockData;
@@ -282,9 +353,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     }
 
 
-    interfaceDevProperties.push_back({ { DEVPKEY_KsMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
-        DEVPROP_TYPE_BINARY, sizeof(KSMIDI_PIN_MAP), &(pinMap) });
-
 
     SW_DEVICE_CREATE_INFO createInfo{ };
 
@@ -298,6 +366,15 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     HRESULT swdCreationResult;
     wil::unique_cotaskmem_string newDeviceInterfaceId;
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Activating endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    );
 
     LOG_IF_FAILED(
         swdCreationResult = m_midiDeviceManager->ActivateEndpoint(
@@ -327,7 +404,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         );
 
         // todo: return new device interface id
-
 
 
         // Add to internal endpoint manager
@@ -469,6 +545,21 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     {
         for (auto const& filterDevice : filterDevices)
         {
+            if (filterDevice.Id().empty())
+            {
+                TraceLoggingWrite(
+                    MidiKSAggregateTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Filter Id is empty.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(parentDevice.Id().c_str(), "device id")
+                );
+
+                continue;
+            }
+
             wil::unique_handle hFilter;
             if (FAILED(FilterInstantiate(filterDevice.Id().c_str(), &hFilter)))
             {
@@ -532,8 +623,8 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
                     KsAggregateEndpointMidiPinDefinition pinDefinition{ };
                     pinDefinition.PinNumber = pinIndex;
-                    pinDefinition.FilterDeviceId = filterDevice.Id();
-                    pinDefinition.FilterName = filterDevice.Name();
+                    pinDefinition.FilterDeviceId = std::wstring{ filterDevice.Id() };
+                    pinDefinition.FilterName = std::wstring{ filterDevice.Name() };
 
                     // find the name of the pin (supplied by iJack, and if not available, generated by the stack)
                     std::wstring pinName{ };
@@ -551,17 +642,16 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                         if (dataFlow == KSPIN_DATAFLOW_IN)
                         {
                             // MIDI Out (input to device)
-
-                            // add it to the endpoint definition
-                            endpointDefinition.MidiOutPins.push_back(pinDefinition);
+                            pinDefinition.PinDataFlow = MidiFlow::MidiFlowIn;
                         }
                         else if (dataFlow == KSPIN_DATAFLOW_OUT)
                         {
                             // MIDI In (output from device)
-
-                            // add it to the endpoint definition
-                            endpointDefinition.MidiInPins.push_back(pinDefinition);
+                            pinDefinition.PinDataFlow = MidiFlow::MidiFlowOut;
                         }
+
+                        endpointDefinition.MidiPins.push_back(pinDefinition);
+
                     }
                     else
                     {
@@ -576,6 +666,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                 hPin.reset();
 
             }
+
         }
 
         // now create the device
@@ -599,7 +690,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
             endpointDefinition.EndpointDeviceInstanceId = TRANSPORT_INSTANCE_ID_PREFIX + hash;
 
-            if (endpointDefinition.MidiInPins.size() > 0 || endpointDefinition.MidiOutPins.size() > 0)
+            if (endpointDefinition.MidiPins.size() > 0)
             {
                 // We've enumerated all the pins on the device. Now create the aggregated UMP endpoint
                 RETURN_IF_FAILED(CreateMidiUmpEndpoint(endpointDefinition));
