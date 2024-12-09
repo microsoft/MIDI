@@ -100,6 +100,7 @@ private:
     uint8_t m_declaredFunctionBlockCount{ 0 };
 
 
+    MidiFunctionBlockProperty BuildFunctionBlockPropertyFromInfoNotificationMessage(_In_ internal::PackedUmp128& ump);
 
     HRESULT RequestAllFunctionBlocks();
     HRESULT RequestAllEndpointDiscoveryInformation();

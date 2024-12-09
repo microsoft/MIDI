@@ -544,22 +544,7 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockInfoNotificationMessage(interna
 
     if (m_inInitialFunctionBlockDiscovery && blockNumber < m_declaredFunctionBlockCount)
     {
-        MidiFunctionBlockProperty prop{ };
-
-        prop.IsActive = internal::GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(ump.word0);
-        prop.BlockNumber = internal::GetFunctionBlockNumberFromInfoNotificationFirstWord(ump.word0);
-        prop.Direction = internal::GetFunctionBlockDirectionFromInfoNotificationFirstWord(ump.word0);
-        prop.Midi1 = internal::GetFunctionBlockMidi10FromInfoNotificationFirstWord(ump.word0);
-        prop.UIHint = internal::GetFunctionBlockUIHintFromInfoNotificationFirstWord(ump.word0);
-        prop.Reserved0 = MIDIWORDBYTE4LOWCRUMB4(ump.word0);
-
-        prop.FirstGroup = internal::GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(ump.word1);
-        prop.NumberOfGroupsSpanned = internal::GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(ump.word1);
-        prop.MidiCIMessageVersionFormat = internal::GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(ump.word1);
-        prop.MaxSysEx8Streams = internal::GetFunctionBlockMaxSysex8StreamsFromInfoNotificationSecondWord(ump.word1);
-
-        prop.Reserved1 = ump.word2;
-        prop.Reserved2 = ump.word3;
+        MidiFunctionBlockProperty prop = BuildFunctionBlockPropertyFromInfoNotificationMessage(ump);
 
         m_functionBlocks.insert_or_assign(prop.BlockNumber, prop);
 
@@ -621,7 +606,14 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
 
         m_functionBlockNames.insert_or_assign(functionBlockNumber, name);
 
-        RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
+        if (m_inInitialFunctionBlockDiscovery)
+        {
+            RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
+        }
+        else
+        {
+            RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name.Name));
+        }
     }
     break;
 
@@ -657,7 +649,14 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
             name.Name = internal::TrimmedWStringCopy(name.Name + ParseStreamTextMessage(ump));
             name.IsComplete = true;
 
-            RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
+            if (m_inInitialFunctionBlockDiscovery)
+            {
+                RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
+            }
+            else
+            {
+                RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name.Name));
+            }
         }
         else
         {
@@ -1267,7 +1266,6 @@ CMidiEndpointProtocolWorker::UpdateEndpointInfoProperties(internal::PackedUmp128
     BYTE umpVersionMinor = internal::GetEndpointInfoNotificationUmpVersionMinorFirstWord(endpointInfoNotificationMessage.word0);
     BYTE functionBlockCount = internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(endpointInfoNotificationMessage.word1);
 
-
     DEVPROP_BOOLEAN functionBlocksAreStatic = internal::GetEndpointInfoNotificationStaticFunctionBlocksFlagFromSecondWord(endpointInfoNotificationMessage.word1) ? DEVPROP_TRUE : DEVPROP_FALSE;
 
     DEVPROP_BOOLEAN supportsMidi1Protocol = internal::GetEndpointInfoNotificationMidi1ProtocolCapabilityFromSecondWord(endpointInfoNotificationMessage.word1) ? DEVPROP_TRUE : DEVPROP_FALSE;
@@ -1391,6 +1389,29 @@ CMidiEndpointProtocolWorker::UpdateAllFunctionBlockPropertiesIfComplete()
     return S_OK;
 }
 
+_Use_decl_annotations_
+MidiFunctionBlockProperty 
+CMidiEndpointProtocolWorker::BuildFunctionBlockPropertyFromInfoNotificationMessage(internal::PackedUmp128& ump)
+{
+    MidiFunctionBlockProperty prop;
+
+    prop.IsActive = internal::GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(ump.word0);
+    prop.BlockNumber = internal::GetFunctionBlockNumberFromInfoNotificationFirstWord(ump.word0);
+    prop.Reserved0 = MIDIWORDBYTE4LOWCRUMB4(ump.word0);
+    prop.UIHint = internal::GetFunctionBlockUIHintFromInfoNotificationFirstWord(ump.word0);
+    prop.Midi1 = internal::GetFunctionBlockMidi10FromInfoNotificationFirstWord(ump.word0);
+    prop.Direction = internal::GetFunctionBlockDirectionFromInfoNotificationFirstWord(ump.word0);
+
+    prop.FirstGroup = internal::GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(ump.word1);
+    prop.NumberOfGroupsSpanned = internal::GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(ump.word1);
+    prop.MidiCIMessageVersionFormat = internal::GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(ump.word1);
+    prop.MaxSysEx8Streams = internal::GetFunctionBlockMaxSysex8StreamsFromInfoNotificationSecondWord(ump.word1);
+
+    prop.Reserved1 = ump.word2;
+    prop.Reserved2 = ump.word3;
+
+    return prop;
+}
 
 _Use_decl_annotations_
 HRESULT
@@ -1406,22 +1427,8 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockProperty(internal::PackedUmp128&
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    MidiFunctionBlockProperty prop;
+    MidiFunctionBlockProperty prop = BuildFunctionBlockPropertyFromInfoNotificationMessage(functionBlockInfoNotificationMessage);
 
-    prop.IsActive = internal::GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(functionBlockInfoNotificationMessage.word0);
-    prop.BlockNumber = internal::GetFunctionBlockNumberFromInfoNotificationFirstWord(functionBlockInfoNotificationMessage.word0);
-    prop.Direction = internal::GetFunctionBlockDirectionFromInfoNotificationFirstWord(functionBlockInfoNotificationMessage.word0);
-    prop.Midi1 = internal::GetFunctionBlockMidi10FromInfoNotificationFirstWord(functionBlockInfoNotificationMessage.word0);
-    prop.UIHint = internal::GetFunctionBlockUIHintFromInfoNotificationFirstWord(functionBlockInfoNotificationMessage.word0);
-    prop.Reserved0 = MIDIWORDBYTE4LOWCRUMB4(functionBlockInfoNotificationMessage.word0);
-
-    prop.FirstGroup = internal::GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(functionBlockInfoNotificationMessage.word1);
-    prop.NumberOfGroupsSpanned = internal::GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(functionBlockInfoNotificationMessage.word1);
-    prop.MidiCIMessageVersionFormat = internal::GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(functionBlockInfoNotificationMessage.word1);
-    prop.MaxSysEx8Streams = internal::GetFunctionBlockMaxSysex8StreamsFromInfoNotificationSecondWord(functionBlockInfoNotificationMessage.word1);
-
-    prop.Reserved1 = functionBlockInfoNotificationMessage.word2;
-    prop.Reserved2 = functionBlockInfoNotificationMessage.word3;
 
     FILETIME currentTime;
     GetSystemTimePreciseAsFileTime(&currentTime);
@@ -1435,10 +1442,11 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockProperty(internal::PackedUmp128&
 
         {{ PKEY_MIDI_FunctionBlocksLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr},
             DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) },
-
     };
 
     RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_endpointDeviceInterfaceId.c_str(), ARRAYSIZE(props), props));
+
+    m_functionBlocks.insert_or_assign(prop.BlockNumber, prop);
 
     return S_OK;
 }

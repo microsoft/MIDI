@@ -21,13 +21,23 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-
-            <TextBox x:Name="EndpointNameEntry" Grid.Column="0" VerticalAlignment="Bottom" Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            
+            <TextBox x:Name="EndpointNameEntry" VerticalAlignment="Bottom" Margin="5" Grid.Row="0" Grid.Column="0">
                 <TextBox.Header>
                     <TextBlock Text="New Endpoint Name" Foreground="#7070FF" />
                 </TextBox.Header>
             </TextBox>
-            <Button x:Name="UpdateName" Content="Update Name" Grid.Column="1" Click="UpdateName_Click" VerticalAlignment="Bottom" Margin="5"/>
+            <Button x:Name="UpdateName" Content="Update Name" Grid.Row="0" Grid.Column="1" Click="UpdateName_Click" VerticalAlignment="Bottom" Margin="5"/>
+
+            <Button x:Name="UpdateFunctionBlocks" Content="Update FunctionBlocks" Grid.Row="1" Grid.Column="1" Click="UpdateFunctionBlocks_Click" VerticalAlignment="Bottom" Margin="5"/>
+
+
+
+
         </Grid>
         
         <Grid x:Name="PadContainer" Grid.Row="1" Margin="5,15,5,5">

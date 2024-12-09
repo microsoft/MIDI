@@ -27,7 +27,7 @@ namespace MidiSample.AppToAppMidi
 {
 
     public sealed partial class MainWindow : Microsoft.UI.Xaml.Window
-    {      
+    {
         private MidiSession _session;
         private MidiEndpointConnection _connection;
         private MidiVirtualDevice _virtualDevice;
@@ -225,13 +225,13 @@ namespace MidiSample.AppToAppMidi
             declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps = false;
             declaredEndpointInfo.SupportsSendingJitterReductionTimestamps = false;
 
-            declaredEndpointInfo.HasStaticFunctionBlocks = true;
+            declaredEndpointInfo.HasStaticFunctionBlocks = false;   // this makes it possible for us to update them later
             declaredEndpointInfo.DeclaredFunctionBlockCount = 3;    // needs to match the number of function blocks in the collection
 
 
             // todo: set any device identity values if you want. This is optional
             // The SysEx id, if used, needs to be a valid one
-            var declaredDeviceIdentity = new MidiDeclaredDeviceIdentity() ;
+            var declaredDeviceIdentity = new MidiDeclaredDeviceIdentity();
             declaredDeviceIdentity.DeviceFamilyMsb = 0x01;
             declaredDeviceIdentity.DeviceFamilyLsb = 0x02;
             declaredDeviceIdentity.DeviceFamilyModelNumberMsb = 0x03;
@@ -245,7 +245,7 @@ namespace MidiSample.AppToAppMidi
             declaredDeviceIdentity.SystemExclusiveIdByte3 = 0x0B;
 
 
-            var userSuppliedInfo = new MidiEndpointUserSuppliedInfo() ;
+            var userSuppliedInfo = new MidiEndpointUserSuppliedInfo();
             userSuppliedInfo.Name = userSuppliedName;           // for names, this will bubble to the top in priority
             userSuppliedInfo.Description = userSuppliedDescription;
 
@@ -256,12 +256,8 @@ namespace MidiSample.AppToAppMidi
                 transportSuppliedManufacturerName,              // transport-supplied company name
                 declaredEndpointInfo,                           // for endpoint discovery
                 declaredDeviceIdentity,                         // for endpoint discovery
-                userSuppliedInfo    
+                userSuppliedInfo
             );
-
-            // if set to true, WinMM / WinRT MIDI 1.0 backwards-compat endpoints won't be created
-            // when that feature is available in the service
-            config.CreateOnlyUmpEndpoints = false;
 
             // Function blocks. The MIDI 2 UMP specification covers the meanings
             // of these values
@@ -331,5 +327,25 @@ namespace MidiSample.AppToAppMidi
 
             }
         }
+
+        private void UpdateFunctionBlocks_Click(object sender, RoutedEventArgs e)
+        {
+            // no user entry here, we just update them here.
+
+            var block3 = new MidiFunctionBlock();
+            block3.Number = 2;
+            block3.Name = "Block Updated " + DateTime.Now.ToShortTimeString();
+            block3.IsActive = true;                // function blocks can be marked as inactive.
+            block3.UIHint = MidiFunctionBlockUIHint.Receiver;
+            block3.FirstGroup = new MidiGroup(5);
+            block3.GroupCount = 3;
+            block3.Direction = MidiFunctionBlockDirection.BlockInput;
+            block3.RepresentsMidi10Connection = MidiFunctionBlockRepresentsMidi10Connection.Not10;
+            block3.MaxSystemExclusive8Streams = 0;
+            block3.MidiCIMessageVersionFormat = 0;
+
+            _virtualDevice.UpdateFunctionBlock(block3);
+        }
+
     }
 }

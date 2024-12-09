@@ -790,6 +790,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unique identifiers updated.
+        /// </summary>
+        internal static string NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds {
+            get {
+                return ResourceManager.GetString("NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to User Metadata Updated.
         /// </summary>
         internal static string NotificationEndpointDeviceWatcherEndpointUpdatedUserMetadata {

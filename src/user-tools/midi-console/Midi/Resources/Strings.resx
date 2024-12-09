@@ -899,4 +899,7 @@ Timestamp</value>
   <data name="CommandPlayMidi1NotesDescription" xml:space="preserve">
     <value>Send MIDI 1.0 note on and off messages to the endpoint</value>
   </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds" xml:space="preserve">
+    <value>Unique identifiers updated</value>
+  </data>
 </root>
