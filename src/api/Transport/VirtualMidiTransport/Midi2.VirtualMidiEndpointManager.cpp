@@ -212,13 +212,11 @@ CMidi2VirtualMidiEndpointManager::NegotiateAndRequestMetadata(std::wstring endpo
     negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
     negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
     negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
-    negotiationParams.TimeoutMilliseconds = 3000;
 
     RETURN_IF_FAILED(m_MidiProtocolManager->DiscoverAndNegotiate(
         TransportLayerGUID,
         endpointId.c_str(),
-        negotiationParams,
-        nullptr                 // TODO: Provide callback
+        negotiationParams
     ));
 
 

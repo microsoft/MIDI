@@ -56,10 +56,17 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_midiProtocolManager));
 
-    winrt::hstring deviceSelector(
-        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+    winrt::hstring parentDeviceSelector(
+        L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\"");
 
-    m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
+    auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
+
+    additionalProps.Append(L"System.Devices.DeviceManufacturer");
+    additionalProps.Append(L"System.Devices.Manufacturer");
+
+
+
+    m_watcher = DeviceInformation::CreateWatcher(parentDeviceSelector, additionalProps, DeviceInformationKind::Device);
 
     auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded);
     auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved);
@@ -83,6 +90,62 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 
 
 
+// this will be used for the group terminal block name but also for the WinMM port name
+HRESULT
+CreateGroupTerminalBlockName(
+    _In_ std::wstring parentDeviceName,
+    _In_ std::wstring filterName,
+    _In_ std::wstring currentPinName, 
+    _Inout_ std::wstring& newGroupTerminalBlockName)
+{
+    std::wstring cleanedPinName{};
+
+    // MOTU-specific. We don't want to mess up other names, so check only for whole word
+    if (currentPinName == L"MIDI")
+    {
+        cleanedPinName = L"";
+    }
+    else
+    {
+        cleanedPinName = currentPinName;
+    }
+
+    // the double and triple space entries need to be last
+    // there are other ways to do this with pattern matching, 
+    // but just banging this through for this version
+    std::wstring wordsToRemove[] = 
+    { 
+        parentDeviceName, filterName, 
+        L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
+        L"  ", L"   ", L"    "
+    };
+
+    for (auto const& word : wordsToRemove)
+    {
+        if (cleanedPinName.length() >= word.length())
+        {
+            auto idx = cleanedPinName.find(word);
+
+            if (idx != std::wstring::npos)
+            {
+                cleanedPinName = cleanedPinName.erase(idx, word.length());
+            }
+        }
+    }
+
+    newGroupTerminalBlockName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
+
+    return S_OK;
+}
+
+
+typedef struct {
+    BYTE GroupIndex;                        // index (0-15) of the group this pin maps to
+    UINT32 PinId;                           // KS Pin number
+    MidiFlow PinDataFlow;                   // an input pin is MidiFlowIn, and from the user's perspective, a MIDI Output
+    std::wstring FilterId;                 // full filter id for this pin
+} PinMapEntryStagingEntry;
+
 
 _Use_decl_annotations_
 HRESULT
@@ -96,13 +159,13 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Creating aggregate UMP endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
         );
 
 
     // we require at least one valid pin
-    RETURN_HR_IF(E_INVALIDARG, masterEndpointDefinition.Pins.size() < 1);
+    RETURN_HR_IF(E_INVALIDARG, masterEndpointDefinition.MidiPins.size() < 1);
 
     std::vector<DEVPROPERTY> interfaceDevProperties;
 
@@ -111,81 +174,83 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = masterEndpointDefinition.EndpointName.c_str();
     commonProperties.TransportCode = TRANSPORT_CODE;
-    commonProperties.EndpointName = masterEndpointDefinition.FilterName.c_str();
+    commonProperties.EndpointName = masterEndpointDefinition.EndpointName.c_str();
     commonProperties.EndpointDescription = nullptr;
     commonProperties.CustomEndpointName = nullptr;
     commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = nullptr;
-    commonProperties.ManufacturerName = nullptr;
+    commonProperties.ManufacturerName = masterEndpointDefinition.ManufacturerName.empty() ? nullptr : masterEndpointDefinition.ManufacturerName.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
     commonProperties.NativeDataFormat = MidiDataFormats_ByteStream;
     
-    UINT32 capabilities {0};
+    UINT32 capabilities { 0 };
     capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
     capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
     capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
     commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
-    interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
-        DEVPROP_TYPE_STRING, static_cast<ULONG>((masterEndpointDefinition.FilterDeviceId.length() + 1) * sizeof(WCHAR)), (PVOID)masterEndpointDefinition.FilterDeviceId.c_str() });
+    // this property does not apply for aggregate endpoints
+    //interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
+    //    DEVPROP_TYPE_STRING, static_cast<ULONG>((masterEndpointDefinition.FilterDeviceId.length() + 1) * sizeof(WCHAR)), (PVOID)masterEndpointDefinition.FilterDeviceId.c_str() });
 
-    interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
-        DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&masterEndpointDefinition.TransportCapability });
+    //MidiTransport transportCapability{ MidiTransport::MidiTransport_StandardByteStream };
+    //interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
+    //    DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), (PVOID)&transportCapability });
 
     // create group terminal blocks and the pin map
+
+
+    //TraceLoggingWrite(
+    //    MidiKSAggregateTransportTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Building group terminal blocks and pin map", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    //);
 
     uint8_t currentGtbInputGroupIndex{ 0 };
     uint8_t currentGtbOutputGroupIndex{ 0 };
     uint8_t currentBlockNumber{ 0 };
 
-    KSMIDI_PIN_MAP pinMap{ };
-    std::vector<internal::GroupTerminalBlockInternal> blocks;
+    std::vector<internal::GroupTerminalBlockInternal> blocks{ };
+    std::vector<PinMapEntryStagingEntry> pinMapEntries{ };
 
-    for (auto const& pin : masterEndpointDefinition.Pins)
+    for (auto const& pin : masterEndpointDefinition.MidiPins)
     {
+        RETURN_HR_IF(E_INVALIDARG, pin.FilterDeviceId.empty());
+
         internal::GroupTerminalBlockInternal gtb;
 
         gtb.Number = ++currentBlockNumber;
         gtb.GroupCount = 1; // always a single group for aggregate devices
 
-        if (pin.DataFlowFromClientPerspective == MidiFlow::MidiFlowIn)
+        PinMapEntryStagingEntry pinMapEntry{ };
+
+        pinMapEntry.PinId = pin.PinNumber;
+        pinMapEntry.FilterId = pin.FilterDeviceId;
+        pinMapEntry.PinDataFlow = pin.PinDataFlow;
+        pinMapEntry.GroupIndex = currentGtbInputGroupIndex;
+
+        if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
         {
-            if (currentGtbOutputGroupIndex >= KSMIDI_PIN_MAP_ENTRY_COUNT)
-                continue;
-
-            pinMap.InputEntries[currentGtbOutputGroupIndex].IsValid = true;
-            pinMap.InputEntries[currentGtbOutputGroupIndex].PinId = pin.PinNumber;
-
+            gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
+            gtb.FirstGroupIndex = currentGtbInputGroupIndex;
+            currentGtbInputGroupIndex++;
+        }
+        else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)
+        {
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
             gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
-
             currentGtbOutputGroupIndex++;
         }
         else
         {
-            if (currentGtbInputGroupIndex >= KSMIDI_PIN_MAP_ENTRY_COUNT)
-                continue;
-
-            pinMap.OutputEntries[currentGtbInputGroupIndex].IsValid = true;
-            pinMap.OutputEntries[currentGtbInputGroupIndex].PinId = pin.PinNumber;
-
-            gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
-            gtb.FirstGroupIndex = currentGtbInputGroupIndex;
-
-            currentGtbInputGroupIndex++;
+            RETURN_IF_FAILED(E_INVALIDARG);
         }
 
-        // sort out the name for this group terminal
-        if (pin.Name.empty())
-        {
-            std::wstring dir = pin.DataFlowFromClientPerspective == MidiFlow::MidiFlowIn ? L"In" : L"Out";
-
-            gtb.Name = std::wstring(dir) + L" " + std::to_wstring(gtb.FirstGroupIndex + 1);
-        }
-        else
-        {
-            gtb.Name = pin.Name;
-        }
+        LOG_IF_FAILED(CreateGroupTerminalBlockName(masterEndpointDefinition.ParentDeviceName, pin.FilterName, pin.PinName, gtb.Name));
 
         // default values as defined in the MIDI 2.0 USB spec
         gtb.Protocol = 0x01;                // midi 1.0
@@ -193,7 +258,86 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         gtb.MaxOutputBandwidth = 0x0001;    // 31.25 kbps
 
         blocks.push_back(gtb);
+        pinMapEntries.push_back(pinMapEntry);
     }
+
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Building pin map property", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    );
+
+    // build the pin map property value
+    KSAGGMIDI_PIN_MAP_PROPERTY_VALUE pinMap{ };
+
+    size_t totalStringSizesIncludingNulls{ 0 };
+    for (auto const& entry : pinMapEntries)
+    {
+        totalStringSizesIncludingNulls += ((entry.FilterId.length() + 1) * sizeof(wchar_t));
+    }
+
+    size_t totalMemoryBytes{ 
+        SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_VALUE_HEADER + 
+        SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY_WITHOUT_STRING * pinMapEntries.size() +
+        totalStringSizesIncludingNulls };
+
+    auto pinMapData = std::make_shared<byte[]>(totalMemoryBytes);
+    RETURN_IF_NULL_ALLOC(pinMapData);
+    memset(pinMapData.get(), 0, totalMemoryBytes);
+
+    auto currentPos = pinMapData.get();
+
+    // header
+    auto pinMapHeader = (PKSAGGMIDI_PIN_MAP_PROPERTY_VALUE)currentPos;
+    pinMapHeader->TotalByteCount = (UINT32)totalMemoryBytes;
+    currentPos += SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_VALUE_HEADER;
+
+    for (auto const& entry : pinMapEntries)
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Processing Pin Map entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name"),
+            TraceLoggingUInt32(entry.PinId, "Pin Id"),
+            TraceLoggingWideString(entry.FilterId.c_str(), "Filter Id")
+        );
+
+        PKSAGGMIDI_PIN_MAP_PROPERTY_ENTRY propEntry = (PKSAGGMIDI_PIN_MAP_PROPERTY_ENTRY)currentPos;
+
+        propEntry->ByteCount = (UINT)(SIZET_KSAGGMIDI_PIN_MAP_PROPERTY_ENTRY_WITHOUT_STRING + ((entry.FilterId.length()+1) * sizeof(wchar_t)));
+        propEntry->GroupIndex = entry.GroupIndex;
+        propEntry->PinDataFlow = entry.PinDataFlow;
+        propEntry->PinId = entry.PinId;
+
+        if (!entry.FilterId.empty())
+        {
+            wcscpy_s((wchar_t*)propEntry->FilterId, entry.FilterId.length() + 1, entry.FilterId.c_str());
+        }
+
+        currentPos += propEntry->ByteCount;
+    }
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"All pin map entries copied to property memory", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    );
+
+    interfaceDevProperties.push_back({ { DEVPKEY_KsAggMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_BINARY, (UINT32)totalMemoryBytes, pinMapData.get() });
 
 
     std::vector<std::byte> groupTerminalBlockData;
@@ -209,9 +353,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     }
 
 
-    interfaceDevProperties.push_back({ { DEVPKEY_KsMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
-        DEVPROP_TYPE_BINARY, sizeof(KSMIDI_PIN_MAP), &(pinMap) });
-
 
     SW_DEVICE_CREATE_INFO createInfo{ };
 
@@ -225,11 +366,20 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     HRESULT swdCreationResult;
     wil::unique_cotaskmem_string newDeviceInterfaceId;
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Activating endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    );
 
     LOG_IF_FAILED(
         swdCreationResult = m_midiDeviceManager->ActivateEndpoint(
             masterEndpointDefinition.ParentDeviceInstanceId.c_str(),
-            false,                                  // TODO: create UMP only, handle the MIDI 1.0 compat ports
+            false,                                  
             MidiFlow::MidiFlowBidirectional,        // bidi only for the UMP endpoint
             &commonProperties,
             (ULONG) interfaceDevProperties.size(),
@@ -256,9 +406,8 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         // todo: return new device interface id
 
 
-
         // Add to internal endpoint manager
-        m_availableEndpointDefinitions.push_back(std::move(masterEndpointDefinition));
+        m_availableEndpointDefinitions.insert_or_assign(masterEndpointDefinition.ParentDeviceInstanceId, masterEndpointDefinition);
 
         return swdCreationResult; 
     }
@@ -279,56 +428,81 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     }
 }
 
-_Use_decl_annotations_
-HRESULT
-CMidi2KSAggregateMidiEndpointManager::CreateMidiBytestreamEndpoints(
-    KsAggregateEndpointDefinition& /*masterEndpointDefinition*/
-)
+
+winrt::hstring GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
 {
+    auto prop = di.Properties().Lookup(propertyName);
 
-    // TODO
+    if (prop == nullptr)
+    {
+        return defaultValue;
+    }
 
-    return S_OK;
+    auto value = winrt::unbox_value<winrt::hstring>(prop);
+
+    if (value.empty())
+    {
+        return defaultValue;
+    }
+
+    return value;
+}
+
+HRESULT GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName)
+{
+    std::unique_ptr<WCHAR> pinNameData;
+    ULONG pinNameDataSize{ 0 };
+
+    auto pinNameHR = PinPropertyAllocate(
+        hFilter,
+        pinIndex,
+        KSPROPSETID_Pin,
+        KSPROPERTY_PIN_NAME,
+        (PVOID*)&pinNameData,
+        &pinNameDataSize
+    );
+
+    if (SUCCEEDED(pinNameHR) || pinNameHR == HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND))
+    {
+        // Check to see if the pin has an iJack name
+        if (pinNameDataSize > 0)
+        {
+            pinName = pinNameData.get();
+            
+            return S_OK;
+        }
+    }
+
+    return E_FAIL;
+}
+
+HRESULT GetPinDataFlow(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ KSPIN_DATAFLOW& dataFlow)
+{
+    auto dataFlowHR = PinPropertySimple(
+        hFilter,
+        pinIndex,
+        KSPROPSETID_Pin,
+        KSPROPERTY_PIN_DATAFLOW,
+        &dataFlow,
+        sizeof(KSPIN_DATAFLOW)
+    );
+
+    if (SUCCEEDED(dataFlowHR))
+    {
+        return S_OK;
+    }
+
+    return E_FAIL;
 }
 
 
 
 
-// TODO: Currently, this process is set up to get alerted of new devices at the
-// filter level, which is normal. However, some MIDI devices, especially those
-// with custom drivers, present different filters solely for naming reasons. 
-// Those filters end up as different aggregate endpoints here, which is very 
-// messy. For example, the MOTU MIDI Express 128 presents one filter for each
-// numbered port pair, resulting 8 created MIDI BiDi Endpoint devices.
-// Others, like some Roland devices, end up as two different devices for a
-// management port and a user port, adding to confusion from users when they
-// go to select them. 
-//
-// So the logic needs to change to consider the whole set of filters at a 
-// parent device or container level. This could mean a ton of additional
-// alerts as the parent device can show up in any number of ways (composite
-// device, audio device etc.). Another option will be to capture the info
-// like it is now, but not create the aggregate device until we're sure
-// we have all the filters and all their pins accounted for first. This will
-// require some additional logic, but will result in fewer unnecessary 
-// device notifications being handled by this Transport.
-//
-// Note that devices can dynamically create filters using KsCreateFilterFactory
-// which may complicate this, as there may be no defined upper bound to the
-// number of filters a device may expose.
-// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ks/ns-ks-_ksdevice_descriptor
-// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ks/ns-ks-_ksdevice
-// https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ks/nf-ks-ksfiltergetdevice
-//
-// The ugly but functional approach may be to create the devices per-filter, but to 
-// keep track of previously created devices, and then update those devices with new
-// filters and pins in their pin maps as they are discovered.
-
 _Use_decl_annotations_
 HRESULT 
 CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     DeviceWatcher watcher, 
-    DeviceInformation device
+    DeviceInformation parentDevice
 )
 {
     TraceLoggingWrite(
@@ -337,191 +511,41 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(device.Id().c_str(), "added device")
+        TraceLoggingWideString(parentDevice.Id().c_str(), "added parent device")
     );
-
-    wil::unique_handle hFilter;
-    std::hash<std::wstring> hasher;
-    std::wstring hash;
-    ULONG cPins{ 0 };
 
     std::wstring transportCode(TRANSPORT_CODE);
 
-    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-
-    auto properties = device.Properties();
+    //auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    auto properties = parentDevice.Properties();
 
     KsAggregateEndpointDefinition endpointDefinition{ };
 
+    auto deviceInstanceId = GetStringProperty(parentDevice, L"System.Devices.DeviceInstanceId", L"");
+    RETURN_HR_IF(E_FAIL, deviceInstanceId.empty());
 
-    // retrieve the device instance id from the DeviceInformation property store
-    auto prop = properties.Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
-    RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-    endpointDefinition.ParentDeviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
-    endpointDefinition.FilterDeviceId = internal::NormalizeDeviceInstanceIdWStringCopy(device.Id().c_str());
 
-    // get the parent device
-    auto parentDeviceInfo = DeviceInformation::CreateFromIdAsync(endpointDefinition.ParentDeviceInstanceId,
-        additionalProperties,winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
+    endpointDefinition.ParentDeviceName = parentDevice.Name();
+    endpointDefinition.EndpointName = parentDevice.Name();
+    endpointDefinition.ParentDeviceInstanceId = parentDevice.Id();
 
-    // the default name is the filter name, not the parent device name
-    endpointDefinition.ParentDeviceName = parentDeviceInfo.Name();
-    endpointDefinition.FilterName = device.Name();
-    endpointDefinition.EndpointName = device.Name();
-    endpointDefinition.TransportCapability = MidiTransport::MidiTransport_CyclicUMP;
 
-    // default hash is the device id. We don't have an iSerial here.
-    hash = std::to_wstring(hasher(endpointDefinition.FilterDeviceId));
+    // we set this if we find any compatible MIDI 1.0 byte format pins
+    bool isCompatibleMidi1Device{ false };
 
- //   std::vector<std::unique_ptr<MIDI_PIN_INFO>> newMidiPins;
+    // enumerate all KS_CATEGORY_AUDIO filters for this parent media device
+    winrt::hstring filterDeviceSelector(
+        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\""\
+        L" AND System.Devices.InterfaceEnabled:= System.StructuredQueryType.Boolean#True"\
+        L" AND System.Devices.DeviceInstanceId:= \"" + deviceInstanceId + L"\"");
 
-    // instantiate the interface
-    RETURN_IF_FAILED(FilterInstantiate(endpointDefinition.FilterDeviceId.c_str(), &hFilter));
-    RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins)));
+    auto filterDevices = DeviceInformation::FindAllAsync(filterDeviceSelector).get();
 
-    for (UINT i = 0; i < cPins; i++)
+    if (filterDevices.Size() > 0)
     {
-        wil::unique_handle hPin;
-        KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
-        //MidiTransport transportCapability { MidiTransport_Invalid };
-        //MidiDataFormats dataFormatCapability { MidiDataFormats_Invalid };
-        KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
-        GUID nativeDataFormat{ 0 };
-
-        std::unique_ptr<WCHAR> pinNameData;
-        ULONG pinNameDataSize{ 0 };
-
-        KsAggregateEndpointPinDefinition pinDef;
-        pinDef.PinNumber = i;
-
-
-        RETURN_IF_FAILED(
-            PinPropertySimple(
-                hFilter.get(), 
-                i, 
-                KSPROPSETID_Pin, 
-                KSPROPERTY_PIN_COMMUNICATION, 
-                &communication, 
-                sizeof(KSPIN_COMMUNICATION)
-            )
-        );
-
-
-        // The external connector pin representing the physical connection
-        // has KSPIN_COMMUNICATION_NONE. We can only create on software IO pins which
-        // have a valid communication. Skip connector pins.
-        if (communication == KSPIN_COMMUNICATION_NONE)
+        for (auto const& filterDevice : filterDevices)
         {
-            continue;
-        }
-
-        //
-        // ================== Standard Byte / MIDI 1.0 Interfaces ===============================================
-        // The pin is byte stream, but the endpoint definition will be cyclic ump
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
-        {
-            TraceLoggingWrite(
-                MidiKSAggregateTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_VERBOSE,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Opened pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingUInt32(i, "pin id")
-                );
-
-
-            // get the name from the Pin. This is how many developers would prefer we name MIDI ports
-
-            LOG_IF_FAILED_WITH_EXPECTED(
-                PinPropertyAllocate(
-                    hFilter.get(), 
-                    i, 
-                    KSPROPSETID_Pin, 
-                    KSPROPERTY_PIN_NAME, 
-                    (PVOID*)&pinNameData,
-                    &pinNameDataSize),
-                HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
-
-            // Check to see if the pin has an iJack name
-            if (pinNameDataSize > 0)
-            {
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Retrieved pin name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(device.Id().c_str(), "device id"),
-                    TraceLoggingUInt32(i, "pin id"),
-                    TraceLoggingWideString(pinNameData.get(), "pin name")
-                );
-
-                if (IsAutogeneratedPinName(endpointDefinition.FilterName.c_str(), i, pinNameData.get()))
-                {
-                    pinDef.Name= L"";
-                }
-                else
-                {
-                    // use the name from the pin. This is the most preferred name for most devices
-                    pinDef.Name = std::wstring(pinNameData.get());
-                }
-            }
-            else
-            {
-                // no pin name provided
-                pinDef.Name = L"";
-            }
-
-            hPin.reset();
-
-            RETURN_IF_FAILED(
-                PinPropertySimple(
-                    hFilter.get(), 
-                    i, 
-                    KSPROPSETID_Pin, 
-                    KSPROPERTY_PIN_DATAFLOW, 
-                    &dataFlow, 
-                    sizeof(KSPIN_DATAFLOW)
-                )
-            );
-
-            if (dataFlow == KSPIN_DATAFLOW_IN)
-            {
-                // for render (MIDIOut) we need KSPIN_DATAFLOW_IN
-                pinDef.DataFlowFromClientPerspective = MidiFlowOut;
-
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_VERBOSE,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Pin is KSPIN_DATAFLOW_IN (MidiOut pin)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                    TraceLoggingUInt32(i, "pin id"),
-                    TraceLoggingWideString(pinDef.Name.c_str(), "pin def name")
-                    );
-            }
-            else if (dataFlow == KSPIN_DATAFLOW_OUT)
-            {
-                pinDef.DataFlowFromClientPerspective = MidiFlowIn;
-
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_VERBOSE,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Pin is KSPIN_DATAFLOW_OUT (MidiIn pin)", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                    TraceLoggingUInt32(i, "pin id"),
-                    TraceLoggingWideString(pinDef.Name.c_str(), "pin def name")
-                    );
-            }
-            else
+            if (filterDevice.Id().empty())
             {
                 TraceLoggingWrite(
                     MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -529,43 +553,166 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Pin dataflow is unexpected value. Skipping pin.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(device.Id().c_str(), "device id"),
-                    TraceLoggingUInt32(i, "pin id"),
-                    TraceLoggingWideString(pinDef.Name.c_str(), "pin def name")
-                    );
+                    TraceLoggingWideString(L"Filter Id is empty.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(parentDevice.Id().c_str(), "device id")
+                );
 
                 continue;
             }
 
-            // add the pin to our endpoint
-            endpointDefinition.Pins.push_back(std::move(pinDef));
+            wil::unique_handle hFilter;
+            if (FAILED(FilterInstantiate(filterDevice.Id().c_str(), &hFilter)))
+            {
+                // couldn't instantiate this filter for some reason.
+                continue;
+            }
+
+            // enumerate all the pins for this filter
+            ULONG cPins{ 0 };
+            if (FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins))))
+            {
+                // couldn't get the count of pins. Just move on to the next filter
+                continue;
+            }
+
+            // process the pins for this filter. Not all will be MIDI pins
+            for (UINT pinIndex = 0; pinIndex < cPins; pinIndex++)
+            {
+            //    bool isMidi1Pin{ false };
+                wil::unique_handle hPin;
+
+
+                // Check the communication capabilities of the pin so we can fail fast
+                KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
+                RETURN_IF_FAILED(
+                    PinPropertySimple(
+                        hFilter.get(),
+                        pinIndex,
+                        KSPROPSETID_Pin,
+                        KSPROPERTY_PIN_COMMUNICATION,
+                        &communication,
+                        sizeof(KSPIN_COMMUNICATION)
+                    )
+                );
+
+                // The external connector pin representing the physical connection
+                // has KSPIN_COMMUNICATION_NONE. We can only create on software IO pins which
+                // have a valid communication. Skip connector pins.
+                if (communication == KSPIN_COMMUNICATION_NONE)
+                {
+                    continue;
+                }
+
+
+                if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), pinIndex, MidiTransport_CyclicUMP, &hPin)))
+                {
+                    // this is a UMP pin. The KS transport will handle it, so we skip it here.
+                    //
+                    // TODO: We should probably skip the entire device if we find *any* UMP pins. 
+                    // Will there be devices which have simultaneously active UMP and bytestream pins?
+                    // I don't think there are. And if we don't skip the device, we're likely to
+                    // incorrectly instantiate fallback pins
+
+                    continue;
+                }
+                else if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), pinIndex, MidiTransport_StandardByteStream, &hPin)))
+                {
+                    // this is a MIDI 1.0 byte format pin, so let's process it
+
+                    isCompatibleMidi1Device = true;
+
+                    KsAggregateEndpointMidiPinDefinition pinDefinition{ };
+                    pinDefinition.PinNumber = pinIndex;
+                    pinDefinition.FilterDeviceId = std::wstring{ filterDevice.Id() };
+                    pinDefinition.FilterName = std::wstring{ filterDevice.Name() };
+
+                    // find the name of the pin (supplied by iJack, and if not available, generated by the stack)
+                    std::wstring pinName{ };
+                    if (SUCCEEDED(GetPinName(hFilter.get(), pinIndex, pinName)))
+                    {
+                        pinDefinition.PinName = pinName;
+                    }
+
+
+                    // get the data flow so we know if this is a MIDI Input or a MIDI Output
+                    KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
+                    auto dataFlowHr = GetPinDataFlow(hFilter.get(), pinIndex, dataFlow);
+                    if (SUCCEEDED(dataFlowHr))
+                    {
+                        if (dataFlow == KSPIN_DATAFLOW_IN)
+                        {
+                            // MIDI Out (input to device)
+                            pinDefinition.PinDataFlow = MidiFlow::MidiFlowIn;
+                        }
+                        else if (dataFlow == KSPIN_DATAFLOW_OUT)
+                        {
+                            // MIDI In (output from device)
+                            pinDefinition.PinDataFlow = MidiFlow::MidiFlowOut;
+                        }
+
+                        endpointDefinition.MidiPins.push_back(pinDefinition);
+
+                    }
+                    else
+                    {
+                        // this is a failure condition. Move on to next pin
+                        LOG_IF_FAILED(dataFlowHr);
+                        continue;
+                    }
+
+
+                }
+
+                hPin.reset();
+
+            }
+
         }
 
-        endpointDefinition.EndpointDeviceInstanceId = TRANSPORT_INSTANCE_ID_PREFIX;
-        endpointDefinition.EndpointDeviceInstanceId += hash;
-    }
+        // now create the device
 
+        if (isCompatibleMidi1Device)
+        {
+            // only some vendor drivers provide an actual manufacturer
+            // and all the in-box drivers just provide the Generic USB Audio string
+            // TODO: Is "Generic USB Audio" a string that is localized? If so, this
+            // code will not have the intended effect outside of en-US
+            auto manufacturer = GetStringProperty(parentDevice, L"System.Devices.DeviceManufacturer", L"");
+            if (!manufacturer.empty() && manufacturer != L"(Generic USB Audio)")
+            {
+                endpointDefinition.ManufacturerName = manufacturer;
+            }
 
-    if (endpointDefinition.Pins.size() > 0)
-    {
-        // We've enumerated all the pins on the device. Now create the aggregated UMP endpoint
-        RETURN_IF_FAILED(CreateMidiUmpEndpoint(endpointDefinition));
+            // default hash is the device id. We don't have an iSerial here.
+            std::hash<std::wstring> hasher;
+            std::wstring hash;
+            hash = std::to_wstring(hasher(endpointDefinition.ParentDeviceInstanceId));
 
-        // create the individual MIDI 1.0 compat endpoints
-        RETURN_IF_FAILED(CreateMidiBytestreamEndpoints(endpointDefinition));
+            endpointDefinition.EndpointDeviceInstanceId = TRANSPORT_INSTANCE_ID_PREFIX + hash;
+
+            if (endpointDefinition.MidiPins.size() > 0)
+            {
+                // We've enumerated all the pins on the device. Now create the aggregated UMP endpoint
+                RETURN_IF_FAILED(CreateMidiUmpEndpoint(endpointDefinition));
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiKSAggregateTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Device has no compatible MIDI 1.0 pins. This is normal for many devices.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(parentDevice.Id().c_str(), "device id")
+                );
+            }
+        }
+
     }
     else
     {
-        TraceLoggingWrite(
-            MidiKSAggregateTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Device has no compatible MIDI 1.0 pins. This is normal for many devices.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(device.Id().c_str(), "device id")
-            );
+        // no KS_CATEGORY_AUDIO filters for this device. This is not a failure condition.
     }
 
     return S_OK;
@@ -595,17 +742,7 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
     // the m_AvailableMidiPins list.
     do
     {
-        auto item = std::find_if(m_availableEndpointDefinitions.begin(), 
-            m_availableEndpointDefinitions.end(), [&](const KsAggregateEndpointDefinition& endpointDefinition)
-        {
-            if (endpointDefinition.FilterDeviceId == cleanDeviceId)
-            {
-                return true;
-            }
-
-            return false;
-        });
-
+        auto item = m_availableEndpointDefinitions.find((std::wstring)device.Id());
 
         if (item == m_availableEndpointDefinitions.end())
         {

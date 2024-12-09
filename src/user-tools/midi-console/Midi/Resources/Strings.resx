@@ -759,7 +759,7 @@ Timestamp</value>
     <value>Function blocks are also present, and will be more accurate.</value>
   </data>
   <data name="PropertyValueNativeDataFormatByteStream" xml:space="preserve">
-    <value>Byte Stream (MIDI 1.0)</value>
+    <value>Byte Data Format (MIDI 1.0)</value>
   </data>
   <data name="PropertyValueNativeDataFormatUmp" xml:space="preserve">
     <value>Universal MIDI Packet (MIDI 1.0 or MIDI 2.0 protocol)</value>
@@ -877,5 +877,29 @@ Timestamp</value>
   </data>
   <data name="CommandEnumerateMdnsAdvertisementsDescription" xml:space="preserve">
     <value>List discovered MDNS advertisements for Network MIDI 2.0 (UDP) services on the network.</value>
+  </data>
+  <data name="ParameterPlayNotesIndexes" xml:space="preserve">
+    <value>List of space-separated MIDI 1.0 note indexes (0-127 decimal)</value>
+  </data>
+  <data name="ParameterPlayNotesLengthMilliseconds" xml:space="preserve">
+    <value>Length / duration of the note in whole decimal milliseconds.</value>
+  </data>
+  <data name="ParameterPlayNotesGroupIndex" xml:space="preserve">
+    <value>Index (0-15 decimal) for the group to send the messages to</value>
+  </data>
+  <data name="ParameterPlayNotesChannelIndex" xml:space="preserve">
+    <value>Index (0-15 decimal) of the channel to send the messages to</value>
+  </data>
+  <data name="ParameterPlayNotesVelocity" xml:space="preserve">
+    <value>Note velocity (0-127 decimal). A velocity of 0 becomes a note-off message.</value>
+  </data>
+  <data name="ParameterPlayNotesForever" xml:space="preserve">
+    <value>Set to true to play the notes until you press the escape key</value>
+  </data>
+  <data name="CommandPlayMidi1NotesDescription" xml:space="preserve">
+    <value>Send MIDI 1.0 note on and off messages to the endpoint</value>
+  </data>
+  <data name="NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds" xml:space="preserve">
+    <value>Unique identifiers updated</value>
   </data>
 </root>

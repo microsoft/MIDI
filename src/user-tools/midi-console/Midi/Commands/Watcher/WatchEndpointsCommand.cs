@@ -20,10 +20,18 @@ namespace Microsoft.Midi.ConsoleApp
             [DefaultValue(false)]
             public bool IncludeDiagnosticLoopback { get; set; }
 
+            [LocalizedDescription("ParameterEnumEndpointsVerbose")]
+            [CommandOption("-v|--verbose")]
+            [DefaultValue(false)]
+            public bool Verbose { get; set; }
         }
+
+        private Settings _settings;
 
         public override int Execute(CommandContext context, Settings settings)
         {
+            _settings = settings;
+
             //if (!MidiServicesInitializer.EnsureServiceAvailable())
             //{
             //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorMidiServiceNotAvailable));
@@ -153,6 +161,24 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedAdditionalCapabilities}[/]");
             }
+
+            if (args.AreUniqueIdsUpdated)
+            {
+                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds}[/]");
+            }
+
+            if (_settings.Verbose)
+            {
+                // display all updated properties
+
+                foreach (var propKey in args.DeviceInformationUpdate.Properties.Keys)
+                {
+                    // TODO: Consider a lookup table of friendly prop names or property descriptions
+                    AnsiConsole.MarkupLine($"  [grey]{propKey}[/]");
+                }
+            }
+
+
 
             AnsiConsole.MarkupLine("");
         }

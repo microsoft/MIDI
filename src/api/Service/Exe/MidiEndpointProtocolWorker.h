@@ -11,6 +11,13 @@
 #include <queue>
 #include <mutex>
 
+struct MidiFunctionBlockName
+{
+    std::wstring Name;
+    bool IsComplete{ false };
+};
+
+
 class CMidiEndpointProtocolWorker : public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
     IMidiCallback>
@@ -29,8 +36,7 @@ public:
         );
 
     STDMETHOD(Start)(
-        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
-        _In_ IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
+        _In_ ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams
         );
 
     STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context);
@@ -48,10 +54,10 @@ private:
 
     LONGLONG m_context{ 0 };
 
-    bool m_inInitialDiscoveryAndNegotiation{ false }; // true if we're in the initial discovery and negotiation phase where we need to call callback
+    bool m_inInitialFunctionBlockDiscovery{ false };
 
     wil::unique_event_nothrow m_endProcessing;
-    wil::unique_event_nothrow m_allNegotiationMessagesReceived;
+    //wil::unique_event_nothrow m_allInitialDiscoveryAndNegotiationMessagesReceived;
     //wil::unique_event_nothrow m_queueWorkerThreadWakeup;
 
     // true if we're closing down
@@ -62,7 +68,7 @@ private:
     std::shared_ptr<CMidiDeviceManager> m_deviceManager;
     std::shared_ptr<CMidiSessionTracker> m_sessionTracker;
 
-    wil::com_ptr_nothrow<IMidiProtocolNegotiationCompleteCallback> m_negotiationCompleteCallback{ nullptr };
+    //wil::com_ptr_nothrow<IMidiProtocolNegotiationCompleteCallback> m_negotiationCompleteCallback{ nullptr };
 
     //MIDISRV_CLIENT m_midiClient{ };
 
@@ -73,7 +79,8 @@ private:
     // these are holding locations while names are built
     std::wstring m_endpointName{};
     std::wstring m_productInstanceId{};
-    std::map<uint8_t /* function block number */, std::wstring> m_functionBlockNames;
+    std::map<uint8_t /* function block number */, MidiFunctionBlockName> m_functionBlockNames{ };
+    std::map<uint8_t /* function block number */, MidiFunctionBlockProperty> m_functionBlocks{ };
 
 
 
@@ -83,24 +90,17 @@ private:
 
     bool m_alreadyTriedToNegotiationOnce{ false };
 
-    bool m_taskEndpointInfoReceived{ false };
-    bool m_taskFinalStreamNegotiationResponseReceived{ false };
-    bool m_taskEndpointNameReceived{ false };
-    bool m_taskEndpointProductInstanceIdReceived{ false };
-    bool m_taskDeviceIdentityReceived{ false };
+    //bool m_taskEndpointInfoReceived{ false };
+    //bool m_taskFinalStreamNegotiationResponseReceived{ false };
+    //bool m_taskEndpointNameReceived{ false };
+    //bool m_taskEndpointProductInstanceIdReceived{ false };
+    //bool m_taskDeviceIdentityReceived{ false };
 
     bool m_functionBlocksAreStatic{ false };
     uint8_t m_declaredFunctionBlockCount{ 0 };
 
-    uint8_t m_countFunctionBlocksReceived{ 0 };
-    uint8_t m_countFunctionBlockNamesReceived{ 0 };
 
-
-    //we keep these here so the pointer stays valid
-    ENDPOINTPROTOCOLNEGOTIATIONRESULTS m_mostRecentResults{ };
-    std::vector<DISCOVEREDFUNCTIONBLOCK> m_discoveredFunctionBlocks{ };
-    //std::map<uint8_t, DISCOVEREDFUNCTIONBLOCK> m_discoveredFunctionBlocks{ };
-
+    MidiFunctionBlockProperty BuildFunctionBlockPropertyFromInfoNotificationMessage(_In_ internal::PackedUmp128& ump);
 
     HRESULT RequestAllFunctionBlocks();
     HRESULT RequestAllEndpointDiscoveryInformation();
@@ -126,7 +126,9 @@ private:
     HRESULT UpdateDeviceIdentityProperty(_In_ internal::PackedUmp128& identityMessage);
     HRESULT UpdateEndpointInfoProperties(_In_ internal::PackedUmp128& endpointInfoNotificationMessage);
     HRESULT UpdateStreamConfigurationProperties(_In_ internal::PackedUmp128& endpointStreamConfigurationNotificationMessage);
+
     HRESULT UpdateFunctionBlockProperty(_In_ internal::PackedUmp128& functionBlockInfoNotificationMessage);
+    HRESULT UpdateAllFunctionBlockPropertiesIfComplete();
 
 };
 

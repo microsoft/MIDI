@@ -2343,6 +2343,10 @@ CMidiDeviceManager::SyncMidi1Ports(
                     }
                     else
                     {
+                        // Gary TODO: If the transport is KSA, this should use the generated Group Terminal Block name
+                        // as the base name. That name follows rules for deriving the name from the pin/filter/device
+                        // the below logic is fine for MIDI 2.0 KS devices.
+
                         std::wstring shortName{};
 
                         prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_ManufacturerName));

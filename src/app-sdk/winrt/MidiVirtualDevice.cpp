@@ -40,7 +40,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
 
     _Use_decl_annotations_
-    bool MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& block) noexcept
+    bool MidiVirtualDevice::UpdateFunctionBlock(midi2::MidiFunctionBlock const& updatedBlock) noexcept
     {
         // If blocks are static, return false. By spec, they are not allowed to be updated.
         if (m_declaredEndpointInfo.HasStaticFunctionBlocks)
@@ -61,7 +61,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         // check to see if this is an existing block number. If not, fail. Devices are
         // not allowed to change the number of function blocks they have, per the MIDI 2 spec
-        if (!m_functionBlocks.HasKey(block.Number()))
+        if (!m_functionBlocks.HasKey(updatedBlock.Number()))
         {
             LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
 
@@ -77,11 +77,33 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
             return false;
         }
 
-        // Update the block and send the notification messages
-        if (SendFunctionBlockInfoNotificationMessage(block))
+        auto oldBlock = m_functionBlocks.Lookup(updatedBlock.Number());
+
+        // Update the block info and send the notification messages
+        if (SendFunctionBlockInfoNotificationMessage(updatedBlock))
         {
-            // this ignores that the name may not be set. It's an oversight in the block object design.
-            m_functionBlocks.Insert(block.Number(), block);
+            if (oldBlock.Name() != updatedBlock.Name())
+            {
+                // only send a name notification if the name has changed
+
+                if (!SendFunctionBlockNameNotificationMessages(updatedBlock))
+                {
+                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Error sending function block name notification messages.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
+
+                    return false;
+                }
+            }
+
+            m_functionBlocks.Insert(updatedBlock.Number(), updatedBlock);
         }
         else
         {
@@ -99,28 +121,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
             return false;
         }
 
-        // check to see if the function block name changed. If so, send out a name notification
-
-        auto existingBlock = m_functionBlocks.Lookup(block.Number());
-
-        if (existingBlock.Name() != block.Name())
-        {
-            if (!SendFunctionBlockNameNotificationMessages(block))
-            {
-                LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Error sending function block name notification messages.", MIDI_SDK_TRACE_MESSAGE_FIELD)
-                );
-
-                return false;
-            }
-        }
 
         return true;
     }

@@ -438,74 +438,13 @@ interface IMidiDataTransform : IUnknown
 // ============================================================================================
 // MIDI 2.0 Endpoint Discovery and Protocol Negotiation
 
-// Represents a single function block discovered from a MIDI 2.0 device during discovery and protocol negotiation
-typedef struct
-{
-    BYTE Number;
-    BYTE FirstGroup;
-    BYTE NumberOfGroupsSpanned;
-    BOOL IsActive;
-    BOOL IsMIDIMessageDestination;  // if clients can send messages TO this block. We should create a MIDI 1.0 output port
-    BOOL IsMIDIMessageSource;       // if clients can receive messages FROM this block. We should create a MIDI 1.0 input port
-    LPCWSTR Name;                   // this type is only used within the service process, so string pointers are fine
-} DISCOVEREDFUNCTIONBLOCK, *PDISCOVEREDFUNCTIONBLOCK;
-
-// Used between the MIDI Service and the loaded MIDI 2.0 transports. This contains the
-// results of the required MIDI 2.0 discovery and protocol negotiation steps, and is used
-// to inform the creation of the backwards-compatible API endpoints for these devices.
-// 
-// this only contains key info required by the endpoint managers
-// so they can create compatible MIDI 1.0 ports from the results
-// from MIDI 2.0 protocol negotiation. This is not sent over RPC
-// or otherwise used cross-process. In-service only.
-//
-// AllEndpointInformationReceived is set to true when the final negotiation message
-// is received.
-//
-typedef struct
-{
-    BOOL AllEndpointInformationReceived;
-
-    MidiEndpointCapabilities EndpointCapabilities;
-
-    LPCWSTR EndpointSuppliedName;
-    LPCWSTR EndpointSuppliedProductInstanceId;
-
-    BYTE CountFunctionBlocksDeclared;
-    BYTE CountFunctionBlocksReceived;
-    BOOL FunctionBlocksAreStatic;
-
-    PDISCOVEREDFUNCTIONBLOCK DiscoveredFunctionBlocks;  // pointer to an array of discovered function blocks. 
-
-}  ENDPOINTPROTOCOLNEGOTIATIONRESULTS, *PENDPOINTPROTOCOLNEGOTIATIONRESULTS;
-
 // The service's input into the protocol negotiation process for a single endpoint
 typedef struct
 {
     BOOL PreferToSendJitterReductionTimestampsToEndpoint;
     BOOL PreferToReceiveJitterReductionTimestampsFromEndpoint;
     BYTE PreferredMidiProtocol;
-    WORD TimeoutMilliseconds;
 } ENDPOINTPROTOCOLNEGOTIATIONPARAMS, *PENDPOINTPROTOCOLNEGOTIATIONPARAMS;
-
-// During discovery and protocol negotiation, the service receives the initial
-// metadata from the endpoint. This metadata may used to create the 
-// backwards-compatible MIDI 1.0 ports. The callback enables the process to 
-// provide those initial results and then continue watching for metadata for 
-// the lifetime of the service.
-[
-    object,
-        local,
-        uuid(f948dc64-e03a-4e24-bc6e-437ad729cd50)
-]
-interface IMidiProtocolNegotiationCompleteCallback : IUnknown
-{
-    HRESULT ProtocolNegotiationCompleteCallback(
-        [in, annotation("_In_")] GUID transportId,
-        [in, string, annotation("_In_")] LPCWSTR endpointDeviceInterfaceId,
-        [in, annotation("_In_")] PENDPOINTPROTOCOLNEGOTIATIONRESULTS results
-    );
-};
 
 // Endpoint transports for MIDI 2.0 devices need to access the protocol 
 // manager in the service. This interface facilitates that.
@@ -519,8 +458,7 @@ interface IMidiEndpointProtocolManagerInterface : IUnknown
     HRESULT DiscoverAndNegotiate(
         [in, annotation("_In_")] GUID transportId,
         [in, string, annotation("_In_")] LPCWSTR endpointDeviceInterfaceId,
-        [in, annotation("_In_")] ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams,
-        [in, annotation("_In_")] IMidiProtocolNegotiationCompleteCallback* negotiationCompleteCallback
+        [in, annotation("_In_")] ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams
     );
 
     BOOL IsEnabled();

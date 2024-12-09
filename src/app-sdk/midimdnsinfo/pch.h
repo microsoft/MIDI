@@ -32,6 +32,10 @@ using namespace winrt::Windows::Devices::Enumeration;
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
 
+#include <winrt/Microsoft.Windows.Devices.Midi2.Endpoints.Network.h>
+namespace midinet = winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network;
+
+
 #include <wrl\module.h>
 #include <wrl\event.h>
 #include <devioctl.h>
@@ -71,4 +75,6 @@ namespace collections = winrt::Windows::Foundation::Collections;
 
 namespace internal = ::WindowsMidiServicesInternal;
 
+#include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
+namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 

@@ -32,8 +32,8 @@ DEFINE_DEVPROPKEY(DEVPKEY_KsTransport, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29
 
 // The binary is KSMIDI_PIN_MAP which contains 16 input and 16 output group maps
 // this is used for when we create a UMP BIDI from a set of MIDI in and Out pins on a device
-#define STRING_DEVPKEY_KsMidiGroupPinMap L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},16"
-DEFINE_DEVPROPKEY(DEVPKEY_KsMidiGroupPinMap, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 16); // DEVPROP_TYPE_BINARY
+#define STRING_DEVPKEY_KsAggMidiGroupPinMap L"{05279CB1-002F-4E6B-A3A3-29A87D82B4F7},16"
+DEFINE_DEVPROPKEY(DEVPKEY_KsAggMidiGroupPinMap, 0x5279cb1, 0x2f, 0x4e6b, 0xa3, 0xa3, 0x29, 0xa8, 0x7d, 0x82, 0xb4, 0xf7, 16); // DEVPROP_TYPE_BINARY
 
 
 typedef enum _MidiTransport

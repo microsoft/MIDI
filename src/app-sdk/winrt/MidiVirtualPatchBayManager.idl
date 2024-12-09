@@ -18,6 +18,7 @@ import "MidiVirtualPatchBayRouteDefinition.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
+    [experimental]
     static runtimeclass MidiVirtualPatchBayManager
     {
         static Boolean IsTransportAvailable{ get; };

@@ -72,14 +72,14 @@ app.Configure(config =>
             .WithExample("enumerate", "transports")
             ;
 
-        enumerate.AddCommand<EnumMdnsAdvertisementsCommand>("mdns-advertisements")
-            .WithAlias("mdns")
-            .WithAlias("network-midi")
-            .WithDescription(Strings.CommandEnumerateMdnsAdvertisementsDescription)
-            .WithExample("enumerate", "mdns-advertisements")
-            .WithExample("enumerate", "mdns")
-            .WithExample("enumerate", "network-midi")
-            ;
+        //enumerate.AddCommand<EnumMdnsAdvertisementsCommand>("mdns-advertisements")
+        //    .WithAlias("mdns")
+        //    .WithAlias("network-midi")
+        //    .WithDescription(Strings.CommandEnumerateMdnsAdvertisementsDescription)
+        //    .WithExample("enumerate", "mdns-advertisements")
+        //    .WithExample("enumerate", "mdns")
+        //    .WithExample("enumerate", "network-midi")
+        //    ;
 
 
     }).WithAlias("list")
@@ -126,12 +126,20 @@ app.Configure(config =>
             .WithDescription(Strings.CommandSendSysExFileDescription)
             ;
 
+        endpoint.AddCommand<EndpointPlayNotesCommand>("play-notes")
+            .WithAlias("play")
+            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "play-notes", "127 32 56 98", "--length", "500", "--velocity", "50", "--forever", "--midi2")
+            .WithDescription(Strings.CommandPlayMidi1NotesDescription)
+            ;
+
 
         endpoint.AddCommand<EndpointPropertiesCommand>("properties")
             .WithAlias("props")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "properties")
             .WithDescription(Strings.CommandEndpointPropertiesDescription)
             ;
+
+
 
 
         endpoint.AddBranch<EndpointRequestCommandSettings>("request", request =>

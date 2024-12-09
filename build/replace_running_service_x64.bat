@@ -24,10 +24,10 @@ net stop /Y AudioEndpointBuilder
 timeout 3
 echo Copying MidiSrv.exe and related dlls
 copy /Y %buildoutput%\MidiSrv.exe %servicepath%
-copy /Y %buildoutput%\Midi2.*Abstraction.dll %servicepath%
+copy /Y %buildoutput%\Midi2.*Transport.dll %servicepath%
 copy /Y %buildoutput%\Midi2.*Transform.dll %servicepath%
 
-%midi_repo_root%build\sfpcopy %buildoutput%\wdmaud2.drv %windir%\system32\wdmaud2.drv
+REM %midi_repo_root%build\sfpcopy %buildoutput%\wdmaud2.drv %windir%\system32\wdmaud2.drv
 
 echo Reinstalling service
 %servicepath%\midisrv.exe install

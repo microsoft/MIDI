@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Windows.AI.MachineLearning;
 using Windows.Devices.Enumeration;
 
 
@@ -153,7 +154,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public static string FormatBlockNumber(int number)
         {
-            return "[orange3]" + number + "[/]";
+            return "[orange3]" + number.ToString().PadLeft(2) + "[/]";
         }
 
         public static string FormatBlockName(string name)
@@ -217,6 +218,10 @@ namespace Microsoft.Midi.ConsoleApp
             }
         }
 
+        public static string FormatMidi1Note(byte noteIndex)
+        {
+            return $"[deepskyblue1]{noteIndex}[/]";
+        }
 
         public static string FormatMidiWords(params UInt32[] words)
         {

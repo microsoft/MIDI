@@ -347,7 +347,7 @@ class Build : NukeBuild
 
 
                 MSBuildTasks.MSBuild(_ => _
-                    .SetTargetPath(ApiSolutionFolder / "Midi2-InDevelopment.sln")
+                    .SetTargetPath(ApiSolutionFolder / "midi2-service-component-preview.sln")
                     .SetMaxCpuCount(14)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/

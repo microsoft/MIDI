@@ -14,11 +14,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 {
     bool MidiNetworkEndpointManager::IsTransportAvailable()
     {
-        throw hresult_not_implemented();
-    }
-    winrt::guid MidiNetworkEndpointManager::TransportId()
-    {
-        throw hresult_not_implemented();
+        // TODO: Check to see if service transport is installed and running. May require a new service call
+        return true;
     }
 
     _Use_decl_annotations_
@@ -36,6 +33,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         UNREFERENCED_PARAMETER(removalConfig);
         throw hresult_not_implemented();
     }
+
+
 
     _Use_decl_annotations_
     network::MidiNetworkClientEndpointCreationResult MidiNetworkEndpointManager::CreateNetworkClient(
@@ -67,7 +66,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
         if (entries && entries.Size() > 0)
         {
-
             for (auto const& entry : entries)
             {
                 MidiAdvertisedHost host;

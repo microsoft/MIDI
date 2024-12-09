@@ -53,7 +53,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         bool AreFunctionBlocksStatic() { return m_declaredEndpointInfo.HasStaticFunctionBlocks; }
         collections::IMapView<uint8_t, midi2::MidiFunctionBlock> FunctionBlocks() noexcept { return m_functionBlocks.GetView(); }
 
-        bool UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& block) noexcept;
+        bool UpdateFunctionBlock(_In_ midi2::MidiFunctionBlock const& updatedBlock) noexcept;
         bool UpdateEndpointName(_In_ winrt::hstring const& name) noexcept;
 
         winrt::guid AssociationId() const noexcept { return m_associationId; }
