@@ -345,6 +345,8 @@ namespace MidiSample.AppToAppMidi
             block3.MidiCIMessageVersionFormat = 0;
 
             _virtualDevice.UpdateFunctionBlock(block3);
+
+            FunctionBlockInfo.Text = block3.Name;
         }
 
     }

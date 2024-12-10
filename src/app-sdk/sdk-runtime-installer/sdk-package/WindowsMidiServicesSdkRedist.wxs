@@ -33,6 +33,7 @@
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.dll" Vital="true" SelfRegCost="1"/>
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pri" />
             <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.winmd" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Microsoft.Windows.Devices.Midi2.pdb" Vital="true" />
 
             <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\WindowsMidiServicesClientInitialization.dll" Vital="true" SelfRegCost="1"/>-->
             <!--<File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\WindowsMidiServicesClientInitialization.tlb" Vital="true"/>-->
