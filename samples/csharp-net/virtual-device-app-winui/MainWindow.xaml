@@ -33,6 +33,8 @@
             </TextBox>
             <Button x:Name="UpdateName" Content="Update Name" Grid.Row="0" Grid.Column="1" Click="UpdateName_Click" VerticalAlignment="Bottom" Margin="5"/>
 
+
+            <TextBlock x:Name="FunctionBlockInfo" VerticalAlignment="Bottom" Margin="5" Grid.Row="1" Grid.Column="0"/>
             <Button x:Name="UpdateFunctionBlocks" Content="Update FunctionBlocks" Grid.Row="1" Grid.Column="1" Click="UpdateFunctionBlocks_Click" VerticalAlignment="Bottom" Margin="5"/>
 
 
