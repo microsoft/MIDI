@@ -240,21 +240,8 @@ int main()
                 std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
                 std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
                 std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
+                std::cout << "- Data               " << winrt::to_string(args.GetMessagePacket().as<foundation::IStringable>().ToString()) << std::endl;
                 std::cout << "- Message:           " << winrt::to_string(MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())) << std::endl;
-
-                // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension
-
-                if (ump.PacketType() == MidiPacketType::UniversalMidiPacket32)
-                {
-                    // we'll use the Ump32 type here. This is a runtimeclass that the strongly-typed 
-                    // 32-bit messages derive from. There are also MidiUmp64/96/128 classes.
-                    auto ump32 = ump.as<MidiMessage32>();
-
-                    std::cout << "- Word 0:            0x" << std::hex << ump32.Word0() << std::endl;
-                }
-
-                std::cout << std::endl;
-
             };
 
         // the returned token is used to deregister the event later.
@@ -263,24 +250,20 @@ int main()
         // this is what associates the virtual device client object with this connection
         deviceEndpoint.AddMessageProcessingPlugin(m_virtualDevice);
 
-
         std::cout << std::endl << "Opening device endpoint connection. This will create the client-visible endpoint" << std::endl;
-
-        // once you have wired up all your event handlers, added any filters/listeners, etc.
-        // You can open the connection. Doing this will query the cache for the in-protocol 
-        // endpoint information and function blocks. If not there, it will send out the requests
-        // which will come back asynchronously with responses.
         deviceEndpoint.Open();
 
         std::cout << "Press any key to send an endpoint name update" << std::endl;
         system("pause");
         UpdateEndpointName();
+        std::cout << std::endl;
 
         std::cout << "Press any key to send a function block update" << std::endl;
         system("pause");
         UpdateFunctionBlocks();
+        std::cout << std::endl;
 
-        std::cout << "Press any key to exit" << std::endl;
+        std::cout << "Press any key to cleanup and exit" << std::endl;
         system("pause");
 
 
