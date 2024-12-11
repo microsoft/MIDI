@@ -969,6 +969,15 @@ CMidiDeviceManager::ActivateEndpoint
 
         // remove actual function blocks and their names
 
+        // *************************************************************************************************************
+        // 2024-12-10 Note from Pete
+        // 
+        // TODO: Talk to Gary to see if we can re-enable this code. By not clearing these out, we end up missing
+        // notifications in the WinRT SDK when function blocks are re-discovered, but it's the same value as the
+        // last time the device was present. Anything relying on device watcher update notifications to make decisions
+        // based on the function blocks will not execute. That may be an anti-pattern anyway. Need to discuss.
+        // *************************************************************************************************************
+
         //// TEMP
         //TraceLoggingWrite(
         //    MidiSrvTelemetryProvider::Provider(),

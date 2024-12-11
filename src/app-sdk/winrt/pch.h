@@ -60,6 +60,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
 
+#include "devpkey.h"
 #include <Devpropdef.h>
 #include <MidiDefs.h>
 #include <midi_group_terminal_blocks.h>
@@ -77,7 +78,6 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 #include <resource_util.h>
 #include <swd_helpers.h>
 #include <midi_ump_message_defs.h>
-
 
 // service interface
 #include <WindowsMidiServices.h>
@@ -135,6 +135,8 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 
 #include "midi_stream_message_defs.h"
 #include "midi_function_block_prop_util.h"
+#include "endpoint_device_interface_helpers.h"
+
 
 #include "memory_buffer.h"
 
@@ -204,6 +206,8 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiSystemExclusiveSender.h"
 
 #include "MidiServiceConfig.h"
+
+#include "MidiEndpointDevicePropertyHelper.h"
 
 // Initialization-specific
 

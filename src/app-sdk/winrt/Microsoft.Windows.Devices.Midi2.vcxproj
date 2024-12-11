@@ -271,12 +271,14 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="endpoint_device_interface_helpers.h" />
     <ClInclude Include="Initialization\MidiAppSdkManifest.h" />
     <ClInclude Include="Initialization\MidiAppSdkRuntimeComponent.h" />
     <ClInclude Include="Initialization\MidiAppSdkRuntimeComponentCatalog.h" />
     <ClInclude Include="Initialization\MidiAppSdkRuntimeTypeResolution.h" />
     <ClInclude Include="Initialization\MidiClientInitializer.h" />
     <ClInclude Include="Initialization\MidiRoDetours.h" />
+    <ClInclude Include="MidiEndpointDevicePropertyHelper.h" />
     <ClInclude Include="MidiNetworkClientEndpointCreationConfig.h">
       <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
     </ClInclude>
@@ -452,6 +454,7 @@
     <ClCompile Include="Initialization\MidiAppSdkRuntimeTypeResolution.cpp" />
     <ClCompile Include="Initialization\MidiClientInitializer.cpp" />
     <ClCompile Include="Initialization\MidiRoDetours.cpp" />
+    <ClCompile Include="MidiEndpointDevicePropertyHelper.cpp" />
     <ClCompile Include="MidiNetworkClientEndpointCreationConfig.cpp">
       <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
     </ClCompile>
@@ -718,6 +721,7 @@
     <Midl Include="MidiDeclaredStreamConfiguration.idl" />
     <Midl Include="MidiEndpointDeviceInformationAddedEventArgs.idl" />
     <Midl Include="MidiEndpointDeviceInformationRemovedEventArgs.idl" />
+    <Midl Include="MidiEndpointDevicePropertyHelper.idl" />
     <Midl Include="MidiEndpointTransportSuppliedInfo.idl" />
     <Midl Include="MidiEndpointUserSuppliedInfo.idl" />
     <Midl Include="MidiEndpointDeviceInformationUpdatedEventArgs.idl" />

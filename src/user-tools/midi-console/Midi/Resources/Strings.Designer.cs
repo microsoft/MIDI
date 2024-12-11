@@ -160,6 +160,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to List the Windows MIDI Services-specific property keys.
+        /// </summary>
+        internal static string CommandEnumerateEndpointPropertyKeysDescription {
+            get {
+                return ResourceManager.GetString("CommandEnumerateEndpointPropertyKeysDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to List MIDI UMP endpoints visible to Windows MIDI Services-aware applications.
         /// </summary>
         internal static string CommandEnumerateEndpointsDescription {

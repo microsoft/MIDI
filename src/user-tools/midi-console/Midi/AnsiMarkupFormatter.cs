@@ -120,6 +120,9 @@ namespace Microsoft.Midi.ConsoleApp
             return "[greenyellow]" + EscapeString(message) + "[/]";
         }
 
+
+
+
         public static string FormatTimestamp(UInt64 timestamp)
         {
             return "[darkseagreen2]" + timestamp.ToString("N0") + "[/]";
@@ -236,6 +239,17 @@ namespace Microsoft.Midi.ConsoleApp
             }
 
             return output.Trim();
+        }
+
+
+        public static string FormatFriendlyPropertyKey(string key)
+        {
+            return "[deepskyblue2]" + key + "[/]";
+        }
+
+        public static string FormatUnrecognizedPropertyKey(string key)
+        {
+            return "[grey]" + key + "[/]";
         }
 
 

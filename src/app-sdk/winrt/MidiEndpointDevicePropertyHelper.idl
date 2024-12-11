@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [experimental]
+    static runtimeclass MidiEndpointDevicePropertyHelper
+    {
+        static String GetMidiPropertyNameFromPropertyKey(Guid fmtid, UInt32 pid);
+        static String GetMidiPropertyNameFromPropertyKey(String key);
+
+        static Boolean IsMidiPropertyKey(String key);
+        static Boolean IsMidiPropertyKey(Guid fmtid, UInt32 pid);
+
+        static IMapView<String, String> GetAllMidiProperties();
+    }
+}
+

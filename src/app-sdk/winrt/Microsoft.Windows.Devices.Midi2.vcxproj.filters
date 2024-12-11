@@ -79,6 +79,9 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Initializer</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointDevicePropertyHelper.cpp">
+      <Filter>SDK\Core\Enumeration\Metadata\Windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -158,6 +161,10 @@
     <ClInclude Include="Initialization\MidiClientInitializer.h">
       <Filter>Initializer\Init</Filter>
     </ClInclude>
+    <ClInclude Include="MidiEndpointDevicePropertyHelper.h">
+      <Filter>SDK\Core\Enumeration\Metadata\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="endpoint_device_interface_helpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
@@ -474,6 +481,9 @@
     </Midl>
     <Midl Include="MidiAdvertisedHost.idl">
       <Filter>SDK\Endpoints\Network</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDevicePropertyHelper.idl">
+      <Filter>SDK\Core\Enumeration\Metadata\Windows</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

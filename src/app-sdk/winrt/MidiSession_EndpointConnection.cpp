@@ -13,6 +13,10 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
+
+
+
+
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId,
@@ -23,6 +27,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         try
         {
             auto normalizedDeviceId = winrt::to_hstring(internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId.c_str()).c_str());
+
+            // this does a lookup to see if this is a MIDI device or not
+            if (!internal::IsValidWindowsMidiServicesEndpointId(normalizedDeviceId))
+            {
+                return nullptr;
+            }
+            
+            // this checks to see if the interface is enabled
+            if (!internal::IsWindowsMidiServicesEndpointPresent(normalizedDeviceId))
+            {
+                return nullptr;
+            }
+
             auto endpointConnection = winrt::make_self<implementation::MidiEndpointConnection>();
 
             // generate internal endpoint Id
