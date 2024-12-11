@@ -902,4 +902,7 @@ Timestamp</value>
   <data name="NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds" xml:space="preserve">
     <value>Unique identifiers updated</value>
   </data>
+  <data name="CommandEnumerateEndpointPropertyKeysDescription" xml:space="preserve">
+    <value>List the Windows MIDI Services-specific property keys</value>
+  </data>
 </root>

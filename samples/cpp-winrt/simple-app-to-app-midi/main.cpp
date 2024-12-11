@@ -113,12 +113,16 @@ bool CreateVirtualDevice()
         {
             creationConfig.FunctionBlocks().Append(fb);
         }
+
+        std::cout << "Added " << creationConfig.FunctionBlocks().Size() << " function blocks." << std::endl;
     }
 
     // creates the device using the endpoint info provided above
     m_virtualDevice = MidiVirtualDeviceManager::CreateVirtualDevice(creationConfig);
     if (m_virtualDevice == nullptr)
     {
+        std::cout << "Virtual device creation failed." << std::endl;
+
         return false;
     }
 
@@ -222,6 +226,13 @@ int main()
     if (CreateVirtualDevice())
     {
         auto deviceEndpoint = session.CreateEndpointConnection(m_virtualDevice.DeviceEndpointDeviceId());
+
+        if (deviceEndpoint == nullptr)
+        {
+            std::cout << "Unable to create device connection" << std::endl;
+            return 1;
+        }
+
         std::cout << "Connected to device endpoint: " << winrt::to_string(m_virtualDevice.DeviceEndpointDeviceId()) << std::endl;
 
         auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& /*sender*/, MidiMessageReceivedEventArgs const& args)

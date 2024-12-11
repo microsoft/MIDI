@@ -123,58 +123,67 @@ namespace Microsoft.Midi.ConsoleApp
             var di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(args.EndpointDeviceId);
 
             AnsiConsole.MarkupLine($"[steelblue1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdated}[/]");
-            AnsiConsole.MarkupLine(_emptyBullet + AnsiMarkupFormatter.FormatEndpointName(di.Name));
+            AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatEndpointName(di.Name));
             AnsiConsole.MarkupLine(_deviceBullet + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.EndpointDeviceId));
 
             
             if (args.IsNameUpdated)
             {
-                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedName}[/]");
+                AnsiConsole.MarkupLine(_bullet + $"[green]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedName}[/]");
             }
 
             if (args.IsEndpointInformationUpdated)
             {
-                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedEndpointInformation}[/]");
+                AnsiConsole.MarkupLine(_bullet + $"[green]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedEndpointInformation}[/]");
             }
 
             if (args.IsStreamConfigurationUpdated)
             {
-                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedStreamConfiguration}[/]");
+                AnsiConsole.MarkupLine(_bullet + $"[green]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedStreamConfiguration}[/]");
             }
 
             if (args.AreFunctionBlocksUpdated)
             {
-                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedFunctionBlocks}[/]");
+                AnsiConsole.MarkupLine(_bullet + $"[green]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedFunctionBlocks}[/]");
             }
 
             if (args.IsDeviceIdentityUpdated)
             {
-                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedDeviceIdentity}[/]");
+                AnsiConsole.MarkupLine(_bullet + $"[green]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedDeviceIdentity}[/]");
             }
 
             if (args.IsUserMetadataUpdated)
             {
-                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedUserMetadata}[/]");
+                AnsiConsole.MarkupLine(_bullet + $"[green]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedUserMetadata}[/]");
             }
 
             if (args.AreAdditionalCapabilitiesUpdated)
             {
-                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedAdditionalCapabilities}[/]");
+                AnsiConsole.MarkupLine(_bullet + $"[green]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedAdditionalCapabilities}[/]");
             }
 
             if (args.AreUniqueIdsUpdated)
             {
-                AnsiConsole.MarkupLine(_bullet + $"[gold3_1]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds}[/]");
+                AnsiConsole.MarkupLine(_bullet + $"[green]{Strings.NotificationEndpointDeviceWatcherEndpointUpdatedUniqueIds}[/]");
             }
 
             if (_settings.Verbose)
             {
                 // display all updated properties
 
+                AnsiConsole.MarkupLine(_bullet+"Raw Updated Property List:");
+
                 foreach (var propKey in args.DeviceInformationUpdate.Properties.Keys)
                 {
-                    // TODO: Consider a lookup table of friendly prop names or property descriptions
-                    AnsiConsole.MarkupLine($"  [grey]{propKey}[/]");
+                    if (MidiEndpointDevicePropertyHelper.IsMidiPropertyKey(propKey))
+                    {
+                        AnsiConsole.MarkupLine("    " + AnsiMarkupFormatter.FormatFriendlyPropertyKey(MidiEndpointDevicePropertyHelper.GetMidiPropertyNameFromPropertyKey(propKey)));
+                    }
+                    else
+                    {
+                        // not a MIDI property key
+                        AnsiConsole.MarkupLine("    " + AnsiMarkupFormatter.FormatUnrecognizedPropertyKey(propKey));
+                    }
                 }
             }
 

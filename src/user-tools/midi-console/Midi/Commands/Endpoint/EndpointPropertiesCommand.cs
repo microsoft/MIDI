@@ -83,6 +83,13 @@ namespace Microsoft.Midi.ConsoleApp
 
 
                 MidiEndpointDeviceInformation di = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(endpointId);
+                if (di == null)
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("Unable to create device. It may have been disconnected."));
+                    AnsiConsole.WriteLine();
+                    return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+                }
+
 
                 var config = di.GetDeclaredStreamConfiguration();
                 var epinfo = di.GetDeclaredEndpointInfo();
@@ -539,27 +546,39 @@ namespace Microsoft.Midi.ConsoleApp
 
                 if (found)
                 {
+                    string friendlyKey = key;
+
+                    if (MidiEndpointDevicePropertyHelper.IsMidiPropertyKey(key))
+                    {
+                        friendlyKey = AnsiMarkupFormatter.FormatFriendlyPropertyKey(MidiEndpointDevicePropertyHelper.GetMidiPropertyNameFromPropertyKey(key));
+                    }
+                    else
+                    {
+                        // not a MIDI property key
+                        friendlyKey = key;
+                    }
+
                     if (value != null)
                     {
                         if (key == "System.ItemNameDisplay")
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatEndpointName(value.ToString()!));
+                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatEndpointName(value.ToString()!));
                         }
                         else if (key == "System.Devices.DeviceInstanceId")
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatDeviceInstanceId(value.ToString()!));
+                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatDeviceInstanceId(value.ToString()!));
                         }
                         else if (key == "System.Devices.Parent")
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatDeviceParentId(value.ToString()!));
+                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatDeviceParentId(value.ToString()!));
                         }
                         else if (key == "System.Devices.ContainerId")
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatContainerId(value.ToString()!));
+                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatContainerId(value.ToString()!));
                         }
                         else if (value is DateTimeOffset)
                         {
-                            table.AddRow(key, AnsiMarkupFormatter.FormatLongDateTime((DateTimeOffset)value!));
+                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatLongDateTime((DateTimeOffset)value!));
                         }
                         else
                         {
@@ -572,11 +591,11 @@ namespace Microsoft.Midi.ConsoleApp
                                     s += string.Format("{0:X2} ", b);
                                 }
 
-                                table.AddRow(key, s);
+                                table.AddRow(friendlyKey, s);
                             }
                             else
                             {
-                                table.AddRow(key, AnsiMarkupFormatter.EscapeString(value.ToString()!));
+                                table.AddRow(friendlyKey, AnsiMarkupFormatter.EscapeString(value.ToString()!));
                             }
 
                         }
@@ -584,7 +603,7 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                     else
                     {
-                        table.AddRow(key, "[grey35]null[/]");
+                        table.AddRow(friendlyKey, "[grey35]null[/]");
                     }
                 }
             }

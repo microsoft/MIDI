@@ -72,6 +72,13 @@ app.Configure(config =>
             .WithExample("enumerate", "transports")
             ;
 
+        enumerate.AddCommand<EnumEndpointPropertyKeysCommand>("endpoint-property-keys")
+            .WithAlias("property-keys")
+            .WithDescription(Strings.CommandEnumerateEndpointPropertyKeysDescription)
+            .WithExample("enumerate", "endpoint-property-keys")
+            .WithExample("enumerate", "property-keys")
+            ;
+
         //enumerate.AddCommand<EnumMdnsAdvertisementsCommand>("mdns-advertisements")
         //    .WithAlias("mdns")
         //    .WithAlias("network-midi")

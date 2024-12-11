@@ -164,6 +164,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         additionalProperties.Append(L"System.Devices.DeviceManufacturer");
         additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
         additionalProperties.Append(L"System.Devices.Present");
+        additionalProperties.Append(L"System.Devices.InterfaceEnabled");
 
         // Basics ============================================================================
         additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
@@ -518,9 +519,33 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         try
         {
-            auto di = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
-                endpointDeviceId, GetAdditionalPropertiesList()).get();
+            auto cleanedEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
+            // this helps ensure we aren't just using random ids
+            if (!internal::IsValidWindowsMidiServicesEndpointId(cleanedEndpointDeviceId))
+            {
+                return nullptr;
+            }
+
+            // we don't like to show stale info. Only return info if device is present
+            if (!internal::IsWindowsMidiServicesEndpointPresent(cleanedEndpointDeviceId))
+            {
+                return nullptr;
+            }
+
+
+            auto di = enumeration::DeviceInformation::CreateFromIdAsync(
+                cleanedEndpointDeviceId, 
+                GetAdditionalPropertiesList(),
+                enumeration::DeviceInformationKind::DeviceInterface
+            ).get();
+
+            if (di == nullptr)
+            {
+                return nullptr;
+            }
+
+            // check to see if the interface is enabled
             if (di != nullptr)
             {
                 auto endpointInfo = winrt::make_self<MidiEndpointDeviceInformation>();

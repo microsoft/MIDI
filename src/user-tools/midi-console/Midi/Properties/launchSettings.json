@@ -14,10 +14,18 @@
     },
     "Endpoint Properties": {
       "commandName": "Project",
-      "commandLineArgs": "endpoint properties --verbose"
+      "commandLineArgs": "endpoint properties --verbose --include-raw"
     },
     "No Arguments": {
       "commandName": "Project"
+    },
+    "Property Keys": {
+      "commandName": "Project",
+      "commandLineArgs": "enum endpoint-property-keys"
+    },
+    "Watch Endpoints": {
+      "commandName": "Project",
+      "commandLineArgs": "watch-endpoints --verbose"
     }
   }
 }

@@ -15,7 +15,14 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 | -------| ----------- |
 | [App SDK Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages|
 | [Enumerate Endpoints](static-enum-endpoints/) | Demonstrates enumerating endpoints, getting group terminal and function blocks, and other properties|
+| [Loopback Endpoints](loopback-endpoints/) | Demonstrates how to create simple loopback endpoints at runtime.|
+| [Simple app-to-app MIDI](simple-app-to-app-midi/) | Demonstrates how to create an application endpoint, and update properties like function blocks. The C# sample is more of a real-world use-case.|
+| [Static Enum Endpoints](static-enum-endpoints/) | Demonstrates how to get a one-time static list of active endpoints.|
 | [Watch Endpoints](watch-endpoints/) | Demonstrates handling device add/remove notifications, as well as device property changes. Most applications will want to use the watcher so they can properly react to device plug/unplug, as well as things like Function Block updates.|
+
+We recommend you load the entire solution in Visual Studio, as that is how the NuGet package configuration is set up. Change the sample you run by setting that project as startup.
+
+Before running, you will need to have installed the Windows MIDI Services App SDK Runtime. You will also need the NuGet package that these projects use, in a location on your PC configured as a NuGet package source. The runtime and NuGet package are available in the official releases.
 
 ## Background information
 
