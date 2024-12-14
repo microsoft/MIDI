@@ -55,33 +55,21 @@ MidiNetworkHost::Initialize(
 HRESULT
 MidiNetworkHost::Start()
 {
-    winrt::Windows::Foundation::TimeSpan timeout = std::chrono::seconds(5);
-    auto status = m_socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).wait_for(timeout);
-
-    if (status != winrt::Windows::Foundation::AsyncStatus::Completed)
-    {
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Timed out trying to bind service to socket.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(m_hostDefinition.Port.c_str(), "port")
-        );
-    
-        RETURN_IF_FAILED(E_FAIL);
-    }
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     HostName hostName(m_hostDefinition.HostName);
 
     // this should have error checking
-    auto portNumber = static_cast<uint16_t>(std::stoi(winrt::to_string(m_hostDefinition.Port)));
+    m_socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).get();
 
-
-    // open the port
-    // TODO: This can specify encryption level, which we may want to add to params
-    m_socket.BindServiceNameAsync(m_hostDefinition.Port).get();
+    auto boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(m_socket.Information().LocalPort())));
 
     // advertise
     if (m_hostDefinition.Advertise)
@@ -90,7 +78,7 @@ MidiNetworkHost::Start()
             m_hostDefinition.ServiceInstanceName,
             hostName,
             m_socket,
-            portNumber,
+            boundPort,
             m_hostDefinition.UmpEndpointName,
             m_hostDefinition.ProductInstanceId
         ));

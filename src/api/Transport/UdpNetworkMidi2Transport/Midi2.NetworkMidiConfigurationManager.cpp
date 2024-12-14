@@ -271,7 +271,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 if (auto hostEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_KEY, nullptr); hostEntry != nullptr)
                 {
                     MidiNetworkHostDefinition definition;
-                    winrt::hstring validationErrorMessage{};
+                    winrt::hstring validationErrorMessage{ };
 
                     // currently, UDP is the only allowed protocol
 
@@ -280,8 +280,9 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     if (protocol != MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                     {
                         validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
-
                     }
+
+                    definition.Advertise = true;
 
                     definition.EntryIdentifier = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENTRY_IDENTIFIER_KEY, L""));
 
@@ -348,13 +349,33 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                     // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number. Keep trying until unused one is found
 
+                    definition.HostName = definition.ServiceInstanceName + L"._midi2._udp.local";
 
+                    if (definition.Port == L"" || definition.Port == L"auto" || definition.Port == L"0")
+                    {
+                        // this will cause us to use an auto-generated free port
+                        definition.Port = L"";
+                        definition.UseAutomaticPortAllocation = true;
+                    }
+                    else
+                    {
+                        definition.UseAutomaticPortAllocation = false;
+                    }
 
 
                     // validate the entry
 
                     if (SUCCEEDED(ValidateHostDefinition(definition, validationErrorMessage)))
                     {
+                        TraceLoggingWrite(
+                            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Host definition validated. Creating host", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                        );
+
                         // create the host
 
                         auto host = std::make_shared<MidiNetworkHost>();

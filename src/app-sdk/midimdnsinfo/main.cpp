@@ -27,14 +27,18 @@ void WriteLabel(std::string label)
 
 init::MidiDesktopAppSdkInitializer initializer{ };
 
+#define LINE_LENGTH 79
 
 int __cdecl main()
 {
     winrt::init_apartment();
 
-    std::cout << dye::grey("===================================================================") << std::endl;
+    std::cout << std::endl;
+    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" Enumerating MIDI mdns advertisements currently visible to this PC") << std::endl;
-    std::cout << dye::grey("===================================================================") << std::endl;
+    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    std::cout << std::endl;
+
 
     auto cleanup = wil::scope_exit([&]
         {
@@ -61,15 +65,34 @@ int __cdecl main()
     {
         for (auto const& entry : entries)
         {
-            std::cout << winrt::to_string(entry.HostName) << std::endl;
+            std::cout << dye::grey("Id:                   ") << dye::yellow(winrt::to_string(entry.DeviceId)) << std::endl;
+            std::cout << dye::grey("Name:                 ") << dye::yellow(winrt::to_string(entry.DeviceName)) << std::endl;
+
+          //  std::wcout<< L"Protocol Id:  " << internal::GuidToString(protocolId) << std::endl;
+
+            std::cout << dye::grey("FullName:             ") << dye::aqua(winrt::to_string(entry.FullName)) << std::endl;
+            std::cout << dye::grey("InstanceName:         ") << dye::aqua(winrt::to_string(entry.ServiceInstanceName)) << std::endl;
+            std::cout << dye::grey("ServiceType:          ") << dye::aqua(winrt::to_string(entry.ServiceType)) << std::endl;
+            std::cout << dye::grey("Domain:               ") << dye::aqua(winrt::to_string(entry.Domain)) << std::endl;
+            std::cout << dye::grey("HostName:             ") << dye::aqua(winrt::to_string(entry.HostName)) << std::endl;
+
+            // todo: IP Addresses
+            std::cout << dye::grey("IP Address:           ") << dye::purple(winrt::to_string(entry.IPAddress)) << std::endl;
+            std::cout << dye::grey("PortNumber:           ") << dye::purple(entry.Port) << std::endl;
+
+            std::cout << dye::grey("UMP Endpoint Name:    ") << dye::light_aqua(winrt::to_string(entry.UmpEndpointName)) << std::endl;
+            std::cout << dye::grey("Product Instance Id:  ") << dye::light_aqua(winrt::to_string(entry.ProductInstanceId)) << std::endl;
+
+            std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
         }
     }
     else
     {
-        std::cout << dye::red("No MIDI 2.0 network host MDNS advertisements found.");
+        std::cout << dye::light_red("No MIDI 2.0 network host MDNS advertisements found.");
     }
 
     std::cout << std::endl;
+
 
     return 0;
 }

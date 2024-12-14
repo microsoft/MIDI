@@ -136,6 +136,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "midi_stream_message_defs.h"
 #include "midi_function_block_prop_util.h"
 #include "endpoint_device_interface_helpers.h"
+#include "enumeration_prop_util.h"
 
 
 #include "memory_buffer.h"

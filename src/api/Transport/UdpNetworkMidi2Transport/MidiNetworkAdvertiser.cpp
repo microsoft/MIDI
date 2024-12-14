@@ -59,6 +59,7 @@ MidiNetworkAdvertiser::Advertise(
 
     auto fullServiceName = BuildFullServiceInstanceName(serviceInstanceNameWithoutSuffix);
 
+
     auto service = DnssdServiceInstance(
         fullServiceName,
         hostName,
