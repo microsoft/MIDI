@@ -180,6 +180,11 @@ private:
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
+    HRESULT UseFallbackMidi1PortDefinition(
+        _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ std::map<UINT32, PORT_INFO> portInfo[2]
+    );
+
     HRESULT GetCustomPortMapping(
         _In_ LPCWSTR umpDeviceInterfaceId,
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]

@@ -185,6 +185,8 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_ManufacturerName, 7);     // DEVPROP_TYPE_STRING
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_GenerateIncomingTimestamp, 10);     // DEVPROP_TYPE_STRING
 
 
+#define STRING_PKEY_MIDI_CustomPortAssignments MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"13"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CustomPortAssignments, 16);     // DEVPROP_TYPE_BINARY containing an array of GroupCustomPortProperty
 
 // this is the device-supplied name in the case of device-based transports
 // we have a copy here because we may rewrite FriendlyName
@@ -683,6 +685,13 @@ struct MidiFunctionBlockProperty
 
     uint32_t Reserved1{ 0 };        // unused in UMP 1.1
     uint32_t Reserved2{ 0 };        // unused in UMP 1.1
+};
+
+// array of GroupCustomPortProperty is stored for custom port mappings.
+struct GroupCustomPortProperty
+{
+    uint8_t GroupIndex { 0 };
+    uint32_t CustomPortNumber { 0 };
 };
 
 #define HRESULT_FROM_RPCSTATUS(status) status == RPC_S_OK ? S_OK : MAKE_HRESULT(SEVERITY_ERROR, FACILITY_RPC, status)

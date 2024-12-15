@@ -214,7 +214,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                     std::wstring customEndpointDescription{};
                     std::wstring customSmallImagePath{};
                     std::wstring customLargeImagePath{};
-                    UINT32 customPortNumber{0};
+                    std::vector<GroupCustomPortProperty> customPortNumbers{};
 
                     // get the device id, Right now, the SWD is the only way to id the item. We're changing that
                     // but when the update is sent at runtime, that's the only value that's useful anyway
@@ -364,37 +364,35 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                     DEVPROP_TYPE_EMPTY, 0, nullptr });
                         }
 
-                        // user-supplied port number
-                        if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_NUMBER))
+                        // retrieve user-supplied port number assignments from JSON, if present
+                        if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_ASSIGNMENTS))
                         {
-                            customPortNumber = (UINT32) updateObject.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_NUMBER, 0);
-
-                            if (customPortNumber != 0)
+                            auto customPortAssignments = updateObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_ASSIGNMENTS, 0);
+                            if (customPortAssignments != nullptr)
                             {
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&customPortNumber) });
+                                // TODO: parse custom port assignments out of the named object and add them to customPortNumbers vector
+                            }
+                        }
 
-                                TraceLoggingWrite(
-                                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                                    MIDI_TRACE_EVENT_INFO,
-                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                    TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(swdId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                                    TraceLoggingUInt32(customPortNumber, "port number")
-                                );
-                            }
-                            else
-                            {
-                                // delete any existing property value, because it is blank in the config
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_EMPTY, 0, nullptr });
-                            }
+                        // If custom port assignments are present, add them to the endpoint properties
+                        if (customPortNumbers.size() > 0)
+                        {
+                            endpointProperties.push_back({ {PKEY_MIDI_CustomPortAssignments, DEVPROP_STORE_SYSTEM, nullptr},
+                                    DEVPROP_TYPE_BINARY, (ULONG)(customPortNumbers.size() * sizeof(GroupCustomPortProperty)), (PVOID)(customPortNumbers.data()) });
+                        
+                            TraceLoggingWrite(
+                                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_INFO,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(swdId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                            );
                         }
                         else
                         {
                             // delete any existing property value, because it is no longer in the config
-                            endpointProperties.push_back({ {PKEY_MIDI_CustomPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                            endpointProperties.push_back({ {PKEY_MIDI_CustomPortAssignments, DEVPROP_STORE_SYSTEM, nullptr},
                                     DEVPROP_TYPE_EMPTY, 0, nullptr });
                         }
 

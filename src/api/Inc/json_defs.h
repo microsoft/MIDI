@@ -55,7 +55,7 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY                 L"customDescription"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY                 L"customSmallImage"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY                 L"customLargeImage"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_NUMBER                          L"customPortNumber"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_ASSIGNMENTS                     L"customPortAssignments"
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY                                         L"create"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY                                         L"update"
