@@ -1173,6 +1173,8 @@ CMidiDeviceManager::ActivateEndpointInternal
         // append the group index to the instance id, so we an get a separate SWD for
         // each group, otherwise we'll only get 1 SWD per flow.
         midiPort->InstanceId += L"_";
+        midiPort->InstanceId += std::to_wstring(flow);
+        midiPort->InstanceId += L"_";
         midiPort->InstanceId += std::to_wstring(groupIndex);
 
         interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
@@ -2229,7 +2231,7 @@ CMidiDeviceManager::GetGroupTerminalBlockPortInfo(
                 portInfo[MidiFlowOut][i].IsEnabled = true;
                 portInfo[MidiFlowOut][i].Flow = (MidiFlow) MidiFlowOut;
                 portInfo[MidiFlowOut][i].InterfaceId = umpDeviceInterfaceId;
-                portInfo[MidiFlowIn][i].Name = gtb->Name;
+                portInfo[MidiFlowOut][i].Name = gtb->Name;
             }
         }
 
@@ -2435,7 +2437,6 @@ CMidiDeviceManager::SyncMidi1Ports(
     createInfo.cbSize = sizeof(createInfo);
     createInfo.pszInstanceId = umpMidiPort->InstanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = umpMidiPort->DeviceDescription.c_str();
     if (GUID_NULL != umpMidiPort->ContainerId)
     {
         createInfo.pContainerId = &(umpMidiPort->ContainerId);
@@ -2534,6 +2535,7 @@ CMidiDeviceManager::SyncMidi1Ports(
 
                 // Create the friendly name for this interface and add it to the properties list
                 std::wstring friendlyName;
+
                 // if we are using the port info name, and the port info name is valid,
                 // use that as the friendly name base, otherwise use the baseFriendlyName
                 // created above.
@@ -2573,6 +2575,9 @@ CMidiDeviceManager::SyncMidi1Ports(
                 // Finally, add the group index that is assigned to this interface
                 interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_PortAssignedGroupIndex, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&groupIndex) });
+
+                // create the swd with the specialized friendly name
+                createInfo.pszDeviceDescription = friendlyName.c_str();
 
                 // create the midi 1 interface
                 RETURN_IF_FAILED(ActivateEndpointInternal(
