@@ -41,8 +41,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         winrt::hstring EndpointDeviceId() const noexcept { return m_id; }
 
-        winrt::guid ContainerId() const noexcept { return GetProperty<winrt::guid>(L"System.Devices.ContainerId", winrt::guid{}); }
-        winrt::hstring DeviceInstanceId() const noexcept { return GetProperty<winrt::hstring>(L"System.Devices.DeviceInstanceId", L"");}
+        winrt::guid ContainerId() const noexcept { return internal::GetDeviceInfoProperty<winrt::guid>(m_properties, L"System.Devices.ContainerId", winrt::guid{}); }
+        winrt::hstring DeviceInstanceId() const noexcept { return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.Devices.DeviceInstanceId", L""); }
 
         winrt::Windows::Devices::Enumeration::DeviceInformation GetParentDeviceInformation() const noexcept;
         winrt::Windows::Devices::Enumeration::DeviceInformation GetContainerDeviceInformation() const noexcept;
@@ -96,26 +96,26 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ foundation::DateTime defaultValue) const noexcept;
 
 
-        template<typename T>
-        inline T GetProperty(
-            winrt::hstring key,
-            T defaultValue
-        ) const noexcept
-        {
-            if (!m_properties.HasKey(key)) return defaultValue;
-            if (m_properties.Lookup(key) == nullptr) return defaultValue;
+        //template<typename T>
+        //inline T GetProperty(
+        //    winrt::hstring key,
+        //    T defaultValue
+        //) const noexcept
+        //{
+        //    if (!m_properties.HasKey(key)) return defaultValue;
+        //    if (m_properties.Lookup(key) == nullptr) return defaultValue;
 
-            std::optional<T> opt = m_properties.Lookup(key).try_as<T>();
+        //    std::optional<T> opt = m_properties.Lookup(key).try_as<T>();
 
-            if (opt == std::nullopt)
-            {
-                return defaultValue;
-            }
-            else
-            {
-                return opt.value();
-            }
-        }
+        //    if (opt == std::nullopt)
+        //    {
+        //        return defaultValue;
+        //    }
+        //    else
+        //    {
+        //        return opt.value();
+        //    }
+        //}
 
         //template<typename T>
         //T GetProperty(
@@ -175,8 +175,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::hstring m_id{};
 
 
-        collections::IMap<winrt::hstring, IInspectable> m_properties =
-            winrt::multi_threaded_map< winrt::hstring, IInspectable>();
+        collections::IMap<winrt::hstring, foundation::IInspectable> m_properties 
+            { winrt::multi_threaded_map<winrt::hstring, foundation::IInspectable>() };
 
         // these don't change, so fine to keep them as a class var
         collections::IVector<midi2::MidiGroupTerminalBlock> m_groupTerminalBlocks

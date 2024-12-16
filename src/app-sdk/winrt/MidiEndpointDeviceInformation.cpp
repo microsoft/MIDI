@@ -624,7 +624,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         // transport-supplied name is last
         if (GetTransportSuppliedInfo().Name != L"") return GetTransportSuppliedInfo().Name;
 
-        return GetProperty<winrt::hstring>(L"System.ItemNameDisplay", L"(Unknown)");
+        return internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, L"System.ItemNameDisplay", L"(Unknown)");
     }
 
     midi2::MidiEndpointDevicePurpose MidiEndpointDeviceInformation::EndpointPurpose() const noexcept
@@ -632,7 +632,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         // This assumes we're keeping things in sync with the service
         // like we should be
 
-        return (midi2::MidiEndpointDevicePurpose)GetProperty<uint32_t>(STRING_PKEY_MIDI_EndpointDevicePurpose, 0);
+        return (midi2::MidiEndpointDevicePurpose)internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_EndpointDevicePurpose, 0);
     }
 
 
@@ -664,7 +664,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         memcpy(&prop, data.data(), arraySize);
 
                         block->UpdateFromDevPropertyStruct(prop);
-                        block->InternalSetName(GetProperty<winrt::hstring>(functionBlockNameProperty, L""));
+                        block->InternalSetName(internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, functionBlockNameProperty, L""));
                     }
 
                     blocks.Append(*block);
@@ -702,15 +702,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiEndpointUserSuppliedInfo info{};
 
-        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_CustomEndpointName, L"");
-        info.Description = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_CustomDescription, L"");
+        info.Name = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomEndpointName, L"");
+        info.Description = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomDescription, L"");
         
-        info.LargeImagePath = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_CustomLargeImagePath, L"");
-        info.SmallImagePath = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_CustomSmallImagePath, L"");
+        info.LargeImagePath = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomLargeImagePath, L"");
+        info.SmallImagePath = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomSmallImagePath, L"");
 
-        info.RequiresNoteOffTranslation = GetProperty<bool>(STRING_PKEY_MIDI_RequiresNoteOffTranslation, false);
-        info.SupportsMidiPolyphonicExpression = GetProperty<bool>(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false);
-        info.RecommendedControlChangeAutomationIntervalMilliseconds = GetProperty<uint16_t>(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0);
+        info.RequiresNoteOffTranslation = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_RequiresNoteOffTranslation, false);
+        info.SupportsMidiPolyphonicExpression = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false);
+        info.RecommendedControlChangeAutomationIntervalMilliseconds = internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0);
 
         return info;
     }
@@ -719,22 +719,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiEndpointTransportSuppliedInfo info{};
 
-        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_EndpointName, L"");
-        info.Description = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_Description, L"");
+        info.Name = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointName, L"");
+        info.Description = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_Description, L"");
 
 //        info.LargeImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedLargeImagePath, L"");
 //        info.SmallImagePath = GetStringProperty(STRING_PKEY_MIDI_TransportSuppliedSmallImagePath, L"");
 
-        info.TransportId = GetProperty<winrt::guid>(STRING_PKEY_MIDI_TransportLayer, winrt::guid{});
-        info.TransportCode = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_TransportCode, L"");
-        info.SupportsMultiClient = GetProperty<bool>(STRING_PKEY_MIDI_SupportsMulticlient, true);
+        info.TransportId = internal::GetDeviceInfoProperty<winrt::guid>(m_properties, STRING_PKEY_MIDI_TransportLayer, winrt::guid{});
+        info.TransportCode = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_TransportCode, L"");
+        info.SupportsMultiClient = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMulticlient, true);
 
-        info.VendorId = GetProperty<uint16_t>(STRING_PKEY_MIDI_UsbVID, 0);
-        info.ProductId = GetProperty<uint16_t>(STRING_PKEY_MIDI_UsbPID, 0);
-        info.SerialNumber = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_SerialNumber, L"");
-        info.ManufacturerName = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_ManufacturerName, L"");
+        info.VendorId = internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_UsbVID, 0);
+        info.ProductId = internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_UsbPID, 0);
+        info.SerialNumber = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_SerialNumber, L"");
+        info.ManufacturerName = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_ManufacturerName, L"");
 
-        auto formatProperty = GetProperty<uint8_t>(STRING_PKEY_MIDI_NativeDataFormat, 0);
+        auto formatProperty = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_NativeDataFormat, 0);
 
         if (formatProperty == MidiDataFormats::MidiDataFormats_ByteStream)
             info.NativeDataFormat = midi2::MidiEndpointNativeDataFormat::Midi1ByteFormat;
@@ -750,7 +750,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiDeclaredStreamConfiguration config{};
 
-        auto protocolProperty = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointConfiguredProtocol, (uint8_t)MidiProtocol::Default);
+        auto protocolProperty = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredProtocol, (uint8_t)MidiProtocol::Default);
 
         if (protocolProperty == MIDI_PROP_CONFIGURED_PROTOCOL_MIDI1)
             config.Protocol = midi2::MidiProtocol::Midi1;
@@ -759,8 +759,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         else
             config.Protocol = midi2::MidiProtocol::Default;
 
-        config.ReceiveJitterReductionTimestamps = GetProperty<bool>(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, false);
-        config.SendJitterReductionTimestamps = GetProperty<bool>(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, false);
+        config.ReceiveJitterReductionTimestamps = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps, false);
+        config.SendJitterReductionTimestamps = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps, false);
 
         return config;
     }
@@ -828,19 +828,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     {
         midi2::MidiDeclaredEndpointInfo info;
 
-        info.Name = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_EndpointProvidedName, L"");
-        info.ProductInstanceId = GetProperty<winrt::hstring>(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId, L"");
+        info.Name = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointProvidedName, L"");
+        info.ProductInstanceId = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_EndpointProvidedProductInstanceId, L"");
 
-        info.SupportsMidi10Protocol = GetProperty<bool>(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol, false);
-        info.SupportsMidi20Protocol = GetProperty<bool>(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol, false);
-        info.SupportsReceivingJitterReductionTimestamps = GetProperty<bool>(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false);
-        info.SupportsSendingJitterReductionTimestamps = GetProperty<bool>(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false);
+        info.SupportsMidi10Protocol = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol, false);
+        info.SupportsMidi20Protocol = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol, false);
+        info.SupportsReceivingJitterReductionTimestamps = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps, false);
+        info.SupportsSendingJitterReductionTimestamps = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps, false);
 
-        info.SpecificationVersionMajor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0);
-        info.SpecificationVersionMinor = GetProperty<uint8_t>(STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0);
+        info.SpecificationVersionMajor = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointUmpVersionMajor, (uint8_t)0);
+        info.SpecificationVersionMinor = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_EndpointUmpVersionMinor, (uint8_t)0);
 
-        info.HasStaticFunctionBlocks = GetProperty<bool>(STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
-        info.DeclaredFunctionBlockCount = GetProperty<uint8_t>(STRING_PKEY_MIDI_FunctionBlockDeclaredCount, (uint8_t)0);
+        info.HasStaticFunctionBlocks = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_FunctionBlocksAreStatic, false);
+        info.DeclaredFunctionBlockCount = internal::GetDeviceInfoProperty<uint8_t>(m_properties, STRING_PKEY_MIDI_FunctionBlockDeclaredCount, (uint8_t)0);
 
         return info;
     }

@@ -441,6 +441,7 @@
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
+    <ClInclude Include="enumeration_prop_util.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="MidiSession.h">
       <DependentUpon>MidiSession.idl</DependentUpon>

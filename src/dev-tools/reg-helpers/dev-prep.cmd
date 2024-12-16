@@ -8,4 +8,5 @@ echo You also need to run this from an elevated command prompt. Do not just doub
 echo click this cmd file.
 echo ==================================================================================
 echo[
+pwsh -Command Unblock-File .\midi-pre-install-reg-steps.ps1
 pwsh .\midi-pre-install-reg-steps.ps1

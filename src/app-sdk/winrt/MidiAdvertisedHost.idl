@@ -11,16 +11,25 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     [experimental]
     struct MidiAdvertisedHost
     {
+        // from Windows props
+        String DeviceId;
+        String DeviceName;
+         
         // from SRV record 
+        String FullName;
         String ServiceInstanceName;
         String ServiceType;
         String HostName;
         UInt16 Port;
+        String Domain;
 
         // from TXT record
         String UmpEndpointName;
         String ProductInstanceId;
 
         // TODO: A/AAAA IP records
+
+        String IPAddress;
+
     };
 }

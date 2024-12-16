@@ -165,6 +165,7 @@
       <Filter>SDK\Core\Enumeration\Metadata\Windows</Filter>
     </ClInclude>
     <ClInclude Include="endpoint_device_interface_helpers.h" />
+    <ClInclude Include="enumeration_prop_util.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
