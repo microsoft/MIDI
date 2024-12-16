@@ -77,7 +77,7 @@ typedef struct _PORT_INFO
     UINT32 CustomPortNumber {0};
     std::wstring InterfaceId;
     MidiFlow Flow {MidiFlowIn};
-    std::wstring Name;          // added PMB 2024-12-15 due to compile error after merge
+    std::wstring Name;
 } PORT_INFO;
 
 class CMidiDeviceManager  : 
