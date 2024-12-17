@@ -47,8 +47,7 @@ MidiClientInitializer::Initialize(
             TraceLoggingWideString(L"Unable to create runtime component catalog", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-        LOG_IF_FAILED(E_POINTER);
-        return false;
+        RETURN_IF_FAILED(E_POINTER);
     }
 
     auto hrcatalog = g_runtimeComponentCatalog->Initialize();
@@ -63,8 +62,7 @@ MidiClientInitializer::Initialize(
             TraceLoggingWideString(L"Unable to initialize runtime component catalog", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-        LOG_IF_FAILED(E_FAIL);
-        return false;
+        RETURN_IF_FAILED(E_FAIL);
     }
 
 
@@ -83,8 +81,7 @@ MidiClientInitializer::Initialize(
                 TraceLoggingWideString(L"Unable to install WinRT activation hooks", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
             );
-            LOG_IF_FAILED(hr);
-            return false;
+            RETURN_IF_FAILED(hr);
         }
     }
     catch (...)
@@ -100,7 +97,7 @@ MidiClientInitializer::Initialize(
             TraceLoggingWideString(L"Exception installing WinRT activation hooks", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-        return false;
+        RETURN_IF_FAILED(E_FAIL);
     }
 
     m_initialized = true;
@@ -278,6 +275,8 @@ MidiClientInitializer::EnsureServiceAvailable() noexcept
     RETURN_IF_FAILED(serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker));
 
     RETURN_HR_IF_NULL(E_POINTER, sessionTracker);
+
+    RETURN_IF_FAILED(sessionTracker->Initialize());
 
     if (sessionTracker->VerifyConnectivity())
     {

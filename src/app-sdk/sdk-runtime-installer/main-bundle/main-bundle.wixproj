@@ -15,9 +15,9 @@
     <Content Include="midi_installer_logo_square.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.5" />
-    <PackageReference Include="WixToolset.Netfx.wixext" Version="4.0.5" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.5" />
+    <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.6" />
+    <PackageReference Include="WixToolset.Netfx.wixext" Version="4.0.6" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\console-package\console-package.wixproj" />

@@ -610,6 +610,7 @@ class Build : NukeBuild
 
                 //var setupSolutionFolder = AppSdkSolutionFolder / "sdk-runtime-installer";
 
+
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSetupSolutionFolder / "midi-services-app-sdk-runtime-setup.sln")
                     .SetMaxCpuCount(14)
