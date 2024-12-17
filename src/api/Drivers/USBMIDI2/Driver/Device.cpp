@@ -192,6 +192,8 @@ Return Value:
     devCtx->DeviceWriteMemory = NULL;
     devCtx->DeviceWriteBuffer = NULL;
     devCtx->DeviceWriteBufferIndex = NULL;
+    devCtx->UsbInMask = 0;
+    devCtx->UsbOutMask = 0;
   
     for (int count = 0; count < MAX_NUM_GROUPS_CABLES; count++)
     {
@@ -1088,10 +1090,12 @@ Return Value:
     }
 
     // Temporary for testing
+#if 0
     if (pDeviceContext->UsbMIDIbcdMSC == 0x0100)
     {
         USBMIDI2DriverCreateGTB(Device);
     }
+#endif
 
 SelectExit:
     if (pSettingPairs)
@@ -1286,6 +1290,10 @@ Return Value:
             TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error determining GTB indexes for USB MIDI 2.0 device. %!STATUS!", status);
             status = STATUS_SUCCESS;
         }
+
+        // Set the group ID mask for all groups - masking for legacy support
+        devCtx->UsbInMask = 0xffff;
+        devCtx->UsbOutMask = 0xffff;
     }
 
     // First get the GTB Header to determine overall size needed
@@ -1717,6 +1725,7 @@ Return Value:
         midi_desc_in_jack_t* pInJack = NULL;
         midi_desc_out_jack_t* pOutJack = NULL;
 
+
         switch (pCommonHdr->bDescriptorSubType)
         {
         case MIDI_CS_INTERFACE_IN_JACK :
@@ -1740,6 +1749,9 @@ Return Value:
                 grpTermBlockDirection[numGrpTermBlocks] = (UINT8)MIDI_CS_INTERFACE_IN_JACK;
                 grpTermBlockStringIndexes[numGrpTermBlocks] = pInJack->iJack;
                 grpTermBlockGroupIndex[numGrpTermBlocks] = numMidiIn++;
+
+                // Add to In Mask for the Cable ID associated with this Jack
+                pDevCtx->UsbInMask = (pDevCtx->UsbInMask << 1) | 0x0001;
             }
             else
             {
@@ -1769,6 +1781,9 @@ Return Value:
                 grpTermBlockDirection[numGrpTermBlocks] = (UINT8)MIDI_CS_INTERFACE_OUT_JACK;
                 grpTermBlockStringIndexes[numGrpTermBlocks] = *(pCurrent - 1);
                 grpTermBlockGroupIndex[numGrpTermBlocks] = numMidiOut++;
+
+                // Add to In Mask for the Cable ID associated with this Jack
+                pDevCtx->UsbOutMask = (pDevCtx->UsbOutMask << 1) | 0x0001;
             }
             else
             {
@@ -2136,6 +2151,12 @@ Return Value:
                 // Need Cable Number
                 PUINT8 pBuffer = (PUINT8)&pReceivedWords[receivedIndex];
                 UINT8 cbl_num = (pBuffer[0] & 0xf0) >> 4;
+
+                // No need to process further if invalid Cable ID
+                if (!(pDeviceContext->UsbInMask & (0x0001 << cbl_num)))
+                {
+                    continue;
+                }
 
                 // Convert to UMP, skipping if indicated not processed
                 if (!USBMIDI1ToUMP(
@@ -2685,11 +2706,15 @@ Return Value:Amy
                 }
                 pWriteWords = (PUINT32)pDeviceContext->DeviceWriteBuffer;
 
-                // Write into buffer
-                for (int count = 0; count < umpWritePacket.wordCount; count++)
+                // Write into buffer if proper cable number
+                if (pDeviceContext->UsbOutMask & 0x0001 << cbl_num)
                 {
-                    pWriteWords[pDeviceContext->DeviceWriteBufferIndex++] = umpWritePacket.umpData.umpWords[count];
+                    for (int count = 0; count < umpWritePacket.wordCount; count++)
+                    {
+                        pWriteWords[pDeviceContext->DeviceWriteBufferIndex++] = umpWritePacket.umpData.umpWords[count];
+                    }
                 }
+                // else data is dropped
 
                 if ((pDeviceContext->DeviceWriteBufferIndex*sizeof(UINT32)) == pDeviceContext->MidiOutMaxSize)
                 {
@@ -2706,7 +2731,7 @@ Return Value:Amy
                         goto DriverIoWriteExit;
                     }
 
-                    // Indicate new buffer needed
+                    // Indicate new bufRfer needed
                     pDeviceContext->DeviceWriteBuffer = NULL;
                     pDeviceContext->DeviceWriteBufferIndex = 0;
                 }

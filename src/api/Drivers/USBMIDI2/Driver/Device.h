@@ -102,6 +102,8 @@ typedef struct _DEVICE_CONTEXT {
     UINT16                      UsbMIDIbcdMSC;
     UINT8                       UsbMIDIInterfaceNumber;
     ULONG                       UsbDeviceTraits;
+    UINT16                      UsbOutMask;         // Primarily for legacy support, mask for CableIDs supported
+    UINT16                      UsbInMask;          // Primarily for legacy support, mask for CableIDs supported
 
     // Buffers and information for USB MIDI 1.0 and UMP translations
     bool                        midi1IsInSysex[MAX_NUM_GROUPS_CABLES];
