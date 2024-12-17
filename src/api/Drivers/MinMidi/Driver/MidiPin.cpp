@@ -165,6 +165,24 @@ DEFINE_KSPROPERTY_TABLE(g_LoopedStreamingProperties)
     )
 };
 
+
+DEFINE_KSPROPERTY_TABLE(g_Midi2EndpointInformationProperties)
+{
+    DEFINE_KSPROPERTY_ITEM
+    (
+        KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,            // idProperty
+        MidiPin::GetGroupTerminalBlocks,                   // pfnGetHandler
+        sizeof(KSPROPERTY),                                // cbMinPropertyInput
+        0,                                                 // cbMinDataInput
+        NULL,                                              // pfnSetHandler
+        0,                                                 // Values
+        0,                                                 // RelationsCount
+        NULL,                                              // Relations
+        NULL,                                              // SupportHandler
+        0                                                  // SerializedSize
+    ),
+};
+
 DEFINE_KSPROPERTY_SET_TABLE (g_PinPropertySet)
 {
     DEFINE_KSPROPERTY_SET
@@ -172,6 +190,13 @@ DEFINE_KSPROPERTY_SET_TABLE (g_PinPropertySet)
         &KSPROPSETID_MidiLoopedStreaming,
         SIZEOF_ARRAY(g_LoopedStreamingProperties),
         g_LoopedStreamingProperties,
+        0,NULL
+    ),
+    DEFINE_KSPROPERTY_SET
+    (
+        &KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
+        SIZEOF_ARRAY(g_Midi2EndpointInformationProperties),
+        g_Midi2EndpointInformationProperties,
         0,NULL
     )
 };
@@ -1490,6 +1515,68 @@ MidiPin::SetLoopedStreamingNotificationEvent
                                               UserMode,
                                               (PVOID*)&This->m_ReadEvent,
                                               NULL));
+
+    return STATUS_SUCCESS;
+}
+
+WCHAR outputBlockName [] = L"FBO0";
+
+UMP_GROUP_TERMINAL_BLOCK_HEADER outputBlock ={
+        sizeof(UMP_GROUP_TERMINAL_BLOCK_HEADER) + sizeof(outputBlockName),  // Size of the whole UMP_GROUP_TERMINAL_BLOCK_DEFINITION
+        0,                                                                  // Number
+        MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL,                            // Direction
+        0,                                                                  // FirstGroupIndex
+        1,                                                                  // GroupCount
+        0,                                                                  // Protocol
+        0,                                                                  // MaxInputBandwidth
+        0                                                                   // MaxOutputBandwidth
+    };
+
+_Use_decl_annotations_
+NTSTATUS
+MidiPin::GetGroupTerminalBlocks
+(
+    PIRP                      irp,
+    PKSP_PIN                  request,
+    PVOID                     buffer
+)
+{
+    PAGED_CODE();
+
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == irp);
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == request);
+
+    PIO_STACK_LOCATION  irpStack              = IoGetCurrentIrpStackLocation( irp );
+    ULONG               inputBufferLength     = irpStack->Parameters.DeviceIoControl.InputBufferLength;
+    ULONG               outputBufferLength    = irpStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, inputBufferLength < sizeof(KSP_PIN));
+    NT_RETURN_NTSTATUS_IF(STATUS_NOT_SUPPORTED, (request->Property.Flags & KSPROPERTY_TYPE_GET) == 0);
+    NT_RETURN_NTSTATUS_IF(STATUS_NOT_SUPPORTED, (request->Property.Flags & KSPROPERTY_TYPE_SET) != 0);
+
+    // total return data size, multiple item plus all UMP_GROUP_TERMINAL_BLOCK_DEFINITIONs
+    ULONG gtbOutputSize = sizeof(KSMULTIPLE_ITEM) + sizeof(outputBlock) + sizeof(outputBlockName);
+
+    irp->IoStatus.Information = gtbOutputSize;
+    NT_RETURN_NTSTATUS_IF(STATUS_BUFFER_OVERFLOW, 0 == outputBufferLength);
+    NT_RETURN_NTSTATUS_IF(STATUS_BUFFER_TOO_SMALL, outputBufferLength < gtbOutputSize);
+
+    // If we've gotten this far, we have to have an output buffer.
+    NT_RETURN_NTSTATUS_IF(STATUS_INVALID_PARAMETER, nullptr == buffer);
+
+    // fill out the leading multiple item structure
+    PKSMULTIPLE_ITEM multItem = (PKSMULTIPLE_ITEM) buffer;
+    multItem->Size = gtbOutputSize;
+    multItem->Count = 1;
+
+    // copy over the gtb header data, note that outputBlock->Size includes the size of the 
+    // name that follows the header.
+    UMP_GROUP_TERMINAL_BLOCK_HEADER *gtb = (UMP_GROUP_TERMINAL_BLOCK_HEADER*) (multItem + 1);
+    memcpy(gtb, &outputBlock, sizeof(outputBlock));
+
+    // copy over the name just after the gtb header
+    PWCHAR name = (PWCHAR) (gtb + 1);
+    memcpy(name, &outputBlockName, sizeof(outputBlockName));
 
     return STATUS_SUCCESS;
 }

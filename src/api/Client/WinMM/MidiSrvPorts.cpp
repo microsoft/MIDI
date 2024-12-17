@@ -32,8 +32,7 @@ CMidiPorts::~CMidiPorts()
     else
     {
         // unsafe to release COM objects while process is terminating.
-        static_cast<void>(m_MidisrvTransport.detach());
-        static_cast<void>(m_MidiSessionTracker.detach());
+        static_cast<void>(m_MidisrvTransport.reset());
     }
 }
 
@@ -49,11 +48,15 @@ CMidiPorts::RuntimeClassInitialize()
         TraceLoggingUInt32(GetCurrentProcessId(), "Process id")
         );
 
-    RETURN_IF_FAILED(CoCreateGuid(&m_SessionId));
-    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidisrvTransport)));
-    RETURN_IF_FAILED(m_MidisrvTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &m_MidiSessionTracker));
+    RETURN_IF_FAILED(UuidCreate(&m_SessionId));
 
-    RETURN_IF_FAILED(m_MidiSessionTracker->AddClientSession(m_SessionId, m_SessionName.c_str()));
+    std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
+    RETURN_IF_NULL_ALLOC(midiSrv);
+
+    RETURN_IF_FAILED(midiSrv->Initialize());
+    m_MidisrvTransport = std::move(midiSrv);
+
+    RETURN_IF_FAILED(m_MidisrvTransport->AddClientSession(m_SessionId, m_SessionName.c_str()));
 
     return S_OK;        
 }
@@ -79,10 +82,10 @@ CMidiPorts::Shutdown()
     }
     m_OpenPorts.clear();
 
-    if (m_MidiSessionTracker)
+    if (m_MidisrvTransport)
     {
-        m_MidiSessionTracker->RemoveClientSession(m_SessionId);
-        m_MidiSessionTracker.reset();
+        m_MidisrvTransport->RemoveClientSession(m_SessionId);
+        m_MidisrvTransport.reset();
     }
 
     return S_OK;
