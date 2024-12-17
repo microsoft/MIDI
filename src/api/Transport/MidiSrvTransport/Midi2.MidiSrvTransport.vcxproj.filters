@@ -33,12 +33,6 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiSrv_Rpc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Midi2.MidiSrv.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Midi2.MidiSrvConfigurationManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

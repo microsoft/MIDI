@@ -25,45 +25,16 @@ using namespace winrt;
 
 #include <SDKDDKVer.h>
 
-#define _ATL_APARTMENT_THREADED
-#define _ATL_NO_AUTOMATIC_NAMESPACE
-#define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS // some CString constructors will be explicit
-#define ATL_NO_ASSERT_ON_DESTROY_NONEXISTENT_WINDOW
-
-#include "resource.h"
-#include <atlbase.h>
-#include <atlcom.h>
-#include <atlctl.h>
-#include <atlcoll.h>
-#include <atlsync.h>
-
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
 #include <filesystem>
-
 
 #include <Devpkey.h>
 #include "MidiDefs.h"
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
 
-#include "Midi2MidiSrvTransport.h"
-#include "Midi2MidiSrvTransport_i.c"
-
-#include "dllmain.h"
-
-class MidiSrvManager;
-
 #include "MidiSrvRpc.h"
 #include "MidiXProc.h"
-#include "MidiSrvTransport.h"
-#include "Midi2.MidiSrvTransport.h"
-#include "Midi2.MidiSrvIn.h"
-#include "Midi2.MidiSrvOut.h"
-#include "Midi2.MidiSrvBiDi.h"
-#include "Midi2.MidiSrvConfigurationManager.h"
-#include "Midi2.MidiSrvSessionTracker.h"
-
-#include "Midi2.MidiSrvManager.h"
 

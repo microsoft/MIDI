@@ -78,8 +78,6 @@ private:
     BYTE m_RunningStatus {0};
     std::queue<LPMIDIHDR> m_InBuffers;
     wil::unique_event m_BuffersAdded{wil::EventOptions::None};
-    
-    wil::com_ptr_nothrow<IMidiTransport> m_MidiTransport;
-    wil::com_ptr_nothrow<IMidiIn> m_MidiIn;
-    wil::com_ptr_nothrow<IMidiOut> m_MidiOut;
-};
+
+    std::unique_ptr<CMidi2MidiSrv> m_MidisrvTransport;
+};

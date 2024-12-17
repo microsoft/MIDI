@@ -196,6 +196,10 @@ void MidiTransportTests::TestMidiTransport(REFIID iid, MidiDataFormats dataForma
     // may fail, depending on transport layer support, currently only midisrv transport supports
     // the session tracker.
     midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
+    if (midiSessionTracker)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+    }
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
@@ -391,6 +395,10 @@ void MidiTransportTests::TestMidiTransportCreationOrder(REFIID iid, _In_ MidiDat
     // may fail, depending on transport layer support, currently only midisrv transport supports
     // the session tracker.
     midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
+    if (midiSessionTracker)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+    }
 
     VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiIn), (void **) &midiInDevice));
     VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiOut), (void **) &midiOutDevice));
@@ -556,6 +564,11 @@ void MidiTransportTests::TestMidiTransportBiDi(REFIID iid, MidiDataFormats dataF
     // may fail, depending on transport layer support, currently only midisrv transport supports
     // the session tracker.
     midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
+    if (midiSessionTracker)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+    }
+
     VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBiDi), (void **) &midiBiDiDevice));
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
@@ -725,6 +738,10 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
     // may fail, depending on transport layer support, currently only midisrv transport supports
     // the session tracker.
     midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
+    if (midiSessionTracker)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+    }
 
     VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBiDi), (void**)&midiBiDiDevice));
 
@@ -1074,6 +1091,10 @@ void MidiTransportTests::TestMidiSrvMultiClient(MidiDataFormats dataFormat1, Mid
     // may fail, depending on transport layer support, currently only midisrv transport supports
     // the session tracker.
     midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
+    if (midiSessionTracker)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+    }
 
     VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiIn), (void**)&midiInDevice1));
     VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiIn), (void**)&midiInDevice2));
@@ -1401,6 +1422,10 @@ void MidiTransportTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat1,
     // may fail, depending on transport layer support, currently only midisrv transport supports
     // the session tracker.
     midiTransport->Activate(__uuidof(IMidiSessionTracker), (void **) &midiSessionTracker);
+    if (midiSessionTracker)
+    {
+        VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
+    }
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG context)
     {

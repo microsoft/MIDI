@@ -44,8 +44,7 @@ private:
 
     wil::critical_section m_Lock;
 
-    wil::com_ptr_nothrow<IMidiTransport> m_MidisrvTransport;
-    wil::com_ptr_nothrow<IMidiSessionTracker> m_MidiSessionTracker;
+    std::unique_ptr<CMidi2MidiSrv> m_MidisrvTransport;
 
     // The session guid created for all ports opened by this client, a single guid is used for all sessions.
     GUID m_SessionId {0};

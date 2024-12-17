@@ -23,17 +23,7 @@ CMidiPort::~CMidiPort()
         TraceLoggingPointer(this, "this"),
         TraceLoggingValue(g_ProcessIsTerminating, "ProcessIsTerminating"));
 
-    if (!g_ProcessIsTerminating)
-    {
-        Shutdown();
-    }
-    else
-    {
-        // unsafe to release COM objects while process is terminating.
-        static_cast<void>(m_MidiTransport.detach());
-        static_cast<void>(m_MidiIn.detach());
-        static_cast<void>(m_MidiOut.detach());
-    }
+    Shutdown();
 }
 
 _Use_decl_annotations_
@@ -63,18 +53,11 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
     m_Flags = flags;
     m_InterfaceId = interfaceId;
 
-    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_MidiTransport)));
+    std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
+    RETURN_IF_NULL_ALLOC(midiSrv);
 
-    if (flow == MidiFlowIn)
-    {
-        RETURN_IF_FAILED(m_MidiTransport->Activate(__uuidof(IMidiIn), (void **) &m_MidiIn));
-        RETURN_IF_FAILED(m_MidiIn->Initialize(m_InterfaceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, sessionId));
-    }
-    else
-    {
-        RETURN_IF_FAILED(m_MidiTransport->Activate(__uuidof(IMidiOut), (void **) &m_MidiOut));
-        RETURN_IF_FAILED(m_MidiOut->Initialize(m_InterfaceId.c_str(), &transportCreationParams, &mmcssTaskId, sessionId));
-    }
+    RETURN_IF_FAILED(midiSrv->Initialize(m_InterfaceId.c_str(), flow, &transportCreationParams, &mmcssTaskId, this, 0, sessionId));
+    m_MidisrvTransport = std::move(midiSrv);
 
     WinmmClientCallback(m_Flow == MidiFlowIn?MIM_OPEN:MOM_OPEN, 0, 0);
     return S_OK;
@@ -100,9 +83,8 @@ CMidiPort::Shutdown()
         auto lock = m_Lock.lock();
         std::queue<LPMIDIHDR> emptyQueue;
 
-        m_MidiIn.reset();
-        m_MidiOut.reset();
-        m_MidiTransport.reset();
+        m_MidisrvTransport.reset();
+
         std::swap(m_InBuffers, emptyQueue);
         m_InterfaceId.clear();
 
@@ -114,15 +96,9 @@ CMidiPort::Shutdown()
 
     Stop();
 
-    // MidiIn/Out cleanup must be done without holding
-    // the lock, because they will block for worker thread cleanup
-    if (m_MidiIn)
+    if (m_MidisrvTransport)
     {
-        RETURN_IF_FAILED(m_MidiIn->Shutdown());
-    }
-    else if (m_MidiOut)
-    {
-        RETURN_IF_FAILED(m_MidiOut->Shutdown());
+        m_MidisrvTransport->Shutdown();
     }
 
     // successful cleanup, send MIM/MOM_CLOSE to the client
@@ -620,11 +596,11 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
         auto lock = m_Lock.lock();
 
         // This should be on an initialized midi out port
-        RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidiOut);
+        RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidisrvTransport);
 
         // send the message to the transport
         // pass a timestamp of 0 to bypass scheduler
-        RETURN_IF_FAILED(m_MidiOut->SendMidiMessage(&midiMessage, sizeof(midiMessage), 0));
+        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, sizeof(midiMessage), 0));
     }
 
     return S_OK;
@@ -659,7 +635,7 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         auto lock = m_Lock.lock();
 
         // This should be on an initialized midi out port
-        RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidiOut);
+        RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidisrvTransport);
 
         // The buffer provided must be valid
         RETURN_HR_IF(E_INVALIDARG, nullptr == buffer);
@@ -669,7 +645,7 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         // pass a timestamp of 0 to bypass scheduler
         // TODO: based on the buffer length, this message may require chunking into smaller
         // pieces to ensure it fits into the cross process queue.
-        RETURN_IF_FAILED(m_MidiOut->SendMidiMessage(buffer->lpData, buffer->dwBufferLength, 0));
+        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBufferLength, 0));
     }
 
     // mark the buffer as completed

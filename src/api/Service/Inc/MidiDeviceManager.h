@@ -192,7 +192,7 @@ private:
     );
 
     HRESULT SyncMidi1Ports(
-        PMIDIPORT umpMidiPort
+        _In_ PMIDIPORT umpMidiPort
     );
 
     std::shared_ptr<CMidiPerformanceManager> m_performanceManager;

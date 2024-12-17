@@ -35,9 +35,5 @@ public:
 
 private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;
-
-    PVOID m_contextHandle{ nullptr };
-
-    //GUID m_TransportGuid;
 };
 
