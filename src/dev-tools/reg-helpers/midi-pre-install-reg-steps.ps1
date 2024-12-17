@@ -10,7 +10,7 @@
 #Requires -RunAsAdministrator
 #Requires -Version 7.0
 
-function Take-Permissions 
+function Take-Reg-Permissions 
 {
     param($rootKey, $key, $comment, [System.Security.Principal.SecurityIdentifier]$sid = 'S-1-5-32-545', $recurse = $true)
     
@@ -117,28 +117,28 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
 
     # Root Windows MIDI Services key. Taking permission of this enables
     # us to add in-development transports
-    Take-Permissions "HKLM" "SOFTWARE\Microsoft\Windows MIDI Services" "Main MIDI Services key"
+    Take-Reg-Permissions "HKLM" "SOFTWARE\Microsoft\Windows MIDI Services" "Main MIDI Services key"
 
     # The in-box COM registrations need to be unprotected so we can use the ones
     # we install from the setup package rather than what is in System32
 
-    Take-Permissions "HKCR" "CLSID\{0f273b18-e372-4d95-87ac-c31c3d22e937}" "KS Aggregate Transport"
-    Take-Permissions "HKCR" "CLSID\{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}" "KS Transport"
-    Take-Permissions "HKCR" "CLSID\{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" "Loopback Transport"
-    Take-Permissions "HKCR" "CLSID\{8FEAAD91-70E1-4A19-997A-377720A719C1}" "Virtual MIDI Transport"
-    Take-Permissions "HKCR" "CLSID\{ac9b5417-3fe0-4e62-960f-034ee4235a1a}" "Diagnostics Transport"
+    Take-Reg-Permissions "HKCR" "CLSID\{0f273b18-e372-4d95-87ac-c31c3d22e937}" "KS Aggregate Transport"
+    Take-Reg-Permissions "HKCR" "CLSID\{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}" "KS Transport"
+    Take-Reg-Permissions "HKCR" "CLSID\{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" "Loopback Transport"
+    Take-Reg-Permissions "HKCR" "CLSID\{8FEAAD91-70E1-4A19-997A-377720A719C1}" "Virtual MIDI Transport"
+    Take-Reg-Permissions "HKCR" "CLSID\{ac9b5417-3fe0-4e62-960f-034ee4235a1a}" "Diagnostics Transport"
 
     # --------------------
 
     # Main MidiSrv Transport (what the client SDK talks to)
-    Take-Permissions "HKCR" "CLSID\{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}" "Main Midisrv Transport"
+    Take-Reg-Permissions "HKCR" "CLSID\{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}" "Main Midisrv Transport"
 
     # --------------------
 
-    Take-Permissions "HKCR" "CLSID\{A8798C54-6066-45F0-9ADB-648BC0641ABF}" "Bytestream 2 UMP Transform"
-    Take-Permissions "HKCR" "CLSID\{96121591-8D68-479F-9B48-2BF0B90113F7}" "UMP 2 Bytestream Transform"
-    Take-Permissions "HKCR" "CLSID\{a42cde44-7fa9-4597-a8ee-b40b96bcddb1}" "Message Scheduler"
-    Take-Permissions "HKCR" "CLSID\{dc638b31-cf31-48ed-9e79-02740bf5d013}" "Protocol Downscaler"
+    Take-Reg-Permissions "HKCR" "CLSID\{A8798C54-6066-45F0-9ADB-648BC0641ABF}" "Bytestream 2 UMP Transform"
+    Take-Reg-Permissions "HKCR" "CLSID\{96121591-8D68-479F-9B48-2BF0B90113F7}" "UMP 2 Bytestream Transform"
+    Take-Reg-Permissions "HKCR" "CLSID\{a42cde44-7fa9-4597-a8ee-b40b96bcddb1}" "Message Scheduler"
+    Take-Reg-Permissions "HKCR" "CLSID\{dc638b31-cf31-48ed-9e79-02740bf5d013}" "Protocol Downscaler"
 
     Write-Host
 

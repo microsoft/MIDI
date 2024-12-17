@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-
 using Microsoft.Windows.Devices.Midi2.Messages;
 using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 

@@ -231,16 +231,17 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         pinMapEntry.PinId = pin.PinNumber;
         pinMapEntry.FilterId = pin.FilterDeviceId;
         pinMapEntry.PinDataFlow = pin.PinDataFlow;
-        pinMapEntry.GroupIndex = currentGtbInputGroupIndex;
 
         if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
         {
+            pinMapEntry.GroupIndex = currentGtbInputGroupIndex;
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
             gtb.FirstGroupIndex = currentGtbInputGroupIndex;
             currentGtbInputGroupIndex++;
         }
         else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)
         {
+            pinMapEntry.GroupIndex = currentGtbOutputGroupIndex;
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
             gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
             currentGtbOutputGroupIndex++;
