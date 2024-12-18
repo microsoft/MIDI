@@ -9,7 +9,7 @@
 #include "stdafx.h"
 #include "midisrvrpc.h"
 
-RPC_STATUS MidiSrvRpcIfCallback(
+RPC_STATUS RPC_ENTRY MidiSrvRpcIfCallback(
     RPC_IF_HANDLE,
     void* Context
 )

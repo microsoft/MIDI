@@ -429,7 +429,8 @@ typedef struct _PARENTDEVICECREATECONTEXT
 
 
 
-void SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResult, __in PVOID context, __in_opt PCWSTR /* deviceInstanceId */)
+VOID WINAPI
+SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResult, __in PVOID context, __in_opt PCWSTR /* deviceInstanceId */)
 {
     // fix code analysis complaint
     if (context == nullptr) return;
@@ -487,7 +488,7 @@ void SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResu
 }
 
 
-void
+VOID WINAPI
 SwMidiParentDeviceCreateCallback(
     __in HSWDEVICE /*swDevice*/,
     __in HRESULT creationResult,
@@ -2549,14 +2550,14 @@ CMidiDeviceManager::SyncMidi1Ports(
                     friendlyName = baseFriendlyName;
                 }
 
-                // append the flow(Input or Output) & group index to the friendly name.
+                // append the flow(Input or Output) & group number (group index + 1) to the friendly name.
                 if (MidiFlowIn == (MidiFlow) flow)
                 {
-                    friendlyName = friendlyName + L" I-" + std::to_wstring(groupIndex);
+                    friendlyName = friendlyName + L" I-" + std::to_wstring(groupIndex+1);
                 }
                 else
                 {
-                    friendlyName = friendlyName + L" O-" + std::to_wstring(groupIndex);
+                    friendlyName = friendlyName + L" O-" + std::to_wstring(groupIndex+1);
                 }
                 interfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(friendlyName.c_str()) + 1)), (PVOID)friendlyName.c_str() });
