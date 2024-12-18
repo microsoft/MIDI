@@ -999,6 +999,9 @@ CMidiClientManager::CreateMidiClient(
     //bool addMetadataListenerToIncomingStream{ true };
     bool generateIncomingMessageTimestamps{ true };
 
+    // take a copy of the client creation params, to modify for device creation.
+    MIDISRV_CLIENTCREATION_PARAMS deviceCreationParams = *creationParams;
+
     if (!internalProtocolNegotiationUseOnly)
     {
         // pre-populate our mmcss task id so we have a known task id
@@ -1013,7 +1016,7 @@ CMidiClientManager::CreateMidiClient(
         // The provided SWD instance id provided may be an alias of a UMP device, retrieve the
         // PKEY_MIDI_AssociatedUMP property to retrieve the id of the primary device.
         // We only create device pipe entries for the primary devices.
-        RETURN_IF_FAILED(GetEndpointAlias(midiDevice, primaryMidiDevice, creationParams->Flow));
+        RETURN_IF_FAILED(GetEndpointAlias(midiDevice, primaryMidiDevice, deviceCreationParams.Flow));
 
         // see if we should create timestamps or not. This option is set
         // by the transport at endpoint enumeration time. For most endpoint
@@ -1045,7 +1048,7 @@ CMidiClientManager::CreateMidiClient(
         client->DataFormat = MidiDataFormats_Invalid;
     });
 
-    RETURN_IF_FAILED(GetMidiDevice(primaryMidiDevice.c_str(), creationParams, devicePipe));
+    RETURN_IF_FAILED(GetMidiDevice(primaryMidiDevice.c_str(), &deviceCreationParams, devicePipe));
     devicePipe->AddClient((MidiClientHandle)clientPipe.get());
 
     // MidiFlowIn on the client flows data from the midi device to the client,
