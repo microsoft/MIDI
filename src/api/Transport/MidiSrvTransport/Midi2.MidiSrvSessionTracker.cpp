@@ -115,8 +115,7 @@ CMidi2MidiSrvSessionTracker::VerifyConnectivity()
         TraceLoggingPointer(this, "this")
     );
 
-    RETURN_HR_IF_NULL(CO_E_NOTINITIALIZED, m_MidiSrv);
-    return m_MidiSrv->VerifyConnectivity();
+    return m_MidiSrv?m_MidiSrv->VerifyConnectivity():FALSE;
 }
 
 HRESULT
@@ -138,4 +137,4 @@ CMidi2MidiSrvSessionTracker::Shutdown()
 
     return S_OK;
 }
-
+
