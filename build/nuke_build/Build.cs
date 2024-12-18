@@ -128,9 +128,9 @@ class Build : NukeBuild
 
     string[] SdkPlatforms => new string[] { "x64", "Arm64EC"  };
     string[] ServiceAndApiPlatforms => new string[] { "x64", "Arm64" };
-    string[] ServiceAndApiPlatformsAll => new string[] { "x64", "Arm64", "Arm64EC" };
+    string[] ServiceAndApiPlatformsAll => new string[] { "x64", "Arm64", "Arm64EC" };   // the order here matters because the dependencies in the solution aren't perfect
     string[] ToolsPlatforms => new string[] { "x64", "Arm64" };
-    string[] NativeSamplesPlatforms => new string[] { "x64", "Arm64EC", "Arm64" };
+    string[] NativeSamplesPlatforms => new string[] { "x64", "Arm64", "Arm64EC" };
     string[] ManagedSamplesPlatforms => new string[] { "x64", "Arm64" };
     string[] InstallerPlatforms => new string[] { "x64", "Arm64" };
 

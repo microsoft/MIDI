@@ -165,6 +165,9 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
         Write-Host "Midisrv service was not present. No service action taken." -ForegroundColor DarkGray
     }
 
+    Write-Host "Taking ownership of wdmaud2.drv..." -ForegroundColor DarkCyan
+    cmd.exe /c "takeown /F %windir%\System32\wdmaud2.drv"
+
     Write-Host
     Write-Host "You may now install the development version of the service and plugins." -ForegroundColor Green
 
