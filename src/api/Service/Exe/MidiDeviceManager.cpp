@@ -429,7 +429,8 @@ typedef struct _PARENTDEVICECREATECONTEXT
 
 
 
-void SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResult, __in PVOID context, __in_opt PCWSTR /* deviceInstanceId */)
+VOID WINAPI
+SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResult, __in PVOID context, __in_opt PCWSTR /* deviceInstanceId */)
 {
     // fix code analysis complaint
     if (context == nullptr) return;
@@ -487,7 +488,7 @@ void SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResu
 }
 
 
-void
+VOID WINAPI
 SwMidiParentDeviceCreateCallback(
     __in HSWDEVICE /*swDevice*/,
     __in HRESULT creationResult,

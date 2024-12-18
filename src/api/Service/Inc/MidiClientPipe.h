@@ -35,16 +35,15 @@ public:
         if (CMidiPipe::DataFormatOut() != MidiDataFormats_Invalid)
         {
             RETURN_IF_FAILED(CMidiPipe::SetDataFormatOut(DataFormat));
-            if (m_MidiPump)
-            {
-                RETURN_IF_FAILED(m_MidiPump->SetDataFormatOut(DataFormat));
-            }
         }
 
         if (m_MidiPump)
         {
+            // Set the format(s) on the midi pump
             RETURN_IF_FAILED(m_MidiPump->SetDataFormatIn(DataFormat));
+            RETURN_IF_FAILED(m_MidiPump->SetDataFormatOut(DataFormat));
         }
+
         return S_OK;
     }
 
@@ -54,14 +53,12 @@ public:
         if (CMidiPipe::DataFormatIn() != MidiDataFormats_Invalid)
         {
             RETURN_IF_FAILED(CMidiPipe::SetDataFormatIn(DataFormat));
-            if (m_MidiPump)
-            {
-                RETURN_IF_FAILED(m_MidiPump->SetDataFormatIn(DataFormat));
-            }
         }
 
         if (m_MidiPump)
         {
+            // Set the format(s) on the midi pump
+            RETURN_IF_FAILED(m_MidiPump->SetDataFormatIn(DataFormat));
             RETURN_IF_FAILED(m_MidiPump->SetDataFormatOut(DataFormat));
         }
         return S_OK;
