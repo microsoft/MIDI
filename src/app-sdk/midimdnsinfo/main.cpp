@@ -36,6 +36,7 @@ int __cdecl main()
     std::cout << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" Enumerating MIDI mdns advertisements currently visible to this PC") << std::endl;
+    std::cout << dye::aqua(" This may take a moment...") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << std::endl;
 
