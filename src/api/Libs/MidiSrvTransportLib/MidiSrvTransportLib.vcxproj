@@ -36,7 +36,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{2480B077-46E5-42AE-9BDB-685AFF258529}</ProjectGuid>
+    <ProjectGuid>{02D828BE-2362-4733-B82E-DC3A511D6FEE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -168,7 +168,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -184,7 +184,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\x64\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -199,7 +199,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -216,7 +216,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\x64\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -231,7 +231,7 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -240,7 +240,7 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -249,7 +249,7 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -258,25 +258,17 @@
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="MidiXProc.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(MSBuildThisFileDirectory)..\..\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(MSBuildThisFileDirectory)..\..\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(MSBuildThisFileDirectory)..\..\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(MSBuildThisFileDirectory)..\..\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(MSBuildThisFileDirectory)..\..\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(MSBuildThisFileDirectory)..\..\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(MSBuildThisFileDirectory)..\..\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(MSBuildThisFileDirectory)..\..\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
+    <ClCompile Include="MidiSrvTransport.cpp" />
+    <ClCompile Include="MidiSrv_Rpc.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Inc\MidiXProc.h" />
+    <ClInclude Include="..\..\Inc\MidiSrvTransport.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

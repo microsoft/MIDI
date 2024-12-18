@@ -128,6 +128,18 @@ public:
         _In_ PKSMIDILOOPED_EVENT2   Buffer
     );
 
+    _Must_inspect_result_
+    __drv_maxIRQL(PASSIVE_LEVEL)
+    PAGED_CODE_SEG
+    static
+    NTSTATUS
+    GetGroupTerminalBlocks
+    (
+        _In_ PIRP     irp,
+        _In_ PKSP_PIN request,
+        _Inout_ PVOID buffer
+    );
+
 private:
 
     static KSTART_ROUTINE WorkerThread;

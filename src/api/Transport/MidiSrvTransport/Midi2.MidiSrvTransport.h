@@ -8,21 +8,6 @@
 
 #pragma once
 
-class MidiSrvTransportTelemetryProvider : public wil::TraceLoggingProvider
-{
-    IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
-        MidiSrvTransportTelemetryProvider,
-        "Microsoft.Windows.Midi2.MidiSrvTransport",
-        // {c22d26fd-947b-5df1-a0f8-bc62d26d188d}
-        (0xc22d26fd,0x947b,0x5df1,0xa0,0xf8,0xbc,0x62,0xd2,0x6d,0x18,0x8d))
-};
-
-
-
-
-
-HRESULT GetMidiSrvBindingHandle(_In_ handle_t* BindingHandle);
-
 using namespace ATL;
 
 class ATL_NO_VTABLE CMidi2MidiSrvTransport : 

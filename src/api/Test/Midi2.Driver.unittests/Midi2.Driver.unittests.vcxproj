@@ -1,9 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
@@ -51,7 +59,25 @@
     <CharacterSet>Unicode</CharacterSet>
     <Driver_SpectreMitigation>Spectre</Driver_SpectreMitigation>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <DriverTargetPlatform>Universal</DriverTargetPlatform>
+    <CharacterSet>Unicode</CharacterSet>
+    <Driver_SpectreMitigation>Spectre</Driver_SpectreMitigation>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <DriverTargetPlatform>Universal</DriverTargetPlatform>
+    <CharacterSet>Unicode</CharacterSet>
+    <Driver_SpectreMitigation>Spectre</Driver_SpectreMitigation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <TargetVersion>Windows10</TargetVersion>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
@@ -107,7 +133,21 @@
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);</LibraryPath>
+    <ExternalIncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</ExternalIncludePath>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);</LibraryPath>
+    <ExternalIncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</ExternalIncludePath>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\test\miditestcommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);</LibraryPath>
     <ExternalIncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</ExternalIncludePath>
@@ -128,11 +168,45 @@
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib;miditestcommon.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;WINAPI_PARTITION_DESKTOP=1;WINAPI_PARTITION_SYSTEM=1;WINAPI_PARTITION_APP=1;WINAPI_PARTITION_PC_APP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>
+      </PrecompiledHeaderOutputFile>
+      <WarningLevel>Level4</WarningLevel>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)\Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib;miditestcommon.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PreprocessorDefinitions>WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;WINAPI_PARTITION_DESKTOP=1;WINAPI_PARTITION_SYSTEM=1;WINAPI_PARTITION_APP=1;WINAPI_PARTITION_PC_APP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile />
       <PrecompiledHeaderOutputFile />
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level4</WarningLevel>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)\Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib;miditestcommon.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;WINAPI_PARTITION_DESKTOP=1;WINAPI_PARTITION_SYSTEM=1;WINAPI_PARTITION_APP=1;WINAPI_PARTITION_PC_APP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>
+      </PrecompiledHeaderOutputFile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)test\inc;$(WindowsSdkDir)\Testing\Development\inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>

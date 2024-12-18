@@ -24,7 +24,6 @@ public:
     //STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Inout_ BSTR* responseJson));
     STDMETHOD(Shutdown)();
 
-
     STDMETHOD(GetTransportList(_Out_ LPWSTR* transportListJson));
     //STDMETHOD(GetTransportList(_In_ DWORD transportMetadataStructSize, _In_ PTRANSPORTMETADATA transportList, _Inout_ DWORD* transportCount);
 
