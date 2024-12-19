@@ -80,7 +80,8 @@
               "BuildUserToolsSharedComponents",
               "CreateVersionIncludes",
               "Prerequisites",
-              "ZipPowershellDevUtilities"
+              "ZipPowershellDevUtilities",
+              "ZipWdmaud2"
             ]
           }
         },
@@ -106,7 +107,8 @@
               "BuildUserToolsSharedComponents",
               "CreateVersionIncludes",
               "Prerequisites",
-              "ZipPowershellDevUtilities"
+              "ZipPowershellDevUtilities",
+              "ZipWdmaud2"
             ]
           }
         },

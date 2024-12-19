@@ -1538,12 +1538,33 @@ class Build : NukeBuild
             regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
         });
 
+    Target ZipWdmaud2 => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildServiceAndPlugins)
+        .Executes(() =>
+        {
+            var zipRoot = (StagingRootFolder / "wdmaud2").CreateOrCleanDirectory();
+
+            var arm64 = (zipRoot / "arm64").CreateOrCleanDirectory();
+            var x64 = (zipRoot / "x64").CreateOrCleanDirectory();
+
+            string driverFile = "wdmaud2.drv";
+
+            CopyFile(ApiStagingFolder / "arm64" / driverFile, arm64 / driverFile, FileExistsPolicy.Fail, false);
+            CopyFile(ApiStagingFolder / "x64" / driverFile, x64 / driverFile, FileExistsPolicy.Fail, false);
+
+            // todo: add takeown / copy scripts
+
+            zipRoot.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-shim-driver.zip");
+
+        });
 
 
     Target BuildAndPublishAll => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
         .DependsOn(BuildServiceAndPlugins)
+        .DependsOn(ZipWdmaud2)
         .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildInDevelopmentServicePlugins)
         .DependsOn(BuildInDevelopmentServicePluginsInstaller)
