@@ -263,7 +263,7 @@ class Build : NukeBuild
 
             // This transport gets compiled to Arm64X and x64. The Arm64X output is in the Arm64EC folder
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.MidiSrvTransport.dll");
-
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"wdmaud2.drv");
 
             // only in-proc files, like the MidiSrvTransport, are Arm64EC. For all the others
             // any reference to Arm64EC is just Arm64. We don't use any of the Arm64X output
@@ -282,8 +282,6 @@ class Build : NukeBuild
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.UmpProtocolDownscalerTransform.dll");
 
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.SchedulerTransform.dll");
-
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"wdmaud2.drv");
 
             foreach (var file in stagingFiles)
             {

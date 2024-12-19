@@ -68,6 +68,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         private MidiDesktopAppSdkInitializer(IMidiClientInitializer initializer)
         {
             _initializer = initializer;
+
         }
 
         public static MidiDesktopAppSdkInitializer? Create()
@@ -82,11 +83,24 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
             if (hr == 0 && obj != null)
             {
-                return new MidiDesktopAppSdkInitializer((IMidiClientInitializer)obj);
+                var cominit = (IMidiClientInitializer)obj;
+
+                try
+                {
+                    cominit.Initialize();
+
+                    var initializer = new MidiDesktopAppSdkInitializer(cominit);
+
+                    return initializer;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
             }
             else
             {
-                // TODO: failed to create the initializer
+                // failed to create the initializer
                 return null;
             }
         }
@@ -99,7 +113,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // todo: Log
                 return false;
@@ -114,7 +128,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // todo: Log
                 return false;

@@ -77,6 +77,9 @@ struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitia
 
 private:
     bool m_initialized{ false };
+
+    wil::com_ptr_nothrow<IMidiTransport> m_serviceTransport{ nullptr };
+    wil::com_ptr_nothrow<IMidiSessionTracker> m_sessionTracker{ nullptr };
 };
 
 extern winrt::com_ptr<IMidiClientInitializer> g_clientInitializer;

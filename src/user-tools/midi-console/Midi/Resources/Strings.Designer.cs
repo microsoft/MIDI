@@ -214,11 +214,11 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Send MIDI 1.0 note on and off messages to the endpoint.
+        ///   Looks up a localized string similar to Send MIDI 1.0 or 2.0 note on and off messages to the endpoint.
         /// </summary>
-        internal static string CommandPlayMidi1NotesDescription {
+        internal static string CommandPlayNotesDescription {
             get {
-                return ResourceManager.GetString("CommandPlayMidi1NotesDescription", resourceCulture);
+                return ResourceManager.GetString("CommandPlayNotesDescription", resourceCulture);
             }
         }
         
@@ -1051,16 +1051,16 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Index (0-15 decimal) of the channel to send the messages to.
+        ///   Looks up a localized string similar to Number (1-16 decimal) of the channel to send the messages to.
         /// </summary>
-        internal static string ParameterPlayNotesChannelIndex {
+        internal static string ParameterPlayNotesChannelNumber {
             get {
-                return ResourceManager.GetString("ParameterPlayNotesChannelIndex", resourceCulture);
+                return ResourceManager.GetString("ParameterPlayNotesChannelNumber", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set to true to play the notes until you press the escape key.
+        ///   Looks up a localized string similar to Set to true to continue to loop through the notes until you press the escape key.
         /// </summary>
         internal static string ParameterPlayNotesForever {
             get {
@@ -1069,11 +1069,11 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Index (0-15 decimal) for the group to send the messages to.
+        ///   Looks up a localized string similar to Number (1-16 decimal) for the group to send the messages to.
         /// </summary>
-        internal static string ParameterPlayNotesGroupIndex {
+        internal static string ParameterPlayNotesGroupNumber {
             get {
-                return ResourceManager.GetString("ParameterPlayNotesGroupIndex", resourceCulture);
+                return ResourceManager.GetString("ParameterPlayNotesGroupNumber", resourceCulture);
             }
         }
         
@@ -1096,7 +1096,25 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Note velocity (0-127 decimal). A velocity of 0 becomes a note-off message..
+        ///   Looks up a localized string similar to Set to true to use MIDI 2.0 protocol messages (type 4) instead of MIDI 1.0 protocol (type 2).
+        /// </summary>
+        internal static string ParameterPlayNotesMidi2 {
+            get {
+                return ResourceManager.GetString("ParameterPlayNotesMidi2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duration of wait time between notes, in whole decimal milliseconds.
+        /// </summary>
+        internal static string ParameterPlayNotesRestMilliseconds {
+            get {
+                return ResourceManager.GetString("ParameterPlayNotesRestMilliseconds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note velocity (1.0 - 100.0) as a fractional decimal percentage of the maximum value for the protocol..
         /// </summary>
         internal static string ParameterPlayNotesVelocity {
             get {
