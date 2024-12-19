@@ -62,10 +62,9 @@
 
         <!--    <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" /> -->
         <!--    <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll"                SelfRegCost="1" Vital="true" /> -->
-
-
         </Component>
 
+        <!-- The only way to copy this file over the existing one is to use sfpcopy, which is not a public tool -->
         <!--
         <Component Id="WinMMAPIRedirectDriver"
                    Bitness="always64"
@@ -79,12 +78,12 @@
         <Component Id="WindowsService"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
+                   NeverOverwrite="false"
                    Guid="d2557869-303c-4985-a6be-67feb11a11d9" >
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
 
         </Component>
 
-        <!--
         <Component Id="WinMMCompatRegistryEntries"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
@@ -95,13 +94,12 @@
             </RegistryKey>
 
         </Component>
-        -->
 
-            <Component Id="ConfigurationRegistryEntries"
-                   Bitness="always64"
-                   Directory="SERVICE_INSTALLFOLDER"
-                   Guid="25E35CBB-4C66-4BEB-9B03-BC2E2D99317B"
-                   NeverOverwrite="false">
+        <Component Id="ConfigurationRegistryEntries"
+                Bitness="always64"
+                Directory="SERVICE_INSTALLFOLDER"
+                Guid="25E35CBB-4C66-4BEB-9B03-BC2E2D99317B"
+                NeverOverwrite="false">
                    
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
@@ -166,7 +164,7 @@
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceTransports"/>
             <ComponentRef Id="WindowsService"/>
-            <!--<ComponentRef Id="WinMMCompatRegistryEntries"/>-->
+            <ComponentRef Id="WinMMCompatRegistryEntries"/>
             <!-- <ComponentRef Id="WinMMAPIRedirectDriver"/> -->
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>

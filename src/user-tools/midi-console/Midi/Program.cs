@@ -136,7 +136,7 @@ app.Configure(config =>
         endpoint.AddCommand<EndpointPlayNotesCommand>("play-notes")
             .WithAlias("play")
             .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "play-notes", "127 32 56 98", "--length", "500", "--velocity", "50", "--forever", "--midi2")
-            .WithDescription(Strings.CommandPlayMidi1NotesDescription)
+            .WithDescription(Strings.CommandPlayNotesDescription)
             ;
 
 

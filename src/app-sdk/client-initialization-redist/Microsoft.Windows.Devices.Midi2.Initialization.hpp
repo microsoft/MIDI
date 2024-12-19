@@ -90,6 +90,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
 
         // guid for the initializer
 
+        // this must be called only *after* initializing the SDK Runtime
         bool EnsureServiceAvailable()
         {
             // initialize the SDK runtime before calling this function

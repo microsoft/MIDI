@@ -1000,7 +1000,7 @@ void OutputProcessAndNativeMachine()
             // if not running emulated, IsWow64Process2 returns machine unknown for the process.
             if ((processMachine == IMAGE_FILE_MACHINE_UNKNOWN || processMachine == IMAGE_FILE_MACHINE_ARM64) && nativeMachine == IMAGE_FILE_MACHINE_ARM64)
             {
-                OutputStringField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_EMULATION, std::wstring{ L"Native Arm64 process on Arm64 PC (Note Emulated)" });
+                OutputStringField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_PROCESSOR_EMULATION, std::wstring{ L"Native Arm64 process on Arm64 PC (Not Emulated)" });
             }
             else if ((processMachine == IMAGE_FILE_MACHINE_UNKNOWN || processMachine == IMAGE_FILE_MACHINE_AMD64) && nativeMachine == IMAGE_FILE_MACHINE_AMD64)
             {

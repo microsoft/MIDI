@@ -34,6 +34,18 @@ MidiClientInitializer::Initialize(
         return S_OK;
     }
 
+    // midisrv client initialization. Doesn't actually connect to service here
+
+    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_serviceTransport)));
+    RETURN_IF_FAILED(m_serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&m_sessionTracker));
+
+    RETURN_HR_IF_NULL(E_POINTER, m_sessionTracker);
+
+    RETURN_IF_FAILED(m_sessionTracker->Initialize());
+
+
+    // SDK initialization
+
     g_runtimeComponentCatalog = std::make_shared<MidiAppSdkRuntimeComponentCatalog>();
 
     if (g_runtimeComponentCatalog == nullptr)
@@ -99,6 +111,7 @@ MidiClientInitializer::Initialize(
 
         RETURN_IF_FAILED(E_FAIL);
     }
+
 
     m_initialized = true;
 
@@ -268,17 +281,10 @@ MidiClientInitializer::EnsureServiceAvailable() noexcept
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    wil::com_ptr_nothrow<IMidiTransport> serviceTransport;
-    wil::com_ptr_nothrow<IMidiSessionTracker> sessionTracker;
 
-    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport)));
-    RETURN_IF_FAILED(serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker));
+    RETURN_HR_IF_NULL(E_POINTER, m_sessionTracker);
 
-    RETURN_HR_IF_NULL(E_POINTER, sessionTracker);
-
-    RETURN_IF_FAILED(sessionTracker->Initialize());
-
-    if (sessionTracker->VerifyConnectivity())
+    if (m_sessionTracker->VerifyConnectivity())
     {
         return S_OK;
     }
@@ -303,6 +309,16 @@ MidiClientInitializer::Shutdown() noexcept
     // Remove activation hooks
     RemoveWinRTActivationHooks();
 
+    if (m_serviceTransport)
+    {
+        m_serviceTransport = nullptr;
+    }
+
+    if (m_sessionTracker)
+    {
+        m_sessionTracker->Shutdown();
+        m_serviceTransport = nullptr;
+    }
 
     if (g_runtimeComponentCatalog != nullptr)
     {

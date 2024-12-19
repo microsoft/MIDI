@@ -28,20 +28,20 @@ namespace Microsoft.Midi.ConsoleApp
             [DefaultValue(250)]
             public int Rest { get; set; }
 
-            [LocalizedDescription("ParameterPlayNotesGroupIndex")]
-            [CommandOption("-g|--group|--group-index")]
-            [DefaultValue(0)]
-            public int GroupIndex { get; set; }
+            [LocalizedDescription("ParameterPlayNotesGroupNumber")]
+            [CommandOption("-g|--group|--group-number")]
+            [DefaultValue(1)]
+            public int GroupNumber { get; set; }
 
-            [LocalizedDescription("ParameterPlayNotesChannelIndex")]
-            [CommandOption("-c|--channel|--channel-index")]
-            [DefaultValue(0)]
-            public int ChannelIndex { get; set; }
+            [LocalizedDescription("ParameterPlayNotesChannelNumber")]
+            [CommandOption("-c|--channel|--channel-number")]
+            [DefaultValue(1)]
+            public int ChannelNumber { get; set; }
 
             [LocalizedDescription("ParameterPlayNotesVelocity")]
-            [CommandOption("-v|--velocity")]
-            [DefaultValue(127)]
-            public UInt32 Velocity { get; set; }
+            [CommandOption("-v|--velocity|--velocity-percent")]
+            [DefaultValue(75.0)]
+            public double Velocity { get; set; }
 
             [LocalizedDescription("ParameterPlayNotesForever")]
             [CommandOption("-f|--forever|--repeat-forever")]
@@ -57,22 +57,19 @@ namespace Microsoft.Midi.ConsoleApp
         public override Spectre.Console.ValidationResult Validate(CommandContext context, Settings settings)
         {
             
-            if (!MidiGroup.IsValidIndex((byte)settings.GroupIndex))
+            if (!MidiGroup.IsValidIndex((byte)(settings.GroupNumber-1)))
             {
-                return ValidationResult.Error("Group index must be between 0 and 15 inclusive.");
+                return ValidationResult.Error("Group number must be between 1 and 16 inclusive.");
             }
 
-            if (!MidiChannel.IsValidIndex((byte)settings.ChannelIndex))
+            if (!MidiChannel.IsValidIndex((byte)(settings.ChannelNumber-1)))
             {
-                return ValidationResult.Error("Channel index must be between 0 and 15 inclusive.");
+                return ValidationResult.Error("Channel index must be between 1 and 16 inclusive.");
             }
 
-            if (!settings.Midi2)
+            if (settings.Velocity > 100.0 || settings.Velocity < 1.0)
             {
-                if (settings.Velocity > 127 || settings.Velocity < 0)
-                {
-                    return ValidationResult.Error("Velocity must be between 0 and 127 inclusive for MIDI 1.0 messages.");
-                }
+                return ValidationResult.Error("Velocity percentage must be between 1.0 and 100.0 inclusive.");
             }
 
             // todo: validate notes
@@ -86,18 +83,18 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 if (index > 127 || index < 0)
                 {
-                    return ValidationResult.Error("All note indexes must be between 0 and 127");
+                    return ValidationResult.Error("All note indexes must be between 0 and 127.");
                 }
             }
 
             if (settings.Length < 30 )
             {
-                return ValidationResult.Error("Please provide a note duration of at least 30 milliseconds");
+                return ValidationResult.Error("Please provide a note duration of at least 30 milliseconds.");
             }
 
             if (settings.Rest < 0)
             {
-                return ValidationResult.Error("Please provide a rest duration of zero or more milliseconds");
+                return ValidationResult.Error("Please provide a rest duration of zero or more milliseconds.");
             }
 
             return base.Validate(context, settings);
@@ -168,9 +165,8 @@ namespace Microsoft.Midi.ConsoleApp
 
                 bool stillSending = true;
 
-                MidiGroup group = new MidiGroup((byte)settings.GroupIndex);
-                MidiChannel channel = new MidiChannel((byte)settings.ChannelIndex);
-                byte velocity = (byte)settings.Velocity;
+                MidiGroup group = new MidiGroup((byte)(settings.GroupNumber-1));
+                MidiChannel channel = new MidiChannel((byte)(settings.ChannelNumber-1));
 
                 var messageSenderThread = new Thread(() =>
                 {
@@ -191,6 +187,8 @@ namespace Microsoft.Midi.ConsoleApp
 
                         if (settings.Midi2)
                         {
+                            UInt32 velocity = (UInt32)(settings.Velocity / 100.0) * UInt32.MaxValue;
+
                             var noteOnMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
                                                                 group,
@@ -203,6 +201,8 @@ namespace Microsoft.Midi.ConsoleApp
                         }
                         else
                         {
+                            byte velocity = (byte)settings.Velocity;
+
                             var noteOnMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
                                                                 group,
@@ -231,6 +231,8 @@ namespace Microsoft.Midi.ConsoleApp
 
                             if (settings.Midi2)
                             {
+                                UInt32 velocity = (UInt32)(settings.Velocity / 100.0) * UInt32.MaxValue;
+
                                 var noteOffMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
                                                                 group,
@@ -243,6 +245,8 @@ namespace Microsoft.Midi.ConsoleApp
                             }
                             else
                             {
+                                byte velocity = (byte)settings.Velocity;
+
                                 var noteOffMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
                                                                 group,

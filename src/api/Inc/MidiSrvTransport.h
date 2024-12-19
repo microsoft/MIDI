@@ -32,7 +32,7 @@ public:
     HRESULT UpdateClientSessionName(_In_ GUID sessionId, _In_ LPCWSTR sessionName);
     HRESULT RemoveClientSession(_In_ GUID sessionId);
     HRESULT GetSessionList(_Out_ LPWSTR* sessionList);
-    HRESULT GetSessionList(_Out_ LPSAFEARRAY* SessionDetailsList);
+   // HRESULT GetSessionList(_Out_ LPSAFEARRAY* SessionDetailsList);
     BOOL VerifyConnectivity();
 
     // configuration manager

@@ -128,9 +128,9 @@ class Build : NukeBuild
 
     string[] SdkPlatforms => new string[] { "x64", "Arm64EC"  };
     string[] ServiceAndApiPlatforms => new string[] { "x64", "Arm64" };
-    string[] ServiceAndApiPlatformsAll => new string[] { "x64", "Arm64", "Arm64EC" };
+    string[] ServiceAndApiPlatformsAll => new string[] { "x64", "Arm64", "Arm64EC" };   // the order here matters because the dependencies in the solution aren't perfect
     string[] ToolsPlatforms => new string[] { "x64", "Arm64" };
-    string[] NativeSamplesPlatforms => new string[] { "x64", "Arm64EC", "Arm64" };
+    string[] NativeSamplesPlatforms => new string[] { "x64", "Arm64", "Arm64EC" };
     string[] ManagedSamplesPlatforms => new string[] { "x64", "Arm64" };
     string[] InstallerPlatforms => new string[] { "x64", "Arm64" };
 
@@ -263,7 +263,7 @@ class Build : NukeBuild
 
             // This transport gets compiled to Arm64X and x64. The Arm64X output is in the Arm64EC folder
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"Midi2.MidiSrvTransport.dll");
-
+            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / Configuration.Release / $"wdmaud2.drv");
 
             // only in-proc files, like the MidiSrvTransport, are Arm64EC. For all the others
             // any reference to Arm64EC is just Arm64. We don't use any of the Arm64X output
@@ -282,8 +282,6 @@ class Build : NukeBuild
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.UmpProtocolDownscalerTransform.dll");
 
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.SchedulerTransform.dll");
-
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"wdmaud2.drv");
 
             foreach (var file in stagingFiles)
             {
@@ -1538,12 +1536,33 @@ class Build : NukeBuild
             regHelpersFolder.ZipTo(ThisReleaseFolder / $"dev-pre-setup-scripts.zip");
         });
 
+    Target ZipWdmaud2 => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildServiceAndPlugins)
+        .Executes(() =>
+        {
+            var zipRoot = (StagingRootFolder / "wdmaud2").CreateOrCleanDirectory();
+
+            var arm64 = (zipRoot / "arm64").CreateOrCleanDirectory();
+            var x64 = (zipRoot / "x64").CreateOrCleanDirectory();
+
+            string driverFile = "wdmaud2.drv";
+
+            CopyFile(ApiStagingFolder / "arm64" / driverFile, arm64 / driverFile, FileExistsPolicy.Fail, false);
+            CopyFile(ApiStagingFolder / "x64" / driverFile, x64 / driverFile, FileExistsPolicy.Fail, false);
+
+            // todo: add takeown / copy scripts
+
+            zipRoot.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-shim-driver.zip");
+
+        });
 
 
     Target BuildAndPublishAll => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
         .DependsOn(BuildServiceAndPlugins)
+        .DependsOn(ZipWdmaud2)
         .DependsOn(BuildServiceAndPluginsInstaller)
         .DependsOn(BuildInDevelopmentServicePlugins)
         .DependsOn(BuildInDevelopmentServicePluginsInstaller)
