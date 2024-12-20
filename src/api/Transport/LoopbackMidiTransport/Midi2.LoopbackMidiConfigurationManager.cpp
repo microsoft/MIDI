@@ -55,7 +55,6 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     // empty config is ok in this case. We just ignore
     if (configurationJsonSection == nullptr) return S_OK;
 
-
     json::JsonObject jsonObject{};
 
     // default to failure
@@ -331,9 +330,10 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         //}
 
         
-
-
-        internal::JsonStringifyObjectToOutParam(responseObject, response);
+        if (response != nullptr)
+        {
+            internal::JsonStringifyObjectToOutParam(responseObject, response);
+        }
 
         return S_OK;
 

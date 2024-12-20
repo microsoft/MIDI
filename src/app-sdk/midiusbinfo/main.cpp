@@ -48,20 +48,21 @@ winrt::hstring GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring 
     return value;
 }
 
+#define LINE_LENGTH 79
 
 int __cdecl main()
 {
     winrt::init_apartment();
 
-    std::cout << dye::grey("======================================================================") << std::endl;
+    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" Enumerating MIDI 1.0 kernel streaming devices to discover MIDI pins") << std::endl;
     std::cout << dye::aqua(" Typically, these are USB, but other KS drivers will be included") << std::endl;
-    std::cout << dye::grey("----------------------------------------------------------------------") << std::endl;
+    std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
     std::cout << dye::aqua(" If the MIDI service is running when you run this utility, some") << std::endl;
     std::cout << dye::aqua(" devices may not report all pin properties because they are in-use.") << std::endl;
     std::cout << dye::aqua(" It is recommended that you stop the midisrv service before running.") << std::endl;
     std::cout << dye::aqua(" this utility.") << std::endl;
-    std::cout << dye::grey("======================================================================") << std::endl;
+    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
 
     std::wcout 
         << WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME 

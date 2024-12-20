@@ -972,11 +972,12 @@ CMidiDeviceManager::ActivateEndpoint
         // remove actual function blocks and their names
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
-            __FUNCTION__,
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(parentInstanceId, "parent"),
-            TraceLoggingWideString(L"Adding clearing properties for function blocks", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"Adding clearing properties for function blocks", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(parentInstanceId, "parent")
         );
 
         for (int i = 0; i < MIDI_MAX_FUNCTION_BLOCKS; i++)
@@ -1297,7 +1298,7 @@ CMidiDeviceManager::ActivateEndpointInternal
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Endpoint exists, but it is not in the MidiDeviceManager store. Is something else creating endpoints?"),
+                TraceLoggingWideString(L"Endpoint exists, but it is not in the MidiDeviceManager store. Is something else creating endpoints?", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(parentInstanceId, "parent"),
                 TraceLoggingWideString(midiPort->InstanceId.c_str(), "new port"),
                 TraceLoggingWideString(midiPort->Enumerator.c_str(), "new port enumerator"),

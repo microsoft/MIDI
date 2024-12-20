@@ -10,10 +10,10 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{0F688DE9-BE99-4A86-BE79-C5BE32BC471D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>midiusbinfo</RootNamespace>
+    <RootNamespace>midiksinfo</RootNamespace>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
-    <ProjectName>midiusbinfo</ProjectName>
+    <ProjectName>midiksinfo</ProjectName>
   </PropertyGroup>
   <Import Project="..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.props" Condition="Exists('..\packages\$(WindowsMidiServicesSdkPackage)\build\native\Microsoft.Windows.Devices.Midi2.props')" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

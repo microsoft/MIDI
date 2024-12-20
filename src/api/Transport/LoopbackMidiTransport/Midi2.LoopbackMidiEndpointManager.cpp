@@ -166,6 +166,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->InstanceIdPrefix.c_str(), "prefix"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
@@ -195,9 +196,9 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Adding endpoint properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
-        TraceLoggingWideString(L"Adding endpoint properties"),
         TraceLoggingWideString(friendlyName.c_str(), "friendlyName"),
         TraceLoggingWideString(transportCode.c_str(), "transport code"),
         TraceLoggingWideString(endpointName.c_str(), "endpointName"),
@@ -230,24 +231,24 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Activating endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
-        TraceLoggingWideString(instanceId.c_str(), "instance id"),
-        TraceLoggingWideString(L"Activating endpoint")
+        TraceLoggingWideString(instanceId.c_str(), "instance id")
     );
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.TransportId = m_TransportTransportId;
-    commonProperties.EndpointDeviceType = MidiEndpointDeviceType_Normal;
+    commonProperties.EndpointDeviceType = MidiEndpointDeviceType::MidiEndpointDeviceType_Normal;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
     commonProperties.EndpointName = endpointName.c_str();
-    commonProperties.EndpointDescription = endpointDescription.c_str();
+    commonProperties.EndpointDescription = endpointDescription.size() > 0 ? endpointDescription.c_str() : nullptr;
     commonProperties.CustomEndpointName = nullptr;
     commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = definition->EndpointUniqueIdentifier.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
-    commonProperties.NativeDataFormat = MidiDataFormats_UMP;
+    commonProperties.NativeDataFormat = MidiDataFormats::MidiDataFormats_UMP;
 
     UINT32 capabilities {0};
     capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
@@ -275,10 +276,10 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Endpoint activated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
         TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
-        TraceLoggingWideString(newDeviceInterfaceId.get(), "new device interface id"),
-        TraceLoggingWideString(L"Endpoint activated")
+        TraceLoggingWideString(newDeviceInterfaceId.get(), "new device interface id")
     );
 
 
@@ -296,9 +297,9 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Done", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(definition->AssociationId.c_str(), "association id"),
-        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier"),
-        TraceLoggingWideString(L"Done")
+        TraceLoggingWideString(definition->EndpointUniqueIdentifier.c_str(), "unique identifier")
     );
 
     return S_OK;
