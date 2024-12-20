@@ -94,6 +94,9 @@
     <ClInclude Include="Midi2.LoopbackMidiPluginMetadataProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TransportWorkQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.LoopbackMidiTransport.rc">

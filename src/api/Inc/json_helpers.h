@@ -87,6 +87,8 @@ namespace WindowsMidiServicesInternal
     {
         try
         {
+            if (outParam == nullptr) return false;
+
             wil::unique_cotaskmem_string tempString = wil::make_cotaskmem_string_nothrow(obj.Stringify().c_str());
 
             if (tempString.get() != nullptr)

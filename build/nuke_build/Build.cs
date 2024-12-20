@@ -34,8 +34,8 @@ class Build : NukeBuild
     //readonly GitVersion MasterBuildVersion;
 
 
-    string VersionName => "Developer Preview 8";
-    string NuGetVersionName => "preview-8";
+    string VersionName => "Developer Preview 9";
+    string NuGetVersionName => "preview-9";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
 
@@ -574,7 +574,7 @@ class Build : NukeBuild
 
                 // MIDI utilities
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
-                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiusbinfo" / stagingPlatform / Configuration.Release / $"midiusbinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiksinfo" / stagingPlatform / Configuration.Release / $"midiksinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midimdnsinfo" / stagingPlatform / Configuration.Release / $"midimdnsinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
         });

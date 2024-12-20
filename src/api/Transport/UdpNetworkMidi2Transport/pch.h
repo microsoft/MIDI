@@ -16,11 +16,13 @@
 #include <winrt/Windows.Storage.Streams.h>
 
 // this mDNS/DNS-SD API is quite a bit easier to use than the win32 version
+#include <winrt/windows.networking.connectivity.h>
 #include <winrt/windows.networking.servicediscovery.dnssd.h>
 #include <winrt/windows.networking.sockets.h>
 #include <winrt/windows.networking.h>
 
 namespace json = ::winrt::Windows::Data::Json;
+
 
 
 #include <assert.h>

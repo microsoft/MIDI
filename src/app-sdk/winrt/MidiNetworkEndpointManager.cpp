@@ -18,17 +18,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         return true;
     }
 
+
+
     _Use_decl_annotations_
-    network::MidiNetworkHostEndpointCreationResult MidiNetworkEndpointManager::CreateNetworkHost(
-        network::MidiNetworkHostEndpointCreationConfig const& creationConfig)
+        network::MidiNetworkHostEndpointCreationResult MidiNetworkEndpointManager::CreateNetworkHost(
+            network::MidiNetworkHostEndpointCreationConfig const& creationConfig)
     {
         UNREFERENCED_PARAMETER(creationConfig);
         throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
-    network::MidiNetworkHostEndpointRemovalResult MidiNetworkEndpointManager::RemoveNetworkHost(
-        network::MidiNetworkHostEndpointRemovalConfig const& removalConfig)
+        network::MidiNetworkHostEndpointRemovalResult MidiNetworkEndpointManager::RemoveNetworkHost(
+            network::MidiNetworkHostEndpointRemovalConfig const& removalConfig)
     {
         UNREFERENCED_PARAMETER(removalConfig);
         throw hresult_not_implemented();
@@ -37,20 +39,68 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
 
     _Use_decl_annotations_
-    network::MidiNetworkClientEndpointCreationResult MidiNetworkEndpointManager::CreateNetworkClient(
-        network::MidiNetworkClientEndpointCreationConfig const& creationConfig)
+        network::MidiNetworkClientEndpointCreationResult MidiNetworkEndpointManager::CreateNetworkClient(
+            network::MidiNetworkClientEndpointCreationConfig const& creationConfig)
     {
         UNREFERENCED_PARAMETER(creationConfig);
         throw hresult_not_implemented();
     }
 
     _Use_decl_annotations_
-    network::MidiNetworkClientEndpointRemovalResult MidiNetworkEndpointManager::RemoveNetworkClient(
-        network::MidiNetworkClientEndpointRemovalConfig const& removalConfig)
+        network::MidiNetworkClientEndpointRemovalResult MidiNetworkEndpointManager::RemoveNetworkClient(
+            network::MidiNetworkClientEndpointRemovalConfig const& removalConfig)
     {
         UNREFERENCED_PARAMETER(removalConfig);
         throw hresult_not_implemented();
     }
+
+
+    winrt::hstring MidiNetworkEndpointManager::MidiNetworkUdpDnsServiceType() 
+    { 
+        return L"_midi2._udp"; 
+    }
+
+    winrt::hstring MidiNetworkEndpointManager::MidiNetworkUdpDnsDomain() 
+    { 
+        return L"local"; 
+    }
+
+    winrt::hstring MidiNetworkEndpointManager::MidiNetworkUdpDnsSdQueryString()
+    {
+        // protocol guid from https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/enumerate-devices-over-a-network
+
+        return
+            L"System.Devices.AepService.ProtocolId:={4526e8c1-8aac-4153-9b16-55e86ada0e54} AND " \
+            L"System.Devices.Dnssd.ServiceName:=\"" + MidiNetworkEndpointManager::MidiNetworkUdpDnsServiceType() + L"\" AND " \
+            L"System.Devices.Dnssd.Domain:=\"" + MidiNetworkEndpointManager::MidiNetworkUdpDnsDomain() + L"\"";
+    }
+
+    enumeration::DeviceInformationKind MidiNetworkEndpointManager::MidiNetworkUdpDnsSdDeviceInformationKind()
+    {
+        return enumeration::DeviceInformationKind::AssociationEndpointService;
+    }
+
+
+    collections::IVector<winrt::hstring> MidiNetworkEndpointManager::MidiNetworkUdpDnsSdQueryAdditionalProperties()
+    {
+        auto props = winrt::single_threaded_vector<winrt::hstring>();
+
+        // https://learn.microsoft.com/en-us/windows/win32/properties/props-system-devices-dnssd-domain
+        props.Append(L"System.Devices.AepService.ProtocolId");  // guid
+        props.Append(L"System.Devices.Dnssd.HostName");         // string
+        props.Append(L"System.Devices.Dnssd.FullName");         // string
+        props.Append(L"System.Devices.Dnssd.ServiceName");      // string
+        props.Append(L"System.Devices.Dnssd.Domain");           // string
+        props.Append(L"System.Devices.Dnssd.InstanceName");     // string
+        props.Append(L"System.Devices.IpAddress");              // multivalue string
+        props.Append(L"System.Devices.Dnssd.PortNumber");       // uint16_t
+        props.Append(L"System.Devices.Dnssd.TextAttributes");   // multivalue string
+
+        return props;
+    }
+
+
+
 
 
     collections::IVector<midi2::Endpoints::Network::MidiAdvertisedHost> MidiNetworkEndpointManager::GetAdvertisedHosts()
@@ -98,7 +148,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
                     // we only take the top one right now. We should take the others as well
                     if (array.size() > 0)
                     {
-                        host.IPAddress = array.at(0);
+                        // TEMP! We'll need to move these to a vector
+                        for (auto const& ip : array)
+                        {
+                            host.IPAddress = host.IPAddress + L" | " + ip;
+                        }
+                        
                     }
                 }
 

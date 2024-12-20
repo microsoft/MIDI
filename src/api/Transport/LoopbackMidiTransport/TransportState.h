@@ -36,6 +36,10 @@ public:
         return m_endpointTable;
     }
 
+    std::shared_ptr<TransportWorkQueue> GetEndpointWorkQueue()
+    {
+        return m_workQueue;
+    }
 
     HRESULT Shutdown()
     {
@@ -55,8 +59,11 @@ private:
     ~TransportState();
 
 
-    wil::com_ptr<CMidi2LoopbackMidiEndpointManager> m_endpointManager;
-    wil::com_ptr<CMidi2LoopbackMidiConfigurationManager> m_configurationManager;
+    wil::com_ptr<CMidi2LoopbackMidiEndpointManager> m_endpointManager{ nullptr };
+    wil::com_ptr<CMidi2LoopbackMidiConfigurationManager> m_configurationManager{ nullptr };
 
     std::shared_ptr<MidiLoopbackDeviceTable> m_endpointTable = std::make_shared<MidiLoopbackDeviceTable>();
+
+    std::shared_ptr<TransportWorkQueue> m_workQueue = std::make_shared<TransportWorkQueue>();
+
 };

@@ -58,7 +58,7 @@ struct MidiNetworkHostDefinition
     MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
 
     // ip information
-    std::vector<winrt::Windows::Networking::HostName> IpAddresses{};
+    //std::vector<winrt::Windows::Networking::HostName> IpAddresses{};
 
     // authentication
     MidiNetworkHostAuthentication Authentication{ MidiNetworkHostAuthentication::NoAuthentication };

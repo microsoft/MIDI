@@ -26,6 +26,10 @@
     "Watch Endpoints": {
       "commandName": "Project",
       "commandLineArgs": "watch-endpoints --verbose"
+    },
+    "Enum Transports": {
+      "commandName": "Project",
+      "commandLineArgs": "enum transports"
     }
   }
 }

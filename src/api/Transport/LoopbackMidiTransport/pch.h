@@ -55,6 +55,7 @@
 
 #include <vector>
 #include <string>
+#include <queue>
 
 #include "SWDevice.h"
 #include <initguid.h>
@@ -107,5 +108,7 @@ class TransportState;
 #include "Midi2.LoopbackMidiBiDi.h"
 #include "Midi2.LoopbackMidiEndpointManager.h"
 #include "Midi2.LoopbackMidiConfigurationManager.h"
+#include "TransportWorkQueue.h"
 #include "TransportState.h"
 #include "Midi2.LoopbackMidiPluginMetadataProvider.h"
+

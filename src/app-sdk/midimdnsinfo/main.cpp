@@ -36,7 +36,7 @@ int __cdecl main()
     std::cout << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" Enumerating MIDI mdns advertisements currently visible to this PC") << std::endl;
-    std::cout << dye::aqua(" This may take a moment...") << std::endl;
+    std::cout << dye::aqua(" Press any key to stop ...") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << std::endl;
 
@@ -59,6 +59,33 @@ int __cdecl main()
         std::cout << dye::red("Unable to start MIDI service.");
         return 1;
     }
+
+
+    // list host names for this PC, just as a helper
+
+    auto hostNames = winrt::Windows::Networking::Connectivity::NetworkInformation::GetHostNames();
+
+    if (hostNames.Size() > 0)
+    {
+        std::cout << dye::grey("Host names for this PC:") << std::endl;
+
+        for (auto const& hostName : hostNames)
+        {
+            std::cout 
+                << "  " <<  dye::aqua(winrt::to_string(hostName.DisplayName())) 
+//                << dye::grey(" | ")
+//                << dye::aqua(winrt::to_string(winrt::hstring{ hostName.IPInformation().NetworkAdapter().NetworkAdapterId() }))
+                << std::endl;
+           
+        }
+
+        std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
+        std::cout << std::endl;
+    }
+
+
+
+
 
     auto entries = midinet::MidiNetworkEndpointManager::GetAdvertisedHosts();
 
