@@ -100,7 +100,7 @@ namespace Microsoft.Midi.ConsoleApp
                 }
                 else
                 {
-                    table.AddRow("No transports available. This is not normal.", "");
+                    table.AddRow("No transports available. This is not normal.");
                 }
 
                 AnsiConsole.Write(table);

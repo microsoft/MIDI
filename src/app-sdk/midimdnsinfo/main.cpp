@@ -61,7 +61,28 @@ int __cdecl main()
     }
 
 
-    // todo: create a host watcher
+    // list host names for this PC, just as a helper
+
+    auto hostNames = winrt::Windows::Networking::Connectivity::NetworkInformation::GetHostNames();
+
+    if (hostNames.Size() > 0)
+    {
+        std::cout << dye::grey("Host names for this PC:") << std::endl;
+
+        for (auto const& hostName : hostNames)
+        {
+            std::cout 
+                << "  " <<  dye::aqua(winrt::to_string(hostName.DisplayName())) 
+//                << dye::grey(" | ")
+//                << dye::aqua(winrt::to_string(winrt::hstring{ hostName.IPInformation().NetworkAdapter().NetworkAdapterId() }))
+                << std::endl;
+           
+        }
+
+        std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
+        std::cout << std::endl;
+    }
+
 
 
 

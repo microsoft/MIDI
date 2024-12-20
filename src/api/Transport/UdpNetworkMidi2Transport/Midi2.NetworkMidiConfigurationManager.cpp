@@ -123,27 +123,27 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
         return E_INVALIDARG;
     }
 
-    if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange)
-    {
-        // validate that there are exactly two entries
+    //if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange)
+    //{
+    //    // validate that there are exactly two entries
 
-        if (definition.IpAddresses.size() != 2)
-        {
-            errorMessage = L"Connection policy IP address range needs exactly two valid entries to define the range.";
-            return E_INVALIDARG;
-        }
-    }
-    else if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList)
-    {
-        // validate that there is at least one entry
+    //    if (definition.IpAddresses.size() != 2)
+    //    {
+    //        errorMessage = L"Connection policy IP address range needs exactly two valid entries to define the range.";
+    //        return E_INVALIDARG;
+    //    }
+    //}
+    //else if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList)
+    //{
+    //    // validate that there is at least one entry
 
-        if (definition.IpAddresses.size() < 1)
-        {
-            errorMessage = L"Connection policy IP address list needs at least one valid entry.";
-            return E_INVALIDARG;
-        }
+    //    if (definition.IpAddresses.size() < 1)
+    //    {
+    //        errorMessage = L"Connection policy IP address list needs at least one valid entry.";
+    //        return E_INVALIDARG;
+    //    }
 
-    }
+    //}
 
 
     // validate user authentication
@@ -187,7 +187,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     //                    {
     //                        "entryIdentifier": "{62153fff-a0d0-4c0a-98ad-09010123d10a}",
     //                        "name" : "my_endpoint",
-    //                        "hostInstanceName" : "windowsproto", 
+    //                        "serviceInstanceName" : "windowsproto", 
     //                        "productInstanceId" : "8675309",
     //                        "networkInterface" : "all",
     //                        "networkProtocol" : "udp",
@@ -195,15 +195,12 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     //                        "umpOnly" : true,
     //                        "enabled" : true,
     //                        "advertise" : true,
-    //                        "connectionRulesIpv4" :
-    //                        {
-    //                          "allow" : "list",
-    //                          "addresses" :
-    //                          [
-    //                            "192.168.1.1",
-    //                            "192.168.1.10"
-    //                          ]
-    //                        }
+    //                        "connectionRulesIpv4" : "allowList"
+    //                        "addresses" :
+    //                        [
+    //                          "192.168.1.1",
+    //                          "192.168.1.10"
+    //                        ]
     //                        "authentication" : "none" 
     //                    }
     //                },
@@ -282,30 +279,32 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                         validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
                     }
 
-                    definition.Advertise = true;
+                    definition.Advertise = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
+
+                    definition.Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
 
                     definition.EntryIdentifier = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENTRY_IDENTIFIER_KEY, L""));
 
                     definition.UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
                     definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
 
-                    definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, L""));
-                    definition.ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY, L""));
+                    definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
+                    definition.ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY));
 
                     // read the list of ip info
-                    if (definition.ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
-                    {
-                        auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
+                    //if (definition.ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
+                    //{
+                    //    auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
 
-                        for (uint32_t j = 0; j < addressArray.Size(); j++)
-                        {
-                            auto addressEntry = addressArray.GetStringAt(j);
+                    //    for (uint32_t j = 0; j < addressArray.Size(); j++)
+                    //    {
+                    //        auto addressEntry = addressArray.GetStringAt(j);
 
-                            HostName address(addressEntry);
+                    //        HostName address(addressEntry);
 
-                            definition.IpAddresses.push_back(address);
-                        }
-                    }
+                    //        definition.IpAddresses.push_back(address);
+                    //    }
+                    //}
 
                     // read authentication information
                     if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
@@ -346,12 +345,28 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     }
 
                     definition.ServiceInstanceName = serviceInstanceNamePrefix;
+                    
 
                     // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number. Keep trying until unused one is found
 
-                    definition.HostName = definition.ServiceInstanceName + L"._midi2._udp.local";
+                    //definition.HostName = definition.ServiceInstanceName + L"._midi2._udp.local";
 
-                    if (definition.Port == L"" || definition.Port == L"auto" || definition.Port == L"0")
+                    // TODO: User should be able to specify the adapter, host name, etc.
+
+                    auto hostNames = winrt::Windows::Networking::Connectivity::NetworkInformation::GetHostNames();
+
+                    for (auto const& host : hostNames)
+                    {
+                        if ((host.Type() == HostNameType::DomainName) &&
+                            (host.RawName().ends_with(L".local")))
+                        {
+                            definition.HostName = host.RawName();
+                            break;
+                        }
+                    }                  
+                    
+
+                    if (definition.Port == L"" || definition.Port == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO || definition.Port == L"0")
                     {
                         // this will cause us to use an auto-generated free port
                         definition.Port = L"";
@@ -386,7 +401,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                         // add to our collection of hosts
                         TransportState::Current().AddHost(host);
 
-                        // start the network host asynchonously
+                        // start the network host asynchronously
                         RETURN_IF_FAILED(host->Start());
                     }
                     else

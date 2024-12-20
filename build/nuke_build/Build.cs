@@ -34,8 +34,8 @@ class Build : NukeBuild
     //readonly GitVersion MasterBuildVersion;
 
 
-    string VersionName => "Developer Preview 8";
-    string NuGetVersionName => "preview-8";
+    string VersionName => "Developer Preview 9";
+    string NuGetVersionName => "preview-9";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
 

@@ -41,13 +41,12 @@ MidiNetworkHost::Initialize(
 
     m_hostDefinition = hostDefinition;
 
-    // TODO: If we are to automatically pick a port, then do so here.
-
-
-
-    m_advertiser = std::make_shared<MidiNetworkAdvertiser>();
-    RETURN_HR_IF_NULL(E_POINTER, m_advertiser);
-    RETURN_IF_FAILED(m_advertiser->Initialize());
+    if (m_hostDefinition.Advertise)
+    {
+        m_advertiser = std::make_shared<MidiNetworkAdvertiser>();
+        RETURN_HR_IF_NULL(E_POINTER, m_advertiser);
+        RETURN_IF_FAILED(m_advertiser->Initialize());
+    }
 
     return S_OK;
 }
@@ -66,13 +65,17 @@ MidiNetworkHost::Start()
 
     HostName hostName(m_hostDefinition.HostName);
 
+    
+
+
+
     // this should have error checking
     m_socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).get();
 
     auto boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(m_socket.Information().LocalPort())));
 
     // advertise
-    if (m_hostDefinition.Advertise)
+    if (m_hostDefinition.Advertise && m_advertiser != nullptr)
     {
         RETURN_IF_FAILED(m_advertiser->Advertise(
             m_hostDefinition.ServiceInstanceName,

@@ -18,39 +18,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
         // TODO: may want to move the enumeration functions to another class
 
-        static winrt::hstring MidiNetworkUdpDnsServiceType() { return L"_midi2._udp"; }
-        static winrt::hstring MidiNetworkUdpDnsDomain() { return L"local"; }
+        static winrt::hstring MidiNetworkUdpDnsServiceType();
+        static winrt::hstring MidiNetworkUdpDnsDomain();
+        static winrt::hstring MidiNetworkUdpDnsSdQueryString();
+        static enumeration::DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind();
 
-        static winrt::hstring MidiNetworkUdpDnsSdQueryString()
-        { 
-            // protocol guid from https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/enumerate-devices-over-a-network
-
-            return
-                L"System.Devices.AepService.ProtocolId:={4526e8c1-8aac-4153-9b16-55e86ada0e54} AND " \
-                L"System.Devices.Dnssd.ServiceName:=\"" + MidiNetworkEndpointManager::MidiNetworkUdpDnsServiceType() + L"\" AND " \
-                L"System.Devices.Dnssd.Domain:=\"" + MidiNetworkEndpointManager::MidiNetworkUdpDnsDomain() + L"\"";
-        }
-
-        static enumeration::DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind() 
-            { return enumeration::DeviceInformationKind::AssociationEndpointService; }
-
-        static collections::IVector<winrt::hstring> MidiNetworkUdpDnsSdQueryAdditionalProperties()
-        {
-            auto props = winrt::single_threaded_vector<winrt::hstring>();
-
-            // https://learn.microsoft.com/en-us/windows/win32/properties/props-system-devices-dnssd-domain
-            props.Append(L"System.Devices.AepService.ProtocolId");  // guid
-            props.Append(L"System.Devices.Dnssd.HostName");         // string
-            props.Append(L"System.Devices.Dnssd.FullName");         // string
-            props.Append(L"System.Devices.Dnssd.ServiceName");      // string
-            props.Append(L"System.Devices.Dnssd.Domain");           // string
-            props.Append(L"System.Devices.Dnssd.InstanceName");     // string
-            props.Append(L"System.Devices.IpAddress");              // multivalue string
-            props.Append(L"System.Devices.Dnssd.PortNumber");       // uint16_t
-            props.Append(L"System.Devices.Dnssd.TextAttributes");   // multivalue string
-
-            return props;
-        }
+        static collections::IVector<winrt::hstring> MidiNetworkUdpDnsSdQueryAdditionalProperties();
 
         static bool IsTransportAvailable();
         
