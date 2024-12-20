@@ -46,9 +46,58 @@ CMidi2LoopbackMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
+    m_initialized = true;
+
+    // this must be the last thing we do, as it relies on everything being initialized
+    LOG_IF_FAILED(ProcessWorkQueue());
+
     return S_OK;
 }
 
+
+HRESULT
+CMidi2LoopbackMidiEndpointManager::ProcessWorkQueue()
+{
+    TraceLoggingWrite(
+        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+    uint32_t countItemsProcessed{ 0 };
+
+    while (!TransportState::Current().GetEndpointWorkQueue()->IsEmpty())
+    {
+        TransportWorkItem item{ };
+
+        if (TransportState::Current().GetEndpointWorkQueue()->GetNextWorkItem(item))
+        {
+            if (item.Type == TransportWorkItemWorkType::Create)
+            {
+                LOG_IF_FAILED(CreateEndpointPair(item.DefinitionA, item.DefinitionB));
+
+                countItemsProcessed++;
+            }
+
+            // TODO: Process other types of work items
+        }
+    }
+
+    TraceLoggingWrite(
+        MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(countItemsProcessed, "count items processed")
+    );
+
+    return S_OK;
+}
 
 
 HRESULT
@@ -61,6 +110,10 @@ CMidi2LoopbackMidiEndpointManager::CreateParentDevice()
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
+
+    // this happens before initialization is complete, so don't gate on m_initialized here
+
+    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
 
     // the parent device parameters are set by the transport (this)
     std::wstring parentDeviceName{ TRANSPORT_PARENT_DEVICE_NAME };
@@ -128,6 +181,8 @@ CMidi2LoopbackMidiEndpointManager::DeleteSingleEndpoint(
     MidiLoopbackDeviceDefinition const& definition
 )
 {
+    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
+    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
 
     TraceLoggingWrite(
         MidiLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -153,6 +208,9 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     std::shared_ptr<MidiLoopbackDeviceDefinition> definition
     )
 {
+    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
+    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
+
     RETURN_HR_IF_NULL(E_INVALIDARG, definition);
 
     RETURN_HR_IF_MSG(E_INVALIDARG, definition->EndpointName.empty(), "Empty endpoint name");
@@ -402,10 +460,7 @@ CMidi2LoopbackMidiEndpointManager::Shutdown()
     m_MidiDeviceManager.reset();
     m_MidiProtocolManager.reset();
 
-    TransportState::Current().Shutdown();
-
-    m_MidiDeviceManager.reset();
-    m_MidiProtocolManager.reset();
+    m_initialized = false;
 
     return S_OK;
 }

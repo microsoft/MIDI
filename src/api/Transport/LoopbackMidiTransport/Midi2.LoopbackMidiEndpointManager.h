@@ -34,7 +34,7 @@ public:
         _In_ MidiLoopbackDeviceDefinition const& definitionB
     );
 
-
+    bool IsInitialized() { return m_initialized; }
 
 
     //HRESULT DeleteEndpointPair(
@@ -42,6 +42,9 @@ public:
     //);
 
 private:
+    HRESULT ProcessWorkQueue();
+
+    bool m_initialized{ false };
 
     void CleanupDeviceDefinition(_In_ std::shared_ptr<MidiLoopbackDeviceDefinition> definition)
     {

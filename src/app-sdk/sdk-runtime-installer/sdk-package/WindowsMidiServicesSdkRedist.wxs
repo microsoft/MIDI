@@ -58,7 +58,7 @@
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="704c5cee-8af7-4826-a9b8-d45d14d24684"  >
-            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiusbinfo.exe" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiksinfo.exe" Vital="true" />
 
             <!-- Add folder to path -->
             <Environment Id="AddMidiUsbUtilityToSystemPath"

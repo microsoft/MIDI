@@ -52,6 +52,8 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingWideString(configurationJsonSection, "json")
     );
 
+    RETURN_HR_IF_NULL(E_POINTER, m_MidiDeviceManager);
+
     // empty config is ok in this case. We just ignore
     if (configurationJsonSection == nullptr) return S_OK;
 
@@ -168,53 +170,69 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                             return E_FAIL;
                         }
 
-
-                        if (SUCCEEDED(TransportState::Current().GetEndpointManager()->CreateEndpointPair(definitionA, definitionB)))
+                        if (TransportState::Current().GetEndpointManager() != nullptr && 
+                            TransportState::Current().GetEndpointManager()->IsInitialized())
                         {
-                            TraceLoggingWrite(
-                                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_INFO,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Loopback endpoint pair created", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                            );
+                            // endpoint manager is initialized, so do the full creation so we can return the result
+                            // This happens when the SDK is used to create the endpoints
 
-                            // all good
+                            if (SUCCEEDED(TransportState::Current().GetEndpointManager()->CreateEndpointPair(definitionA, definitionB)))
+                            {
+                                TraceLoggingWrite(
+                                    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_INFO,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Loopback endpoint pair created", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                                );
 
-                            auto successVal = json::JsonValue::CreateBooleanValue(true);
-                            responseObject.SetNamedValue(
-                                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                                successVal);
+                                // all good
 
-                            // update the return json with the new Ids
-                            auto endpointIdAVal = json::JsonValue::CreateStringValue(definitionA->CreatedEndpointInterfaceId);
-                            responseObject.SetNamedValue(
-                                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY,
-                                endpointIdAVal);
+                                auto successVal = json::JsonValue::CreateBooleanValue(true);
+                                responseObject.SetNamedValue(
+                                    MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                                    successVal);
 
-                            auto endpointIdBVal = json::JsonValue::CreateStringValue(definitionB->CreatedEndpointInterfaceId);
-                            responseObject.SetNamedValue(
-                                MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY,
-                                endpointIdBVal);
+                                // update the return json with the new Ids
+                                auto endpointIdAVal = json::JsonValue::CreateStringValue(definitionA->CreatedEndpointInterfaceId);
+                                responseObject.SetNamedValue(
+                                    MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY,
+                                    endpointIdAVal);
+
+                                auto endpointIdBVal = json::JsonValue::CreateStringValue(definitionB->CreatedEndpointInterfaceId);
+                                responseObject.SetNamedValue(
+                                    MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY,
+                                    endpointIdBVal);
+
+                            }
+                            else
+                            {
+                                // we failed to create the endpoints. Exit and return a fail.
+                                TraceLoggingWrite(
+                                    MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Failed to create endpoints", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                                );
+
+                                internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                return E_FAIL;
+                            }
 
                         }
                         else
                         {
-                            // we failed to create the endpoints. Exit and return a fail.
-                            TraceLoggingWrite(
-                                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_ERROR,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Failed to create endpoints", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                            );
+                            // endpoint manager has not yet been initialized, so queue the work for later processing.
+                            // This happens when the service starts up and the endpoints are in the config file
+                            // rather than coming from an SDK call.
 
-                            internal::JsonStringifyObjectToOutParam(responseObject, response);
-
-                            return E_FAIL;
+                            RETURN_IF_FAILED(TransportState::Current().GetEndpointWorkQueue()->CreateEndpointPair(definitionA, definitionB));
                         }
+
                     }
                     else
                     {
