@@ -17,7 +17,7 @@ struct MidiNetworkUdpPacket
 
 
 
-enum MidiNetworkCommandCode : uint8_t
+enum MidiNetworkCommandCode : byte
 {
     CommandClientToHost_Invitation = 0x01,
     CommandClientToHost_InvitationWithAuthentication = 0x02,
@@ -42,8 +42,9 @@ enum MidiNetworkCommandCode : uint8_t
 
 };
 
-enum MidiNetworkCommandNAKReasons : uint8_t
+enum MidiNetworkCommandNAKReason : byte
 {
+    CommandNAKReason_Other = 0x0,
     CommandNAKReason_CommandNotSupported = 0x01,
     CommandNAKReason_CommandNotExpected = 0x02,
     CommandNAKReason_CommandMalformed = 0x03,
@@ -51,7 +52,7 @@ enum MidiNetworkCommandNAKReasons : uint8_t
     
 };
 
-enum MidiNetworkCommandByeReasons : uint8_t
+enum MidiNetworkCommandByeReason : byte
 {
     CommandByeReasonCommon_Undefined = 0x00,
     CommandByeReasonCommon_UserTerminated = 0x01,
@@ -70,6 +71,19 @@ enum MidiNetworkCommandByeReasons : uint8_t
     CommandByeReasonHostToClient_NoMatchingAuthenticationMethod = 0x45,
 
     CommandByeReasonClientToHost_InvitationCanceled = 0x80,
+};
+
+enum MidiNetworkCommandRetransmitErrorReason : byte
+{
+    CommandNAKReason_Unknown = 0x0,
+    CommandNAKReason_DataCommandNotAvailable = 0x01,
+};
+
+
+enum MidiNetworkCommandInvitationCapabilities : byte
+{
+    Capabilities_ClientSupportsInvitationWithAuthentication = 0x01,
+    Capabilities_ClientSupportsInvitationWithUserAuthentication = 0x02,
 };
 
 
@@ -98,6 +112,8 @@ union MidiNetworkCommandPacketHeader
 
     uint32_t HeaderWord;
 };
+
+
 
 
 struct MidiNetworkCommandPacket

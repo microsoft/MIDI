@@ -18,6 +18,7 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
     IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface
 )
 {
+    UNREFERENCED_PARAMETER(transportId);
     UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
 
 
@@ -32,8 +33,6 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
-
-    m_transportId = transportId;
 
     return S_OK;
 }
@@ -174,49 +173,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     // if we're passed a null or empty json, we just quietly exit
     if (configurationJsonSection == nullptr) return S_OK;
 
-    // Json Format for network UDP midi
-    //
-    //{
-    //    "{c95dcd1f-cde3-4c2d-913c-528cb8a4cbe6}":
-    //    {
-    //        "_comment": "Network UDP MIDI 2.0",
-    //            "create" :
-    //            [
-    //                {
-    //                    "host":
-    //                    {
-    //                        "entryIdentifier": "{62153fff-a0d0-4c0a-98ad-09010123d10a}",
-    //                        "name" : "my_endpoint",
-    //                        "serviceInstanceName" : "windowsproto", 
-    //                        "productInstanceId" : "8675309",
-    //                        "networkInterface" : "all",
-    //                        "networkProtocol" : "udp",
-    //                        "networkPort" : "auto",
-    //                        "umpOnly" : true,
-    //                        "enabled" : true,
-    //                        "advertise" : true,
-    //                        "connectionRulesIpv4" : "allowList"
-    //                        "addresses" :
-    //                        [
-    //                          "192.168.1.1",
-    //                          "192.168.1.10"
-    //                        ]
-    //                        "authentication" : "none" 
-    //                    }
-    //                },
-    //                "client":
-    //                {
-    //                   TODO: Clients for connect / reconnect
-    //                }
-    //            ],
-    //            "remove":
-    //            [
-    //
-    //            ]
-    //
-    //
-    //    }
-    //}
 
 
     json::JsonObject jsonObject;
@@ -366,7 +322,9 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     }                  
                     
 
-                    if (definition.Port == L"" || definition.Port == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO || definition.Port == L"0")
+                    if (definition.Port == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO || 
+                        definition.Port == L"" ||
+                        definition.Port == L"0")
                     {
                         // this will cause us to use an auto-generated free port
                         definition.Port = L"";
@@ -401,8 +359,12 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                         // add to our collection of hosts
                         TransportState::Current().AddHost(host);
 
-                        // start the network host asynchronously
-                        RETURN_IF_FAILED(host->Start());
+                        // we only start if this comes in after the endpoint manager has been spun up
+                        if (TransportState::Current().GetEndpointManager() != nullptr && 
+                            TransportState::Current().GetEndpointManager()->IsInitialized())
+                        {
+                            RETURN_IF_FAILED(host->Start());
+                        }
                     }
                     else
                     {
@@ -443,6 +405,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(responseObject.Stringify().c_str())
     );
 

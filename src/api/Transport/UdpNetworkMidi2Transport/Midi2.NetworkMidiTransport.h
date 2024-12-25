@@ -12,10 +12,10 @@ class MidiNetworkMidiTransportTelemetryProvider : public wil::TraceLoggingProvid
 {
     IMPLEMENT_TRACELOGGING_CLASS_WITH_MICROSOFT_TELEMETRY(
         MidiNetworkMidiTransportTelemetryProvider,
-        "Microsoft.Windows.Midi2.NetworkMidiAbstraction",
-        // ee50a899-6caf-526c-e261-1f00403716f3 from hash of name using:
-        // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.NetworkMidiAbstraction").Guid
-        (0xee50a899,0x6caf,0x526c,0xe2,0x61,0x1f,0x00,0x40,0x37,0x16,0xf3))
+        "Microsoft.Windows.Midi2.NetworkMidiTransport",
+        // 69964598-a2da-5f65-9288-a394b9633704 from hash of name using:
+        // PS> [System.Diagnostics.Tracing.EventSource]::new("Microsoft.Windows.Midi2.NetworkMidiTransport").Guid
+        (0x69964598,0xa2da,0x5f65,0x92,0x88,0xa3,0x94,0xb9,0x63,0x37,0x04))
 };
 
 using namespace ATL;

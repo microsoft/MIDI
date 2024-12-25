@@ -14,11 +14,12 @@
 #define TRANSPORT_LAYER_GUID __uuidof(Midi2NetworkMidiTransport);
 
 #define TRANSPORT_MANUFACTURER L"Microsoft"
-#define TRANSPORT_CODE L"UDP"
+#define TRANSPORT_CODE L"NET2UDP"
+#define MIDI_NETWORK_ENDPOINT_INSTANCE_ID_PREFIX L"MIDIU_NET2UDP_"
 
 // TODO: Names should be moved to .rc for localization
 
-#define TRANSPORT_PARENT_ID L"MIDIU_UDP_TRANSPORT"
+#define TRANSPORT_PARENT_ID L"MIDIU_NET2UDP_TRANSPORT"
 #define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Network (UDP) Devices"
 
 
@@ -31,8 +32,15 @@
 #define MIDI_UDP_PAYLOAD_HEADER     0x4D494449              // "MIDI" in ASCII
 
 
-#define MAX_UMP_ENDPOINT_NAME_LENGTH          98
-#define MAX_UMP_PRODUCT_INSTANCE_ID_LENGTH    42
+#define MIDI_MAX_UMP_WORDS_PER_PACKET                   64          // spec section 7.1
+#define MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT           98          // Spec sections 6.4 - 6.8         
+#define MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT     42          // Spec sections 6.4 - 6.8
+#define MIDI_MAX_NAK_MESSAGE_BYTE_COUNT                 1020        // Spec 6.15 : (255 * sizeof(uint32_t))
+#define MIDI_MAX_BYE_MESSAGE_BYTE_COUNT                 1020        // Spec 6.16 : (255 * sizeof(uint32_t))
+
+#define MIDI_COMMAND_PAYLOAD_LENGTH_NO_PAYLOAD      0
+
+#define MIDI_NETWORK_COMMAND_RETRANSMIT_INTERVAL_MS 1000
 
 
 // JSON keys. Can move to json_defs when in-box
@@ -72,3 +80,9 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY             L"productInstanceId"
 
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CLIENT_KEY                               L"client"
+
+enum MidiNetworkConnectionRole
+{
+    ConnectionWindowsIsHost,
+    ConnectionWindowsIsClient,
+};

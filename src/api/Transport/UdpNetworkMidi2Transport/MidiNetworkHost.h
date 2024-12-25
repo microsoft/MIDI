@@ -48,6 +48,8 @@ struct MidiNetworkHostDefinition
     bool Enabled{ true };
     bool Advertise{ true };
 
+    uint16_t RetransmitBufferMaxCommandPacketCount{ 50 };
+
     // connection rules
     MidiNetworkHostConnectionPolicy ConnectionPolicy{ MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections };
 
@@ -83,43 +85,75 @@ public:
 
     HRESULT Shutdown();
 
+    bool HasStarted() { return m_started; }
+
 private:
-    // this will need to take the incoming packet and then route it to the 
-    // correct session based on the client IP/Port sending the message, or 
-    // start up a new session if appropriate
-    HRESULT ProcessIncomingPackets();
-    HRESULT ProcessOutgoingPackets();
+    bool m_started{ false };
 
-    HRESULT EstablishNewSession();
+    //HRESULT EstablishNewSession();
+    std::wstring m_hostEndpointName{ };
+    std::wstring m_hostProductInstanceId{ };
 
+    std::atomic<bool> m_keepProcessing{ true };
+
+    // todo: these probably aren't necessary. The only queues we need are for midi messages
     std::queue<MidiNetworkOutOfBandIncomingCommandPacket> m_incomingOutOfBandCommands;
     std::queue<MidiNetworkOutOfBandOutgoingCommandPacket> m_outgoingOutOfBandCommands;
 
-    void OnUdpPacketReceived(
+    winrt::impl::consume_Windows_Networking_Sockets_IDatagramSocket<IDatagramSocket>::MessageReceived_revoker m_messageReceivedRevoker;
+    void OnMessageReceived(
         _In_ DatagramSocket const& sender,
         _In_ DatagramSocketMessageReceivedEventArgs const& args);
 
     MidiNetworkHostDefinition m_hostDefinition{};
 
-    std::shared_ptr<MidiNetworkAdvertiser> m_advertiser;
+    std::shared_ptr<MidiNetworkAdvertiser> m_advertiser{ nullptr };
+
 
     DatagramSocket m_socket;
 
-    std::atomic<bool> m_keepProcessing{ true };
-
     // Map of MidiNetworkHostSessions and their related remote client addresses
-    std::map<std::string, std::shared_ptr<MidiNetworkHostSession>> m_sessions{ };
+    // the keys for these two maps are the same values created with CreateSessionMapKey
+    std::map<std::string, std::shared_ptr<MidiNetworkConnection>> m_connections{ };
 
-    inline std::string CreateSessionMapKey(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
+
+    inline std::string CreateConnectionMapKey(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
     {
         return winrt::to_string(hostName.ToString() + L":" + port);
     }
 
-    inline bool SessionExists(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
+    inline bool ConnectionExists(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
     {
-        auto key = CreateSessionMapKey(hostName, port);
+        auto key = CreateConnectionMapKey(hostName, port);
 
-        return m_sessions.find(key) != m_sessions.end();
+        return m_connections.find(key) != m_connections.end();
     }
+
+
+    inline std::shared_ptr<MidiNetworkConnection> GetConnection(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
+    {
+        auto key = CreateConnectionMapKey(hostName, port);
+
+        if (!ConnectionExists(hostName, port))
+        {
+            // need to create it and then add one
+
+            auto conn = std::make_shared<MidiNetworkConnection>();
+            conn->Initialize(
+                MidiNetworkConnectionRole::ConnectionWindowsIsHost, 
+                m_socket, 
+                hostName, 
+                port, 
+                m_hostEndpointName, 
+                m_hostProductInstanceId,
+                m_hostDefinition.RetransmitBufferMaxCommandPacketCount
+                );
+
+            m_connections.insert_or_assign(key, conn);
+        }
+
+        return m_connections.find(key)->second;
+    }
+
 
 };

@@ -26,5 +26,4 @@ public:
 private:
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
 
-    GUID m_transportId;   // kept for convenience
 };

@@ -53,6 +53,8 @@ public:
 
     HRESULT AddHost(_In_ std::shared_ptr<MidiNetworkHost>);
 
+    std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts() { return m_hosts; }
+
 
 private:
     TransportState();

@@ -20,18 +20,28 @@ public:
     STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
     STDMETHOD(Shutdown)();
 
+
+    STDMETHOD(CreateNewEndpoint(
+        _In_ std::wstring const& endpointName,
+        _In_ std::wstring const& remoteEndpointProductInstanceId,
+        _In_ winrt::Windows::Networking::HostName const& hostName,
+        _In_ std::wstring const& networkPort,
+        _Out_ std::wstring& createdNewDeviceInstanceId,
+        _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
+    ));
+
+
+
+    bool IsInitialized() { return m_initialized; }
+
 private:
-    //HRESULT AdvertiseHost();
-    //HRESULT ConnectExternalHost();
-
-
+    bool m_initialized{ false };
 
     GUID m_containerId{};
     GUID m_transportId{};
     std::wstring m_parentDeviceId{};
 
     HRESULT CreateParentDevice();
-//    HRESULT CreateEndpoint(_In_ MidiNetworkDeviceDefinition& deviceEndpoint);
 
 
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;

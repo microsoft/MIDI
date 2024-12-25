@@ -46,6 +46,9 @@ namespace json = ::winrt::Windows::Data::Json;
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS // some CString constructors will be explicit
 #define ATL_NO_ASSERT_ON_DESTROY_NONEXISTENT_WINDOW
 
+#include <codecvt>
+
+
 #include "resource.h"
 #include <atlbase.h>
 #include <atlcom.h>
@@ -105,6 +108,9 @@ class MidiNetworkClientSession;
 
 #include "MidiNetworkClient.h"
 #include "MidiNetworkClientSession.h"
+
+#include "MidiNetworkDataWriter.h"
+#include "MidiNetworkConnection.h"
 
 #include "MidiNetworkHost.h"
 #include "MidiNetworkHostSession.h"

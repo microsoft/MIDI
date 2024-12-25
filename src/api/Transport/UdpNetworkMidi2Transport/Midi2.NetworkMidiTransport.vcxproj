@@ -274,6 +274,8 @@
     </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="MidiNetworkConnection.cpp" />
+    <ClCompile Include="MidiNetworkDataWriter.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.NetworkMidiTransport.cpp" />
@@ -298,6 +300,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MidiNetworkConnection.h" />
+    <ClInclude Include="MidiNetworkDataWriter.h" />
     <ClInclude Include="TransportState.h" />
     <ClInclude Include="transport_defs.h" />
     <ClInclude Include="dllmain.h" />
