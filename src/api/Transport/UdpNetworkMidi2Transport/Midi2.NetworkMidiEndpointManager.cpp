@@ -21,7 +21,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::Initialize(
     IMidiDeviceManagerInterface* midiDeviceManager,
-    IMidiEndpointProtocolManagerInterface* /*midiEndpointProtocolManager*/
+    IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
@@ -36,6 +36,7 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_midiProtocolManager));
 
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
     m_containerId = m_transportId;                           // we use the transport ID as the container ID for convenience
@@ -108,6 +109,67 @@ CMidi2NetworkMidiEndpointManager::CreateParentDevice()
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::DeleteEndpoint(
+    std::wstring deviceInstanceId)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(deviceInstanceId.c_str(), "deviceShortInstanceId")
+    );
+
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
+
+    auto instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(deviceInstanceId);
+
+    if (!instanceId.empty())
+    {
+        RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(instanceId.c_str()));
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Empty instanceId property for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        RETURN_IF_FAILED(E_INVALIDARG);
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::InitiateDiscoveryAndNegotiation(
+    std::wstring const& endpointDeviceInterfaceId
+)
+{
+    // Discovery and protocol negotiation
+
+    ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
+    negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
+    negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
+    negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
+
+
+    RETURN_IF_FAILED(m_midiProtocolManager->DiscoverAndNegotiate(
+        m_transportId,
+        endpointDeviceInterfaceId.c_str(),
+        negotiationParams
+    ));
+
+    return S_OK;
+}
 
 
 _Use_decl_annotations_
@@ -250,17 +312,6 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     // we need this for removal later
     createdNewDeviceInstanceId = instanceId;
     createdNewEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
-
-
-
-
-    // TODO: Discovery and protocol negotiation
-
-
-
-
-
-
 
 
 

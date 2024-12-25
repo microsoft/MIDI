@@ -19,6 +19,11 @@ struct MidiPingInformation
     uint64_t Timestamp{ 0 };
 };
 
+struct MidiRetransmitBufferEntry
+{
+    uint16_t SequenceNumber{ 0 };
+    std::vector<uint32_t> Words{ };
+};
 
 class MidiNetworkConnection
 {
@@ -39,13 +44,25 @@ public:
     HRESULT SendMidiMessagesToNetwork(
         _In_ std::vector<uint32_t> const& words);
 
+    HRESULT SendMidiMessagesToNetwork(
+        _In_ PVOID const bytes,
+        _In_ UINT const byteCount);
+
+
+    HRESULT SetMidiCallback(
+        _In_ IMidiCallback* callback
+    );
+
 
     // todo: session info, connection to bidi streams, etc.
 
 private:
     MidiNetworkConnectionRole m_role{};
 
+    std::wstring m_sessionEndpointDeviceInterfaceId{};  // swd
+    std::wstring m_sessionDeviceInstanceId{};           // what we used to create/delete the device
     bool m_sessionActive{ false };
+    IMidiCallback* m_callback{ nullptr };
 
     winrt::Windows::Networking::HostName m_remoteHostName{ nullptr };
     std::wstring m_remotePort{ };
@@ -72,20 +89,39 @@ private:
     HRESULT HandleIncomingPing(_In_ uint32_t const pingId);
     HRESULT HandleIncomingPingReply(_In_ uint32_t const pingId);
 
-    uint16_t m_lastSentUmpCommandSequenceNumber{ 0 };
-    uint16_t m_lastReceivedUmpCommandSequenceNUmber{ 0 };
-    
+    HRESULT HandleIncomingUmpData(
+        _In_ uint64_t const timestamp,
+        _In_ std::vector<uint32_t> const& words
+    );
+
+    HRESULT HandleIncomingRetransmitRequest(
+        _In_ uint16_t const startingSequenceNumber, 
+        _In_ uint16_t const retransmitPacketCount);
+
 #pragma push_macro("max")
 #undef max
+    uint16_t m_lastSentUmpCommandSequenceNumber{ std::numeric_limits<uint16_t>::max() };    // init to this so first real one is zero
+    uint16_t m_lastReceivedUmpCommandSequenceNumber{ 0 };
+    
     inline uint16_t IncrementAndGetNextUmpSequenceNumber()
     {
-        return m_lastSentUmpCommandSequenceNumber == std::numeric_limits<uint16_t>::max() ? 0 : ++m_lastSentUmpCommandSequenceNumber;
+        if (m_lastSentUmpCommandSequenceNumber == std::numeric_limits<uint16_t>::max())
+        {
+            m_lastSentUmpCommandSequenceNumber = 0;
+        }
+        else
+        {
+            m_lastSentUmpCommandSequenceNumber += 1;
+        }
+
+        return m_lastSentUmpCommandSequenceNumber;
     }
 #pragma pop_macro("max")
     
         // TODO: Last n UMP packets kept in a circular buffer here for FEC
     uint16_t m_retransmitBufferMaxCommandPacketCount{ 0 };
+    boost::circular_buffer<MidiRetransmitBufferEntry> m_retransmitBuffer {};
 
     HRESULT StoreUmpPacketInRetransmitBuffer(_In_ uint16_t const sequenceNumber, _In_ std::vector<uint32_t> const& words);
-    HRESULT RetransmitBufferedPackets(_In_ uint16_t const startingSequenceNumber, _In_ uint16_t const retransmitPacketCount);
+
 };

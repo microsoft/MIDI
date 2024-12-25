@@ -75,8 +75,8 @@ enum MidiNetworkCommandByeReason : byte
 
 enum MidiNetworkCommandRetransmitErrorReason : byte
 {
-    CommandNAKReason_Unknown = 0x0,
-    CommandNAKReason_DataCommandNotAvailable = 0x01,
+    RetransmitErrorReason_Unknown = 0x0,
+    RetransmitErrorReason_DataNotAvailable = 0x01,
 };
 
 

@@ -51,9 +51,6 @@
     <ClCompile Include="MidiNetworkClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkMessageProcessor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TransportState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -69,10 +66,7 @@
     <ClCompile Include="MidiNetworkAdvertiser.cpp">
       <Filter>Source Files\Infrastructure</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostSession.cpp">
-      <Filter>Source Files\Session</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkClientSession.cpp">
+    <ClCompile Include="MidiNetworkSession.cpp">
       <Filter>Source Files\Session</Filter>
     </ClCompile>
   </ItemGroup>
@@ -116,9 +110,6 @@
     <ClInclude Include="MidiNetworkClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiNetworkMessageProcessor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TransportState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -140,10 +131,7 @@
     <ClInclude Include="MidiNetworkAdvertiser.h">
       <Filter>Header Files\Infrastructure</Filter>
     </ClInclude>
-    <ClInclude Include="MidiNetworkHostSession.h">
-      <Filter>Header Files\Session</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkClientSession.h">
+    <ClInclude Include="MidiNetworkSession.h">
       <Filter>Header Files\Session</Filter>
     </ClInclude>
   </ItemGroup>

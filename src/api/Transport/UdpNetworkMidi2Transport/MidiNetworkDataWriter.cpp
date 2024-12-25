@@ -240,7 +240,7 @@ MidiNetworkDataWriter::WriteCommandRetransmitError(
 
     byte payloadLengthIn32BitWords{ 1 };    // 1 here to account for sequence number
 
-    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitRequest, payloadLengthIn32BitWords, errorReason, 0));
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitError, payloadLengthIn32BitWords, errorReason, 0));
 
     m_dataWriter.WriteUInt16(sequenceNumber);
     m_dataWriter.WriteUInt16(0);

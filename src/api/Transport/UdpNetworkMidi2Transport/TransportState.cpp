@@ -51,3 +51,38 @@ TransportState::AddHost(std::shared_ptr<MidiNetworkHost> host)
 
     return S_OK;
 }
+
+
+
+_Use_decl_annotations_
+HRESULT
+TransportState::AddSessionConnection(_In_ std::wstring endpointDeviceInterfaceId, std::shared_ptr<MidiNetworkConnection> connection)
+{
+    m_sessionConnections.insert_or_assign(endpointDeviceInterfaceId, connection);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+TransportState::RemoveSessionConnection(_In_ std::wstring endpointDeviceInterfaceId)
+{
+    if (m_sessionConnections.find(endpointDeviceInterfaceId) != m_sessionConnections.end())
+    {
+        m_sessionConnections.erase(endpointDeviceInterfaceId);
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+std::shared_ptr<MidiNetworkConnection> TransportState::GetSessionConnection(_In_ std::wstring endpointDeviceInterfaceId)
+{
+    if (auto entry = m_sessionConnections.find(endpointDeviceInterfaceId); entry != m_sessionConnections.end())
+    {
+        return entry->second;
+    }
+
+    return nullptr;
+}
+

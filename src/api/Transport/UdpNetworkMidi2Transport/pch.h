@@ -67,6 +67,8 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "strsafe.h"
 #include "wstring_util.h"
 #include "hstring_util.h"
+#include "ump_helpers.h"
+#include "midi_timestamp.h"
 
 #undef GetObject
 #include <winrt/Windows.Data.Json.h>
@@ -93,6 +95,12 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "dllmain.h"
 
+
+// subset of boost is installed via vcpkg https://vcpkg.io/en/package/boost-circular-buffer.html
+#include "boost/circular_buffer.hpp"
+
+
+
 class CMidi2NetworkMidiEndpointManager;
 class CMidi2NetworkMidiConfigurationManager;
 class MidiNetworkAdvertiser;
@@ -104,16 +112,13 @@ class MidiNetworkClientSession;
 #include "MidiNetworkEndpointDefinition.h"
 
 #include "MidiNetworkMessages.h"
-#include "MidiNetworkMessageProcessor.h"
-
-#include "MidiNetworkClient.h"
-#include "MidiNetworkClientSession.h"
 
 #include "MidiNetworkDataWriter.h"
 #include "MidiNetworkConnection.h"
 
+#include "MidiNetworkClient.h"
 #include "MidiNetworkHost.h"
-#include "MidiNetworkHostSession.h"
+#include "MidiNetworkSession.h"
 
 #include "MidiNetworkAdvertiser.h"
 

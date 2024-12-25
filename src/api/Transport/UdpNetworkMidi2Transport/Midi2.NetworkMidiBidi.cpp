@@ -13,7 +13,7 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBiDi::Initialize(
-    LPCWSTR,
+    LPCWSTR endpointDeviceInterfaceId,
     PTRANSPORTCREATIONPARAMS,
     DWORD *,
     IMidiCallback * callback,
@@ -30,8 +30,20 @@ CMidi2NetworkMidiBiDi::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
+
     m_callback = callback;
     m_context = context;
+
+    m_endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
+
+
+    // look up the endpointDeviceInterfaceId in our list of endpoints, and connect to it
+
+    m_connection = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
+    RETURN_HR_IF_NULL(E_INVALIDARG, m_connection);
+
+    m_connection->SetMidiCallback(callback);
 
     return S_OK;
 }
@@ -62,28 +74,18 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
     LONGLONG position
 )
 {
-    if (m_callback == nullptr)
-    {
-        // TODO log that callback is null
-        return E_FAIL;
-    }
+    UNREFERENCED_PARAMETER(position);
 
-    if (message == nullptr)
-    {
-        // TODO log that message was null
-        return E_FAIL;
-    }
+    RETURN_HR_IF_NULL(E_INVALIDARG, message);
+    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-    if (size < sizeof(uint32_t))
-    {
-        // TODO log that data was smaller than minimum UMP size
-        return E_FAIL;
-    }
+    auto conn = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
 
-    m_callback->Callback(message, size, position, m_context);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, conn);
+
+    RETURN_IF_FAILED(conn->SendMidiMessagesToNetwork(message, size));
 
     return S_OK;
-
 }
 
 _Use_decl_annotations_
@@ -95,9 +97,7 @@ CMidi2NetworkMidiBiDi::Callback(
     LONGLONG
 )
 {
-    //return E_NOTIMPL;
-
-    // just eat it for this simple loopback
-    return S_OK;
+    // this shouldn't be called. The connection uses the direct callback instead
+    return E_NOTIMPL;
 }
 

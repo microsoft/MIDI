@@ -20,6 +20,7 @@ public:
     STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
     STDMETHOD(Shutdown)();
 
+    STDMETHOD(InitiateDiscoveryAndNegotiation(_In_ std::wstring const& endpointDeviceInterfaceId));
 
     STDMETHOD(CreateNewEndpoint(
         _In_ std::wstring const& endpointName,
@@ -30,7 +31,7 @@ public:
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
 
-
+    STDMETHOD(DeleteEndpoint(_In_ std::wstring deviceInstanceId));
 
     bool IsInitialized() { return m_initialized; }
 
@@ -38,7 +39,7 @@ private:
     bool m_initialized{ false };
 
     GUID m_containerId{};
-    GUID m_transportId{};
+    GUID m_transportId{ };
     std::wstring m_parentDeviceId{};
 
     HRESULT CreateParentDevice();

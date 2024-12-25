@@ -24,7 +24,7 @@
 // TODO: Should the session just be 1:1 with IMidiBiDi / ICallback and then simply implemented in there?
 
 
-class MidiNetworkHostSession
+class MidiNetworkSession
 {
 public:
     HRESULT Initialize(_In_ IMidiCallback* callback  /* TODO: Linked IMidiCallback and IMidiBiDi */);

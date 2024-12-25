@@ -39,10 +39,67 @@ MidiNetworkConnection::Initialize(
 
     m_retransmitBufferMaxCommandPacketCount = retransmitBufferMaxCommandPacketCount;
 
+    try
+    {
+        m_retransmitBuffer.set_capacity(m_retransmitBufferMaxCommandPacketCount);
+    }
+    catch (...)
+    {
+        RETURN_IF_FAILED(E_OUTOFMEMORY);
+    }
+
     // TODO: Initialize retransmit buffer
 
     return S_OK;
 }
+
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkConnection::SetMidiCallback(
+    IMidiCallback* callback
+)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
+
+    m_callback = callback;
+
+    return S_OK;
+}
+
+
+
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkConnection::HandleIncomingUmpData(
+    uint64_t const timestamp,
+    std::vector<uint32_t> const& words
+)
+{
+    if (m_callback != nullptr)
+    {
+        // this may have more than one message, so we need to tease it apart here
+        // and send the individual messages
+
+        auto it = words.begin();
+
+        while (it < words.end())
+        {
+            uint8_t messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(*it);
+
+            LOG_IF_FAILED(m_callback->Callback(
+                (PVOID)(&(*it)),
+                (UINT)(messageWordCount * sizeof(uint32_t)),
+                timestamp, 
+                (LONGLONG)0));            // todo: may need to pass along the context
+
+            it += messageWordCount;
+        }
+    }
+
+    return S_OK;
+}
+
+
 
 HRESULT
 MidiNetworkConnection::HandleIncomingBye()
@@ -53,8 +110,24 @@ MidiNetworkConnection::HandleIncomingBye()
     RETURN_IF_FAILED(m_writer->Send());
 
 
-    // todo: close the session etc.
+    // todo: close the session, remove the connection info from the endpoint manager etc.
 
+    if (m_sessionActive)
+    {
+        if (TransportState::Current().GetEndpointManager() != nullptr)
+        {
+            RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteEndpoint(m_sessionDeviceInstanceId));
+            RETURN_IF_FAILED(TransportState::Current().RemoveSessionConnection(m_sessionEndpointDeviceInterfaceId));
+
+            m_sessionActive = false;
+            m_sessionDeviceInstanceId.clear();
+            m_sessionEndpointDeviceInterfaceId.clear();
+        }
+    }
+    else
+    {
+        // not an active session. Nothing to clean up
+    }
 
     return S_OK;
 }
@@ -96,8 +169,6 @@ MidiNetworkConnection::HandleIncomingInvitation(
 
         if (TransportState::Current().GetEndpointManager()->IsInitialized())
         {
-            // TODO: Create the session object
-
 
             // Create the endpoint for Windows MIDI Services clients
             // This will also kick off discovery and protocol negotiation
@@ -119,7 +190,23 @@ MidiNetworkConnection::HandleIncomingInvitation(
                 );
             }
 
-            if (FAILED(hr))
+            if (SUCCEEDED(hr))
+            {
+                m_sessionEndpointDeviceInterfaceId = newEndpointDeviceInterfaceId;
+                m_sessionDeviceInstanceId = newDeviceInstanceId;
+
+                std::shared_ptr<MidiNetworkConnection> connection;
+                connection.reset(this);
+
+                // this is what the BiDi uses when it is created
+                TransportState::Current().AddSessionConnection(m_sessionEndpointDeviceInterfaceId, connection);
+
+                // protocol negotiation needs to happen here, not in the endpoint creation
+                // because we need to wire up the connection first. Bit of a race.
+
+                LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->InitiateDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
+            }
+            else
             {
                 // let the other side know that we can't create the session
 
@@ -215,8 +302,8 @@ MidiNetworkConnection::ProcessIncomingMessage(
     winrt::Windows::Storage::Streams::DataReader const& reader
 )
 {
-    // todo: update last message time to now
-
+    // todo: update last message time to this timestamp
+    uint64_t packetMidiTimestamp = internal::GetCurrentMidiTimestamp();
 
     while (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
     {
@@ -224,9 +311,6 @@ MidiNetworkConnection::ProcessIncomingMessage(
 
         MidiNetworkCommandPacketHeader commandHeader;
         commandHeader.HeaderWord = commandHeaderWord;
-
-//        uint8_t payloadWordsToRead = packetHeader.HeaderData.CommandPayloadLength;
-
 
         switch (commandHeader.HeaderData.CommandCode)
         {
@@ -268,50 +352,66 @@ MidiNetworkConnection::ProcessIncomingMessage(
             break;
 
         case CommandClientToHost_InvitationWithUserAuthentication:
-        //{
-        //    MidiNetworkOutOfBandIncomingCommandPacket packet{};
-
-        //    packet.SourceHostName = args.RemoteAddress().ToString();
-        //    packet.SourcePort = args.RemotePort();
-        //    packet.Header = packetHeader;
-
-        //    // command payload length is given in 32 bit words
-        //    auto expectedDataByteCount = packetHeader.HeaderData.CommandPayloadLength * sizeof(uint32_t);
-
-        //    // Socket read operations are blocking, so if there's bad data (command payload length not correct)
-        //    // then we need to be able to handle that here. Otherwise, it just waits.
-        //    if (reader.UnconsumedBufferLength() < expectedDataByteCount)
-        //    {
-        //        // TODO: packets must be complete by spec, but not sure if Windows might chunk them
-        //        // in the reader. TBD.
-        //    }
-        //    else
-        //    {
-        //        // TODO: We need to read only the expectedDataByteCount. There could be
-        //        // more than one command packet in the buffer
-
-        //        packet.SetMinimumBufferDataSizeAndAlign(packetHeader.HeaderData.CommandPayloadLength * sizeof(uint32_t));
-        //        reader.ReadBytes(packet.DataBuffer);
-
-        //        m_incomingOutOfBandCommands.push(packet);
-        //    }
-        //}
             break;
 
         case CommandCommon_UmpData:
-            // TODO: check the UMP message sequence number. If it is lower than the last 
-            // received sequence number (accounting for wrap), then just ignore.
-            // If it is the last received sequence number + 1, then the session can process 
-            // them immediately. FEC is also covered by this as we walk the messages.
-            // If we have a gap in the sequence numbers, request a retransmit of the missing
-            // message data packet(s). This will require either holding on to the current 
-            // packet or discarding it and re-requesting the missing plus this packet.
-            // Note: The packet number is only 16 bits, so it'll wrap. Need to ensure we
-            // handle that here.
+        {
+            uint8_t numberOfWords = commandHeader.HeaderData.CommandPayloadLength;
+            uint16_t sequenceNumber = commandHeader.HeaderData.CommandSpecificData.AsUInt16;
 
+
+            std::vector<uint32_t> words{ };
+
+            for (uint8_t i = 0; i < numberOfWords; i++)
+            {
+                if (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
+                {
+                    if (sequenceNumber > m_lastReceivedUmpCommandSequenceNumber)
+                    {
+                        // add to our vector
+                        words.push_back(reader.ReadUInt32());
+
+                    }
+                    else
+                    {
+                        // just read and discard
+                        reader.ReadUInt32();
+                    }
+                }
+                else
+                {
+                    // bad / incomplete packet
+
+                    m_writer->WriteUdpPacketHeader();
+                    m_writer->WriteCommandNAK(commandHeader.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandMalformed, L"Packet data incomplete");
+                    m_writer->Send();
+
+                    return E_FAIL;
+                }
+
+                if (sequenceNumber > m_lastReceivedUmpCommandSequenceNumber)
+                {
+                    m_lastReceivedUmpCommandSequenceNumber = sequenceNumber;
+
+                    LOG_IF_FAILED(HandleIncomingUmpData(packetMidiTimestamp, words));
+                }
+
+            }
+        }
             break;
 
         case CommandCommon_RetransmitRequest:
+        {
+            //uint8_t payloadLengthWords = commandHeader.HeaderData.CommandPayloadLength;
+            uint16_t sequenceNumber = commandHeader.HeaderData.CommandSpecificData.AsUInt16;
+            uint16_t numberOfUmpCommands = reader.ReadUInt16();
+
+            reader.ReadUInt16();    // reserved
+
+            LOG_IF_FAILED(HandleIncomingRetransmitRequest(sequenceNumber, numberOfUmpCommands));
+
+        }
+            break;
         case CommandCommon_RetransmitError:
             // TODO: handle retransmitting data
             break;
@@ -322,7 +422,7 @@ MidiNetworkConnection::ProcessIncomingMessage(
             break;
 
         default:
-            // TODO: unexpected command code
+            // TODO: unexpected command code. Send NAK.
 
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -347,24 +447,67 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::StoreUmpPacketInRetransmitBuffer(uint16_t const sequenceNumber, std::vector<uint32_t> const& words)
 {
-    UNREFERENCED_PARAMETER(sequenceNumber);
-    UNREFERENCED_PARAMETER(words);
+    MidiRetransmitBufferEntry entry;
+    entry.SequenceNumber = sequenceNumber;
+    entry.Words = words;
 
-    // TODO: this is also responsible for keeping the retransmit buffer a reasonable size by removing old entries
+    m_retransmitBuffer.push_back(entry);
 
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::RetransmitBufferedPackets(uint16_t const startingSequenceNumber, uint16_t const retransmitPacketCount)
+MidiNetworkConnection::HandleIncomingRetransmitRequest(uint16_t const startingSequenceNumber, uint16_t const retransmitPacketCount)
 {
-    UNREFERENCED_PARAMETER(startingSequenceNumber);
-    UNREFERENCED_PARAMETER(retransmitPacketCount);
+    // TODO: A packet count of 0x0000 means to send all the data we have starting at the startingSequenceNumber
+
+    // find the starting sequence number in the circular buffer
+
+    auto firstPacket = std::find_if(m_retransmitBuffer.begin(), m_retransmitBuffer.end(), [&](const MidiRetransmitBufferEntry& s) { return s.SequenceNumber == startingSequenceNumber; });
+
+    if (firstPacket == m_retransmitBuffer.end())
+    {
+        // Send a retransmit error
+
+        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+
+        if (m_retransmitBuffer.size() > 0)
+        {
+            m_writer->WriteCommandRetransmitError(m_retransmitBuffer.begin()->SequenceNumber, MidiNetworkCommandRetransmitErrorReason::RetransmitErrorReason_DataNotAvailable);
+        }
+        else
+        {
+            m_writer->WriteCommandRetransmitError(0, MidiNetworkCommandRetransmitErrorReason::RetransmitErrorReason_DataNotAvailable);
+
+        }
+
+        RETURN_IF_FAILED(m_writer->Send());
+
+    }
+    else
+    {
+        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+
+        auto endPacket = firstPacket + retransmitPacketCount;
+
+        if (retransmitPacketCount == 0x0000)
+        {
+            endPacket = m_retransmitBuffer.end();
+        }
+
+        for (auto& it = firstPacket; it != m_retransmitBuffer.end() && it < endPacket && it->SequenceNumber >= startingSequenceNumber; it++)
+        {
+            // TODO: We need to account for UDP packet size here
+
+            RETURN_IF_FAILED(m_writer->WriteCommandUmpMessages(it->SequenceNumber, it->Words));
+        }
+
+        RETURN_IF_FAILED(m_writer->Send());
+    }
 
     return S_OK;
 }
-
 
 
 _Use_decl_annotations_
@@ -379,6 +522,10 @@ MidiNetworkConnection::SendMidiMessagesToNetwork(std::vector<uint32_t> const& wo
     // todo: write FEC packets by using this sequence number and transmitting the past N packets
     // need to look at max UDP packet size and ensure we'll be under that
 
+ //   m_writer->WriteCommandUmpMessages(sequenceNumber - 2, oldWords2);
+ //   m_writer->WriteCommandUmpMessages(sequenceNumber - 1, oldWords1);
+
+
     RETURN_IF_FAILED(m_writer->WriteCommandUmpMessages(sequenceNumber, words));
     RETURN_IF_FAILED(m_writer->Send());
 
@@ -386,5 +533,18 @@ MidiNetworkConnection::SendMidiMessagesToNetwork(std::vector<uint32_t> const& wo
 }
 
 
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::SendMidiMessagesToNetwork(
+    PVOID const bytes,
+    UINT const byteCount)
+{
+    std::vector<uint32_t> words{ };
+    uint32_t* wordPointer{ static_cast<uint32_t*>(bytes) };
+
+    words.insert(words.end(), wordPointer, wordPointer + (byteCount / sizeof(uint32_t)));
+
+    return SendMidiMessagesToNetwork(words);
+}
 
 
