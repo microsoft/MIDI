@@ -51,9 +51,51 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         fb->IsActive(true);
         fb->Number(max(0, m_block.Number - 1));     // group terminal blocks are numbered 1-255. Function blocks start with 0 as the id.
-        fb->Name(m_block.Name.c_str());
         fb->FirstGroup(winrt::make<implementation::MidiGroup>(m_block.FirstGroupIndex));
         fb->GroupCount(m_block.GroupCount);
+
+        std::wstring blockName{ m_block.Name };
+
+        // Name rules for MIDI 1.0 devices (byte-format-native) with single-group blocks
+        // - If the name starts with the device name remove that portion of the string
+        // - If the name ends up empty, name it starting with Group 0 = A in the form "Port A"
+
+        if (m_block.GroupCount == 1)
+        {
+            std::wstring deviceName{ m_deviceName.c_str() };
+
+            if (blockName == deviceName)
+            {
+                blockName = L"";
+            }
+            else if (blockName.starts_with(deviceName))
+            {
+                blockName = internal::TrimmedWStringCopy(blockName.substr(deviceName.length()));
+            }
+
+            // the device name has now been removed. Let's see what else we have
+
+            std::wstring portInfo = L"Port " + (wchar_t)(m_block.FirstGroupIndex + 'A');
+
+            if (blockName.empty())
+            {
+                blockName = portInfo;
+            }
+            else if (blockName.find(L"Port") != std::wstring::npos && blockName.find(L"port") != std::wstring::npos)
+            {
+                blockName = L" (" + portInfo + L")";
+            }
+            else
+            {
+                // block name already includes some Port name info, so we just leave it
+            }
+
+        }
+
+        fb->Name(blockName.c_str());
+
+
+
 
         switch ((midi2::MidiGroupTerminalBlockDirection)m_block.Direction)
         {
@@ -138,8 +180,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     
     _Use_decl_annotations_
-    bool MidiGroupTerminalBlock::InternalUpdateFromPropertyData(internal::GroupTerminalBlockInternal block)
+    bool MidiGroupTerminalBlock::InternalUpdateFromPropertyData(internal::GroupTerminalBlockInternal block, winrt::hstring deviceName)
     {
+        m_deviceName = deviceName;
         m_block = block;
 
         return true;

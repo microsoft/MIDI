@@ -14,9 +14,8 @@
 // TODO: Change to a loop
 // - Incoming messages should go into a list
 // - Loop will check the list and send out whatever is in there (requires that the list has locks to prevent reading partial UMPs)
-// - Loop should also handle a regular outgoing ping
+// - Loop should also handle a regular outgoing ping and then update the SWD's calculated latency when it changes beyond some delta
 // - Loop should also handle sending keep-alive empty UDP packets
-
 
 
 
@@ -46,6 +45,8 @@ MidiNetworkConnection::Initialize(
     m_retransmitBufferMaxCommandPacketCount = retransmitBufferMaxCommandPacketCount;
     m_maxForwardErrorCorrectionCommandPacketCount = maxForwardErrorCorrectionCommandPacketCount;
 
+    m_outgoingUmpMessages.reserve(MIDI_NETWORK_STARTING_OUTBOUND_UMP_QUEUE_CAPACITY);
+
     // build out the retransmit buffer used for FEC and retransmit requests
     try
     {
@@ -56,15 +57,28 @@ MidiNetworkConnection::Initialize(
         RETURN_IF_FAILED(E_OUTOFMEMORY);
     }
 
-#pragma push_macro("max")
-#undef max
-    m_lastSentUmpCommandSequenceNumber = std::numeric_limits<uint16_t>::max();    // init to this so first real one is zero
-#pragma pop_macro("max")
+    m_lastSentUmpCommandSequenceNumber = 0;
+    m_lastSentUmpCommandSequenceNumber--;           // init to this so first real one is zero
 
     // create the data writer
     m_writer = std::make_shared<MidiNetworkDataWriter>();
     RETURN_IF_NULL_ALLOC(m_writer);
     RETURN_IF_FAILED(m_writer->Initialize(socket.GetOutputStreamAsync(hostName, port).get()));
+
+    return S_OK;
+}
+
+
+HRESULT
+MidiNetworkConnection::StartOutboundProcessingThreads()
+{
+
+
+
+
+
+
+
 
     return S_OK;
 }

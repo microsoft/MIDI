@@ -8,15 +8,11 @@
 
 #pragma once
 
-// TODO: This class needs a timer that is going to check when we last received
-// a message, and if more than X milliseconds, will send out a ping
-// The same timer should also send out empty UMP command packets if nothing has
-// been sent from this endpoint for X milliseconds
-
 struct MidiPingInformation
 {
     uint32_t PingId{ 0 };
-    uint64_t Timestamp{ 0 };
+    uint64_t SentTimestamp{ 0 };
+    uint64_t ReceivedTimestamp{ 0 };
 };
 
 struct MidiRetransmitBufferEntry
@@ -42,6 +38,7 @@ public:
     HRESULT ProcessIncomingMessage(
         _In_ winrt::Windows::Storage::Streams::DataReader const& reader);
 
+    // these SendMidiMessages methods don't do the actual sending. They add to the queue
     HRESULT SendMidiMessagesToNetwork(
         _In_ std::vector<uint32_t> const& words);
 
@@ -59,9 +56,18 @@ public:
     // todo: session info, connection to bidi streams, etc.
 
 private:
+
+    HRESULT StartOutboundProcessingThreads();
+
+
+
+
     MidiNetworkConnectionRole m_role{};
 
     wil::critical_section m_socketWriterLock;
+
+    wil::critical_section m_umpMessageQueueLock;
+    std::vector<uint32_t> m_outgoingUmpMessages{};
 
 
     std::wstring m_sessionEndpointDeviceInterfaceId{};  // swd
@@ -77,6 +83,7 @@ private:
 
     std::shared_ptr<MidiNetworkDataWriter> m_writer{ nullptr };
 
+
     std::wstring ReadUtf8String(
         _In_ winrt::Windows::Storage::Streams::DataReader reader,
         _In_ size_t const byteCount);
@@ -89,7 +96,8 @@ private:
 
     HRESULT HandleIncomingBye();
 
-    uint32_t m_lastPingIdSent{ 0 };
+    // this buffer holds the last n ping messages used to calculate latency
+    boost::circular_buffer<MidiPingInformation> m_sentPingInformation{};
 
     HRESULT HandleIncomingPing(_In_ uint32_t const pingId);
     HRESULT HandleIncomingPingReply(_In_ uint32_t const pingId);

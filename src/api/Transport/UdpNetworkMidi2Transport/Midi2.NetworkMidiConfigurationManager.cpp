@@ -44,15 +44,15 @@ MidiNetworkHostAuthenticationFromJsonString(_In_ winrt::hstring const& jsonStrin
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
-    if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE)
+    if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE)
     {
         return MidiNetworkHostAuthentication::NoAuthentication;
     }
-    else if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_PASSWORD)
+    else if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_PASSWORD)
     {
         return MidiNetworkHostAuthentication::PasswordAuthentication;
     }
-    else if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_USER)
+    else if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_USER)
     {
         return MidiNetworkHostAuthentication::UserAuthentication;
     }
@@ -69,15 +69,15 @@ MidiNetworkHostConnectionPolicyFromJsonString(_In_ winrt::hstring const& jsonStr
 {
     auto value = internal::ToLowerTrimmedHStringCopy(jsonString);
 
-    if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY)
+    if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY)
     {
         return MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections;
     }
-    else if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_LIST)
+    else if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_LIST)
     {
         return MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList;
     }
-    else if (value == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_RANGE)
+    else if (value == MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_RANGE)
     {
         return MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange;
     }
@@ -221,40 +221,43 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
             if (jsonEntry)
             {
                 // are we defining a host?
-                if (auto hostEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_KEY, nullptr); hostEntry != nullptr)
+                if (auto hostEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_KEY, nullptr); hostEntry != nullptr)
                 {
                     MidiNetworkHostDefinition definition;
                     winrt::hstring validationErrorMessage{ };
 
                     // currently, UDP is the only allowed protocol
 
-                    auto protocol = internal::ToLowerTrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
+                    auto protocol = internal::ToLowerTrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
 
-                    if (protocol != MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
+                    if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                     {
                         validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
                     }
 
-                    definition.EntryIdentifier = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENTRY_IDENTIFIER_KEY, L""));
+                    definition.EntryIdentifier = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENTRY_IDENTIFIER_KEY, L""));
 
-                    definition.Enabled = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENABLED_KEY, true);
-                    definition.Advertise = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
+                    definition.Enabled = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
+                    definition.Advertise = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
 
                     definition.UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
-                    definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
+                    definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
 
-                    definition.ForwardErrorCorrectionMaxCommandPacketCount = static_cast<uint8_t>(hostEntry.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_MAX_FEC_PACKETS_KEY, MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT));
-                    definition.RetransmitBufferMaxCommandPacketCount = static_cast<uint16_t>(hostEntry.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT));
+                    definition.ForwardErrorCorrectionMaxCommandPacketCount = static_cast<uint8_t>(hostEntry.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY, MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT));
+                    definition.RetransmitBufferMaxCommandPacketCount = static_cast<uint16_t>(hostEntry.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT));
 
-                    definition.Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
+                    definition.Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
 
-                    definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
-                    definition.ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY, MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY));
+                    definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
+                    definition.ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY));
+
+                    definition.OutboundPingInterval = static_cast<uint32_t>(hostEntry.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT));
+
 
                     // read the list of ip info
                     //if (definition.ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
                     //{
-                    //    auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
+                    //    auto addressArray = hostEntry.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_IPV4_ADDRESSES_KEY);
 
                     //    for (uint32_t j = 0; j < addressArray.Size(); j++)
                     //    {
@@ -286,7 +289,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                     // generate host name and other info
 
-                    auto serviceInstanceNamePrefix = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
+                    auto serviceInstanceNamePrefix = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
 
                     // if the provided service instance name is empty, default to 
                     // machine name. If that name is already in use, add an additional
@@ -326,7 +329,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     }                  
                     
 
-                    if (definition.Port == MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO || 
+                    if (definition.Port == MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO || 
                         definition.Port == L"" ||
                         definition.Port == L"0")
                     {
@@ -378,7 +381,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
 
                 }
-                else if (auto clientEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CLIENT_KEY, nullptr); clientEntry != nullptr)
+                else if (auto clientEntry = jsonEntry.GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_KEY, nullptr); clientEntry != nullptr)
                 {
                     // TODO: Add to the client reconnect table
                 }
@@ -399,7 +402,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
 
     //responseObject.SetNamedValue(
-    //    MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY,
+    //    MIDI_CONFIG_JSON_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY,
     //    createdDevicesResponseArray);
 
 
