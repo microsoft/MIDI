@@ -18,7 +18,7 @@ CMidi2NetworkMidiBiDi::Initialize(
     DWORD *,
     IMidiCallback * callback,
     LONGLONG context,
-    GUID /* SessionId */
+    GUID sessionId
 )
 {
     TraceLoggingWrite(
@@ -27,7 +27,9 @@ CMidi2NetworkMidiBiDi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingGuid(sessionId, "Session")
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
@@ -43,7 +45,7 @@ CMidi2NetworkMidiBiDi::Initialize(
     m_connection = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
     RETURN_HR_IF_NULL(E_INVALIDARG, m_connection);
 
-    m_connection->SetMidiCallback(callback);
+    m_connection->SetMidiCallback(this);
 
     return S_OK;
 }
@@ -63,6 +65,14 @@ CMidi2NetworkMidiBiDi::Shutdown()
     m_callback = nullptr;
     m_context = 0;
 
+    auto conn = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
+    
+    if (conn)
+    {
+        conn->RemoveMidiCallback();
+    }
+    
+
     return S_OK;
 }
 
@@ -80,7 +90,6 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
     auto conn = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
-
     RETURN_HR_IF_NULL(E_UNEXPECTED, conn);
 
     RETURN_IF_FAILED(conn->SendMidiMessagesToNetwork(message, size));
@@ -91,13 +100,17 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBiDi::Callback(
-    PVOID,
-    UINT,
-    LONGLONG,
-    LONGLONG
+    PVOID message,
+    UINT size,
+    LONGLONG timestamp,
+    LONGLONG context
 )
 {
-    // this shouldn't be called. The connection uses the direct callback instead
-    return E_NOTIMPL;
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_callback);
+    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+
+    RETURN_IF_FAILED(m_callback->Callback(message, size, timestamp, context));
+
+    return S_OK;
 }
 

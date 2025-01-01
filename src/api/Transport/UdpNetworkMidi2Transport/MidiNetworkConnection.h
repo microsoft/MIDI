@@ -21,7 +21,7 @@ struct MidiPingInformation
 
 struct MidiRetransmitBufferEntry
 {
-    uint16_t SequenceNumber{ 0 };
+    MidiSequenceNumber SequenceNumber{ 0 };
     std::vector<uint32_t> Words{ };
 };
 
@@ -35,7 +35,8 @@ public:
         _In_ winrt::hstring const& remotePort,
         _In_ std::wstring const& thisEndpointName,
         _In_ std::wstring const& thisProductInstanceId,
-        _In_ uint16_t const retransmitBufferMaxCommandPacketCount
+        _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
+        _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount
     );
 
     HRESULT ProcessIncomingMessage(
@@ -53,11 +54,15 @@ public:
         _In_ IMidiCallback* callback
     );
 
+    HRESULT RemoveMidiCallback();
 
     // todo: session info, connection to bidi streams, etc.
 
 private:
     MidiNetworkConnectionRole m_role{};
+
+    wil::critical_section m_socketWriterLock;
+
 
     std::wstring m_sessionEndpointDeviceInterfaceId{};  // swd
     std::wstring m_sessionDeviceInstanceId{};           // what we used to create/delete the device
@@ -98,30 +103,13 @@ private:
         _In_ uint16_t const startingSequenceNumber, 
         _In_ uint16_t const retransmitPacketCount);
 
-#pragma push_macro("max")
-#undef max
-    uint16_t m_lastSentUmpCommandSequenceNumber{ std::numeric_limits<uint16_t>::max() };    // init to this so first real one is zero
-    uint16_t m_lastReceivedUmpCommandSequenceNumber{ 0 };
-    
-    inline uint16_t IncrementAndGetNextUmpSequenceNumber()
-    {
-        if (m_lastSentUmpCommandSequenceNumber == std::numeric_limits<uint16_t>::max())
-        {
-            m_lastSentUmpCommandSequenceNumber = 0;
-        }
-        else
-        {
-            m_lastSentUmpCommandSequenceNumber += 1;
-        }
+    MidiSequenceNumber m_lastSentUmpCommandSequenceNumber{ 0 };
+    MidiSequenceNumber m_lastReceivedUmpCommandSequenceNumber{ 0 };
 
-        return m_lastSentUmpCommandSequenceNumber;
-    }
-#pragma pop_macro("max")
-    
-        // TODO: Last n UMP packets kept in a circular buffer here for FEC
+    uint8_t m_maxForwardErrorCorrectionCommandPacketCount{ 2 };
     uint16_t m_retransmitBufferMaxCommandPacketCount{ 0 };
     boost::circular_buffer<MidiRetransmitBufferEntry> m_retransmitBuffer {};
 
-    HRESULT StoreUmpPacketInRetransmitBuffer(_In_ uint16_t const sequenceNumber, _In_ std::vector<uint32_t> const& words);
+    HRESULT AddUmpPacketToRetransmitBuffer(_In_ MidiSequenceNumber const sequenceNumber, _In_ std::vector<uint32_t> const& words);
 
 };

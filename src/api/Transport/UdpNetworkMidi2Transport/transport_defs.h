@@ -41,6 +41,8 @@
 #define MIDI_COMMAND_PAYLOAD_LENGTH_NO_PAYLOAD      0
 
 #define MIDI_NETWORK_COMMAND_RETRANSMIT_INTERVAL_MS 1000
+#define MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT 2
+#define MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT 50
 
 
 // JSON keys. Can move to json_defs when in-box
@@ -54,12 +56,18 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP               L"udp"                  // UDP is only protocol currently supported
 
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_MDNS_ADVERTISE_KEY                       L"advertise"            // boolean
+#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_ENABLED_KEY                              L"enabled"            // boolean
 
 
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY                L"serviceInstanceName"     // just the first part (before the . ) of the host instance name. Defaults to machine name
 
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_KEY                         L"port"
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO                  L"auto"
+
+#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_MAX_FEC_PACKETS_KEY                      L"maxForwardErrorCorrectionCommandPackets"
+#define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY               L"maxRetransmitBufferCommandPackets"
+
+
 
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_KEY                     L"connectionPolicyIpv4"
 #define MIDI_CONFIG_JSON_ENDPOINT_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY    L"allowAny"

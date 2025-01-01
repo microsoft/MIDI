@@ -167,7 +167,23 @@ void MidiNetworkHost::OnMessageReceived(
         return;
     }
 
-    GetConnection(args.RemoteAddress(), args.RemotePort())->ProcessIncomingMessage(reader);
+    auto conn = GetConnection(args.RemoteAddress(), args.RemotePort());
+
+    if (conn)
+    {
+        conn->ProcessIncomingMessage(reader);
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Message received from remote client, but GetConnection returned nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+    }
 
 }
 

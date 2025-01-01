@@ -49,6 +49,7 @@ struct MidiNetworkHostDefinition
     bool Advertise{ true };
 
     uint16_t RetransmitBufferMaxCommandPacketCount{ 50 };
+    uint8_t ForwardErrorCorrectionMaxCommandPacketCount{ 2 };
 
     // connection rules
     MidiNetworkHostConnectionPolicy ConnectionPolicy{ MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections };
@@ -119,7 +120,7 @@ private:
 
     inline std::string CreateConnectionMapKey(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
     {
-        return winrt::to_string(hostName.ToString() + L":" + port);
+        return winrt::to_string(hostName.CanonicalName() + L":" + port);
     }
 
     inline bool ConnectionExists(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
@@ -139,17 +140,26 @@ private:
             // need to create it and then add one
 
             auto conn = std::make_shared<MidiNetworkConnection>();
-            conn->Initialize(
-                MidiNetworkConnectionRole::ConnectionWindowsIsHost, 
-                m_socket, 
-                hostName, 
-                port, 
-                m_hostEndpointName, 
-                m_hostProductInstanceId,
-                m_hostDefinition.RetransmitBufferMaxCommandPacketCount
+
+            if (conn)
+            {
+                conn->Initialize(
+                    MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+                    m_socket,
+                    hostName,
+                    port,
+                    m_hostEndpointName,
+                    m_hostProductInstanceId,
+                    m_hostDefinition.RetransmitBufferMaxCommandPacketCount,
+                    m_hostDefinition.ForwardErrorCorrectionMaxCommandPacketCount
                 );
 
-            m_connections.insert_or_assign(key, conn);
+                m_connections.insert_or_assign(key, conn);
+            }
+            else
+            {
+                // could not create the connection object.
+            }
         }
 
         return m_connections.find(key)->second;

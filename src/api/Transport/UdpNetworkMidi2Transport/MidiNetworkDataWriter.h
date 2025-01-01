@@ -30,8 +30,8 @@ public:
     HRESULT WriteCommandSessionReset();
     HRESULT WriteCommandSessionResetReply();
 
-    HRESULT WriteCommandRetransmitRequest(_In_ uint16_t sequenceNumber, _In_ uint16_t numberOfUmpCommands);
-    HRESULT WriteCommandRetransmitError(_In_ uint16_t sequenceNumber, _In_ MidiNetworkCommandRetransmitErrorReason errorReason);
+    HRESULT WriteCommandRetransmitRequest(_In_ MidiSequenceNumber sequenceNumber, _In_ uint16_t numberOfUmpCommands);
+    HRESULT WriteCommandRetransmitError(_In_ MidiSequenceNumber sequenceNumber, _In_ MidiNetworkCommandRetransmitErrorReason errorReason);
 
     // todo: change the capabilities to a bitmap enum
     HRESULT WriteCommandInvitation(_In_ MidiNetworkCommandInvitationCapabilities capabilities, _In_ std::wstring clientUmpEndpointName, _In_ std::wstring clientProductInstanceId);
@@ -47,7 +47,7 @@ public:
     // todo: change authenticationState to an enum (different from other enum) See page 33
     HRESULT WriteCommandInvitationReplyUserAuthenticationRequired(_In_ std::string cryptoNonce, _In_ byte authenticationState, _In_ std::wstring hostUmpEndpointName, _In_ std::wstring hostProductInstanceId);
 
-    HRESULT WriteCommandUmpMessages(_In_ uint16_t sequenceNumber, _In_ std::vector<uint32_t> words);
+    HRESULT WriteCommandUmpMessages(_In_ MidiSequenceNumber sequenceNumber, _In_ std::vector<uint32_t> words);
 
     HRESULT Shutdown();
 

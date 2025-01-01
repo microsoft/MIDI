@@ -212,7 +212,7 @@ MidiNetworkDataWriter::WriteCommandSessionResetReply()
 _Use_decl_annotations_
 HRESULT
 MidiNetworkDataWriter::WriteCommandRetransmitRequest(
-    uint16_t sequenceNumber, 
+    MidiSequenceNumber sequenceNumber,
     uint16_t numberOfUmpCommands
 )
 {
@@ -220,7 +220,7 @@ MidiNetworkDataWriter::WriteCommandRetransmitRequest(
 
     byte payloadLengthIn32BitWords{ 1 };    // 1 here to account for number of UMP commands
 
-    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitRequest, payloadLengthIn32BitWords, sequenceNumber));
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitRequest, payloadLengthIn32BitWords, sequenceNumber.Value()));
 
     m_dataWriter.WriteUInt16(numberOfUmpCommands);
     m_dataWriter.WriteUInt16(0);
@@ -232,7 +232,7 @@ MidiNetworkDataWriter::WriteCommandRetransmitRequest(
 _Use_decl_annotations_
 HRESULT
 MidiNetworkDataWriter::WriteCommandRetransmitError(
-    uint16_t sequenceNumber, 
+    MidiSequenceNumber sequenceNumber, 
     MidiNetworkCommandRetransmitErrorReason errorReason
 )
 {
@@ -242,7 +242,7 @@ MidiNetworkDataWriter::WriteCommandRetransmitError(
 
     RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitError, payloadLengthIn32BitWords, errorReason, 0));
 
-    m_dataWriter.WriteUInt16(sequenceNumber);
+    m_dataWriter.WriteUInt16(sequenceNumber.Value());
     m_dataWriter.WriteUInt16(0);
 
     return S_OK;
@@ -400,7 +400,7 @@ MidiNetworkDataWriter::WriteCommandInvitationReplyUserAuthenticationRequired(
 _Use_decl_annotations_
 HRESULT
 MidiNetworkDataWriter::WriteCommandUmpMessages(
-    uint16_t sequenceNumber,
+    MidiSequenceNumber sequenceNumber,
     std::vector<uint32_t> words
 )
 {
@@ -408,7 +408,7 @@ MidiNetworkDataWriter::WriteCommandUmpMessages(
 
     RETURN_HR_IF(E_INVALIDARG, words.size() > MIDI_MAX_UMP_WORDS_PER_PACKET);
 
-    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_UmpData, static_cast<byte>(words.size()), sequenceNumber));
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_UmpData, static_cast<byte>(words.size()), sequenceNumber.Value()));
 
     // we make the assumption that the calling code has already validated that the words
     // are complete messages, or zero-length. We don't check again here.

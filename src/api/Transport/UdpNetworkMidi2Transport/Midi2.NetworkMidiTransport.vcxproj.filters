@@ -134,6 +134,9 @@
     <ClInclude Include="MidiNetworkSession.h">
       <Filter>Header Files\Session</Filter>
     </ClInclude>
+    <ClInclude Include="MidiSequenceNumber.h">
+      <Filter>Header Files\Infrastructure</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />

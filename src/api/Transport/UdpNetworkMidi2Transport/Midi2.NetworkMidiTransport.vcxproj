@@ -309,6 +309,7 @@
   <ItemGroup>
     <ClInclude Include="MidiNetworkConnection.h" />
     <ClInclude Include="MidiNetworkDataWriter.h" />
+    <ClInclude Include="MidiSequenceNumber.h" />
     <ClInclude Include="TransportState.h" />
     <ClInclude Include="transport_defs.h" />
     <ClInclude Include="dllmain.h" />

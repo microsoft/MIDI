@@ -99,15 +99,14 @@ namespace internal = ::WindowsMidiServicesInternal;
 // subset of boost is installed via vcpkg https://vcpkg.io/en/package/boost-circular-buffer.html
 #include "boost/circular_buffer.hpp"
 
-
+#include "transport_defs.h"
+#include "MidiSequenceNumber.h"
 
 class CMidi2NetworkMidiEndpointManager;
 class CMidi2NetworkMidiConfigurationManager;
 class MidiNetworkAdvertiser;
 class MidiNetworkHostSession;
 class MidiNetworkClientSession;
-
-#include "transport_defs.h"
 
 #include "MidiNetworkEndpointDefinition.h"
 
