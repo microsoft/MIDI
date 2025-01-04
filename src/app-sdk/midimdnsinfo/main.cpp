@@ -35,7 +35,9 @@ int __cdecl main()
 
     std::cout << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" Enumerating MIDI mDNS advertisements currently visible to this PC, on the local network.") << std::endl;
+    std::cout << dye::aqua(" Enumerating MIDI mDNS advertisements currently visible to this PC, on the local network. This") << std::endl;
+    std::cout << dye::aqua(" may take a minute or two.") << std::endl;
+    std::cout << std::endl;
     std::cout << dye::light_red(" If you do not see a device you expect to see, check that its IP address is on your subnet and") << std::endl;
     std::cout << dye::light_red(" that your firewall is not blocking mDNS broadcasts on this subnet.") << std::endl;
     //std::cout << dye::aqua(" Press any key to stop ...") << std::endl;

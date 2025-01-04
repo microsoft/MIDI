@@ -8,6 +8,8 @@
 
 
 
+using Spectre.Console;
+
 namespace Microsoft.Midi.ConsoleApp
 {
     internal class UmpEndpointPickerEntry : IComparable<UmpEndpointPickerEntry>
@@ -56,18 +58,30 @@ namespace Microsoft.Midi.ConsoleApp
                 {
                     var parent = endpoint.GetParentDeviceInformation();
 
+                    var transportInfo = endpoint.GetTransportSuppliedInfo();
+                    string fullName;
+
+                    if (transportInfo.ManufacturerName != "Microsoft" && transportInfo.ManufacturerName != string.Empty)
+                    {
+                        fullName = transportInfo.ManufacturerName + " " + endpoint.Name;
+                    }
+                    else
+                    {
+                        fullName = endpoint.Name;
+                    }
+
                     if (parent != null)
                     {
                         choices.Add(new UmpEndpointPickerEntry(
                             AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " +
-                            (endpoint.Name + " [grey35](" + endpoint.GetParentDeviceInformation().Name + ")[/]").PadRight(80),
+                            (fullName + " [grey35](" + endpoint.GetParentDeviceInformation().Name + ")[/]").PadRight(80),
                             endpoint.EndpointDeviceId));
                     }
                     else
                     {
                         choices.Add(new UmpEndpointPickerEntry(
                             AnsiMarkupFormatter.GetEndpointIcon(endpoint.EndpointPurpose) + " " +
-                            (endpoint.Name).PadRight(80),
+                            (fullName).PadRight(80),
                             endpoint.EndpointDeviceId));
                     }
                 }

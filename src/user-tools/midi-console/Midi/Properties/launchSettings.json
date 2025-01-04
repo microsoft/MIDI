@@ -30,6 +30,10 @@
     "Enum Transports": {
       "commandName": "Project",
       "commandLineArgs": "enum transports"
+    },
+    "Enum Endpoints": {
+      "commandName": "Project",
+      "commandLineArgs": "enum endpoints"
     }
   }
 }
