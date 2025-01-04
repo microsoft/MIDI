@@ -136,6 +136,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
             {
                 if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker)))
                 {
+                    if (FAILED(sessionTracker->Initialize()))
+                    {
+                        return sessionList;
+                    }
+
                     LPWSTR rpcSessionListJson{ nullptr };
                     auto callStatus = sessionTracker->GetSessionList(&rpcSessionListJson);
 
