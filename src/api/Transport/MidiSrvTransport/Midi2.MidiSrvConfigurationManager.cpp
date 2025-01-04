@@ -36,8 +36,9 @@ CMidi2MidiSrvConfigurationManager::Initialize(
     RETURN_IF_FAILED(midiSrv->Initialize());
     m_MidiSrv = std::move(midiSrv);
 
-    return S_OK;
+    m_initialized = true;
 
+    return S_OK;
 }
 
 _Use_decl_annotations_
@@ -72,6 +73,13 @@ CMidi2MidiSrvConfigurationManager::GetTransportList(LPWSTR* transportListJson)
         TraceLoggingPointer(this, "this")
     );
 
+    if (!m_initialized)
+    {
+        GUID nullguid{};
+
+        RETURN_IF_FAILED(Initialize(nullguid, nullptr, nullptr));
+    }
+
     RETURN_HR_IF_NULL(CO_E_NOTINITIALIZED, m_MidiSrv);
     return m_MidiSrv->GetTransportList(transportListJson);
 }
@@ -87,6 +95,13 @@ CMidi2MidiSrvConfigurationManager::GetTransformList(LPWSTR* transformListJson)
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this")
     );
+
+    if (!m_initialized)
+    {
+        GUID nullguid{};
+
+        RETURN_IF_FAILED(Initialize(nullguid, nullptr, nullptr));
+    }
 
     RETURN_HR_IF_NULL(CO_E_NOTINITIALIZED, m_MidiSrv);
     return m_MidiSrv->GetTransformList(transformListJson);

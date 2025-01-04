@@ -15,6 +15,11 @@ class CMidi2MidiSrvConfigurationManager :
     IMidiServicePluginMetadataReporterInterface>
 {
 public:
+    // One issue in the new lib-based rpc implementation is this Initialize function is not in 
+    // the interfaces used by the client, so midsrv is always nullptr. Therefore the individual
+    // calls here do a lazy initialize if needed. I don't like that, but breaking the interface 
+    // contracts now would be bad. This is a problem only for the Get__List reporting functions
+
     STDMETHOD(Initialize(
         _In_ GUID transportId, 
         _In_opt_ IMidiDeviceManagerInterface* deviceManagerInterface, 
@@ -33,6 +38,8 @@ private:
     std::unique_ptr<CMidi2MidiSrv> m_MidiSrv;
 
     GUID m_TransportGuid;
+
+    bool m_initialized{ false };
 };
 
 
