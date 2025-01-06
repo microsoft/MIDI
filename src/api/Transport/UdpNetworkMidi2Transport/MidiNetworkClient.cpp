@@ -11,7 +11,7 @@
 
 _Use_decl_annotations_
 HRESULT 
-MidiNetworkClient::Initialize(MidiNetworkUdpClientDefinition& clientDefinition)
+MidiNetworkClient::Initialize(MidiNetworkClientDefinition& clientDefinition)
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -28,6 +28,13 @@ MidiNetworkClient::Initialize(MidiNetworkUdpClientDefinition& clientDefinition)
 
     return S_OK;
 }
+
+
+
+
+
+
+
 
 HRESULT 
 MidiNetworkClient::Shutdown()
@@ -46,36 +53,4 @@ MidiNetworkClient::Shutdown()
     return S_OK;
 }
 
-HRESULT
-MidiNetworkClient::ProcessIncomingPacket()
-{
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
 
-
-
-    return S_OK;
-}
-
-HRESULT 
-MidiNetworkClient::EstablishNewSession()
-{
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-
-
-    return S_OK;
-}

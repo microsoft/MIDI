@@ -105,8 +105,10 @@ namespace internal = ::WindowsMidiServicesInternal;
 class CMidi2NetworkMidiEndpointManager;
 class CMidi2NetworkMidiConfigurationManager;
 class MidiNetworkAdvertiser;
-class MidiNetworkHostSession;
-class MidiNetworkClientSession;
+class MidiNetworkHost;
+class MidiNetworkClient;
+class MidiNetworkConnection;
+
 
 #include "MidiNetworkEndpointDefinition.h"
 
@@ -115,13 +117,14 @@ class MidiNetworkClientSession;
 #include "MidiNetworkDataWriter.h"
 #include "MidiNetworkConnection.h"
 
+#include "TransportState.h"
+
 #include "MidiNetworkClient.h"
 #include "MidiNetworkHost.h"
 #include "MidiNetworkSession.h"
 
 #include "MidiNetworkAdvertiser.h"
 
-#include "TransportState.h"
 
 #include "Midi2.NetworkMidiTransport.h"
 #include "Midi2.NetworkMidiBiDi.h"

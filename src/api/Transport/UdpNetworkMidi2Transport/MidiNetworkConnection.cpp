@@ -219,6 +219,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
             else
             {
                 hr = TransportState::Current().GetEndpointManager()->CreateNewEndpoint(
+                    MidiNetworkConnectionRole::ConnectionWindowsIsHost,
                     clientUmpEndpointName,
                     clientProductInstanceId,
                     m_remoteHostName,

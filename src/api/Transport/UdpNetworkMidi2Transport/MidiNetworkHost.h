@@ -48,16 +48,8 @@ struct MidiNetworkHostDefinition
     bool Enabled{ true };
     bool Advertise{ true };
 
-    uint32_t OutboundPingInterval{ MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT };
-
-    uint16_t RetransmitBufferMaxCommandPacketCount{ MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT };
-    uint8_t ForwardErrorCorrectionMaxCommandPacketCount{ MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT };
-
     // connection rules
     MidiNetworkHostConnectionPolicy ConnectionPolicy{ MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections };
-
-    // network adapter (the id is a guid)
-
 
     // protocol
     MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
@@ -152,8 +144,8 @@ private:
                     port,
                     m_hostEndpointName,
                     m_hostProductInstanceId,
-                    m_hostDefinition.RetransmitBufferMaxCommandPacketCount,
-                    m_hostDefinition.ForwardErrorCorrectionMaxCommandPacketCount
+                    TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
+                    TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount
                 );
 
                 m_connections.insert_or_assign(key, conn);

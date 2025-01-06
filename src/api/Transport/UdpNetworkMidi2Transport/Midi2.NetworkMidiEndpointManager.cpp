@@ -175,6 +175,7 @@ CMidi2NetworkMidiEndpointManager::InitiateDiscoveryAndNegotiation(
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
+    MidiNetworkConnectionRole thisServiceRole,
     std::wstring const& endpointName,
     std::wstring const& remoteEndpointProductInstanceId,
     winrt::Windows::Networking::HostName const& hostName,
@@ -236,11 +237,28 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
 
+
+    std::wstring instancePrefix{ };
+    if (thisServiceRole == MidiNetworkConnectionRole::ConnectionWindowsIsHost)
+    {
+        // we are the host
+        instancePrefix = std::wstring{ MIDI_NETWORK_ENDPOINT_INSTANCE_ID_HOST_PREFIX };
+    }
+    else if(thisServiceRole == MidiNetworkConnectionRole::ConnectionWindowsIsClient)
+    {
+        // we are the client
+        instancePrefix = std::wstring{ MIDI_NETWORK_ENDPOINT_INSTANCE_ID_CLIENT_PREFIX };
+    }
+    else
+    {
+        RETURN_IF_FAILED(E_FAIL);
+    }
+
     // TODO: We can have multiple devices with the same unique ID, so need 
     // to change this logic to check for that and create a new one, maybe
     // with the host name (if a string is available) and port?
     std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(
-        std::wstring{ MIDI_NETWORK_ENDPOINT_INSTANCE_ID_PREFIX } + 
+        instancePrefix +
         remoteEndpointProductInstanceId);
 
     createInfo.pszInstanceId = instanceId.c_str();

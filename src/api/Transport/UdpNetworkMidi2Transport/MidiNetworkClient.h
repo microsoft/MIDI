@@ -8,10 +8,14 @@
 
 #pragma once
 
-struct MidiNetworkUdpClientDefinition
+struct MidiNetworkClientDefinition
 {
-    int foo;
-    // TODO: Authentication and User Authentication
+    winrt::hstring EntryIdentifier;         // internal 
+    bool Enabled{ true };
+
+    // protocol
+//    MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
+
 
 };
 
@@ -20,22 +24,11 @@ struct MidiNetworkUdpClientDefinition
 class MidiNetworkClient
 {
 public:
-    HRESULT Initialize(_In_ MidiNetworkUdpClientDefinition& clientDefinition);
+    HRESULT Initialize(_In_ MidiNetworkClientDefinition& clientDefinition);
 
     HRESULT Shutdown();
 
 private:
-    // this will need to take the incoming packet and then route it to the 
-    // correct session based on the client IP/Port sending the message, or 
-    // start up a new session if appropriate
-    HRESULT ProcessIncomingPacket();
-
-    HRESULT EstablishNewSession();
-
-
-//    DatagramSocket m_socket{ nullptr };
-
-    // TODO: Map of client connections and their sessions
 
 
 
