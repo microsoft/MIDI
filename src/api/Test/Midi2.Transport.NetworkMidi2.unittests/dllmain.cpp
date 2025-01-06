@@ -6,22 +6,21 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
+#include "pch.h"
 
-// This represents Windows MIDI Services acting as a client to a 
-// remote network host
-// 
-// Each connection from this PC to a remote host results in a session. 
-// Each valid session becomes a UMP Endpoint in Windows. The lifetime 
-// of the UMP endpoint is tied to the lifetime of this session.
-
-class MidiNetworkClientSession
+BOOL APIENTRY DllMain( HMODULE hModule,
+                       DWORD  ul_reason_for_call,
+                       LPVOID lpReserved
+                     )
 {
-public:
-    HRESULT Initialize();
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        break;
+    }
+    return TRUE;
+}
 
-    HRESULT Shutdown();
-
-private:
-
-};

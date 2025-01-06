@@ -24,6 +24,10 @@ public:
 private:
     IMidiCallback* m_callback{ nullptr };
     LONGLONG m_context{ 0 };
+
+    std::wstring m_endpointDeviceInterfaceId{ };
+
+    std::shared_ptr<MidiNetworkConnection> m_connection{ nullptr };
 };
 
 

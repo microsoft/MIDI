@@ -9,6 +9,15 @@
 
 #pragma once
 
+struct MidiTransportSettings
+{
+    uint32_t OutboundPingInterval{ MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT };
+    uint16_t RetransmitBufferMaxCommandPacketCount{ MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT };
+    uint8_t ForwardErrorCorrectionMaxCommandPacketCount{ MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT };
+};
+
+
+
 // singleton
 class TransportState
 {
@@ -19,6 +28,8 @@ public:
     // no copying
     TransportState(_In_ const TransportState&) = delete;
     TransportState& operator=(_In_ const TransportState&) = delete;
+
+    MidiTransportSettings TransportSettings{ };
 
 
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> GetEndpointManager()
@@ -52,6 +63,11 @@ public:
     HRESULT ConstructConfigurationManager();
 
     HRESULT AddHost(_In_ std::shared_ptr<MidiNetworkHost>);
+    std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts() { return m_hosts; }
+
+    HRESULT AddSessionConnection(_In_ std::wstring endpointDeviceInterfaceId, _In_ std::shared_ptr<MidiNetworkConnection> connection);
+    HRESULT RemoveSessionConnection(_In_ std::wstring endpointDeviceInterfaceId);
+    std::shared_ptr<MidiNetworkConnection> GetSessionConnection(_In_ std::wstring endpointDeviceInterfaceId);
 
 
 private:
@@ -63,6 +79,8 @@ private:
     wil::com_ptr<CMidi2NetworkMidiConfigurationManager> m_configurationManager;
 
     // key is the host identifier
-    std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{};
+    std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
+
+    std::map<std::wstring, std::shared_ptr<MidiNetworkConnection>> m_sessionConnections{ };
 
 };

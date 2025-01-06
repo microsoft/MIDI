@@ -27,7 +27,7 @@ void WriteLabel(std::string label)
 
 init::MidiDesktopAppSdkInitializer initializer{ };
 
-#define LINE_LENGTH 79
+#define LINE_LENGTH 96
 
 int __cdecl main()
 {
@@ -35,8 +35,12 @@ int __cdecl main()
 
     std::cout << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" Enumerating MIDI mdns advertisements currently visible to this PC") << std::endl;
-    std::cout << dye::aqua(" Press any key to stop ...") << std::endl;
+    std::cout << dye::aqua(" Enumerating MIDI mDNS advertisements currently visible to this PC, on the local network. This") << std::endl;
+    std::cout << dye::aqua(" may take a minute or two.") << std::endl;
+    std::cout << std::endl;
+    std::cout << dye::light_red(" If you do not see a device you expect to see, check that its IP address is on your subnet and") << std::endl;
+    std::cout << dye::light_red(" that your firewall is not blocking mDNS broadcasts on this subnet.") << std::endl;
+    //std::cout << dye::aqua(" Press any key to stop ...") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << std::endl;
 
@@ -71,19 +75,81 @@ int __cdecl main()
 
         for (auto const& hostName : hostNames)
         {
-            std::cout 
-                << "  " <<  dye::aqua(winrt::to_string(hostName.DisplayName())) 
-//                << dye::grey(" | ")
-//                << dye::aqua(winrt::to_string(winrt::hstring{ hostName.IPInformation().NetworkAdapter().NetworkAdapterId() }))
+            if (hostName.Type() == winrt::Windows::Networking::HostNameType::DomainName)
+            {
+                std::cout
+                    << "  "
+                    << std::left
+                    << std::setw(21)                                            // max 15 for PC name or IP, and then 6 for ".local" when used
+                    << dye::yellow(winrt::to_string(hostName.DisplayName()));
+            }
+            else if (hostName.Type() == winrt::Windows::Networking::HostNameType::Ipv4 || hostName.Type() == winrt::Windows::Networking::HostNameType::Ipv6)
+            {
+                std::cout
+                    << "  "
+                    << std::left
+                    << std::setw(21)                                            // max 15 for PC name or IP, and then 6 for ".local" when used
+                    << dye::purple(winrt::to_string(hostName.DisplayName()));
+
+                if (hostName.IPInformation() != nullptr)
+                {
+                    uint16_t prefixLength = hostName.IPInformation().PrefixLength().Value();
+
+                    std::cout << "/" << dye::aqua(prefixLength);
+
+                    auto item = hostName.IPInformation().NetworkAdapter().NetworkItem();
+
+                    if (item != nullptr)
+                    {
+                        auto types = item.GetNetworkTypes();
+
+                        std::string typesText{ };
+
+                        if (WI_AreAllFlagsSet(types, winrt::Windows::Networking::Connectivity::NetworkTypes::Internet))
+                        {
+                            typesText += "Internet";
+                        }
+
+                        if (WI_AreAllFlagsSet(types, winrt::Windows::Networking::Connectivity::NetworkTypes::PrivateNetwork))
+                        {
+                            if (!typesText.empty())
+                            {
+                                typesText += ", ";
+                            }
+
+                            typesText += "Private";
+                        }
+
+                        if (typesText.empty())
+                        {
+                            typesText = "None";
+                        }
+
+                        typesText = "(" + typesText + ")";
+
+                        std::cout << " " << std::setw(20) << dye::green(typesText);
+
+                    }
+                    
+                    std::cout << dye::grey(" Adapter: ");
+
+                    std::wcout
+                        << internal::GuidToString(hostName.IPInformation().NetworkAdapter().NetworkAdapterId());
+                }
+
+            }
+
+            std::wcout
                 << std::endl;
-           
         }
 
-        std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
+        std::cout << std::endl;
+        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
         std::cout << std::endl;
     }
 
 
+    auto subnet = winrt::Windows::Networking::Connectivity::NetworkInformation::GetConnectionProfiles();
 
 
 

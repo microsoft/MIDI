@@ -46,6 +46,9 @@ namespace json = ::winrt::Windows::Data::Json;
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS // some CString constructors will be explicit
 #define ATL_NO_ASSERT_ON_DESTROY_NONEXISTENT_WINDOW
 
+#include <codecvt>
+
+
 #include "resource.h"
 #include <atlbase.h>
 #include <atlcom.h>
@@ -64,6 +67,8 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "strsafe.h"
 #include "wstring_util.h"
 #include "hstring_util.h"
+#include "ump_helpers.h"
+#include "midi_timestamp.h"
 
 #undef GetObject
 #include <winrt/Windows.Data.Json.h>
@@ -90,28 +95,36 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "dllmain.h"
 
+
+// subset of boost is installed via vcpkg https://vcpkg.io/en/package/boost-circular-buffer.html
+#include "boost/circular_buffer.hpp"
+
+#include "transport_defs.h"
+#include "MidiSequenceNumber.h"
+
 class CMidi2NetworkMidiEndpointManager;
 class CMidi2NetworkMidiConfigurationManager;
 class MidiNetworkAdvertiser;
-class MidiNetworkHostSession;
-class MidiNetworkClientSession;
+class MidiNetworkHost;
+class MidiNetworkClient;
+class MidiNetworkConnection;
 
-#include "transport_defs.h"
 
 #include "MidiNetworkEndpointDefinition.h"
 
 #include "MidiNetworkMessages.h"
-#include "MidiNetworkMessageProcessor.h"
+
+#include "MidiNetworkDataWriter.h"
+#include "MidiNetworkConnection.h"
+
+#include "TransportState.h"
 
 #include "MidiNetworkClient.h"
-#include "MidiNetworkClientSession.h"
-
 #include "MidiNetworkHost.h"
-#include "MidiNetworkHostSession.h"
+#include "MidiNetworkSession.h"
 
 #include "MidiNetworkAdvertiser.h"
 
-#include "TransportState.h"
 
 #include "Midi2.NetworkMidiTransport.h"
 #include "Midi2.NetworkMidiBiDi.h"

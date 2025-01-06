@@ -39,7 +39,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         uint32_t CalculatedMaxDeviceOutputBandwidthBitsPerSecond();
 
 
-        bool InternalUpdateFromPropertyData(_In_ internal::GroupTerminalBlockInternal block);
+        bool InternalUpdateFromPropertyData(_In_ internal::GroupTerminalBlockInternal block, _In_ winrt::hstring deviceName);
 
 
         midi2::MidiFunctionBlock AsEquivalentFunctionBlock();
@@ -49,6 +49,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     private:
         internal::GroupTerminalBlockInternal m_block;
+
+        winrt::hstring m_deviceName{};
 
         uint32_t CalculateBandwidth(_In_ uint16_t gtbBandwidthValue);
 

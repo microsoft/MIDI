@@ -22,6 +22,5 @@ public:
 
 private:
 
-    GUID m_abstractionId;   // kept for convenience
 };
 

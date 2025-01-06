@@ -130,7 +130,20 @@ namespace Microsoft.Midi.ConsoleApp
 
         private void DisplayEndpointInformationFormatted(Table table, Settings settings, MidiEndpointDeviceInformation endpointInfo, string endpointType)
         {
-            table.AddRow(new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo.EndpointPurpose) + " " + AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
+            var transportInfo = endpointInfo.GetTransportSuppliedInfo();
+
+            if (transportInfo.ManufacturerName != "Microsoft" && transportInfo.ManufacturerName != string.Empty)
+            {
+                table.AddRow(new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo.EndpointPurpose) + " " +
+                    AnsiMarkupFormatter.FormatEndpointName(transportInfo.ManufacturerName) + " " +
+                    AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
+            }
+            else
+            {
+                table.AddRow(new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo.EndpointPurpose) + " " +
+                    AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
+            }
+
 
             if (settings.IncludeId)
             {

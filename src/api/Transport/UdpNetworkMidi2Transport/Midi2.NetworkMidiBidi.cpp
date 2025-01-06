@@ -13,12 +13,12 @@
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBiDi::Initialize(
-    LPCWSTR,
+    LPCWSTR endpointDeviceInterfaceId,
     PTRANSPORTCREATIONPARAMS,
     DWORD *,
     IMidiCallback * callback,
     LONGLONG context,
-    GUID /* SessionId */
+    GUID sessionId
 )
 {
     TraceLoggingWrite(
@@ -27,11 +27,25 @@ CMidi2NetworkMidiBiDi::Initialize(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingGuid(sessionId, "Session")
     );
+
+    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
     m_callback = callback;
     m_context = context;
+
+    m_endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
+
+
+    // look up the endpointDeviceInterfaceId in our list of endpoints, and connect to it
+
+    m_connection = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
+    RETURN_HR_IF_NULL(E_INVALIDARG, m_connection);
+
+    m_connection->SetMidiCallback(this);
 
     return S_OK;
 }
@@ -51,6 +65,14 @@ CMidi2NetworkMidiBiDi::Shutdown()
     m_callback = nullptr;
     m_context = 0;
 
+    auto conn = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
+    
+    if (conn)
+    {
+        conn->RemoveMidiCallback();
+    }
+    
+
     return S_OK;
 }
 
@@ -62,42 +84,33 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
     LONGLONG position
 )
 {
-    if (m_callback == nullptr)
-    {
-        // TODO log that callback is null
-        return E_FAIL;
-    }
+    UNREFERENCED_PARAMETER(position);
 
-    if (message == nullptr)
-    {
-        // TODO log that message was null
-        return E_FAIL;
-    }
+    RETURN_HR_IF_NULL(E_INVALIDARG, message);
+    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-    if (size < sizeof(uint32_t))
-    {
-        // TODO log that data was smaller than minimum UMP size
-        return E_FAIL;
-    }
+    auto conn = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, conn);
 
-    m_callback->Callback(message, size, position, m_context);
+    RETURN_IF_FAILED(conn->SendMidiMessagesToNetwork(message, size));
 
     return S_OK;
-
 }
 
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBiDi::Callback(
-    PVOID,
-    UINT,
-    LONGLONG,
-    LONGLONG
+    PVOID message,
+    UINT size,
+    LONGLONG timestamp,
+    LONGLONG context
 )
 {
-    //return E_NOTIMPL;
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_callback);
+    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-    // just eat it for this simple loopback
+    RETURN_IF_FAILED(m_callback->Callback(message, size, timestamp, context));
+
     return S_OK;
 }
 

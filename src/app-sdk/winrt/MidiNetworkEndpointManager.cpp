@@ -151,7 +151,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
                         // TEMP! We'll need to move these to a vector
                         for (auto const& ip : array)
                         {
-                            host.IPAddress = host.IPAddress + L" | " + ip;
+                            if (host.IPAddress.empty())
+                            {
+                                host.IPAddress = ip;
+                            }
+                            else
+                            {
+                                host.IPAddress = host.IPAddress + L" | " + ip;
+                            }
                         }
                         
                     }

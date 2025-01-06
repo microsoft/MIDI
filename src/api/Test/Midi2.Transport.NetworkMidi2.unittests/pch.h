@@ -6,30 +6,20 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
+#ifndef PCH_H
+#define PCH_H
 
-struct MidiNetworkClientDefinition
-{
-    winrt::hstring EntryIdentifier;         // internal 
-    bool Enabled{ true };
+// add headers that you want to pre-compile here
+#include "windows.h"
 
-    // protocol
-//    MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
+#include <wil\com.h>
+#include <wil\resource.h>
+#include <wil\result_macros.h>
+#include <ppltasks.h>
+#include <WexTestClass.h>
 
+#include "MidiSequenceNumber.h" // this is in the network midi project
 
-};
+#include "SequenceNumberTests.h"
 
-
-
-class MidiNetworkClient
-{
-public:
-    HRESULT Initialize(_In_ MidiNetworkClientDefinition& clientDefinition);
-
-    HRESULT Shutdown();
-
-private:
-
-
-
-};
+#endif //PCH_H

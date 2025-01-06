@@ -6,30 +6,8 @@
 // Further information: https://github.com/microsoft/MIDI/
 // ============================================================================
 
-#pragma once
+// pch.cpp: source file corresponding to the pre-compiled header
 
-struct MidiNetworkClientDefinition
-{
-    winrt::hstring EntryIdentifier;         // internal 
-    bool Enabled{ true };
+#include "pch.h"
 
-    // protocol
-//    MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
-
-
-};
-
-
-
-class MidiNetworkClient
-{
-public:
-    HRESULT Initialize(_In_ MidiNetworkClientDefinition& clientDefinition);
-
-    HRESULT Shutdown();
-
-private:
-
-
-
-};
+// When you are using pre-compiled headers, this source file is necessary for compilation to succeed.

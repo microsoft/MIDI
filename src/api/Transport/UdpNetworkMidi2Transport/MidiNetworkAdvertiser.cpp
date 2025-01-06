@@ -75,6 +75,15 @@ MidiNetworkAdvertiser::Advertise(
     switch (registration.Status())
     {
     case DnssdRegistrationStatus::Success:
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Registered socket successfully", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+
+        );
         return S_OK;
 
         // The service was not registered because security settings did not allow it.
