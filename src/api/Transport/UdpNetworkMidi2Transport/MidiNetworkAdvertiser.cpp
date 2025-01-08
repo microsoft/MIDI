@@ -20,9 +20,6 @@ MidiNetworkAdvertiser::Initialize()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-
-
-
     return S_OK;
 }
 

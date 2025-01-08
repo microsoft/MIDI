@@ -22,7 +22,8 @@
 #include <winrt/windows.networking.h>
 
 namespace json = ::winrt::Windows::Data::Json;
-
+namespace enumeration = ::winrt::Windows::Devices::Enumeration;
+namespace foundation = ::winrt::Windows::Foundation;
 
 
 #include <assert.h>
@@ -108,9 +109,10 @@ class MidiNetworkAdvertiser;
 class MidiNetworkHost;
 class MidiNetworkClient;
 class MidiNetworkConnection;
+struct MidiNetworkClientDefinition;
 
 
-#include "MidiNetworkEndpointDefinition.h"
+//#include "MidiNetworkEndpointDefinition.h"
 
 #include "MidiNetworkMessages.h"
 
@@ -121,7 +123,6 @@ class MidiNetworkConnection;
 
 #include "MidiNetworkClient.h"
 #include "MidiNetworkHost.h"
-#include "MidiNetworkSession.h"
 
 #include "MidiNetworkAdvertiser.h"
 

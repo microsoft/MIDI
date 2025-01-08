@@ -65,11 +65,10 @@ CMidi2NetworkMidiBiDi::Shutdown()
     m_callback = nullptr;
     m_context = 0;
 
-    auto conn = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
-    
-    if (conn)
+    if (m_connection)
     {
-        conn->RemoveMidiCallback();
+        m_connection->RemoveMidiCallback();
+        m_connection.reset();
     }
     
 
@@ -89,10 +88,9 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-    auto conn = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
-    RETURN_HR_IF_NULL(E_UNEXPECTED, conn);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_connection);
 
-    RETURN_IF_FAILED(conn->SendMidiMessagesToNetwork(message, size));
+    RETURN_IF_FAILED(m_connection->SendMidiMessagesToNetwork(message, size));
 
     return S_OK;
 }

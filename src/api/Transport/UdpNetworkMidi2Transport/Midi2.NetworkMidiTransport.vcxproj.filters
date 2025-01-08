@@ -19,11 +19,11 @@
     <Filter Include="Source Files\Infrastructure">
       <UniqueIdentifier>{5a8f9e7d-fbf2-49af-8539-4131dc30478f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Session">
-      <UniqueIdentifier>{4d8e5e94-306b-4444-8184-8c87636ddc12}</UniqueIdentifier>
+    <Filter Include="Source Files\Service">
+      <UniqueIdentifier>{e0304812-76e1-4ecc-b7f5-b3e338d1076f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Session">
-      <UniqueIdentifier>{e354b451-93d3-42fa-bf61-3a07d42a02c7}</UniqueIdentifier>
+    <Filter Include="Header Files\Service">
+      <UniqueIdentifier>{9f295eac-33c2-4bfe-8896-96731cbaa587}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -45,12 +45,6 @@
     <ClCompile Include="Midi2.NetworkMidiPluginMetadataProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHost.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkClient.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TransportState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -66,8 +60,11 @@
     <ClCompile Include="MidiNetworkAdvertiser.cpp">
       <Filter>Source Files\Infrastructure</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkSession.cpp">
-      <Filter>Source Files\Session</Filter>
+    <ClCompile Include="MidiNetworkClient.cpp">
+      <Filter>Source Files\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkHost.cpp">
+      <Filter>Source Files\Service</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -98,16 +95,7 @@
     <ClInclude Include="Midi2.NetworkMidiPluginMetadataProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MidiNetworkEndpointDefinition.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MidiNetworkMessages.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkHost.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TransportState.h">
@@ -131,11 +119,14 @@
     <ClInclude Include="MidiNetworkAdvertiser.h">
       <Filter>Header Files\Infrastructure</Filter>
     </ClInclude>
-    <ClInclude Include="MidiNetworkSession.h">
-      <Filter>Header Files\Session</Filter>
-    </ClInclude>
     <ClInclude Include="MidiSequenceNumber.h">
       <Filter>Header Files\Infrastructure</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHost.h">
+      <Filter>Header Files\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClient.h">
+      <Filter>Header Files\Service</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

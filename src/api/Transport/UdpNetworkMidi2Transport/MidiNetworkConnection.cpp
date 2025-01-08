@@ -32,6 +32,15 @@ MidiNetworkConnection::Initialize(
     uint8_t const maxForwardErrorCorrectionCommandPacketCount
 )
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     m_sessionActive = false;
 
     m_role = role;
@@ -65,13 +74,31 @@ MidiNetworkConnection::Initialize(
     RETURN_IF_NULL_ALLOC(m_writer);
     RETURN_IF_FAILED(m_writer->Initialize(socket.GetOutputStreamAsync(hostName, port).get()));
 
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     return S_OK;
 }
+
 
 
 HRESULT
 MidiNetworkConnection::StartOutboundProcessingThreads()
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
 
 
@@ -92,6 +119,15 @@ MidiNetworkConnection::SetMidiCallback(
     IMidiCallback* callback
 )
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
     m_callback = callback;
@@ -102,6 +138,15 @@ MidiNetworkConnection::SetMidiCallback(
 HRESULT
 MidiNetworkConnection::RemoveMidiCallback()
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     m_callback = nullptr;
 
     return S_OK;
@@ -116,6 +161,15 @@ MidiNetworkConnection::HandleIncomingUmpData(
     std::vector<uint32_t> const& words
 )
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     if (m_callback != nullptr)
     {
         // this may have more than one message, so we need to tease it apart here
@@ -145,6 +199,16 @@ MidiNetworkConnection::HandleIncomingUmpData(
 HRESULT
 MidiNetworkConnection::HandleIncomingBye()
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     // send bye reply
     RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
     RETURN_IF_FAILED(m_writer->WriteCommandByeReply());
@@ -179,6 +243,16 @@ MidiNetworkConnection::HandleIncomingInvitation(
     std::wstring const& clientProductInstanceId
 )
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     UNREFERENCED_PARAMETER(capabilities);
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
@@ -301,6 +375,15 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::HandleIncomingPing(uint32_t const pingId)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     auto lock = m_socketWriterLock.lock();
 
     RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
@@ -314,6 +397,15 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::HandleIncomingPingReply(uint32_t const pingId)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     UNREFERENCED_PARAMETER(pingId);
 
     // todo: calculate latency and update the latency properties used in the scheduler
@@ -350,6 +442,16 @@ MidiNetworkConnection::ProcessIncomingMessage(
     winrt::Windows::Storage::Streams::DataReader const& reader
 )
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     // todo: update last message time to this timestamp
     uint64_t packetMidiTimestamp = internal::GetCurrentMidiTimestamp();
 
@@ -543,6 +645,15 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::HandleIncomingRetransmitRequest(uint16_t const startingSequenceNumber, uint16_t const retransmitPacketCount)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     // TODO: A packet count of 0x0000 means to send all the data we have starting at the startingSequenceNumber
 
     // find the starting sequence number in the circular buffer
@@ -598,6 +709,15 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::SendMidiMessagesToNetwork(std::vector<uint32_t> const& words)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     auto sequenceNumber = ++m_lastSentUmpCommandSequenceNumber;
 
     auto lock = m_socketWriterLock.lock();
@@ -648,3 +768,20 @@ MidiNetworkConnection::SendMidiMessagesToNetwork(
 }
 
 
+HRESULT
+MidiNetworkConnection::Shutdown()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
+
+
+    return S_OK;
+}

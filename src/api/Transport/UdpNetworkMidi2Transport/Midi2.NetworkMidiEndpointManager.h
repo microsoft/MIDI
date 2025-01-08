@@ -34,9 +34,27 @@ public:
 
     STDMETHOD(DeleteEndpoint(_In_ std::wstring deviceInstanceId));
 
+    STDMETHOD(StartRemoteHostWatcher)();
+    STDMETHOD(StartBackgroundEndpointCreator)();
+
     bool IsInitialized() { return m_initialized; }
 
+    STDMETHOD(WakeupBackgroundEndpointCreatorThread)();
+
 private:
+    enumeration::DeviceWatcher m_deviceWatcher{ nullptr };
+    winrt::event_token m_deviceWatcherAddedToken;
+    winrt::event_token m_deviceWatcherUpdatedToken;
+    winrt::event_token m_deviceWatcherRemovedToken;
+    winrt::event_token m_deviceWatcherStoppedToken;
+
+    HRESULT OnDeviceWatcherAdded(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformation const& args);
+    HRESULT OnDeviceWatcherUpdated(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformationUpdate const& args);
+    HRESULT OnDeviceWatcherRemoved(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformationUpdate const& args);
+    HRESULT OnDeviceWatcherStopped(_In_ enumeration::DeviceWatcher const&, _In_ foundation::IInspectable const&);
+
+    std::map<winrt::hstring, enumeration::DeviceInformation> m_foundAdvertisedHosts;
+
     bool m_initialized{ false };
 
     GUID m_containerId{};
@@ -45,7 +63,13 @@ private:
 
     HRESULT CreateParentDevice();
 
-
     wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_midiProtocolManager;
+
+
+    std::jthread m_backgroundEndpointCreatorThread;
+    std::stop_token m_backgroundEndpointCreatorThreadStopToken;
+    wil::slim_event_manual_reset m_backgroundEndpointCreatorThreadWakeup;
+    HRESULT EndpointCreatorWorker();
+
 };

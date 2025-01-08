@@ -92,8 +92,8 @@ private:
     std::atomic<bool> m_keepProcessing{ true };
 
     // todo: these probably aren't necessary. The only queues we need are for midi messages
-    std::queue<MidiNetworkOutOfBandIncomingCommandPacket> m_incomingOutOfBandCommands;
-    std::queue<MidiNetworkOutOfBandOutgoingCommandPacket> m_outgoingOutOfBandCommands;
+//    std::queue<MidiNetworkOutOfBandIncomingCommandPacket> m_incomingOutOfBandCommands;
+//    std::queue<MidiNetworkOutOfBandOutgoingCommandPacket> m_outgoingOutOfBandCommands;
 
     winrt::impl::consume_Windows_Networking_Sockets_IDatagramSocket<IDatagramSocket>::MessageReceived_revoker m_messageReceivedRevoker;
     void OnMessageReceived(
@@ -105,12 +105,11 @@ private:
     std::shared_ptr<MidiNetworkAdvertiser> m_advertiser{ nullptr };
 
 
-    DatagramSocket m_socket;
+    DatagramSocket m_socket{ nullptr };
 
     // Map of MidiNetworkHostSessions and their related remote client addresses
     // the keys for these two maps are the same values created with CreateSessionMapKey
     std::map<std::string, std::shared_ptr<MidiNetworkConnection>> m_connections{ };
-
 
     inline std::string CreateConnectionMapKey(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
     {
@@ -125,7 +124,19 @@ private:
     }
 
 
-    inline std::shared_ptr<MidiNetworkConnection> GetConnection(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
+    inline void RemoveConnection(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
+    {
+        if (ConnectionExists(hostName, port))
+        {
+            auto entry = m_connections.find(CreateConnectionMapKey(hostName, port));
+
+            LOG_IF_FAILED(entry->second->Shutdown());
+
+            m_connections.erase(CreateConnectionMapKey(hostName, port));
+        }
+    }
+
+    inline std::shared_ptr<MidiNetworkConnection> GetOrCreateConnection(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
     {
         auto key = CreateConnectionMapKey(hostName, port);
 

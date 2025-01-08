@@ -384,6 +384,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                 // TODO: User should be able to specify the adapter, host name, etc.
 
+                // TODO: This should be pulled out of the loop
                 auto hostNames = winrt::Windows::Networking::Connectivity::NetworkInformation::GetHostNames();
 
                 for (auto const& host : hostNames)
@@ -426,9 +427,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                     // create the host
 
-                    // TODO: This should take place on a background polling thread from the endpoint manager
-                    // not from here. Otherwise, this can delay service startup.
-
                     auto host = std::make_shared<MidiNetworkHost>();
 
                     RETURN_HR_IF_NULL(E_POINTER, host);
@@ -436,13 +434,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                     // add to our collection of hosts
                     TransportState::Current().AddHost(host);
-
-                    // we only start if this comes in after the endpoint manager has been spun up
-                    if (TransportState::Current().GetEndpointManager() != nullptr &&
-                        TransportState::Current().GetEndpointManager()->IsInitialized())
-                    {
-                        RETURN_IF_FAILED(host->Start());
-                    }
                 }
                 else
                 {
