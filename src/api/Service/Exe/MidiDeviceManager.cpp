@@ -1808,22 +1808,22 @@ CMidiDeviceManager::AssignPortNumber(
     wil::unique_event enumerationCompleted{wil::EventOptions::None};
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_CustomPortNumber));
+    additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+    additionalProperties.Append(STRING_PKEY_MIDI_CustomPortNumber);
 
-    auto watcher = DeviceInformation::CreateWatcher(deviceSelector, additionalProperties);
+    auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
 
-    auto deviceAddedHandler = watcher.Added(winrt::auto_revoke, [&](DeviceWatcher watcher, DeviceInformation device)
+    for (auto const& device : deviceList)
     {
-        bool servicePortNumValid {false};
-        UINT32 servicePortNum {0};
-        bool userPortNumValid {false};
-        UINT32 userPortNum {0};
+        bool servicePortNumValid{ false };
+        UINT32 servicePortNum{ 0 };
+        bool userPortNumValid{ false };
+        UINT32 userPortNum{ 0 };
 
         auto processingInterface = internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str());
 
         // all others with a service assigned port number goes into the portInfo structure for processing.
-        auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
+        auto prop = device.Properties().Lookup(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
         if (prop)
         {
             servicePortNum = winrt::unbox_value<UINT32>(prop);
@@ -1843,11 +1843,9 @@ CMidiDeviceManager::AssignPortNumber(
             );
 
             if (!servicePortNumValid) servicePortNum = 0;
-
-
         }
 
-        prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_CustomPortNumber));
+        prop = device.Properties().Lookup(STRING_PKEY_MIDI_CustomPortNumber);
         if (prop)
         {
             userPortNum = winrt::unbox_value<UINT32>(prop);
@@ -1896,28 +1894,7 @@ CMidiDeviceManager::AssignPortNumber(
                 portInfo[servicePortNum].Flow = flow;
             }
         }
-    });
-
-    auto deviceStoppedHandler = watcher.Stopped(winrt::auto_revoke, [&](DeviceWatcher, winrt::Windows::Foundation::IInspectable)
-    {
-        enumerationCompleted.SetEvent();
-        return S_OK;
-    });
-
-    auto enumerationCompletedHandler = watcher.EnumerationCompleted(winrt::auto_revoke, [&](DeviceWatcher , winrt::Windows::Foundation::IInspectable)
-    {
-        enumerationCompleted.SetEvent();
-        return S_OK;
-    });
-
-    watcher.Start();
-    enumerationCompleted.wait();
-    watcher.Stop();
-    enumerationCompleted.wait();
-
-    deviceAddedHandler.revoke();
-    deviceStoppedHandler.revoke();
-    enumerationCompletedHandler.revoke();
+    }
 
     // if we have a service assigned port number, but that number is already in use
     // by either and active port, or an inactive port and we're currently active (meaning this port
@@ -2084,7 +2061,21 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
         TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+    // step 0. An optimization since most attached devices fall under the KSA transport today
+    // we should also just look at the native data format, but this is a fast fail to avoid
+    // doing a device lookup. 
+    std::wstring deviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(umpDeviceInterfaceId);
+    if (deviceInterfaceId.find(L"midiu_ksa_") != std::wstring::npos)
+    {
+        // MIDI 1.0 device under the aggregate transport
+        return E_NOTFOUND;
+    }
+
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+
+    // TODO: We should have a property which indicates if discovery has already happened and the
+    // function blocks are now valid. They never are on the first time around
+
 
     // step 1, retrieve the function block count to determine if we need to build up the list of function
     // blocks to retrieve.
@@ -2194,10 +2185,10 @@ CMidiDeviceManager::GetGroupTerminalBlockPortInfo(
     // Retrieve all of the required properties from the UMP interface and save them in the
     // vector.
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_GroupTerminalBlocks));
+    additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_GroupTerminalBlocks));
+    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_GroupTerminalBlocks);
     RETURN_HR_IF_EXPECTED(E_NOTFOUND, !prop);
 
     auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop);
@@ -2457,28 +2448,31 @@ CMidiDeviceManager::SyncMidi1Ports(
                     // Retrieve all of the required properties from the UMP interface and save them in the
                     // vector.
                     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_CustomEndpointName));
-                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_ManufacturerName));
-                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_EndpointName));
-                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
-                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
-                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_NativeDataFormat));
-                    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
+                    additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
+                    additionalProperties.Append(STRING_PKEY_MIDI_ManufacturerName);
+                    additionalProperties.Append(STRING_PKEY_MIDI_EndpointName);
+                    additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
+                    additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
+                    additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
+                    additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
                     auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpMidiPort->DeviceInterfaceId.get(), additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
                     // Determine if this is a transport which we wish to use the friendly name provided by either
                     // the group terminal blocks or function blocks.
-                    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
+                    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_TransportLayer);
+                    winrt::guid transportId{};
+
                     if (prop)
                     {
-                        auto transportId = winrt::unbox_value<winrt::guid>(prop);
-                        if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)))
-                        {
-                            usePortInfoName = true;
-                        }
+                        transportId = winrt::unbox_value<winrt::guid>(prop);
                     }
 
-                    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_CustomEndpointName));
+                    if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)))
+                    {
+                        usePortInfoName = true;
+                    }
+
+                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CustomEndpointName);
                     if (prop)
                     {
                         baseFriendlyName = winrt::unbox_value<winrt::hstring>(prop).c_str();
@@ -2489,14 +2483,14 @@ CMidiDeviceManager::SyncMidi1Ports(
                     {
                         std::wstring shortName{};
 
-                        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_ManufacturerName));
+                        prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_ManufacturerName);
                         if (prop)
                         {
                             baseFriendlyName += winrt::unbox_value<winrt::hstring>(prop).c_str();
                             baseFriendlyName += L" ";
                         }
 
-                        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointName));
+                        prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_EndpointName);
                         if (prop)
                         {
                             shortName = winrt::unbox_value<winrt::hstring>(prop).c_str();
@@ -2511,13 +2505,8 @@ CMidiDeviceManager::SyncMidi1Ports(
                         }
                     }
 
-                    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
-                    if (prop)
-                    {                    
-                        transportGUID = winrt::unbox_value<winrt::guid>(prop);
-                        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
-                            DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(transportGUID)) });
-                    }
+                    interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_GUID, (ULONG)(sizeof(GUID)), (PVOID)(&(transportId)) });
 
                     prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
                     if (prop)

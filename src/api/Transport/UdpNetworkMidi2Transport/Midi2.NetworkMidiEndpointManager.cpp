@@ -43,16 +43,254 @@ CMidi2NetworkMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(CreateParentDevice());
 
-    // TODO: Lock the transport state hosts
-
     m_initialized = true;
 
-    for (auto const& host : TransportState::Current().GetHosts())
+    // start background thread that creates endpoints
+    RETURN_IF_FAILED(StartBackgroundEndpointCreator());
+
+    // start the device watcher so we see new hosts come online
+    RETURN_IF_FAILED(StartRemoteHostWatcher());
+
+    return S_OK;
+}
+
+HRESULT
+CMidi2NetworkMidiEndpointManager::StartRemoteHostWatcher()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    // when new remote host is found, track it. We will need to have a complete
+    // list of found hosts so we can handle both pre-configured reconnects as
+    // well as connect requests that come later
+
+    // ProtocolId is mDNS: {4526e8c1-8aac-4153-9b16-55e86ada0e54}
+    // ServiceName is per MIDI spec: _midi2._udp"
+    // Domain is per MIDI spec: local
+
+    winrt::hstring query = 
+        L"System.Devices.AepService.ProtocolId:={4526e8c1-8aac-4153-9b16-55e86ada0e54} AND " \
+        L"System.Devices.Dnssd.ServiceName:=\"_midi2._udp\" AND " \
+        L"System.Devices.Dnssd.Domain:=\"local\"";
+
+    auto props = winrt::single_threaded_vector<winrt::hstring>();
+
+    // https://learn.microsoft.com/en-us/windows/win32/properties/props-system-devices-dnssd-domain
+    props.Append(L"System.Devices.AepService.ProtocolId");  // guid
+    props.Append(L"System.Devices.Dnssd.HostName");         // string
+    props.Append(L"System.Devices.Dnssd.FullName");         // string
+    props.Append(L"System.Devices.Dnssd.ServiceName");      // string
+    props.Append(L"System.Devices.Dnssd.Domain");           // string
+    props.Append(L"System.Devices.Dnssd.InstanceName");     // string
+    props.Append(L"System.Devices.IpAddress");              // multivalue string
+    props.Append(L"System.Devices.Dnssd.PortNumber");       // uint16_t
+    props.Append(L"System.Devices.Dnssd.TextAttributes");   // multivalue string
+
+    m_deviceWatcher = enumeration::DeviceInformation::CreateWatcher(
+        query, 
+        props, 
+        enumeration::DeviceInformationKind::AssociationEndpointService);
+
+    // add event handlers
+    m_deviceWatcherAddedToken = m_deviceWatcher.Added({ this, &CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded });
+    m_deviceWatcherUpdatedToken = m_deviceWatcher.Updated({ this, &CMidi2NetworkMidiEndpointManager::OnDeviceWatcherUpdated });
+    m_deviceWatcherRemovedToken = m_deviceWatcher.Removed({ this, &CMidi2NetworkMidiEndpointManager::OnDeviceWatcherRemoved });
+    m_deviceWatcherStoppedToken = m_deviceWatcher.Stopped({ this, &CMidi2NetworkMidiEndpointManager::OnDeviceWatcherStopped });
+
+    // start the watcher
+    m_deviceWatcher.Start();
+
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatcher const&, enumeration::DeviceInformation const& args)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(args.Id().c_str(), "id"),
+        TraceLoggingWideString(args.Name().c_str(), "name")
+    );
+
+    // TODO: Search our host entries to make sure the host is not *this* host
+
+    m_foundAdvertisedHosts.insert_or_assign(args.Id(), args);
+
+    // TODO: do we need to signal the background thread to check the collection?
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& args)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(args.Id().c_str(), "id")
+    );
+
+    // nothing to do here. We don't care about updates.
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::OnDeviceWatcherRemoved(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& args)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(args.Id().c_str(), "id")
+    );
+
+    if (m_foundAdvertisedHosts.find(args.Id()) != m_foundAdvertisedHosts.end())
     {
-        if (!host->HasStarted())
+        m_foundAdvertisedHosts.erase(args.Id());
+
+        // we don't disconnect or anything here. That's handled in-protocol.
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::OnDeviceWatcherStopped(enumeration::DeviceWatcher const&, foundation::IInspectable const&)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    // nothing to do here
+    return S_OK;
+}
+
+HRESULT
+CMidi2NetworkMidiEndpointManager::WakeupBackgroundEndpointCreatorThread()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    m_backgroundEndpointCreatorThreadWakeup.SetEvent();
+
+    return S_OK;
+}
+
+HRESULT
+CMidi2NetworkMidiEndpointManager::StartBackgroundEndpointCreator()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    std::jthread workerThread(&CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker, this);
+
+    m_backgroundEndpointCreatorThread = std::move(workerThread);
+    m_backgroundEndpointCreatorThreadStopToken = m_backgroundEndpointCreatorThread.get_stop_token();
+    m_backgroundEndpointCreatorThread.detach();
+
+    return S_OK;
+}
+
+HRESULT
+CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    // this is set up to run through one time before waiting for the wakeup
+    // this way we can process anything added before the EndpointManager has been
+    // initialized
+
+    while (!m_backgroundEndpointCreatorThreadStopToken.stop_requested())
+    {
+        if (m_backgroundEndpointCreatorThreadWakeup.is_signaled())
         {
-            RETURN_IF_FAILED(host->Start());
+            m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
         }
+
+        // run through host entries
+
+        for (auto const& host : TransportState::Current().GetHosts())
+        {
+            if (!host->HasStarted())
+            {
+                LOG_IF_FAILED(host->Start());
+            }
+        }
+
+        // TODO: run through client definition entries. These aren't actual clients
+        // but are instead just parameters needed to create connections to hosts when
+        // they come online.
+        // 
+
+        for (auto const& clientDefinition : TransportState::Current().GetPendingClientDefinitions())
+        {
+            UNREFERENCED_PARAMETER(clientDefinition);
+
+            // any requiring a match, see if we have a match in our deviceinformation collection
+
+            // - any that are IP/port direct, try to connect, but don't keep trying the same ones if they fail
+
+        }
+
+        // TODO: wait for notification of new hosts online or new entries added via config
+        m_backgroundEndpointCreatorThreadWakeup.wait(10000);
     }
 
     return S_OK;
@@ -154,6 +392,15 @@ CMidi2NetworkMidiEndpointManager::InitiateDiscoveryAndNegotiation(
     std::wstring const& endpointDeviceInterfaceId
 )
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     // Discovery and protocol negotiation
 
     ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{ };
@@ -358,6 +605,46 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    if (m_deviceWatcher)
+    {
+        if (m_deviceWatcherStoppedToken)
+        {
+            m_deviceWatcher.Stopped(m_deviceWatcherStoppedToken);
+        }
+
+        if (m_deviceWatcherAddedToken)
+        {
+            m_deviceWatcher.Added(m_deviceWatcherAddedToken);
+        }
+
+        if (m_deviceWatcherRemovedToken)
+        {
+            m_deviceWatcher.Removed(m_deviceWatcherRemovedToken);
+        }
+
+        if (m_deviceWatcherUpdatedToken)
+        {
+            m_deviceWatcher.Updated(m_deviceWatcherUpdatedToken);
+        }
+
+        m_deviceWatcher.Stop();
+    }
+
+    m_foundAdvertisedHosts.clear();
+
+    m_backgroundEndpointCreatorThread.request_stop();
+    m_backgroundEndpointCreatorThreadWakeup.SetEvent();
+
+    m_initialized = false;
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
 
     return S_OK;

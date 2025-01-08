@@ -167,7 +167,7 @@ void MidiNetworkHost::OnMessageReceived(
         return;
     }
 
-    auto conn = GetConnection(args.RemoteAddress(), args.RemotePort());
+    auto conn = GetOrCreateConnection(args.RemoteAddress(), args.RemotePort());
 
     if (conn)
     {
@@ -208,6 +208,7 @@ MidiNetworkHost::Shutdown()
     // TODO: send "bye" to all sessions, and then unbind the socket
 
     // TODO: Stop packet processing thread
+
 
 
     m_socket.Close();

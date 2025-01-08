@@ -295,7 +295,6 @@
     <ClCompile Include="MidiNetworkAdvertiser.cpp" />
     <ClCompile Include="MidiNetworkClient.cpp" />
     <ClCompile Include="MidiNetworkHost.cpp" />
-    <ClCompile Include="MidiNetworkSession.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -320,9 +319,7 @@
     <ClInclude Include="Midi2.NetworkMidiPluginMetadataProvider.h" />
     <ClInclude Include="MidiNetworkAdvertiser.h" />
     <ClInclude Include="MidiNetworkClient.h" />
-    <ClInclude Include="MidiNetworkEndpointDefinition.h" />
     <ClInclude Include="MidiNetworkHost.h" />
-    <ClInclude Include="MidiNetworkSession.h" />
     <ClInclude Include="MidiNetworkMessages.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />

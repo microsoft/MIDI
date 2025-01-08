@@ -35,6 +35,8 @@ public:
         _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount
     );
 
+    HRESULT Shutdown();
+
     HRESULT ProcessIncomingMessage(
         _In_ winrt::Windows::Storage::Streams::DataReader const& reader);
 

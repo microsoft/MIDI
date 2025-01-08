@@ -377,11 +377,14 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
     );
 
+    // set to true if we only want to create UMP endpoints
+    bool umpOnly = false;
+
     LOG_IF_FAILED(
         swdCreationResult = m_midiDeviceManager->ActivateEndpoint(
             masterEndpointDefinition.ParentDeviceInstanceId.c_str(),
-            false,                                  
-            MidiFlow::MidiFlowBidirectional,        // bidi only for the UMP endpoint
+            umpOnly,
+            MidiFlow::MidiFlowBidirectional,            // bidi only for the UMP endpoint
             &commonProperties,
             (ULONG) interfaceDevProperties.size(),
             (ULONG)0,
@@ -540,6 +543,17 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
         L" AND System.Devices.InterfaceEnabled:= System.StructuredQueryType.Boolean#True"\
         L" AND System.Devices.DeviceInstanceId:= \"" + deviceInstanceId + L"\"");
 
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enumerating Filters", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(parentDevice.Id().c_str(), "parent device id")
+    );
+
     auto filterDevices = DeviceInformation::FindAllAsync(filterDeviceSelector).get();
 
     if (filterDevices.Size() > 0)
@@ -672,14 +686,14 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
         // now create the device
 
-        if (isCompatibleMidi1Device)
+        if (isCompatibleMidi1Device && endpointDefinition.MidiPins.size() > 0)
         {
             // only some vendor drivers provide an actual manufacturer
             // and all the in-box drivers just provide the Generic USB Audio string
             // TODO: Is "Generic USB Audio" a string that is localized? If so, this
             // code will not have the intended effect outside of en-US
             auto manufacturer = GetStringProperty(parentDevice, L"System.Devices.DeviceManufacturer", L"");
-            if (!manufacturer.empty() && manufacturer != L"(Generic USB Audio)")
+            if (!manufacturer.empty() && manufacturer != L"(Generic USB Audio)" && manufacturer != L"Microsoft")
             {
                 endpointDefinition.ManufacturerName = manufacturer;
             }
@@ -691,30 +705,53 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
             endpointDefinition.EndpointDeviceInstanceId = TRANSPORT_INSTANCE_ID_PREFIX + hash;
 
-            if (endpointDefinition.MidiPins.size() > 0)
-            {
-                // We've enumerated all the pins on the device. Now create the aggregated UMP endpoint
-                RETURN_IF_FAILED(CreateMidiUmpEndpoint(endpointDefinition));
-            }
-            else
-            {
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Device has no compatible MIDI 1.0 pins. This is normal for many devices.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(parentDevice.Id().c_str(), "device id")
-                );
-            }
-        }
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Creating aggregate UMP endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
 
+            // We've enumerated all the pins on the device. Now create the aggregated UMP endpoint
+            RETURN_IF_FAILED(CreateMidiUmpEndpoint(endpointDefinition));
+        }
+        else
+        {
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"No compatible MIDI pins. This is normal in most cases.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        }
     }
     else
     {
         // no KS_CATEGORY_AUDIO filters for this device. This is not a failure condition.
+
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"No KS_CATEGORY_AUDIO filters for this device. This is fine in most cases.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
     }
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Filter Enumeration Complete", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(parentDevice.Id().c_str(), "parent device id")
+    );
 
     return S_OK;
 }
