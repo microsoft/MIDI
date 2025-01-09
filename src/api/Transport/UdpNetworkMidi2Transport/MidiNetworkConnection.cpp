@@ -208,12 +208,6 @@ MidiNetworkConnection::HandleIncomingBye()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-
-    // send bye reply
-    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-    RETURN_IF_FAILED(m_writer->WriteCommandByeReply());
-    RETURN_IF_FAILED(m_writer->Send());
-
     if (m_sessionActive)
     {
         if (TransportState::Current().GetEndpointManager() != nullptr)
@@ -225,10 +219,20 @@ MidiNetworkConnection::HandleIncomingBye()
             m_sessionDeviceInstanceId.clear();
             m_sessionEndpointDeviceInterfaceId.clear();
         }
+       
+        // send bye reply
+        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+        RETURN_IF_FAILED(m_writer->WriteCommandByeReply());
+        RETURN_IF_FAILED(m_writer->Send());
+
     }
     else
     {
         // not an active session. Nothing to clean up
+        // but we should NAK the Bye saying there's no active session
+        m_writer->WriteUdpPacketHeader();
+        m_writer->WriteCommandNAK(0, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"BYE received when there's no active session.");
+        m_writer->Send();
     }
 
     return S_OK;
@@ -256,6 +260,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
     UNREFERENCED_PARAMETER(capabilities);
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
 
     if (m_role == MidiNetworkConnectionRole::ConnectionWindowsIsHost)
     {
@@ -281,7 +286,6 @@ MidiNetworkConnection::HandleIncomingInvitation(
 
         if (TransportState::Current().GetEndpointManager()->IsInitialized())
         {
-
             // Create the endpoint for Windows MIDI Services clients
             // This will also kick off discovery and protocol negotiation
             HRESULT hr = S_OK;
@@ -514,69 +518,56 @@ MidiNetworkConnection::ProcessIncomingMessage(
             // TODO: a message can have zero MIDI words, but a valid sequence number. Need to handle that.
 
 
-            // TODO: This logic doesn't handle wrap. Need to have a window
             if (sequenceNumber <= m_lastReceivedUmpCommandSequenceNumber)
             {
+                // Skip all words in this command message
+                for (uint8_t i = 0; i < numberOfWords && reader.UnconsumedBufferLength() >= sizeof(uint32_t); i++)
+                {
+                    reader.ReadUInt32();
+                }
 
-
-                // todo: skip all words
             }
             else if (sequenceNumber == m_lastReceivedUmpCommandSequenceNumber + 1)
             {
-                // todo: process UMP data
-
+                // Process UMP data because this is the next sequence number
 
                 m_lastReceivedUmpCommandSequenceNumber = sequenceNumber;
-            }
-            else
-            {
-                // skipped data. Re-request missing packets
-            }
 
-
-
-
-
-
-
-
-            for (uint8_t i = 0; i < numberOfWords; i++)
-            {
-                if (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
+                for (uint8_t i = 0; i < numberOfWords; i++)
                 {
-                    // TODO: We need to check this sequence number, and if there's any gap from the last received, drop this data and request a retransmit
-
-                    if (sequenceNumber > m_lastReceivedUmpCommandSequenceNumber)
+                    if (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
                     {
                         // add to our vector
                         words.push_back(reader.ReadUInt32());
-
                     }
                     else
                     {
-                        // just read and discard
-                        reader.ReadUInt32();
+                        // bad / incomplete packet
+
+                        auto lock = m_socketWriterLock.lock();
+                        m_writer->WriteUdpPacketHeader();
+                        m_writer->WriteCommandNAK(commandHeader.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandMalformed, L"Packet data incomplete");
+                        m_writer->Send();
+
+                        // TODO: We should request a retransmit of this packet
+
+                        RETURN_IF_FAILED(E_FAIL);
                     }
                 }
-                else
-                {
-                    // bad / incomplete packet
 
-                    auto lock = m_socketWriterLock.lock();
-                    m_writer->WriteUdpPacketHeader();
-                    m_writer->WriteCommandNAK(commandHeader.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandMalformed, L"Packet data incomplete");
-                    m_writer->Send();
-
-                    // TODO: We should request a retransmit of this packet
-
-                    return E_FAIL;
-                }
             }
-
-            if (sequenceNumber > m_lastReceivedUmpCommandSequenceNumber)
+            else
             {
-                m_lastReceivedUmpCommandSequenceNumber = sequenceNumber;
+                // TODO: We need to check this sequence number, and if there's any gap from the last received, 
+                // drop this data and request a retransmit
+
+                // skipped data. Re-request missing packets
             }
+
+            //if (sequenceNumber > m_lastReceivedUmpCommandSequenceNumber)
+            //{
+            //    m_lastReceivedUmpCommandSequenceNumber = sequenceNumber;
+            //}
 
             if (words.size() > 0)
             {

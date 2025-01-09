@@ -298,7 +298,9 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
             {
                 auto hostEntry = hostsSection.GetNamedObject(it.Current().Key());
 
-                MidiNetworkHostDefinition definition{ };
+                auto definition = std::make_shared<MidiNetworkHostDefinition>();
+                RETURN_IF_NULL_ALLOC(definition);
+
                 winrt::hstring validationErrorMessage{ };
 
                 // currently, UDP is the only allowed protocol
@@ -309,18 +311,18 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
                 }
 
-                definition.EntryIdentifier = internal::TrimmedHStringCopy(it.Current().Key());
+                definition->EntryIdentifier = internal::TrimmedHStringCopy(it.Current().Key());
 
-                definition.Enabled = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
-                definition.Advertise = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
+                definition->Enabled = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
+                definition->Advertise = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
 
-                definition.UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
-                definition.ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
+                definition->UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
+                definition->ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
 
-                definition.Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
+                definition->Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
 
-                definition.Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
-                definition.ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY));
+                definition->Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
+                definition->ConnectionPolicy = MidiNetworkHostConnectionPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_CONNECTION_POLICY_ALLOW_IPV4_VALUE_ANY));
 
                 // read the list of ip info
                 //if (definition.ConnectionPolicy != MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections)
@@ -338,14 +340,14 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 //}
 
                 // read authentication information
-                if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
+                if (definition->Authentication != MidiNetworkHostAuthentication::NoAuthentication)
                 {
 
-                    if (definition.Authentication == MidiNetworkHostAuthentication::PasswordAuthentication)
+                    if (definition->Authentication == MidiNetworkHostAuthentication::PasswordAuthentication)
                     {
                         // TODO: Read the password vault key
                     }
-                    else if (definition.Authentication == MidiNetworkHostAuthentication::UserAuthentication)
+                    else if (definition->Authentication == MidiNetworkHostAuthentication::UserAuthentication)
                     {
                         // TODO: Read username/password vault key
                     }
@@ -376,7 +378,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     }
                 }
 
-                definition.ServiceInstanceName = serviceInstanceNamePrefix;
+                definition->ServiceInstanceName = serviceInstanceNamePrefix;
 
                 // TODO: See if the serviceInstanceName is already in use. If so, add a disambiguation number. Keep trying until unused one is found
 
@@ -392,29 +394,29 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     if ((host.Type() == HostNameType::DomainName) &&
                         (host.RawName().ends_with(L".local")))
                     {
-                        definition.HostName = host.RawName();
+                        definition->HostName = host.RawName();
                         break;
                     }
                 }
 
 
-                if (definition.Port == MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO ||
-                    definition.Port == L"" ||
-                    definition.Port == L"0")
+                if (definition->Port == MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO ||
+                    definition->Port == L"" ||
+                    definition->Port == L"0")
                 {
                     // this will cause us to use an auto-generated free port
-                    definition.Port = L"";
-                    definition.UseAutomaticPortAllocation = true;
+                    definition->Port = L"";
+                    definition->UseAutomaticPortAllocation = true;
                 }
                 else
                 {
-                    definition.UseAutomaticPortAllocation = false;
+                    definition->UseAutomaticPortAllocation = false;
                 }
 
 
                 // validate the entry
 
-                if (SUCCEEDED(ValidateHostDefinition(definition, validationErrorMessage)))
+                if (SUCCEEDED(ValidateHostDefinition(*definition, validationErrorMessage)))
                 {
                     TraceLoggingWrite(
                         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -425,15 +427,14 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                         TraceLoggingWideString(L"Host definition validated. Creating host", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                     );
 
-                    // create the host
-
-                    auto host = std::make_shared<MidiNetworkHost>();
-
-                    RETURN_HR_IF_NULL(E_POINTER, host);
-                    RETURN_IF_FAILED(host->Initialize(definition));
+                    // create the host definition
 
                     // add to our collection of hosts
-                    TransportState::Current().AddHost(host);
+                    TransportState::Current().AddPendingHostDefinition(definition);
+
+                    responseObject.SetNamedValue(
+                        MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                        jsonTrue);
                 }
                 else
                 {

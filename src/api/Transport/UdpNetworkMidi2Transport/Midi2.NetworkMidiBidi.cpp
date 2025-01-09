@@ -85,10 +85,11 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
 {
     UNREFERENCED_PARAMETER(position);
 
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_connection);
+
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_connection);
 
     RETURN_IF_FAILED(m_connection->SendMidiMessagesToNetwork(message, size));
 

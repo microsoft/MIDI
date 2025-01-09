@@ -68,8 +68,8 @@ private:
 
 
     std::jthread m_backgroundEndpointCreatorThread;
-    std::stop_token m_backgroundEndpointCreatorThreadStopToken;
+    //std::stop_token m_backgroundEndpointCreatorThreadStopToken;
     wil::slim_event_manual_reset m_backgroundEndpointCreatorThreadWakeup;
-    HRESULT EndpointCreatorWorker();
+    HRESULT EndpointCreatorWorker(_In_ std::stop_token stopToken);
 
 };

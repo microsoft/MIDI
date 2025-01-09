@@ -46,6 +46,14 @@ MidiNetworkHost::Initialize(
 
     m_hostDefinition = hostDefinition;
 
+    DatagramSocket socket;
+    m_socket = std::move(socket);
+
+    m_socket.Control().DontFragment(true);
+    //m_socket.Control().InboundBufferSizeInBytes(10000);
+    m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
+
+
     if (m_hostDefinition.Advertise)
     {
         m_advertiser = std::make_shared<MidiNetworkAdvertiser>();
@@ -81,9 +89,9 @@ MidiNetworkHost::Start()
 
     // wire up to handle incoming events
     auto messageReceivedHandler = winrt::Windows::Foundation::TypedEventHandler<DatagramSocket, DatagramSocketMessageReceivedEventArgs>(this, &MidiNetworkHost::OnMessageReceived);
-    m_messageReceivedRevoker = m_socket.MessageReceived(winrt::auto_revoke, messageReceivedHandler);
+    m_messageReceivedEventToken = m_socket.MessageReceived(messageReceivedHandler);
 
-    // this should have error checking
+    // TODO: this should have error checking
     m_socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).get();
 
     auto boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(m_socket.Information().LocalPort())));
@@ -101,6 +109,8 @@ MidiNetworkHost::Start()
         ));
     }
 
+    m_started = true;
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -109,8 +119,6 @@ MidiNetworkHost::Start()
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
-
-    m_started = true;
 
     return S_OK;
 }
@@ -124,16 +132,6 @@ void MidiNetworkHost::OnMessageReceived(
     DatagramSocket const& sender,
     DatagramSocketMessageReceivedEventArgs const& args)
 {
-    // TEMP!!
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
     UNREFERENCED_PARAMETER(sender);
 
     auto reader = args.GetDataReader();
@@ -207,12 +205,25 @@ MidiNetworkHost::Shutdown()
 
     // TODO: send "bye" to all sessions, and then unbind the socket
 
-    // TODO: Stop packet processing thread
+    // TODO: Stop packet processing thread using the jthread stop token
+    m_keepProcessing = false;
+
+    if (m_socket)
+    {
+        m_socket.MessageReceived(m_messageReceivedEventToken);
+        m_socket.Close();
+        m_socket = nullptr;
+    }
 
 
-
-    m_socket.Close();
-
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }

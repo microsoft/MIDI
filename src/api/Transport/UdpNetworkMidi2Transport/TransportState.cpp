@@ -52,6 +52,17 @@ TransportState::AddHost(std::shared_ptr<MidiNetworkHost> host)
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+TransportState::AddPendingHostDefinition(std::shared_ptr<MidiNetworkHostDefinition> hostDefinition)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, hostDefinition);
+
+    m_pendingHostDefinitions.push_back(hostDefinition);
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT
@@ -85,6 +96,10 @@ TransportState::RemoveSessionConnection(_In_ std::wstring endpointDeviceInterfac
     if (m_sessionConnections.find(cleanId) != m_sessionConnections.end())
     {
         m_sessionConnections.erase(cleanId);
+    }
+    else
+    {
+        RETURN_IF_FAILED(E_NOTFOUND);
     }
 
     return S_OK;

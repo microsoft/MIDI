@@ -64,6 +64,10 @@ public:
     HRESULT AddHost(_In_ std::shared_ptr<MidiNetworkHost>);
     std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts() { return m_hosts; }
 
+    HRESULT AddPendingHostDefinition(_In_ std::shared_ptr<MidiNetworkHostDefinition>);
+    std::vector<std::shared_ptr<MidiNetworkHostDefinition>> GetPendingHostDefinitions() { return m_pendingHostDefinitions; }
+
+
     HRESULT AddPendingClientDefinition(_In_ std::shared_ptr<MidiNetworkClientDefinition>);
     std::vector<std::shared_ptr<MidiNetworkClientDefinition>> GetPendingClientDefinitions() { return m_pendingClientDefinitions; }
 
@@ -83,6 +87,8 @@ private:
 
     // key is the host identifier
     std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
+
+    std::vector<std::shared_ptr<MidiNetworkHostDefinition>> m_pendingHostDefinitions{ };
     std::vector<std::shared_ptr<MidiNetworkClientDefinition>> m_pendingClientDefinitions{ };
 
     std::map<std::wstring, std::shared_ptr<MidiNetworkConnection>> m_sessionConnections{ };

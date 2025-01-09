@@ -68,6 +68,9 @@ private:
 
     inline void WritePaddedString(_In_ std::string s, _In_ size_t maxByteCount)
     {
+        // don't lock here. Calling method will lock
+        //auto lock = m_dataWriterLock.lock();
+
         size_t count{ 0 };
 
         for (auto const& ch : s)
@@ -121,5 +124,6 @@ private:
     winrt::Windows::Storage::Streams::IOutputStream m_stream{ nullptr };
     winrt::Windows::Storage::Streams::DataWriter m_dataWriter{ nullptr };
 
-
+    // data writer doesn't support concurrent writes and will throw exceptions if you try
+    wil::critical_section m_dataWriterLock;
 };

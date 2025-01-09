@@ -36,6 +36,8 @@ enum MidiNetworkHostProtocol
 
 struct MidiNetworkHostDefinition
 {
+    bool Created{ false };
+
     winrt::hstring EntryIdentifier;         // internal 
 
     bool UseAutomaticPortAllocation{ true };
@@ -95,7 +97,8 @@ private:
 //    std::queue<MidiNetworkOutOfBandIncomingCommandPacket> m_incomingOutOfBandCommands;
 //    std::queue<MidiNetworkOutOfBandOutgoingCommandPacket> m_outgoingOutOfBandCommands;
 
-    winrt::impl::consume_Windows_Networking_Sockets_IDatagramSocket<IDatagramSocket>::MessageReceived_revoker m_messageReceivedRevoker;
+    winrt::event_token m_messageReceivedEventToken;
+
     void OnMessageReceived(
         _In_ DatagramSocket const& sender,
         _In_ DatagramSocketMessageReceivedEventArgs const& args);

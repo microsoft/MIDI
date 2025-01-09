@@ -31,6 +31,6 @@ public:
     HRESULT Shutdown();
 
 private:
-
+    winrt::Windows::Networking::ServiceDiscovery::Dnssd::DnssdServiceInstance m_serviceInstance{ nullptr };
 
 };

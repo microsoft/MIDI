@@ -7,7 +7,7 @@
 #endif
 
 #include <windows.h>
-
+#include <mmdeviceapi.h>        // mostly for E_NOTFOUND
 #include <hstring.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
@@ -110,6 +110,7 @@ class MidiNetworkHost;
 class MidiNetworkClient;
 class MidiNetworkConnection;
 struct MidiNetworkClientDefinition;
+struct MidiNetworkHostDefinition;
 
 
 //#include "MidiNetworkEndpointDefinition.h"

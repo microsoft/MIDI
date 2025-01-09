@@ -145,19 +145,20 @@ CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatche
 
 _Use_decl_annotations_
 HRESULT
-CMidi2NetworkMidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& args)
+CMidi2NetworkMidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& /*args*/)
 {
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(args.Id().c_str(), "id")
-    );
+    //TraceLoggingWrite(
+    //    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingWideString(args.Id().c_str(), "id")
+    //);
 
-    // nothing to do here. We don't care about updates.
+    // nothing to do here. We don't care about updates. This gets really spammy because
+    // the endpoint updates maybe with each mdns ad broadcast or something
 
     return S_OK;
 }
@@ -232,17 +233,28 @@ CMidi2NetworkMidiEndpointManager::StartBackgroundEndpointCreator()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    std::jthread workerThread(&CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker, this);
+    std::jthread workerThread(std::bind_front(&CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker, this));
 
     m_backgroundEndpointCreatorThread = std::move(workerThread);
-    m_backgroundEndpointCreatorThreadStopToken = m_backgroundEndpointCreatorThread.get_stop_token();
+    //m_backgroundEndpointCreatorThreadStopToken = m_backgroundEndpointCreatorThread.get_stop_token();
     m_backgroundEndpointCreatorThread.detach();
+
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
 
+_Use_decl_annotations_
 HRESULT
-CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker()
+CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToken)
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -253,12 +265,24 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+//    winrt::init_apartment();
+    //auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
     // this is set up to run through one time before waiting for the wakeup
     // this way we can process anything added before the EndpointManager has been
     // initialized
 
-    while (!m_backgroundEndpointCreatorThreadStopToken.stop_requested())
+    while (!stopToken.stop_requested())
     {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Background worker loop", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         if (m_backgroundEndpointCreatorThreadWakeup.is_signaled())
         {
             m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
@@ -266,11 +290,36 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker()
 
         // run through host entries
 
-        for (auto const& host : TransportState::Current().GetHosts())
+        for (auto& definition : TransportState::Current().GetPendingHostDefinitions())
         {
-            if (!host->HasStarted())
+            if (definition->Created)
             {
-                LOG_IF_FAILED(host->Start());
+                continue;
+            }
+
+            if (!definition->Enabled)
+            {
+                continue;
+            }
+
+            auto host = std::make_shared<MidiNetworkHost>();
+            LOG_IF_NULL_ALLOC(host);
+
+            if (host != nullptr)
+            {
+                LOG_IF_FAILED(host->Initialize(*definition));
+
+                if (!host->HasStarted())
+                {
+                    LOG_IF_FAILED(host->Start());
+                }
+
+                // Remove pending entry
+
+                definition->Created = true;
+
+                // this ensures the host doesn't disappear
+                TransportState::Current().AddHost(host);
             }
         }
 
@@ -292,6 +341,15 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker()
         // TODO: wait for notification of new hosts online or new entries added via config
         m_backgroundEndpointCreatorThreadWakeup.wait(10000);
     }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
@@ -549,9 +607,10 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
     commonProperties.Capabilities = (MidiEndpointCapabilities)capabilities;
 
+    bool umpOnly = false;
     RETURN_IF_FAILED(m_midiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
-        false,                                                  // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
+        umpOnly,                                                // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)0, //interfaceDeviceProperties.size(),
