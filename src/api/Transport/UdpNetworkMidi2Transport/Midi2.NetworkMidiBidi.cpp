@@ -45,7 +45,7 @@ CMidi2NetworkMidiBiDi::Initialize(
     m_connection = TransportState::Current().GetSessionConnection(m_endpointDeviceInterfaceId);
     RETURN_HR_IF_NULL(E_INVALIDARG, m_connection);
 
-    m_connection->SetMidiCallback(this);
+    RETURN_IF_FAILED(m_connection->SetMidiCallback(this));
 
     return S_OK;
 }
@@ -62,15 +62,17 @@ CMidi2NetworkMidiBiDi::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_callback = nullptr;
-    m_context = 0;
-
-    if (m_connection)
-    {
-        m_connection->RemoveMidiCallback();
-        m_connection.reset();
-    }
+    // TODO: This causes the service to crash. Need to look into this further.
     
+
+    //if (m_connection)
+    //{
+    //    m_connection->RemoveMidiCallback();
+    //    m_connection = nullptr;
+    //}
+    //
+    //m_callback = nullptr;
+    //m_context = 0;
 
     return S_OK;
 }
@@ -86,7 +88,6 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
     UNREFERENCED_PARAMETER(position);
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_connection);
-
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 

@@ -92,7 +92,7 @@ MidiNetworkDataWriter::Initialize(
 
     winrt::Windows::Storage::Streams::DataWriter writer(m_stream);
 
-    m_dataWriter = std::move(writer);
+    m_dataWriter = writer;
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
 
     m_dataWriter.ByteOrder(winrt::Windows::Storage::Streams::ByteOrder::BigEndian);

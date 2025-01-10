@@ -132,11 +132,21 @@ void MidiNetworkHost::OnMessageReceived(
     DatagramSocket const& sender,
     DatagramSocketMessageReceivedEventArgs const& args)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+
     UNREFERENCED_PARAMETER(sender);
 
     auto reader = args.GetDataReader();
 
-    if (reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
+    if (reader != nullptr && reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
     {
         // not a message we understand. Needs to be at least the size of the 
         // MIDI header plus a command packet header. Really it needs to be larger, but
@@ -183,6 +193,16 @@ void MidiNetworkHost::OnMessageReceived(
         );
     }
 
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
 }
 
 
@@ -215,6 +235,13 @@ MidiNetworkHost::Shutdown()
         m_socket = nullptr;
     }
 
+    while (m_connections.size() > 0)
+    {
+        auto conn = m_connections.begin();
+        LOG_IF_FAILED(conn->second->Shutdown());
+
+        m_connections.erase(conn);
+    }
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),

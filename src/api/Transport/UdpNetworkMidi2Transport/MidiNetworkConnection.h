@@ -50,7 +50,7 @@ public:
 
 
     HRESULT SetMidiCallback(
-        _In_ IMidiCallback* callback
+        _In_ wil::com_ptr_nothrow<IMidiCallback> callback
     );
 
     HRESULT RemoveMidiCallback();
@@ -75,7 +75,7 @@ private:
     std::wstring m_sessionEndpointDeviceInterfaceId{};  // swd
     std::wstring m_sessionDeviceInstanceId{};           // what we used to create/delete the device
     bool m_sessionActive{ false };
-    IMidiCallback* m_callback{ nullptr };
+    wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
 
     winrt::Windows::Networking::HostName m_remoteHostName{ nullptr };
     std::wstring m_remotePort{ };

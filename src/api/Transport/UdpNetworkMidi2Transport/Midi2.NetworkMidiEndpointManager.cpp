@@ -607,7 +607,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
     commonProperties.Capabilities = (MidiEndpointCapabilities)capabilities;
 
-    bool umpOnly = false;
+    bool umpOnly = true;
     RETURN_IF_FAILED(m_midiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         umpOnly,                                                // UMP-only. When set to false, WinMM MIDI 1.0 ports are created

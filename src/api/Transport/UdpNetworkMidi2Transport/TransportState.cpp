@@ -95,6 +95,7 @@ TransportState::RemoveSessionConnection(_In_ std::wstring endpointDeviceInterfac
 
     if (m_sessionConnections.find(cleanId) != m_sessionConnections.end())
     {
+//        m_sessionConnections.find(cleanId)->second.reset();
         m_sessionConnections.erase(cleanId);
     }
     else

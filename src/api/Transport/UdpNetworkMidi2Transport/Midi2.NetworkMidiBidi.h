@@ -22,7 +22,7 @@ public:
     STDMETHOD(Shutdown)();
 
 private:
-    IMidiCallback* m_callback{ nullptr };
+    wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
     LONGLONG m_context{ 0 };
 
     std::wstring m_endpointDeviceInterfaceId{ };
