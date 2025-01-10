@@ -22,7 +22,6 @@ TransportState& TransportState::Current()
 }
 
 
-
 HRESULT
 TransportState::ConstructEndpointManager()
 {
@@ -30,7 +29,6 @@ TransportState::ConstructEndpointManager()
 
     return S_OK;
 }
-
 
 HRESULT
 TransportState::ConstructConfigurationManager()
@@ -41,9 +39,12 @@ TransportState::ConstructConfigurationManager()
 }
 
 
+
+
 _Use_decl_annotations_
 HRESULT 
-TransportState::AddHost(std::shared_ptr<MidiNetworkHost> host)
+TransportState::AddHost(
+    std::shared_ptr<MidiNetworkHost> host)
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, host);
 
@@ -54,7 +55,8 @@ TransportState::AddHost(std::shared_ptr<MidiNetworkHost> host)
 
 _Use_decl_annotations_
 HRESULT
-TransportState::AddPendingHostDefinition(std::shared_ptr<MidiNetworkHostDefinition> hostDefinition)
+TransportState::AddPendingHostDefinition(
+    std::shared_ptr<MidiNetworkHostDefinition> hostDefinition)
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, hostDefinition);
 
@@ -66,7 +68,8 @@ TransportState::AddPendingHostDefinition(std::shared_ptr<MidiNetworkHostDefiniti
 
 _Use_decl_annotations_
 HRESULT
-TransportState::AddPendingClientDefinition(std::shared_ptr<MidiNetworkClientDefinition> clientDefinition)
+TransportState::AddPendingClientDefinition(
+    std::shared_ptr<MidiNetworkClientDefinition> clientDefinition)
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, clientDefinition);
 
@@ -76,26 +79,45 @@ TransportState::AddPendingClientDefinition(std::shared_ptr<MidiNetworkClientDefi
 }
 
 
+
 _Use_decl_annotations_
 HRESULT
-TransportState::AddSessionConnection(_In_ std::wstring endpointDeviceInterfaceId, std::shared_ptr<MidiNetworkConnection> connection)
+TransportState::AssociateMidiEndpointWithConnection(
+    _In_ std::wstring endpointDeviceInterfaceId,
+    _In_ winrt::Windows::Networking::HostName const& remoteHostName,
+    _In_ winrt::hstring const& remotePort)
 {
     auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
-    m_sessionConnections.insert_or_assign(cleanId, connection);
+    // find the connection and then associate it here
 
-    return S_OK;
+    auto connection = GetNetworkConnection(remoteHostName, remotePort);
+
+    if (connection != nullptr)
+    {
+        m_sessionConnections.insert_or_assign(cleanId, connection);
+
+        return S_OK;
+    }
+    else
+    {
+        return E_FAIL;
+    }
+
 }
 
 _Use_decl_annotations_
 HRESULT
-TransportState::RemoveSessionConnection(_In_ std::wstring endpointDeviceInterfaceId)
+TransportState::DisassociateMidiEndpointFromConnection(
+    std::wstring endpointDeviceInterfaceId)
 {
+    RETURN_HR_IF(E_INVALIDARG, endpointDeviceInterfaceId.empty());
     auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
+    RETURN_HR_IF(E_INVALIDARG, cleanId.empty());
 
     if (m_sessionConnections.find(cleanId) != m_sessionConnections.end())
     {
-//        m_sessionConnections.find(cleanId)->second.reset();
+        //m_sessionConnections.find(cleanId)->second.reset();
         m_sessionConnections.erase(cleanId);
     }
     else
@@ -107,7 +129,8 @@ TransportState::RemoveSessionConnection(_In_ std::wstring endpointDeviceInterfac
 }
 
 _Use_decl_annotations_
-std::shared_ptr<MidiNetworkConnection> TransportState::GetSessionConnection(_In_ std::wstring endpointDeviceInterfaceId)
+std::shared_ptr<MidiNetworkConnection> 
+TransportState::GetSessionConnection(_In_ std::wstring endpointDeviceInterfaceId)
 {
     auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
 
@@ -119,3 +142,68 @@ std::shared_ptr<MidiNetworkConnection> TransportState::GetSessionConnection(_In_
     return nullptr;
 }
 
+
+
+
+
+_Use_decl_annotations_
+bool 
+TransportState::NetworkConnectionExists(
+    winrt::Windows::Networking::HostName const& remoteHostName, 
+    winrt::hstring const& port)
+{
+    auto key = CreateNetworkConnectionMapKey(remoteHostName, port);
+
+    return m_networkConnections.find(key) != m_networkConnections.end();
+}
+
+
+_Use_decl_annotations_
+HRESULT 
+TransportState::RemoveNetworkConnection(
+    winrt::Windows::Networking::HostName const& remoteHostName, 
+    winrt::hstring const& remotePort)
+{
+    if (NetworkConnectionExists(remoteHostName, remotePort))
+    {
+        auto entry = m_networkConnections.find(CreateNetworkConnectionMapKey(remoteHostName, remotePort));
+
+        LOG_IF_FAILED(entry->second->Shutdown());
+
+        m_networkConnections.erase(CreateNetworkConnectionMapKey(remoteHostName, remotePort));
+    }
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+std::shared_ptr<MidiNetworkConnection> 
+TransportState::GetNetworkConnection(
+    winrt::Windows::Networking::HostName const& remoteHostName, 
+    winrt::hstring const& remotePort)
+{
+    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
+
+    if (NetworkConnectionExists(remoteHostName, remotePort))
+    {
+        return m_networkConnections.find(key)->second;
+    }
+
+    return nullptr;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+TransportState::AddNetworkConnection(
+    winrt::Windows::Networking::HostName const& remoteHostName,
+    winrt::hstring const& remotePort, 
+    std::shared_ptr<MidiNetworkConnection> connection
+)
+{
+    auto key = CreateNetworkConnectionMapKey(remoteHostName, remotePort);
+
+    m_networkConnections.insert_or_assign(key, connection);
+
+    return S_OK;
+}

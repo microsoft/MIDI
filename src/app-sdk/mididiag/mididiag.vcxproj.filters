@@ -21,6 +21,9 @@
     <ClInclude Include="mididiag_field_defs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="color.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

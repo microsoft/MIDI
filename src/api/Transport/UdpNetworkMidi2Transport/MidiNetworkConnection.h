@@ -49,11 +49,11 @@ public:
         _In_ UINT const byteCount);
 
 
-    HRESULT SetMidiCallback(
+    HRESULT ConnectMidiCallback(
         _In_ wil::com_ptr_nothrow<IMidiCallback> callback
     );
 
-    HRESULT RemoveMidiCallback();
+    HRESULT DisconnectMidiCallback();
 
     // todo: session info, connection to bidi streams, etc.
 
@@ -61,8 +61,12 @@ private:
 
     HRESULT StartOutboundProcessingThreads();
 
+    HRESULT ResetSequenceNumbers();
+    HRESULT EndActiveSession();
 
 
+    uint32_t m_emptyUmpIterationCounter{ 0 };                   // this will increment over time
+    uint32_t m_emptyUmpIterationIntervalBeforeSending{ 10 };    // number of background thread iterations with no data before we send empty UMP packets. This changes over time.
 
     MidiNetworkConnectionRole m_role{};
 

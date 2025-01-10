@@ -167,6 +167,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="color.hpp" />
     <ClInclude Include="mididiag_field_defs.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

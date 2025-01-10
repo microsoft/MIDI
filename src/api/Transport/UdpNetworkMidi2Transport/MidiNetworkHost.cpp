@@ -73,6 +73,35 @@ MidiNetworkHost::Initialize(
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHost::CreateNetworkConnection(HostName const& remoteHostName, winrt::hstring const& remotePort)
+{
+    auto conn = std::make_shared<MidiNetworkConnection>();
+
+    if (conn)
+    {
+        RETURN_IF_FAILED(conn->Initialize(
+            MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+            m_socket,
+            remoteHostName,
+            remotePort,
+            m_hostEndpointName,
+            m_hostProductInstanceId,
+            TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
+            TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount
+        ));
+
+        TransportState::Current().AddNetworkConnection(remoteHostName, remotePort, conn);
+    }
+    else
+    {
+        // could not create the connection object.
+    }
+
+    return S_OK;
+}
+
 HRESULT
 MidiNetworkHost::Start()
 {
@@ -175,7 +204,14 @@ void MidiNetworkHost::OnMessageReceived(
         return;
     }
 
-    auto conn = GetOrCreateConnection(args.RemoteAddress(), args.RemotePort());
+    std::shared_ptr<MidiNetworkConnection> conn{ nullptr };
+
+    if (!TransportState::Current().NetworkConnectionExists(args.RemoteAddress(), args.RemotePort()))
+    {
+        LOG_IF_FAILED(CreateNetworkConnection(args.RemoteAddress(), args.RemotePort()));
+    }
+
+    conn = TransportState::Current().GetNetworkConnection(args.RemoteAddress(), args.RemotePort());
 
     if (conn)
     {
@@ -224,6 +260,8 @@ MidiNetworkHost::Shutdown()
     }
 
     // TODO: send "bye" to all sessions, and then unbind the socket
+    // but we need to restrict to this host, not every host/client
+
 
     // TODO: Stop packet processing thread using the jthread stop token
     m_keepProcessing = false;
@@ -235,13 +273,13 @@ MidiNetworkHost::Shutdown()
         m_socket = nullptr;
     }
 
-    while (m_connections.size() > 0)
-    {
-        auto conn = m_connections.begin();
-        LOG_IF_FAILED(conn->second->Shutdown());
+    //while (m_connections.size() > 0)
+    //{
+    //    auto conn = m_connections.begin();
+    //    LOG_IF_FAILED(conn->second->Shutdown());
 
-        m_connections.erase(conn);
-    }
+    //    m_connections.erase(conn);
+    //}
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -254,3 +292,7 @@ MidiNetworkHost::Shutdown()
 
     return S_OK;
 }
+
+
+
+

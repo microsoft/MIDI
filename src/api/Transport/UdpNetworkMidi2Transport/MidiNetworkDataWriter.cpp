@@ -95,6 +95,7 @@ MidiNetworkDataWriter::Initialize(
     m_dataWriter = writer;
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
 
+    // per Network MIDI 2.0 specification
     m_dataWriter.ByteOrder(winrt::Windows::Storage::Streams::ByteOrder::BigEndian);
 
     return S_OK;
@@ -112,7 +113,6 @@ MidiNetworkDataWriter::WriteCommandPing(uint32_t pingId)
     auto lock = m_dataWriterLock.lock();
 
     RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_Ping, payloadLengthIn32BitWords, 0));
-
     m_dataWriter.WriteUInt32(pingId);
 
     return S_OK;
@@ -130,7 +130,6 @@ MidiNetworkDataWriter::WriteCommandPingReply(uint32_t pingId)
     auto lock = m_dataWriterLock.lock();
 
     RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_PingReply, payloadLengthIn32BitWords, 0));
-
     m_dataWriter.WriteUInt32(pingId);
 
     return S_OK;
@@ -244,6 +243,8 @@ MidiNetworkDataWriter::WriteCommandSessionResetReply()
     return S_OK;
 }
 
+#define MIDI_NETWORK_RESERVED_UINT16 ((uint16_t)0)
+
 _Use_decl_annotations_
 HRESULT
 MidiNetworkDataWriter::WriteCommandRetransmitRequest(
@@ -261,7 +262,7 @@ MidiNetworkDataWriter::WriteCommandRetransmitRequest(
     RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitRequest, payloadLengthIn32BitWords, sequenceNumber.Value()));
 
     m_dataWriter.WriteUInt16(numberOfUmpCommands);
-    m_dataWriter.WriteUInt16(0);
+    m_dataWriter.WriteUInt16(MIDI_NETWORK_RESERVED_UINT16);
 
     return S_OK;
 }
@@ -284,7 +285,7 @@ MidiNetworkDataWriter::WriteCommandRetransmitError(
     RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitError, payloadLengthIn32BitWords, errorReason, 0));
 
     m_dataWriter.WriteUInt16(sequenceNumber.Value());
-    m_dataWriter.WriteUInt16(0);
+    m_dataWriter.WriteUInt16(MIDI_NETWORK_RESERVED_UINT16);
 
     return S_OK;
 }
@@ -338,6 +339,7 @@ MidiNetworkDataWriter::WriteCommandInvitationWithAuthentication(
 
     auto lock = m_dataWriterLock.lock();
 
+    // todo: we should NAK this for now
 
     return E_NOTIMPL;
 }
@@ -359,6 +361,7 @@ MidiNetworkDataWriter::WriteCommandInvitationWithUserAuthentication(
 
     auto lock = m_dataWriterLock.lock();
 
+    // TODO: we should NAK this for now
 
     return E_NOTIMPL;
 }
@@ -372,6 +375,9 @@ MidiNetworkDataWriter::WriteCommandInvitationReplyAccepted(
 {
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    RETURN_HR_IF(E_INVALIDARG, hostUmpEndpointName.empty());
+    RETURN_HR_IF(E_INVALIDARG, hostProductInstanceId.empty());
 
     byte payloadLengthIn32BitWords{ 0 };
 
@@ -409,6 +415,7 @@ MidiNetworkDataWriter::WriteCommandInvitationReplyPending(
 
     auto lock = m_dataWriterLock.lock();
 
+    // TODO
 
     return E_NOTIMPL;
 }
@@ -433,6 +440,7 @@ MidiNetworkDataWriter::WriteCommandInvitationReplyAuthenticationRequired(
 
     auto lock = m_dataWriterLock.lock();
 
+    // TODO
 
     return E_NOTIMPL;
 }
@@ -457,6 +465,7 @@ MidiNetworkDataWriter::WriteCommandInvitationReplyUserAuthenticationRequired(
 
     auto lock = m_dataWriterLock.lock();
 
+    // TODO
 
     return E_NOTIMPL;
 }
