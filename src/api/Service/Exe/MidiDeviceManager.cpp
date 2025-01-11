@@ -2259,20 +2259,20 @@ CMidiDeviceManager::UseFallbackMidi1PortDefinition(
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlocksAreStatic));
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlocksAreStatic));
-    if (prop)
-    {
-        auto functionBlocksAreStatic = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<bool>>(prop);
-        if (functionBlocksAreStatic)
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Using static function blocks", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
+    //auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlocksAreStatic));
+    //if (prop)
+    //{
+        //auto functionBlocksAreStatic = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<bool>>(prop);
+        //if (functionBlocksAreStatic)
+        //{
+        //    TraceLoggingWrite(
+        //        MidiSrvTelemetryProvider::Provider(),
+        //        MIDI_TRACE_EVENT_INFO,
+        //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        //        TraceLoggingPointer(this, "this"),
+        //        TraceLoggingWideString(L"Using static function blocks", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        //    );
 
             for (UINT flow = 0; flow < 2; flow++)
             {
@@ -2284,8 +2284,8 @@ CMidiDeviceManager::UseFallbackMidi1PortDefinition(
                     portInfo[flow][groupIndex].InterfaceId = umpDeviceInterfaceId;
                 }
             }
-        }
-    }
+        //}
+    //}
 
     return S_OK;
 }
