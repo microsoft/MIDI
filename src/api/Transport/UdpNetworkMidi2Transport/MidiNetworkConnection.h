@@ -64,7 +64,7 @@ private:
     HRESULT StartOutboundProcessingThreads();
 
     HRESULT ResetSequenceNumbers();
-    HRESULT EndActiveSession();
+    HRESULT EndActiveSession(_In_ bool respondWithByeReply);
 
     HRESULT RequestMissingPackets();
 
