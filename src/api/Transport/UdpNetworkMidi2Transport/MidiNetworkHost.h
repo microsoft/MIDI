@@ -50,6 +50,8 @@ struct MidiNetworkHostDefinition
     bool Enabled{ true };
     bool Advertise{ true };
 
+    bool CreateMidi1Ports{ MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT };
+
     // connection rules
     MidiNetworkHostConnectionPolicy ConnectionPolicy{ MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections };
 
@@ -84,6 +86,7 @@ public:
 
 private:
     bool m_started{ false };
+    bool m_createUmpEndpointsOnly{ true };
 
     std::wstring m_hostEndpointName{ };
     std::wstring m_hostProductInstanceId{ };

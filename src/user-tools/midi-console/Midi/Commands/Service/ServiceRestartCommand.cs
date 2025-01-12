@@ -51,7 +51,7 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 if (controller.Status == ServiceControllerStatus.Running)
                 {
-                    AnsiConsole.Write("Stopping service..");
+                    AnsiConsole.Write("Attempting to stop service..");
 
                     MidiServiceHelper.StopServiceWithConsoleStatusUpdate(controller);
                 }
@@ -64,14 +64,14 @@ namespace Microsoft.Midi.ConsoleApp
 
                 if (controller.Status == ServiceControllerStatus.Stopped)
                 {
-                    AnsiConsole.Write("Restarting service..");
+                    AnsiConsole.Write("Attempting to restart service..");
 
                     MidiServiceHelper.StartServiceWithConsoleStatusUpdate(controller);
                 }
 
                 if (controller.Status != ServiceControllerStatus.Running)
                 {
-                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to restart service. Service is not currently running. It may be locked in a tight loop due to an error."));
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to restart service. Service is not currently running."));
                     return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
                 }
 
@@ -81,7 +81,7 @@ namespace Microsoft.Midi.ConsoleApp
             }
             catch (Exception)
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to restart service."));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to restart service. It may be locked in a tight loop due to an error. Consider killing the midisrv.exe process, or rebooting."));
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
 

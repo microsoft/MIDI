@@ -69,6 +69,9 @@ public:
         _In_ std::shared_ptr<MidiNetworkHostDefinition>);
     std::vector<std::shared_ptr<MidiNetworkHostDefinition>> GetPendingHostDefinitions() { return m_pendingHostDefinitions; }
 
+    HRESULT AddClient(
+        _In_ std::shared_ptr<MidiNetworkClient>);
+    std::vector<std::shared_ptr<MidiNetworkClient>> GetClients() { return m_clients; }
 
     HRESULT AddPendingClientDefinition(
         _In_ std::shared_ptr<MidiNetworkClientDefinition>);
@@ -116,8 +119,8 @@ private:
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> m_endpointManager;
     wil::com_ptr<CMidi2NetworkMidiConfigurationManager> m_configurationManager;
 
-    // key is the host identifier
     std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
+    std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };
 
     std::vector<std::shared_ptr<MidiNetworkHostDefinition>> m_pendingHostDefinitions{ };
     std::vector<std::shared_ptr<MidiNetworkClientDefinition>> m_pendingClientDefinitions{ };

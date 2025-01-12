@@ -316,6 +316,8 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 definition->Enabled = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
                 definition->Advertise = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
 
+                definition->CreateMidi1Ports = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
+
                 definition->UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
                 definition->ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
 
@@ -449,7 +451,81 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         // device (or application)
         if (clientsSection != nullptr && clientsSection.Size() > 0)
         {
+            for (auto const& it = clientsSection.First(); it.HasCurrent(); it.MoveNext())
+            {
+                auto clientEntry = clientsSection.GetNamedObject(it.Current().Key());
 
+                auto definition = std::make_shared<MidiNetworkClientDefinition>();
+                RETURN_IF_NULL_ALLOC(definition);
+
+                winrt::hstring validationErrorMessage{ };
+
+                // currently, UDP is the only allowed protocol
+                auto protocol = internal::ToLowerTrimmedHStringCopy(clientEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
+
+                if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
+                {
+                    validationErrorMessage = L"Invalid network protocol '" + protocol + L"' specified.";
+                }
+                else
+                {
+                    definition->EntryIdentifier = internal::TrimmedHStringCopy(it.Current().Key());
+                    definition->Enabled = clientEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
+
+                    winrt::hstring localEndpointName{ };
+                    winrt::hstring localProductInstanceId{ };
+
+                    // TODO: Add ability for config file to specify the localEndpointName and localProductInstanceId
+                    if (localEndpointName.empty())
+                    {
+                        std::wstring buffer{};
+                        DWORD bufferSize = MAX_COMPUTERNAME_LENGTH + 1;
+                        buffer.resize(bufferSize);
+
+                        bool validName = GetComputerName(buffer.data(), &bufferSize);
+                        if (validName)
+                        {
+                            localEndpointName = buffer;
+                        }
+                    }
+
+                    // TODO: we may want to provide the local product instance id as a system-wide setting. Same with name
+                    if (localProductInstanceId.empty())
+                    {
+                        localProductInstanceId = L"8675309-OU812";
+                    }
+
+                    definition->LocalEndpointName = localEndpointName;
+                    definition->LocalProductInstanceId = localProductInstanceId;
+
+                    auto matchSection = clientEntry.GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY, nullptr);
+
+                    if (matchSection)
+                    {
+                        // TODO: Match on IP/Port, etc.
+                        // for the moment, we only match on the actual device id, so must be mdns-advertised
+
+                        definition->MatchId = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID_KEY, L""));
+
+
+
+
+
+
+                        TransportState::Current().AddPendingClientDefinition(definition);
+
+                        responseObject.SetNamedValue(
+                            MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
+                            jsonTrue);
+                    }
+                    else
+                    {
+                        // we have no way to match against endpoints, so this is a failure
+                        validationErrorMessage = L"Missing match entry";
+                    }
+                }
+
+            }
         }
 
     }

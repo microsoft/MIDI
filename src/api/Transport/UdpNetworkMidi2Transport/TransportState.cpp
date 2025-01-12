@@ -65,6 +65,18 @@ TransportState::AddPendingHostDefinition(
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+TransportState::AddClient(
+    std::shared_ptr<MidiNetworkClient> client)
+{
+    RETURN_HR_IF_NULL(E_INVALIDARG, client);
+
+    m_clients.push_back(client);
+
+    return S_OK;
+}
+
 
 _Use_decl_annotations_
 HRESULT

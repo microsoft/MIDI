@@ -28,6 +28,7 @@ public:
         _In_ std::wstring const& remoteEndpointProductInstanceId,
         _In_ winrt::Windows::Networking::HostName const& hostName,
         _In_ std::wstring const& networkPort,
+        _In_ bool umpOnly,
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));

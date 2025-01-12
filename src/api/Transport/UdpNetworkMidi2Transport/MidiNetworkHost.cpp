@@ -36,6 +36,8 @@ MidiNetworkHost::Initialize(
 
     m_started = false;
 
+    m_createUmpEndpointsOnly = !hostDefinition.CreateMidi1Ports;
+
     m_hostEndpointName = hostDefinition.UmpEndpointName;
     m_hostProductInstanceId = hostDefinition.ProductInstanceId;
 
@@ -89,7 +91,8 @@ MidiNetworkHost::CreateNetworkConnection(HostName const& remoteHostName, winrt::
             m_hostEndpointName,
             m_hostProductInstanceId,
             TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
-            TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount
+            TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount,
+            m_createUmpEndpointsOnly
         ));
 
         TransportState::Current().AddNetworkConnection(remoteHostName, remotePort, conn);
@@ -151,9 +154,6 @@ MidiNetworkHost::Start()
 
     return S_OK;
 }
-
-// header sized plus a command packet header
-#define MINIMUM_VALID_UDP_PACKET_SIZE (sizeof(uint32_t) * 2)
 
 // "message" here means UDP packet message, not a MIDI message
 _Use_decl_annotations_

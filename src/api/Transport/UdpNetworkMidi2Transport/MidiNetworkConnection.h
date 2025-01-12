@@ -32,7 +32,8 @@ public:
         _In_ std::wstring const& thisEndpointName,
         _In_ std::wstring const& thisProductInstanceId,
         _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
-        _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount
+        _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
+        _In_ bool createUmpEndpointsOnly
     );
 
     HRESULT Shutdown();
@@ -48,6 +49,7 @@ public:
         _In_ PVOID const bytes,
         _In_ UINT const byteCount);
 
+    HRESULT SendInvitation();
 
     HRESULT ConnectMidiCallback(
         _In_ wil::com_ptr_nothrow<IMidiCallback> callback
@@ -63,6 +65,10 @@ private:
 
     HRESULT ResetSequenceNumbers();
     HRESULT EndActiveSession();
+
+    HRESULT RequestMissingPackets();
+
+    bool m_createUmpEndpointsOnly{ true };
 
 
     uint32_t m_emptyUmpIterationCounter{ 0 };                   // this will increment over time
@@ -99,6 +105,11 @@ private:
         _In_ MidiNetworkCommandInvitationCapabilities const& capabilities,
         _In_ std::wstring const& clientUmpEndpointName,
         _In_ std::wstring const& clientProductInstanceId);
+
+    HRESULT HandleIncomingInvitationReplyAccepted(
+        _In_ MidiNetworkCommandPacketHeader const& header,
+        _In_ std::wstring const& remoteHostUmpEndpointName,
+        _In_ std::wstring const& remoteHostProductInstanceId);
 
     HRESULT HandleIncomingBye();
 

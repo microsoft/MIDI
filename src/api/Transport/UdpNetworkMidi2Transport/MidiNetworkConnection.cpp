@@ -29,7 +29,8 @@ MidiNetworkConnection::Initialize(
     std::wstring const& thisEndpointName,
     std::wstring const& thisProductInstanceId,
     uint16_t const retransmitBufferMaxCommandPacketCount,
-    uint8_t const maxForwardErrorCorrectionCommandPacketCount
+    uint8_t const maxForwardErrorCorrectionCommandPacketCount,
+    bool createUmpEndpointsOnly
 )
 {
     TraceLoggingWrite(
@@ -47,6 +48,8 @@ MidiNetworkConnection::Initialize(
 
     m_remoteHostName = hostName;
     m_remotePort = port;
+
+    m_createUmpEndpointsOnly = createUmpEndpointsOnly;
 
     m_thisEndpointName = thisEndpointName;
     m_thisProductInstanceId = thisProductInstanceId;
@@ -66,7 +69,7 @@ MidiNetworkConnection::Initialize(
         RETURN_IF_FAILED(E_OUTOFMEMORY);
     }
 
-    ResetSequenceNumbers();
+    RETURN_IF_FAILED(ResetSequenceNumbers());
 
     // create the data writer
     m_writer = std::make_shared<MidiNetworkDataWriter>();
@@ -305,6 +308,132 @@ MidiNetworkConnection::HandleIncomingBye()
     return S_OK;
 }
 
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
+    MidiNetworkCommandPacketHeader const& header,
+    std::wstring const& remoteHostUmpEndpointName,
+    std::wstring const& remoteHostProductInstanceId
+)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    if (m_role == MidiNetworkConnectionRole::ConnectionWindowsIsClient)
+    {
+        if (m_sessionActive)
+        {
+            // per protocol, if we've already accepted this, then just ignore it
+            return S_OK;
+        }
+
+        // TODO: will we accept a session invitation from the specified hostname?
+        // TODO: Also need to check auth mechanism and follow instructions in 6.4 and send a Bye if not supported
+
+        // todo: see if we already have a session active for this remote. If so, use it.
+        // otherwise, we need to spin up a new session
+
+        std::wstring newDeviceInstanceId{ };
+        std::wstring newEndpointDeviceInterfaceId{ };
+
+        if (TransportState::Current().GetEndpointManager()->IsInitialized())
+        {
+            // Create the endpoint for Windows MIDI Services clients
+            HRESULT hr = S_OK;
+
+            hr = TransportState::Current().GetEndpointManager()->CreateNewEndpoint(
+                MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+                remoteHostUmpEndpointName,
+                remoteHostProductInstanceId,
+                m_remoteHostName,
+                m_remotePort,
+                m_createUmpEndpointsOnly,
+                newDeviceInstanceId,
+                newEndpointDeviceInterfaceId
+            );
+
+            if (SUCCEEDED(hr))
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Created MIDI endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+
+                m_sessionEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newEndpointDeviceInterfaceId);
+                m_sessionDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
+
+                // this is what the BiDi uses when it is created
+                RETURN_IF_FAILED(TransportState::Current().AssociateMidiEndpointWithConnection(m_sessionEndpointDeviceInterfaceId.c_str(), m_remoteHostName, m_remotePort.c_str()));
+
+                // protocol negotiation needs to happen here, not in the endpoint creation
+                // because we need to wire up the connection first. Bit of a race.
+
+                LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->InitiateDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
+
+                m_sessionActive = true;
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Failed to create MIDI endpoint.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingHResult(hr, "hresult")
+                );
+
+                // let the other side know that we can't create the session
+
+                auto lock = m_socketWriterLock.lock();
+                RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+                // TODO: Move string to resources for localization
+                RETURN_IF_FAILED(m_writer->WriteCommandBye(MidiNetworkCommandByeReason::CommandByeReasonCommon_Undefined, L"Error attempting to create endpoint. Bad data?"));
+                RETURN_IF_FAILED(m_writer->Send());
+
+                // exit out of here, and log while we're at it
+                RETURN_IF_FAILED(hr);
+            }
+        }
+
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"We are not in the client role, but received an invitation accept. Not normal.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        // we are a host, not a client, so NAK this per spec 6.4
+        auto lock = m_socketWriterLock.lock();
+        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+
+        // TODO: Move string to resources for localization
+        RETURN_IF_FAILED(m_writer->WriteCommandNAK(header.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"Unexpected invitation accept sent to host."));
+        RETURN_IF_FAILED(m_writer->Send());
+    }
+
+
+
+    return S_OK;
+}
+
 _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::HandleIncomingInvitation(
@@ -366,6 +495,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
                 clientProductInstanceId,
                 m_remoteHostName,
                 m_remotePort,
+                m_createUmpEndpointsOnly,
                 newDeviceInstanceId,
                 newEndpointDeviceInterfaceId
             );
@@ -498,6 +628,23 @@ std::wstring MidiNetworkConnection::ReadUtf8String(
     return ws;
 }
 
+// TODO: This needs some checking. If we call this too many times, we
+// should close the connection. Also, if there's a retransmit request
+// already in progress, we shouldn't be asking for more if there's any
+// overlap at all.
+HRESULT
+MidiNetworkConnection::RequestMissingPackets()
+{
+    auto lock = m_socketWriterLock.lock();
+
+    // this requests all packets after the last one we received
+
+    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+    RETURN_IF_FAILED(m_writer->WriteCommandRetransmitRequest(m_lastReceivedUmpCommandSequenceNumber + 1, 0));
+    RETURN_IF_FAILED(m_writer->Send());
+
+    return S_OK;
+}
 
 _Use_decl_annotations_
 HRESULT
@@ -562,9 +709,11 @@ MidiNetworkConnection::ProcessIncomingMessage(
 
 
         case CommandClientToHost_InvitationWithAuthentication:
+            // TODO
             break;
 
         case CommandClientToHost_InvitationWithUserAuthentication:
+            // TODO
             break;
 
         case CommandCommon_UmpData:
@@ -578,51 +727,64 @@ MidiNetworkConnection::ProcessIncomingMessage(
 
             // TODO: a message can have zero MIDI words, but a valid sequence number. Need to handle that.
 
-
             if (sequenceNumber <= m_lastReceivedUmpCommandSequenceNumber)
             {
-                // Skip all words in this command message
-                for (uint8_t i = 0; i < numberOfWords && reader.UnconsumedBufferLength() >= sizeof(uint32_t); i++)
+                if (numberOfWords > 0)
                 {
-                    reader.ReadUInt32();
+                    // Skip all words in this command message because it is FEC.
+                    for (uint8_t i = 0; i < numberOfWords && reader.UnconsumedBufferLength() >= sizeof(uint32_t); i++)
+                    {
+                        reader.ReadUInt32();
+                    }
                 }
-
+                else
+                {
+                    // empty UMP message. This is fine
+                }
             }
             else if (sequenceNumber == m_lastReceivedUmpCommandSequenceNumber + 1)
             {
-                // Process UMP data because this is the next sequence number
+                // Process UMP data because this is the next expected sequence number
 
                 m_lastReceivedUmpCommandSequenceNumber = sequenceNumber;
 
-                for (uint8_t i = 0; i < numberOfWords; i++)
+                if (numberOfWords > 0)
                 {
-                    if (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
+                    for (uint8_t i = 0; i < numberOfWords; i++)
                     {
-                        // add to our vector
-                        words.push_back(reader.ReadUInt32());
-                    }
-                    else
-                    {
-                        // bad / incomplete packet
+                        if (reader.UnconsumedBufferLength() >= sizeof(uint32_t))
+                        {
+                            // add to our vector
+                            words.push_back(reader.ReadUInt32());
+                        }
+                        else
+                        {
+                            // bad / incomplete packet
 
-                        auto lock = m_socketWriterLock.lock();
-                        m_writer->WriteUdpPacketHeader();
-                        m_writer->WriteCommandNAK(commandHeader.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandMalformed, L"Packet data incomplete");
-                        m_writer->Send();
+                            auto lock = m_socketWriterLock.lock();
+                            RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+                            RETURN_IF_FAILED(m_writer->WriteCommandNAK(commandHeader.HeaderWord, MidiNetworkCommandNAKReason::CommandNAKReason_CommandMalformed, L"Packet data incomplete"));
+                            RETURN_IF_FAILED(m_writer->Send());
 
-                        // TODO: We should request a retransmit of this packet
+                            // TODO: We should request a retransmit of this packet
 
-                        RETURN_IF_FAILED(E_FAIL);
+                            RETURN_IF_FAILED(E_FAIL);
+                        }
                     }
                 }
-
+                else
+                {
+                    // empty UMP messages. That's fine.
+                }
             }
-            else
+            else if (sequenceNumber > m_lastReceivedUmpCommandSequenceNumber + 1)
             {
-                // TODO: We need to check this sequence number, and if there's any gap from the last received, 
-                // drop this data and request a retransmit
-
                 // skipped data. Re-request missing packets
+
+                // TODO: We should make sure we don't keep calling this for each
+                // UMP Data message within the same UDP packet.
+
+                RETURN_IF_FAILED(RequestMissingPackets());
             }
 
             if (words.size() > 0)
@@ -652,6 +814,31 @@ MidiNetworkConnection::ProcessIncomingMessage(
         case CommandCommon_SessionResetReply:
             // TODO: handle session reset
             break;
+
+        case CommandHostToClient_InvitationReplyAccepted:
+        {
+            uint16_t endpointNameLengthInBytes = commandHeader.HeaderData.CommandSpecificData.AsBytes.Byte1 * sizeof(uint32_t);
+            uint16_t productInstanceIdLengthInBytes = commandHeader.HeaderData.CommandPayloadLength * sizeof(uint32_t) - endpointNameLengthInBytes;
+
+            auto hostEndpointName = ReadUtf8String(reader, endpointNameLengthInBytes);
+            auto hostProductInstanceId = ReadUtf8String(reader, productInstanceIdLengthInBytes);
+
+            LOG_IF_FAILED(HandleIncomingInvitationReplyAccepted(commandHeader, hostEndpointName, hostProductInstanceId));
+        }
+            break;
+
+        case CommandHostToClient_InvitationReplyPending:
+            // TODO: not sure we need to do anything with this
+            break;
+
+        case CommandHostToClient_InvitationReplyAuthenticationRequired:
+            // TODO
+            break;
+
+        case CommandHostToClient_InvitationReplyUserAuthenticationRequired:
+            // TODO
+            break;
+
 
         default:
             // TODO: unexpected command code. Send NAK.
@@ -703,7 +890,6 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(uint16_t const startingSe
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_writer);
 
-    // TODO: A packet count of 0x0000 means to send all the data we have starting at the startingSequenceNumber
 
     // find the starting sequence number in the circular buffer
 
@@ -735,6 +921,8 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(uint16_t const startingSe
 
         auto endPacket = firstPacket + retransmitPacketCount;
 
+        // packet count of 0 means to send everything we've got
+
         if (retransmitPacketCount == 0x0000)
         {
             endPacket = m_retransmitBuffer.end();
@@ -749,6 +937,30 @@ MidiNetworkConnection::HandleIncomingRetransmitRequest(uint16_t const startingSe
 
         RETURN_IF_FAILED(m_writer->Send());
     }
+
+    return S_OK;
+}
+
+
+HRESULT
+MidiNetworkConnection::SendInvitation()
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    auto lock = m_socketWriterLock.lock();
+
+    // TODO: When we support security, need to update the capabilities
+
+    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+    RETURN_IF_FAILED(m_writer->WriteCommandInvitation(MidiNetworkCommandInvitationCapabilities::Capabilities_None, m_thisEndpointName, m_thisProductInstanceId));
+    RETURN_IF_FAILED(m_writer->Send());
 
     return S_OK;
 }
