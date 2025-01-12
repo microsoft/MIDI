@@ -80,6 +80,7 @@ enum MidiNetworkCommandRetransmitErrorReason : byte
 
 enum MidiNetworkCommandInvitationCapabilities : byte
 {
+    Capabilities_None = 0x00,
     Capabilities_ClientSupportsInvitationWithAuthentication = 0x01,
     Capabilities_ClientSupportsInvitationWithUserAuthentication = 0x02,
 };

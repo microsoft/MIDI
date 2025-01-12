@@ -1,41 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <WindowsPerformanceRecorder Version="1.0" Author="Microsoft Corporation" Copyright="Microsoft Corporation" Company="Microsoft Corporation">
   <Profiles>
-    <SystemCollector Id="SystemCollector" Name="System Collector">
-      <BufferSize Value="256" />
-      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="256" />
-    </SystemCollector>    
+
     <EventCollector Id="EventCollector_MidiSrvSimple" Name="Windows MIDI Services Events">
       <BufferSize Value="256" />
       <Buffers Value="64" />
     </EventCollector>
-    <SystemProvider Id="SystemProvider">
-      <Keywords>
-        <Keyword Value="CpuConfig" />
-        <Keyword Value="CSwitch" />
-        <Keyword Value="DiskIO" />
-        <Keyword Value="DPC" />
-        <Keyword Value="HardFaults" />
-        <Keyword Value="Interrupt" />
-        <Keyword Value="KernelQueue" />
-        <Keyword Value="Loader" />
-        <Keyword Value="Power" />
-        <Keyword Value="ProcessThread" />
-        <Keyword Value="ReadyThread" />
-        <Keyword Value="SampledProfile" />
-        <Keyword Value="WDFDPC" />
-        <Keyword Value="WDFInterrupt" />
-      </Keywords>
-      <Stacks>
-        <Stack Value="CSwitch" />
-        <Stack Value="ProcessCreate" />
-        <Stack Value="ProcessDelete" />
-        <Stack Value="ReadyThread" />
-        <Stack Value="SampledProfile" />
-        <Stack Value="ThreadCreate" />
-        <Stack Value="ThreadDelete" />
-      </Stacks>
-    </SystemProvider>
+
 
     <EventProvider Id="EventProvider_MidiSrv" Stack="true" ProcessExeFilter="Midisrv.exe" Name="*Microsoft.Windows.Midi2.MidiSrv"/>
     <EventProvider Id="EventProvider_MidiSrvTransport" Name="*Microsoft.Windows.Midi2.MidiSrvTransport"/>
@@ -65,9 +36,7 @@
 
      <Profile Id="MidiSrv.Verbose.File" Name="MidiSrv" DetailLevel="Verbose" Description="Windows MIDI Services trace profile" LoggingMode="File">
       <Collectors>
-        <SystemCollectorId Value="SystemCollector">
-          <SystemProviderId Value="SystemProvider" />
-        </SystemCollectorId>      
+    
         <EventCollectorId Value="EventCollector_MidiSrvSimple">
           <EventProviders>
             <EventProviderId Value="EventProvider_MidiSrv"/>

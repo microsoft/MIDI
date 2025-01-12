@@ -31,7 +31,7 @@ inline const winrt::hstring BuildFullServiceInstanceName(_In_ winrt::hstring con
 }
 
 
-
+// TODO: Change this method to "Start" and have the parameters passed into Initialize instead of this.
 
 _Use_decl_annotations_
 HRESULT 
@@ -56,18 +56,17 @@ MidiNetworkAdvertiser::Advertise(
 
     auto fullServiceName = BuildFullServiceInstanceName(serviceInstanceNameWithoutSuffix);
 
-
-    auto service = DnssdServiceInstance(
+    m_serviceInstance = DnssdServiceInstance(
         fullServiceName,
         hostName,
         port);
 
     // add the txt attributes per the spec
-    service.TextAttributes().Insert(L"UMPEndpointName", midiEndpointName);
-    service.TextAttributes().Insert(L"ProductInstanceId", midiProductInstanceId);
+    m_serviceInstance.TextAttributes().Insert(L"UMPEndpointName", midiEndpointName);
+    m_serviceInstance.TextAttributes().Insert(L"ProductInstanceId", midiProductInstanceId);
 
     // register with the socket that's bound to the port
-    auto registration = service.RegisterDatagramSocketAsync(boundSocket).get();
+    auto registration = m_serviceInstance.RegisterDatagramSocketAsync(boundSocket).get();
 
     switch (registration.Status())
     {
@@ -137,6 +136,15 @@ MidiNetworkAdvertiser::Advertise(
 
         RETURN_IF_FAILED(E_FAIL);
     }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 }
 
 
@@ -153,7 +161,7 @@ MidiNetworkAdvertiser::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-
+    m_serviceInstance = nullptr;
 
 
     return S_OK;

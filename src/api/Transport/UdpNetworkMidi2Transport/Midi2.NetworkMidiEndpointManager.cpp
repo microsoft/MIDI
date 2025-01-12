@@ -138,26 +138,28 @@ CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatche
 
     m_foundAdvertisedHosts.insert_or_assign(args.Id(), args);
 
-    // TODO: do we need to signal the background thread to check the collection?
+    // signal the background thread to check the collection?
+    m_backgroundEndpointCreatorThreadWakeup.SetEvent();
 
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidi2NetworkMidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& args)
+CMidi2NetworkMidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& /*args*/)
 {
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(args.Id().c_str(), "id")
-    );
+    //TraceLoggingWrite(
+    //    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingWideString(args.Id().c_str(), "id")
+    //);
 
-    // nothing to do here. We don't care about updates.
+    // nothing to do here. We don't care about updates. This gets really spammy because
+    // the endpoint updates maybe with each mdns ad broadcast or something
 
     return S_OK;
 }
@@ -232,17 +234,27 @@ CMidi2NetworkMidiEndpointManager::StartBackgroundEndpointCreator()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    std::jthread workerThread(&CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker, this);
+    std::jthread workerThread(std::bind_front(&CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker, this));
 
     m_backgroundEndpointCreatorThread = std::move(workerThread);
-    m_backgroundEndpointCreatorThreadStopToken = m_backgroundEndpointCreatorThread.get_stop_token();
     m_backgroundEndpointCreatorThread.detach();
+
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
 
+_Use_decl_annotations_
 HRESULT
-CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker()
+CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToken)
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -253,12 +265,24 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+//    winrt::init_apartment();
+    //auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
     // this is set up to run through one time before waiting for the wakeup
     // this way we can process anything added before the EndpointManager has been
     // initialized
 
-    while (!m_backgroundEndpointCreatorThreadStopToken.stop_requested())
+    while (!stopToken.stop_requested())
     {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Background worker loop", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         if (m_backgroundEndpointCreatorThreadWakeup.is_signaled())
         {
             m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
@@ -266,32 +290,211 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker()
 
         // run through host entries
 
-        for (auto const& host : TransportState::Current().GetHosts())
+        for (auto& definition : TransportState::Current().GetPendingHostDefinitions())
         {
-            if (!host->HasStarted())
+            if (definition->Created)
             {
-                LOG_IF_FAILED(host->Start());
+                continue;
+            }
+
+            if (!definition->Enabled)
+            {
+                continue;
+            }
+
+            auto host = std::make_shared<MidiNetworkHost>();
+            LOG_IF_NULL_ALLOC(host);
+
+            if (host != nullptr)
+            {
+                LOG_IF_FAILED(host->Initialize(*definition));
+
+                if (!host->HasStarted())
+                {
+                    LOG_IF_FAILED(host->Start());
+                }
+
+                // Remove pending entry
+
+                definition->Created = true;
+
+                // this ensures the host doesn't disappear
+                TransportState::Current().AddHost(host);
             }
         }
 
         // TODO: run through client definition entries. These aren't actual clients
         // but are instead just parameters needed to create connections to hosts when
         // they come online.
-        // 
 
         for (auto const& clientDefinition : TransportState::Current().GetPendingClientDefinitions())
         {
-            UNREFERENCED_PARAMETER(clientDefinition);
+            if (clientDefinition->Created)
+            {
+                continue;
+            }
+
+            if (!clientDefinition->Enabled)
+            {
+                continue;
+            }
 
             // any requiring a match, see if we have a match in our deviceinformation collection
-
             // - any that are IP/port direct, try to connect, but don't keep trying the same ones if they fail
+
+            // check for id first, as this is fastest
+            // TODO: right now, this is case-sensitive. It needs clean-up.
+            if (auto advertised = m_foundAdvertisedHosts.find(clientDefinition->MatchId); advertised != m_foundAdvertisedHosts.end())
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Processing mdns entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(advertised->second.Id().c_str(), "id")
+                );
+
+                auto client = std::make_shared<MidiNetworkClient>();
+                LOG_IF_NULL_ALLOC(client);
+
+                auto initHr = client->Initialize(*clientDefinition, advertised->second);
+                LOG_IF_FAILED(initHr);
+
+                if (SUCCEEDED(initHr))
+                {
+                    TransportState::Current().AddClient(client);
+
+                    // todo: get the hostname and port, and then start the client
+
+                    //deviceId = advertised.Id();
+                    //deviceName = advertised.Name();
+
+                    //host.HostName = internal::GetDeviceInfoProperty<winrt::hstring>(entry.Properties(), L"System.Devices.Dnssd.HostName", L"");
+                    //host.FullName = internal::GetDeviceInfoProperty<winrt::hstring>(entry.Properties(), L"System.Devices.Dnssd.FullName", L"");
+                    //host.ServiceInstanceName = internal::GetDeviceInfoProperty<winrt::hstring>(entry.Properties(), L"System.Devices.Dnssd.InstanceName", L"");
+                    //host.Port = internal::GetDeviceInfoProperty<uint16_t>(entry.Properties(), L"System.Devices.Dnssd.PortNumber", 0);
+
+                    winrt::hstring hostNameString{};
+                    uint16_t port{ 0 };
+
+                    const winrt::hstring hostNamePropertyKey = L"System.Devices.Dnssd.HostName";
+                    //const winrt::hstring hostNamePropertyKey = L"System.Devices.Dnssd.FullName";
+                    const winrt::hstring hostPortPropertyKey = L"System.Devices.Dnssd.PortNumber";
+                    const winrt::hstring ipAddressPropertyKey = L"System.Devices.IpAddress";
+
+                    // we use IP address first, as that is the most reliable
+                    if (advertised->second.Properties().HasKey(ipAddressPropertyKey))
+                    {
+                        auto prop = advertised->second.Properties().Lookup(ipAddressPropertyKey).as<foundation::IReferenceArray<winrt::hstring>>();
+                        winrt::com_array<winrt::hstring> array;
+                        prop.GetStringArray(array);
+
+                        // we only take the top one right now. We should take the others as well
+                        if (array.size() > 0)
+                        {
+                            hostNameString = array.at(0);
+                        }
+                    }
+                    // next we get the host name, but this relies on DNS being set up properly,
+                    // which is often not the case on a network with just some devices and a laptop
+                    else if (advertised->second.Properties().HasKey(hostNamePropertyKey))
+                    {
+                        auto prop = advertised->second.Properties().Lookup(hostNamePropertyKey);
+
+                        if (prop)
+                        {
+                            hostNameString = winrt::unbox_value<winrt::hstring>(prop);
+                        }
+                    }
+
+                    if (advertised->second.Properties().HasKey(hostPortPropertyKey))
+                    {
+                        auto prop = advertised->second.Properties().Lookup(hostPortPropertyKey);
+
+                        if (prop)
+                        {
+                            port = winrt::unbox_value<uint16_t>(prop);
+                        }
+                    }
+
+                    // the == 0 is hacky, but for midi, anything under 1024 is likely bogus
+                    if (!hostNameString.empty() && port != 0)
+                    {
+
+                        HostName hostName(hostNameString);
+                        winrt::hstring portNameString = winrt::to_hstring(port);
+
+                        auto startHr = client->Start(hostName, portNameString);
+
+                        LOG_IF_FAILED(startHr);
+
+                        if (SUCCEEDED(startHr))
+                        {
+                            // Mark as created so we don't try to process it again
+                            clientDefinition->Created = true;
+                        }
+                        else
+                        {
+                            TraceLoggingWrite(
+                                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Failed to start client", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(advertised->second.Id().c_str(), "id"),
+                                TraceLoggingWideString(hostNameString.c_str(), "hostname string"),
+                                TraceLoggingWideString(hostName.ToString().c_str(), "created hostname"),
+                                TraceLoggingWideString(portNameString.c_str(), "port")
+                            );
+                        }
+                    }
+                    else
+                    {
+                        TraceLoggingWrite(
+                            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Unable to resolve remote device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(advertised->second.Id().c_str(), "id")
+                        );
+                    }
+
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Failed to initialize client", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(advertised->second.Id().c_str(), "id")
+                    );
+
+                }
+
+            }
 
         }
 
         // TODO: wait for notification of new hosts online or new entries added via config
         m_backgroundEndpointCreatorThreadWakeup.wait(10000);
     }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
@@ -427,6 +630,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     std::wstring const& remoteEndpointProductInstanceId,
     winrt::Windows::Networking::HostName const& hostName,
     std::wstring const& networkPort,
+    bool umpOnly,
     std::wstring& createdNewDeviceInstanceId,
     std::wstring& createdNewEndpointDeviceInterfaceId
 )
@@ -527,7 +731,17 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
 
     // TODO: Add custom properties for the network information
 
+    std::wstring endpointDescription{ L"Network MIDI 2.0 endpoint "};
 
+    switch (thisServiceRole)
+    {
+    case MidiNetworkConnectionRole::ConnectionWindowsIsHost:
+        endpointDescription += L"(This PC is the Network Host)";
+        break;
+    case MidiNetworkConnectionRole::ConnectionWindowsIsClient:
+        endpointDescription += L"(This PC is a Network Client)";
+        break;
+    }
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.TransportId = TRANSPORT_LAYER_GUID;
@@ -535,7 +749,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
     commonProperties.EndpointName = endpointName.c_str();
-    commonProperties.EndpointDescription = nullptr;
+    commonProperties.EndpointDescription = endpointDescription.c_str();
     commonProperties.CustomEndpointName = nullptr;
     commonProperties.CustomEndpointDescription = nullptr;
     commonProperties.UniqueIdentifier = remoteEndpointProductInstanceId.c_str();
@@ -551,7 +765,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
 
     RETURN_IF_FAILED(m_midiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
-        false,                                                  // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
+        umpOnly,                                                // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)0, //interfaceDeviceProperties.size(),

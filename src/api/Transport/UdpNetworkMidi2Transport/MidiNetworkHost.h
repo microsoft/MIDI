@@ -36,6 +36,8 @@ enum MidiNetworkHostProtocol
 
 struct MidiNetworkHostDefinition
 {
+    bool Created{ false };
+
     winrt::hstring EntryIdentifier;         // internal 
 
     bool UseAutomaticPortAllocation{ true };
@@ -47,6 +49,8 @@ struct MidiNetworkHostDefinition
     bool UmpOnly{ true };
     bool Enabled{ true };
     bool Advertise{ true };
+
+    bool CreateMidi1Ports{ MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT };
 
     // connection rules
     MidiNetworkHostConnectionPolicy ConnectionPolicy{ MidiNetworkHostConnectionPolicy::PolicyAllowAllConnections };
@@ -75,27 +79,22 @@ class MidiNetworkHost
 {
 public:
     HRESULT Initialize(_In_ MidiNetworkHostDefinition& hostDefinition);
-
     HRESULT Start();
-
     HRESULT Shutdown();
 
     bool HasStarted() { return m_started; }
 
 private:
     bool m_started{ false };
+    bool m_createUmpEndpointsOnly{ true };
 
-    //HRESULT EstablishNewSession();
     std::wstring m_hostEndpointName{ };
     std::wstring m_hostProductInstanceId{ };
 
     std::atomic<bool> m_keepProcessing{ true };
 
-    // todo: these probably aren't necessary. The only queues we need are for midi messages
-//    std::queue<MidiNetworkOutOfBandIncomingCommandPacket> m_incomingOutOfBandCommands;
-//    std::queue<MidiNetworkOutOfBandOutgoingCommandPacket> m_outgoingOutOfBandCommands;
+    winrt::event_token m_messageReceivedEventToken;
 
-    winrt::impl::consume_Windows_Networking_Sockets_IDatagramSocket<IDatagramSocket>::MessageReceived_revoker m_messageReceivedRevoker;
     void OnMessageReceived(
         _In_ DatagramSocket const& sender,
         _In_ DatagramSocketMessageReceivedEventArgs const& args);
@@ -107,68 +106,6 @@ private:
 
     DatagramSocket m_socket{ nullptr };
 
-    // Map of MidiNetworkHostSessions and their related remote client addresses
-    // the keys for these two maps are the same values created with CreateSessionMapKey
-    std::map<std::string, std::shared_ptr<MidiNetworkConnection>> m_connections{ };
-
-    inline std::string CreateConnectionMapKey(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
-    {
-        return winrt::to_string(hostName.CanonicalName() + L":" + port);
-    }
-
-    inline bool ConnectionExists(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
-    {
-        auto key = CreateConnectionMapKey(hostName, port);
-
-        return m_connections.find(key) != m_connections.end();
-    }
-
-
-    inline void RemoveConnection(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
-    {
-        if (ConnectionExists(hostName, port))
-        {
-            auto entry = m_connections.find(CreateConnectionMapKey(hostName, port));
-
-            LOG_IF_FAILED(entry->second->Shutdown());
-
-            m_connections.erase(CreateConnectionMapKey(hostName, port));
-        }
-    }
-
-    inline std::shared_ptr<MidiNetworkConnection> GetOrCreateConnection(_In_ HostName const& hostName, _In_ winrt::hstring const& port)
-    {
-        auto key = CreateConnectionMapKey(hostName, port);
-
-        if (!ConnectionExists(hostName, port))
-        {
-            // need to create it and then add one
-
-            auto conn = std::make_shared<MidiNetworkConnection>();
-
-            if (conn)
-            {
-                conn->Initialize(
-                    MidiNetworkConnectionRole::ConnectionWindowsIsHost,
-                    m_socket,
-                    hostName,
-                    port,
-                    m_hostEndpointName,
-                    m_hostProductInstanceId,
-                    TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
-                    TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount
-                );
-
-                m_connections.insert_or_assign(key, conn);
-            }
-            else
-            {
-                // could not create the connection object.
-            }
-        }
-
-        return m_connections.find(key)->second;
-    }
-
+    HRESULT CreateNetworkConnection(_In_ winrt::Windows::Networking::HostName const& remoteHostName, _In_ winrt::hstring const& remotePort);
 
 };

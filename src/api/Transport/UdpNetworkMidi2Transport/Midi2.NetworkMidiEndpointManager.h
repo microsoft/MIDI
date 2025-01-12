@@ -28,6 +28,7 @@ public:
         _In_ std::wstring const& remoteEndpointProductInstanceId,
         _In_ winrt::Windows::Networking::HostName const& hostName,
         _In_ std::wstring const& networkPort,
+        _In_ bool umpOnly,
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
@@ -68,8 +69,8 @@ private:
 
 
     std::jthread m_backgroundEndpointCreatorThread;
-    std::stop_token m_backgroundEndpointCreatorThreadStopToken;
+    //std::stop_token m_backgroundEndpointCreatorThreadStopToken;
     wil::slim_event_manual_reset m_backgroundEndpointCreatorThreadWakeup;
-    HRESULT EndpointCreatorWorker();
+    HRESULT EndpointCreatorWorker(_In_ std::stop_token stopToken);
 
 };

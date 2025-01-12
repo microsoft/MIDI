@@ -51,7 +51,7 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 if (controller.Status == ServiceControllerStatus.Running)
                 {
-                    AnsiConsole.Write("Stopping service..");
+                    AnsiConsole.Write("Attempting to stop service..");
                     MidiServiceHelper.StopServiceWithConsoleStatusUpdate(controller);
                     AnsiConsole.WriteLine();
 
@@ -62,7 +62,7 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                     else
                     {
-                        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to stop service."));
+                        AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to stop service. It may be in-use by other apps, or it may be locked up. Consider killing the midisrv.exe process, or rebooting."));
                         return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
                     }
                 }
@@ -74,7 +74,7 @@ namespace Microsoft.Midi.ConsoleApp
             }
             catch (Exception)
             {
-                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to stop service."));
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Unable to stop service. It may be in-use by other apps, or it may be locked up. Consider killing the midisrv.exe process, or rebooting."));
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
             }
         }

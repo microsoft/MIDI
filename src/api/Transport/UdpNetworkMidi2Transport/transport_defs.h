@@ -53,9 +53,14 @@
 #define MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND                 120000
 #define MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND                 250
 
-
-
 #define MIDI_NETWORK_STARTING_OUTBOUND_UMP_QUEUE_CAPACITY               50
+
+#define MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT                    false
+
+// header sized plus a command packet header
+#define MINIMUM_VALID_UDP_PACKET_SIZE (sizeof(uint32_t) * 2)
+
+
 
 // JSON keys. Can move to json_defs when in-box
 
@@ -77,6 +82,8 @@
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY                        L"advertise"                // boolean
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY                               L"enabled"                  // boolean
+
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY                    L"createMidi1Ports"         // boolean - set to true to enable creating WinMM/WinRT 1.0 ports
 
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY                 L"serviceInstanceName"      // just the first part (before the . ) of the host instance name. Defaults to machine name
@@ -104,13 +111,14 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY              L"productInstanceId"
 
 
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID                           L"id"                    // Windows ID like:  DnsSd#kb7C5D0A_1._midi2._udp.local#0
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_SERVICE_INSTANCE             L"serviceInstance"       // Like kb7C5D0A_1 or bomeboxdin-8q6d2z-1
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_IP                           L"ipAddress"             // Like 192.168.1.253 (port is also required)
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME                    L"hostName"              // Like kissbox or BomeBox.local (port is also required)
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT                         L"port"                  // Like 5004 (ip address or host name is also required)
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME            L"umpEndpointName"       // Like UMP2TR @253 Port 1 or BomeBox
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID             L"umpProductInstanceId"  // Like kb7C5D0A_1 or CC851C0080257A96
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY                   L"match"                 // object which contains match criteria
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID_KEY                       L"id"                    // Windows ID like:  DnsSd#kb7C5D0A_1._midi2._udp.local#0
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_SERVICE_INSTANCE_KEY         L"serviceInstance"       // Like kb7C5D0A_1 or bomeboxdin-8q6d2z-1
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_IPV4_KEY                     L"ipv4Address"           // Like 192.168.1.253 (port is also required)
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_KEY                L"hostName"              // Like kissbox or BomeBox.local (port is also required)
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT_KEY                     L"port"                  // Like 5004 (ip address or host name is also required)
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY        L"umpEndpointName"       // Like UMP2TR @253 Port 1 or BomeBox
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY         L"umpProductInstanceId"  // Like kb7C5D0A_1 or CC851C0080257A96
 
 
 enum MidiNetworkConnectionRole

@@ -36,6 +36,8 @@ MidiNetworkHost::Initialize(
 
     m_started = false;
 
+    m_createUmpEndpointsOnly = !hostDefinition.CreateMidi1Ports;
+
     m_hostEndpointName = hostDefinition.UmpEndpointName;
     m_hostProductInstanceId = hostDefinition.ProductInstanceId;
 
@@ -45,6 +47,14 @@ MidiNetworkHost::Initialize(
     }
 
     m_hostDefinition = hostDefinition;
+
+    DatagramSocket socket;
+    m_socket = std::move(socket);
+
+    m_socket.Control().DontFragment(true);
+    //m_socket.Control().InboundBufferSizeInBytes(10000);
+    m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
+
 
     if (m_hostDefinition.Advertise)
     {
@@ -65,6 +75,36 @@ MidiNetworkHost::Initialize(
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHost::CreateNetworkConnection(HostName const& remoteHostName, winrt::hstring const& remotePort)
+{
+    auto conn = std::make_shared<MidiNetworkConnection>();
+
+    if (conn)
+    {
+        RETURN_IF_FAILED(conn->Initialize(
+            MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+            m_socket,
+            remoteHostName,
+            remotePort,
+            m_hostEndpointName,
+            m_hostProductInstanceId,
+            TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
+            TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount,
+            m_createUmpEndpointsOnly
+        ));
+
+        TransportState::Current().AddNetworkConnection(remoteHostName, remotePort, conn);
+    }
+    else
+    {
+        // could not create the connection object.
+    }
+
+    return S_OK;
+}
+
 HRESULT
 MidiNetworkHost::Start()
 {
@@ -81,9 +121,9 @@ MidiNetworkHost::Start()
 
     // wire up to handle incoming events
     auto messageReceivedHandler = winrt::Windows::Foundation::TypedEventHandler<DatagramSocket, DatagramSocketMessageReceivedEventArgs>(this, &MidiNetworkHost::OnMessageReceived);
-    m_messageReceivedRevoker = m_socket.MessageReceived(winrt::auto_revoke, messageReceivedHandler);
+    m_messageReceivedEventToken = m_socket.MessageReceived(messageReceivedHandler);
 
-    // this should have error checking
+    // TODO: this should have error checking
     m_socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).get();
 
     auto boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(m_socket.Information().LocalPort())));
@@ -101,6 +141,8 @@ MidiNetworkHost::Start()
         ));
     }
 
+    m_started = true;
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -110,13 +152,8 @@ MidiNetworkHost::Start()
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    m_started = true;
-
     return S_OK;
 }
-
-// header sized plus a command packet header
-#define MINIMUM_VALID_UDP_PACKET_SIZE (sizeof(uint32_t) * 2)
 
 // "message" here means UDP packet message, not a MIDI message
 _Use_decl_annotations_
@@ -124,7 +161,6 @@ void MidiNetworkHost::OnMessageReceived(
     DatagramSocket const& sender,
     DatagramSocketMessageReceivedEventArgs const& args)
 {
-    // TEMP!!
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -134,11 +170,12 @@ void MidiNetworkHost::OnMessageReceived(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+
     UNREFERENCED_PARAMETER(sender);
 
     auto reader = args.GetDataReader();
 
-    if (reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
+    if (reader != nullptr && reader.UnconsumedBufferLength() < MINIMUM_VALID_UDP_PACKET_SIZE)
     {
         // not a message we understand. Needs to be at least the size of the 
         // MIDI header plus a command packet header. Really it needs to be larger, but
@@ -167,7 +204,14 @@ void MidiNetworkHost::OnMessageReceived(
         return;
     }
 
-    auto conn = GetOrCreateConnection(args.RemoteAddress(), args.RemotePort());
+    std::shared_ptr<MidiNetworkConnection> conn{ nullptr };
+
+    if (!TransportState::Current().NetworkConnectionExists(args.RemoteAddress(), args.RemotePort()))
+    {
+        LOG_IF_FAILED(CreateNetworkConnection(args.RemoteAddress(), args.RemotePort()));
+    }
+
+    conn = TransportState::Current().GetNetworkConnection(args.RemoteAddress(), args.RemotePort());
 
     if (conn)
     {
@@ -184,6 +228,16 @@ void MidiNetworkHost::OnMessageReceived(
             TraceLoggingWideString(L"Message received from remote client, but GetConnection returned nullptr", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
     }
+
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
 }
 
@@ -206,13 +260,39 @@ MidiNetworkHost::Shutdown()
     }
 
     // TODO: send "bye" to all sessions, and then unbind the socket
-
-    // TODO: Stop packet processing thread
-
+    // but we need to restrict to this host, not every host/client
 
 
-    m_socket.Close();
+    // TODO: Stop packet processing thread using the jthread stop token
+    m_keepProcessing = false;
 
+    if (m_socket)
+    {
+        m_socket.MessageReceived(m_messageReceivedEventToken);
+        m_socket.Close();
+        m_socket = nullptr;
+    }
+
+    //while (m_connections.size() > 0)
+    //{
+    //    auto conn = m_connections.begin();
+    //    LOG_IF_FAILED(conn->second->Shutdown());
+
+    //    m_connections.erase(conn);
+    //}
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
+
+
+
+
