@@ -261,7 +261,7 @@
                                                    Text="First Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                   Text="{x:Bind FirstGroupIndex, Converter={StaticResource MidiGroupIndexConverter}}" 
+                                                   Text="{x:Bind FirstGroup.DisplayValue}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 

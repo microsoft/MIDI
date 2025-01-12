@@ -20,7 +20,28 @@ public class AppState
 
     private AppState()
     {
-        MidiServicesInitializer.EnsureServiceAvailable();
+        var initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create();
+
+        if (initializer == null)
+        {
+            // TODO: Failed
+            return;
+
+        }
+
+        // initialize SDK runtime
+        if (!initializer.InitializeSdkRuntime())
+        {
+            // TODO: Failed
+            return;
+        }
+
+        // start the service
+        if (!initializer.EnsureServiceAvailable())
+        {
+            // TODO: Failed
+            return;
+        }
 
         StartDeviceWatcher(true);
     }
