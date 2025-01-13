@@ -30,6 +30,8 @@ public:
     TEST_METHOD(TestSimpleDecrement);
     TEST_METHOD(TestWrappedIncrement);
     TEST_METHOD(TestWrappedDecrement);
+    TEST_METHOD(TestInitializedComparison);
+    TEST_METHOD(TestBasicMath);
 
 private:
 

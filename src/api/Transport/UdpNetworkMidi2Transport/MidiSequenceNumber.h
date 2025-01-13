@@ -33,44 +33,43 @@ public:
 
     MidiSequenceNumber operator+ (_In_ const MidiSequenceNumber value) const
     {
-        uint32_t val = m_value + value.m_value;
+        uint32_t val = (m_value + value.m_value);
 
-        return MidiSequenceNumber(static_cast<uint16_t>(val % Max()));
+        return MidiSequenceNumber(static_cast<uint16_t>(val % (Max() + 1)));
     }
 
     MidiSequenceNumber operator+ (_In_ uint16_t const value) const
     {
-        uint32_t val = m_value + value;
+        uint32_t val = (m_value + value);
 
-        return MidiSequenceNumber(static_cast<uint16_t>(val % Max()));
+        return MidiSequenceNumber(static_cast<uint16_t>(val % (Max() + 1)));
     }
-
 
     MidiSequenceNumber operator- (_In_ MidiSequenceNumber const value) const
     {
-        int32_t val = m_value - value.m_value;
+        int32_t val = ((int32_t)m_value - (int32_t)value.m_value);
 
         if (val >= 0)
         {
-            return MidiSequenceNumber(static_cast<uint16_t>(val % Max()));
+            return MidiSequenceNumber(static_cast<uint16_t>(val % (Max() + 1)));
         }
         else
         {
-            return MidiSequenceNumber(static_cast<uint16_t>(Max() - (val % Max())));
+            return MidiSequenceNumber(static_cast<uint16_t>(Max() - (val * -1)));
         }
     }
 
     MidiSequenceNumber operator- (_In_ uint16_t const value) const
     {
-        int32_t val = m_value - value;
+        int32_t val = ((int32_t)m_value - (int32_t)value);
 
         if (val >= 0)
         {
-            return MidiSequenceNumber(static_cast<uint16_t>(val % Max()));
+            return MidiSequenceNumber(static_cast<uint16_t>(val % (Max() + 1)));
         }
         else
         {
-            return MidiSequenceNumber(static_cast<uint16_t>(Max() - (val % Max())));
+            return MidiSequenceNumber(static_cast<uint16_t>(Max() - (val * -1) + 1));
         }
     }
 

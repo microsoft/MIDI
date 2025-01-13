@@ -237,8 +237,9 @@ MidiNetworkConnection::ResetSequenceNumbers()
     return S_OK;
 }
 
+_Use_decl_annotations_
 HRESULT
-MidiNetworkConnection::EndActiveSession()
+MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -259,12 +260,15 @@ MidiNetworkConnection::EndActiveSession()
     RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteEndpoint(m_sessionDeviceInstanceId));
     m_sessionDeviceInstanceId.clear();
 
-    // send bye reply
+    if (respondWithByeReply)
+    {
+        // send bye reply
+        auto lock = m_socketWriterLock.lock();
+        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
+        RETURN_IF_FAILED(m_writer->WriteCommandByeReply());
+        RETURN_IF_FAILED(m_writer->Send());
+    }
 
-    auto lock = m_socketWriterLock.lock();
-    RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-    RETURN_IF_FAILED(m_writer->WriteCommandByeReply());
-    RETURN_IF_FAILED(m_writer->Send());
 
     // clear the association with the SWD
     RETURN_IF_FAILED(TransportState::Current().DisassociateMidiEndpointFromConnection(m_sessionEndpointDeviceInterfaceId));
@@ -292,17 +296,12 @@ MidiNetworkConnection::HandleIncomingBye()
 
     if (m_sessionActive)
     {
-        RETURN_IF_FAILED(EndActiveSession());
+        RETURN_IF_FAILED(EndActiveSession(true));
     }
     else
     {
         // not an active session. Nothing to clean up
-        // but we should NAK the Bye saying there's no active session
-
-        auto lock = m_socketWriterLock.lock();
-        RETURN_IF_FAILED(m_writer->WriteUdpPacketHeader());
-        RETURN_IF_FAILED(m_writer->WriteCommandNAK(0, MidiNetworkCommandNAKReason::CommandNAKReason_CommandNotExpected, L"BYE received when there's no active session."));
-        RETURN_IF_FAILED(m_writer->Send());
+        // we ignore this (protocol says not to NAK)
     }
 
     return S_OK;
@@ -373,6 +372,8 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
                 m_sessionEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newEndpointDeviceInterfaceId);
                 m_sessionDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
 
+                m_sessionActive = true;
+
                 // this is what the BiDi uses when it is created
                 RETURN_IF_FAILED(TransportState::Current().AssociateMidiEndpointWithConnection(m_sessionEndpointDeviceInterfaceId.c_str(), m_remoteHostName, m_remotePort.c_str()));
 
@@ -380,8 +381,6 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
                 // because we need to wire up the connection first. Bit of a race.
 
                 LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->InitiateDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
-
-                m_sessionActive = true;
             }
             else
             {
