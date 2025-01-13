@@ -372,6 +372,8 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
                 m_sessionEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newEndpointDeviceInterfaceId);
                 m_sessionDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
 
+                m_sessionActive = true;
+
                 // this is what the BiDi uses when it is created
                 RETURN_IF_FAILED(TransportState::Current().AssociateMidiEndpointWithConnection(m_sessionEndpointDeviceInterfaceId.c_str(), m_remoteHostName, m_remotePort.c_str()));
 
@@ -379,8 +381,6 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
                 // because we need to wire up the connection first. Bit of a race.
 
                 LOG_IF_FAILED(TransportState::Current().GetEndpointManager()->InitiateDiscoveryAndNegotiation(m_sessionEndpointDeviceInterfaceId));
-
-                m_sessionActive = true;
             }
             else
             {

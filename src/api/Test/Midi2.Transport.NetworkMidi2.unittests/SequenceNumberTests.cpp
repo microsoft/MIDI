@@ -168,4 +168,34 @@ void MidiSequenceNumberTests::TestWrappedDecrement()
     VERIFY_ARE_EQUAL(a.Value(), 65535);
 }
 
+void MidiSequenceNumberTests::TestInitializedComparison()
+{
+    MidiSequenceNumber a{ 0 };
+    MidiSequenceNumber b{ 0 };
 
+    a--;    // gets us to max, which will be considered less than the 0 of b
+
+    VERIFY_IS_TRUE(b > a);
+    VERIFY_ARE_EQUAL(a.Value(), MidiSequenceNumber::Max());
+    VERIFY_ARE_EQUAL(b.Value(), (a + 1).Value());
+    VERIFY_ARE_EQUAL(a.Value(), (b - 1).Value());
+}
+
+void MidiSequenceNumberTests::TestBasicMath()
+{
+    uint16_t val{ 100 };
+    MidiSequenceNumber a{ val };
+
+    a = val;
+    a = a - 50;
+    VERIFY_ARE_EQUAL(a.Value(), 50);
+
+    a = val;
+    a = a + 50;
+    VERIFY_ARE_EQUAL(a.Value(), 150);
+
+    a = val;
+    a = a - 101;
+    VERIFY_ARE_EQUAL(a.Value(), MidiSequenceNumber::Max());
+
+}
