@@ -1314,9 +1314,9 @@ CMidiEndpointProtocolWorker::UpdateAllFunctionBlockPropertiesIfComplete()
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    // TODO: Check protocol spec to see if names are actually required
-    if (m_functionBlocks.size() != m_declaredFunctionBlockCount || 
-        m_functionBlockNames.size() != m_declaredFunctionBlockCount)
+    // we only check blocks, not names, because names are optional
+    // this may lead to a bit of a race, but it's the best we can do
+    if (m_functionBlocks.size() != m_declaredFunctionBlockCount)
     {
         return S_OK;
     }
