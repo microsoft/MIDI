@@ -1353,11 +1353,11 @@ CMidiDeviceManager::ActivateEndpointInternal
     }
     RETURN_HR_IF(E_FAIL, midiPort->SwDeviceState != SWDEVICESTATE::Created);
 
-    if (midiOne)
-    {
-        // Assign the port number for this midi port
-        RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), flow));
-    }
+    //if (midiOne)
+    //{
+    //    // Assign the port number for this midi port
+    //    RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), flow));
+    //}
 
     // Activate the SWD just created, it's created in the disabled state to allow for assigning
     // the port prior to activating it.
@@ -1830,17 +1830,17 @@ CMidiDeviceManager::AssignPortNumber(
             //servicePortNumValid = true;
             servicePortNumValid = servicePortNum <= MAX_WINMM_PORT_NUMBER;        // Temporary gate because this value sometimes comes back as int32.max
 
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Endpoint has service-assigned port number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingUInt32(servicePortNum, "port number"),
-                TraceLoggingBool(servicePortNumValid, "port number valid")
-            );
+            //TraceLoggingWrite(
+            //    MidiSrvTelemetryProvider::Provider(),
+            //    MIDI_TRACE_EVENT_INFO,
+            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            //    TraceLoggingPointer(this, "this"),
+            //    TraceLoggingWideString(L"Endpoint has service-assigned port number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            //    TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            //    TraceLoggingUInt32(servicePortNum, "port number"),
+            //    TraceLoggingBool(servicePortNumValid, "port number valid")
+            //);
 
             if (!servicePortNumValid) servicePortNum = 0;
         }
@@ -1853,17 +1853,17 @@ CMidiDeviceManager::AssignPortNumber(
 
             userPortNumValid = userPortNum <= MAX_WINMM_PORT_NUMBER;        // Temporary gate because this value sometimes comes back as int32.max
 
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Endpoint has user-assigned port number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-                TraceLoggingUInt32(userPortNum, "port number"),
-                TraceLoggingBool(userPortNumValid, "port number valid")
-            );
+            //TraceLoggingWrite(
+            //    MidiSrvTelemetryProvider::Provider(),
+            //    MIDI_TRACE_EVENT_INFO,
+            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            //    TraceLoggingPointer(this, "this"),
+            //    TraceLoggingWideString(L"Endpoint has user-assigned port number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            //    TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            //    TraceLoggingUInt32(userPortNum, "port number"),
+            //    TraceLoggingBool(userPortNumValid, "port number valid")
+            //);
 
             if (!userPortNumValid) userPortNum = 0;
         }
@@ -2257,7 +2257,8 @@ CMidiDeviceManager::UseFallbackMidi1PortDefinition(
     // vector.
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlocksAreStatic));
-    auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+    auto deviceInfo = DeviceInformation::CreateFromIdAsync(
+        umpDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
     //auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_FunctionBlocksAreStatic));
     //if (prop)

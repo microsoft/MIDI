@@ -79,6 +79,15 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkHost::CreateNetworkConnection(HostName const& remoteHostName, winrt::hstring const& remotePort)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     auto conn = std::make_shared<MidiNetworkConnection>();
 
     if (conn)
@@ -101,6 +110,16 @@ MidiNetworkHost::CreateNetworkConnection(HostName const& remoteHostName, winrt::
     {
         // could not create the connection object.
     }
+
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }

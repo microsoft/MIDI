@@ -154,8 +154,6 @@ CMidiEndpointProtocolWorker::Start(
 
     m_inInitialFunctionBlockDiscovery = true;
 
-//    m_negotiationCompleteCallback = negotiationCompleteCallback;
-
     // these are defaults, but discovery will tell us what we can really do here.
     m_preferToSendJRTimestampsToEndpoint = negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint;
     m_preferToReceiveJRTimestampsFromEndpoint = negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint;
@@ -215,10 +213,10 @@ CMidiEndpointProtocolWorker::Start(
         //    m_deviceInterfaceId.c_str(),
         //    (MidiClientHandle)nullptr));
 
-        //if (!m_allDiscoveryAndNegotiationMessagesReceived.is_valid())
-        //{
-        //    RETURN_IF_FAILED(m_allNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
-        //}
+        if (!m_allInitialDiscoveryAndNegotiationMessagesReceived.is_valid())
+        {
+            RETURN_IF_FAILED(m_allInitialDiscoveryAndNegotiationMessagesReceived.create(wil::EventOptions::ManualReset));
+        }
 
 
         m_declaredFunctionBlockCount = 0;
@@ -243,8 +241,17 @@ CMidiEndpointProtocolWorker::Start(
         // start initial negotiation. Return when timed out or when we have all the requested info.
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
+        // hang out until all info comes in or we time out
+        DWORD timeoutMilliseconds{ 15000 };
+        m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(timeoutMilliseconds);
 
-        // we just hang out until endProcessing is set. There's no timeout here.
+        RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
+
+        m_inInitialFunctionBlockDiscovery = false;
+        RETURN_IF_FAILED(SetDiscoveryCompleteProperty());
+
+
+        // we just hang out until endProcessing is set.
         m_endProcessing.wait();
 
         return S_OK;
@@ -252,6 +259,47 @@ CMidiEndpointProtocolWorker::Start(
     }
     CATCH_RETURN();
 }
+
+
+HRESULT 
+CMidiEndpointProtocolWorker::SetDiscoveryCompleteProperty()
+{
+    // this function is called when discovery has completed or timed out
+    
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+
+    DEVPROPERTY props[] =
+    {
+        {{ PKEY_MIDI_EndpointDiscoveryProcessComplete, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_BOOLEAN, static_cast<DEVPROP_BOOLEAN>(sizeof(DEVPROP_BOOLEAN)), (PVOID)(&devPropTrue) },
+    };
+
+    RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_endpointDeviceInterfaceId.c_str(), ARRAYSIZE(props), props));
+
+    return S_OK;
+}
+
+HRESULT
+CMidiEndpointProtocolWorker::CheckIfDiscoveryComplete()
+{
+    if (m_taskEndpointInfoReceived &&
+        m_taskFinalStreamNegotiationResponseReceived &&
+        m_taskEndpointNameReceived &&
+        m_taskEndpointProductInstanceIdReceived &&
+        m_taskDeviceIdentityReceived &&
+        m_functionBlocks.size() == m_declaredFunctionBlockCount &&
+        m_functionBlockNames.size() == m_declaredFunctionBlockCount)
+    {
+        if (!m_allInitialDiscoveryAndNegotiationMessagesReceived.is_signaled())
+        {
+            m_allInitialDiscoveryAndNegotiationMessagesReceived.SetEvent();
+        }
+    }
+
+    return S_OK;
+}
+
+
 
 _Use_decl_annotations_
 HRESULT
@@ -338,6 +386,7 @@ CMidiEndpointProtocolWorker::Callback(
 
                 }
 
+                LOG_IF_FAILED(CheckIfDiscoveryComplete());
 
             }
             else
@@ -421,6 +470,7 @@ CMidiEndpointProtocolWorker::ProcessEndpointInfoNotificationMessage(internal::Pa
         m_preferToSendJRTimestampsToEndpoint = false;
     }
 
+
     if (m_inInitialFunctionBlockDiscovery)
     {
         // per-spec, these values are not allowed to change after initial discovery
@@ -465,6 +515,8 @@ CMidiEndpointProtocolWorker::ProcessEndpointInfoNotificationMessage(internal::Pa
 
     RETURN_IF_FAILED(UpdateEndpointInfoProperties(ump));
 
+    m_taskEndpointInfoReceived = true;
+
     // when we get the info notification during initial discovery, we request function blocks, too
     if (m_inInitialFunctionBlockDiscovery)
     {
@@ -489,6 +541,8 @@ CMidiEndpointProtocolWorker::ProcessDeviceIdentityNotificationMessage(internal::
     );
 
     LOG_IF_FAILED(UpdateDeviceIdentityProperty(ump));
+
+    m_taskDeviceIdentityReceived = true;
 
     return S_OK;
 }
@@ -532,9 +586,6 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockInfoNotificationMessage(interna
         MidiFunctionBlockProperty prop = BuildFunctionBlockPropertyFromInfoNotificationMessage(ump);
 
         m_functionBlocks.insert_or_assign(prop.BlockNumber, prop);
-
-        // this only updates if we've received everything
-        RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
     }
     else if (!m_inInitialFunctionBlockDiscovery && blockNumber < m_declaredFunctionBlockCount)
     {
@@ -591,14 +642,7 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
 
         m_functionBlockNames.insert_or_assign(functionBlockNumber, name);
 
-        if (m_inInitialFunctionBlockDiscovery)
-        {
-            RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
-        }
-        else
-        {
-            RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name.Name));
-        }
+        RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name.Name));
     }
     break;
 
@@ -634,14 +678,7 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
             name.Name = internal::TrimmedWStringCopy(name.Name + ParseStreamTextMessage(ump));
             name.IsComplete = true;
 
-            if (m_inInitialFunctionBlockDiscovery)
-            {
-                RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
-            }
-            else
-            {
-                RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name.Name));
-            }
+            RETURN_IF_FAILED(UpdateFunctionBlockNameProperty(functionBlockNumber, name.Name));
         }
         else
         {
@@ -678,6 +715,8 @@ CMidiEndpointProtocolWorker::ProcessProductInstanceIdNotificationMessage(interna
     case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
         m_productInstanceId = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
         RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
+
+        m_taskEndpointProductInstanceIdReceived = true;
         break;
 
     case MIDI_STREAM_MESSAGE_MULTI_FORM_START: // start of multi-part name message. Overwrite any other name in the map
@@ -702,6 +741,7 @@ CMidiEndpointProtocolWorker::ProcessProductInstanceIdNotificationMessage(interna
         {
             m_productInstanceId = internal::TrimmedWStringCopy(m_productInstanceId + ParseStreamTextMessage(ump));
             RETURN_IF_FAILED(UpdateEndpointProductInstanceIdProperty());
+            m_taskEndpointProductInstanceIdReceived = true;
         }
         else
         {
@@ -738,6 +778,7 @@ CMidiEndpointProtocolWorker::ProcessEndpointNameNotificationMessage(internal::Pa
     case MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE: // complete name in single message. Just update property
         m_endpointName = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
         RETURN_IF_FAILED(UpdateEndpointNameProperty());
+        m_taskEndpointNameReceived = true;
         break;
 
     case MIDI_STREAM_MESSAGE_MULTI_FORM_START: // start of multi-part name message. Overwrite any other name in the map
@@ -763,6 +804,7 @@ CMidiEndpointProtocolWorker::ProcessEndpointNameNotificationMessage(internal::Pa
             m_endpointName = internal::TrimmedWStringCopy(m_endpointName + ParseStreamTextMessage(ump));
 
             RETURN_IF_FAILED(UpdateEndpointNameProperty());
+            m_taskEndpointNameReceived = true;
         }
         else
         {
@@ -778,12 +820,6 @@ CMidiEndpointProtocolWorker::ProcessEndpointNameNotificationMessage(internal::Pa
 
     return S_OK;
 }
-
-
-
-
-
-
 
 
 
@@ -1314,15 +1350,16 @@ CMidiEndpointProtocolWorker::UpdateAllFunctionBlockPropertiesIfComplete()
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    // TODO: Check protocol spec to see if names are actually required
-    if (m_functionBlocks.size() != m_declaredFunctionBlockCount || 
-        m_functionBlockNames.size() != m_declaredFunctionBlockCount)
+    // we only check blocks, not names, because names are optional
+    // this may lead to a bit of a race, but it's the best we can do
+    if (m_functionBlocks.size() != m_declaredFunctionBlockCount)
     {
         return S_OK;
     }
 
     // this is for efficiency during initial discovery. This function is called when all 
-    // function blocks and function block names have been received
+    // function blocks have been received. It's possible not all names have been received
+    // which is a bit of a pain, as that is an allowed outcome.
 
     std::vector<DEVPROPERTY> props{ };
 
