@@ -246,6 +246,12 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointDevicePurpose, 100);     // DEVPROP_TYPE
 //#define STRING_PKEY_MIDI_EndpointRequiresMetadataHandler MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"120"
 //DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointRequiresMetadataHandler, 120);     // DEVPROP_TYPE_BOOLEAN
 
+// In-protocol Endpoint Discovery status ===========================================================
+
+// This is set to true when endpoint discovery has received all information, or has timed out.
+#define STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"140"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_EndpointDiscoveryProcessComplete, 140);     // DEVPROP_TYPE_BOOLEAN
+
 
 
 // In-protocol Endpoint information ================================================================

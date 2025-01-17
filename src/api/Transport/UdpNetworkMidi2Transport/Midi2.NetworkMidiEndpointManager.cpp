@@ -292,6 +292,15 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+
+    // the first time this starts up, we delay for a bit. This is a hack
+    // but right now, the service is doing way too much immediately. Having
+    // devices connect immediately just adds to the contention. This needs
+    // to be removed before this is production-ready
+    Sleep(10000);
+
+
+
     winrt::init_apartment();
     //auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 

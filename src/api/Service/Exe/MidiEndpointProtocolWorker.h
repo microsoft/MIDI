@@ -57,7 +57,7 @@ private:
     bool m_inInitialFunctionBlockDiscovery{ false };
 
     wil::unique_event_nothrow m_endProcessing;
-    //wil::unique_event_nothrow m_allInitialDiscoveryAndNegotiationMessagesReceived;
+    wil::unique_event_nothrow m_allInitialDiscoveryAndNegotiationMessagesReceived;
     //wil::unique_event_nothrow m_queueWorkerThreadWakeup;
 
     // true if we're closing down
@@ -90,15 +90,19 @@ private:
 
     bool m_alreadyTriedToNegotiationOnce{ false };
 
-    //bool m_taskEndpointInfoReceived{ false };
-    //bool m_taskFinalStreamNegotiationResponseReceived{ false };
-    //bool m_taskEndpointNameReceived{ false };
-    //bool m_taskEndpointProductInstanceIdReceived{ false };
-    //bool m_taskDeviceIdentityReceived{ false };
+    bool m_timedOut{ false };
+
+    bool m_taskEndpointInfoReceived{ false };
+    bool m_taskFinalStreamNegotiationResponseReceived{ false };
+    bool m_taskEndpointNameReceived{ false };
+    bool m_taskEndpointProductInstanceIdReceived{ false };
+    bool m_taskDeviceIdentityReceived{ false };
 
     bool m_functionBlocksAreStatic{ false };
     uint8_t m_declaredFunctionBlockCount{ 0 };
 
+    HRESULT CheckIfDiscoveryComplete();
+    HRESULT SetDiscoveryCompleteProperty();
 
     MidiFunctionBlockProperty BuildFunctionBlockPropertyFromInfoNotificationMessage(_In_ internal::PackedUmp128& ump);
 

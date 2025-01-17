@@ -1353,11 +1353,11 @@ CMidiDeviceManager::ActivateEndpointInternal
     }
     RETURN_HR_IF(E_FAIL, midiPort->SwDeviceState != SWDEVICESTATE::Created);
 
-    if (midiOne)
-    {
-        // Assign the port number for this midi port
-        RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), flow));
-    }
+    //if (midiOne)
+    //{
+    //    // Assign the port number for this midi port
+    //    RETURN_IF_FAILED(AssignPortNumber(midiPort->SwDevice.get(), midiPort->DeviceInterfaceId.get(), flow));
+    //}
 
     // Activate the SWD just created, it's created in the disabled state to allow for assigning
     // the port prior to activating it.
