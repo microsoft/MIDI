@@ -6,12 +6,12 @@ namespace Microsoft.Midi.Common
 	{
 		public const string Source = "GitHub Preview";
 		public const string Name = "Developer Preview 9";
-		public const string BuildFullVersion = "1.0.2-preview-9.250112-2036";
+		public const string BuildFullVersion = "1.0.2-preview-9.250117-2153";
 		public const string VersionMajor = "1";
 		public const string VersionMinor = "0";
 		public const string VersionRevision = "2";
-		public const string VersionDateNumber = "250112";
-		public const string VersionTimeNumber = "2036";
+		public const string VersionDateNumber = "250117";
+		public const string VersionTimeNumber = "2153";
 	}
 }
 
