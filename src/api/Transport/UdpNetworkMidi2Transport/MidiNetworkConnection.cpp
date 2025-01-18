@@ -416,6 +416,13 @@ MidiNetworkConnection::EndActiveSession(bool respondWithByeReply)
     RETURN_IF_FAILED(TransportState::Current().DisassociateMidiEndpointFromConnection(m_sessionEndpointDeviceInterfaceId));
     m_sessionEndpointDeviceInterfaceId.clear();
 
+    // if the endpoint is in our discovery list, mark it as not created
+
+
+
+
+
+
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,

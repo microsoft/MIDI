@@ -127,7 +127,7 @@ TransportState::DisassociateMidiEndpointFromConnection(
     auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
     RETURN_HR_IF(E_INVALIDARG, cleanId.empty());
 
-    if (m_sessionConnections.find(cleanId) != m_sessionConnections.end())
+    if (auto session = m_sessionConnections.find(cleanId); session != m_sessionConnections.end())
     {
         //m_sessionConnections.find(cleanId)->second.reset();
         m_sessionConnections.erase(cleanId);
