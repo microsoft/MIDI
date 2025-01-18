@@ -8,17 +8,21 @@
 
 #pragma once
 
-struct MidiPingInformation
-{
-    uint32_t PingId{ 0 };
-    uint64_t SentTimestamp{ 0 };
-    uint64_t ReceivedTimestamp{ 0 };
-};
+
 
 struct MidiRetransmitBufferEntry
 {
     MidiSequenceNumber SequenceNumber{ 0 };
     std::vector<uint32_t> Words{ };
+};
+
+struct MidiOutgoingPingTrackingEntry
+{
+    uint32_t PingId{ 0 };
+    uint64_t PingSendTimestamp{ 0 };
+    uint64_t PingReceiveTimestamp{ 0 };
+
+    bool Received{ false };
 };
 
 class MidiNetworkConnection
@@ -41,32 +45,41 @@ public:
     HRESULT ProcessIncomingMessage(
         _In_ winrt::Windows::Storage::Streams::DataReader const& reader);
 
-    // these SendMidiMessages methods don't do the actual sending. They add to the queue
-    HRESULT SendMidiMessagesToNetwork(
-        _In_ std::vector<uint32_t> const& words);
-
-    HRESULT SendMidiMessagesToNetwork(
-        _In_ PVOID const bytes,
-        _In_ UINT const byteCount);
-
     HRESULT SendInvitation();
 
     HRESULT ConnectMidiCallback(
         _In_ wil::com_ptr_nothrow<IMidiCallback> callback
     );
 
+    HRESULT QueueMidiMessagesToSendToNetwork(
+        _In_ std::vector<uint32_t> const& words);
+
+    HRESULT QueueMidiMessagesToSendToNetwork(
+        _In_ PVOID const bytes,
+        _In_ UINT const byteCount);
+
+
+
     HRESULT DisconnectMidiCallback();
 
     // todo: session info, connection to bidi streams, etc.
 
 private:
+    HRESULT SendQueuedMidiMessagesToNetwork();
 
-    HRESULT StartOutboundProcessingThreads();
+    HRESULT StartOutboundMidiMessageProcessingThread();
+    HRESULT StartConnectionWatchdogThread();
 
     HRESULT ResetSequenceNumbers();
     HRESULT EndActiveSession(_In_ bool respondWithByeReply);
 
     HRESULT RequestMissingPackets();
+
+    wil::slim_event_manual_reset m_newMessagesInQueueEvent;
+    wil::critical_section m_outgoingUmpMessageQueueLock;
+    std::vector<uint32_t> m_outgoingUmpMessages{};
+    std::jthread m_outboundProcessingThread;
+    HRESULT OutboundProcessingThreadWorker(_In_ std::stop_token stopToken);
 
     bool m_createUmpEndpointsOnly{ true };
 
@@ -77,9 +90,6 @@ private:
     MidiNetworkConnectionRole m_role{};
 
     wil::critical_section m_socketWriterLock;
-
-    wil::critical_section m_umpMessageQueueLock;
-    std::vector<uint32_t> m_outgoingUmpMessages{};
 
 
     std::wstring m_sessionEndpointDeviceInterfaceId{};  // swd
@@ -113,11 +123,9 @@ private:
 
     HRESULT HandleIncomingBye();
 
-    // this buffer holds the last n ping messages used to calculate latency
-    boost::circular_buffer<MidiPingInformation> m_sentPingInformation{};
-
     HRESULT HandleIncomingPing(_In_ uint32_t const pingId);
     HRESULT HandleIncomingPingReply(_In_ uint32_t const pingId);
+    HRESULT SendPing();
 
     HRESULT HandleIncomingUmpData(
         _In_ uint64_t const timestamp,
@@ -128,6 +136,8 @@ private:
         _In_ uint16_t const startingSequenceNumber, 
         _In_ uint16_t const retransmitPacketCount);
 
+    // FEC, Retransmit, and UMP integrity -----------------------------------------------
+
     MidiSequenceNumber m_lastSentUmpCommandSequenceNumber{ 0 };
     MidiSequenceNumber m_lastReceivedUmpCommandSequenceNumber{ 0 };
 
@@ -135,6 +145,30 @@ private:
     uint16_t m_retransmitBufferMaxCommandPacketCount{ 0 };
     boost::circular_buffer<MidiRetransmitBufferEntry> m_retransmitBuffer {};
 
+
+    // Connection stability -------------------------------------------------------------
+
+    // we may eventually want these to be configurable. For now, they are const
+    const uint16_t m_outgoingUmpEmptyPacketMaxIntervalMilliseconds{ 2000 };
+    const uint16_t m_outgoingUmpEmptyPacketStartingIntervalMilliseconds{ 200 };
+    uint16_t m_outgoingUmpEmptyPacketIntervalMilliseconds{ m_outgoingUmpEmptyPacketStartingIntervalMilliseconds };
+    const uint16_t m_outgoingPingIntervalMilliseconds{ 2000 };
+    const uint16_t m_outgoingPingMaxIgnoredBeforeDisconnect{ 5 };
+    const uint16_t m_outgoingPingTrackingMaxEntries{ 10 };
+    boost::circular_buffer<MidiOutgoingPingTrackingEntry> m_outgoingPingTracking{};
+
+    //const uint16_t m_maxMillisecondsWithoutResponseBeforeDisconnect{ 15000 };       // Milliseconds of silence (no pings or any other message) before disconnect
+    wil::slim_event_manual_reset m_connectionTimeoutEvent;
+    std::atomic<uint64_t> m_lastIncomingValidUdpPacketTimestamp{ 0 };
+
+    std::jthread m_connectionWatcherThread;
+    HRESULT SignalHealthyConnectionAndUpdateArrivalTimestamp();
+    HRESULT ConnectionWatcherThreadWorker(_In_ std::stop_token stopToken);
+    HRESULT EndActiveSessionDueToTimeout();
+
     HRESULT AddUmpPacketToRetransmitBuffer(_In_ MidiSequenceNumber const sequenceNumber, _In_ std::vector<uint32_t> const& words);
+
+
+
 
 };

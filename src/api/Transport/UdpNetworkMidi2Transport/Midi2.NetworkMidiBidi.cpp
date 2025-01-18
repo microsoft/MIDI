@@ -98,7 +98,7 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
 
     if (auto conn = m_connection.lock())
     {
-        RETURN_IF_FAILED(conn->SendMidiMessagesToNetwork(message, size));
+        RETURN_IF_FAILED(conn->QueueMidiMessagesToSendToNetwork(message, size));
     }
 
     return S_OK;
