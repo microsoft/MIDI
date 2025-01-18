@@ -2515,6 +2515,9 @@ Return Value:Amy
                 {
                     umpWritePacket.umpData.umpBytes[count] = umpPacket.umpData.umpBytes[count];
                 }
+
+                // Update number of processed words
+                numProcessed += umpPacket.wordCount;
                 break;
 
             case UMP_MT_MIDI1_CV:
@@ -2524,6 +2527,9 @@ Return Value:Amy
                 {
                     umpWritePacket.umpData.umpBytes[count] = umpPacket.umpData.umpBytes[count];
                 }
+
+                // Update number of processed words
+                numProcessed += umpPacket.wordCount;
                 break;
 
             case UMP_MT_DATA_64:
@@ -2547,6 +2553,9 @@ Return Value:Amy
                     bEndSysex = false;
                     break;
                 }
+
+                // Indicate that this packet being processed
+                numProcessed += umpPacket.wordCount;
 
                 if (bEnterSysex)
                 {
@@ -2666,8 +2675,6 @@ Return Value:Amy
 
             if (umpWritePacket.wordCount)
             {
-                numProcessed += umpPacket.wordCount;
-
                 // If currently no write buffer, create one
                 if (!pDeviceContext->DeviceWriteBuffer)
                 {
