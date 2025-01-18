@@ -36,18 +36,19 @@ CMidiDevicePipe::Initialize(
     RETURN_IF_FAILED(CMidiPipe::Initialize(device, creationParams->Flow));
 
     transportCreationParams.DataFormat = creationParams->DataFormat;
+    transportCreationParams.CallingApi = MidiApi_Service;
 
     // retrieve the transport layer GUID for this peripheral
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient));
+    additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
+    additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(
         device, 
         additionalProperties, 
         winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
+    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_TransportLayer);
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     m_TransportGuid = winrt::unbox_value<winrt::guid>(prop);
 
@@ -138,9 +139,9 @@ CMidiDevicePipe::Initialize(
         // default to true for multiclient support
         m_endpointSupportsMulticlient = true;
 
-        if (deviceInfo.Properties().HasKey(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient)))
+        if (deviceInfo.Properties().HasKey(STRING_PKEY_MIDI_SupportsMulticlient))
         {
-            auto propMultiClient = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportsMulticlient));
+            auto propMultiClient = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_SupportsMulticlient);
 
             if (propMultiClient != nullptr)
             {

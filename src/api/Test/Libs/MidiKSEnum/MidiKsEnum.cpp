@@ -31,18 +31,24 @@ KSMidiDeviceEnum::EnumerateFilters()
 {
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
-    wil::unique_event enumerationCompleted{wil::EventOptions::None};
 
-    auto watcher = DeviceInformation::CreateWatcher(deviceSelector);
+    auto deviceList = DeviceInformation::FindAllAsync(deviceSelector).get();
 
-    auto deviceAddedHandler = watcher.Added(winrt::auto_revoke, [&](DeviceWatcher watcher, DeviceInformation device)
+    for (auto const& device : deviceList)
     {
         wil::unique_handle hFilter;
         PCWSTR deviceId = device.Id().c_str();
         ULONG cPins = 0;
 
-        RETURN_IF_FAILED(FilterInstantiate(deviceId, &hFilter));
-        RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins)));
+        if (FAILED(FilterInstantiate(deviceId, &hFilter)))
+        {
+            continue;
+        }
+
+        if (FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins))))
+        {
+            continue;
+        }
 
         for (UINT i = 0; i < cPins; i++)
         {
@@ -51,7 +57,10 @@ KSMidiDeviceEnum::EnumerateFilters()
             MidiTransport transportCapability { MidiTransport_Invalid };
             KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
 
-            RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION)));
+            if(FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION))))
+            {
+                continue;
+            }
 
             // The external connector pin representing the phsyical connection
             // has KSPIN_COMMUNICATION_NONE. We can only create on software IO pins which
@@ -91,7 +100,10 @@ KSMidiDeviceEnum::EnumerateFilters()
                 continue;
             }
 
-            RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_DATAFLOW, &dataFlow, sizeof(KSPIN_DATAFLOW)));
+            if (FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_DATAFLOW, &dataFlow, sizeof(KSPIN_DATAFLOW))))
+            {
+                continue;
+            }
 
             // for render (MIDIOut) we need  KSPIN_DATAFLOW_IN
             if (KSPIN_DATAFLOW_IN == dataFlow)
@@ -115,29 +127,7 @@ KSMidiDeviceEnum::EnumerateFilters()
                 continue;
             }
         }
-        return S_OK;
-    });
-
-    auto deviceStoppedHandler = watcher.Stopped(winrt::auto_revoke, [&](DeviceWatcher, winrt::Windows::Foundation::IInspectable)
-    {
-        enumerationCompleted.SetEvent();
-        return S_OK;
-    });
-
-    auto enumerationCompletedHandler = watcher.EnumerationCompleted(winrt::auto_revoke, [&](DeviceWatcher , winrt::Windows::Foundation::IInspectable)
-    {
-        enumerationCompleted.SetEvent();
-        return S_OK;
-    });
-
-    watcher.Start();
-    enumerationCompleted.wait();
-    watcher.Stop();
-    enumerationCompleted.wait();
-
-    deviceAddedHandler.revoke();
-    deviceStoppedHandler.revoke();
-    enumerationCompletedHandler.revoke();
+    }
 
     return S_OK;
 }

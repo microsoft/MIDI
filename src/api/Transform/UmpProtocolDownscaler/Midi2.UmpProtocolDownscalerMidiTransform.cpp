@@ -54,18 +54,18 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, dev);
 
-    auto m1Prop = dev.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol));
+    auto m1Prop = dev.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol);
     RETURN_HR_IF_NULL(E_INVALIDARG, m1Prop);
     m_endpointSupportsMidi1Protocol = winrt::unbox_value<bool>(m1Prop);
 
-    auto m2Prop = dev.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol));
+    auto m2Prop = dev.Properties().Lookup(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol);
     RETURN_HR_IF_NULL(E_INVALIDARG, m1Prop);
     m_endpointSupportsMidi2Protocol = winrt::unbox_value<bool>(m2Prop);
 
     winrt::hstring deviceInstanceId;
 
     // retrieve the device instance id from the DeviceInformation property store
-    auto devInstanceIdProp = dev.Properties().Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
+    auto devInstanceIdProp = dev.Properties().Lookup(L"System.Devices.DeviceInstanceId");
     RETURN_HR_IF_NULL(E_INVALIDARG, devInstanceIdProp);
     deviceInstanceId = winrt::unbox_value<winrt::hstring>(devInstanceIdProp).c_str();
 
@@ -127,7 +127,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::OnDeviceUpdated(DeviceWatcher, DeviceI
         );
 
         // retrieve the device instance id from the DeviceInformation property store
-        auto prop = update.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_EndpointConfiguredProtocol));
+        auto prop = update.Properties().Lookup(STRING_PKEY_MIDI_EndpointConfiguredProtocol);
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
         byte newVal = winrt::unbox_value<uint8_t>(prop);
 

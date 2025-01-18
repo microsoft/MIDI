@@ -102,7 +102,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     auto properties = device.Properties();
 
     // retrieve the device instance id from the DeviceInformation property store
-    auto prop = properties.Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
+    auto prop = properties.Lookup(L"System.Devices.DeviceInstanceId");
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     deviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
     deviceId = device.Id().c_str();

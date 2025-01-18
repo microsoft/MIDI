@@ -45,7 +45,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="testmd.definition" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

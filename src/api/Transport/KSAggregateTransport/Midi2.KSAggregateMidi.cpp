@@ -54,19 +54,19 @@ CMidi2KSAggregateMidi::Initialize(
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
-    //additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
-    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsTransport));
-    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsAggMidiGroupPinMap));
- //   additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+    //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
+    additionalProperties.Append(STRING_DEVPKEY_KsTransport);
+    additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);
+ //   additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(
         endpointDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    //auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
+    //auto prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
     //RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     //filterInterfaceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
 
-    //prop = deviceInfo.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+    //prop = deviceInfo.Properties().Lookup(L"System.Devices.InterfaceClassGuid");
     //RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     //interfaceClass = winrt::unbox_value<winrt::guid>(prop);
 

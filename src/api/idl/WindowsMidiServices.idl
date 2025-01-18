@@ -25,6 +25,17 @@ cpp_quote("#include <devpropdef.h>")
 cpp_quote("#endif")
 
 
+// Enumeration of which api is calling in to create the midi client.
+typedef enum
+{
+    MidiApi_None = 0,
+    MidiApi_Test = 1,
+    MidiApi_Service = 2,
+    MidiApi_Winmm = 3,
+    MidiApi_Winrt1 = 4,
+    MidiApi_Winrt2 = 5
+} MidiApi;
+
 // Enumeration of midi data formats. These are used to communicate both a requested format, and the negotiated format.
 typedef enum
 {
@@ -55,6 +66,7 @@ typedef enum
 typedef struct
 {
     MidiDataFormats DataFormat;
+    MidiApi CallingApi;
 } TRANSPORTCREATIONPARAMS, * PTRANSPORTCREATIONPARAMS;
 
 

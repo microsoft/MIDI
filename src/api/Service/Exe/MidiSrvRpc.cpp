@@ -7,6 +7,7 @@
 // ============================================================================
 
 #include "stdafx.h"
+#include <filesystem>
 
 #define SAFE_COTASKMEMFREE(p) \
     if (NULL != p) { \
@@ -72,6 +73,11 @@ HRESULT MidiSrvCreateClient(
     std::shared_ptr<CMidiClientManager> clientManager;
     PMIDISRV_CLIENT createdClient {nullptr};
 
+    std::shared_ptr<CMidiSrvTraceLogger> traceLogger = nullptr;
+    RETURN_IF_FAILED(g_MidiService->GetTraceLogger(traceLogger));
+
+    std::wstring processName{};
+
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
     auto cleanupOnExit = wil::scope_exit([&]() {
@@ -79,6 +85,22 @@ HRESULT MidiSrvCreateClient(
         {
             MIDL_user_free(createdClient);
         }
+    });
+
+    auto logCreateClientOnFailure = wil::ThreadFailureCallback([&](wil::FailureInfo const& failure) noexcept {
+        if (traceLogger != nullptr)
+        {
+            DWORD EmptyProcessId{0};
+            traceLogger->LogMidi2CreateClient(
+                failure.hr,
+                midiDevice,
+                processName.c_str(),
+                creationParams->CallingApi,
+                creationParams->Flow,
+                creationParams->DataFormat,
+                EmptyProcessId);
+        }
+        return false;
     });
 
     // allocate a midl object to fill in and return to the client
@@ -97,8 +119,16 @@ HRESULT MidiSrvCreateClient(
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcImpersonateClient(bindingHandle)));
     clientProcessHandle.reset(OpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION, FALSE, clientProcessId));
     RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(RpcRevertToSelf()));
-
     RETURN_LAST_ERROR_IF_NULL(clientProcessHandle);
+
+    std::wstring modulePath{ 0 };
+    modulePath.resize(MAX_PATH + 1);
+
+    auto numPathCharacters = GetModuleFileNameEx(clientProcessHandle.get(), NULL, modulePath.data(), (DWORD)modulePath.capacity());
+    if (numPathCharacters > 0)
+    {
+        processName = (std::filesystem::path(modulePath).filename()).c_str();
+    }
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
@@ -107,6 +137,18 @@ HRESULT MidiSrvCreateClient(
     // Success, transfer the MIDISRV_CLIENT data to the caller.
     *client = createdClient;
     createdClient = nullptr;
+
+    if (traceLogger != nullptr)
+    {
+        traceLogger->LogMidi2CreateClient(S_OK,
+            midiDevice,
+            processName.c_str(),
+            creationParams->CallingApi,
+            creationParams->Flow,
+            creationParams->DataFormat,
+            clientProcessId
+        );
+    }
 
     return S_OK;
 }
@@ -126,11 +168,24 @@ HRESULT MidiSrvDestroyClient(
 
     std::shared_ptr<CMidiClientManager> clientManager;
 
+    std::shared_ptr<CMidiSrvTraceLogger> traceLogger = nullptr;
+    RETURN_IF_FAILED(g_MidiService->GetTraceLogger(traceLogger));
+
+    auto logCreateClientOnFailure = wil::ThreadFailureCallback([&](wil::FailureInfo const& failure) noexcept {
+        if (traceLogger != nullptr)
+        {
+            traceLogger->LogMidi2DestroyClient(failure.hr);
+        }
+        return false;
+    });
+
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
     // Client manager creates the client, fills in the MIDISRV_CLIENT information
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
     RETURN_IF_FAILED(clientManager->DestroyMidiClient(clientHandle));
+
+    traceLogger->LogMidi2DestroyClient(S_OK);
 
     return S_OK;
 }
