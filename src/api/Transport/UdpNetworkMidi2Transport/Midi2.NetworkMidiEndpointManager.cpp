@@ -261,9 +261,8 @@ CMidi2NetworkMidiEndpointManager::StartBackgroundEndpointCreator()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    std::jthread workerThread(std::bind_front(&CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker, this));
 
-    m_backgroundEndpointCreatorThread = std::move(workerThread);
+    m_backgroundEndpointCreatorThread = std::jthread(std::bind_front(&CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker, this));
     m_backgroundEndpointCreatorThread.detach();
 
 
@@ -297,11 +296,10 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
     // but right now, the service is doing way too much immediately. Having
     // devices connect immediately just adds to the contention. This needs
     // to be removed before this is production-ready
-    Sleep(10000);
-
-
+    Sleep(5000);
 
     winrt::init_apartment();
+
     //auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
     // this is set up to run through one time before waiting for the wakeup
