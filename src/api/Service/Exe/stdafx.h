@@ -29,6 +29,11 @@
 #include <wil\registry.h>
 #include <wil\result.h>
 #include <wil\tracelogging.h>
+#ifdef TRACELOGGING_CONFIG_HEADER
+#include TRACELOGGING_CONFIG_HEADER
+#else
+#include <wil\traceloggingconfig.h>
+#endif
 #include <wil\wistd_memory.h>
 #include <atlbase.h>
 #include <atlcom.h>
@@ -97,6 +102,7 @@ namespace json = ::winrt::Windows::Data::Json;
 class CMidiEndpointProtocolManager;
 struct GUIDCompare;
 class CMidiSessionTracker;
+class CMidiSrvTraceLogger;
 
 #include "MidiTelemetry.h"
 #include "MidiPerformanceManager.h"
@@ -104,6 +110,7 @@ class CMidiSessionTracker;
 #include "MidiConfigurationManager.h"
 #include "MidiDeviceManager.h"
 #include "MidiXProc.h"
+#include "MidiSrvTraceLogger.h"
 
 // MidiDevicePipe holds MidiClientPipe(s) that it is connected to.
 // MidiClientPipe holds a MidiDevicePipe that it is connected to.

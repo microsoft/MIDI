@@ -41,7 +41,7 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
         TraceLoggingValue((int)flow, "MidiFlow"),
         TraceLoggingValue(flags, "flags"));
 
-    TRANSPORTCREATIONPARAMS transportCreationParams { MidiDataFormats_ByteStream };
+    TRANSPORTCREATIONPARAMS transportCreationParams { MidiDataFormats_ByteStream, MidiApi_Winmm };
     DWORD mmcssTaskId {0};
     LARGE_INTEGER qpc{ 0 };
     

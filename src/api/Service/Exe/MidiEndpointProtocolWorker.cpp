@@ -174,6 +174,7 @@ CMidiEndpointProtocolWorker::Start(
             // we only support UMP data format for protocol negotiation
             TRANSPORTCREATIONPARAMS transportCreationParams{ };
             transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
+            transportCreationParams.CallingApi = MidiApi_Service;
 
             DWORD mmcssTaskId{ 0 };
             LONGLONG context{ 0 };

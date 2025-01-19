@@ -73,6 +73,8 @@ CMidiSrv::Initialize()
     m_SessionTracker = std::make_shared<CMidiSessionTracker>();
     RETURN_IF_NULL_ALLOC(m_SessionTracker);
 
+    m_TraceLogger = std::make_shared<CMidiSrvTraceLogger>();
+    RETURN_IF_NULL_ALLOC(m_TraceLogger);
 
     // NOTE: client manager is not yet initialized when this is called
     RETURN_IF_FAILED(m_SessionTracker->Initialize(m_ClientManager));

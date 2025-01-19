@@ -66,6 +66,9 @@
     <ClCompile Include="MidiEndpointProtocolWorker.cpp">
       <Filter>Source Files\Protocol</Filter>
     </ClCompile>
+    <ClCompile Include="MidiSrvTraceLogger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -115,6 +118,9 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointProtocolWorker.h">
       <Filter>Header Files\Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiSrvTraceLogger.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
