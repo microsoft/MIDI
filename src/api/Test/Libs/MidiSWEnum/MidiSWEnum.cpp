@@ -43,25 +43,24 @@ MidiSWDeviceEnum::EnumerateDevices(
 )
 {
     winrt::hstring deviceSelector(MIDI_DEVICE_SELECTOR);
-    wil::unique_event enumerationCompleted{wil::EventOptions::None};
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
-    additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
+    additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
+    additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
+    additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
 
-    auto watcher = DeviceInformation::CreateWatcher(deviceSelector, additionalProperties);
+    auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
 
-    auto deviceAddedHandler = watcher.Added(winrt::auto_revoke, [&](DeviceWatcher watcher, DeviceInformation device)
+    for (auto const& device : deviceList)
     {
         auto name = device.Name();
         auto deviceId = device.Id();
         winrt::guid transportGuid;
-        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+        auto additionalProperties2 = winrt::single_threaded_vector<winrt::hstring>();
         MidiDataFormats supportedDataFormats { MidiDataFormats_Invalid };
 
-        auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_TransportLayer));
+        auto prop = device.Properties().Lookup(STRING_PKEY_MIDI_TransportLayer);
         if (prop)
         {
             transportGuid = winrt::unbox_value<winrt::guid>(prop);
@@ -70,24 +69,35 @@ MidiSWDeviceEnum::EnumerateDevices(
         {
             // TODO: SWD's created by AudioEndpointBuilder lack an transport guid entirely,
             // we don't currently know how to use these endpoints. Skip for now.
-            return S_OK;
+            continue;
         }
 
-        prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
-        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
+        prop = device.Properties().Lookup(STRING_PKEY_MIDI_SupportedDataFormats);
+        if (!prop)
+        {
+            continue;
+        }
         supportedDataFormats = (MidiDataFormats) winrt::unbox_value<uint8_t>(prop);
 
-        prop = device.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
-        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
+        prop = device.Properties().Lookup(L"System.Devices.InterfaceClassGuid");
+        if (!prop)
+        {
+            continue;
+        }
         auto interfaceClass = winrt::unbox_value<winrt::guid>(prop);
 
-        prop = device.Properties().Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
-        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
+        prop = device.Properties().Lookup(L"System.Devices.DeviceInstanceId");
+        if (!prop)
+        {
+            continue;
+        }
         std::wstring deviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
         
         std::unique_ptr<MIDIU_DEVICE> midiDevice = std::make_unique<MIDIU_DEVICE>();
-        
-        RETURN_IF_NULL_ALLOC(midiDevice);
+        if (!midiDevice)
+        {
+            continue;
+        }
 
         midiDevice->TransportLayer = transportGuid;
         midiDevice->InterfaceClass = interfaceClass;
@@ -120,15 +130,15 @@ MidiSWDeviceEnum::EnumerateDevices(
         }
         else
         {
-            RETURN_IF_FAILED(E_UNEXPECTED);
+            continue;
         }
 
-        additionalProperties.Append(winrt::to_hstring(L"System.Devices.Parent"));
+        additionalProperties2.Append(L"System.Devices.Parent");
 
         auto parentDeviceInfo = DeviceInformation::CreateFromIdAsync(deviceInstanceId,
-        additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
+        additionalProperties2, winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
 
-        prop = parentDeviceInfo.Properties().Lookup(winrt::to_hstring(L"System.Devices.Parent"));
+        prop = parentDeviceInfo.Properties().Lookup(L"System.Devices.Parent");
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
         std::wstring parentDeviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
         midiDevice->ParentDeviceInstanceId = WindowsMidiServicesInternal::NormalizeDeviceInstanceIdWStringCopy(parentDeviceInstanceId);
@@ -137,30 +147,7 @@ MidiSWDeviceEnum::EnumerateDevices(
         {
             devices.push_back(std::move(midiDevice));
         }
-
-        return S_OK;
-    });
-
-    auto deviceStoppedHandler = watcher.Stopped(winrt::auto_revoke, [&](DeviceWatcher, winrt::Windows::Foundation::IInspectable)
-    {
-        enumerationCompleted.SetEvent();
-        return S_OK;
-    });
-
-    auto enumerationCompletedHandler = watcher.EnumerationCompleted(winrt::auto_revoke, [&](DeviceWatcher , winrt::Windows::Foundation::IInspectable)
-    {
-        enumerationCompleted.SetEvent();
-        return S_OK;
-    });
-
-    watcher.Start();
-    enumerationCompleted.wait();
-    watcher.Stop();
-    enumerationCompleted.wait();
-
-    deviceAddedHandler.revoke();
-    deviceStoppedHandler.revoke();
-    enumerationCompletedHandler.revoke();
+    }
 
     return S_OK;
 }

@@ -354,6 +354,7 @@
     <ClCompile Include="MidiSrv.cpp" />
     <ClCompile Include="MidiSrvRpc.cpp" />
     <ClCompile Include="MidiSrvRPC_stub.cpp" />
+    <ClCompile Include="MidiSrvTraceLogger.cpp" />
     <ClCompile Include="MidiTransformPipe.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -371,6 +372,7 @@
     <ClInclude Include="MidiEndpointProtocolManager.h" />
     <ClInclude Include="MidiEndpointProtocolWorker.h" />
     <ClInclude Include="MidiSessionTracker.h" />
+    <ClInclude Include="MidiSrvTraceLogger.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

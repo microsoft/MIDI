@@ -12,6 +12,9 @@
 #define MIDI_DEVICE_ENUMERATOR L"MIDISRV"
 #define MIDI_SWD_VIRTUAL_PARENT_ROOT L"HTREE\\ROOT\\0"
 
+#define MAX_UINT32     ((UINT32) 0xFFFFFFFF)
+#define IS_VALID_PORT_NUMBER(Context) (Context != MAX_UINT32)
+
 // ----------------------------------------------------------------------
 //
 //  MIDIPORT
@@ -54,8 +57,9 @@ typedef struct _MIDIPORT
     HRESULT hr{ S_OK };
     bool MidiOne {false};
     UINT32 GroupIndex{0};
-    UINT32 CustomPortNumber {0};
+    UINT32 CustomPortNumber{MAX_UINT32};
     std::wstring AssociatedInterfaceId;
+    bool UmpOnly {false};
 } MIDIPORT, *PMIDIPORT;
 
 typedef struct _MIDIPARENTDEVICE
@@ -173,21 +177,25 @@ private:
 
     HRESULT GetFunctionBlockPortInfo(
         _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
     HRESULT GetGroupTerminalBlockPortInfo(
         _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
     HRESULT UseFallbackMidi1PortDefinition(
         _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
     HRESULT GetCustomPortMapping(
         _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 

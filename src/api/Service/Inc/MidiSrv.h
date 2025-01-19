@@ -63,6 +63,11 @@ public:
         return S_OK;
     }
 
+    HRESULT GetTraceLogger(std::shared_ptr<CMidiSrvTraceLogger>& traceLogger)
+    {
+        traceLogger = m_TraceLogger;
+        return S_OK;
+    }
 
 private:
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
@@ -75,7 +80,9 @@ private:
 
     std::shared_ptr<CMidiSessionTracker> m_SessionTracker;
 
-    bool m_RpcRegistered {false};
+    std::shared_ptr<CMidiSrvTraceLogger> m_TraceLogger;
+
+    bool m_RpcRegistered{false};
     bool m_RpcBound {false};
     wil::unique_rpc_binding_vector  m_RpcBindingVector;
 

@@ -121,6 +121,7 @@ CMidi2MidiSrv::Initialize(
 
     clientCreationParams.Flow = flow;
     clientCreationParams.DataFormat = creationParams->DataFormat;
+    clientCreationParams.CallingApi = creationParams->CallingApi;
 
     // Todo: client side buffering requests to come from some service setting?
     // - See https://aka.ms/midiissues/219 for details

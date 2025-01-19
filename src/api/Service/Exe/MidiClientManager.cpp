@@ -121,13 +121,13 @@ GetEndpointRequiresOutboundProtocolDownscaling(
     if (deviceFormat == MidiDataFormats::MidiDataFormats_UMP && (flow == MidiFlow::MidiFlowBidirectional || flow == MidiFlow::MidiFlowOut))
     {
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-        additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_NativeDataFormat));
+        additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
 
         auto deviceInfo = DeviceInformation::CreateFromIdAsync(
             midiDevice, additionalProperties, 
             winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-        auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_NativeDataFormat));
+        auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
         if (prop)
         {
             auto nativeFormat = winrt::unbox_value<uint8_t>(prop);
@@ -171,10 +171,10 @@ GetDeviceSupportedDataFormat(_In_ std::wstring midiDevice, _Inout_ MidiDataForma
 
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
+    additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(midiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_SupportedDataFormats));
+    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_SupportedDataFormats);
     if (prop)
     {
         dataFormat = MidiDataFormats::MidiDataFormats_Any;
@@ -223,10 +223,10 @@ GetEndpointGenerateIncomingTimestamp(_In_ std::wstring midiDevice, _Inout_ bool&
     if (flow == MidiFlow::MidiFlowBidirectional || flow == MidiFlow::MidiFlowIn)
     {
         auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-        additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_GenerateIncomingTimestamp));
+        additionalProperties.Append(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
         auto deviceInfo = DeviceInformation::CreateFromIdAsync(midiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-        auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_GenerateIncomingTimestamp));
+        auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_GenerateIncomingTimestamp);
         if (prop)
         {
             // this interface is pointing to a UMP interface, so use that instance id.
@@ -274,10 +274,10 @@ GetEndpointAlias(_In_ LPCWSTR midiDevice, _In_ std::wstring& alias, _In_ MidiFlo
     alias = internal::NormalizeEndpointInterfaceIdWStringCopy(midiDevice);
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_AssociatedUMP));
+    additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(midiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_AssociatedUMP));
+    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_AssociatedUMP);
     if (prop)
     {
         // this interface is pointing to a UMP interface, so use that instance id.
@@ -291,9 +291,9 @@ GetEndpointAlias(_In_ LPCWSTR midiDevice, _In_ std::wstring& alias, _In_ MidiFlo
     // alternate flows will work as expected. This needs to be done whether or not the activated
     // interface has an AssociatedUMP or not.
     additionalProperties.Clear();
-    additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+    additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
     auto aliasedDeviceInfo = DeviceInformation::CreateFromIdAsync(alias, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
-    prop = aliasedDeviceInfo.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+    prop = aliasedDeviceInfo.Properties().Lookup(L"System.Devices.InterfaceClassGuid");
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     auto interfaceClass = winrt::unbox_value<winrt::guid>(prop);
 
@@ -337,10 +337,10 @@ GetEndpointGroupIndex(_In_ std::wstring midiDevice, _Inout_ BYTE& groupIndex)
     groupIndex = INVALID_GROUP_INDEX;
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_PortAssignedGroupIndex));
+    additionalProperties.Append(STRING_PKEY_MIDI_PortAssignedGroupIndex);
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(midiDevice, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_PortAssignedGroupIndex));
+    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_PortAssignedGroupIndex);
     if (prop)
     {
         try

@@ -245,7 +245,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>Midi2.KSAggregateTransport.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

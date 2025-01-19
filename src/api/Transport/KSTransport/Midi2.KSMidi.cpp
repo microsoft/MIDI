@@ -55,24 +55,24 @@ CMidi2KSMidi::Initialize(
     std::wstring filterInterfaceId;
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
 
-    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
-    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsPinId));
-    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
-    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
-    additionalProperties.Append(winrt::to_hstring(STRING_DEVPKEY_KsTransport));
-    additionalProperties.Append(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+    additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
+    additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsPinId);
+    additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_InPinId);
+    additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_OutPinId);
+    additionalProperties.Append(STRING_DEVPKEY_KsTransport);
+    additionalProperties.Append(L"System.Devices.InterfaceClassGuid");
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(device, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    auto prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId));
+    auto prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     filterInterfaceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
 
-    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(L"System.Devices.InterfaceClassGuid"));
+    prop = deviceInfo.Properties().Lookup(L"System.Devices.InterfaceClassGuid");
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     interfaceClass = winrt::unbox_value<winrt::guid>(prop);
 
-    prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsTransport));
+    prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsTransport);
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     transportCapabilities = (MidiTransport) winrt::unbox_value<uint32_t>(prop);
 
@@ -126,11 +126,11 @@ CMidi2KSMidi::Initialize(
 
     if (flow == MidiFlowBidirectional)
     {
-        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_InPinId);
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
         inPinId = winrt::unbox_value<uint32_t>(prop);
 
-        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_OutPinId);
         RETURN_HR_IF_NULL(E_INVALIDARG, prop);
         outPinId = winrt::unbox_value<uint32_t>(prop);
     }
@@ -138,20 +138,20 @@ CMidi2KSMidi::Initialize(
     {
         // first check for the legacy pin id, if that's not present then look for the newer in/out
         // pin id's that is on bidi endpoints, which can be activated separately in and out.
-        prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_KsPinId));
+        prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_KsPinId);
         if (prop)
         {
             inPinId = outPinId = winrt::unbox_value<uint32_t>(prop);
         }
         else if (flow == MidiFlowIn)
         {
-            prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_InPinId));
+            prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_InPinId);
             RETURN_HR_IF_NULL(E_INVALIDARG, prop);
             inPinId = winrt::unbox_value<uint32_t>(prop);
         }
         else
         {
-            prop = deviceInfo.Properties().Lookup(winrt::to_hstring(STRING_DEVPKEY_KsMidiPort_OutPinId));
+            prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_OutPinId);
             RETURN_HR_IF_NULL(E_INVALIDARG, prop);
             outPinId = winrt::unbox_value<uint32_t>(prop);
         }

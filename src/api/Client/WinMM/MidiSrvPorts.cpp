@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "MidiSrvPorts.h"
 
-using namespace winrt::Windows::Devices::Enumeration;
+using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
 CMidiPorts::CMidiPorts()
 {
@@ -191,14 +191,6 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
     return MMRESULT_FROM_HRESULT(hr);
 }
 
-#define ACTIVE_MIDI1_OUTPUT_DEVICES \
-    L"System.Devices.InterfaceClassGuid:=\"{6DC23320-AB33-4CE4-80D4-BBB3EBBF2814}\"" \
-    L" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"
-
-#define ACTIVE_MIDI1_INPUT_DEVICES \
-    L"System.Devices.InterfaceClassGuid:=\"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}\"" \
-    L" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True"
-
 _Use_decl_annotations_
 HRESULT
 CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
@@ -209,6 +201,9 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingValue((int)flow, "MidiFlow"));
+
+    count = 0;
+    RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
 
     auto lock = m_Lock.lock();
 
@@ -222,37 +217,92 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
     // maximum port number, our port numbers are from 1->, max port number is 0->
     // (because port 0 is reserved for the synth, which will eventually be in midisrv)           
     m_MidiPortInfo[flow].clear();
+    m_MidiPortCount[flow] = 0;
 
-    winrt::hstring deviceSelector(flow == MidiFlowOut?ACTIVE_MIDI1_OUTPUT_DEVICES:ACTIVE_MIDI1_INPUT_DEVICES);
-    wil::unique_event enumerationCompleted{wil::EventOptions::None};
+    SP_DEVINFO_DATA device = { sizeof(SP_DEVINFO_DATA) };
+    const GUID* interfaceCategory = (flow == MidiFlowOut) ? &DEVINTERFACE_MIDI_OUTPUT : &DEVINTERFACE_MIDI_INPUT;
+    auto devInfo = unique_hdevinfo{ SetupDiGetClassDevs(interfaceCategory, nullptr, nullptr, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT) };
+    RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), !devInfo);
 
-    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
-
-    auto watcher = DeviceInformation::CreateWatcher(deviceSelector, additionalProperties);
-
-    auto deviceAddedHandler = watcher.Added(winrt::auto_revoke, [&](DeviceWatcher watcher, DeviceInformation device)
+    for (DWORD deviceIndex = 0; SetupDiEnumDeviceInfo(devInfo.get(), deviceIndex, &device); deviceIndex++)
     {
-        bool servicePortNumValid {false};
-        UINT32 servicePortNum {0};
-
-        // all others with a service assigned port number goes into the portInfo structure for processing.
-        auto prop = device.Properties().Lookup(winrt::to_hstring(STRING_PKEY_MIDI_ServiceAssignedPortNumber));
-        
-        if (prop)
+        SP_DEVICE_INTERFACE_DATA deviceInterfaceData = { sizeof(SP_DEVICE_INTERFACE_DATA) };
+        for (DWORD deviceInterfaceIndex = 0; SetupDiEnumDeviceInterfaces(devInfo.get(), &device, interfaceCategory, deviceInterfaceIndex, &deviceInterfaceData); deviceInterfaceIndex++ )
         {
-//            servicePortNum = winrt::unbox_value<UINT32>(prop);
+            DEVPROPTYPE propType = DEVPROP_TYPE_NULL;
+            WCHAR deviceName[MAXPNAMELEN] = {0};
+            DWORD servicePortNum {0};
+            DWORD requiredSize {0};
+            std::unique_ptr<SP_DEVICE_INTERFACE_DETAIL_DATA> interfaceDetailData;
 
-            std::optional<UINT32> servicePortNumValue = prop.try_as<UINT32>();
-            if (servicePortNumValue != std::nullopt && servicePortNumValue.has_value() && servicePortNumValue.value() != 0)
+            // retrieve the device interface id string
+            if (!SetupDiGetDeviceInterfaceDetail(
+                devInfo.get(),
+                &deviceInterfaceData,
+                nullptr,
+                0,
+                &requiredSize,
+                nullptr))
             {
-                servicePortNum = servicePortNumValue.value();
-                servicePortNumValid = true;
+                if (ERROR_INSUFFICIENT_BUFFER == GetLastError())
+                {
+                    interfaceDetailData.reset((PSP_DEVICE_INTERFACE_DETAIL_DATA)(new (std::nothrow) BYTE[requiredSize]));
+                    RETURN_IF_NULL_ALLOC(interfaceDetailData);
+                    memset(interfaceDetailData.get(), 0, requiredSize);
+                    interfaceDetailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+                    SetupDiGetDeviceInterfaceDetail(
+                                    devInfo.get(),
+                                    &deviceInterfaceData,
+                                    interfaceDetailData.get(),
+                                    requiredSize,
+                                    nullptr,
+                                    nullptr);
+                }
             }
-        }
+            if (nullptr == interfaceDetailData)
+            {
+                continue;
+            }
 
-        if (servicePortNumValid)
-        {
+            // retrieve the assigned port number for this interface
+            // if not present, then this may be the synth, which currently
+            // doesn't go through midisrv.
+            if (!SetupDiGetDeviceInterfaceProperty(
+                devInfo.get(),
+                &deviceInterfaceData,
+                &PKEY_MIDI_ServiceAssignedPortNumber,
+                &propType,
+                (PBYTE) &servicePortNum,
+                sizeof(DWORD),
+                nullptr,
+                0))
+            {
+                continue;
+            }
+            if (propType != DEVPROP_TYPE_UINT32)
+            {
+                continue;
+            }
+
+            // retrieve the friendly name for the port
+            if (!SetupDiGetDeviceInterfaceProperty(
+                devInfo.get(),
+                &deviceInterfaceData,
+                &DEVPKEY_DeviceInterface_FriendlyName,
+                &propType,
+                (PBYTE) &deviceName,
+                sizeof(deviceName),
+                &requiredSize,
+                0))
+            {
+                continue;
+            }
+            if (propType != DEVPROP_TYPE_STRING ||
+                requiredSize < sizeof(WCHAR))
+            {
+                continue;
+            }
+
             // our port numbers start with 1 because they're the "global" port numbers
             // that the user should see and port 0 is reserved for the synth.
             // So, a service port number of 1 indicates that we have 1 port, and so on.
@@ -263,27 +313,23 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
                 highestPortNumber = servicePortNum;
             }
 
+            // save the port information to the array.
             m_MidiPortInfo[flow][servicePortNum].PortNumber = servicePortNum;
-            m_MidiPortInfo[flow][servicePortNum].Name = device.Name().c_str();
-            m_MidiPortInfo[flow][servicePortNum].InterfaceId = device.Id().c_str();
-
-            //OutputDebugString(device.Id().c_str());
-            //OutputDebugString(L" : ");
-            //OutputDebugString(device.Name().c_str());
-            //OutputDebugString(L"\n");
-
+            m_MidiPortInfo[flow][servicePortNum].Name = deviceName;
+            m_MidiPortInfo[flow][servicePortNum].InterfaceId = interfaceDetailData->DevicePath;
+            
             // Fill in the midiCaps for this port
             if (flow == MidiFlowOut)
             {
                 MIDIOUTCAPSW *caps = &(m_MidiPortInfo[flow][servicePortNum].MidiOutCaps);
-
+            
                 caps->wMid = MM_MICROSOFT;
                 caps->wPid = MM_MSFT_GENERIC_MIDIOUT;
                 caps->vDriverVersion = 0x0100;
-
+            
                 wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
                 caps->szPname[MAXPNAMELEN - 1] = NULL;
-
+            
                 caps->wTechnology = MOD_MIDIPORT;
                 caps->wVoices = 0;
                 caps->wNotes = 0;
@@ -293,43 +339,22 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
             else
             {
                 MIDIINCAPSW *caps = &(m_MidiPortInfo[flow][servicePortNum].MidiInCaps);
-
+            
                 caps->wMid = MM_MICROSOFT;
                 caps->wPid = MM_MSFT_GENERIC_MIDIIN;
                 caps->vDriverVersion = 0x0100;
-
+            
                 //wcsncpy_s(caps->szPname, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), MAXPNAMELEN);
                 wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
                 caps->szPname[MAXPNAMELEN - 1] = NULL;
-
+            
                 caps->dwSupport = 0;
             }
         }
-    });
+    }
 
-    auto deviceStoppedHandler = watcher.Stopped(winrt::auto_revoke, [&](DeviceWatcher, winrt::Windows::Foundation::IInspectable)
-    {
-        enumerationCompleted.SetEvent();
-        return S_OK;
-    });
-
-    auto enumerationCompletedHandler = watcher.EnumerationCompleted(winrt::auto_revoke, [&](DeviceWatcher , winrt::Windows::Foundation::IInspectable)
-    {
-        enumerationCompleted.SetEvent();
-        return S_OK;
-    });
-
-    watcher.Start();
-    enumerationCompleted.wait();
-    watcher.Stop();
-    enumerationCompleted.wait();
-
-    deviceAddedHandler.revoke();
-    deviceStoppedHandler.revoke();
-    enumerationCompletedHandler.revoke();
-
+    // save and return the highest port number
     m_MidiPortCount[flow] = highestPortNumber;
-
     count = highestPortNumber;
 
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
@@ -359,6 +384,16 @@ CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps)
     RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
     RETURN_HR_IF(E_INVALIDARG, midiCaps == 0);
 
+    // clear the provided caps, in the event that the port is not active.
+    if (MidiFlowIn == flow)
+    {
+        memset((PVOID) midiCaps, 0, sizeof(MIDIINCAPSW));
+    }
+    else
+    {
+        memset((PVOID) midiCaps, 0, sizeof(MIDIOUTCAPSW));
+    }
+
     auto lock = m_Lock.lock();
 
     // The port numbers provided to us by winmm start with 0, our port numbers
@@ -380,7 +415,7 @@ CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps)
     {
         memcpy((PVOID) midiCaps, &(port->second.MidiOutCaps), sizeof(port->second.MidiOutCaps));
     }
-    
+
     return S_OK;
 }
 
