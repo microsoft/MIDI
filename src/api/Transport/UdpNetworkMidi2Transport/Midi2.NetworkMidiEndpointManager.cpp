@@ -739,12 +739,15 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
         RETURN_IF_FAILED(E_FAIL);
     }
 
-    // TODO: We can have multiple devices with the same unique ID, so need 
-    // to change this logic to check for that and create a new one, maybe
-    // with the host name (if a string is available) and port?
+
+    std::hash<std::wstring> hasher;
+    std::wstring hash;
+    auto idToHash = hostName.CanonicalName() + remoteEndpointProductInstanceId + networkPort;
+    hash = std::to_wstring(hasher(idToHash.c_str()));
+
     std::wstring instanceId = internal::NormalizeDeviceInstanceIdWStringCopy(
         instancePrefix +
-        remoteEndpointProductInstanceId);
+        hash);
 
     createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
