@@ -291,8 +291,19 @@ typedef struct _DEVPROPERTY *PDEVPROPERTY;
 #include <swdevicedef.h>
 #include <devpropdef.h>
 #endif
-typedef /* [public][public][public][public][public][public][public][public][public][public][public][public][public][public][public][public] */ 
+typedef /* [public][public][public][public] */ 
 enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0001
+    {
+        MidiApi_None	= 0,
+        MidiApi_Test	= 1,
+        MidiApi_Service	= 2,
+        MidiApi_Winmm	= 3,
+        MidiApi_Winrt1	= 4,
+        MidiApi_Winrt2	= 5
+    } 	MidiApi;
+
+typedef /* [public][public][public][public][public][public][public][public][public][public][public][public][public][public][public][public] */ 
+enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0002
     {
         MidiDataFormats_Invalid	= 0,
         MidiDataFormats_ByteStream	= 0x1,
@@ -301,7 +312,7 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0001
     } 	MidiDataFormats;
 
 typedef /* [public][public] */ 
-enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0002
+enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003
     {
         MidiFlowIn	= 0,
         MidiFlowOut	= ( MidiFlowIn + 1 ) ,
@@ -309,7 +320,7 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0002
     } 	MidiFlow;
 
 typedef /* [public][public][public][public][public][public][public] */ 
-enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003
+enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004
     {
         MetadataFlags_None	= 0,
         MetadataFlags_IsRuntimeCreatableByApps	= 1,
@@ -318,12 +329,13 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003
         MetadataFlags_IsClientConfigurable	= 8
     } 	MetadataFlags;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0005
     {
     MidiDataFormats DataFormat;
+    MidiApi CallingApi;
     } 	TRANSPORTCREATIONPARAMS;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004 *PTRANSPORTCREATIONPARAMS;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0005 *PTRANSPORTCREATIONPARAMS;
 
 
 
