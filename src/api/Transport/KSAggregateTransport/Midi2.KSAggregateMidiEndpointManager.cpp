@@ -57,14 +57,15 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_midiProtocolManager));
 
     winrt::hstring parentDeviceSelector(
-        L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\"");
+        L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\" AND " \
+        L"System.Devices.Present:=System.StructuredQueryType.Boolean#True");
+
+    // :=System.StructuredQueryType.Boolean#True
 
     auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
 
     additionalProps.Append(L"System.Devices.DeviceManufacturer");
     additionalProps.Append(L"System.Devices.Manufacturer");
-
-
 
     m_watcher = DeviceInformation::CreateWatcher(parentDeviceSelector, additionalProps, DeviceInformationKind::Device);
 
