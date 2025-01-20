@@ -9,6 +9,11 @@ has_children: false
 
 Used to indicate the type of System Exclusive 8 Universal MIDI Packet (UMP) as per the MIDI 2.0 UMP specification.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Messages |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -20,4 +25,4 @@ Used to indicate the type of System Exclusive 8 Universal MIDI Packet (UMP) as p
 
 ## IDL
 
-[MidiSystemExclusive8StatusEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiSystemExclusive8StatusEnum.idl)
+[MidiSystemExclusive8StatusEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiSystemExclusive8StatusEnum.idl)

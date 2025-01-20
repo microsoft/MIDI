@@ -14,6 +14,11 @@ Microsoft provides several plugins in the API, including the `MidiVirtualEndpoin
 
 The main part of message processing is the `ProcessIncomingMessage` callback.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Description |
@@ -34,4 +39,4 @@ The main part of message processing is the `ProcessIncomingMessage` callback.
 
 ## IDL
 
-[IMidiEndpointMessageProcessingPlugin IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiEndpointMessageProcessingPlugin.idl)
+[IMidiEndpointMessageProcessingPlugin IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/IMidiEndpointMessageProcessingPlugin.idl)

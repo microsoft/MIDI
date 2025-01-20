@@ -8,11 +8,19 @@ has_children: false
 
 # MidiSession
 
-## Remarks
-
 Before you can connect to an endpoint, you must start a new MIDI session. 
 
 An application may have any number of sessions open. For example, the application may open one session per open project, or one session per tab in the case of a browser. The lifetime of endpoint connections opened through a session are controlled through the session.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`Windows.Foundation.IClosable`
+`Windows.Foundation.IStringable`
 
 ## Properties
 
@@ -40,7 +48,7 @@ The two static functions are factory-pattern methods for creating a new session.
 
 ## See also
 
-[MidiSession IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiSession.idl)
+[MidiSession IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiSession.idl)
 
 ### Sample
 

@@ -14,6 +14,11 @@ This is the class applications should use when they want to find devices, and al
 
 Create a `MidiEndpointDeviceWatcher` on a background thread, and use the internal list of Endpoints as your source of record for device properties.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Function | Description |
@@ -78,4 +83,4 @@ If the auto-reconnect option was used when creating the connection from the SDK,
 
 ## IDL
 
-[MidiEndpointDeviceWatcher IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceWatcher.idl)
+[MidiEndpointDeviceWatcher IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointDeviceWatcher.idl)

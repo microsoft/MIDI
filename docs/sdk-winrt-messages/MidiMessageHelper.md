@@ -13,6 +13,11 @@ This class contains a number of static helper functions for reading information 
 
 In most cases, the calling application needs to do some validation before calling functions which return specific fields. If, for example, the application asks for the Flex Data Status, but doesn't provide a valid Flex Data message, the function will happily return whatever other data is in the position of that field.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Messages |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Validation Functions
 
 | Function | Description |
@@ -65,4 +70,4 @@ In most cases, the calling application needs to do some validation before callin
 
 ## IDL
 
-[MidiMessageUtility IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiMessageHelper.idl)
+[MidiMessageUtility IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiMessageHelper.idl)

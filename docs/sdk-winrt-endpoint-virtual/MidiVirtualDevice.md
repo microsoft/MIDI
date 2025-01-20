@@ -7,14 +7,23 @@ has_children: false
 
 # MidiVirtualDevice
 
+This is the class that a virtual device application uses as its interface to the virtual device it has defined. Use the `MidiVirtualDeviceManager` to construct an instance of this type.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Endpoints.Virtual |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin`
+
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
 | `DeviceEndpointDeviceId` | The EndpointDeviceId to be used by the app creating the virtual device |
-| `ClientEndpointDeviceId` | The EndpointDeviceId to be used by apps which want to connect to this virtual device |
-
-
+| `AssociationId` | The id used to associate the client and device endpoints |
 | `FunctionBlocks` | Current list of function blocks for this device. |
 | `SuppressHandledMessages` | True if the protocol messages handled by this class should be filtered out of the incoming message stream |
 
@@ -31,6 +40,11 @@ has_children: false
 | --------------- | ----------- |
 | `StreamConfigRequestReceived(device, args)` | Raised when this device receives a Stream Configuration Request UMP message. |
 
+## Examples
+
+[C++ Sample](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/simple-app-to-app-midi/main.cpp)
+[C# Sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/virtual-device-app-winui)
+
 ## IDL
 
-[MidiVirtualDevice IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-endpoints-virtual/MidiVirtualDevice.idl)
+[MidiVirtualDevice IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiVirtualDevice.idl)

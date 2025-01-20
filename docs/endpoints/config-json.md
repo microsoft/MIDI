@@ -74,7 +74,7 @@ Here's an example of a bare-bones file, with sections for three different transp
 
 > NOTE: This section is in flux, as we're changing how devices are identified, and how properties are set.
 
-The basics of this are identical for each transport. We'll use KS (USB) as an example as it has the most complex lookup mechanisms to attempt to identify devices, even when they are moved from port to port.
+Here's how the KS (USB using the new UMP driver) transport works as an example as it has the most complex lookup mechanisms to attempt to identify devices, even when they are moved from USB port to port.
 
 ```json
 "{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}":
@@ -98,7 +98,10 @@ The basics of this are identical for each transport. We'll use KS (USB) as an ex
 },
 ```
 
-Valid properties you can set across all supported endpoints
+> TODO: Include KSA endpoints and their generated group terminal blocks / groups.
+
+
+Valid properties you can set:
 
 | Property | Type | Description |
 | -------- | ---- | ----------- |

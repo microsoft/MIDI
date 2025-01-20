@@ -1,6 +1,6 @@
 ---
 layout: api_page
-title: MidiEndpointDeviceInformationFilter
+title: MidiEndpointDeviceInformationFilters
 parent: Endpoint Enumeration
 grand_parent: Midi2 core
 has_children: false
@@ -9,6 +9,11 @@ has_children: false
 # MidiEndpointDeviceInformationFilters Enumeration
 
 When enumerating devices, it is helpful to be able to filter for different types of devices. For example, an application providing diagnostic or development services may want to enumerate the diagnostic loopback endpoints. A Digital Audio Workstation, on the other hand, would only want to enumerate the normal UMP and Byte Stream native endpoints.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
 
 ## Properties
 
@@ -23,5 +28,5 @@ When enumerating devices, it is helpful to be able to filter for different types
 
 ## IDL
 
-[MidiEndpointDeviceInformationFilterEnum IDL](https://github.com/microsoft/MIDI/blob/main/srcapp-sdk/winrt-core/MidiEndpointDeviceInformationFilterEnum.idl)
+[MidiEndpointDeviceInformationFilterEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointDeviceInformationFilterEnum.idl)
 

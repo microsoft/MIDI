@@ -9,6 +9,11 @@ has_children: false
 
 Used to indicate which function block messages you want to receive when you request function blocks.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Messages |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -19,4 +24,4 @@ Used to indicate which function block messages you want to receive when you requ
 
 ## IDL
 
-[MidiFunctionBlockDiscoveryRequests IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiFunctionBlockDiscoveryRequestsEnum.idl)
+[MidiFunctionBlockDiscoveryRequests IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiFunctionBlockDiscoveryRequestsEnum.idl)

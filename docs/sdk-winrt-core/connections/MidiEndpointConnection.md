@@ -14,11 +14,22 @@ Connections allocate resources including send/receive buffers, and processing th
 
 To ensure an application is able to wire up processing plugins and event handlers before the connection is active, the connection returned by the `MidiSession` is not yet open. Once the connection is acquired, the application should assign event handlers, and optionally assign any message processing plugins. Once complete, the application calls the `Open()` function to connect to the service, create the queues, and begin sending and receiving messages.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`IStringable`
+`Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource`
+`Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionSource`
+
 ## A note on sending messages
 
 All `SendMessageXX` functions send a single Universal MIDI Packet message at a time. The pluralized versions `SendMessagesXX` will send multiple packets, in order, with the same timestamp.
 
-Currently, in the implementation behind the scenes, the service receives each timestamped message one at a time. We have the functions for sending more than one message as a developer convenience for similarity with other platforms, and also to allow for possible future optimization in the service communication code.
+Currently, in the implementation behind the scenes, the service receives each timestamped message one at a time. We have the functions for sending more than one message as a developer convenience for similarity with other platforms, and also to allow for possible future optimization in the service communication code. In any case, those functions require fewer COM calls for the same number of messages and so will be slightly more efficient in some cases.
 
 ## Properties
 
@@ -99,7 +110,7 @@ When processing the `MessageReceived` event, do so quickly. This event is synchr
 
 ## IDL
 
-[MidiEndpointConnection IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointConnection.idl)
+[MidiEndpointConnection IDL](github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointConnection.idl)
 
 ## Sample
 
@@ -172,3 +183,5 @@ using (var session = MidiSession.CreateSession("API Sample Session"))
 }
 
 ```
+
+More complete examples [available on Github](https://aka.ms/midirepo)

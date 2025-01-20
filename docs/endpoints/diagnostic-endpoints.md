@@ -10,7 +10,7 @@ has_children: false
 
 | Property | Value |
 | -------- | ----- |
-| Abstraction Id | `{ac9b5417-3fe0-4e62-960f-034ee4235a1a}` |
+| Transport Id | `{ac9b5417-3fe0-4e62-960f-034ee4235a1a}` |
 | Abbreviation | `DIAG` |
 
 (Note: This transport cannot be disabled and is not listed in the registry. Its activation is hard-coded into the Windows service. Settings for this transport are not read from the configuration file and cannot be changed.)
@@ -50,15 +50,13 @@ If you need the more typical timestamp behavior, you can set up app-to-app MIDI 
 
 ### Metadata Capture
 
-The Loopback endpoints capture Endpoint and Function Block metadata just like any other endpoint. Because of this, you can change the name of the endpoint through in-protocol messages. If you do that, simply change it back later using the same type of message.
-
-> Note: We're working to purge the endpoint metadata cache on device reconnection or service restart, which would reset those properties and names. Currently, it persists across service and Windows restarts.
+The Loopback endpoints capture Endpoint and Function Block metadata just like any other endpoint. Because of this, you can change the name of the endpoint through in-protocol messages. If you do that, simply change it back later using the same type of message, or with a service restart.
 
 ## Ping
 
-The ping endpoint is not normally returned through any enumeration. It is for internal use only, and should not be used by any applications. It recognizes only one type of proprietary message.
+The ping endpoint is not normally returned through any enumeration. It is for internal use only, and should not be used by any applications. It recognizes only one type of proprietary message that is not part of the standard MIDI 2.0 UMP Protocol.
 
-Behavior and implementation of the Ping endpoint is subject to change and should not be relied upon by any code outside of the API.
+Behavior and implementation of the Ping endpoint is subject to change and should not be relied upon by any code outside of the SDK.
 
 ## Compatibility
 

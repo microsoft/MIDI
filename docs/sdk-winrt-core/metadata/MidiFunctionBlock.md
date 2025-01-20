@@ -24,9 +24,18 @@ Per the specification, function blocks can span more than one group, and can ove
 
 Function blocks are used in the Windwos MIDI Services API in three ways:
 
-1. A property of a MidiEndpointDeviceInformation object, representing function blocks discovered through endpoint discovery. These function blocks are read-only.
+1. A property of a `MidiEndpointDeviceInformation` object, representing function blocks discovered through endpoint discovery. These function blocks are read-only.
 2. The return value of the AsEquivalentFunctionBlock method of the GroupTerminalBlock class. This is a convenience function. These function blocks are read-only
 3. Provided by the application as part of the device definition for a virtual device in app-to-app MIDI. These function blocks are editable before adding them to the device definition.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`Windows.Foundation.IStringable`
 
 ## Properties
 
@@ -41,7 +50,7 @@ Most properties are 1:1 with the MIDI 2.0 UMP specification section on function 
 | `Direction` | The direction of the block from the block's point of view. |
 | `UIHint` | A hint which tells you how this block should be treated in a user interface. This should be considered a "soft filter" for display, not a mechanism to keep blocks completely hidden from a user. |
 | `RepresentsMidi10Connection` | How to treat this block if it is a MIDI 1.0 connection |
-| `FirstGroupIndex` | Zero-based index of the first group spanned by this block. |
+| `FirstGroup` | First group spanned by this block. |
 | `GroupCount` | The number of groups spanned. |
 | `MidiCIMessageVersionFormat` | MIDI CI version format value |
 | `MaxSystemExclusive8Streams` | The maximum number of System Exclusive 8 streams allowed. Please refer to the UMP specification for how to treat this value. |
@@ -53,6 +62,13 @@ Most properties are 1:1 with the MIDI 2.0 UMP specification section on function 
 | `MidiFunctionBlock()` | Construct an empty function block |
 | `IncludesGroup(group)` | Helper function which returns true if this function exists on the supplied group |
 
+## Static Properties
+
+| `ShortLabel` | Returns the localized abbreviation for use in UI. |
+| `ShortLabelPlural` | Returns the localized abbreviation for use in UI. |
+| `LongLabel` | Returns the localized full name for use in UI. |
+| `LongLabelPlural` | Returns the localized full name for use in UI. |
+
 ## IDL
 
-[MidiFunctionBlock IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlock.idl)
+[MidiFunctionBlock IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiFunctionBlock.idl)

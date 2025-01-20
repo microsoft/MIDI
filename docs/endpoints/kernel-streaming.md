@@ -10,7 +10,7 @@ has_children: false
 
 | Property | Value |
 | -------- | ----- |
-| Abstraction Id | `{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}` |
+| Transport Id | `{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}` |
 | Abbreviation | `KS` |
 
 ## Overview
@@ -29,7 +29,7 @@ The best experience for Windows MIDI Services will be with applications using th
 | WinRT MIDI 1.0 | Yes | Data is translated between UMP and MIDI bytes (MIDI 1.0 data format) as required. |
 | WinMM MIDI 1.0 | Yes | Data is translated between UMP and MIDI bytes (MIDI 1.0 data format) as required. |
 
-> When creating endpoints for use by MIDI 1.0 applications which connect to MIDI 2.0 devices, we're limited to using the declared Group Terminal blocks and their associated groups, unless the device is MIDI 2.0 and the function blocks retrieved are marked as static function blocks. 
+> When creating WinMM and WinRT MIDI 1.0 endpoints for applications using the older APIs, we first use the declared Function Blocks. If there are no function blocks, we use the Group Terminal Blocks. If there are no declared group terminal blocks, we currently create 16 input ports and 16 output ports -- 1 for each group in each direction. However, we're likely to change this in the future and require the user to specify if they want more than 1 group in each direction because creating the backwards compatible WinMM ports is costly.
 
 ## Configuration
 
@@ -50,4 +50,8 @@ Endpoints for this transport are not created through the configuration file, but
     }
 }
 ```
+
+> TODO: Need to add options for the WinMM port numbers and more
+
+> If you want to see how Windows sees any given device at the Kernel Streaming interface level, run the SDK tool `midiksinfo`. That will list all KS devices as they are seen before we create MIDI endpoints for them.
 

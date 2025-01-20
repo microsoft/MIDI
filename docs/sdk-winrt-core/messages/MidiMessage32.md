@@ -10,6 +10,18 @@ has_children: false
 
 `MidiMessage32` is used for short messages such as utility messages and MIDI 1.0 messages in UMP format.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket`
+`Windows.Foundation.IStringable`
+
+## Properties and Methods
+
 Includes all functions and properties in `IMidiUniversalPacket`, as well as:
 
 | Property | Description |
@@ -23,4 +35,4 @@ Includes all functions and properties in `IMidiUniversalPacket`, as well as:
 
 ## IDL
 
-[MidiMessage32 IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessage32.idl)
+[MidiMessage32 IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiMessage32.idl)

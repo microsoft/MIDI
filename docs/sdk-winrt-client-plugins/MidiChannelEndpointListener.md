@@ -11,6 +11,16 @@ This class acts as a filter. Incoming messages with the specified group and chan
 
 In addition to the properties and methods in `IMidiEndpointMessageProcessingPlugin`, and the MessageReceived event from `IMidiMessageReceivedEventSource` the class provides the following:
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.ClientPlugins |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+# Implements
+
+`Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin`
+`Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource`
+
 ## Properties
 
 | Property | Description |
@@ -90,8 +100,8 @@ myConnection.Open();
 // ...
 ```
 
-
+More complete examples [available on Github](https://aka.ms/midirepo)
 
 ## IDL
 
-[MidiChannelEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-client-plugins/MidiChannelEndpointListener.idl)
+[MidiChannelEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiChannelEndpointListener.idl)

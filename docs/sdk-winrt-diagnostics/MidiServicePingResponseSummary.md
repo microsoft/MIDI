@@ -9,6 +9,11 @@ has_children: false
 
 This class represents a summary of the ping attempts against the Windows service.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Diagnostics |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Description |
@@ -21,5 +26,5 @@ This class represents a summary of the ping attempts against the Windows service
 
 ## IDL
 
-[MidiServicePingResponseSummary IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-diagnostics/MidiServicePingResponseSummary.idl)
+[MidiServicePingResponseSummary IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiServicePingResponseSummary.idl)
 

@@ -9,10 +9,16 @@ has_children: false
 
 The `MidiVirtualDeviceCreationConfig` class specifies, in an easy to use format, the responses for endpoint discovery as well as the properties to use when constructing the device endpoint.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Endpoints.Virtual |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
+| `AssociationId` | Returns the id which links the device and client endpoints |
 | `Name` | The transport-supplied name to use for this device |
 | `Description` | The transport-supplied description to use for this device |
 | `Manufacturer` | The transport-supplied manufacturer name to use for this device |
@@ -20,11 +26,21 @@ The `MidiVirtualDeviceCreationConfig` class specifies, in an easy to use format,
 | `DeclaredEndpointInfo` | The `MidiDeclaredEndpointInfo` to use for responding to MIDI 2.0 endpoint discovery |
 | `UserSuppliedInfo` | Any user-supplied information for this endpoint  |
 | `FunctionBlocks` | The set of function blocks to be declared for this endpoint |
+| `CreateOnlyUmpEndpoints` | True if only UMP endpoints should be created for this endpoint (no WinMM or WinRT MIDI 1.0 Ports) |
 
-## Sample
+## Methods
 
-[Full Example](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/app-to-app-midi-cs)
+| Name | Description |
+| --------------- | ----------- |
+| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo)` | Create a virtual device with the specified information|
+| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity)` | Create a virtual device with the specified information |
+| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity, userSuppliedInfo)` | Create a virtual device with the specified information |
+
+## Examples
+
+[C++ Sample](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/simple-app-to-app-midi/main.cpp)
+[C# Sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/virtual-device-app-winui)
 
 ## IDL
 
-[MidiVirtualDeviceCreationConfig IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-endpoints-virtual/MidiVirtualDeviceCreationConfig.idl)
+[MidiVirtualDeviceCreationConfig IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiVirtualDeviceCreationConfig.idl)

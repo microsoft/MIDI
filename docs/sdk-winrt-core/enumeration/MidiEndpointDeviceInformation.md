@@ -20,6 +20,15 @@ When displaying endpoint devices to users, you'll typically want to stick to the
 
 When a device is first enumerated by the MIDI Service, if it is a UMP-native device, we will attempt endpoint discover and protocol negotiation. During that, we request all endpoint information and all function block information. The received data is then cached in the device properties so that applications do not need to perform this process themselves.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`IStringable`
+
 ## Properties
 
 | Property | Source | Description |
@@ -67,5 +76,5 @@ When a device is first enumerated by the MIDI Service, if it is a UMP-native dev
 
 ## IDL
 
-[MidiEndpointDeviceInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceInformation.idl)
+[MidiEndpointDeviceInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointDeviceInformation.idl)
 

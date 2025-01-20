@@ -10,7 +10,7 @@ has_children: false
 
 | Property | Value |
 | -------- | ----- |
-| Abstraction Id | `{942BF02D-93C0-4EA8-B03E-D51156CA75E1}` |
+| Transport Id | `{942BF02D-93C0-4EA8-B03E-D51156CA75E1}` |
 | Abbreviation | `LOOP` |
 
 ## Overview
@@ -73,6 +73,8 @@ That out of the way, here's an example configuration section for the Virtual Loo
     }
 }
 ```
+
+> TODO: Options for creating WinMM ports
 
 Each loopback endpoint pair is identified by a GUID for the association id. The association GUID must be a valid unique GUID and shall not be an empty (all zeroes) GUID.
 

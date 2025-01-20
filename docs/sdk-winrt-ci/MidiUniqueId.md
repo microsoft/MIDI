@@ -7,11 +7,18 @@ has_children: false
 
 # MidiUniqueId
 
-## Remarks
-
 The `MidiUniqueId` class is used to provide formatting and data validation for MIDI-CI MUID (MIDI Unique Id) types used in Function Blocks and MIDI CI transactions.
 
 In the specification, Byte1 is the LSB and Byte4 is the MSB. We follow that convention here.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.CapabilityInquiry |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`IStringable`
 
 ## Constructors
 
@@ -29,10 +36,16 @@ In the specification, Byte1 is the LSB and Byte4 is the MSB. We follow that conv
 | `IsBroadcast` | True if this is the broadcast MUID value from the MIDI CI specification |
 | `IsReserved` | True if this is the reserved MUID value from the MIDI CI specification |
 
+## Methods
+
+| `ToString` | (From `IStringable`) provides a string representation of the values in this type |
+
 ## Static Properties
 
 | `ShortLabel` | Returns the localized abbreviation for use in UI. |
+| `ShortLabelPlural` | Returns the localized abbreviation for use in UI. |
 | `LongLabel` | Returns the localized full name for use in UI. |
+| `LongLabelPlural` | Returns the localized full name for use in UI. |
 
 ## Static Methods
 
@@ -41,4 +54,4 @@ In the specification, Byte1 is the LSB and Byte4 is the MSB. We follow that conv
 
 ## See also
 
-[MidiUniqueId IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-ci/MidiUniqueId.idl)
+[MidiUniqueId IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiUniqueId.idl)

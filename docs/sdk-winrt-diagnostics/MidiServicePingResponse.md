@@ -8,6 +8,11 @@ has_children: false
 
 This class represents a single ping message response. This is used to assess health and performance of the Windows service.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Diagnostics |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Description |
@@ -21,5 +26,5 @@ This class represents a single ping message response. This is used to assess hea
 
 ## IDL
 
-[MidiServicePingResponse IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-diagnostics/MidiServicePingResponse.idl)
+[MidiServicePingResponse IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiServicePingResponse.idl)
 

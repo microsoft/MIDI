@@ -15,6 +15,11 @@ Also note that `QueryPerformanceCounter` technically returns a signed 64 bit int
 
 You can learn more about high-resolution timestamps in Windows at [https://aka.ms/miditimestamp](https://aka.ms/miditimestamp).
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Static Properties
 
 | Static Property | Description |
@@ -45,6 +50,16 @@ When scheduling messages, you may want to use a more convenient time units. Thes
 | `OffsetTimestampByMilliseconds(timestampValue, offsetMilliseconds)` | Offsets a given timestamp by the provided (signed) number of milliseconds |
 | `OffsetTimestampBySeconds(timestampValue, offsetSeconds)` | Offsets a given timestamp by the provided (signed) number of seconds |
 
+## Static Functions for Windows Timer Frequency
+
+Windows supports putting the system timer into a low-latency / high-frequency mode. Drivers have more control over this, but applications can also specify that they want to enter a low-latency period, providing better timing characteristics. If you call the `BeginLowLatencyTimerPeriod` function, your application **must** call the `EndLowLatencyTimePeriod` before it closes. If drivers have not already set the timer period to the lowest value, these functions typically change the timer period from around 15ms to around 1ms.
+
+| Static Function | Description |
+| --------------- | ----------- |
+| `GetCurrentSystemTimerInfo` | Returns a `MidiSystemTimerSettings` struct containing the current timer characteristics |
+| `BeginLowLatencySystemTimerPeriod` | Signal that this application is putting the system into a low-latency timer period. Internally calls `timeBeginPeriod` |
+| `EndLowLatencySystemTimerPeriod` | End the started low-latency timer period. You must call this before the application closes if you previously called the Begin function. Internally calls `timeEndPeriod` |
+
 ## IDL
 
-[MidiClock IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiClock.idl)
+[MidiClock IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiClock.idl)

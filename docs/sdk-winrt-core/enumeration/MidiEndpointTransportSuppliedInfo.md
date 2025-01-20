@@ -8,7 +8,12 @@ has_children: false
 
 # MidiEndpointTransportSuppliedInfo
 
-## Fields
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Struct Fields
 
 | Field | Description |
 | --------------- | ----------- |
@@ -25,5 +30,5 @@ has_children: false
 
 ## IDL
 
-[MidiEndpointTransportSuppliedInfo IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointTransportSuppliedInfo.idl)
+[MidiEndpointTransportSuppliedInfo IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointTransportSuppliedInfo.idl)
 

@@ -6,9 +6,14 @@ grand_parent: Midi2 core
 has_children: false
 ---
 
-# MidiFunctionBlockMidi10 Enumeration
+# MidiFunctionBlockRepresentsMidi10Connection enum
 
 Indicates the MIDI 1.0 capability restrictions for a function block. Note that Windows MIDI Services does not currently throttle the speed of outbound messages, even if the block indicates it has restricted bandwidth.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
 
 ## Properties
 
@@ -21,4 +26,4 @@ Indicates the MIDI 1.0 capability restrictions for a function block. Note that W
 
 ## IDL
 
-[MidiFunctionBlockRepresentsMidi10Connection IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl)
+[MidiFunctionBlockRepresentsMidi10Connection IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl)

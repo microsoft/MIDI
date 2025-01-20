@@ -12,10 +12,21 @@ Internally, the MIDI service moves messages around in the UMP format. This enabl
 
 ## A couple definitions
 
+### MIDI 1.0 (Byte) Data format
 
+This is the byte format (also called "byte stream" due to how it operates over MIDI 1.0 DIN/Serial connections) used by MIDI 1.0. 
 
+### MIDI UMP Data format
 
+This is the Universal MIDI Packet format. Packets are from 1 to 4 32-bit words in length, and are self-contained and atomic. Internally in Windows MIDI Services, all messages are processed and transports in UMP format, and translated to MIDI 1.0 byte data format as needed
 
+### MIDI 1.0 Protocol
+
+The MIDI messages defined in the MIDI 1.0 specifications, with most values between 0-127, and messages containing 1-3 bytes (except System Exclusive). These messages can be transported in the MIDI 1.0 data format, or in the Universal MIDI Packet format.
+
+### MIDI 2.0 Protocol
+
+The MIDI messages defined in the MIDI 2.0 UMP specifications, excluding the MIDI 1.0 protocol messages in UMP format.
 
 ## Translation Scenarios involving data format changes
 
@@ -32,7 +43,9 @@ Windows MIDI Services supports both MIDI 1.0 and MIDI 2.0 devices.
 
 ### Translation between Message type 2 (MIDI 1.0 Channel Voice) and Message type 4 (MIDI 2.0 Channel Voice)
 
-Currently, Windows MIDI Services does not translate messages based on negotiated protocol or Function Block declared protocol. Instead, for native UMP endpoints, applications should send the correct protocol messages (message type 2 for MIDI 1.0-compatible and message type 4 for MIDI 2.0-compatible messages) based upon the information provided by the `MidiEndpointDeviceInformation` class. In addition, for native MIDI 1.0 byte data format endpoints, applications should send the appropriate MIDI 1.0 messages in UMP.
+Currently, Windows MIDI Services does not translate messages based on Function Block declared protocol. Instead, for native UMP endpoints, applications should send the correct protocol messages (message type 2 for MIDI 1.0-compatible and message type 4 for MIDI 2.0-compatible messages) based upon the information provided by the `MidiEndpointDeviceInformation` class. In addition, for native MIDI 1.0 byte data format endpoints, applications should send the appropriate MIDI 1.0 messages in UMP.
+
+Windows MIDI Services will downscale messages as needed based on negotiated protocol. We plan to add upscaling (if an endpoing negotiates MIDI 2 but doesn't support MIDI 1), but that is not in place in the first release.
 
 If a MIDI 1.0 device is connected to the new MIDI 2.0 Class Driver, Windows MIDI Services *will* downscale Message Type 4 to Message Type 2 before sending to the driver. This is because the driver, when working with a MIDI 1.0 device, only handles UMP messages which can be directly translated to MIDI 1.0 data format.
 

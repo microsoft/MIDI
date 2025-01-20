@@ -10,6 +10,11 @@ has_children: false
 
 This interface is implemented by the rich MidiMessageXX runtime class types. It may also be used as the interface for message-specific classes you create yourself.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Description |
@@ -29,5 +34,5 @@ This interface is implemented by the rich MidiMessageXX runtime class types. It 
 
 ## IDL
 
-[IMidiUniversalPacket IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiUniversalPacket.idl)
+[IMidiUniversalPacket IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/IMidiUniversalPacket.idl)
 

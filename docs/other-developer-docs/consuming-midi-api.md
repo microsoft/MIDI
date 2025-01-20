@@ -1,29 +1,29 @@
 ---
 layout: page
-title: Consuming the MIDI API
+title: Consuming the MIDI SDK
 parent: For Developers
 has_children: false
 ---
 
-# Consuming the Windows MIDI Services API
+# Consuming the Windows MIDI Services SDK
 
-The Windows MIDI Services API is built using C++/WinRT. WinRT, a requirement for modern APIs on Windows, enables desktop applications, regardless of language, to be able to use APIs, SDKs, etc. that we create. The older tools, C++/CX, are arguably simpler to implement in, but because they include proprietary extensions to C++, we decided to go with standards-based C++/WinRT instead.
+The Windows MIDI Services SDK is built using C++/WinRT. WinRT, a requirement for modern APIs/SDKs on Windows, enables desktop applications regardless of language to be able to use APIs, SDKs, etc. that we create. The older tools, C++/CX, are arguably simpler to implement in, but because they include proprietary extensions to C++, we decided to go with standards-based C++/WinRT instead.
 
-## Prerequisites
+## Developer Prerequisites
 
-To use the API, your application language and tools must be able to work with WinRT metadata and libraries, or the generated projection header file.
+To use the SDK, your application language and tools must be able to work with WinRT metadata and libraries, or the generated projection header file.
 
 * Visual Studio 2022+ if you are using Visual Studio
-* Windows SDK 10.0.20348 (Install with Visual Studio)
-* Windows 10 22H2, or preferably, the latest version of Windows 11. Our development machines are all running Windows 11.
-* C++ 17 (C++ 20 may work, C++ 14 will not)
+* Latest Windows 11 SDKs and Windows SDK 10.0.20348 (Install with Visual Studio)
+* The latest version of Windows 11.
+* C++ 20
 * The NuGet package(s) from the release
 
 There are somewhat hacky ways to get traditional C to work with the COM interfaces, but it is a ton of work for you, and is not a scenario we support. If you find yourself in that situation, I recommend factoring out the MIDI code into its own lib and encapsulating all the C++ calls in there.
 
-> NOTE: In the period of time before Windows MIDI Services ships in Windows, you will also need to run the latest Windows 11 Insider Canary build of Windows in order to be able to use the USB MIDI 2.0 driver. [Click here to learn more and join the Windows Insider Program](https://www.microsoft.com/windowsinsider/).
+> NOTE: In the period of time before Windows MIDI Services ships in retail Windows, you will also need to run the latest Windows 11 Insider Canary build of Windows in order to be able to use the USB MIDI 2.0 driver. [Click here to learn more and join the Windows Insider Program](https://www.microsoft.com/windowsinsider/).
 
-> CPU Architecture: There is no planned support for Arm(32) or x86. We only support 64 bit applications.
+> CPU Architecture: There is no planned support for Arm(32) or x86. We only support 64 bit operating systems. The SDK and service also support only 64 bit applications. We have basic 32-bit support for 32-bit apps on Windows 64bit using the older WinMM API.
 
 ## Consuming from C++ with Visual Studio
 
@@ -35,7 +35,7 @@ Download the NuGet package for the Core SDK
 
 * Until this is in the in-box SDK, you'll need to set up a local NuGet package repository. This is easy to do inside the NuGet Package Manager in Visual Studio -- you simply point to a folder. The structure I use in the local clone of the repo is a subfolder of the release folder for all NuGet packages. Specifically `G:\GitHub\microsoft\midi\build\release\NuGet\` on my Dev Drive.
 
-If needed, modify the project file as required (info in the C++/WinRT docs, and you can also look at the sample application code). If you are not using Visual Studio as your toolchain for your project, you may want to pull out the MIDI code into a library in your project which does. It's not strictly required, but it's much easier to use C++/WinRT. (If you do not want to do this, you'll need to manually set up the cppwinrt tools as part of your build process to generate the required `Windows.Devices.Midi2.h` projection header. After that, you can develop using your normal flow.).
+If needed, modify the project file as required (info in the C++/WinRT docs, and you can also look at the sample application code). If you are not using Visual Studio as your toolchain for your project, you may want to pull out the MIDI code into a library in your project which does. It's not strictly required, but it's much easier to use C++/WinRT. (If you do not want to do this, you'll need to manually set up the cppwinrt tools as part of your build process to generate the required `Microsoft.Windows.Devices.Midi2.h` projection header. After that, you can develop using your normal flow.).
 
 [Read through this page](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/consume-apis), specifically the "If the API is implemented in a Windows Runtime component".
 
@@ -103,7 +103,7 @@ C:\demos\cppwinrt>dir
 
 11/09/2023  02:21 PM    <DIR>          .
 11/09/2023  02:20 PM    <DIR>          ..
-11/06/2023  08:48 PM            55,808 Windows.Devices.Midi2.winmd
+11/06/2023  08:48 PM            55,808 Microsoft.Windows.Devices.Midi2.winmd
                1 File(s)         55,808 bytes
                2 Dir(s)  32,987,725,824 bytes free
 
@@ -111,7 +111,7 @@ C:\demos\cppwinrt>
 
 C:\demos\cppwinrt>set cppwinrt="path_to_downloaded_nuget_cppwinrt_exe\cppwinrt.exe"
 
-C:\demos\cppwinrt>%cppwinrt% -input Windows.Devices.Midi2.winmd -reference 10.0.20348.0+ -output .\projection
+C:\demos\cppwinrt>%cppwinrt% -input Microsoft.Windows.Devices.Midi2.winmd -reference 10.0.20348.0+ -output .\projection
 
 C:\demos\cppwinrt>dir /s
  Volume in drive C has no label.
@@ -122,7 +122,7 @@ C:\demos\cppwinrt>dir /s
 11/09/2023  02:26 PM    <DIR>          .
 11/09/2023  02:20 PM    <DIR>          ..
 11/09/2023  02:26 PM    <DIR>          projection
-11/06/2023  08:48 PM            55,808 Windows.Devices.Midi2.winmd
+11/06/2023  08:48 PM            55,808 Microsoft.Windows.Devices.Midi2.winmd
                1 File(s)         55,808 bytes
 
  Directory of C:\demos\cppwinrt\projection
@@ -137,16 +137,16 @@ C:\demos\cppwinrt>dir /s
 11/09/2023  02:26 PM    <DIR>          .
 11/09/2023  02:26 PM    <DIR>          ..
 11/09/2023  02:26 PM    <DIR>          impl
-11/09/2023  02:26 PM           349,214 Windows.Devices.Midi2.h
+11/09/2023  02:26 PM           349,214 Microsoft.Windows.Devices.Midi2.h
                1 File(s)        349,214 bytes
 
  Directory of C:\demos\cppwinrt\projection\winrt\impl
 
 11/09/2023  02:26 PM    <DIR>          .
 11/09/2023  02:26 PM    <DIR>          ..
-11/09/2023  02:26 PM           155,054 Windows.Devices.Midi2.0.h
-11/09/2023  02:26 PM            22,170 Windows.Devices.Midi2.1.h
-11/09/2023  02:26 PM            26,886 Windows.Devices.Midi2.2.h
+11/09/2023  02:26 PM           155,054 Microsoft.Windows.Devices.Midi2.0.h
+11/09/2023  02:26 PM            22,170 Microsoft.Windows.Devices.Midi2.1.h
+11/09/2023  02:26 PM            26,886 Microsoft.Windows.Devices.Midi2.2.h
                3 File(s)        204,110 bytes
 
      Total Files Listed:
@@ -155,7 +155,10 @@ C:\demos\cppwinrt>dir /s
 
 C:\demos\cppwinrt>
 ```
-The minimum SDK to build against is `10.0.20348.0`, to support Windows 10. If you get a ["Mismatched C++/WinRT headers" message](https://github.com/microsoft/cppwinrt/pull/683), double-check that you are using the `cppwinrt.exe` from the nuget package and you have the latest SDK installed.
+
+> Note: there are quite a few additional header files generated. The above documentation is older so only shows a few. You want all files that start with Microsoft.Windows.Deivces.Midi2*.h . You may also need header files from the OS SDK. Normally, C++/WinRT will take care of this for you if you are using Visual Studio 2022 or later.
+
+Build againt the latest SDK, but the minimum SDK to build against is `10.0.20348.0`, to support Windows 10. If you get a ["Mismatched C++/WinRT headers" message](https://github.com/microsoft/cppwinrt/pull/683), double-check that you are using the `cppwinrt.exe` from the nuget package and you have the latest SDK installed.
 
 ### Using the Projection
 
@@ -277,14 +280,10 @@ UM-ONE
 C:\demos\node-midi\electron-midi>
 ```
 
-## Flutter / Dart
-
-Once the API is in-box on Windows, it will be possible for the projections to be generated by the Flutter/Dart teams, like they do with the Windows SDK today.
-
 ## Webview2 Hosted / PWA
 
 We are investigating.
 
 ## Python
 
-Once the API is in the Windows SDK, tools like [PyWinRT](https://github.com/pywinrt/pywinrt) can be used to create projections.
+Our SDK ships out-of-band with Windows, however, tools like [PyWinRT](https://github.com/pywinrt/pywinrt) could potentially be used to create projections.

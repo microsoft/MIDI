@@ -10,7 +10,12 @@ has_children: false
 
 This information is populated by the Windows Service during the MIDI 2.0 endpoint discovery process.
 
-## Fields
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Struct Fields
 
 | Field | Description |
 | --------------- | ----------- |
@@ -27,4 +32,4 @@ This information is populated by the Windows Service during the MIDI 2.0 endpoin
 
 ## IDL
 
-[MidiDeclaredEndpointInfo IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiDeclaredEndpointInfo.idl)
+[MidiDeclaredEndpointInfo IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiDeclaredEndpointInfo.idl)

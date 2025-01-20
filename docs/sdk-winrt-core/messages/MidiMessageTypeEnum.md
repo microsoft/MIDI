@@ -10,6 +10,13 @@ has_children: false
 
 The values correspond directly to the "mt" field in the MIDI UMP packet and may be cast as such if trimmed to 4 bits and shifted into place.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Properties
+
 | Property | Value | Description |
 | -------- | ------- | ------ |
 | `UtilityMessage32` | `0x0` | 32-bit utility message |
@@ -31,4 +38,4 @@ The values correspond directly to the "mt" field in the MIDI UMP packet and may 
 
 ## IDL
 
-[MidiMessageType IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessageTypeEnum.idl)
+[MidiMessageType IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiMessageTypeEnum.idl)

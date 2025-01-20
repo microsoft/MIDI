@@ -10,6 +10,11 @@ has_children: false
 
 Indicates the message flow for a function block. Note that this is, per the specification, from the function block's point of view. So, for example, a function block specifying `BlockOutput` would be a sender of messages, and therefore used as an input in the API.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -21,4 +26,4 @@ Indicates the message flow for a function block. Note that this is, per the spec
 
 ## IDL
 
-[MidiFunctionBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlockDirectionEnum.idl)
+[MidiFunctionBlockDirectionEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiFunctionBlockDirectionEnum.idl)

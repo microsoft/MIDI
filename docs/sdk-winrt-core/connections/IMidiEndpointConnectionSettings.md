@@ -8,7 +8,12 @@ has_children: false
 
 # IMidiEndpointConnectionSettings
 
-Settings which are optionally provided when connecting to an endpoint. Typically, the implementation of the endpoint will come with a concrete settings class which implements this interface, and translates the settings into JSON which is sent up to the service and read by the abstraction.
+Settings which are optionally provided when connecting to an endpoint. When needed, the implementation of the endpoint will come with a concrete settings class which implements this interface, and translates the settings into JSON which is sent up to the service and read by the abstraction.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
 
 ## Properties
 
@@ -18,5 +23,5 @@ Settings which are optionally provided when connecting to an endpoint. Typically
 
 ## IDL
 
-[IMidiEndpointConnectionSettings IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiEndpointConnectionSettings.idl)
+[IMidiEndpointConnectionSettings IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/IMidiEndpointConnectionSettings.idl)
 
