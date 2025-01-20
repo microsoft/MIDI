@@ -7,7 +7,11 @@ has_children: false
 
 # Best Practices and Performance Optimizations
 
-Here's a list of best practices and performance optimizations for MIDI API-consuming applications.
+Here's a list of some best practices and performance optimizations for MIDI API-consuming applications.
+
+## Service Startup and WinMM Port creation
+
+One of the things which takes the longest when starting the service is the creation of WinMM and WinRT MIDI 1.0 backwards-compatible ports. If those ports are not needed for a specific MIDI 2.0 endpoint, most transports include an option to turn off creation, or limit the number of ports created. This can significantly speed up service startup.
 
 ## Fast transmission of messages
 
@@ -19,7 +23,7 @@ You will want to do your own performance testing from your application and scena
 
 The IMemoryBuffer approach is a more advanced way to transfer data to and from the API. This wraps a buffer of data which you can reuse between calls, including send/receive, as long as you manage and avoid any potential overlaps. Internally, the COM types used to access this ensures that only pointers are passed into the API. There's a bit more ceremony to using this approach, so we recommend investing time there only if it better fits your app's programming model. In addition, because IMemoryBuffer deals with bytes and not 32 bit words, you need to ensure you are correctly copying the data in, following the endianness rules for our internal MIDI 2.0 data representation.
 
-The most flexible, but least performant approach, is to use the IMidiMessage interface and the methods which return strongly typed messages. These do involve additional type allocations either on the part of the caller or in the API code.
+The most flexible, but least performant approach, is to use the `IMidiMessage` interface and the methods which return strongly typed messages. These do involve additional type allocations either on the part of the caller or in the API code.
 
 ### Data copies
 
@@ -41,7 +45,7 @@ When receiving messages, the process is almost exactly the opposite of sending. 
 
 Most apps need to display device and endpoint connection information to their users. Here are some details related to that.
 
-### Use the MidiEndpointDeviceWatcher to respond to device changes
+### Use the `MidiEndpointDeviceWatcher` to respond to device changes
 
 MIDI devices come and go based on connecting/disconnecting USB cables, or new network endpoints coming online. In addition, properties like Function Blocks and Endpoint Name are subject to change at any time. Use the `Microsoft::Windows::Devices::Midi2::MidiEndpointDeviceWatcher` class on a background thread to monitor these endpoints, and receive notifications when anything changes. This is a much more robust approach vs simply enumerating a snapshot of devices up-front.
 
@@ -53,22 +57,42 @@ For more information, see the [How to Watch Endpoints](../developer-how-to/how-t
 
 Unless the app is a utility / testing app, we recommend you do not display the UMP Loopback Endpoints to the user. These are for diagnostics and testing only. By default, they are excluded during enumeration.
 
+### Always display the Group Number, not the Group Index
+
+Groups, like Channels, are indexed 0-15, but the actual number to present to the user is always 1-16. The Built-in `MidiGroup` and `MidiChannel` types in the SDK make it easy to ensure you are using the correct values for data or display.
+
 ### Enable drill-down into Groups (functions)
 
 A single function block may exist on multiple groups, and multiple groups may overlap function blocks. That is the nature of the MIDI 2.0 specification. In most cases, you'll find that a function is associated with one or more groups and those groups do not span other function blocks.
 
-We recommend that, when displaying a connection to the user, you connect them to the UMP Endpoint, but then enable some sort of drill-down to show the function block names and their associated groups. 
+We recommend that, when displaying a connection to the user, you connect them to the UMP Endpoint, but then enable some sort of drill-down to show the function block names and their associated groups. Remember that the ultimate address of most MIDI Messages is the Endpoint, Group, and Channel.
 
 ```
 SynthCompany Foo Synth 5
 - Synthesizer (Groups 1, 2, 3)
-- Sequencer (Groups 4, 5)
+- Sequencer (Groups 3, 4, 5)
 - MIDI DIN Out (Group 6)
+```
+
+or
+
+```
+SynthCompany Foo Synth 5
+- Group 1 (Synthesizer)
+- Group 2 (Synthesizer)
+- Group 3 (Synthesizer, Sequencer)
+- Group 4 (Sequencer)
+- Group 5 (Sequencer)
+- Group 6 (MIDI DIN Out)
 ```
 
 Or similar based on the conventions of your application.
 
-Note that a flat list, like what many apps used for MIDI 1.0 ports, is not as reasonable in a MIDI 2.0 world.
+Note that a flat list, like what many apps used for MIDI 1.0 ports, is not as reasonable in a MIDI 2.0 world. Best practices for this will come out over time as various applications grapple with the increased address count in MIDI 2.0.
+
+### Use `.AsEquivalentFunctionBlock()` for Group Terminal Blocks
+
+USB MIDI 1.0 devices and some USB MIDI 2.0 devices will not have Function Blocks. Per-spec, Function Blocks are optional. However, those USB devices will have Group Terminal Blocks. The preference is to use the Function Block when available. However, to keep your data model uniform, we project Function Blocks from Group Terminal Blocks using the `.AsEquivalentFunctionBlock()` function of the `MidiGroupTerminalBlock` type. Not all properties map cleanly, but we make a best-effort attempt here to provide the application with usable data that can be presented to the user.
 
 ### Use the Function Block UI Hint to help you decide how to show functions
 

@@ -8,6 +8,11 @@ has_children: false
 
 # MidiProtocol enum
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -18,4 +23,4 @@ has_children: false
 
 ## IDL
 
-[MidiProtocol IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiProtocolEnum.idl)
+[MidiProtocol IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiProtocolEnum.idl)

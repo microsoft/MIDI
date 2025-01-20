@@ -8,6 +8,11 @@ has_children: false
 
 # MidiEndpointNativeDataFormat enum
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -18,5 +23,5 @@ has_children: false
 
 ## IDL
 
-[MidiEndpointNativeDataFormat IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointNativeDataFormatEnum.idl)
+[MidiEndpointNativeDataFormat IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointNativeDataFormatEnum.idl)
 

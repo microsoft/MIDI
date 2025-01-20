@@ -10,7 +10,12 @@ has_children: false
 
 This is all information supplied by the user through the MIDI Settings app and/or through the main configuration file.
 
-## Fields
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Struct Fields
 
 | Field | Description |
 | --------------- | ----------- |
@@ -24,5 +29,5 @@ This is all information supplied by the user through the MIDI Settings app and/o
 
 ## IDL
 
-[MidiEndpointUserSuppliedInfo IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointUserSuppliedInfo.idl)
+[MidiEndpointUserSuppliedInfo IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointUserSuppliedInfo.idl)
 

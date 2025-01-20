@@ -10,6 +10,11 @@ has_children: false
 
 Specifies the sort order to use when enumerating a static list of devices.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -21,11 +26,11 @@ Specifies the sort order to use when enumerating a static list of devices.
 | `ContainerThenName` | `11` | Sort by the container and then by name. This is helpful when you want endpoints grouped by parent. |
 | `ContainerThenEndpointDeviceId` | `12` | Sort by the container and then by the endpoint id |
 | `ContainerThenDeviceInstanceId` | `13` | Sort by the container and then by the device instance id |
-| `TransportMnemonicThenName` | `21` | Sort by the transport mnemonic (example: "DIAG") and then by the device instance id |
-| `TransportMnemonicThenEndpointDeviceId` | `22` | Sort by the transport mnemonic and then by the endpoint id |
-| `TransportMnemonicThenDeviceInstanceId` | `23` | Sort by the transport mnemonic and then by the device instance id |
+| `TransportMnemonicThenName` | `21` | Sort by the transport abbreviation (example: "DIAG", formerly called the mnemonic) and then by the device instance id |
+| `TransportMnemonicThenEndpointDeviceId` | `22` | Sort by the transport abbreviation (formerly called the mnemonic) and then by the endpoint id |
+| `TransportMnemonicThenDeviceInstanceId` | `23` | Sort by the transport abbreviation (formerly called the mnemonic) and then by the device instance id |
 
 ## IDL
 
-[MidiEndpointDeviceInformationSortOrderEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceInformationSortOrderEnum.idl)
+[MidiEndpointDeviceInformationSortOrderEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointDeviceInformationSortOrderEnum.idl)
 

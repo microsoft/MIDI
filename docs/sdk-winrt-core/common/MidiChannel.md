@@ -11,6 +11,15 @@ has_children: false
 
 The `MidiChannel` class is used to provide formatting and data validation for MIDI 1.0 and MIDI 2.0 channels. For clarity, the 0-15 value used in all messages is the `Index` and the 1-16 value those are mapped to for user display, is the `DisplayValue`.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`IStringable`
+
 ## Constructors
 
 | `MidiChannel(UInt8)` | Create a MidiChannel with the specified channel Index (0-15). Any data in the upper 4 bits of the provided byte is ignored, so you may pass in an entire status + channel value here without first cleaning it. |
@@ -23,12 +32,18 @@ The `MidiChannel` class is used to provide formatting and data validation for MI
 ## Static Properties
 
 | `ShortLabel` | Returns the localized abbreviation. For example, "Ch" in English. |
+| `ShortLabelPlural` | Returns the localized abbreviation. For example, "Chs" in English. |
 | `LongLabel` | Returns the localized full name. For example, "Channel" in English. |
+| `LongLabelPlural` | Returns the localized full name. For example, "Channels" in English. |
 
 ## Static Methods
 
 | `IsValidIndex(UInt8)` | Verifies that the provided index is valid (between 0 and 15) |
 
-## See also
+## Examples
 
-[MidiChannel IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiChannel.idl)
+More complete examples [available on Github](https://aka.ms/midirepo)
+
+## IDL
+
+[MidiChannel IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiChannel.idl)

@@ -7,6 +7,18 @@ has_children: false
 
 # MidiLoopbackEndpointManager
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Endpoints.Loopback |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Static Properties
+
+| Function | Description |
+| -------- | ----------- |
+| `IsTransportAvailable` | Returns true if this transport is available in the service. |
+| `TransportId` | Returns the GUID of this transport. |
+
 ## Static Functions
 
 | Function | Description |
@@ -20,4 +32,4 @@ Loopback endpoints created by the user and stored in the configuration file will
 
 ## IDL
 
-[MidiLoopbackEndpointManager IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-endpoints-loopback/MidiLoopbackEndpointManager.idl)
+[MidiLoopbackEndpointManager IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiLoopbackEndpointManager.idl)

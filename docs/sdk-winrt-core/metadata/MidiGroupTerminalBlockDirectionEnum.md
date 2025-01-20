@@ -10,6 +10,11 @@ has_children: false
 
 Indicates the message flow for a group terminal block. Note that this is, per the specification, from the group terminal block's point of view. So, for example, a group terminal block specifying `BlockOutput` would be a sender of messages, and therefore used as an input in the API.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -20,4 +25,4 @@ Indicates the message flow for a group terminal block. Note that this is, per th
 
 ## IDL
 
-[MidiGroupTerminalBlockDirection IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroupTerminalBlockDirectionEnum.idl)
+[MidiGroupTerminalBlockDirection IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiGroupTerminalBlockDirectionEnum.idl)

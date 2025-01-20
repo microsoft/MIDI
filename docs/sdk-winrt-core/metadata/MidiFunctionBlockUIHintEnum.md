@@ -12,6 +12,11 @@ The MIDI 2.0 protocol is bi-directional in nature, but individual function block
 
 In general, these values should not restrict completely what you enable a user to do with the groups in a function block, but they should help in how you present the information to the user. You may, for example, present a list of receiver functions and groups to the user initially, but provide a "show all" to show the remaining functions and groups.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -23,4 +28,4 @@ In general, these values should not restrict completely what you enable a user t
 
 ## IDL
 
-[MidiFunctionBlockUIHint IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiFunctionBlockUIHintEnum.idl)
+[MidiFunctionBlockUIHint IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiFunctionBlockUIHintEnum.idl)

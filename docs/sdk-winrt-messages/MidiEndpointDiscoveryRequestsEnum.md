@@ -9,6 +9,11 @@ has_children: false
 
 Used to indicate which endpoint discovery messages you want to receive when you query an endpoint.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Messages |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -23,4 +28,4 @@ Used to indicate which endpoint discovery messages you want to receive when you 
 
 ## IDL
 
-[MidiEndpointDiscoveryRequests IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiEndpointDiscoveryRequestsEnum.idl)
+[MidiEndpointDiscoveryRequests IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointDiscoveryRequestsEnum.idl)

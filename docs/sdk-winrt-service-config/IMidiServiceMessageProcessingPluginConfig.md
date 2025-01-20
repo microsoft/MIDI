@@ -9,6 +9,11 @@ has_children: false
 
 (TODO: This section is not complete)
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.ServiceConfig |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## IDL
 
-[IMidiServiceMessageProcessingPluginConfig IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-service-config/IMidiServiceMessageProcessingPluginConfig.idl)
+[IMidiServiceMessageProcessingPluginConfig IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/IMidiServiceMessageProcessingPluginConfig.idl)

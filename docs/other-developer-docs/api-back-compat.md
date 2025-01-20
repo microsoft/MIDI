@@ -18,9 +18,9 @@ Here is where we currently stand with planned backwards compatibility. Backwards
 | WinMM (Win32 API most apps use today) | Access to MIDI 1.0 and most MIDI 2.0 devices, at a MIDI 1.0 compatibility level only. |
 | WinRT (MIDI API Introduced with Windows 10) | Access to MIDI 1.0 and most MIDI 2.0 devices, at a MIDI 1.0 compatibility level only. |
 | DirectMusic | No compatibility planned. Not part of our testing. |
-| Any 32 bit API | No compatibility planned. No part of our testing. |
+| Any 32 bit API | Other than WinMM which talks to the service from 32 bit apps by using WoW64, there is no compatibility planned. Note that development builds available on GitHub have no 32 bit application support. |
 
-Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture. It's likely we will handle it as an additional transport, but we need to test some of the MIDI file players today as many of them make assumptions about which synth index is the GS synth, so this compatibility may come after the initial release.
+> Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture for apps using the new UMP-based API. We may add an additional transport in the future, specific to this or to another compatible synth.
 
 Here's the current short-term plan for when the API redirection is in-box. Each of the features listed is from the viewpoint of an application using the API.
 
@@ -29,7 +29,7 @@ Here's the current short-term plan for when the API redirection is in-box. Each 
 | **Basic Protocols** | | | |
 | MIDI 2.0 Protocol (UMP) | ✅ | No | No |
 | MIDI 1.0 Protocol (UMP) | ✅ | No | No |
-| MIDI 1.0 Protocol Bytestream | No | ✅ | ✅ |
+| MIDI 1.0 Byte data format | No | ✅ | ✅ |
 | **Enhancements** | | | |
 | Multi-Client MIDI (more than one app can use a MIDI endpoint) | ✅ | ✅ | ✅ |
 | MIDI Timestamps (incoming) | ✅ | No | No |
@@ -42,20 +42,20 @@ Here's the current short-term plan for when the API redirection is in-box. Each 
 | Work with devices using MIDI CI | ✅ | ✅ | ✅ |
 | Access Function Blocks and Endpoint Metadata | ✅ | No | No |
 | **Built-in MIDI Transports** | | | |
-| Send/Receive with Virtual MIDI Device | ✅ | ❓ | ❓ |
+| Send/Receive with Virtual MIDI Device | ✅ | ✅ | ✅ |
 | Create Virtual MIDI Device | ✅ | No | No |
-| Send/Receive with Loopback MIDI Device | ✅ | ❓ | ❓ |
+| Send/Receive with Loopback MIDI Device | ✅ | ✅ | ✅ |
 | Create Loopback MIDI Device | ✅ | No | No |
 | Send/Receive with Bluetooth MIDI 1.0 | After Initial Release | ❓ | ❓ |
-| Send/Receive with Network MIDI 2.0 | After Initial Release | ❓ | ❓ |
+| Send/Receive with Network MIDI 2.0 | After Initial Release | ✅ | ✅ |
 | **Application Types** | | | |
 | 64-bit Win32 (Desktop) App | ✅ | ✅ | ✅ |
 | 64-bit UWP App | ❓ | No | ✅ |
 | 64-bit Windows App SDK App | ✅ | No | ✅ |
-| 32-bit desktop app | No | ❓ | ❓ |
+| 32-bit desktop app | No | ✅ | ❓ |
 
-Arm64 and x86-64 ("x64" or "amd64") are both equally supported by the 64 bit APIs. There is no support for 32-bit operating systems. We are evaluating 32-bit applications on 64-bit Windows.
+Arm64 and x86-64 ("x64" or "amd64") are both equally supported by the 64 bit APIs. There is no support for 32-bit operating systems.
 
 ✅ Feature is supported
 ❓We are investigating
-* Messages are translated between MIDI 1.0 protocol and MIDI 2.0 protocol
+* Messages are translated between MIDI 1.0 protocol / data format and MIDI 2.0 protocol / UMP format

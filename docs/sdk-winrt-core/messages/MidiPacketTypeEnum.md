@@ -8,6 +8,13 @@ has_children: false
 
 # MidiPacketType Enumeration
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Properties
+
 The values correspond to the number of 32-bit MIDI words in the packet.
 
 | Property | Value | Description |
@@ -20,4 +27,4 @@ The values correspond to the number of 32-bit MIDI words in the packet.
 
 ## IDL
 
-[MidiPacketType IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiPacketTypeEnum.idl)
+[MidiPacketType IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiPacketTypeEnum.idl)

@@ -11,7 +11,17 @@ This class acts as a filter. Incoming messages with the specified group will be 
 
 For a MIDI 1.0 device, where the ports (virtual MIDI cables) have been mapped to UMP groups, this class can provide the equivalent of a MIDI 1.0 port to an application, ignoring all other inputs and operating only on the included groups.
 
-In addition to the properties and methods in `IMidiEndpointMessageProcessingPlugin`, and the MessageReceived event from `IMidiMessageReceivedEventSource` the class provides the following:
+In addition to the properties and methods in `IMidiEndpointMessageProcessingPlugin`, and the MessageReceived event from `IMidiMessageReceivedEventSource` the class provides the properties and methods described below.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.ClientPlugins |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Implements
+
+`Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin`
+`Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource`
 
 ## Properties
 
@@ -27,6 +37,7 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 | ---- | ---- |
 | `MidiGroupEndpointListener()` | Construct a new instance of this type |
 
+## Example
 
 ```cpp
 // set up your message receive handler and create your connection
@@ -52,6 +63,8 @@ myConnection.Open();
 // ...
 ```
 
+More complete examples [available on Github](https://aka.ms/midirepo)
+
 ## IDL
 
-[MidiGroupEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-client-plugins/MidiGroupEndpointListener.idl)
+[MidiGroupEndpointListener IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiGroupEndpointListener.idl)

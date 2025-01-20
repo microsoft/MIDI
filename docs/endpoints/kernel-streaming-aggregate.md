@@ -10,18 +10,16 @@ has_children: false
 
 | Property | Value |
 | -------- | ----- |
-| Abstraction Id | `TBA` |
+| Transport Id | `{0F273B18-E372-4D95-87AC-C31C3D22E937}` |
 | Abbreviation | `KSA` |
 
 ## Overview
 
-The Kernel Streaming Aggregator transport creates UMP endpoints for MIDI 1.0 devices using MIDI 1.0 byte format devices, like third-party MIDI 1.0 drivers.
-
-> NOTE: This transport may be recombined with the base Kernel Streaming transport in the future
+The Kernel Streaming Aggregator transport creates UMP endpoints for MIDI 1.0 devices using MIDI 1.0 byte format devices, like third-party MIDI 1.0 drivers, and our in-box USB MIDI 1.0 Class Driver.
 
 ## Suggested Uses
 
-Although this transport is primarily recommended for USB devices, it may be used for access to most other existing MIDI 1.0 devices on Windows.
+Although this transport is primarily recommended for USB devices, it may be used for access to most other existing MIDI 1.0 devices on Windows as long as they have a Kernel Streaming driver.
 
 ## Compatibility
 
@@ -32,6 +30,10 @@ The best experience for Windows MIDI Services will be with applications using th
 | Windows MIDI Services Native | Yes | Data is translated between UMP and MIDI bytes (MIDI 1.0 data format) as required. |
 | WinRT MIDI 1.0 | Yes | Data is translated between UMP and MIDI bytes (MIDI 1.0 data format) as required. |
 | WinMM MIDI 1.0 | Yes | Data is translated between UMP and MIDI bytes (MIDI 1.0 data format) as required. |
+
+## Grouping
+
+When creating MIDI 2.0 / UMP Endpoints, the aggregation happens at the device level. All interfaces and pins under the device are aggregated and presented as a single UMP endpoint.
 
 ## Naming
 
@@ -46,10 +48,10 @@ Endpoints for this transport are not created through the configuration file, but
 ```json
 "endpointTransportPluginSettings":
 {
-    "{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}":
+    "{0F273B18-E372-4D95-87AC-C31C3D22E937}":
     {
         "_comment": "KSA MIDI (USB etc.)",
-        "SWD: \\\\?\\SWD#MIDISRV#MIDIU_KSA_BIDI_6799286025327820155#{e7cce071-3c03-423f-88d3-f1045d02552b}":
+        "SWD: \\\\?\\swd#midisrv#midiu_ksa_6799286025327820155#{e7cce071-3c03-423f-88d3-f1045d02552b}":
         {
             
         }
@@ -57,5 +59,7 @@ Endpoints for this transport are not created through the configuration file, but
 }
 ```
 
-## Implementation
+> TODO: Need to add options for the WinMM port numbers and more
 
+
+> If you want to see how Windows sees any given device at the Kernel Streaming interface level, run the SDK tool `midiksinfo`. That will list all KS devices as they are seen before we create MIDI endpoints for them.

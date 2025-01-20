@@ -1,13 +1,18 @@
 ---
 layout: api_page
 title: MidiSessionConnectionInformation
-parent: Midi2.Diagnostics
+parent: Midi2.Reporting
 has_children: false
 ---
 
 # MidiSessionConnectionInformation
 
 This class represents an open connection in a Windows MIDI Services session. This is an informational class only for reporting system-wide connection usage. 
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Reporting |
+| Library | Microsoft.Windows.Devices.Midi2 |
 
 ## Properties
 
@@ -19,5 +24,5 @@ This class represents an open connection in a Windows MIDI Services session. Thi
 
 ## IDL
 
-[MidiSessionConnectionInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-diagnostics/MidiSessionConnectionInformation.idl)
+[MidiSessionConnectionInformation IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiSessionConnectionInformation.idl)
 

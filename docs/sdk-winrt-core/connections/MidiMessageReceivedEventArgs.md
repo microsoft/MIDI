@@ -12,6 +12,11 @@ This is the main class to use when receving MIDI data from a message source such
 
 > Note: Do not keep a copy of the `MidiMessageReceivedEventArgs` class, as the data it points to is guaranteed to exist for only the duration of the event handler call for which this instance was an argument.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Description |
@@ -39,4 +44,4 @@ This is the main class to use when receving MIDI data from a message source such
 
 ## IDL
 
-[MidiMessageReceivedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessageReceivedEventArgs.idl)
+[MidiMessageReceivedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiMessageReceivedEventArgs.idl)

@@ -10,6 +10,11 @@ has_children: false
 
 Represents a notification that endpoint properties have been updated
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Functions
 
 | Property | Description |
@@ -19,4 +24,4 @@ Represents a notification that endpoint properties have been updated
 
 ## IDL
 
-[MidiEndpointDeviceInformationRemovedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDeviceInformationRemovedEventArgs.idl)
+[MidiEndpointDeviceInformationRemovedEventArgs IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointDeviceInformationRemovedEventArgs.idl)

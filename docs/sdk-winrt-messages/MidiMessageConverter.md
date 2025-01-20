@@ -9,6 +9,11 @@ has_children: false
 
 This class provides support for representing MIDI 1.0 messages in the Universal MIDI Packet format.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Messages |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Generic MIDI 1.0 Conversion Functions
 
 | Function | Description |
@@ -45,5 +50,5 @@ This class provides support for representing MIDI 1.0 messages in the Universal 
 
 ## IDL
 
-[MidiMessageConverter IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiMessageConverter.idl)
+[MidiMessageConverter IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiMessageConverter.idl)
 

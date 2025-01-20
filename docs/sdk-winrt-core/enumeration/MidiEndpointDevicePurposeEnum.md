@@ -8,7 +8,12 @@ has_children: false
 
 # MidiEndpointDevicePurpose Enumeration
 
-Indicates the intended purpose of the endpoint. Use this to help classify endpoints you show to users in your application. This value is also used internally when filtering endpoints per the `MidiEndpointDeviceInformationFilter` enumeration.
+Indicates the intended purpose of the endpoint. Use this to help classify endpoints you show to users in your application. This value is also used internally when filtering endpoints per the `MidiEndpointDeviceInformationFilters` enumeration.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
 
 ## Properties
 
@@ -22,5 +27,4 @@ Indicates the intended purpose of the endpoint. Use this to help classify endpoi
 
 ## IDL
 
-[MidiEndpointDevicePurposeEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiEndpointDevicePurposeEnum.idl)
-
+[MidiEndpointDevicePurposeEnum IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiEndpointDevicePurposeEnum.idl)

@@ -10,6 +10,11 @@ has_children: false
 
 Indicates the protocol specifics for the Group Terminal Block. Group terminal blocks are still available, but are generally deprecated by the MIDI Association in favor of function blocks, endpoint discovery and protocol negotiation, when available.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -26,4 +31,4 @@ Indicates the protocol specifics for the Group Terminal Block. Group terminal bl
 
 ## IDL
 
-[MidiGroupTerminalBlockProtocol IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiGroupTerminalBlockProtocolEnum.idl)
+[MidiGroupTerminalBlockProtocol IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiGroupTerminalBlockProtocolEnum.idl)

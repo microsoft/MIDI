@@ -10,6 +10,14 @@ has_children: false
 
 `MidiMessageStruct` is provided for cases where the API consumer wants to have a fixed value type they can use to send and receive messages. In the case of receiving messages, a function which fills the struct will typically return a count of valid words. The `MidiMessageStruct` struct type is simpler than the other runtime class types and may therefore perform better in some projections and for some uses. Note that this type does not include the timestamp field.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+
+## Struct Fields
+
 | Field | Description |
 | -------- | ----------- |
 | `Word0` | First 32-bit MIDI word |
@@ -19,4 +27,4 @@ has_children: false
 
 ## IDL
 
-[MidiMessageStruct IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/MidiMessageStruct.idl)
+[MidiMessageStruct IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiMessageStruct.idl)

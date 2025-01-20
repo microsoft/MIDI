@@ -9,6 +9,11 @@ has_children: false
 
 Status to use for MIDI 2.0 Channel Voice messages. These are message type 4 messages.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Messages |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -31,4 +36,4 @@ Status to use for MIDI 2.0 Channel Voice messages. These are message type 4 mess
 
 ## IDL
 
-[Midi2ChannelVoiceMessageStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/Midi2ChannelVoiceMessageStatusEnum.idl)
+[Midi2ChannelVoiceMessageStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/Midi2ChannelVoiceMessageStatusEnum.idl)

@@ -1,14 +1,18 @@
 ---
 layout: api_page
-title: MidiServiceLoopbackEndpointDefinition
+title: MidiLoopbackEndpointDefinition
 parent: Midi2.Endpoints.Loopback
 has_children: false
 ---
 
-# MidiServiceLoopbackEndpointDefinition
+# MidiLoopbackEndpointDefinition
 
+## Location
 
-## Properties
+| Namespace | Microsoft.Windows.Devices.Midi2.Endpoints.Loopback |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
+## Struct Properties
 
 | Property | Description |
 |---|---|
@@ -18,4 +22,4 @@ has_children: false
 
 ## IDL
 
-[MidiServiceLoopbackEndpointDefinition IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-endpoints-loopback/MidiServiceLoopbackEndpointDefinition.idl)
+[MidiLoopbackEndpointDefinition IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiLoopbackEndpointDefinition.idl)

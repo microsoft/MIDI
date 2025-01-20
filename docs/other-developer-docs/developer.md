@@ -6,4 +6,4 @@ has_children: true
 
 # Developer Documentation
 
-In addition to the API documentation, here's additional developer documentation.
+In addition to the SDK documentation, here's additional developer documentation.

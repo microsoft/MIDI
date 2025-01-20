@@ -9,6 +9,11 @@ has_children: false
 
 Status to use for MIDI 1.0 Channel Voice messages. Note that not all MIDI 1.0 messages are channel voice messages, so this is not an exhaustive list of MIDI 1.0 messages. However, this is the total set of MIDI 1.0 messages which can be used in a MIDI Universal MIDI Packet Message type 2.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Messages |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Properties
 
 | Property | Value | Description |
@@ -23,4 +28,4 @@ Status to use for MIDI 1.0 Channel Voice messages. Note that not all MIDI 1.0 me
 
 ## IDL
 
-[Midi1ChannelVoiceMessageStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/Midi1ChannelVoiceMessageStatusEnum.idl)
+[Midi1ChannelVoiceMessageStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/Midi1ChannelVoiceMessageStatusEnum.idl)

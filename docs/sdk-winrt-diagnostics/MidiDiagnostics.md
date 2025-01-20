@@ -7,16 +7,19 @@ has_children: false
 
 # MidiDiagnostics
 
-## Remarks
-
 The MidiDiagnostics class contains a number of static functions which enable working with the service outside of a specific session. 
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Diagnostics |
+| Library | Microsoft.Windows.Devices.Midi2 |
 
 ## Static Methods
 
 | Static Property | Description |
 | --------------- | ----------- |
-| `DiagnosticsLoopbackAEndpointId` | Endpoint Id for the diagnostic loopback used for development and support purposes. |
-| `DiagnosticsLoopbackBEndpointId` | Endpoint Id for the diagnostic loopback used for development and support purposes. |
+| `DiagnosticsLoopbackAEndpointDeviceId` | Returns the endpoint Id for the diagnostic loopback used for development and support purposes. |
+| `DiagnosticsLoopbackBEndpointDeviceId` | Returns the endpoint Id for the diagnostic loopback used for development and support purposes. |
 
 ### Service Health
 
@@ -35,4 +38,4 @@ Here's an example of ping responses through the MIDI console app
 
 ## IDL
 
-[MidiDiagnostics IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-diagnostics/MidiDiagnostics.idl)
+[MidiDiagnostics IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiDiagnostics.idl)

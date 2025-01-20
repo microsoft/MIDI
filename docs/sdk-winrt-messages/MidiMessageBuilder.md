@@ -9,6 +9,11 @@ has_children: false
 
 This class includes static functions to assist in constructing common message types.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.Messages |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Static Functions
 
 | Function | Description |
@@ -26,4 +31,4 @@ This class includes static functions to assist in constructing common message ty
 
 ## IDL
 
-[MidiMessageBuilder IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-messages/MidiMessageBuilder.idl)
+[MidiMessageBuilder IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiMessageBuilder.idl)

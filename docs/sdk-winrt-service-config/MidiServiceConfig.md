@@ -7,9 +7,12 @@ has_children: false
 
 # MidiServiceConfig
 
-## Remarks
-
 The MidiServiceConfig class contains methods which are typically used only by the client-side configuration components of transports and message transforms. The JSON in these messages must be understood by the service and known to the service transport/transform to be processed properly.
+
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.ServiceConfig |
+| Library | Microsoft.Windows.Devices.Midi2 |
 
 ## Static Functions
 
@@ -24,4 +27,4 @@ For plugins which support updates at runtime, developers of those plugins should
 
 ## IDL
 
-[MidiServiceConfig IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-service-config/MidiService.idl)
+[MidiServiceConfig IDL](https://ggithub.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiServiceConfig.idl)

@@ -10,6 +10,11 @@ has_children: false
 
 Interface which is used to prevent circular references in the SDK, specifically with message processing plugins. This interface is only supported when used by the `MidiEndpointConnection` class.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Events
 
 | Event | Description |
@@ -19,5 +24,5 @@ Interface which is used to prevent circular references in the SDK, specifically 
 
 ## IDL
 
-[IMidiEndpointConnectionSource IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiEndpointConnectionSource.idl)
+[IMidiEndpointConnectionSource IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/IMidiEndpointConnectionSource.idl)
 

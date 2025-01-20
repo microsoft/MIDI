@@ -9,6 +9,11 @@ has_children: false
 
 (TODO: This section is not complete)
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2.ServiceConfig |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## IDL
 
-[MidiServiceConfigResponseStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-service-config/MidiServiceConfigResponseStatusEnum.idl)
+[MidiServiceConfigResponseStatus IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/MidiServiceConfigResponseStatusEnum.idl)

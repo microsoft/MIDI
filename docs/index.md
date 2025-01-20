@@ -41,11 +41,6 @@ While we're in developer preview, get started by downloading and installing the 
 * **Supports your Existing Devices**. Windows MIDI Services supports the MIDI 1.0 devices you own today, including those with vendor-supplied kernel streaming drivers, as well as class-compliant MIDI 1.0 and MIDI 2.0 devices. The experience will be better/faster if they use the new class driver, but we recognize that is not always possible or desirable with some existing devices.
 * **Supports your Existing Apps**. When Windows MIDI Services ships in-box in Windows, the existing WinMM and WinRT MIDI 1.0 APIs will be repointed to the new Windows Service. This will provide a subset of the new features, including multi-client. Those apps will not have access to the user metadata, auto-reconnect, device connect/disconnect detection, rich device details, MIDI 2.0 messages, etc. but will continue to work as today, with the benefit of multi-client (more than one app using the same port) support.
 
-## Release Plans
-
-We'll soon have Windows MIDI Services in Windows Insider releases. The first few releases will be opt-in for people who request access on our Discord server, as they are not complete and they *will* break some current MIDI applications. After that, we'll open it up more broadly.
-
-After that, our release plan for the service, plugins, and API is to release when our customers, partners, and internal reviews are all happy with the results, especially backwards compatibility. This is currently expected to happen in the first half of CY 2025.
 
 ## Developer Samples
 

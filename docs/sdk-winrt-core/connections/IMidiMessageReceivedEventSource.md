@@ -10,6 +10,11 @@ has_children: false
 
 Interface which contains the event definition used by any class which raises the `MessageReceived` event. This is defined in an interface so that message processing plugins and the `MidiEndpointConnection` type can be used interchangeably in an event handler.
 
+## Location
+
+| Namespace | Microsoft.Windows.Devices.Midi2 |
+| Library | Microsoft.Windows.Devices.Midi2 |
+
 ## Events
 
 | Event | Description |
@@ -18,5 +23,5 @@ Interface which contains the event definition used by any class which raises the
 
 ## IDL
 
-[IMidiMessageReceivedEventSource IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt-core/IMidiMessageReceivedEventSource.idl)
+[IMidiMessageReceivedEventSource IDL](https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/IMidiMessageReceivedEventSource.idl)
 
