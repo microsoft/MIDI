@@ -48,6 +48,7 @@
 #include "devpkey.h"
 
 // Shared helpers
+#include "midi_utils.h"
 #include "midi_ump.h"
 #include "midi_timestamp.h"
 #include "ump_helpers.h"

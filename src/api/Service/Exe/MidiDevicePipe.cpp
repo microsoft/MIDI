@@ -52,6 +52,10 @@ CMidiDevicePipe::Initialize(
     RETURN_HR_IF_NULL(E_INVALIDARG, prop);
     m_TransportGuid = winrt::unbox_value<winrt::guid>(prop);
 
+    // Confirm that this component is either signed, or we are in developer mode.
+    // Else, do not use it.
+    RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransportGuid));
+
     GUID dummySessionId{};
 
     if (MidiFlowBidirectional == creationParams->Flow)

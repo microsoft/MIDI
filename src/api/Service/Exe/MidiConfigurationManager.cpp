@@ -327,33 +327,37 @@ std::vector<TRANSPORTMETADATA> CMidiConfigurationManager::GetAllEnabledTransport
         wil::com_ptr_nothrow<IMidiTransport> midiTransport;
         wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> plugin;
 
-        if (SUCCEEDED(CoCreateInstance(transportId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))))
+        // Do not load any transports which are untrusted, unless in developer mode.
+        if (SUCCEEDED(internal::IsComponentPermitted(transportId)))
         {
-            if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiServiceTransportPluginMetadataProvider), (void**)&plugin)))
+            if (SUCCEEDED(CoCreateInstance(transportId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))))
             {
-                plugin->Initialize();
+                if (SUCCEEDED(midiTransport->Activate(__uuidof(IMidiServiceTransportPluginMetadataProvider), (void**)&plugin)))
+                {
+                    plugin->Initialize();
 
-                TRANSPORTMETADATA metadata;
+                    TRANSPORTMETADATA metadata;
 
-                LOG_IF_FAILED(plugin->GetMetadata(&metadata));
+                    LOG_IF_FAILED(plugin->GetMetadata(&metadata));
 
-                results.push_back(std::move(metadata));
+                    results.push_back(std::move(metadata));
 
-                plugin->Shutdown();
-            }
-            else
-            {
-                // log that the interface isn't there, but don't terminate or anything
+                    plugin->Shutdown();
+                }
+                else
+                {
+                    // log that the interface isn't there, but don't terminate or anything
 
-                TraceLoggingWrite(
-                    MidiSrvTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingWideString(L"Unable to activate IMidiServiceTransportPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingGuid(transportId, "transport id"),
-                    TraceLoggingPointer(this, "this")
-                );
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingWideString(L"Unable to activate IMidiServiceTransportPlugin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingGuid(transportId, "transport id"),
+                        TraceLoggingPointer(this, "this")
+                    );
+                }
             }
         }
     }

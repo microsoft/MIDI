@@ -83,6 +83,10 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 
     auto transformId = __uuidof(Midi2BS2UMPTransform);
 
+    // Confirm that this component is either signed, or we are in developer mode.
+    // Else, do not use it.
+    RETURN_IF_FAILED(internal::IsComponentPermitted(transformId));
+
     RETURN_IF_FAILED(CoCreateInstance(transformId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformPlugin)));
 
     RETURN_IF_FAILED(transformPlugin->Activate(__uuidof(IMidiDataTransform), (void**)(&m_bs2UmpTransform)));
