@@ -87,7 +87,7 @@ typedef struct _PORT_INFO
 class CMidiDeviceManager  : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiDeviceManagerInterface>
+        IMidiDeviceManager>
 {
 public:
 
@@ -110,7 +110,7 @@ public:
         _In_ PCWSTR,
         _In_ BOOL,
         _In_ MidiFlow,
-        _In_ PMIDIENDPOINTCOMMONPROPERTIES,
+        _In_ const PMIDIENDPOINTCOMMONPROPERTIES,
         _In_ ULONG,
         _In_ ULONG,
         _In_ const DEVPROPERTY* ,

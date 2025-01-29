@@ -42,7 +42,7 @@ class CMidi2KSMidiEndpointManager :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
+    STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
     STDMETHOD(Shutdown)();
 
 private:
@@ -54,8 +54,8 @@ private:
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
-    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_midiProtocolManager;
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
     std::vector<std::unique_ptr<MIDI_PIN_INFO>> m_AvailableMidiPins;
     

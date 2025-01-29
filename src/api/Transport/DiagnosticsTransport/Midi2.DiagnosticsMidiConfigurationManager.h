@@ -16,12 +16,12 @@ class CMidi2DiagnosticsMidiConfigurationManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManagerInterface* MidiDeviceManager, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
+    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManager* MidiDeviceManager, _In_ IMidiServiceConfigurationManager* MidiServiceConfigurationManagerInterface));
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _Out_ LPWSTR* response));
     STDMETHOD(Shutdown)();
 
 private:
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
     //GUID m_TransportId;   // kept for convenience
 };

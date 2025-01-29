@@ -63,7 +63,7 @@ private:
     // true if we're closing down
  //   bool m_shutdown{ false };
 
-    //wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
+    //wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
     std::shared_ptr<CMidiClientManager> m_clientManager;
     std::shared_ptr<CMidiDeviceManager> m_deviceManager;
     std::shared_ptr<CMidiSessionTracker> m_sessionTracker;

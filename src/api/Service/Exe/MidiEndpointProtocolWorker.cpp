@@ -181,6 +181,8 @@ CMidiEndpointProtocolWorker::Start(
 
             // this is not a good idea, but we don't have a reference to the COM lib here
             GUID midi2MidiSrvTransportIID = internal::StringToGuid(L"{2BA15E4E-5417-4A66-85B8-2B2260EFBC84}");
+
+            RETURN_IF_FAILED(internal::IsComponentPermitted(midi2MidiSrvTransportIID));
             RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvTransportIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport)));
             RETURN_IF_NULL_ALLOC(serviceTransport);
 

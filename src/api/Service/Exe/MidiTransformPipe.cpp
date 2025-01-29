@@ -14,7 +14,7 @@ CMidiTransformPipe::Initialize(
     LPCWSTR device,
     PMIDISRV_TRANSFORMCREATION_PARAMS pipeCreationParams,
     DWORD* mmcssTaskId,
-    IMidiDeviceManagerInterface* midiDeviceManager
+    IMidiDeviceManager* midiDeviceManager
 )
 {
     TraceLoggingWrite(
@@ -32,6 +32,10 @@ CMidiTransformPipe::Initialize(
     TRANSFORMCREATIONPARAMS creationParams {};
 
     m_TransformGuid = pipeCreationParams->TransformGuid;
+
+    // Confirm that this component is either signed, or we are in developer mode.
+    // Else, do not use it.
+    RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransformGuid));
 
     // Transforms are "bidirectional" from the midi pipes perspective,
     // so we always initialize the pipe as bidirectional.

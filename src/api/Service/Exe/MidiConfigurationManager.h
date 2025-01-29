@@ -11,7 +11,7 @@
 class CMidiConfigurationManager : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiServiceConfigurationManagerInterface>
+        IMidiServiceConfigurationManager>
 {
 public:
 

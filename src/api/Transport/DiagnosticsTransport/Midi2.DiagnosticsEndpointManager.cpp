@@ -22,8 +22,8 @@ GUID TransportLayerGUID = TRANSPORT_LAYER_GUID;
 _Use_decl_annotations_
 HRESULT
 CMidi2DiagnosticsEndpointManager::Initialize(
-    IMidiDeviceManagerInterface* midiDeviceManager,
-    IMidiEndpointProtocolManagerInterface* /*midiEndpointProtocolManager*/
+    IMidiDeviceManager* midiDeviceManager,
+    IMidiEndpointProtocolManager* /*midiEndpointProtocolManager*/
 
 )
 {
@@ -37,7 +37,7 @@ CMidi2DiagnosticsEndpointManager::Initialize(
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
 
     m_ContainerId = m_TransportTransportId;           // we use the transport ID as the container ID for convenience
 

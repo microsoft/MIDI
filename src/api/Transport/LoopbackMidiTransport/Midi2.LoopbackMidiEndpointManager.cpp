@@ -22,8 +22,8 @@ GUID TransportLayerGUID = TRANSPORT_LAYER_GUID;
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiEndpointManager::Initialize(
-    IMidiDeviceManagerInterface* midiDeviceManager, 
-    IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
+    IMidiDeviceManager* midiDeviceManager, 
+    IMidiEndpointProtocolManager* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
@@ -37,8 +37,8 @@ CMidi2LoopbackMidiEndpointManager::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
-    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_MidiProtocolManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_MidiProtocolManager));
 
 
     m_TransportTransportId = TransportLayerGUID;    // this is needed so MidiSrv can instantiate the correct transport

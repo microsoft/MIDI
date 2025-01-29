@@ -119,6 +119,12 @@ CMidiDeviceManager::Initialize(
                 TraceLoggingGuid(TransportLayer, "transport layer")
             );
 
+            // Do not load any transports which are untrusted, unless in developer mode.
+            if (FAILED(internal::IsComponentPermitted(TransportLayer)))
+            {
+                continue;
+            }
+
             // changed these from a return-on-fail to just log, so we don't prevent service startup
             // due to one bad transport
 
@@ -278,7 +284,7 @@ CMidiDeviceManager::Initialize(
 
                 if (endpointManager != nullptr)
                 {
-                    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = endpointProtocolManager.get();
+                    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> protocolManager = endpointProtocolManager.get();
 
                     TraceLoggingWrite(
                         MidiSrvTelemetryProvider::Provider(),
@@ -618,7 +624,7 @@ CMidiDeviceManager::ActivateEndpoint
     PCWSTR parentInstanceId,
     BOOL umpOnly,
     MidiFlow flow,
-    PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
+    const PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
     ULONG intPropertyCount,
     ULONG devPropertyCount,
     const DEVPROPERTY* interfaceDevProperties,
