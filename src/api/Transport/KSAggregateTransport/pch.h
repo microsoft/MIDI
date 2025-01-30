@@ -65,6 +65,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "MidiDefs.h"
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
+#include "midi_utils.h"
 
 
 #undef GetObject

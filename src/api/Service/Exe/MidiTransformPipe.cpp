@@ -33,6 +33,10 @@ CMidiTransformPipe::Initialize(
 
     m_TransformGuid = pipeCreationParams->TransformGuid;
 
+    // Confirm that this component is either signed, or we are in developer mode.
+    // Else, do not use it.
+    RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransformGuid));
+
     // Transforms are "bidirectional" from the midi pipes perspective,
     // so we always initialize the pipe as bidirectional.
     RETURN_IF_FAILED(CMidiPipe::Initialize(device, MidiFlowBidirectional));
