@@ -553,7 +553,7 @@ CMidiClientManager::GetMidiProtocolDownscalerTransform(
 
         // create the transform
         wil::com_ptr_nothrow<CMidiTransformPipe> transform;
-        wil::com_ptr_nothrow<IMidiDeviceManagerInterface> midiDeviceManager = m_DeviceManager.get();
+        wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager = m_DeviceManager.get();
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
 
         RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));
@@ -758,7 +758,7 @@ CMidiClientManager::GetMidiTransform(
 
         // create the transform
         wil::com_ptr_nothrow<CMidiTransformPipe> transform;
-        wil::com_ptr_nothrow<IMidiDeviceManagerInterface> midiDeviceManager = m_DeviceManager.get();
+        wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager = m_DeviceManager.get();
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
 
         RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));
@@ -869,7 +869,7 @@ CMidiClientManager::GetMidiScheduler(
 
         // create the transform
         wil::com_ptr_nothrow<CMidiTransformPipe> transform;
-        wil::com_ptr_nothrow<IMidiDeviceManagerInterface> midiDeviceManager = m_DeviceManager.get();
+        wil::com_ptr_nothrow<IMidiDeviceManager> midiDeviceManager = m_DeviceManager.get();
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidiTransformPipe>(&transform));
 
         RETURN_IF_FAILED(transform->Initialize(devicePipe->MidiDevice().c_str(), &creationParams, &m_MmcssTaskId, midiDeviceManager.get()));

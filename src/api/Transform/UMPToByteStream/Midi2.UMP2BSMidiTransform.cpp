@@ -12,7 +12,7 @@ CMidi2UMP2BSMidiTransform::Initialize(
     DWORD *,
     IMidiCallback *callback,
     LONGLONG /*context*/,
-    IMidiDeviceManagerInterface* /*midiDeviceManager*/
+    IMidiDeviceManager* /*midiDeviceManager*/
 )
 {
     TraceLoggingWrite(

@@ -12,7 +12,7 @@ class CMidi2MidiSrvConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
     IMidiTransportConfigurationManager,
-    IMidiServicePluginMetadataReporterInterface>
+    IMidiServicePluginMetadataReporter>
 {
 public:
     // One issue in the new lib-based rpc implementation is this Initialize function is not in 
@@ -22,8 +22,8 @@ public:
 
     STDMETHOD(Initialize(
         _In_ GUID transportId, 
-        _In_opt_ IMidiDeviceManagerInterface* deviceManagerInterface, 
-        _In_opt_ IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface));
+        _In_opt_ IMidiDeviceManager* deviceManagerInterface, 
+        _In_opt_ IMidiServiceConfigurationManager* midiServiceConfigurationManagerInterface));
 
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Out_ LPWSTR* responseJson));
     //STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Inout_ BSTR* responseJson));

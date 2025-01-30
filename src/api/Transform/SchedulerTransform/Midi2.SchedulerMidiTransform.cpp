@@ -22,7 +22,7 @@ CMidi2SchedulerMidiTransform::Initialize(
     DWORD * mmcssTaskId,
     IMidiCallback * callback,
     LONGLONG context,
-    IMidiDeviceManagerInterface* /*MidiDeviceManager*/
+    IMidiDeviceManager* /*MidiDeviceManager*/
 )
 {
     UNREFERENCED_PARAMETER(creationParams);

@@ -263,7 +263,7 @@ typedef struct
     local,
     uuid(A04374D3-4514-44E1-A2F9-7D8B907AEF1F)
 ]
-interface IMidiDeviceManagerInterface : IUnknown
+interface IMidiDeviceManager : IUnknown
 {
     HRESULT ActivateVirtualParentDevice(
         [in, annotation("_In_")] ULONG devPropertyCount,
@@ -276,7 +276,7 @@ interface IMidiDeviceManagerInterface : IUnknown
         [in, string, annotation("_In_")] LPCWSTR parentInstanceId,
         [in, annotation("_In_")] BOOL umpOnly,
         [in, annotation("_In_")] MidiFlow midiFlow,
-        [in, annotation("_In_")] PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
+        [in, annotation("_In_")] const PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
         [in, annotation("_In_")] ULONG intPropertyCount,
         [in, annotation("_In_")] ULONG devPropertyCount,
         [in, size_is(intPropertyCount), annotation("_In_opt_")] const DEVPROPERTY* interfaceDevProperties,
@@ -324,7 +324,7 @@ interface IMidiDeviceManagerInterface : IUnknown
     local,
     uuid(6c21fcda-051b-4f06-8d40-f5bced5957c0)
 ]
-interface IMidiServiceConfigurationManagerInterface : IUnknown
+interface IMidiServiceConfigurationManager : IUnknown
 {
     // these parse provided json
 
@@ -374,8 +374,8 @@ interface IMidiTransportConfigurationManager : IUnknown
 {
     HRESULT Initialize(
         [in, annotation("_In_")] GUID transportId,
-        [in, annotation("_In_opt_")] IMidiDeviceManagerInterface* midiDeviceManager,
-        [in, annotation("_In_opt_")] IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManager
+        [in, annotation("_In_opt_")] IMidiDeviceManager* midiDeviceManager,
+        [in, annotation("_In_opt_")] IMidiServiceConfigurationManager* midiServiceConfigurationManager
     );
 
     HRESULT UpdateConfiguration(
@@ -433,7 +433,7 @@ interface IMidiDataTransform : IUnknown
         [in, out, annotation("_Inout_")] DWORD* mmcssTaskId,
         [in, annotation("_In_")] IMidiCallback* callback,
         [in, annotation("_In_")] LONGLONG context,
-        [in, annotation("_In_")] IMidiDeviceManagerInterface* midiDeviceManager
+        [in, annotation("_In_")] IMidiDeviceManager* midiDeviceManager
     );
 
     HRESULT Shutdown();
@@ -465,7 +465,7 @@ typedef struct
     local,
     uuid(7a3def20-fb76-49b6-a3a0-3dcbcda8f482)
 ]
-interface IMidiEndpointProtocolManagerInterface : IUnknown
+interface IMidiEndpointProtocolManager : IUnknown
 {
     HRESULT DiscoverAndNegotiate(
         [in, annotation("_In_")] GUID transportId,
@@ -492,8 +492,8 @@ interface IMidiEndpointProtocolManagerInterface : IUnknown
 interface IMidiEndpointManager : IUnknown
 {
     HRESULT Initialize(
-        [in, annotation("_In_")] IMidiDeviceManagerInterface* midiDeviceManager,
-        [in, annotation("_In_")] IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
+        [in, annotation("_In_")] IMidiDeviceManager* midiDeviceManager,
+        [in, annotation("_In_")] IMidiEndpointProtocolManager* midiEndpointProtocolManager
     );
 
     HRESULT Shutdown();
@@ -577,7 +577,7 @@ interface IMidiServiceTransformPluginMetadataProvider : IUnknown
         local,
         uuid(469c7722-f779-40c3-b648-52620f75dcee)
 ]
-interface IMidiServicePluginMetadataReporterInterface : IUnknown
+interface IMidiServicePluginMetadataReporter : IUnknown
 {
     HRESULT GetTransportList(
         [out, string, annotation("_Out_")] LPWSTR* transportListJson);

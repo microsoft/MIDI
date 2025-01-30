@@ -21,7 +21,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::Initialize(
     DWORD *,
     IMidiCallback * callback,
     LONGLONG context,
-    IMidiDeviceManagerInterface* /*midiDeviceManager*/
+    IMidiDeviceManager* /*midiDeviceManager*/
 )
 {
     TraceLoggingWrite(

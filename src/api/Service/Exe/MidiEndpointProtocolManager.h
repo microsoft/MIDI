@@ -17,7 +17,7 @@ struct ProtocolNegotiationWorkerThreadEntry
 
 class CMidiEndpointProtocolManager : public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiEndpointProtocolManagerInterface>
+    IMidiEndpointProtocolManager>
 {
 public:
     CMidiEndpointProtocolManager() = default;

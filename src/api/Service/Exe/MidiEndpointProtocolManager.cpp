@@ -52,7 +52,7 @@ CMidiEndpointProtocolManager::Initialize(
     if (m_discoveryAndProtocolNegotiationEnabled)
     {
         // use our clsid as the session id. 
-        m_sessionId = __uuidof(IMidiEndpointProtocolManagerInterface);
+        m_sessionId = __uuidof(IMidiEndpointProtocolManager);
 
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
