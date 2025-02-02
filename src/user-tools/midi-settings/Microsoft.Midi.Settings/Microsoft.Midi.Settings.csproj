@@ -71,6 +71,12 @@
     <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DeviceDetailPage.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
+    <None Remove="Views\EndpointsAllPage.xaml" />
+    <None Remove="Views\EndpointsAppPage.xaml" />
+    <None Remove="Views\EndpointsBle10Page.xaml" />
+    <None Remove="Views\EndpointsKsaPage.xaml" />
+    <None Remove="Views\EndpointsLoopPage.xaml" />
+    <None Remove="Views\EndpointsNet2UdpPage.xaml" />
     <None Remove="Views\HomePage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
@@ -153,6 +159,24 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\EndpointsAllPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsLoopPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsNet2UdpPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsKsaPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsBle10Page.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsAppPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\WinMMMidi1DevicesPage.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
     </Page>

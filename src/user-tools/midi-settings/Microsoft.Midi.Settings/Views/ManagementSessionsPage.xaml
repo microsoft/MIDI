@@ -46,13 +46,14 @@
                                 </controls:SettingsExpander.Header>
 
                                 <controls:SettingsExpander.ItemTemplate>
-                                    <DataTemplate x:DataType="midirept:MidiServiceSessionConnectionInfo">
+                                    <DataTemplate x:DataType="local:MidiServiceSessionConnectionInfoWrapper">
                                         <controls:SettingsCard IsClickEnabled="False">
                                             <controls:SettingsCard.Header>
                                                 <StackPanel>
-                                                    <TextBlock Text="{x:Bind EndpointDeviceId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                    <TextBlock Text="{x:Bind EndpointName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                    <TextBlock Text="{x:Bind ConnectionInfo.EndpointDeviceId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
                                                    <!-- <TextBlock Text="{x:Bind EarliestConnectionTime}" Style="{StaticResource SmallPlainPropertyValue}"/> -->
-                                                    <TextBlock Text="{x:Bind InstanceCount}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                    <TextBlock Text="{x:Bind ConnectionInfo.InstanceCount}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                                 </StackPanel>
                                             </controls:SettingsCard.Header>
                                         </controls:SettingsCard>

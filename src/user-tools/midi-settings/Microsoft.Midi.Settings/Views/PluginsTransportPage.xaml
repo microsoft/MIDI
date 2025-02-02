@@ -79,7 +79,7 @@
                                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Version" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind Version}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Code" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind TransportCode}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" Text="Id" Style="{StaticResource SmallPropertyLabel}" />

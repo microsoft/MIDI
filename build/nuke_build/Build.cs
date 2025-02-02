@@ -34,14 +34,15 @@ class Build : NukeBuild
     //readonly GitVersion MasterBuildVersion;
 
 
-    string VersionName => "Developer Preview 9";
-    string NuGetVersionName => "preview-9";
+    //string VersionName => "Developer Preview 9";
+    string VersionName => "Customer Preview 1";
+    string NuGetVersionName => "preview-10";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
 
     const string BuildVersionMajor = "1";
     const string BuildVersionMinor = "0";
-    const string BuildVersionRevision = "2";
+    const string BuildVersionRevision = "3";
     const string BuildMajorMinorRevision = $"{BuildVersionMajor}.{BuildVersionMinor}.{BuildVersionRevision}";
 
     //string BuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year

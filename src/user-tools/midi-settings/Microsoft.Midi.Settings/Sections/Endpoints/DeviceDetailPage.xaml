@@ -45,7 +45,11 @@
                            Style="{StaticResource PageHeaderStyleDeviceName}" />
                 <TextBlock Text="{x:Bind ViewModel.DeviceInformation.EndpointPurpose, Converter={StaticResource EndpointDevicePurposeConverter}}"
                            Style="{StaticResource PageHeaderStyleDevicePurpose}" />
-                
+                <Button Content="Open console MIDI input monitor in new window" 
+                        Margin="0,10,0,10"
+                        VerticalAlignment="Center"
+                        Click="OnOpenConsoleMonitor" />
+
             </StackPanel>
 
             <Grid Grid.Column="2">

@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
+using Microsoft.Midi.Settings.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,6 +35,24 @@ namespace Microsoft.Midi.Settings.ViewModels
                 return (MidiClock.ConvertTimestampTicksToNanoseconds(1)).ToString("N2") + " ns";
             }
         }
+
+
+        public string MidiSdkVersionString
+        {
+            get
+            {
+                return AppState.Current.GetInstalledSdkVersionString();
+            }
+        }
+
+        public Uri MidiSdkDownloadUri
+        {
+            get
+            {
+                return AppState.Current.GetMidiSdkInstallerUri();
+            }
+        }
+
 
         public void OnNavigatedFrom()
         {
