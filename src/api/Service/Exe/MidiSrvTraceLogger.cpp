@@ -8,8 +8,9 @@
 
 #include "stdafx.h"
 
+_Use_decl_annotations_
 void CMidiSrvTraceLogger::LogMidi2CreateClient(
-    HRESULT hr, LPCWSTR DeviceInstanceId, LPCWSTR ProcessName, MidiApi Api, MidiFlow Flow, MidiDataFormats Format, DWORD ClientProcessId)
+    HRESULT hr, LPCWSTR deviceInstanceId, LPCWSTR processName, GUID api, MidiFlow flow, MidiDataFormats format, DWORD clientProcessId)
 {
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -17,15 +18,16 @@ void CMidiSrvTraceLogger::LogMidi2CreateClient(
         TraceLoggingKeyword(MICROSOFT_KEYWORD_MEASURES),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingHResult(hr, "HResult"),
-        TraceLoggingValue(DeviceInstanceId, "DeviceInstanceId"),
-        TraceLoggingValue(ProcessName, "ProcessName"),
-        TraceLoggingUInt8((static_cast<UINT8>(Api)), "CallingApi"),
-        TraceLoggingUInt8((static_cast<UINT8>(Flow)), "Flow"),
-        TraceLoggingUInt8((static_cast<UINT8>(Format)), "DataFormat"),
-        TraceLoggingValue(ClientProcessId, "ClientProcessId")
+        TraceLoggingValue(deviceInstanceId, "DeviceInstanceId"),
+        TraceLoggingValue(processName, "ProcessName"),
+        TraceLoggingGuid(api, "CallingApi"),
+        TraceLoggingUInt8((static_cast<UINT8>(flow)), "Flow"),
+        TraceLoggingUInt8((static_cast<UINT8>(format)), "DataFormat"),
+        TraceLoggingValue(clientProcessId, "ClientProcessId")
         );
 }
 
+_Use_decl_annotations_
 void CMidiSrvTraceLogger::LogMidi2DestroyClient(HRESULT hr)
 {
     TraceLoggingWrite(

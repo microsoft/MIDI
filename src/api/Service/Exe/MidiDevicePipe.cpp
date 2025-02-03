@@ -36,7 +36,7 @@ CMidiDevicePipe::Initialize(
     RETURN_IF_FAILED(CMidiPipe::Initialize(device, creationParams->Flow));
 
     transportCreationParams.DataFormat = creationParams->DataFormat;
-    transportCreationParams.CallingApi = MidiApi_Service;
+    transportCreationParams.CallingApi = MIDISRV_APIID;
 
     // retrieve the transport layer GUID for this peripheral
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();

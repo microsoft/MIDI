@@ -17,6 +17,14 @@ public:
     {
     }
 
-    void LogMidi2CreateClient(HRESULT hr, LPCWSTR DeviceInstanceId, LPCWSTR ProcessName, MidiApi Api, MidiFlow Flow, MidiDataFormats Format, DWORD ClientProcessId);
-    void LogMidi2DestroyClient(HRESULT hr);
+    void LogMidi2CreateClient(
+        _In_ HRESULT hr,
+        _In_ LPCWSTR deviceInstanceId,
+        _In_ LPCWSTR processName,
+        _In_ GUID api,
+        _In_ MidiFlow flow,
+        _In_ MidiDataFormats format,
+        _In_ DWORD clientProcessId
+    );
+    void LogMidi2DestroyClient(_In_ HRESULT hr);
 };
