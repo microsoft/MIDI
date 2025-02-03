@@ -10,6 +10,7 @@
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:midicontrols="using:Microsoft.Midi.Settings.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -34,110 +35,29 @@
         <TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,8" />
 
         <ScrollViewer Grid.Row="1">
-            <Grid Margin="0,0,8,0" HorizontalAlignment="Stretch">
+            <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
 
                 <!-- Transport -->
 
+
                 <!-- If this transport supports runtime creation, have create button at this level -->
 
-                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiEndpointDevicesByTransport, Mode=OneWay}">
+
+                <TextBlock Text="{x:Bind ViewModel.Transport.Name, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                <TextBlock Text="{x:Bind ViewModel.Transport.Description, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiEndpointDevices}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="local:MidiEndpointDevicesByTransport">
-
-                            <controls:SettingsExpander ItemsSource="{x:Bind EndpointDevices}"
-                                                       IsExpanded="True"
-                                                       Margin="3">
-                                <controls:SettingsExpander.Header>
-                                    <StackPanel>
-                                        <TextBlock Text="{x:Bind Transport.Name, Mode=OneTime}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                        <TextBlock Text="{x:Bind Transport.Description, Mode=OneTime}" Style="{StaticResource SmallPlainPropertyValue}"/>
-                                    </StackPanel>
-                                </controls:SettingsExpander.Header>
-
-                                <controls:SettingsExpander.ItemTemplate>
-                                    <DataTemplate x:DataType="local:MidiEndpointDeviceListItem">
-                                        <controls:SettingsCard IsClickEnabled="True"
-                                                               CommandParameter="{x:Bind DeviceInformation}"
-                                                               Loaded="EndpointSettingsCard_Loaded">
-                                            <controls:SettingsCard.Header>
-                                                <TextBlock Text="{x:Bind Name}" 
-                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                            </controls:SettingsCard.Header>
-                                            <controls:SettingsCard.Description>
-                                                <StackPanel Orientation="Vertical">
-                                                    <TextBlock Text="{x:Bind TransportSuppliedDescription}" 
-                                                               Style="{StaticResource SmallPlainPropertyValue}"/>
-                                                    <TextBlock Text="{x:Bind UserSuppliedDescription}" 
-                                                               Style="{StaticResource SmallPlainPropertyValue}"/>
-                                                </StackPanel>
-                                            </controls:SettingsCard.Description>
-
-                                            <Grid>
-                                                <Grid.RowDefinitions>
-                                                    <RowDefinition Height="*" />
-                                                    <RowDefinition Height="*" />
-                                                    <RowDefinition Height="*" />
-                                                </Grid.RowDefinitions>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                    <ColumnDefinition Width="*" />
-                                                </Grid.ColumnDefinitions>
-
-
-                                                <TextBlock Grid.Row="0" Grid.Column="0" 
-                                                           Text="Native Format" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
-                                                <TextBlock Grid.Row="0" Grid.Column="1" 
-                                                           Text="{x:Bind NativeDataFormat, Mode=OneTime, Converter={StaticResource MidiEndpointNativeDataFormatConverter}}" 
-                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-
-
-
-                                                <TextBlock Grid.Row="0" Grid.Column="2" 
-                                                           Text="MIDI 1.0" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
-                                                <TextBlock Grid.Row="0" Grid.Column="3"
-                                                           Text="{x:Bind SupportsMidi10Protocol, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
-                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-
-                                                <TextBlock Grid.Row="1" Grid.Column="2" 
-                                                           Text="MIDI 2.0" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
-                                                <TextBlock Grid.Row="1" Grid.Column="3"
-                                                           Text="{x:Bind SupportsMidi20Protocol, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
-                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-
-
-                                                <TextBlock Grid.Row="0" Grid.Column="4" 
-                                                           Text="Unique Id?" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
-                                                <TextBlock Grid.Row="0" Grid.Column="5"
-                                                           Text="☑️"
-                                                           Visibility="{x:Bind TransportSuppliedSerialNumber, Mode=OneTime, Converter={StaticResource HasUniqueIdToVisibilityConverter}}" 
-                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                                <TextBlock Grid.Row="0" Grid.Column="5"
-                                                           Text="❌"
-                                                           Visibility="{x:Bind TransportSuppliedSerialNumber, Mode=OneTime, Converter={StaticResource HasUniqueIdToInverseVisibilityConverter}}" 
-                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-
-                                                <TextBlock Grid.Row="1" Grid.Column="4" 
-                                                           Text="Multi-client" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
-                                                <TextBlock Grid.Row="1" Grid.Column="5"
-                                                           Text="{x:Bind SupportsMultiClient, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
-                                                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-
-                                            </Grid>
-
-                                        </controls:SettingsCard>
-                                    </DataTemplate>
-                                </controls:SettingsExpander.ItemTemplate>
-
-                            </controls:SettingsExpander>
-
+                        <DataTemplate x:DataType="local:MidiEndpointDeviceListItem">
+                            <midicontrols:MidiEndpointDeviceListItemControl EndpointItem="{x:Bind}" 
+                                                                            Loaded="MidiEndpointDeviceListItemControl_Loaded"
+                                                                            Margin="3"/>
                         </DataTemplate>
+
                     </ItemsControl.ItemTemplate>
+
                 </ItemsControl>
-            </Grid>
+
+            </StackPanel>
 
         </ScrollViewer>
 

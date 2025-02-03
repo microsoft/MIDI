@@ -65,23 +65,33 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Manufacturer" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="0" 
+                           x:Uid="DeviceDetailPage_ManufacturerLabel"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName}" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                <TextBlock Grid.Column="0" Grid.Row="1" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="1" 
+                           x:Uid="DeviceDetailPage_ProductInstanceId"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointInfo.ProductInstanceId }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                <TextBlock Grid.Column="0" Grid.Row="2" Text="Serial Number" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="2" 
+                           x:Uid="DeviceDetailPage_SerialNumber"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                <TextBlock Grid.Column="0" Grid.Row="3" Text="Native Data Format" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="3" 
+                           x:Uid="DeviceDetailPage_NativeDataFormat"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.NativeDataFormat, Converter={StaticResource EndpointNativeDataFormatConverter} }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="4" 
+                           x:Uid="DeviceDetailPage_TransportCode"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
             </Grid>
@@ -160,7 +170,7 @@
                                     <TextBlock Grid.Column="0" Grid.Row="3" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport Code" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 </Grid>

@@ -21,6 +21,7 @@ using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.Midi.Settings.Models;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Controls;
 
 
 // To learn more about WinUI, the WinUI project structure,
@@ -60,10 +61,11 @@ namespace Microsoft.Midi.Settings.Views
         }
 
 
+
         // work around WinUI binding bug
-        private void EndpointSettingsCard_Loaded(object sender, RoutedEventArgs e)
+        private void MidiEndpointDeviceListItemControl_Loaded(object sender, RoutedEventArgs e)
         {
-            ((SettingsCard)sender).Command = ViewModel.ViewDeviceDetailsCommand;
+            ((MidiEndpointDeviceListItemControl)sender).ViewDeviceDetailsCommand = ViewModel.ViewDeviceDetailsCommand;
         }
     }
 }

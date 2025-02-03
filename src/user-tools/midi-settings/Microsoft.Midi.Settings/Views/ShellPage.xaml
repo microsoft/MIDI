@@ -67,7 +67,7 @@
             </NavigationView.Resources>
 
 
-            <NavigationView.AutoSuggestBox>
+            <!--<NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
                     x:Name="SettingsSearchBox"
                     x:Uid="ShellPage_SettingsSearchBox"
@@ -82,7 +82,7 @@
                         <KeyboardAccelerator Modifiers="Control" Key="F" Invoked="KeyboardAccelerator_Invoked" />
                     </AutoSuggestBox.KeyboardAccelerators>
                 </AutoSuggestBox>
-            </NavigationView.AutoSuggestBox>
+            </NavigationView.AutoSuggestBox>-->
 
 
             <NavigationView.MenuItems>
@@ -90,7 +90,7 @@
                 <NavigationViewItem x:Uid="Shell_Home" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.HomeViewModel"
                                     >
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe80f;"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe80f;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
@@ -111,13 +111,13 @@
 
                 <NavigationViewItem x:Uid="Shell_EndpointsKS" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsKSViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xecf3;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
                 <NavigationViewItem x:Uid="Shell_EndpointsKsa" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsKsaViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xecf0;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 

@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 
 using Windows.System;
+using Windows.UI.Popups;
 
 namespace Microsoft.Midi.Settings.Views;
 
@@ -86,7 +87,9 @@ public sealed partial class ShellPage : Page
 
     private void SettingsSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
+        var dialog = new MessageDialog("Settings search is not yet implemented.");
 
+        dialog.ShowAsync().Wait();
     }
 
     private void SettingsSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)

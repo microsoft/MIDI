@@ -310,7 +310,7 @@
     <value>MIDI 2.0 UMP Drivers (USB)</value>
   </data>
   <data name="Shell_EndpointsKsa.Content" xml:space="preserve">
-    <value>MIDI 1.0 Classic Drivers (USB, third-party)</value>
+    <value>MIDI 1.0 Drivers (USB, etc.)</value>
   </data>
   <data name="Shell_EndpointsLoop.Content" xml:space="preserve">
     <value>Loopback</value>
@@ -323,5 +323,23 @@
   </data>
   <data name="Shell_EndpointsNet2Udp.Content" xml:space="preserve">
     <value>Network MIDI 2.0 (Preview)</value>
+  </data>
+  <data name="CreateLoopbackEndpointsWindowTitle" xml:space="preserve">
+    <value>Create Loopback Endpoints</value>
+  </data>
+  <data name="DeviceDetailPage_ManufacturerLabel.Text" xml:space="preserve">
+    <value>Manufacturer</value>
+  </data>
+  <data name="DeviceDetailPage_ProductInstanceId.Text" xml:space="preserve">
+    <value>Product Instance Id</value>
+  </data>
+  <data name="DeviceDetailPage_SerialNumber.Text" xml:space="preserve">
+    <value>Serial Number</value>
+  </data>
+  <data name="DeviceDetailPage_NativeDataFormat.Text" xml:space="preserve">
+    <value>Native Data Format</value>
+  </data>
+  <data name="DeviceDetailPage_TransportCode.Text" xml:space="preserve">
+    <value>Transport Code</value>
   </data>
 </root>

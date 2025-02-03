@@ -67,6 +67,7 @@
 
 		
   <ItemGroup>
+    <None Remove="Controls\MidiEndpointDeviceListItemControl.xaml" />
     <None Remove="Styles\DefaultFont.xaml" />
     <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DeviceDetailPage.xaml" />
@@ -141,6 +142,9 @@
   </ItemGroup>
 	
   <ItemGroup>
+    <Page Update="Controls\MidiEndpointDeviceListItemControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <None Update="MidiSettings.exe.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -159,6 +163,9 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Sections\Endpoints\LOOP\CreateLoopbackEndpointsWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\EndpointsAllPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
