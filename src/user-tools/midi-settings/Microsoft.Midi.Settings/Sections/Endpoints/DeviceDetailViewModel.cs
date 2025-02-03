@@ -15,19 +15,31 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class DeviceDetailViewModel : ObservableRecipient, INavigationAware
     {
+        public DispatcherQueue? DispatcherQueue { get; set; }
+
+
         public EndpointUserMetadata UserMetadata { get; private set; } = new EndpointUserMetadata();
 
         [ObservableProperty]
         public bool hasFunctionBlocks;
 
         [ObservableProperty]
+        public bool hasGroupTerminalBlocks;
+
+        [ObservableProperty]
         public bool hasParent;
+
+        [ObservableProperty]
+        public bool showMidi2Properties;
+
 
         [ObservableProperty]
         public MidiEndpointDeviceInformation deviceInformation;
 
-        [ObservableProperty]
-        public IReadOnlyList<MidiFunctionBlock> functionBlocks;
+
+        public ObservableCollection<MidiFunctionBlock> FunctionBlocks = [];
+        public ObservableCollection<MidiGroupTerminalBlock> GroupTerminalBlocks = [];
+
 
         [ObservableProperty]
         public MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
@@ -49,7 +61,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public DeviceDetailViewModel()
         {
-            FunctionBlocks = new List<MidiFunctionBlock>(); // to prevent null binding
+            System.Diagnostics.Debug.WriteLine("Start clearing properties");
 
             // ugly, but there to prevent binding errors. Making everything nullable
             // bleeds over into the xaml, requires converters, etc. messy AF.
@@ -63,6 +75,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             this.HasParent = false;
             this.HasFunctionBlocks = false;
+            this.HasGroupTerminalBlocks = false;
+            this.ShowMidi2Properties = false;
+
+            System.Diagnostics.Debug.WriteLine("Finished clearing properties");
         }
 
         public void OnNavigatedFrom()
@@ -72,9 +88,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
+            System.Diagnostics.Debug.WriteLine("Start setting device-specific properties properties");
+
             this.DeviceInformation = (MidiEndpointDeviceInformation)parameter;
 
-            this.FunctionBlocks = this.DeviceInformation.GetDeclaredFunctionBlocks();
             this.TransportSuppliedInfo = this.DeviceInformation.GetTransportSuppliedInfo();
             this.UserSuppliedInfo = this.DeviceInformation.GetUserSuppliedInfo();
             this.DeviceIdentity = this.DeviceInformation.GetDeclaredDeviceIdentity();
@@ -82,9 +99,38 @@ namespace Microsoft.Midi.Settings.ViewModels
             this.EndpointInfo = this.DeviceInformation.GetDeclaredEndpointInfo();
             this.ParentDeviceInformation = this.DeviceInformation.GetParentDeviceInformation();
 
-            this.HasFunctionBlocks = FunctionBlocks.Count > 0;
             this.HasParent = this.ParentDeviceInformation != null;
 
+            ShowMidi2Properties = (this.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
+
+            if (DispatcherQueue == null) return;
+
+            // we're working with observable collections here, so need to dispatch
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            {
+                System.Diagnostics.Debug.WriteLine("Enter Dispatcher worker: function blocks and group terminal blocks");
+
+                FunctionBlocks.Clear();
+                GroupTerminalBlocks.Clear();
+
+                foreach (var fb in DeviceInformation.GetDeclaredFunctionBlocks())
+                {
+                    FunctionBlocks.Add(fb);
+                }
+
+                foreach (var gtb in DeviceInformation.GetGroupTerminalBlocks())
+                {
+                    GroupTerminalBlocks.Add(gtb);
+                }
+
+                this.HasFunctionBlocks = FunctionBlocks.Count > 0;
+                this.HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
+
+                System.Diagnostics.Debug.WriteLine("Exit Dispatcher worker: function blocks and group terminal blocks");
+            });
+
+
+            System.Diagnostics.Debug.WriteLine("Finished setting device-specific properties properties");
         }
     }
 }

@@ -118,7 +118,7 @@
                 <ToggleSwitch Grid.Column="0" 
                               x:Name="PersistentSwitch"
                               Margin="9"
-                              Header="Persistent (retain across service restarts/reboots)" 
+                              Header="Persistent (retain across service restarts/reboots) NOT YET IMPLEMENTED" 
                               VerticalAlignment="Bottom"
                               />
 
@@ -139,11 +139,6 @@
                         />
             </Grid>
             
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            </StackPanel>
-            
-
         </StackPanel>
         
     </Grid>

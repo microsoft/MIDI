@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Helpers
 {
-    public partial class MidiFunctionBlockDirectionConverter : IValueConverter
+    public partial class MidiGroupTerminalBlockDirectionConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -16,21 +16,21 @@ namespace Microsoft.Midi.Settings.Helpers
                 return string.Empty;
             }
 
-            if (value is MidiFunctionBlockDirection)
+            if (value is MidiGroupTerminalBlockDirection)
             {
-                var val = (MidiFunctionBlockDirection)value;
+                var val = (MidiGroupTerminalBlockDirection)value;
 
                 // TODO: Localize
 
                 switch (val)
                 {
-                    case MidiFunctionBlockDirection.BlockInput:
+                    case MidiGroupTerminalBlockDirection.BlockInput:
                         return "Message Destination";
 
-                    case MidiFunctionBlockDirection.BlockOutput:
+                    case MidiGroupTerminalBlockDirection.BlockOutput:
                         return "Message Source";
 
-                    case MidiFunctionBlockDirection.Bidirectional:
+                    case MidiGroupTerminalBlockDirection.Bidirectional:
                         return "Message Source and Destination";
 
                     default:

@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml.Data;
+﻿using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Helpers
 {
-    public partial class MidiFunctionBlockDirectionConverter : IValueConverter
+    public partial class MidiGroupTerminalBlockDirectionToFontIconConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -16,25 +17,27 @@ namespace Microsoft.Midi.Settings.Helpers
                 return string.Empty;
             }
 
-            if (value is MidiFunctionBlockDirection)
+            if (value is MidiGroupTerminalBlockDirection)
             {
-                var val = (MidiFunctionBlockDirection)value;
+                var val = (MidiGroupTerminalBlockDirection)value;
 
                 // TODO: Localize
 
+                
+
                 switch (val)
                 {
-                    case MidiFunctionBlockDirection.BlockInput:
-                        return "Message Destination";
+                    case MidiGroupTerminalBlockDirection.BlockInput:
+                        return "\ue898";
 
-                    case MidiFunctionBlockDirection.BlockOutput:
-                        return "Message Source";
+                    case MidiGroupTerminalBlockDirection.BlockOutput:
+                        return "\ue896";
 
-                    case MidiFunctionBlockDirection.Bidirectional:
-                        return "Message Source and Destination";
+                    case MidiGroupTerminalBlockDirection.Bidirectional:
+                        return "\ue895";
 
                     default:
-                        return "Unknown";
+                        return "\ue711";
                 }
             }
             else

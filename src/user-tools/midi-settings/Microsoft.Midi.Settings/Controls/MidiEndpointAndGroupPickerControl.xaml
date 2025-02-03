@@ -1,0 +1,58 @@
+<UserControl
+    x:Class="Microsoft.Midi.Settings.Controls.MidiEndpointAndGroupPickerControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:Microsoft.Midi.Settings.Views"
+    xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
+    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <helpers:HasUniqueIdToVisibilityConverter x:Key="HasUniqueIdToVisibilityConverter" />
+            <helpers:HasUniqueIdToInverseVisibilityConverter x:Key="HasUniqueIdToInverseVisibilityConverter" />
+            <helpers:MidiEndpointNativeDataFormatConverter x:Key="MidiEndpointNativeDataFormatConverter" />
+            <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ComboBox x:Name="EndpointsComboBox"
+                  Grid.Column="0"
+                  Margin="0,0,13,0"
+                  HorizontalAlignment="Stretch"
+                  Header="Endpoint"
+                  ItemsSource="{x:Bind Endpoints}"
+                  SelectedItem="{x:Bind SelectedEndpoint, Mode=TwoWay}"
+                  >
+            <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="midi2:MidiEndpointDeviceInformation">
+                    <TextBlock Text="{x:Bind Name}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <ComboBox x:Name="GroupsComboBox"
+                  Grid.Column="1"
+                  Margin="0,0,13,0"
+                  HorizontalAlignment="Stretch"
+                  Header="Group"
+                  IsEnabled="True"
+                  ItemsSource="{x:Bind Groups}"
+                  SelectedItem="{x:Bind SelectedGroup, Mode=TwoWay}"
+                  />
+
+
+    </Grid>
+</UserControl>

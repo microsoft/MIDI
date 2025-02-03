@@ -108,6 +108,9 @@ public class AppState
     }
 
 
+
+
+
     private void StartDeviceWatcher(bool includeAll)
     {
         if (_watcher != null)

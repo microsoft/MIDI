@@ -342,4 +342,40 @@
   <data name="DeviceDetailPage_TransportCode.Text" xml:space="preserve">
     <value>Transport Code</value>
   </data>
+  <data name="ToolsSysExPageDescription.Text" xml:space="preserve">
+    <value>Send a System Exclusive (SysEx) binary 7-bit file (a typical MIDI 1.0 SysEx File) to an endpoint of your choice. Older devices or devices with very small data buffers may work better if you increase the transfer delay by 10-50 milliseconds. This is especially true when sending large patch banks or firmware upgrades over SysEx.</value>
+  </data>
+  <data name="DeviceDetailPage_PersonalizationExpander.Description" xml:space="preserve">
+    <value>Some settings for devices, like the name and description, can be customized by you. Applications may use this information when displaying device information.</value>
+  </data>
+  <data name="DeviceDetailPage_TransportExpander.Description" xml:space="preserve">
+    <value>The MIDI Service transport plugin obtains device information from the underlying transport (USB, Network, BLE, etc.)</value>
+  </data>
+  <data name="DeviceDetailPage_TransportExpander.Header" xml:space="preserve">
+    <value>Transport-Supplied Information</value>
+  </data>
+  <data name="DeviceDetailPage_Midi2ProtocolExpander.Header" xml:space="preserve">
+    <value>MIDI 2.0 In-protocol Discovered Information</value>
+  </data>
+  <data name="DeviceDetailPage_Midi2ProtocolExpander.Description" xml:space="preserve">
+    <value>The MIDI 2.0 protocol includes device discovery. The information here is obtained from that source.</value>
+  </data>
+  <data name="DeviceDetailPage_FunctionBlocksExpander.Header" xml:space="preserve">
+    <value>Function Blocks</value>
+  </data>
+  <data name="DeviceDetailPage_FunctionBlocksExpander.Description" xml:space="preserve">
+    <value>For a MIDI 2.0 device, function blocks indicate the active groups and their valid directions.</value>
+  </data>
+  <data name="DeviceDetailPage_GroupTerminalBlocksExpander.Header" xml:space="preserve">
+    <value>Group Terminal Blocks</value>
+  </data>
+  <data name="DeviceDetailPage_GroupTerminalBlocksExpander.Description" xml:space="preserve">
+    <value>For USB MIDI 2.0 devices, Group Terminal Blocks are the fallback when no Function Blocks are available. They indicate active groups and their direction. For MIDI 1.0 devices, we generate Group Terminal Blocks for each MIDI jack (formerly "Port").</value>
+  </data>
+  <data name="DeviceDetailPage_ParentDeviceExpander.Header" xml:space="preserve">
+    <value>Parent Device</value>
+  </data>
+  <data name="DeviceDetailPage_ParentDeviceExpander.Description" xml:space="preserve">
+    <value>Devices may have more than one MIDI Endpoint. This is the parent device for this endpoint.</value>
+  </data>
 </root>

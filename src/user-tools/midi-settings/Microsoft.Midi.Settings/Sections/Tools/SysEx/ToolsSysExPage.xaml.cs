@@ -34,7 +34,20 @@ namespace Microsoft.Midi.Settings.Views
         public ToolsSysExPage()
         {
             ViewModel = App.GetService<ToolsSysExViewModel>();
+
+            this.Loaded += Page_Loaded;
+
             InitializeComponent();
+
         }
+
+
+        private void Page_Loaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel.DispatcherQueue = this.DispatcherQueue;
+
+            ViewModel.RefreshDeviceCollection();
+        }
+
     }
 }

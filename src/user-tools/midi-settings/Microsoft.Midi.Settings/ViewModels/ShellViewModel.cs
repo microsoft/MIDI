@@ -15,6 +15,8 @@ public class ShellViewModel : ObservableRecipient
 
     private readonly IGeneralSettingsService _generalSettingsService;
 
+
+
     public bool AreDeveloperOptionsEnabled
     {
         get => _generalSettingsService.ShowDeveloperOptions;

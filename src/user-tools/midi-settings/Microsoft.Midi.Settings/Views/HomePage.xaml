@@ -327,7 +327,7 @@
                             <controls:SettingsCard.Header>
                                 <HyperlinkButton NavigateUri="https://aka.ms/midirepo">
                                     <HyperlinkButton.Content>
-                                        <TextBlock Text="GitHub Repo for known issues and developer bug reports" TextWrapping="WrapWholeWords"/>
+                                        <TextBlock Text="GitHub Repo with source for Windows MIDI Services" TextWrapping="WrapWholeWords"/>
                                     </HyperlinkButton.Content>
 
                                 </HyperlinkButton>
@@ -335,8 +335,22 @@
                             <controls:SettingsCard.HeaderIcon>
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe71b;"/>
                             </controls:SettingsCard.HeaderIcon>
-
                         </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <HyperlinkButton NavigateUri="https://aka.ms/midirepoissues">
+                                    <HyperlinkButton.Content>
+                                        <TextBlock Text="GitHub Repo issues list for known issues and reporting new ones" TextWrapping="WrapWholeWords"/>
+                                    </HyperlinkButton.Content>
+
+                                </HyperlinkButton>
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe71b;"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
 
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>

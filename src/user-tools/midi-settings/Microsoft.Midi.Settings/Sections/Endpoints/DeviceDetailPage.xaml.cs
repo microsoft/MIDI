@@ -46,13 +46,20 @@ namespace Microsoft.Midi.Settings.Views
         public DeviceDetailPage()
         {
             ViewModel = App.GetService<DeviceDetailViewModel>();
+            ViewModel.DispatcherQueue = this.DispatcherQueue;
+
+            Loaded += DeviceDetailPage_Loaded;
 
             _loggingService = App.GetService<ILoggingService>();
 
             this.InitializeComponent();
         }
 
- 
+        private void DeviceDetailPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
             if (ViewModel.DeviceInformation == null)
