@@ -12,6 +12,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.KSTransport", "Transp
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MinMidi", "Drivers\MinMidi\Driver\Driver.vcxproj", "{0ACC44A8-A2AE-449C-AABA-64A75277C5BD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2480B077-46E5-42AE-9BDB-685AFF258529} = {2480B077-46E5-42AE-9BDB-685AFF258529}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.Driver.unittests", "Test\Midi2.Driver.unittests\Midi2.Driver.unittests.vcxproj", "{8EABA9B2-A718-4AA3-88F7-E264CF3CCC29}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -137,10 +140,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.DiagnosticsTransport"
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MinMidi2", "Drivers\MinMidi2\Driver\MinMidi2.vcxproj", "{2AD0622B-D47A-4CC1-9493-459730F442BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2480B077-46E5-42AE-9BDB-685AFF258529} = {2480B077-46E5-42AE-9BDB-685AFF258529}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Message Transforms and Processing", "Message Transforms and Processing", "{23C1D0EF-10F0-464B-86C3-1FCD3F6BA20E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "USBMidi2", "Drivers\USBMIDI2\Driver\USBMidi2.vcxproj", "{1B5A1991-AD62-494F-AE3A-1A681914898D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2480B077-46E5-42AE-9BDB-685AFF258529} = {2480B077-46E5-42AE-9BDB-685AFF258529}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.BS2UMPTransform", "Transform\ByteStreamToUMP\Midi2.BS2UMPTransform.vcxproj", "{206CEDBF-6343-4171-87A8-1DDDE6E2ED60}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -183,6 +192,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.KSAggregateTransport"
 		{00B066CB-3F9F-4B31-B30A-48631B07D157} = {00B066CB-3F9F-4B31-B30A-48631B07D157}
 		{0E739771-0C0B-42EE-AADB-95E7E1E5A5ED} = {0E739771-0C0B-42EE-AADB-95E7E1E5A5ED}
 		{0FB85768-237C-4A60-A824-E09884C3EB34} = {0FB85768-237C-4A60-A824-E09884C3EB34}
+		{2480B077-46E5-42AE-9BDB-685AFF258529} = {2480B077-46E5-42AE-9BDB-685AFF258529}
 		{3BD492AD-A08C-4923-9486-138189CA4A0A} = {3BD492AD-A08C-4923-9486-138189CA4A0A}
 	EndProjectSection
 EndProject
