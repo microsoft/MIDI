@@ -825,9 +825,7 @@ class Build : NukeBuild
                 var msftExtensionsFiles = Globbing.GlobFiles(settingsOutputFolder, "Microsoft.Extensions*.dll");
                 var midiSdkFiles = Globbing.GlobFiles(
                     settingsOutputFolder, 
-                    "Microsoft.Windows.Devices.Midi2.Initialization.dll",
-                    /* "Microsoft.Windows.Devices.Midi2.Initialization.winmd", */
-                    "Microsoft.Windows.Devices.Midi2.Initialization.pri"
+                    "Microsoft.Windows.Devices.Midi2.NetProjection.dll"
                     );
 
                 List<AbsolutePath> paths = new List<AbsolutePath>(toolkitFiles.Count + msftExtensionsFiles.Count + midiSdkFiles.Count + 40);
@@ -840,7 +838,7 @@ class Build : NukeBuild
 
                 paths.Add(settingsOutputFolder / "MidiSettings.exe");
                 paths.Add(settingsOutputFolder / "MidiSettings.dll");
-                //paths.Add(settingsOutputFolder / "MidiSettings.exe.manifest");
+                paths.Add(settingsOutputFolder / "MidiSettings.exe.manifest");
                 paths.Add(settingsOutputFolder / "MidiSettings.deps.json");
                 paths.Add(settingsOutputFolder / "MidiSettings.runtimeconfig.json");
 
@@ -859,11 +857,13 @@ class Build : NukeBuild
 
                 paths.Add(settingsOutputFolder / "Newtonsoft.Json.dll");
 
-                //paths.Add(settingsOutputFolder / "System.CodeDom.dll");
+                paths.Add(settingsOutputFolder / "System.CodeDom.dll");
                 paths.Add(settingsOutputFolder / "System.Diagnostics.EventLog.dll");
                 paths.Add(settingsOutputFolder / "System.Diagnostics.EventLog.Messages.dll");
                 paths.Add(settingsOutputFolder / "System.Management.dll");
                 paths.Add(settingsOutputFolder / "System.ServiceProcess.ServiceController.dll");
+
+                paths.Add(settingsOutputFolder / "System.Text.Json.dll");
 
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.dll");
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.Projection.dll");

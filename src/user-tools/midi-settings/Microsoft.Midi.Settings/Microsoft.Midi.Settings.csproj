@@ -11,7 +11,7 @@
         
         <ApplicationIcon>Assets/AppIcon.ico</ApplicationIcon>
         <ApplicationManifest>MidiSettings.exe.manifest</ApplicationManifest>
-		<Platforms>x64;arm64</Platforms>
+		<Platforms>x64;ARM64</Platforms>
 		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
 	    <ImplicitUsings>enable</ImplicitUsings>
         <PublishAot>false</PublishAot>

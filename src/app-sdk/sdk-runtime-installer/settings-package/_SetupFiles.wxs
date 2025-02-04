@@ -43,8 +43,10 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Extensions.Options.ConfigurationExtensions.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Extensions.Options.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Extensions.Primitives.dll" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Windows.Devices.Midi2.NetProjection.dll" /> 
       <File Id="ShortcutTargetExe" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.exe" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.dll" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.exe.manifest" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.deps.json" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\MidiSettings.runtimeconfig.json" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\resources.pri" /> 
@@ -53,10 +55,12 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Windows.SDK.NET.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.InteractiveExperiences.Projection.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Newtonsoft.Json.dll" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.CodeDom.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.Diagnostics.EventLog.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.Diagnostics.EventLog.Messages.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.Management.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.ServiceProcess.ServiceController.dll" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\System.Text.Json.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Web.WebView2.Core.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Web.WebView2.Core.Projection.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\WebView2Loader.dll" /> 
