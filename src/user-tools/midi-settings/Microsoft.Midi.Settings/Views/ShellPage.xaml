@@ -103,12 +103,15 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 -->
+                
+                <!--
                 <NavigationViewItem x:Uid="Shell_EndpointsAll" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe772;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-
+                -->
+                
                 <NavigationViewItem x:Name="SectionKS" Visibility="Collapsed" x:Uid="Shell_EndpointsKS" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsKSViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xecf3;" Style="{StaticResource NavigationMenuIconStyles}"/>
@@ -181,7 +184,7 @@
                 </NavigationViewItem>
                 -->
 
-
+                <!--
                 <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
 
                 <NavigationViewItem x:Uid="Shell_ToolsSysEx" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel">
@@ -194,6 +197,8 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                -->
+                
                 <!--<NavigationViewItem x:Uid="Shell_ToolsConsole" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsConsoleViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;" Style="{StaticResource NavigationMenuIconStyles}"/>
@@ -216,6 +221,7 @@
                 </NavigationViewItem>-->
 
 
+                <!--
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>
 
                 <NavigationViewItem x:Uid="Shell_Troubleshooting" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.TroubleshootingViewModel">
@@ -223,6 +229,7 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7ba;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                -->
                 
                 <NavigationViewItem x:Uid="Shell_ForDevelopers" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ForDevelopersViewModel"

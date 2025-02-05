@@ -34,7 +34,7 @@ namespace Microsoft.Midi.Settings.Helpers
                         return "\ue896";
 
                     case MidiGroupTerminalBlockDirection.Bidirectional:
-                        return "\ue895";
+                        return "\ue8ab";
 
                     default:
                         return "\ue711";

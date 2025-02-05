@@ -777,20 +777,11 @@ class Build : NukeBuild
             {
                 string solutionDir = MidiSettingsSolutionFolder.ToString() + @"\";
 
-                string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
-
-
-                //var msbuildProperties = new Dictionary<string, object>();
-                //msbuildProperties.Add("Platform", platform);
-                //msbuildProperties.Add("SolutionDir", solutionDir);          // to include trailing slash
-                //msbuildProperties.Add("RuntimeIdentifier", rid);          
-                ////msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
-
-                //Console.Out.WriteLine($"----------------------------------------------------------------------");
-                //Console.Out.WriteLine($"Solution:    {solution}");
-                //Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-                //Console.Out.WriteLine($"Platform:    {platform}");
-                //Console.Out.WriteLine($"RID:         {rid}");
+                //
+                // TEMP! The MIDI Settings app is x64 right now due to conflict with WinUI Ro Detours with Arm64
+                //
+                //string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
+                string rid = "win-x64";
 
 
                 DotNetTasks.DotNetBuild(_ => _
@@ -802,17 +793,6 @@ class Build : NukeBuild
                     .SetRuntime(rid)
                     .AddNoWarns(8618) // ignore CS8618 which I have no control over because it's in projection assemblies 
                 );
-
-                // This just doesn't work. Even in Visual Studio, publishing the WinAppSdk app just fails for "unknown" reasons.
-                //DotNetTasks.DotNetPublish(_ => _
-                //    .SetProjectFile(MidiSettingsSolutionFolder / "Microsoft.Midi.Settings.csproj" / "Microsoft.Midi.Settings.csproj")
-                //    .SetConfiguration(Configuration.Release)
-                //    .SetPublishSingleFile(false)
-                //    .SetPublishTrimmed(false)
-                //    .SetSelfContained(false)
-                //    .SetRuntime(rid)
-                //);
-                // folder is bin\rid\publish\
 
                 var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / "net8.0-windows10.0.22621.0" / rid;
                 var stagingFolder = MidiSettingsStagingFolder / platform;
