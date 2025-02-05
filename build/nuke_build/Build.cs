@@ -34,14 +34,15 @@ class Build : NukeBuild
     //readonly GitVersion MasterBuildVersion;
 
 
-    string VersionName => "Developer Preview 9";
-    string NuGetVersionName => "preview-9";
+    //string VersionName => "Developer Preview 9";
+    string VersionName => "Customer Preview 1";
+    string NuGetVersionName => "preview-10";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
 
     const string BuildVersionMajor = "1";
     const string BuildVersionMinor = "0";
-    const string BuildVersionRevision = "2";
+    const string BuildVersionRevision = "3";
     const string BuildMajorMinorRevision = $"{BuildVersionMajor}.{BuildVersionMinor}.{BuildVersionRevision}";
 
     //string BuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
@@ -776,20 +777,11 @@ class Build : NukeBuild
             {
                 string solutionDir = MidiSettingsSolutionFolder.ToString() + @"\";
 
-                string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
-
-
-                //var msbuildProperties = new Dictionary<string, object>();
-                //msbuildProperties.Add("Platform", platform);
-                //msbuildProperties.Add("SolutionDir", solutionDir);          // to include trailing slash
-                //msbuildProperties.Add("RuntimeIdentifier", rid);          
-                ////msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
-
-                //Console.Out.WriteLine($"----------------------------------------------------------------------");
-                //Console.Out.WriteLine($"Solution:    {solution}");
-                //Console.Out.WriteLine($"SolutionDir: {solutionDir}");
-                //Console.Out.WriteLine($"Platform:    {platform}");
-                //Console.Out.WriteLine($"RID:         {rid}");
+                //
+                // TEMP! The MIDI Settings app is x64 right now due to conflict with WinUI Ro Detours with Arm64
+                //
+                //string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
+                string rid = "win-x64";
 
 
                 DotNetTasks.DotNetBuild(_ => _
@@ -802,17 +794,6 @@ class Build : NukeBuild
                     .AddNoWarns(8618) // ignore CS8618 which I have no control over because it's in projection assemblies 
                 );
 
-                // This just doesn't work. Even in Visual Studio, publishing the WinAppSdk app just fails for "unknown" reasons.
-                //DotNetTasks.DotNetPublish(_ => _
-                //    .SetProjectFile(MidiSettingsSolutionFolder / "Microsoft.Midi.Settings.csproj" / "Microsoft.Midi.Settings.csproj")
-                //    .SetConfiguration(Configuration.Release)
-                //    .SetPublishSingleFile(false)
-                //    .SetPublishTrimmed(false)
-                //    .SetSelfContained(false)
-                //    .SetRuntime(rid)
-                //);
-                // folder is bin\rid\publish\
-
                 var settingsOutputFolder = MidiSettingsSolutionFolder / "Microsoft.Midi.Settings" / "bin" / Configuration.Release / "net8.0-windows10.0.22621.0" / rid;
                 var stagingFolder = MidiSettingsStagingFolder / platform;
 
@@ -824,9 +805,7 @@ class Build : NukeBuild
                 var msftExtensionsFiles = Globbing.GlobFiles(settingsOutputFolder, "Microsoft.Extensions*.dll");
                 var midiSdkFiles = Globbing.GlobFiles(
                     settingsOutputFolder, 
-                    "Microsoft.Windows.Devices.Midi2.Initialization.dll",
-                    /* "Microsoft.Windows.Devices.Midi2.Initialization.winmd", */
-                    "Microsoft.Windows.Devices.Midi2.Initialization.pri"
+                    "Microsoft.Windows.Devices.Midi2.NetProjection.dll"
                     );
 
                 List<AbsolutePath> paths = new List<AbsolutePath>(toolkitFiles.Count + msftExtensionsFiles.Count + midiSdkFiles.Count + 40);
@@ -839,7 +818,7 @@ class Build : NukeBuild
 
                 paths.Add(settingsOutputFolder / "MidiSettings.exe");
                 paths.Add(settingsOutputFolder / "MidiSettings.dll");
-                //paths.Add(settingsOutputFolder / "MidiSettings.exe.manifest");
+                paths.Add(settingsOutputFolder / "MidiSettings.exe.manifest");
                 paths.Add(settingsOutputFolder / "MidiSettings.deps.json");
                 paths.Add(settingsOutputFolder / "MidiSettings.runtimeconfig.json");
 
@@ -858,11 +837,13 @@ class Build : NukeBuild
 
                 paths.Add(settingsOutputFolder / "Newtonsoft.Json.dll");
 
-                //paths.Add(settingsOutputFolder / "System.CodeDom.dll");
+                paths.Add(settingsOutputFolder / "System.CodeDom.dll");
                 paths.Add(settingsOutputFolder / "System.Diagnostics.EventLog.dll");
                 paths.Add(settingsOutputFolder / "System.Diagnostics.EventLog.Messages.dll");
                 paths.Add(settingsOutputFolder / "System.Management.dll");
                 paths.Add(settingsOutputFolder / "System.ServiceProcess.ServiceController.dll");
+
+                paths.Add(settingsOutputFolder / "System.Text.Json.dll");
 
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.dll");
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.Projection.dll");

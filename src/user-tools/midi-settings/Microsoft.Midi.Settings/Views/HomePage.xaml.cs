@@ -41,5 +41,10 @@ namespace Microsoft.Midi.Settings.Views
             ViewModel = App.GetService<HomeViewModel>();
             InitializeComponent();
         }
+
+        private void SettingsCard_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

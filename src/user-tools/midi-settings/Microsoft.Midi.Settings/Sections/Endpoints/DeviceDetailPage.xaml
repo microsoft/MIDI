@@ -21,6 +21,10 @@
         <helpers:MidiFunctionBlockMidi10Converter x:Key="MidiFunctionBlockMidi10Converter" />
         <helpers:MidiFunctionBlockDirectionConverter x:Key="MidiFunctionBlockDirectionConverter" />
         <helpers:MidiFunctionBlockUIHintConverter x:Key="MidiFunctionBlockUIHintConverter" />
+
+        <helpers:MidiGroupTerminalBlockDirectionToFontIconConverter x:Key="MidiGroupTerminalBlockDirectionToFontIconConverter" />
+        <helpers:MidiGroupTerminalBlockDirectionConverter x:Key="MidiGroupTerminalBlockDirectionConverter" />
+
     </Page.Resources>
     
     <Grid HorizontalAlignment="Stretch">
@@ -45,7 +49,11 @@
                            Style="{StaticResource PageHeaderStyleDeviceName}" />
                 <TextBlock Text="{x:Bind ViewModel.DeviceInformation.EndpointPurpose, Converter={StaticResource EndpointDevicePurposeConverter}}"
                            Style="{StaticResource PageHeaderStyleDevicePurpose}" />
-                
+                <Button Content="Open console MIDI input monitor in new window" 
+                        Margin="0,10,0,10"
+                        VerticalAlignment="Center"
+                        Click="OnOpenConsoleMonitor" />
+
             </StackPanel>
 
             <Grid Grid.Column="2">
@@ -61,35 +69,57 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Column="0" Grid.Row="0" Text="Manufacturer" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="0" 
+                           x:Uid="DeviceDetailPage_ManufacturerLabel"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName}" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                <TextBlock Grid.Column="0" Grid.Row="1" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="1" 
+                           x:Uid="DeviceDetailPage_ProductInstanceId"
+                           Style="{StaticResource SmallPropertyLabel}" 
+                           Visibility="{x:Bind ViewModel.ShowMidi2Properties, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointInfo.ProductInstanceId }" 
-                           Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                           Style="{StaticResource SmallEmphasizedPropertyValue}" 
+                           Visibility="{x:Bind ViewModel.ShowMidi2Properties, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                <TextBlock Grid.Column="0" Grid.Row="2" Text="Serial Number" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="2" 
+                           x:Uid="DeviceDetailPage_SerialNumber"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                <TextBlock Grid.Column="0" Grid.Row="3" Text="Native Data Format" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="3" 
+                           x:Uid="DeviceDetailPage_NativeDataFormat"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.NativeDataFormat, Converter={StaticResource EndpointNativeDataFormatConverter} }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport" Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="0" Grid.Row="4" 
+                           x:Uid="DeviceDetailPage_TransportCode"
+                           Style="{StaticResource SmallPropertyLabel}" />
                 <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
             </Grid>
             
         </Grid>
 
-        <ScrollViewer Grid.Row="1" x:Name="ContentControl">
+        <!-- TODO: Show active groups summary at top -->
+        
+        <ScrollViewer Grid.Row="1" x:Name="ContentControl" Margin="0,13,0,0">
             <StackPanel Orientation="Vertical" Spacing="4">
 
                 <TextBlock Text="General" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
                 
-                <controls:SettingsExpander Header="Personalization" IsExpanded="True">
+                <!-- User-supplied / Custom information -->
+                
+                <controls:SettingsExpander Header="Personalization"
+                                           IsExpanded="False"
+                                           x:Uid="DeviceDetailPage_PersonalizationExpander"
+                                           >
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe771;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
@@ -126,7 +156,11 @@
 
                 <!-- Information from the transport -->
 
-                <controls:SettingsExpander Header="Transport-Supplied Information" IsExpanded="True">
+                <controls:SettingsExpander x:Uid="DeviceDetailPage_TransportExpander"
+                                           IsExpanded="False">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe95a;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
@@ -156,7 +190,7 @@
                                     <TextBlock Grid.Column="0" Grid.Row="3" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
+                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport Code" Style="{StaticResource SmallPropertyLabel}" />
                                     <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 </Grid>
@@ -166,12 +200,16 @@
                 </controls:SettingsExpander>
 
 
-                <!-- Only visible if a UMP/MIDI 2.0 device -->
+                <!-- UMP/MIDI 2.0 device protocol info -->
 
                 <controls:SettingsExpander 
-                    Header="MIDI 2.0 In-protocol-discovered Information" 
+                    x:Uid="DeviceDetailPage_Midi2ProtocolExpander"
                     IsExpanded="True"
+                    Visibility="{x:Bind ViewModel.ShowMidi2Properties, Converter={StaticResource BoolToVisibilityConverter}}"
                     >
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xebde;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>
@@ -211,10 +249,13 @@
 
 
                 <!-- Function Blocks -->
-                <controls:SettingsExpander Header="Function Blocks" 
-                                           ItemsSource="{x:Bind ViewModel.FunctionBlocks}"
+                <controls:SettingsExpander x:Uid="DeviceDetailPage_FunctionBlocksExpander"
+                                           ItemsSource="{x:Bind ViewModel.FunctionBlocks, Mode=OneWay}"
                                            Visibility="{x:Bind ViewModel.HasFunctionBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
                                            IsExpanded="True">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb41;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.ItemTemplate>
                         <DataTemplate x:DataType="midi2:MidiFunctionBlock">
                             <controls:SettingsCard>
@@ -223,10 +264,10 @@
                                 </controls:SettingsCard.Header>
 
                                 <controls:SettingsCard.Content>
-                                    <Grid>
+                                    <Grid Width="600">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="3*" />
                                         </Grid.ColumnDefinitions>
 
 
@@ -330,12 +371,122 @@
                         </DataTemplate>
                     </controls:SettingsExpander.ItemTemplate>
                 </controls:SettingsExpander>
-                
-                
 
-                <controls:SettingsExpander 
-                    Header="Parent Device" IsExpanded="True" Margin="0,0,0,20"
+                <!-- Group Terminal Blocks -->
+                <controls:SettingsExpander x:Uid="DeviceDetailPage_GroupTerminalBlocksExpander"
+                                           ItemsSource="{x:Bind ViewModel.GroupTerminalBlocks, Mode=OneWay}"
+                                           Visibility="{x:Bind ViewModel.HasGroupTerminalBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
+                                           IsExpanded="True">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb41;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
+                    <controls:SettingsExpander.ItemTemplate>
+                        <DataTemplate x:DataType="midi2:MidiGroupTerminalBlock">
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.HeaderIcon>
+                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind Direction, Converter={StaticResource MidiGroupTerminalBlockDirectionToFontIconConverter}}" Style="{StaticResource CommonTasksIconStyles}"/>
+                                </controls:SettingsCard.HeaderIcon>
+                                <controls:SettingsCard.Header>
+                                    <TextBlock Text="{x:Bind Name}" />
+                                </controls:SettingsCard.Header>
+
+                                <controls:SettingsCard.Content>
+                                    <Grid Width="600">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="3*" />
+                                        </Grid.ColumnDefinitions>
+
+
+                                        <Grid Grid.Column="0" Margin="10,4,10,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Column="0" Grid.Row="0" 
+                                                   Text="Number" 
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="0" 
+                                                   Text="{x:Bind Number }" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                            <TextBlock Grid.Column="0" Grid.Row="2" 
+                                                   Text="First Group"
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="2" 
+                                                   Text="{x:Bind FirstGroup.DisplayValue}" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                            <TextBlock Grid.Column="0" Grid.Row="3" 
+                                                   Text="Group Count" 
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="3" 
+                                                   Text="{x:Bind GroupCount }" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                        </Grid>
+
+                                        <Grid Grid.Column="1" Margin="4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+
+                                            <TextBlock Grid.Column="0" Grid.Row="0" 
+                                                       Text="Direction" 
+                                                       Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="0" 
+                                                       Text="{x:Bind Direction, Converter={StaticResource MidiGroupTerminalBlockDirectionConverter} }" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                            <TextBlock Grid.Column="0" Grid.Row="2" 
+                                                       Text="Max Device Input Bandwidth (bps)" 
+                                                       Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="2" 
+                                                       Text="{x:Bind CalculatedMaxDeviceInputBandwidthBitsPerSecond }" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                            <TextBlock Grid.Column="0" Grid.Row="3" 
+                                                       Text="Max Device Output Bandwidth (bps)" 
+                                                       Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="3" 
+                                                       Text="{x:Bind CalculatedMaxDeviceOutputBandwidthBitsPerSecond }" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+
+                                        </Grid>
+
+                                    </Grid>
+                                </controls:SettingsCard.Content>
+                            </controls:SettingsCard>
+                        </DataTemplate>
+                    </controls:SettingsExpander.ItemTemplate>
+                </controls:SettingsExpander>
+
+                <!-- Parent Device -->
+
+                <controls:SettingsExpander x:Uid="DeviceDetailPage_ParentDeviceExpander"
+                    IsExpanded="True" Margin="0,0,0,20"
                     Visibility="{x:Bind ViewModel.HasParent, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe70c;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard>
                             <controls:SettingsCard.Header>

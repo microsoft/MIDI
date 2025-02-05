@@ -12,7 +12,7 @@ namespace Microsoft.Midi.Settings.Services;
 
 public class LocalSettingsService : ILocalSettingsService
 {
-    private const string _defaultApplicationDataFolder = "Microsoft.Midi.Settings/ApplicationData";
+    private const string _defaultApplicationDataFolder = "Microsoft\\Windows MIDI Services\\SettingsApp";
     private const string _defaultLocalSettingsFile = "LocalSettings.json";
 
     private readonly IFileService _fileService;
@@ -31,8 +31,8 @@ public class LocalSettingsService : ILocalSettingsService
         _fileService = fileService;
         _options = options.Value;
 
-        _applicationDataFolder = Path.Combine(_localApplicationData, _options.ApplicationDataFolder ?? _defaultApplicationDataFolder);
-        _localsettingsFile = _options.LocalSettingsFile ?? _defaultLocalSettingsFile;
+        _applicationDataFolder = Path.Combine(_localApplicationData, /*_options.ApplicationDataFolder ?? */ _defaultApplicationDataFolder);
+        _localsettingsFile = /*_options.LocalSettingsFile ??*/ _defaultLocalSettingsFile;
 
         _settings = new Dictionary<string, object>();
     }

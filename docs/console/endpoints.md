@@ -10,11 +10,15 @@ There are a number of commands, including those for monitoring and sending messa
 
 In most any command which takes an Endpoint Device Id as a parameter, that parameter is optional. If you leave it out, and the command operates on a single endpoint, you will be prompted with a menu of available endpoints to work with.
 
+![midi endpoint prompt](midi-endpoint-prompt.png)
+
 If you want to script the commands without requiring any user interaction, provide the endpoint device ID as the first parameter after the `endpoint` command. For example:
 
 ```
 midi endpoint \\?\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_B#{e7cce071-3c03-423f-88d3-f1045d02552b} properties --verbose
 ```
+
+![midi endpoint help](midi-endpoint-help.png)
 
 ## Get Detailed Endpoint Properties
 
@@ -51,6 +55,8 @@ Verbose mode:
 ```
 midi endpoint monitor --verbose
 ```
+
+![midi endpoint monitor verbose](midi-endpoint-monitor-verbose.png)
 
 ### Saving messages to a file
 
@@ -189,6 +195,20 @@ F3345678h 12345678h 86754321h 86753099h
 
 # bunch of empty lines above. And the file ends with a comment
 ```
+
+## Easily play MIDI 1.0 or MIDI 2.0 Notes
+
+To make it easy to send notes to an endpoint, the play-notes command accepts parameters including the note number and other information, and generates the appropriate channel voice messages at the appropriate times. The `--forever` switch has the messaging sending loop forever, making it useful for testing devices.
+
+```
+midi endpoint play-notes 50 55 52 60 72 90 --group 1 --channel 10 --velocity 100 --length 250 --rest 500 --forever
+```
+
+The parameters are all described when you type `midi endpoint play-notes --help`
+
+This is not meant to be a sequencer with the kind of timing accuracy you would have in a DAW, but is instead a simple way to play notes on an endpoint.
+
+![Play Notes](midi-endpoint-play-notes.png)
 
 ## Sending Endpoint Metadata Requests
 

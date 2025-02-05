@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppDisplayName" xml:space="preserve">
-    <value>MIDI Settings DEVELOPER PREVIEW</value>
+    <value>MIDI Settings PREVIEW</value>
   </data>
   <data name="AppDescription" xml:space="preserve">
     <value>Management, settings, and utility app for Windows MIDI Services. Features in the prototype do not necessarily represent committed features.</value>
@@ -198,14 +198,11 @@
   <data name="Shell_MoreNavHeader.Content" xml:space="preserve">
     <value>More</value>
   </data>
-  <data name="Shell_Devices.Content" xml:space="preserve">
-    <value>UMP Endpoints</value>
-  </data>
   <data name="Shell_Troubleshooting.Content" xml:space="preserve">
     <value>Troubleshooting</value>
   </data>
   <data name="SettingsPage_DeveloperModeExpander.Description" xml:space="preserve">
-    <value>Normally off. Non-developer MIDI users do not need to use developer options as they may adversely impact the stability, capability, or performance of MIDI on your computer. Developer options require that the PC be placed into Developer Mode in Windows settings.</value>
+    <value>Normally off. Developer options are generally intended for developers, and those working with developers to test pre-release components. Non-developer MIDI users do not need to use developer options as they may adversely impact the stability, capability, or performance of MIDI on your computer. Developer options require that the PC be placed into Developer Mode in Windows settings.</value>
   </data>
   <data name="SettingsPage_DeveloperModeExpander.Header" xml:space="preserve">
     <value>Show developer options for MIDI</value>
@@ -247,7 +244,7 @@
     <value>MIDI Settings</value>
   </data>
   <data name="SettingsPage_AboutCard.Description" xml:space="preserve">
-    <value>© 2023 Microsoft. All rights reserved.</value>
+    <value>© 2025 Microsoft. All rights reserved.</value>
   </data>
   <data name="Settings_AboutDescriptionMidiDiscordLinkCard.Description" xml:space="preserve">
     <value>For non-developers, or anyone wishing to discuss Windows MIDI Services, we host a Discord server.</value>
@@ -277,10 +274,10 @@
     <value>WinRT MIDI 1.0 Ports</value>
   </data>
   <data name="Shell_Midi1ApiNavHeader.Content" xml:space="preserve">
-    <value>MIDI 1.0 API Compatibility</value>
+    <value>MIDI 1.0 API Ports</value>
   </data>
   <data name="Shell_MidiServicesNavHeader.Content" xml:space="preserve">
-    <value>Windows MIDI Services</value>
+    <value>Windows MIDI Services UMP Endpoints</value>
   </data>
   <data name="Midi1DevicesPage_Description.Text" xml:space="preserve">
     <value>Below is a list of all MIDI devices as seen by the legacy MIDI 1.0 APIs, and the apps which use them.</value>
@@ -305,5 +302,80 @@
   </data>
   <data name="Shell_WinMMMidi1ApiDevices.Content" xml:space="preserve">
     <value>WinMM MIDI 1.0 Ports</value>
+  </data>
+  <data name="Shell_EndpointsAll.Content" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Shell_EndpointsKS.Content" xml:space="preserve">
+    <value>MIDI 2.0 UMP Drivers (USB)</value>
+  </data>
+  <data name="Shell_EndpointsKsa.Content" xml:space="preserve">
+    <value>MIDI 1.0 Drivers (USB, etc.)</value>
+  </data>
+  <data name="Shell_EndpointsLoop.Content" xml:space="preserve">
+    <value>Loopback</value>
+  </data>
+  <data name="Shell_EndpointsApp.Content" xml:space="preserve">
+    <value>Virtual Device Apps</value>
+  </data>
+  <data name="Shell_EndpointsBle10.Content" xml:space="preserve">
+    <value>Bluetooth MIDI 1.0 (Preview)</value>
+  </data>
+  <data name="Shell_EndpointsNet2Udp.Content" xml:space="preserve">
+    <value>Network MIDI 2.0 (Preview)</value>
+  </data>
+  <data name="CreateLoopbackEndpointsWindowTitle" xml:space="preserve">
+    <value>Create Loopback Endpoints</value>
+  </data>
+  <data name="DeviceDetailPage_ManufacturerLabel.Text" xml:space="preserve">
+    <value>Manufacturer</value>
+  </data>
+  <data name="DeviceDetailPage_ProductInstanceId.Text" xml:space="preserve">
+    <value>Product Instance Id</value>
+  </data>
+  <data name="DeviceDetailPage_SerialNumber.Text" xml:space="preserve">
+    <value>Serial Number</value>
+  </data>
+  <data name="DeviceDetailPage_NativeDataFormat.Text" xml:space="preserve">
+    <value>Native Data Format</value>
+  </data>
+  <data name="DeviceDetailPage_TransportCode.Text" xml:space="preserve">
+    <value>Transport Code</value>
+  </data>
+  <data name="ToolsSysExPageDescription.Text" xml:space="preserve">
+    <value>Send a System Exclusive (SysEx) binary 7-bit file (a typical MIDI 1.0 SysEx File) to an endpoint of your choice. Older devices or devices with very small data buffers may work better if you increase the transfer delay by 10-50 milliseconds. This is especially true when sending large patch banks or firmware upgrades over SysEx.</value>
+  </data>
+  <data name="DeviceDetailPage_PersonalizationExpander.Description" xml:space="preserve">
+    <value>Some settings for devices, like the name and description, can be customized by you. Applications may use this information when displaying device information.</value>
+  </data>
+  <data name="DeviceDetailPage_TransportExpander.Description" xml:space="preserve">
+    <value>The MIDI Service transport plugin obtains device information from the underlying transport (USB, Network, BLE, etc.)</value>
+  </data>
+  <data name="DeviceDetailPage_TransportExpander.Header" xml:space="preserve">
+    <value>Transport-Supplied Information</value>
+  </data>
+  <data name="DeviceDetailPage_Midi2ProtocolExpander.Header" xml:space="preserve">
+    <value>MIDI 2.0 In-protocol Discovered Information</value>
+  </data>
+  <data name="DeviceDetailPage_Midi2ProtocolExpander.Description" xml:space="preserve">
+    <value>The MIDI 2.0 protocol includes device discovery. The information here is obtained from that source.</value>
+  </data>
+  <data name="DeviceDetailPage_FunctionBlocksExpander.Header" xml:space="preserve">
+    <value>Function Blocks</value>
+  </data>
+  <data name="DeviceDetailPage_FunctionBlocksExpander.Description" xml:space="preserve">
+    <value>For a MIDI 2.0 device, function blocks indicate the active groups and their valid directions.</value>
+  </data>
+  <data name="DeviceDetailPage_GroupTerminalBlocksExpander.Header" xml:space="preserve">
+    <value>Group Terminal Blocks</value>
+  </data>
+  <data name="DeviceDetailPage_GroupTerminalBlocksExpander.Description" xml:space="preserve">
+    <value>For USB MIDI 2.0 devices, Group Terminal Blocks are the fallback when no Function Blocks are available. They indicate active groups and their direction. For MIDI 1.0 devices, we generate Group Terminal Blocks for each MIDI jack (formerly "Port").</value>
+  </data>
+  <data name="DeviceDetailPage_ParentDeviceExpander.Header" xml:space="preserve">
+    <value>Parent Device</value>
+  </data>
+  <data name="DeviceDetailPage_ParentDeviceExpander.Description" xml:space="preserve">
+    <value>Devices may have more than one MIDI Endpoint. This is the parent device for this endpoint.</value>
   </data>
 </root>

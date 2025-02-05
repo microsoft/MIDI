@@ -35,25 +35,56 @@
                                                        IsExpanded="True"
                                                        Margin="3">
                                 <controls:SettingsExpander.Header>
-                                    <StackPanel>
-                                        <TextBlock Text="{x:Bind SessionInfo.SessionName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                        <StackPanel Orientation="Horizontal">
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Session Name" Style="{StaticResource SmallPropertyLabel}" />
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind SessionInfo.SessionName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Process" Style="{StaticResource SmallPropertyLabel}" />
+                                        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
                                             <TextBlock Text="{x:Bind SessionInfo.ProcessName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
                                             <TextBlock Text="process id: " Style="{StaticResource SmallPlainPropertyValue}"/>
                                             <TextBlock Text="{x:Bind SessionInfo.ProcessId}" Style="{StaticResource SmallPlainPropertyValue}"/>
                                         </StackPanel>
-                                    </StackPanel>
+                                    </Grid>
+
                                 </controls:SettingsExpander.Header>
 
                                 <controls:SettingsExpander.ItemTemplate>
-                                    <DataTemplate x:DataType="midirept:MidiServiceSessionConnectionInfo">
+                                    <DataTemplate x:DataType="local:MidiServiceSessionConnectionInfoWrapper">
                                         <controls:SettingsCard IsClickEnabled="False">
                                             <controls:SettingsCard.Header>
-                                                <StackPanel>
-                                                    <TextBlock Text="{x:Bind EndpointDeviceId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                                                   <!-- <TextBlock Text="{x:Bind EarliestConnectionTime}" Style="{StaticResource SmallPlainPropertyValue}"/> -->
-                                                    <TextBlock Text="{x:Bind InstanceCount}" Style="{StaticResource SmallPlainPropertyValue}"/>
-                                                </StackPanel>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+                                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Endpoint Name" Style="{StaticResource SmallPropertyLabel}" />
+                                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind EndpointName}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Endpoint Id" Style="{StaticResource SmallPropertyLabel}" />
+                                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind ConnectionInfo.EndpointDeviceId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                                    
+                                                    <!-- <TextBlock Text="{x:Bind EarliestConnectionTime}" Style="{StaticResource SmallPlainPropertyValue}"/> -->
+
+                                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Count of Open Connections" Style="{StaticResource SmallPropertyLabel}" />
+                                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind ConnectionInfo.InstanceCount}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                                </Grid>
                                             </controls:SettingsCard.Header>
                                         </controls:SettingsCard>
                                     </DataTemplate>

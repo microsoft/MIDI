@@ -29,10 +29,10 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" x:Uid="PluginsTransportPage_Description" Margin="0,0,0,8" />
+        <TextBlock Grid.Row="0" x:Uid="PluginsTransportPage_Description" Margin="0,0,0,8" TextWrapping="WrapWholeWords"/>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <Grid Margin="0,0,8,0">
+            <Grid Margin="0,13,9,0">
 
 
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Plugins, Mode=OneWay}">
@@ -59,15 +59,15 @@
                                 </controls:SettingsCard.Header>
 
                                 <controls:SettingsCard.Content>
-                                    <Grid>
+                                    <Grid Width="500">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="2*" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         
                                         <Grid Grid.Column="0" Margin="0,0,21,0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -79,7 +79,7 @@
                                             <TextBlock Grid.Column="0" Grid.Row="0" Text="Version" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind Version}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Mnemonic" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Code" Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind TransportCode}"  Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" Text="Id" Style="{StaticResource SmallPropertyLabel}" />
@@ -89,7 +89,7 @@
 
                                         <Grid Grid.Column="1">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>

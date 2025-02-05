@@ -4,8 +4,7 @@
       <TargetPlatformVersion>10.0.22621.0</TargetPlatformVersion>
       <TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
       <RootNamespace>Microsoft.Midi.Settings.Core</RootNamespace>
-	  <Platforms>AnyCPU;x64;x86</Platforms>
-	  <Platforms>x86;x64;arm64;AnyCPU</Platforms>
+	  <Platforms>x64;ARM64</Platforms>
 	  <ImplicitUsings>enable</ImplicitUsings>
 
       <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->

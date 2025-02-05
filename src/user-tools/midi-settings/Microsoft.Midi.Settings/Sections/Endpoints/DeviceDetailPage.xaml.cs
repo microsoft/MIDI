@@ -23,6 +23,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
 using Windows.Storage;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Windows.AppLifecycle;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -45,13 +46,20 @@ namespace Microsoft.Midi.Settings.Views
         public DeviceDetailPage()
         {
             ViewModel = App.GetService<DeviceDetailViewModel>();
+            ViewModel.DispatcherQueue = this.DispatcherQueue;
+
+            Loaded += DeviceDetailPage_Loaded;
 
             _loggingService = App.GetService<ILoggingService>();
 
             this.InitializeComponent();
         }
 
- 
+        private void DeviceDetailPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            
+        }
+
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
             if (ViewModel.DeviceInformation == null)
@@ -189,6 +197,32 @@ namespace Microsoft.Midi.Settings.Views
                 UserMetadataSmallImagePreview.Source = bitmapImage;
             }
 
+        }
+
+        private void OnOpenConsoleMonitor(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string arguments =
+                    " endpoint " +
+                    ViewModel.DeviceInformation.EndpointDeviceId +
+                    " monitor";
+
+                using (var monitorProcess = new System.Diagnostics.Process())
+                {
+                    monitorProcess.StartInfo.FileName = "midi.exe";
+                    monitorProcess.StartInfo.Arguments = arguments;
+
+                    monitorProcess.Start();
+                }
+            }
+            catch (Exception ex)
+            {
+                var dialog = new MessageDialog("Error opening console");
+                dialog.Content = ex.ToString();
+
+                dialog.ShowAsync().Wait();
+            }
         }
     }
 }

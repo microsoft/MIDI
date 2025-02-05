@@ -19,6 +19,7 @@ public class SettingsViewModel : ObservableRecipient
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IGeneralSettingsService _generalSettingsService;
     private ElementTheme _elementTheme;
+    //private bool _showDeveloperOptions;
     private string _versionDescription;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;

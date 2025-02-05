@@ -11,7 +11,7 @@
         
         <ApplicationIcon>Assets/AppIcon.ico</ApplicationIcon>
         <ApplicationManifest>MidiSettings.exe.manifest</ApplicationManifest>
-		<Platforms>x64;arm64</Platforms>
+		<Platforms>x64;ARM64</Platforms>
 		<RuntimeIdentifiers>win10-x64;win10-arm64</RuntimeIdentifiers>
 	    <ImplicitUsings>enable</ImplicitUsings>
         <PublishAot>false</PublishAot>
@@ -67,10 +67,18 @@
 
 		
   <ItemGroup>
+    <None Remove="Controls\MidiEndpointAndGroupPickerControl.xaml" />
+    <None Remove="Controls\MidiEndpointDeviceListItemControl.xaml" />
     <None Remove="Styles\DefaultFont.xaml" />
     <None Remove="Styles\MessageTemplates.xaml" />
     <None Remove="Views\DeviceDetailPage.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
+    <None Remove="Views\EndpointsAllPage.xaml" />
+    <None Remove="Views\EndpointsAppPage.xaml" />
+    <None Remove="Views\EndpointsBle10Page.xaml" />
+    <None Remove="Views\EndpointsKsaPage.xaml" />
+    <None Remove="Views\EndpointsLoopPage.xaml" />
+    <None Remove="Views\EndpointsNet2UdpPage.xaml" />
     <None Remove="Views\HomePage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
@@ -135,6 +143,12 @@
   </ItemGroup>
 	
   <ItemGroup>
+    <Page Update="Controls\MidiEndpointDeviceListItemControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Controls\MidiEndpointAndGroupPickerControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <None Update="MidiSettings.exe.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -153,6 +167,27 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Sections\Endpoints\LOOP\CreateLoopbackEndpointsWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsAllPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsLoopPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsNet2UdpPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsKsaPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsBle10Page.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="Views\EndpointsAppPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\WinMMMidi1DevicesPage.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
     </Page>

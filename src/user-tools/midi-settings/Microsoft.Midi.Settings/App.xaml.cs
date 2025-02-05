@@ -10,6 +10,7 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml;
+using Windows.UI.Popups;
 
 namespace Microsoft.Midi.Settings;
 
@@ -86,8 +87,28 @@ public partial class App : Application
             services.AddTransient<ForDevelopersPage>();
             services.AddTransient<ForDevelopersViewModel>();
 
-            services.AddTransient<DevicesPage>();
-            services.AddTransient<DevicesViewModel>();
+
+            services.AddTransient<EndpointsAllPage>();
+            services.AddTransient<EndpointsAllViewModel>();
+
+            services.AddTransient<EndpointsAppPage>();
+            services.AddTransient<EndpointsAppViewModel>();
+
+            services.AddTransient<EndpointsBle10Page>();
+            services.AddTransient<EndpointsBle10ViewModel>();
+
+            services.AddTransient<EndpointsKSPage>();
+            services.AddTransient<EndpointsKSViewModel>();
+
+            services.AddTransient<EndpointsKsaPage>();
+            services.AddTransient<EndpointsKsaViewModel>();
+
+            services.AddTransient<EndpointsNet2UdpPage>();
+            services.AddTransient<EndpointsNet2UdpViewModel>();
+
+            services.AddTransient<EndpointsLoopPage>();
+            services.AddTransient<EndpointsLoopViewModel>();
+
 
             services.AddTransient<DeviceDetailPage>();
             services.AddTransient<DeviceDetailViewModel>();
@@ -141,13 +162,19 @@ public partial class App : Application
         App.GetService<ILoggingService>().LogError(e.Message);
     }
 
+    private MidiDesktopAppSdkInitializer? _midiInitializer = null;
+
+    public MidiDesktopAppSdkInitializer? MidiInitializer => _midiInitializer;
+
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
         base.OnLaunched(args);
 
-        await App.GetService<IActivationService>().ActivateAsync(args);
+        // initialize the SDK
+        if (AppState.Current.Initialize())
+        {
+            await App.GetService<IActivationService>().ActivateAsync(args);
 
-        // force construction
-        var current = AppState.Current;
+        }
     }
 }

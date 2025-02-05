@@ -8,7 +8,7 @@
     <StartupObject></StartupObject>
     <AssemblyName>midi</AssemblyName>
     <RootNamespace>Microsoft.Midi.ConsoleApp</RootNamespace>
-    <PlatformTargets>x64, arm64</PlatformTargets>
+    <PlatformTargets>x64, ARM64</PlatformTargets>
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
 
       <PublishSingleFile>false</PublishSingleFile>

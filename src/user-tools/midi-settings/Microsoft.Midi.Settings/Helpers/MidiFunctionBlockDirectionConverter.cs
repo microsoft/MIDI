@@ -30,6 +30,9 @@ namespace Microsoft.Midi.Settings.Helpers
                     case MidiFunctionBlockDirection.BlockOutput:
                         return "Message Source";
 
+                    case MidiFunctionBlockDirection.Bidirectional:
+                        return "Message Source and Destination";
+
                     default:
                         return "Unknown";
                 }

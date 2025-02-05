@@ -1,6 +1,3 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License. See LICENSE in the project root for license information.
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,13 +12,10 @@ using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
-using Microsoft.Midi.Settings.ViewModels;
-//using Microsoft.Midi.Settings.SdkMock;
-//using Microsoft.Midi.Settings.SdkMock.TransportClientSdk;
-using Microsoft.Midi.Settings.Models;
 using CommunityToolkit.WinUI.Controls;
 using Microsoft.Midi.Settings.Contracts.Services;
-
+using Microsoft.Midi.Settings.ViewModels;
+using Microsoft.Midi.Settings.Controls;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -31,20 +25,20 @@ namespace Microsoft.Midi.Settings.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class DevicesPage : Page
+    public sealed partial class EndpointsAllPage : Page
     {
         private ILoggingService _loggingService;
 
 
-        public DevicesViewModel ViewModel
+        public EndpointsAllViewModel ViewModel
         {
             get;
         }
 
 
-        public DevicesPage()
+        public EndpointsAllPage()
         {
-            ViewModel = App.GetService<DevicesViewModel>();
+            ViewModel = App.GetService<EndpointsAllViewModel>();
             _loggingService = App.GetService<ILoggingService>();
 
             Loaded += DevicesPage_Loaded;
@@ -61,9 +55,9 @@ namespace Microsoft.Midi.Settings.Views
 
 
         // work around WinUI binding bug
-        private void EndpointSettingsCard_Loaded(object sender, RoutedEventArgs e)
+        private void MidiEndpointDeviceListItemControl_Loaded(object sender, RoutedEventArgs e)
         {
-            ((SettingsCard)sender).Command = ViewModel.ViewDeviceDetailsCommand;
+            ((MidiEndpointDeviceListItemControl)sender).ViewDeviceDetailsCommand = ViewModel.ViewDeviceDetailsCommand;
         }
     }
 }

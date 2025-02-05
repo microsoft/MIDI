@@ -11,6 +11,13 @@
         <Setter Property="TextWrapping" Value="NoWrap" />
     </Style>
 
+    <Style x:Key="PageDescriptionStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="FontWeight" Value="SemiLight" />
+        <Setter Property="FontSize" Value="{StaticResource MediumSmallFontSize}" />
+        <Setter Property="TextWrapping" Value="WrapWholeWords" />
+    </Style>
+
     <Style x:Key="PageHeaderStyleDeviceName" TargetType="TextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="SemiBold" />

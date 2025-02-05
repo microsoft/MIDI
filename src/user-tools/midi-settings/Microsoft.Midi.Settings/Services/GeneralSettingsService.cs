@@ -31,16 +31,19 @@ namespace Microsoft.Midi.Settings.Services
             get => _showDeveloperOptions;
             set
             {
-                if (value)
+                if (value != _showDeveloperOptions)
                 {
-                    // only allow setting this to true if dev mode is enabled
-                    value = WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
+                    if (value)
+                    {
+                        // only allow setting this to true if dev mode is enabled
+                        value = WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
+                    }
+
+                    SaveShowDeveloperOptionsFromSettingsAsync(value).Wait();
+                    _showDeveloperOptions = value;
+
+                    SettingsChanged?.Invoke(this, EventArgs.Empty);
                 }
-
-                SaveShowDeveloperOptionsFromSettingsAsync(value).Wait();
-                _showDeveloperOptions = value;
-
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -72,7 +75,7 @@ namespace Microsoft.Midi.Settings.Services
 
         private async Task SaveShowDeveloperOptionsFromSettingsAsync(bool showDeveloperOptions)
         {
-            await _localSettingsService.SaveSettingAsync(ShowDeveloperOptions_SettingsKey, showDeveloperOptions.ToString());
+            await _localSettingsService.SaveSettingAsync<bool>(ShowDeveloperOptions_SettingsKey, showDeveloperOptions);
         }
     }
 }
