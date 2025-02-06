@@ -10,7 +10,7 @@ If you have the midi console installed, you can invoke it from any command promp
 
 ## Where to Get it
 
-While in developer preview, the Windows MIDI Services console is delivered as part of the developer preview installer. In the future, it will be delivered and serviced through the Microsoft Store on Windows
+The Windows MIDI Services console is delivered as part of the SDK Runtime and Tools installer. While in preview, this is available on our [GitHub releases page](https://aka.ms/midireleases).
 
 ## General Information
 
@@ -18,7 +18,7 @@ While in developer preview, the Windows MIDI Services console is delivered as pa
 
 MIDI Console commands are words with no symbol prefix. For example `endpoint` or `send-message-file`. Options are prefixed with two dashes if you use the full word, or a single dash if you use the single-letter abbreviation. For example `--help` or `-h`. There is no statement completion built in to the console, but there are some supported abbreviations for commands. These are not yet fully documented but are present in the Program.cs in the console source code.
 
-### "Ports" vs "Streams"
+### "Ports" vs "Endpoints"
 
 In MIDI 1.0, specifically USB MIDI 1.0, a connected device would have a single input and single output stream. Inside that stream are packets of data with virtual cable numbers. Those numbers (16 total at most) identify the "port" the data is going to. Operating systems would then translate those into input and output ports. Those cable numbers were hidden from users.
 
@@ -34,7 +34,7 @@ If you want to see the MIDI clock we're using for timestamps and message schedul
 midi time
 midi clock
 ```
-![MIDI Clock Command](./midi-clock.png)
+![MIDI Clock Command](midi-clock.png)
 
 ## Technical Information
 

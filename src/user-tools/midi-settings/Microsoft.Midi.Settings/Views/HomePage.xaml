@@ -20,17 +20,30 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" x:Uid="HomePage_Description" Margin="0,0,0,8" />
+        <!--<TextBlock Grid.Row="0" x:Uid="HomePage_Description" Margin="0,0,0,8" />-->
         
         <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" /> <!-- Icon -->
-                <ColumnDefinition Width="Auto" /> <!-- Info -->
-                <ColumnDefinition Width="*" />    <!-- Spacer -->
-                <ColumnDefinition Width="Auto" /> <!-- Service Status -->
-                <ColumnDefinition Width="Auto" /> <!-- Panic Button -->
-            </Grid.ColumnDefinitions>
-            
+            <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                <controls:SettingsExpander.Header>
+                    <StackPanel>
+                        <TextBlock Text="Installed Windows MIDI Services SDK Runtime" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.MidiSdkVersionString}" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                    </StackPanel>
+                </controls:SettingsExpander.Header>
+                <controls:SettingsExpander.Items>
+                    <controls:SettingsCard IsClickEnabled="False">
+                        <controls:SettingsCard.Header>
+                            <HyperlinkButton Grid.Column="2" x:Name="DownloadLatestSdk" 
+                                             Content="Check for and download latest SDK runtime and tools" 
+                                             NavigateUri="{x:Bind ViewModel.MidiSdkDownloadUri}" 
+                                             VerticalAlignment="Center" />
+                        </controls:SettingsCard.Header>
+                        <controls:SettingsCard.HeaderIcon>
+                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe896;" Style="{StaticResource CommonTasksIconStyles}"/>
+                        </controls:SettingsCard.HeaderIcon>
+                    </controls:SettingsCard>
+                </controls:SettingsExpander.Items>
+            </controls:SettingsExpander>
         </Grid>
 
         <Grid Grid.Row="2">
@@ -44,37 +57,74 @@
                 <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
                     <controls:SettingsExpander.Header>
                         <StackPanel>
-                            <TextBlock Text="Highlighted settings" Style="{StaticResource HomeCardHeaderTitleStyle}" />
-                            <TextBlock Text="Commonly used settings for Windows MIDI Services" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                            <TextBlock Text="Common MIDI tasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                            <TextBlock Text="Common tasks and settings for Windows MIDI Services." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                            <TextBlock Text="PREVIEW NOTE: These are not yet enabled." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
                         </StackPanel>
                     </controls:SettingsExpander.Header>
                     <controls:SettingsExpander.Items>
-                        
+
                         <controls:SettingsCard IsClickEnabled="True">
                             <controls:SettingsCard.Header>
-                                <ContentControl x:Uid="Shell_Devices" />
+                                <TextBlock Text="Set MIDI Service to auto-start at boot (requires Administrator account)" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
                             <controls:SettingsCard.HeaderIcon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;"/>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef31;" Style="{StaticResource CommonTasksIconStyles}"/>
                             </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
                         <controls:SettingsCard IsClickEnabled="True">
                             <controls:SettingsCard.Header>
-                                <ContentControl x:Uid="Shell_ManagementSessions" />
+                                <TextBlock Text="Set a USB MIDI 1.0 device to use the new fast UMP MIDI 2.0 driver (requires Administrator account)" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
                             <controls:SettingsCard.HeaderIcon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeda3;"/>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb9d;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="True">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="Create a loopback endpoint so two applications can talk to each other over MIDI" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8ee;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="True">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="View all current Universal MIDI Packet (UMP) Endpoints" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe772;" Style="{StaticResource CommonTasksIconStyles}"/>
                             </controls:SettingsCard.HeaderIcon>                            
                         </controls:SettingsCard>
 
                         <controls:SettingsCard IsClickEnabled="True">
                             <controls:SettingsCard.Header>
-                                <ContentControl x:Uid="Shell_PluginsTransport" />
+                                <TextBlock Text="Send System Exclusive data to a device" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
                             <controls:SettingsCard.HeaderIcon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe912;"/>
-                            </controls:SettingsCard.HeaderIcon>                            
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe898;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="True">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="Open Windows MIDI Services Console" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="True">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="Set up Network MIDI 2.0" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xee77;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
                     </controls:SettingsExpander.Items>
@@ -83,11 +133,61 @@
                 
                 <!-- Links to helpful optional 1p apps -->
                 
-                <!-- Store link to download Console app if it's not present -->
-                
-                <!-- Store link to get Windows Terminal -->
+                <!-- Links to discord, repo, etc. -->
                 
                 
+                
+
+
+                <!--
+                <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                    <controls:SettingsExpander.Header>
+                        <StackPanel>
+                            <TextBlock Text="Other Common DAW Tasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                            <TextBlock Text="Common tasks and settings for making music on Windows. PREVIEW NOTE: These are not yet enabled." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                        </StackPanel>
+                    </controls:SettingsExpander.Header>
+                    <controls:SettingsExpander.Items>
+
+                        <controls:SettingsCard IsClickEnabled="True">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="Exclude DAW process(es) and files from Defender scanning" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe713;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="True">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="Increase MMCSS thread pool size" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe713;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="True">
+                            <controls:SettingsCard.Header>
+                                <TextBlock Text="Change power plan" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe713;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+
+
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
+                -->
+
+
+
+
+
+
+
             </StackPanel>
 
             <!-- Right Column -->
@@ -103,7 +203,6 @@
                     </controls:SettingsExpander.Header>
 
                     <controls:SettingsExpander.Items>
-                        
                         <controls:SettingsCard IsClickEnabled="False">
                             <controls:SettingsCard.Header>
                                 <TextBlock Text="MIDI Message Clock" />
@@ -181,18 +280,83 @@
                                 </Grid>
                             </controls:SettingsCard.Content>
                         </controls:SettingsCard>
+                    </controls:SettingsExpander.Items>
+                </controls:SettingsExpander>
 
 
+                <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                    <controls:SettingsExpander.Header>
+                        <StackPanel>
+                            <TextBlock Text="Helpful Links" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                            <TextBlock Text="Links to documentation and more for Windows MIDI Services" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                        </StackPanel>
+                    </controls:SettingsExpander.Header>
 
+                    <controls:SettingsExpander.Items>
+
+                        <controls:SettingsCard IsClickEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <HyperlinkButton NavigateUri="https://aka.ms/midi">
+                                    <HyperlinkButton.Content>
+                                        <TextBlock Text="Windows MIDI Services documentation" TextWrapping="WrapWholeWords"/>
+                                    </HyperlinkButton.Content>
+                                </HyperlinkButton>
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe897;"/>
+                            </controls:SettingsCard.HeaderIcon>
+
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <HyperlinkButton NavigateUri="https://aka.ms/mididiscord">
+                                    <HyperlinkButton.Content>
+                                        <TextBlock Text="Discord Server for questions, discussions and non-developer bug reports" TextWrapping="WrapWholeWords"/>
+                                    </HyperlinkButton.Content>
+
+                                </HyperlinkButton>
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"/>
+                            </controls:SettingsCard.HeaderIcon>
+
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <HyperlinkButton NavigateUri="https://aka.ms/midirepo">
+                                    <HyperlinkButton.Content>
+                                        <TextBlock Text="GitHub Repo with source for Windows MIDI Services" TextWrapping="WrapWholeWords"/>
+                                    </HyperlinkButton.Content>
+
+                                </HyperlinkButton>
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe71b;"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <HyperlinkButton NavigateUri="https://aka.ms/midirepoissues">
+                                    <HyperlinkButton.Content>
+                                        <TextBlock Text="GitHub Repo issues list for known issues and reporting new ones" TextWrapping="WrapWholeWords"/>
+                                    </HyperlinkButton.Content>
+
+                                </HyperlinkButton>
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe71b;"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
 
 
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
-                <!-- Link to troubleshooting page -->
-
-
-
+                
+                
 
             </StackPanel>
 

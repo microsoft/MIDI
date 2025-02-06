@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="Microsoft.Midi.Settings.Controls.MidiEndpointDeviceListItemControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:Microsoft.Midi.Settings.Views"
+    xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
+    xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <helpers:HasUniqueIdToVisibilityConverter x:Key="HasUniqueIdToVisibilityConverter" />
+            <helpers:HasUniqueIdToInverseVisibilityConverter x:Key="HasUniqueIdToInverseVisibilityConverter" />
+            <helpers:MidiEndpointNativeDataFormatConverter x:Key="MidiEndpointNativeDataFormatConverter" />
+            <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <controls:SettingsCard x:Name="RootSettingsCard" 
+                               IsClickEnabled="True"
+                               Loaded="EndpointSettingsCard_Loaded"
+                               CommandParameter="{x:Bind EndpointItem.DeviceInformation}">
+
+            <controls:SettingsCard.Header>
+                <TextBlock Text="{x:Bind EndpointItem.Name}" 
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+            </controls:SettingsCard.Header>
+            
+            <controls:SettingsCard.Description>
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{x:Bind EndpointItem.TransportSuppliedDescription}" 
+                               Style="{StaticResource SmallPlainPropertyValue}"/>
+                    <TextBlock Text="{x:Bind EndpointItem.UserSuppliedDescription}" 
+                               Style="{StaticResource SmallPlainPropertyValue}"/>
+                </StackPanel>
+            </controls:SettingsCard.Description>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+
+                <TextBlock Grid.Row="0" Grid.Column="0" 
+                           Text="Native Format" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" 
+                           Text="{x:Bind EndpointItem.NativeDataFormat, Mode=OneTime, Converter={StaticResource MidiEndpointNativeDataFormatConverter}}" 
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+
+
+                <TextBlock Grid.Row="0" Grid.Column="2" 
+                           Text="MIDI 1.0" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                <TextBlock Grid.Row="0" Grid.Column="3"
+                           Text="{x:Bind EndpointItem.SupportsMidi10Protocol, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="2" 
+                           Text="MIDI 2.0" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                <TextBlock Grid.Row="1" Grid.Column="3"
+                           Text="{x:Bind EndpointItem.SupportsMidi20Protocol, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+
+                <TextBlock Grid.Row="0" Grid.Column="4" 
+                           Text="Unique Id?" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                <TextBlock Grid.Row="0" Grid.Column="5"
+                           Text="☑️"
+                           Visibility="{x:Bind EndpointItem.TransportSuppliedSerialNumber, Mode=OneTime, Converter={StaticResource HasUniqueIdToVisibilityConverter}}" 
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                <TextBlock Grid.Row="0" Grid.Column="5"
+                           Text="❌"
+                           Visibility="{x:Bind EndpointItem.TransportSuppliedSerialNumber, Mode=OneTime, Converter={StaticResource HasUniqueIdToInverseVisibilityConverter}}" 
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="4" 
+                           Text="Multi-client" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
+                <TextBlock Grid.Row="1" Grid.Column="5"
+                           Text="{x:Bind EndpointItem.SupportsMultiClient, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+            </Grid>
+        </controls:SettingsCard>
+    </Grid>
+</UserControl>

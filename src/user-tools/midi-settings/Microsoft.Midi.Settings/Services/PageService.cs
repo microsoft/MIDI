@@ -13,7 +13,15 @@ public class PageService : IPageService
 
     public PageService()
     {
-        Configure<DevicesViewModel, DevicesPage>();
+        Configure<EndpointsAllViewModel, EndpointsAllPage>();
+        Configure<EndpointsAppViewModel, EndpointsAppPage>();
+        Configure<EndpointsBle10ViewModel, EndpointsBle10Page>();
+        Configure<EndpointsKSViewModel, EndpointsKSPage>();
+        Configure<EndpointsKsaViewModel, EndpointsKsaPage>();
+        Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
+        Configure<EndpointsNet2UdpViewModel, EndpointsNet2UdpPage>();
+
+
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
         Configure<RoutesViewModel, RoutesPage>();
 

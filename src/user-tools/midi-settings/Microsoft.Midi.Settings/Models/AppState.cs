@@ -6,6 +6,7 @@ using System.Linq;
 using System.Resources;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI.Popups;
 
 
 namespace Microsoft.Midi.Settings.Models;
@@ -18,32 +19,45 @@ public class AppState
 
     private static AppState? _current;
 
+    private MidiDesktopAppSdkInitializer? _initializer;
+
     private AppState()
     {
-        var initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create();
 
-        if (initializer == null)
+    }
+
+    public bool Initialize()
+    {
+        _initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create();
+
+        if (_initializer == null)
         {
             // TODO: Failed
-            return;
+            return false;
 
         }
 
-        // initialize SDK runtime
-        if (!initializer.InitializeSdkRuntime())
+        if (!_initializer!.InitializeSdkRuntime())
         {
-            // TODO: Failed
-            return;
+            // TODO: Localize these messages
+            var dialog = new MessageDialog("Unable to initialize the Windows MIDI Services SDK runtime. Is it installed? Exiting.");
+            dialog.ShowAsync().Wait();
+
+            return false;
         }
 
-        // start the service
-        if (!initializer.EnsureServiceAvailable())
+        if (!_initializer!.EnsureServiceAvailable())
         {
-            // TODO: Failed
-            return;
+            // TODO: Localize these messages
+            var dialog = new MessageDialog("The Windows MIDI Services SDK is installed, but we failed to start the service. Exiting.");
+            dialog.ShowAsync().Wait();
+
+            return false;
         }
 
         StartDeviceWatcher(true);
+
+        return true;
     }
 
     public static AppState Current
@@ -67,6 +81,23 @@ public class AppState
         return val;
     }
 
+    public string GetInstalledSdkVersionString()
+    {
+        string val = "Unable to query SDK version";
+
+        if (_initializer != null)
+        {
+            val = _initializer.GetInstalledSdkDescription(true, true, true);
+        }
+
+        return val;
+    }
+
+    public Uri GetMidiSdkInstallerUri()
+    {
+        return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
+    }
+
 
     public MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher
     {
@@ -75,6 +106,9 @@ public class AppState
             return _watcher!;
         }
     }
+
+
+
 
 
     private void StartDeviceWatcher(bool includeAll)
