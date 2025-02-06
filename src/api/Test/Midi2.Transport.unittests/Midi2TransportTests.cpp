@@ -14,6 +14,8 @@
 #include "MidiXProc.h"
 #include <mmdeviceapi.h>
 
+#define TEST_APPID {0xc24cc593, 0xbc6b, 0x4726,{ 0xb5, 0x52, 0xbe, 0xc8, 0x2d, 0xed, 0xb6, 0x8c}}
+
 using namespace winrt::Windows::Devices::Enumeration;
 
 HRESULT
@@ -168,7 +170,7 @@ void MidiTransportTests::TestMidiTransport(REFIID iid, MidiDataFormats dataForma
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
-    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, MidiApi_Test };
+    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
@@ -370,7 +372,7 @@ void MidiTransportTests::TestMidiTransportCreationOrder(REFIID iid, _In_ MidiDat
     DWORD mmcssTaskIdIn {0};
     DWORD mmcssTaskIdOut {0};
     unique_mmcss_handle mmcssHandle;
-    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, MidiApi_Test };
+    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
@@ -544,7 +546,7 @@ void MidiTransportTests::TestMidiTransportBiDi(REFIID iid, MidiDataFormats dataF
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
-    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, MidiApi_Test };
+    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
     std::wstring midiBiDirectionalInstanceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
@@ -712,7 +714,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
     LONGLONG previousReceive{ 0 };
 
     long double qpcPerMs = 0;
-    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, MidiApi_Test };
+    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
     std::wstring midiBiDirectionalInstanceId;
 
     QueryPerformanceFrequency(&performanceFrequency);
@@ -1053,8 +1055,8 @@ void MidiTransportTests::TestMidiSrvMultiClient(MidiDataFormats dataFormat1, Mid
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    TRANSPORTCREATIONPARAMS transportCreationParams1 { dataFormat1, MidiApi_Test };
-    TRANSPORTCREATIONPARAMS transportCreationParams2 { dataFormat2, MidiApi_Test };
+    TRANSPORTCREATIONPARAMS transportCreationParams1 { dataFormat1, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams2 { dataFormat2, TEST_APPID };
 
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
@@ -1391,8 +1393,8 @@ void MidiTransportTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat1,
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    TRANSPORTCREATIONPARAMS transportCreationParams1 { dataFormat1, MidiApi_Test };
-    TRANSPORTCREATIONPARAMS transportCreationParams2 { dataFormat2, MidiApi_Test };
+    TRANSPORTCREATIONPARAMS transportCreationParams1 { dataFormat1, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams2 { dataFormat2, TEST_APPID };
     std::wstring midiInstanceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));

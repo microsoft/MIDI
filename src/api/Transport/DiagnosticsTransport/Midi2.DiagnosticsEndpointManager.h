@@ -17,7 +17,7 @@ class CMidi2DiagnosticsEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
+    STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
     //STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson));
     STDMETHOD(Shutdown)();
 
@@ -39,7 +39,7 @@ private:
 
     HRESULT CreateParentDevice();
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
 
     std::wstring m_parentDeviceId{};
 

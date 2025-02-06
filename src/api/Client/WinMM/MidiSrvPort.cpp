@@ -41,7 +41,7 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
         TraceLoggingValue((int)flow, "MidiFlow"),
         TraceLoggingValue(flags, "flags"));
 
-    TRANSPORTCREATIONPARAMS transportCreationParams { MidiDataFormats_ByteStream, MidiApi_Winmm };
+    TRANSPORTCREATIONPARAMS transportCreationParams { MidiDataFormats_ByteStream, WINMM_APIID };
     DWORD mmcssTaskId {0};
     LARGE_INTEGER qpc{ 0 };
     
@@ -433,6 +433,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             if (MIDI_SYSEX == *callbackData)
             {
                 m_IsInSysex = true;
+                m_RunningStatus = 0;
             }
 
             if (m_IsInSysex)
@@ -505,7 +506,6 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     // next iteration will require a new buffer.
                     if (buffer->dwBufferLength == buffer->dwBytesRecorded)
                     {
-
                         RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
                     }
                 }
@@ -522,38 +522,97 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             else
             {
                 // not in a sysex, process this as a normal message
+                // Guaranteed to have at least 1 byte worth of data available
+                // at this point.
+                BYTE status = callbackData[0];
+                BYTE data1 = 0;
+                BYTE data2 = 0;
+                bool dataWritten = false;
 
-                BYTE status;
-                BYTE data1;
-                BYTE data2;
-
-                // if this is true, running status is active
-                if(0 == (*callbackData & MIDI_STATUSBYTEFILTER))
+                // system messages which are not real-time terminate
+                // running status
+                if ((status >= MIDI_SYSEX) && (status <= MIDI_EOX))
                 {
-                    // running status required, but not previously set,
-                    // this isn't a valid message
-                    RETURN_HR_IF(E_FAIL, 0 == m_RunningStatus);
-                    status = m_RunningStatus;
-                    data1 = callbackData[0];
-                    data2 = callbackData[1];
+                    m_RunningStatus = 0;
                 }
-                else
+
+                // tune request, timing, etc. are all 1 byte messages.
+                if (status >= MIDI_TUNEREQUEST &&
+                    callbackDataRemaining >= 1)
                 {
-                    status = callbackData[0];
+                    callbackData+=1;
+                    callbackDataRemaining-=1;
+                    dataWritten = true;
+                }
+                // song select is the only 2 byte message
+                else if (status == MIDI_SONGSELECT &&
+                    callbackDataRemaining >= 2)
+                {
+                    data1 = callbackData[1];
+                    callbackData+=2;
+                    callbackDataRemaining-=2;
+                    dataWritten = true;
+                }
+                // all other status byte messages are 3 bytes,
+                // MIDI_MTC, MIDI_SONGPP, and anything less than 0xF0
+                else if (0 != (status & MIDI_STATUSBYTEFILTER) && 
+                    callbackDataRemaining >= 3)
+                {
                     if(status < MIDI_SYSEX)  // don't save system common or system realtime as running status
                     {
                         m_RunningStatus = status;
                     }
+
                     data1 = callbackData[1];
                     data2 = callbackData[2];
+                    callbackData+=3;
+                    callbackDataRemaining-=3;
+                    dataWritten = true;
+                }
+                // if it's not a message with a status byte, it should be
+                // running status, which requires 2 bytes, and our running
+                // status should be valid.
+                else if((0 == (status & MIDI_STATUSBYTEFILTER)) && 
+                    (0 != (m_RunningStatus & MIDI_STATUSBYTEFILTER)) &&
+                    callbackDataRemaining >= 2)
+                {
+                    status = m_RunningStatus;
+                    data1 = callbackData[0];
+                    data2 = callbackData[1];
+
+                    // running status only consumes 2 bytes
+                    callbackData+=2;
+                    callbackDataRemaining-=2;
+                    dataWritten = true;
+                }
+                else
+                {
+                    // this is an unknown condition, the amount of available
+                    // data doesn't align to the type of message being processed,
+                    // or we don't have a status byte and aren't in a running status.
+
+                    assert(0);
+
+                    callbackData+=1;
+                    callbackDataRemaining-=1;
+                    // data not written, this byte ignored.
+
+                    TraceLoggingWrite(
+                        WdmAud2TelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingWideString(L"Invalid state, dropping data", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingPointer(this, "this"));
                 }
 
-                // Convert from the QPC time to the number of ticks elapsed from the start time.
-                DWORD ticks = (DWORD) (((position - startTime) / m_qpcFrequency) * 1000.0);
-                UINT32 midiMessage = status | (data1 << 8) | (data2 << 16);
-                WinmmClientCallback(MIM_DATA, midiMessage, ticks);
-                callbackData+=3;
-                callbackDataRemaining-=3;
+                if (dataWritten)
+                {
+                    // Convert from the QPC time to the number of ticks elapsed from the start time.
+                    DWORD ticks = (DWORD) (((position - startTime) / m_qpcFrequency) * 1000.0);
+                    UINT32 midiMessage = status | (data1 << 8) | (data2 << 16);
+                    WinmmClientCallback(MIM_DATA, midiMessage, ticks);
+                }
             }
 
             // before we continue on to the next buffer, we need to find out if the

@@ -37,8 +37,8 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiEndpointManager::Initialize(
-    IMidiDeviceManagerInterface* midiDeviceManager,
-    IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
+    IMidiDeviceManager* midiDeviceManager,
+    IMidiEndpointProtocolManager* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
@@ -53,8 +53,8 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiEndpointProtocolManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
-    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_midiProtocolManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
     winrt::hstring parentDeviceSelector(
         L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\" AND " \

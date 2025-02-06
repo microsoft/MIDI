@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include <assert.h>
 #include <wrl\module.h>
 #include <avrt.h>
 #include <wil\com.h>
@@ -52,4 +53,8 @@ public:
 MMRESULT MMRESULT_FROM_HRESULT(HRESULT hResult);
 
 extern bool g_ProcessIsTerminating;
+
+#ifndef WINMM_APIID
+#define WINMM_APIID {0x159f7ef3,0xb022,0x4cb7,{0xad,0x3f,0x6,0x42,0x21,0xbc,0x64,0x18}}
+#endif
 

@@ -13,8 +13,8 @@ _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiConfigurationManager::Initialize(
     GUID transportId, 
-    IMidiDeviceManagerInterface* midiDeviceManager,
-    IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface
+    IMidiDeviceManager* midiDeviceManager,
+    IMidiServiceConfigurationManager* midiServiceConfigurationManagerInterface
 )
 {
     UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
@@ -29,7 +29,7 @@ CMidi2VirtualMidiConfigurationManager::Initialize(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_MidiDeviceManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_MidiDeviceManager));
 
     m_TransportId = transportId;
 

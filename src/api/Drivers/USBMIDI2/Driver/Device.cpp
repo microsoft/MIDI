@@ -1066,7 +1066,9 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "No USB MIDI Interface Found.\n");
-        return(STATUS_INSUFFICIENT_RESOURCES);
+        status = STATUS_INSUFFICIENT_RESOURCES;
+
+        goto SelectExit;
     }
 
     // Prepare to select interface
@@ -1086,16 +1088,9 @@ Return Value:
     {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "Error selecting USB Interfaces.\n");
+        status = STATUS_NOINTERFACE;
         goto SelectExit;
     }
-
-    // Temporary for testing
-#if 0
-    if (pDeviceContext->UsbMIDIbcdMSC == 0x0100)
-    {
-        USBMIDI2DriverCreateGTB(Device);
-    }
-#endif
 
 SelectExit:
     if (pSettingPairs)

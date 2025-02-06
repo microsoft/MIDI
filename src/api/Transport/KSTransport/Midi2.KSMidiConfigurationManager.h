@@ -16,7 +16,7 @@ class CMidi2KSMidiConfigurationManager :
 {
 public:
 
-    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManagerInterface* deviceManagerInterface, _In_ IMidiServiceConfigurationManagerInterface* MidiServiceConfigurationManagerInterface));
+    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManager* deviceManagerInterface, _In_ IMidiServiceConfigurationManager* MidiServiceConfigurationManagerInterface));
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJson, _Out_ LPWSTR* responseJson));
     STDMETHOD(Shutdown)();
 
@@ -33,8 +33,8 @@ public:
 private:
 //    std::vector<std::unique_ptr<ConfigUpdateForEndpoint>> m_CachedConfigurationUpdates{};
 
-    wil::com_ptr_nothrow<IMidiServiceConfigurationManagerInterface> m_midiServiceConfigurationManagerInterface;
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiServiceConfigurationManager> m_midiServiceConfigurationManagerInterface;
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
     //HRESULT ApplyUserConfiguration(_In_ std::wstring deviceInterfaceId);
 

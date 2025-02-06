@@ -13,8 +13,8 @@ _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvConfigurationManager::Initialize(
     GUID transportId, 
-    IMidiDeviceManagerInterface* deviceManagerInterface, 
-    IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface)
+    IMidiDeviceManager* deviceManagerInterface, 
+    IMidiServiceConfigurationManager* midiServiceConfigurationManagerInterface)
 {
     TraceLoggingWrite(
         MidiSrvTransportTelemetryProvider::Provider(),
