@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 
+#include <assert.h>
 #include <wrl\module.h>
 #include <avrt.h>
 #include <wil\com.h>
