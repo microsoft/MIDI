@@ -79,7 +79,7 @@ CMidi2MidiSrvTransport::Activate(
         *activatedInterface = config.detach();
     }
     
-    else if (__uuidof(IMidiServicePluginMetadataReporterInterface) == iid)
+    else if (__uuidof(IMidiServicePluginMetadataReporter) == iid)
     {
         TraceLoggingWrite(
             MidiSrvTransportTelemetryProvider::Provider(),
@@ -87,10 +87,10 @@ CMidi2MidiSrvTransport::Activate(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiServicePluginMetadataReporterInterface", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+            TraceLoggingWideString(L"IMidiServicePluginMetadataReporter", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiServicePluginMetadataReporterInterface> metadataReporter;
+        wil::com_ptr_nothrow<IMidiServicePluginMetadataReporter> metadataReporter;
         RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2MidiSrvConfigurationManager>(&metadataReporter));  // config manager implements this interface
         *activatedInterface = metadataReporter.detach();
     }

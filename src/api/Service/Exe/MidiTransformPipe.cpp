@@ -14,7 +14,7 @@ CMidiTransformPipe::Initialize(
     LPCWSTR device,
     PMIDISRV_TRANSFORMCREATION_PARAMS pipeCreationParams,
     DWORD* mmcssTaskId,
-    IMidiDeviceManagerInterface* midiDeviceManager
+    IMidiDeviceManager* midiDeviceManager
 )
 {
     TraceLoggingWrite(

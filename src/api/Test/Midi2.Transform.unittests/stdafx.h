@@ -14,7 +14,6 @@
 #include <ppltasks.h>
 #include <WexTestClass.h>
 
-//#include "MidiDeviceManagerInterface.h"
 #include "MidiTestCommon.h"
 
 #include "WindowsMidiServices.h"

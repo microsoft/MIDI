@@ -145,7 +145,7 @@ private:
     static KSTART_ROUTINE WorkerThread;
 
     __drv_maxIRQL(PASSIVE_LEVEL)
-    PAGED_CODE_SEG
+    NONPAGED_CODE_SEG
     void
     HandleIo();
 
@@ -231,7 +231,7 @@ private:
 
     // worker thread that handles IO across the shared memory
     PKTHREAD m_WorkerThread {nullptr};
-    wil::kernel_event_auto_reset   m_ThreadExitEvent;
+    wil::kernel_event_manual_reset m_ThreadExitEvent;
     wil::kernel_event_manual_reset m_ThreadExitedEvent {true};
 
     // m_StandardStreamingLock m_LoopbackMessageQueue are only used

@@ -284,7 +284,7 @@ CMidiDeviceManager::Initialize(
 
                 if (endpointManager != nullptr)
                 {
-                    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> protocolManager = endpointProtocolManager.get();
+                    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> protocolManager = endpointProtocolManager.get();
 
                     TraceLoggingWrite(
                         MidiSrvTelemetryProvider::Provider(),
@@ -624,7 +624,7 @@ CMidiDeviceManager::ActivateEndpoint
     PCWSTR parentInstanceId,
     BOOL umpOnly,
     MidiFlow flow,
-    PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
+    const PMIDIENDPOINTCOMMONPROPERTIES commonProperties,
     ULONG intPropertyCount,
     ULONG devPropertyCount,
     const DEVPROPERTY* interfaceDevProperties,

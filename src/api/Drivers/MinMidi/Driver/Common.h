@@ -17,6 +17,7 @@
 
 #define PAGED_CODE_SEG __declspec(code_seg("PAGE"))
 #define INIT_CODE_SEG __declspec(code_seg("INIT"))
+#define NONPAGED_CODE_SEG __declspec(code_seg("NOPAGE"))
 
 #define NT_RETURN_IF_NTSTATUS_FAILED(status) do {\
         if(!NT_SUCCESS(status)) { \

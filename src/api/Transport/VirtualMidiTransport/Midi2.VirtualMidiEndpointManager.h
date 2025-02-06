@@ -16,7 +16,7 @@ class CMidi2VirtualMidiEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
+    STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
     STDMETHOD(Shutdown)();
 
     //STDMETHOD(ApplyConfiguration(
@@ -54,8 +54,8 @@ private:
     
     HRESULT CreateParentDevice();
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_MidiDeviceManager;
-    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_MidiProtocolManager;
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_MidiProtocolManager;
 
     //json::JsonObject m_JsonObject{ nullptr };
 };

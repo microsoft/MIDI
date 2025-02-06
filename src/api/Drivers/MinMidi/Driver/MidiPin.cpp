@@ -602,21 +602,18 @@ MidiPin::Process(
 }
 
 _Use_decl_annotations_
-PAGED_CODE_SEG
+NONPAGED_CODE_SEG
 void MidiPin::WorkerThread(PVOID context)
 {
-    PAGED_CODE();
     auto midiPin = reinterpret_cast<MidiPin*>(context);
     midiPin->HandleIo();
 }
 
 __drv_maxIRQL(PASSIVE_LEVEL)
-PAGED_CODE_SEG
+NONPAGED_CODE_SEG
 void
 MidiPin::HandleIo()
 {
-    PAGED_CODE();
-
     // This function handles both sending and receiving midi messages
     // when cyclic buffering is being used.
     // This implememtation loops the midi out data back to midi in.
@@ -624,6 +621,7 @@ MidiPin::HandleIo()
 
     // start with the even reset to indicate that the thread is running
     m_ThreadExitedEvent.clear();
+    m_ThreadExitEvent.clear();
 
     if (m_Pin->DataFlow == KSPIN_DATAFLOW_IN)
     {
