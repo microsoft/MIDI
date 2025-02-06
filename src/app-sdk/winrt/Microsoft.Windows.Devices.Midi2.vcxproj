@@ -715,7 +715,7 @@
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
-    <Midl Include="MidiAdvertisedHost.idl" />
+    <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiDeclaredEndpointInfo.idl" />
     <Midl Include="MidiDeclaredDeviceIdentity.idl" />
@@ -748,6 +748,10 @@
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="IMidiEndpointConnectionSettings.idl" />
     <Midl Include="MidiMessageTypeEndpointListener.idl" />
+    <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />
+    <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl" />
+    <Midl Include="MidiNetworkAdvertisedHostUpdatedEventArgs.idl" />
+    <Midl Include="MidiNetworkAdvertisedHostWatcher.idl" />
     <Midl Include="MidiNetworkAuthenticationTypeEnum.idl" />
     <Midl Include="MidiNetworkClientEndpointCreationConfig.idl" />
     <Midl Include="MidiNetworkClientEndpointCreationResult.idl" />
