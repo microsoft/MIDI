@@ -5,6 +5,11 @@
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
+// via https://devblogs.microsoft.com/oldnewthing/20041025-00/?p=37483
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+#define HINST_WDMAUD2 ((HINSTANCE)&__ImageBase)
+
+
 CMidiPorts::CMidiPorts()
 {
     TraceLoggingWrite(
@@ -388,10 +393,16 @@ CMidiPorts::GetDevCaps(MidiFlow flow, UINT portNumber, DWORD_PTR midiCaps)
     if (MidiFlowIn == flow)
     {
         memset((PVOID) midiCaps, 0, sizeof(MIDIINCAPSW));
+
+        // set the default name in case the port is not active. Some apps ignore the hresult
+        ::LoadStringW(HINST_WDMAUD2, IDS_MIDI_UNAVAILABLE_ENDPOINT, ((MIDIINCAPSW*)midiCaps)->szPname, MAXPNAMELEN);
     }
     else
     {
         memset((PVOID) midiCaps, 0, sizeof(MIDIOUTCAPSW));
+
+        // set the default name in case the port is not active. Some apps ignore the hresult
+        ::LoadStringW(HINST_WDMAUD2, IDS_MIDI_UNAVAILABLE_ENDPOINT, ((MIDIOUTCAPSW*)midiCaps)->szPname, MAXPNAMELEN);
     }
 
     auto lock = m_Lock.lock();
