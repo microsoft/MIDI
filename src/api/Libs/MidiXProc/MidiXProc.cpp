@@ -25,6 +25,9 @@
 #include "MidiDefs.h"
 #include "MidiXProc.h"
 
+// infinite timeouts when waiting for read events cause the server to just hang
+#define MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT 2000
+
 _Use_decl_annotations_
 HRESULT
 GetRequiredBufferSize(ULONG& requestedSize
@@ -397,11 +400,12 @@ CMidiXProc::SendMidiMessage(
             // Buffer is full, wait for the client to read some data out of the buffer to
             // make space
             HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
-            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+            //DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT);
             if (ret == (WAIT_OBJECT_0 + 1))
             {
                 // space has been made, try again.
-                retry = 1;
+                retry = true;
                 continue;
             }
         }

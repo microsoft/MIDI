@@ -224,15 +224,6 @@ CMidiDevicePipe::SendMidiMessage(
     LONGLONG timestamp
 )
 {
-    // TODO: 
-    // Figure out how to most efficiently handle real-time messages
-    // - Should we allow them to be scheduled?
-    // - Should they bypass plugins?
-    // Run message through plugins
-    // - The plugins may produce additional messages, or delete the message
-    // - If device is currently in the middle of SysEx7, we will want to park messages that aren't allowed to interrupt that
-    // - After plugin processing, it goes to the scheduler
-
     // TODO: What happens with outgoing JR clock/timestamp messages? They can't take a different path
     // from the message they are attached to. If they follow the same path, aren't excepted, and have
     // the right timestamp order, they should be ok, but that's a "should" not a "will".
