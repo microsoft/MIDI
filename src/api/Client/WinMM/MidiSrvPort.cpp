@@ -460,36 +460,35 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         BYTE inProgressMidiMessage[3]{ 0 };         // status, data 1, data 2
         BYTE countMidiMessageBytesReceived = 0;
 
+        BYTE immediateSingleByteMessage{ 0 }; // real time or other single-byte message that could interrupt the in-progress message
+
         LPMIDIHDR buffer{ nullptr };
 
         // keep processing until we run out of callback data
         // we process one byte at a time here
         while (callbackDataRemaining > 0 && started)
         {
+            // Handle all system real-time messages first
             if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(*callbackData))
             {
-                // Handle all system real-time messages
-
                 // send the single-byte message immediately
                 // do not add it to the inProgressMidiMessage or any buffer even though
                 // this shouldn't happen with midisrv-supplied message data (this is here
                 // in case libmidi2 promotes real-time when other messages are in progress)
 
-                // Convert from the QPC time to the number of ticks elapsed from the start time.
-                DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
-                UINT32 midiMessage = *callbackData;
-                WinmmClientCallback(MIM_DATA, midiMessage, ticks);
+                immediateSingleByteMessage = *callbackData;
             }
             else if (!m_IsInSysex)
             {
                 // we're not already processing sysex, but now we should start
-                if (MIDI_BYTE_IS_SYSEX_START_STATUS(*callbackData))
+                if (MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                 {
-                    // put us into SysEx transfer state.
-                    m_IsInSysex = true;
-
-                    // get the buffer, add the F0
-
+                    // we're not in SysEx mode, but this byte was provided
+                    // so we'll send it anyway
+                    immediateSingleByteMessage = *callbackData;
+                }
+                else if (MIDI_BYTE_IS_SYSEX_START_STATUS(*callbackData))
+                {
                     {
                         auto lock = m_BuffersLock.lock();
                         if (!m_InBuffers.empty())
@@ -498,13 +497,29 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                         }
                     }
 
+                    // get the buffer, add the F0
                     if (buffer)
                     {
+                        // put us into SysEx transfer state.
+                        m_IsInSysex = true;
+
                         BYTE* bufferData = (((BYTE*)buffer->lpData) + buffer->dwBytesRecorded);
 
                         *bufferData = *callbackData;
                         ++bufferData;
                         ++buffer->dwBytesRecorded;
+                    }
+                    else
+                    {
+                        // couldn't get the buffer and couldn't add the sysex start byte
+                        // wait for either a buffer or the port to be stopped. 
+                        // Note: this blocks other data processing
+
+                        HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
+                        WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+
+                        // now that we have a buffer, or have stopped, reprocess
+                        continue;
                     }
                 }
                 else if (MIDI_BYTE_IS_STATUS_BYTE(*callbackData))
@@ -525,8 +540,8 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     else
                     {
                         // This is bad data. Could be the rest of an interrupted SysEx message.
-                        // Either way, dropping it here because we are not in SysEx and we do not
-                        // have a valid status byte yet.
+                        // Either way, discarding it here because we are not in SysEx and we do not
+                        // have a valid status byte yet for it to be a regular message.
                     }
                 }
             }
@@ -545,15 +560,12 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     if (MIDI_BYTE_IS_STATUS_BYTE(*callbackData) && !MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                     {
                         // other statuses do not get added to the buffer, so we handle it here.
-
+                        // they do, however, terminate SysEx and then get added to the normal message handling
                         m_IsInSysex = false;
 
                         // send current SysEx buffer because any status byte that
                         // is not a real-time status byte will terminate current SysEx
-                        if (buffer)
-                        {
-                            RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
-                        }
+                        RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
 
                         // spin back around so we reprocess this byte now that we've ended sysex
                         continue;
@@ -561,25 +573,22 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     else if (MIDI_BYTE_IS_DATA_BYTE(*callbackData) || MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                     {
                         // either the end byte or a data byte, for sysex. Either way, add it to the buffer
-                        if (buffer)
+                        BYTE* bufferData = (((BYTE*)buffer->lpData) + buffer->dwBytesRecorded);
+
+                        *bufferData = *callbackData;
+                        ++bufferData;
+                        ++buffer->dwBytesRecorded;
+
+                        // the byte we received is a proper sysex end byte, so complete it
+                        if (MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                         {
-                            BYTE* bufferData = (((BYTE*)buffer->lpData) + buffer->dwBytesRecorded);
-
-                            *bufferData = *callbackData;
-                            ++bufferData;
-                            ++buffer->dwBytesRecorded;
-
-                            // the byte we received is a proper sysex end byte, so complete it
-                            if (MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
-                            {
-                                m_IsInSysex = false;
-                                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
-                            }
-                            else if (buffer->dwBytesRecorded == buffer->dwBufferLength)
-                            {
-                                // The buffer is full, send what we have, but we are still in SysEx mode
-                                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
-                            }
+                            m_IsInSysex = false;
+                            RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
+                        }
+                        else if (buffer->dwBytesRecorded == buffer->dwBufferLength)
+                        {
+                            // The buffer is full now so send what we have, but we are still in SysEx mode
+                            RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
                         }
                     }
                 }
@@ -590,8 +599,21 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
 
                     HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
                     WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+
+                    // now that we have a buffer, or have stopped, reprocess
+                    continue;
                 }
 
+            }
+
+            if (immediateSingleByteMessage > 0)
+            {
+                // Convert from the QPC time to the number of ticks elapsed from the start time.
+                DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                UINT32 midiMessage = *callbackData;
+                WinmmClientCallback(MIM_DATA, midiMessage, ticks);
+
+                immediateSingleByteMessage = 0;
             }
 
             // do we have a complete non-SysEx message to send? If so, send it
