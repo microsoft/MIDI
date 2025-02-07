@@ -66,6 +66,22 @@
                     status >= MIDI_NOTEOFF && \
                     status < MIDI_SYSEX)
 
+#define MIDI_BYTE_IS_STATUS_BYTE(b) (\
+                    (b & MIDI_STATUSBYTEFILTER) == MIDI_STATUSBYTEFILTER)
+
+#define MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(b) (\
+                    (b & MIDI_SYSTEM_REALTIME_FILTER) == MIDI_SYSTEM_REALTIME_FILTER)
+
+#define MIDI_BYTE_IS_SYSEX_START_STATUS(b) (\
+                    b == MIDI_SYSEX)
+
+#define MIDI_BYTE_IS_SYSEX_END_STATUS(b) (\
+                    b == MIDI_EOX)
+
+#define MIDI_BYTE_IS_DATA_BYTE(b) (\
+                    (b &  MIDI_STATUSBYTEFILTER) == 0)
+
+
 
 class CMidiPort :
     public Microsoft::WRL::RuntimeClass<
