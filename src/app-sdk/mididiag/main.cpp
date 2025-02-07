@@ -700,6 +700,33 @@ bool DoSectionWinRTMidi1ApiEndpoints(_In_ bool const verbose)
     return true;
 }
 
+void DisplayWinMMGetDevCapsErrorResult(MMRESULT result)
+{
+    switch (result)
+    {
+    case MMSYSERR_NOERROR:
+        // don't display anything
+        break;
+
+    case MMSYSERR_NODRIVER:
+        OutputError("Port returned MMSYSERR_NODRIVER. This is normal for unused port numbers.");
+        break;
+
+    case MMSYSERR_INVALPARAM:
+        OutputError("Port returned MMSYSERR_INVALPARAM.");
+        break;
+
+    case MMSYSERR_BADDEVICEID:
+        OutputError("Port returned MMSYSERR_BADDEVICEID.");
+        break;
+
+    case MMSYSERR_NOMEM:
+        OutputError("Port returned MMSYSERR_NOMEM.");
+        break;
+
+    }
+}
+
 bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
@@ -718,23 +745,23 @@ bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
 
         for (uint32_t i = 0; i < inputDeviceCount; i++)
         {
-            MIDIINCAPS inputCaps{};
+            MIDIINCAPSW inputCaps{};
 
             auto result = midiInGetDevCaps(i, &inputCaps, sizeof(inputCaps));
 
-            if (result == MMSYSERR_NOERROR)
-            {
-                OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, std::wstring{ inputCaps.szPname });
+            OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
+            OutputStringField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, std::wstring{ inputCaps.szPname });
 
-                if (i < inputDeviceCount - 1)
-                {
-                    OutputItemSeparator();
-                }
-            }
-            else
+            DisplayWinMMGetDevCapsErrorResult(result);
+
+            if (result != MMSYSERR_NOERROR)
             {
                 errorCount++;
+            }
+
+            if (i < inputDeviceCount - 1)
+            {
+                OutputItemSeparator();
             }
         }
 
@@ -763,23 +790,22 @@ bool DoSectionWinMMMidi1ApiEndpoints(_In_ bool const verbose)
 
         for (uint32_t i = 0; i < outputDeviceCount; i++)
         {
-            MIDIOUTCAPS outputCaps{};
+            MIDIOUTCAPSW outputCaps{};
 
             auto result = midiOutGetDevCaps(i, &outputCaps, sizeof(outputCaps));
 
-            if (result == MMSYSERR_NOERROR)
-            {
-                OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
-                OutputStringField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, std::wstring{ outputCaps.szPname });
+            OutputNumericField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_ID, i);
+            OutputStringField(MIDIDIAG_FIELD_LABEL_WINMM_ENDPOINT_NAME, std::wstring{ outputCaps.szPname });
+            DisplayWinMMGetDevCapsErrorResult(result);
 
-                if (i < outputDeviceCount - 1)
-                {
-                    OutputItemSeparator();
-                }
-            }
-            else
+            if (result != MMSYSERR_NOERROR)
             {
                 errorCount++;
+            }
+
+            if (i < outputDeviceCount - 1)
+            {
+                OutputItemSeparator();
             }
         }
 

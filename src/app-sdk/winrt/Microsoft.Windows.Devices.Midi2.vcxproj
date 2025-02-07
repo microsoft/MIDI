@@ -271,6 +271,10 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiNetworkAdvertisedHostAddedEventArgs.h" />
+    <ClInclude Include="MidiNetworkAdvertisedHostRemovedEventArgs.h" />
+    <ClInclude Include="MidiNetworkAdvertisedHostUpdatedEventArgs.h" />
+    <ClInclude Include="MidiNetworkAdvertisedHostWatcher.h" />
     <ClInclude Include="endpoint_device_interface_helpers.h" />
     <ClInclude Include="Initialization\MidiAppSdkManifest.h" />
     <ClInclude Include="Initialization\MidiAppSdkRuntimeComponent.h" />
@@ -450,6 +454,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiNetworkAdvertisedHostAddedEventArgs.cpp" />
+    <ClCompile Include="MidiNetworkAdvertisedHostRemovedEventArgs.cpp" />
+    <ClCompile Include="MidiNetworkAdvertisedHostUpdatedEventArgs.cpp" />
+    <ClCompile Include="MidiNetworkAdvertisedHostWatcher.cpp" />
     <ClCompile Include="Initialization\MidiAppSdkRuntimeComponent.cpp" />
     <ClCompile Include="Initialization\MidiAppSdkRuntimeComponentCatalog.cpp" />
     <ClCompile Include="Initialization\MidiAppSdkRuntimeTypeResolution.cpp" />

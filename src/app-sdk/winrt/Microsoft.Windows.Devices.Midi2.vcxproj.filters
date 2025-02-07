@@ -82,6 +82,18 @@
     <ClCompile Include="MidiEndpointDevicePropertyHelper.cpp">
       <Filter>SDK\Core\Enumeration\Metadata\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkAdvertisedHostWatcher.cpp">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkAdvertisedHostUpdatedEventArgs.cpp">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkAdvertisedHostRemovedEventArgs.cpp">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkAdvertisedHostAddedEventArgs.cpp">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -166,6 +178,18 @@
     </ClInclude>
     <ClInclude Include="endpoint_device_interface_helpers.h" />
     <ClInclude Include="enumeration_prop_util.h" />
+    <ClInclude Include="MidiNetworkAdvertisedHostWatcher.h">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkAdvertisedHostUpdatedEventArgs.h">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkAdvertisedHostRemovedEventArgs.h">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkAdvertisedHostAddedEventArgs.h">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
