@@ -7,7 +7,7 @@
 #define MIDI_POLYAFTERTOUCH         0xa0    // MIDI_POLYAFTERTOUCH
 #define MIDI_CONTROLCHANGE          0xb0    // MIDI_CONTROLCHANGE
 #define MIDI_PROGRAMCHANGE          0xc0    // MIDI_PROGRAMCHANGE
-#define MIDI_MONOAFTERTOUCH         0xd0    // MIDI_MONOAFTERTOUCH
+#define MIDI_MONOAFTERTOUCH         0xd0    // MIDI_MONOAFTERTOUCH  (channel pressure)
 #define MIDI_PITCHBEND              0xe0    // MIDI_PITCHBEND
 #define MIDI_SYSEX                  0xf0    // MIDI_SYSEX
 #define MIDI_TIMECODE               0xf1    // MIDI_TIMECODE
@@ -26,6 +26,46 @@
                                             // a status byte must have the high bit set (0x80)
 #define MIDI_SYSTEM_REALTIME_FILTER 0xf8    // filter for MIDI system realtime messages
                                             // a system realtime message must have all these bits set
+
+
+// For reference, this site is better than the formal MIDI 1.0 specs in many ways
+// http://midi.teragonaudio.com/tech/midispec.htm
+
+#define MIDI_MESSAGE_IS_THREE_BYTES(status) ( \
+                    status == MIDI_NOTEOFF || \
+                    status == MIDI_NOTEON || \
+                    status == MIDI_POLYAFTERTOUCH || \
+                    status == MIDI_CONTROLCHANGE || \
+                    status == MIDI_PITCHBEND || \
+                    status == MIDI_SONGPOSITIONPOINTER)
+
+#define MIDI_MESSAGE_IS_TWO_BYTES(status) ( \
+                    status == MIDI_PROGRAMCHANGE || \
+                    status == MIDI_MONOAFTERTOUCH || \
+                    status == MIDI_TIMECODE || \
+                    status == MIDI_SONGSELECT)
+
+#define MIDI_MESSAGE_IS_ONE_BYTE(status) ( \
+                    status == MIDI_PROGRAMCHANGE || \
+                    status == MIDI_MONOAFTERTOUCH || \
+                    status == MIDI_TIMINGCLOCK || \
+                    status == MIDI_TUNEREQUEST || \
+                    status == MIDI_START || \
+                    status == MIDI_CONTINUE || \
+                    status == MIDI_STOP || \
+                    status == MIDI_ACTIVESENSE || \
+                    status == MIDI_RESET || \
+                    status == MIDI_EOX)
+
+
+#define MIDI_MESSAGE_TERMINATES_RUNNING_STATUS(status) (\
+                    status >= MIDI_SYSEX && \
+                    status <= MIDI_EOX )
+
+#define MIDI_STATUS_SUPPORTS_RUNNING_STATUS(status) (\
+                    status >= MIDI_NOTEOFF && \
+                    status < MIDI_SYSEX)
+
 
 class CMidiPort :
     public Microsoft::WRL::RuntimeClass<

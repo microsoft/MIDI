@@ -371,6 +371,12 @@ CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
     return S_OK;
 }
 
+
+
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
@@ -457,6 +463,8 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                 // we were able to successfully retrieve a buffer, now fill it.
                 if (buffer)
                 {
+                    bool sendThisSysExBuffer = false;
+
                     // our data position within the buffer is the start of the buffer, indexed in
                     // by how much has already been written.
                     BYTE *bufferData = (((BYTE *)buffer->lpData) + buffer->dwBytesRecorded);
@@ -474,7 +482,21 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
 
                             // we're in a sysex block and somehow received a normal midi message,
                             // that's an error, complete the sysex and exit out of processing sysex.
-                            if (*callbackData < MIDI_SYSEX)
+                            if (*callbackData == MIDI_EOX)
+                            {
+                                *bufferData = *callbackData;
+
+                                ++callbackData;
+                                ++bufferData;
+
+                                ++buffer->dwBytesRecorded;
+                                --callbackDataRemaining;
+
+                                sendThisSysExBuffer = true; // we want to just set a flag here, and not send, just in case we're also at the very end of the buffer
+                                m_IsInSysex = false;
+                                break;
+                            }
+                            else if (*callbackData < MIDI_SYSEX)
                             {
                                 RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
                                 m_IsInSysex = false;
@@ -494,6 +516,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                             }
                         }
 
+
                         // it's not an interrupting status byte, so copy it to the buffer and advance our positions.
                         //*callbackData = *bufferData;
                         *bufferData = *callbackData;
@@ -510,7 +533,11 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
 
                     // if we are still in sysex and completed this buffer, we can deliver it, the
                     // next iteration will require a new buffer.
-                    if (buffer->dwBufferLength == buffer->dwBytesRecorded)
+
+                    // NOTE to Gary: If any of the other cases above are true (real time etc.) and the 
+                    // buffer is also full, then we end up completing the buffer twice, which would cause
+                    // the data to be sent twice.
+                    if (sendThisSysExBuffer || (buffer->dwBufferLength == buffer->dwBytesRecorded))
                     {
                         RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
                     }
@@ -527,7 +554,20 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             }
             else
             {
-                // not in a sysex, process this as a normal message
+                // Note to Gary: Technically, the flow below is not exactly correct.
+                // The reason is that a system real-time message in MIDI can interrupt
+                // even the data bytes of a message (and even when using running status). 
+                // So you have to process a byte at a time, allowing for those real-time 
+                // messages when present. From midi.org: 
+                // "To help ensure accurate timing, System Real Time messages 
+                //  are given priority over other messages, and these single-byte messages 
+                //  may occur anywhere in the data stream (a Real Time message may appear 
+                //  between the status byte and data byte of some other MIDI message)."
+                // Now, we're unlikely to run into that in data coming from the service
+                // but it could certainly be present in data coming from MIDI 1 apps
+                // More helpful info on running status http://midi.teragonaudio.com/tech/midispec/run.htm
+
+                // not in a sysex message, process this as a normal message
                 // Guaranteed to have at least 1 byte worth of data available
                 // at this point.
                 BYTE status = callbackData[0];
@@ -543,15 +583,15 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                 }
 
                 // tune request, timing, etc. are all 1 byte messages.
-                if (status >= MIDI_TUNEREQUEST &&
+                if (MIDI_MESSAGE_IS_ONE_BYTE(status) &&
                     callbackDataRemaining >= 1)
                 {
                     callbackData+=1;
                     callbackDataRemaining-=1;
                     dataWritten = true;
                 }
-                // song select is the only 2 byte message
-                else if (status == MIDI_SONGSELECT &&
+                // song select etc
+                else if (MIDI_MESSAGE_IS_TWO_BYTES(status) &&
                     callbackDataRemaining >= 2)
                 {
                     data1 = callbackData[1];
@@ -560,7 +600,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     dataWritten = true;
                 }
                 // all other status byte messages are 3 bytes,
-                // MIDI_MTC, MIDI_SONGPP, and anything less than 0xF0
+                // MIDI_MTC, MIDI_SONGPP
                 else if (0 != (status & MIDI_STATUSBYTEFILTER) && 
                     callbackDataRemaining >= 3)
                 {
@@ -579,6 +619,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                 // if it's not a message with a status byte, it should be
                 // running status, which requires 2 bytes, and our running
                 // status should be valid.
+                // NOTE To Gary: Running status can be 1 or 2 bytes.
                 else if((0 == (status & MIDI_STATUSBYTEFILTER)) && 
                     (0 != (m_RunningStatus & MIDI_STATUSBYTEFILTER)) &&
                     callbackDataRemaining >= 2)
