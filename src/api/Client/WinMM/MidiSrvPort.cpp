@@ -425,6 +425,8 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         DWORD callbackDataRemaining {size};
         BYTE *callbackData = (BYTE *)data;
 
+        bool processingSysExStartByte = false;
+
         // keep processing until we run out of callback data
         while (callbackDataRemaining > 0 && started)
         {
@@ -434,6 +436,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             {
                 m_IsInSysex = true;
                 m_RunningStatus = 0;
+                processingSysExStartByte = true;
             }
 
             if (m_IsInSysex)
@@ -462,10 +465,10 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     // cause us to complete the sysex message in progress.
                     // We're done when we either run out of data to copy, run out of space to put it
                     // in this buffer, or hit something that causes this sysex to end or be terminated.
-                    while(callbackDataRemaining > 0 &&
+                    while (callbackDataRemaining > 0 &&
                         (buffer->dwBytesRecorded < buffer->dwBufferLength))
                     {
-                        if (0 != (*callbackData & MIDI_STATUSBYTEFILTER))
+                        if (!processingSysExStartByte && 0 != (*callbackData & MIDI_STATUSBYTEFILTER))
                         {
                             // this is a status byte message, we're going to need some additional checks.
 
@@ -491,14 +494,18 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                             }
                         }
 
-                        // it's not a status byte, so copy it to the buffer and advance our positions.
-                        *callbackData = *bufferData;
+                        // it's not an interrupting status byte, so copy it to the buffer and advance our positions.
+                        //*callbackData = *bufferData;
+                        *bufferData = *callbackData;
 
                         ++callbackData;
                         ++bufferData;
 
                         ++buffer->dwBytesRecorded;
                         --callbackDataRemaining;
+
+                        // if we were processing the F0 before, we are no longer
+                        processingSysExStartByte = false;
                     }
 
                     // if we are still in sysex and completed this buffer, we can deliver it, the
