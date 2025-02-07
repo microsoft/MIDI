@@ -14,12 +14,12 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::Initialize(
     GUID transportId,
-    IMidiDeviceManagerInterface* midiDeviceManager,
-    IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface
+    IMidiDeviceManager* midiDeviceManager,
+    IMidiServiceConfigurationManager* midiServiceConfigurationManager
 )
 {
     UNREFERENCED_PARAMETER(transportId);
-    UNREFERENCED_PARAMETER(midiServiceConfigurationManagerInterface);
+    UNREFERENCED_PARAMETER(midiServiceConfigurationManager);
 
 
     TraceLoggingWrite(
@@ -32,7 +32,7 @@ CMidi2NetworkMidiConfigurationManager::Initialize(
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, midiDeviceManager);
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
 
     return S_OK;
 }

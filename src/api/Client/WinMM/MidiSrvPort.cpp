@@ -465,20 +465,19 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     while(callbackDataRemaining > 0 &&
                         (buffer->dwBytesRecorded < buffer->dwBufferLength))
                     {
-                        if(0 != (*callbackData & MIDI_STATUSBYTEFILTER))
+                        if (0 != (*callbackData & MIDI_STATUSBYTEFILTER))
                         {
                             // this is a status byte message, we're going to need some additional checks.
 
                             // we're in a sysex block and somehow received a normal midi message,
                             // that's an error, complete the sysex and exit out of processing sysex.
-                            if(MIDI_EOX != *callbackData && 
-                               (*callbackData & MIDI_STATUSBYTEFILTER) < MIDI_SYSEX)
+                            if (*callbackData < MIDI_SYSEX)
                             {
                                 RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
                                 m_IsInSysex = false;
                                 break;
                             }
-                            else if(MIDI_SYSTEM_REALTIME_FILTER != (*callbackData & MIDI_SYSTEM_REALTIME_FILTER))
+                            else if (MIDI_SYSTEM_REALTIME_FILTER != (*callbackData & MIDI_SYSTEM_REALTIME_FILTER))
                             {
                                 // a sys-ex block is supposed to end with a MIDI_EOX, however
                                 // any valid MIDI status byte CAN end a sys-ex block EXCEPT
@@ -569,6 +568,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     callbackDataRemaining-=3;
                     dataWritten = true;
                 }
+
                 // if it's not a message with a status byte, it should be
                 // running status, which requires 2 bytes, and our running
                 // status should be valid.

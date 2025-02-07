@@ -9,7 +9,7 @@
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiAdvertisedHost
+    struct MidiNetworkAdvertisedHost
     {
         // from Windows props
         String DeviceId;

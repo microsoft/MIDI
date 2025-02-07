@@ -16,7 +16,7 @@ class CMidi2NetworkMidiConfigurationManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManagerInterface* midiDeviceManager, _In_ IMidiServiceConfigurationManagerInterface* midiServiceConfigurationManagerInterface));
+    STDMETHOD(Initialize(_In_ GUID transportId, _In_ IMidiDeviceManager* midiDeviceManager, _In_ IMidiServiceConfigurationManager* midiServiceConfigurationManager));
     STDMETHOD(UpdateConfiguration(_In_ LPCWSTR configurationJsonSection, _Out_ LPWSTR* Response));
     STDMETHOD(Shutdown)();
 
@@ -24,6 +24,6 @@ public:
 //    STDMETHOD(ValidateClientDefinition(_In_ MidiNetworkUdpClientDefinition& definition));
 
 private:
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
 };

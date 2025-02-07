@@ -18,7 +18,7 @@ import "MidiNetworkClientEndpointCreationConfig.idl";
 import "MidiNetworkClientEndpointRemovalResult.idl";
 import "MidiNetworkClientEndpointRemovalConfig.idl";
 
-import "MidiAdvertisedHost.idl";
+import "MidiNetworkAdvertisedHost.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
@@ -42,7 +42,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
             MidiNetworkClientEndpointRemovalConfig removalConfig);
 
         // list the hosts currently visible to this PC
-        static Windows.Foundation.Collections.IVector<MidiAdvertisedHost> GetAdvertisedHosts();
+        static Windows.Foundation.Collections.IVector<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
         static String MidiNetworkUdpDnsServiceType{ get; };
         static String MidiNetworkUdpDnsSdQueryString{ get; };
 

@@ -17,7 +17,7 @@ class CMidi2NetworkMidiEndpointManager :
 
 {
 public:
-    STDMETHOD(Initialize(_In_ IMidiDeviceManagerInterface*, _In_ IMidiEndpointProtocolManagerInterface*));
+    STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
     STDMETHOD(Shutdown)();
 
     STDMETHOD(InitiateDiscoveryAndNegotiation(_In_ std::wstring const& endpointDeviceInterfaceId));
@@ -64,8 +64,8 @@ private:
 
     HRESULT CreateParentDevice();
 
-    wil::com_ptr_nothrow<IMidiDeviceManagerInterface> m_midiDeviceManager;
-    wil::com_ptr_nothrow<IMidiEndpointProtocolManagerInterface> m_midiProtocolManager;
+    wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
+    wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
 
     std::jthread m_backgroundEndpointCreatorThread;

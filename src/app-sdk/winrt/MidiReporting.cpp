@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
         try
         {
             winrt::com_ptr<IMidiTransport> serviceTransport;
-            winrt::com_ptr<IMidiServicePluginMetadataReporterInterface> metadataReporter;
+            winrt::com_ptr<IMidiServicePluginMetadataReporter> metadataReporter;
 
             serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
 
@@ -28,7 +28,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
             {
 
 
-                if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiServicePluginMetadataReporterInterface), (void**)&metadataReporter)))
+                if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiServicePluginMetadataReporter), (void**)&metadataReporter)))
                 {
 
                     LPWSTR rpcCallJson{ nullptr };

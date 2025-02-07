@@ -35,7 +35,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         static midi2::Endpoints::Network::MidiNetworkClientEndpointCreationResult CreateNetworkClient(midi2::Endpoints::Network::MidiNetworkClientEndpointCreationConfig const& creationConfig);
         static midi2::Endpoints::Network::MidiNetworkClientEndpointRemovalResult RemoveNetworkClient(midi2::Endpoints::Network::MidiNetworkClientEndpointRemovalConfig const& removalConfig);
 
-        static collections::IVector<midi2::Endpoints::Network::MidiAdvertisedHost> GetAdvertisedHosts();
+        static collections::IVector<midi2::Endpoints::Network::MidiNetworkAdvertisedHost> GetAdvertisedHosts();
 
     };
 }

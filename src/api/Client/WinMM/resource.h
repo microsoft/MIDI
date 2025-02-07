@@ -18,6 +18,8 @@
 #define IDS_SUBMIXER_CDLINE_SHORT       111
 #define IDS_SUBMIXER_CDLINE_LONG        112
 
+#define IDS_MIDI_UNAVAILABLE_ENDPOINT   200
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

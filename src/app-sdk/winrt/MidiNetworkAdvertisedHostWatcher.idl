@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiNetworkAdvertisedHostAddedEventArgs.idl";
+import "MidiNetworkAdvertisedHostRemovedEventArgs.idl";
+import "MidiNetworkAdvertisedHostUpdatedEventArgs.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
+{
+    [experimental]
+    [default_interface]
+    runtimeclass MidiNetworkAdvertisedHostWatcher
+    {
+        static MidiNetworkAdvertisedHostWatcher Create();
+
+        void Start();
+        void Stop();
+
+        Windows.Foundation.Collections.IMapView<String, MidiNetworkAdvertisedHost> EnumeratedHosts{ get; };
+
+        Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
+
+        event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostAddedEventArgs> Added;
+        event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostRemovedEventArgs> Removed;
+        event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostUpdatedEventArgs> Updated;
+
+        event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, IInspectable> EnumerationCompleted;
+        event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, IInspectable> Stopped;
+    }
+}

@@ -29,5 +29,7 @@ BEGIN
     IDS_SUBMIXER_VOLUME_LONG        "Volume"
     IDS_SUBMIXER_MUTE_SHORT         "Mute"
     IDS_SUBMIXER_MUTE_LONG          "Mute"
+
+    IDS_MIDI_UNAVAILABLE_ENDPOINT   "(unavailable)"
 END
 

@@ -103,9 +103,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
 
 
-    collections::IVector<midi2::Endpoints::Network::MidiAdvertisedHost> MidiNetworkEndpointManager::GetAdvertisedHosts()
+    collections::IVector<midi2::Endpoints::Network::MidiNetworkAdvertisedHost> MidiNetworkEndpointManager::GetAdvertisedHosts()
     {
-        auto results = winrt::single_threaded_vector<MidiAdvertisedHost>();
+        auto results = winrt::single_threaded_vector<MidiNetworkAdvertisedHost>();
 
         auto entries = enumeration::DeviceInformation::FindAllAsync(
             MidiNetworkUdpDnsSdQueryString(), 
@@ -117,7 +117,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         {
             for (auto const& entry : entries)
             {
-                MidiAdvertisedHost host;
+                MidiNetworkAdvertisedHost host;
 
                 //props.Append(L"System.Devices.AepService.ProtocolId");  // guid
                 //props.Append(L"System.Devices.Dnssd.HostName");         // string
