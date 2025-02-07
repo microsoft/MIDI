@@ -20,8 +20,8 @@ using namespace Microsoft::WRL::Wrappers;
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::Initialize(
-    IMidiDeviceManagerInterface* midiDeviceManager,
-    IMidiEndpointProtocolManagerInterface* midiEndpointProtocolManager
+    IMidiDeviceManager* midiDeviceManager,
+    IMidiEndpointProtocolManager* midiEndpointProtocolManager
 )
 {
     TraceLoggingWrite(
@@ -35,8 +35,8 @@ CMidi2NetworkMidiEndpointManager::Initialize(
 
     RETURN_HR_IF(E_INVALIDARG, nullptr == midiDeviceManager);
 
-    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManagerInterface), (void**)&m_midiDeviceManager));
-    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManagerInterface), (void**)&m_midiProtocolManager));
+    RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
+    RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
     m_containerId = m_transportId;                           // we use the transport ID as the container ID for convenience
