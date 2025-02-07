@@ -371,12 +371,6 @@ CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
     return S_OK;
 }
 
-
-
-
-
-
-
 _Use_decl_annotations_
 HRESULT
 CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
@@ -499,6 +493,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                             else if (*callbackData < MIDI_SYSEX)
                             {
                                 RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
+                                buffer = nullptr;
                                 m_IsInSysex = false;
                                 break;
                             }
@@ -511,6 +506,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                                 // we have a valid end of sys-ex byte, so turn off
                                 // m_bIsInSysEx
                                 RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
+                                buffer = nullptr;
                                 m_IsInSysex = false;
                                 break;
                             }
@@ -534,10 +530,9 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     // if we are still in sysex and completed this buffer, we can deliver it, the
                     // next iteration will require a new buffer.
 
-                    // NOTE to Gary: If any of the other cases above are true (real time etc.) and the 
-                    // buffer is also full, then we end up completing the buffer twice, which would cause
-                    // the data to be sent twice.
-                    if (sendThisSysExBuffer || (buffer->dwBufferLength == buffer->dwBytesRecorded))
+                    // If any of the other cases above are true (real time etc.), the buffer pointer will be cleared,
+                    // indicating that we do not want to double-send the data.
+                    if (buffer && (sendThisSysExBuffer || (buffer->dwBufferLength == buffer->dwBytesRecorded)))
                     {
                         RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
                     }
@@ -554,19 +549,6 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             }
             else
             {
-                // Note to Gary: Technically, the flow below is not exactly correct.
-                // The reason is that a system real-time message in MIDI can interrupt
-                // even the data bytes of a message (and even when using running status). 
-                // So you have to process a byte at a time, allowing for those real-time 
-                // messages when present. From midi.org: 
-                // "To help ensure accurate timing, System Real Time messages 
-                //  are given priority over other messages, and these single-byte messages 
-                //  may occur anywhere in the data stream (a Real Time message may appear 
-                //  between the status byte and data byte of some other MIDI message)."
-                // Now, we're unlikely to run into that in data coming from the service
-                // but it could certainly be present in data coming from MIDI 1 apps
-                // More helpful info on running status http://midi.teragonaudio.com/tech/midispec/run.htm
-
                 // not in a sysex message, process this as a normal message
                 // Guaranteed to have at least 1 byte worth of data available
                 // at this point.
