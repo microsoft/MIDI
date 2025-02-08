@@ -245,7 +245,7 @@ CMidiEndpointProtocolWorker::Start(
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
         // hang out until all info comes in or we time out
-        DWORD timeoutMilliseconds{ 15000 };
+        DWORD timeoutMilliseconds{ 20000 };
         m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(timeoutMilliseconds);
 
         RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
@@ -286,7 +286,7 @@ HRESULT
 CMidiEndpointProtocolWorker::CheckIfDiscoveryComplete()
 {
     if (m_taskEndpointInfoReceived &&
-        m_taskFinalStreamNegotiationResponseReceived &&
+        /*m_taskFinalStreamNegotiationResponseReceived && */
         m_taskEndpointNameReceived &&
         m_taskEndpointProductInstanceIdReceived &&
         m_taskDeviceIdentityReceived &&
@@ -625,12 +625,12 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    if (!m_inInitialFunctionBlockDiscovery && m_functionBlocksAreStatic)
-    {
-        // we reject this function block because the initial ones were declared static,
-        // meaning no changes are allowed
-        return S_OK;
-    }
+    //if (!m_inInitialFunctionBlockDiscovery && m_functionBlocksAreStatic)
+    //{
+    //    // we reject this function block because the initial ones were declared static,
+    //    // meaning no changes are allowed
+    //    return S_OK;
+    //}
 
     uint8_t functionBlockNumber = MIDIWORDBYTE3(ump.word0);
 
@@ -1355,10 +1355,10 @@ CMidiEndpointProtocolWorker::UpdateAllFunctionBlockPropertiesIfComplete()
 
     // we only check blocks, not names, because names are optional
     // this may lead to a bit of a race, but it's the best we can do
-    if (m_functionBlocks.size() != m_declaredFunctionBlockCount)
-    {
-        return S_OK;
-    }
+    //if (m_functionBlocks.size() != m_declaredFunctionBlockCount)
+    //{
+    //    return S_OK;
+    //}
 
     // this is for efficiency during initial discovery. This function is called when all 
     // function blocks have been received. It's possible not all names have been received
@@ -1391,7 +1391,7 @@ CMidiEndpointProtocolWorker::UpdateAllFunctionBlockPropertiesIfComplete()
             else
             {
                 props.push_back({{ FunctionBlockNamePropertyKeyFromNumber(fbname.first), DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_EMPTY, 0, nullptr });
+                    DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
         }
     }

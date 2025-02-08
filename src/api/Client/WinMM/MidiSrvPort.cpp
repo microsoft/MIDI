@@ -431,27 +431,122 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         DWORD callbackDataRemaining {size};
         BYTE *callbackData = (BYTE *)data;
 
-        bool processingSysExStartByte = false;
+
+        // The data in here is all coming from midisrv, so we can make a few assumptions:
+        // 
+        // 1. No running status. Messages translated from UMP to bytestream do not use
+        //    running status at all. 
+        // 
+        // 2. Messages that fit into a single UMP will not be interrupted by system
+        //    real-time messages. So the MIDI 1.0 scenario where a clock message could
+        //    show up in between the data bytes in a channel voice message will not 
+        //    happen here.
+        // 
+        // 3. SysEx messages could be interrupted by system real-time messages, so 
+        //    we do need to handle that case. 
+        // 
+        // 4. SysEx messages could be interrupted by non-sysex, non-real-time messages
+        //
+        // 5. SysEx messages could be incomplete. It's possible to send a SysEx start
+        //    UMP and never send a SysEx complete UMP
+        //
+        // 6. SysEx start messages could be incorrect. For example, we could get a 
+        //    SysEx start message followed by another SysEx start message. This 
+        //    violates the protocol, but it's possible. We'd need to look into what
+        //    libmidi2 does in that case, but should also guard against that here.
+
+
+        // the message we're building
+        BYTE inProgressMidiMessage[3]{ 0 };         // status, data 1, data 2
+        BYTE countMidiMessageBytesReceived = 0;
+
+        BYTE immediateSingleByteMessage{ 0 }; // real time or other single-byte message that could interrupt the in-progress message
+
+        LPMIDIHDR buffer{ nullptr };
 
         // keep processing until we run out of callback data
+        // we process one byte at a time here
         while (callbackDataRemaining > 0 && started)
         {
-            // If this is a sysex message, then go into InSysex
-            // state
-            if (MIDI_SYSEX == *callbackData)
+            // Handle all system real-time messages first
+            if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(*callbackData))
             {
-                m_IsInSysex = true;
-                m_RunningStatus = 0;
-                processingSysExStartByte = true;
+                // send the single-byte message immediately
+                // do not add it to the inProgressMidiMessage or any buffer even though
+                // this shouldn't happen with midisrv-supplied message data (this is here
+                // in case libmidi2 promotes real-time when other messages are in progress)
+
+                immediateSingleByteMessage = *callbackData;
             }
-
-            if (m_IsInSysex)
+            else if (!m_IsInSysex)
             {
-                // if we're processing a sysex message, then we need a buffer to deliver
-                // the data in, retrieve it, getting either a previously incomplete buffer
-                // or a new one.
-                LPMIDIHDR buffer {nullptr};
+                // we're not already processing sysex, but now we should start
+                if (MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
+                {
+                    // we're not in SysEx mode, but this byte was provided
+                    // so we'll send it anyway
+                    immediateSingleByteMessage = *callbackData;
+                }
+                else if (MIDI_BYTE_IS_SYSEX_START_STATUS(*callbackData))
+                {
+                    {
+                        auto lock = m_BuffersLock.lock();
+                        if (!m_InBuffers.empty())
+                        {
+                            buffer = m_InBuffers.front();
+                        }
+                    }
 
+                    // get the buffer, add the F0
+                    if (buffer)
+                    {
+                        // put us into SysEx transfer state.
+                        m_IsInSysex = true;
+
+                        BYTE* bufferData = (((BYTE*)buffer->lpData) + buffer->dwBytesRecorded);
+
+                        *bufferData = *callbackData;
+                        ++bufferData;
+                        ++buffer->dwBytesRecorded;
+                    }
+                    else
+                    {
+                        // couldn't get the buffer and couldn't add the sysex start byte
+                        // wait for either a buffer or the port to be stopped. 
+                        // Note: this blocks other data processing
+
+                        HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
+                        WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+
+                        // now that we have a buffer, or have stopped, reprocess
+                        continue;
+                    }
+                }
+                else if (MIDI_BYTE_IS_STATUS_BYTE(*callbackData))
+                {
+                    // start a new message
+                    inProgressMidiMessage[0] = *callbackData;
+                    countMidiMessageBytesReceived = 1;
+                }
+                else if (MIDI_BYTE_IS_DATA_BYTE(*callbackData))
+                {
+                    // Handle a data byte, and not sysex.
+
+                    if (countMidiMessageBytesReceived > 0 && countMidiMessageBytesReceived < 3)
+                    {
+                        inProgressMidiMessage[countMidiMessageBytesReceived] = *callbackData;
+                        countMidiMessageBytesReceived++;
+                    }
+                    else
+                    {
+                        // This is bad data. Could be the rest of an interrupted SysEx message.
+                        // Either way, discarding it here because we are not in SysEx and we do not
+                        // have a valid status byte yet for it to be a regular message.
+                    }
+                }
+            }
+            else if (m_IsInSysex)
+            {
                 {
                     auto lock = m_BuffersLock.lock();
                     if (!m_InBuffers.empty())
@@ -460,208 +555,96 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     }
                 }
 
-                // we were able to successfully retrieve a buffer, now fill it.
                 if (buffer)
                 {
-                    bool sendThisSysExBuffer = false;
-
-                    // our data position within the buffer is the start of the buffer, indexed in
-                    // by how much has already been written.
-                    BYTE *bufferData = (((BYTE *)buffer->lpData) + buffer->dwBytesRecorded);
-
-                    // copy the data, inspecting them as we go looking for messages which would
-                    // cause us to complete the sysex message in progress.
-                    // We're done when we either run out of data to copy, run out of space to put it
-                    // in this buffer, or hit something that causes this sysex to end or be terminated.
-                    while (callbackDataRemaining > 0 &&
-                        (buffer->dwBytesRecorded < buffer->dwBufferLength))
+                    if (MIDI_BYTE_IS_STATUS_BYTE(*callbackData) && !MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                     {
-                        if (!processingSysExStartByte && 0 != (*callbackData & MIDI_STATUSBYTEFILTER))
-                        {
-                            // this is a status byte message, we're going to need some additional checks.
+                        // other statuses do not get added to the buffer, so we handle it here.
+                        // they do, however, terminate SysEx and then get added to the normal message handling
+                        m_IsInSysex = false;
 
-                            // we're in a sysex block and somehow received a normal midi message,
-                            // that's an error, complete the sysex and exit out of processing sysex.
-                            if (*callbackData == MIDI_EOX)
-                            {
-                                *bufferData = *callbackData;
+                        // send current SysEx buffer because any status byte that
+                        // is not a real-time status byte will terminate current SysEx
+                        RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
 
-                                ++callbackData;
-                                ++bufferData;
-
-                                ++buffer->dwBytesRecorded;
-                                --callbackDataRemaining;
-
-                                sendThisSysExBuffer = true; // we want to just set a flag here, and not send, just in case we're also at the very end of the buffer
-                                m_IsInSysex = false;
-                                break;
-                            }
-                            else if (*callbackData < MIDI_SYSEX)
-                            {
-                                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
-                                m_IsInSysex = false;
-                                break;
-                            }
-                            else if (MIDI_SYSTEM_REALTIME_FILTER != (*callbackData & MIDI_SYSTEM_REALTIME_FILTER))
-                            {
-                                // a sys-ex block is supposed to end with a MIDI_EOX, however
-                                // any valid MIDI status byte CAN end a sys-ex block EXCEPT
-                                // for system real-time messages (0xF8 to 0xFF)
-
-                                // we have a valid end of sys-ex byte, so turn off
-                                // m_bIsInSysEx
-                                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
-                                m_IsInSysex = false;
-                                break;
-                            }
-                        }
-
-
-                        // it's not an interrupting status byte, so copy it to the buffer and advance our positions.
-                        //*callbackData = *bufferData;
-                        *bufferData = *callbackData;
-
-                        ++callbackData;
-                        ++bufferData;
-
-                        ++buffer->dwBytesRecorded;
-                        --callbackDataRemaining;
-
-                        // if we were processing the F0 before, we are no longer
-                        processingSysExStartByte = false;
+                        // spin back around so we reprocess this byte now that we've ended sysex
+                        continue;
                     }
-
-                    // if we are still in sysex and completed this buffer, we can deliver it, the
-                    // next iteration will require a new buffer.
-
-                    // NOTE to Gary: If any of the other cases above are true (real time etc.) and the 
-                    // buffer is also full, then we end up completing the buffer twice, which would cause
-                    // the data to be sent twice.
-                    if (sendThisSysExBuffer || (buffer->dwBufferLength == buffer->dwBytesRecorded))
+                    else if (MIDI_BYTE_IS_DATA_BYTE(*callbackData) || MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                     {
-                        RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
+                        // either the end byte or a data byte, for sysex. Either way, add it to the buffer
+                        BYTE* bufferData = (((BYTE*)buffer->lpData) + buffer->dwBytesRecorded);
+
+                        *bufferData = *callbackData;
+                        ++bufferData;
+                        ++buffer->dwBytesRecorded;
+
+                        // the byte we received is a proper sysex end byte, so complete it
+                        if (MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
+                        {
+                            m_IsInSysex = false;
+                            RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
+                        }
+                        else if (buffer->dwBytesRecorded == buffer->dwBufferLength)
+                        {
+                            // The buffer is full now so send what we have, but we are still in SysEx mode
+                            RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
+                        }
                     }
                 }
-                // we have remaining callback data, but no buffer available, wait for either a buffer
-                // or the port to be stopped.
                 else
                 {
-                    // Wait for either a buffer to be added, or the pin to be stopped,
-                    // it doesn't matter which wakes us.
+                    // we have remaining callback data, but no buffer available, wait for either a buffer
+                    // or the port to be stopped. Note: this blocks other data processing
+
                     HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
                     WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+
+                    // now that we have a buffer, or have stopped, reprocess
+                    continue;
                 }
+
             }
-            else
+
+            if (immediateSingleByteMessage > 0)
             {
-                // Note to Gary: Technically, the flow below is not exactly correct.
-                // The reason is that a system real-time message in MIDI can interrupt
-                // even the data bytes of a message (and even when using running status). 
-                // So you have to process a byte at a time, allowing for those real-time 
-                // messages when present. From midi.org: 
-                // "To help ensure accurate timing, System Real Time messages 
-                //  are given priority over other messages, and these single-byte messages 
-                //  may occur anywhere in the data stream (a Real Time message may appear 
-                //  between the status byte and data byte of some other MIDI message)."
-                // Now, we're unlikely to run into that in data coming from the service
-                // but it could certainly be present in data coming from MIDI 1 apps
-                // More helpful info on running status http://midi.teragonaudio.com/tech/midispec/run.htm
+                // Convert from the QPC time to the number of ticks elapsed from the start time.
+                DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                UINT32 midiMessage = *callbackData;
+                WinmmClientCallback(MIM_DATA, midiMessage, ticks);
 
-                // not in a sysex message, process this as a normal message
-                // Guaranteed to have at least 1 byte worth of data available
-                // at this point.
-                BYTE status = callbackData[0];
-                BYTE data1 = 0;
-                BYTE data2 = 0;
-                bool dataWritten = false;
-
-                // system messages which are not real-time terminate
-                // running status
-                if ((status >= MIDI_SYSEX) && (status <= MIDI_EOX))
-                {
-                    m_RunningStatus = 0;
-                }
-
-                // tune request, timing, etc. are all 1 byte messages.
-                if (MIDI_MESSAGE_IS_ONE_BYTE(status) &&
-                    callbackDataRemaining >= 1)
-                {
-                    callbackData+=1;
-                    callbackDataRemaining-=1;
-                    dataWritten = true;
-                }
-                // song select etc
-                else if (MIDI_MESSAGE_IS_TWO_BYTES(status) &&
-                    callbackDataRemaining >= 2)
-                {
-                    data1 = callbackData[1];
-                    callbackData+=2;
-                    callbackDataRemaining-=2;
-                    dataWritten = true;
-                }
-                // all other status byte messages are 3 bytes,
-                // MIDI_MTC, MIDI_SONGPP
-                else if (0 != (status & MIDI_STATUSBYTEFILTER) && 
-                    callbackDataRemaining >= 3)
-                {
-                    if(status < MIDI_SYSEX)  // don't save system common or system realtime as running status
-                    {
-                        m_RunningStatus = status;
-                    }
-
-                    data1 = callbackData[1];
-                    data2 = callbackData[2];
-                    callbackData+=3;
-                    callbackDataRemaining-=3;
-                    dataWritten = true;
-                }
-
-                // if it's not a message with a status byte, it should be
-                // running status, which requires 2 bytes, and our running
-                // status should be valid.
-                // NOTE To Gary: Running status can be 1 or 2 bytes.
-                else if((0 == (status & MIDI_STATUSBYTEFILTER)) && 
-                    (0 != (m_RunningStatus & MIDI_STATUSBYTEFILTER)) &&
-                    callbackDataRemaining >= 2)
-                {
-                    status = m_RunningStatus;
-                    data1 = callbackData[0];
-                    data2 = callbackData[1];
-
-                    // running status only consumes 2 bytes
-                    callbackData+=2;
-                    callbackDataRemaining-=2;
-                    dataWritten = true;
-                }
-                else
-                {
-                    // this is an unknown condition, the amount of available
-                    // data doesn't align to the type of message being processed,
-                    // or we don't have a status byte and aren't in a running status.
-
-                    assert(0);
-
-                    callbackData+=1;
-                    callbackDataRemaining-=1;
-                    // data not written, this byte ignored.
-
-                    TraceLoggingWrite(
-                        WdmAud2TelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_WARNING,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                        TraceLoggingWideString(L"Invalid state, dropping data", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingPointer(this, "this"));
-                }
-
-                if (dataWritten)
-                {
-                    // Convert from the QPC time to the number of ticks elapsed from the start time.
-                    DWORD ticks = (DWORD) (((position - startTime) / m_qpcFrequency) * 1000.0);
-                    UINT32 midiMessage = status | (data1 << 8) | (data2 << 16);
-                    WinmmClientCallback(MIM_DATA, midiMessage, ticks);
-                }
+                immediateSingleByteMessage = 0;
             }
+
+            // do we have a complete non-SysEx message to send? If so, send it
+            if (countMidiMessageBytesReceived == 3 && MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]) ||
+                countMidiMessageBytesReceived == 2 && MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) ||
+                countMidiMessageBytesReceived == 1 && MIDI_MESSAGE_IS_ONE_BYTE(inProgressMidiMessage[0]))
+            {
+                // Convert from the QPC time to the number of ticks elapsed from the start time.
+                DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                UINT32 midiMessage{ inProgressMidiMessage[0] };
+                
+                if (MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) || MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]))
+                {
+                    midiMessage |= (inProgressMidiMessage[1] << 8);
+                }
+
+                if (MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]))
+                {
+                    midiMessage |= (inProgressMidiMessage[2] << 16);
+                }
+
+                WinmmClientCallback(MIM_DATA, midiMessage, ticks);
+
+                // reset for next message
+                countMidiMessageBytesReceived = 0;
+                inProgressMidiMessage[0] = 0;
+            }
+
+            // move to the next byte of data in the loop
+            ++callbackData;
+            --callbackDataRemaining;
 
             // before we continue on to the next buffer, we need to find out if the
             // port is still running.
@@ -669,6 +652,15 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             {
                 auto lock = m_Lock.lock();
                 started = m_Started;
+            }
+        }
+
+        // We fell out of the loop. If callback data remaining is 0 and we have some sysex in the buffer, send it
+        if (buffer && started)
+        {
+            if (buffer->dwBytesRecorded > 0 && callbackDataRemaining == 0)
+            {
+                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
             }
         }
     }

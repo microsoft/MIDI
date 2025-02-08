@@ -115,16 +115,16 @@ CMidi2KSAggregateMidiInProxy::Callback(
     RETURN_HR_IF_NULL(E_POINTER, m_callback);
     RETURN_HR_IF_NULL(E_POINTER, m_bs2UmpTransform);
 
-    //TraceLoggingWrite(
-    //    MidiKSAggregateTransportTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_VERBOSE,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(L"Callback received from device. Sending data to next callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-    //    TraceLoggingUInt32(length, "data length"),
-    //    TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-    //);
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MidiIn Callback received from device. Sending data to bs2UmpTransform.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(length, "data length"),
+        TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    );
 
     // the callback for the transform is wired up in initialize
     return m_bs2UmpTransform->SendMidiMessage(data, length, timestamp);

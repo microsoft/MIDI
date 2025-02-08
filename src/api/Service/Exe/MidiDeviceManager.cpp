@@ -1489,11 +1489,11 @@ CMidiDeviceManager::UpdateEndpointProperties
                 { PKEY_MIDI_CustomPortNumber, false, 0, 0 },
                 { PKEY_MIDI_CustomEndpointName, false, 0, 0 },
                 { PKEY_MIDI_GroupTerminalBlocks, false, 0, 0 },
-                { PKEY_MIDI_FunctionBlockDeclaredCount, false, 0, 0 },
+              /*  {PKEY_MIDI_FunctionBlockDeclaredCount, false, 0, 0},
                 { PKEY_MIDI_FunctionBlocksAreStatic, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlocksLastUpdateTime, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlock00, true, PKEY_MIDI_FunctionBlock00.pid, PKEY_MIDI_FunctionBlock31.pid },
-                { PKEY_MIDI_FunctionBlockName00, true, PKEY_MIDI_FunctionBlockName00.pid, PKEY_MIDI_FunctionBlockName31.pid },
+                { PKEY_MIDI_FunctionBlockName00, true, PKEY_MIDI_FunctionBlockName00.pid, PKEY_MIDI_FunctionBlockName31.pid }, */
                 { PKEY_MIDI_EndpointDiscoveryProcessComplete, false, 0, 0 },
                 };
 
@@ -2529,15 +2529,31 @@ CMidiDeviceManager::SyncMidi1Ports(
                     friendlyName = baseFriendlyName;
                 }
 
-                // append the flow(Input or Output) & group number (group index + 1) to the friendly name.
-                if (MidiFlowIn == (MidiFlow) flow)
+
+                // if the device is a new MIDI 2 device, we'll add the group number. Otherwise, we'll leave
+                // off the differentiator. This is in testing with community. If you still see this in 
+                // after the Canary period ends, then this was preferred :)
+                //
+                // The next step if this doesn't work is to see if the name is already used, and then
+                // add the differentiator only in that case.
+
+                if (nativeDataFormat == MidiDataFormats::MidiDataFormats_UMP)
                 {
-                    friendlyName = friendlyName + L" I-" + std::to_wstring(groupIndex+1);
+                    // append the flow(Input or Output) & group number (group index + 1) to the friendly name.
+                    if (MidiFlowIn == (MidiFlow)flow)
+                    {
+                        friendlyName = friendlyName + L" I-" + std::to_wstring(groupIndex + 1);
+                    }
+                    else
+                    {
+                        friendlyName = friendlyName + L" O-" + std::to_wstring(groupIndex + 1);
+                    }
                 }
                 else
                 {
-                    friendlyName = friendlyName + L" O-" + std::to_wstring(groupIndex+1);
+                    // native bytestream port. Leaving off the differentiator for now per Canary note above.
                 }
+
                 interfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(friendlyName.c_str()) + 1)), (PVOID)friendlyName.c_str() });
 
