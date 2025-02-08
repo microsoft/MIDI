@@ -408,6 +408,9 @@ CMidiXProc::SendMidiMessage(
                 retry = true;
                 continue;
             }
+
+            // couldn't find room. 
+
         }
     }while (retry);
 
