@@ -26,7 +26,7 @@
 #include "MidiXProc.h"
 
 // infinite timeouts when waiting for read events cause the server to just hang
-#define MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT 2000
+#define MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT 5000
 
 _Use_decl_annotations_
 HRESULT
