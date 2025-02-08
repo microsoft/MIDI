@@ -92,7 +92,7 @@ void DisplayStatusByte(byte status)
     else
     {
         std::cout << std::endl;
-        std::cout << std::hex << std::setw(2) << dye::aqua((uint16_t)status);
+        std::cout << std::hex << std::setw(2) << dye::light_purple((uint16_t)status);
     }
 }
 
@@ -220,9 +220,9 @@ int __cdecl main()
 
     if (auto const& port = m_midiInputDevices.find(portNumber); port != m_midiInputDevices.end())
     {
-        std::cout << dye::yellow("Monitoring ");
+        std::cout << dye::aqua("Monitoring ");
         std::wcout << port->second.szPname;
-        std::cout << dye::yellow(" for input. Hit escape to cancel.");
+        std::cout << dye::aqua(" for input. Hit escape to cancel.");
         std::cout << std::endl << std::endl;
 
     }

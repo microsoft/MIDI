@@ -79,6 +79,20 @@
                             Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
         </Component>
 
+        <!-- Install MIDI 1 monitor Utility -->
+        <Component Id="Midi1MonitorUtility"
+                   Bitness="always64"
+                   Directory="TOOLSROOT_INSTALLFOLDER"
+                   Guid="7f65432f-5f95-4e8d-9e1b-c25405868244"  >
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1monitor.exe" Vital="true" />
+
+            <!-- Add folder to path -->
+            <Environment Id="AddMidi1MonitorUtilityToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes"
+                            Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
+        </Component>
+
+
 
         <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
         <Component Id="WindowsMidiServicesAppSdkImplementationRegEntries"
@@ -100,6 +114,7 @@
             <ComponentRef Id="MidiDiagUtility"/>
             <ComponentRef Id="MidiUsbUtility"/>
             <ComponentRef Id="MidiMdnsUtility"/>
+            <ComponentRef Id="Midi1MonitorUtility"/>
         </Feature>
 
     </Package>
