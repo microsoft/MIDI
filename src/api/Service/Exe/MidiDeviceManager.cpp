@@ -1489,11 +1489,11 @@ CMidiDeviceManager::UpdateEndpointProperties
                 { PKEY_MIDI_CustomPortNumber, false, 0, 0 },
                 { PKEY_MIDI_CustomEndpointName, false, 0, 0 },
                 { PKEY_MIDI_GroupTerminalBlocks, false, 0, 0 },
-                { PKEY_MIDI_FunctionBlockDeclaredCount, false, 0, 0 },
+              /*  {PKEY_MIDI_FunctionBlockDeclaredCount, false, 0, 0},
                 { PKEY_MIDI_FunctionBlocksAreStatic, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlocksLastUpdateTime, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlock00, true, PKEY_MIDI_FunctionBlock00.pid, PKEY_MIDI_FunctionBlock31.pid },
-                { PKEY_MIDI_FunctionBlockName00, true, PKEY_MIDI_FunctionBlockName00.pid, PKEY_MIDI_FunctionBlockName31.pid },
+                { PKEY_MIDI_FunctionBlockName00, true, PKEY_MIDI_FunctionBlockName00.pid, PKEY_MIDI_FunctionBlockName31.pid }, */
                 { PKEY_MIDI_EndpointDiscoveryProcessComplete, false, 0, 0 },
                 };
 
