@@ -55,6 +55,7 @@ private:
     LONGLONG m_context{ 0 };
 
     bool m_inInitialFunctionBlockDiscovery{ false };
+    DWORD m_discoveryTimeoutMS{ MIDI_DISCOVERY_TIMEOUT_DEFAULT_VALUE };
 
     wil::unique_event_nothrow m_endProcessing;
     wil::unique_event_nothrow m_allInitialDiscoveryAndNegotiationMessagesReceived;

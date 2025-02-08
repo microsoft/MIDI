@@ -9,6 +9,7 @@
 #include "stdafx.h"
 #include "ks.h"
 #include "Midi2KSAggregateTransport.h"
+#include "Midi2KSTransport.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -2456,7 +2457,18 @@ CMidiDeviceManager::SyncMidi1Ports(
                         transportId = winrt::unbox_value<winrt::guid>(prop);
                     }
 
-                    if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)))
+                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
+                    if (prop)
+                    {
+                        nativeDataFormat = (MidiDataFormats)winrt::unbox_value<uint8_t>(prop);
+                        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
+                            DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
+                    }
+
+                    // KSA uses port names for the GTB names. But the new MIDI 2.0 UMP driver
+                    // does the same for MIDI 1.0 devices. So we check both KSA and KS here.
+                    if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)) ||
+                        (transportId == winrt::guid(__uuidof(Midi2KSTransport)) && nativeDataFormat == MidiDataFormats::MidiDataFormats_ByteStream))
                     {
                         usePortInfoName = true;
                     }
@@ -2505,13 +2517,6 @@ CMidiDeviceManager::SyncMidi1Ports(
                             DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(dataFormats)) });
                     }
 
-                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
-                    if (prop)
-                    {
-                        nativeDataFormat = (MidiDataFormats) winrt::unbox_value<uint8_t>(prop);
-                        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-                            DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
-                    }
                 }
 
                 // Create the friendly name for this interface and add it to the properties list

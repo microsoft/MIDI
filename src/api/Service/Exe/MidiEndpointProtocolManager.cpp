@@ -49,6 +49,7 @@ CMidiEndpointProtocolManager::Initialize(
         m_discoveryAndProtocolNegotiationEnabled = true;
     }
 
+
     // we only spin this all up if negotiation is enabled
     if (m_discoveryAndProtocolNegotiationEnabled)
     {

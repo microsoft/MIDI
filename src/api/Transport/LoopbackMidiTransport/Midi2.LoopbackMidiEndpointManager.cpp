@@ -315,9 +315,32 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
     capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
     commonProperties.Capabilities = (MidiEndpointCapabilities) capabilities;
 
+
+    // add a single group terminal block in each direction to support MIDI 1.0 port creation without creating 16 ins and 16 outs.
+
+    std::vector<internal::GroupTerminalBlockInternal> blocks{ };
+
+    internal::GroupTerminalBlockInternal gtb;
+    gtb.Number = 1;             // gtb indexes start at 1
+    gtb.GroupCount = 1;         // todo: we could get this from properties
+    gtb.FirstGroupIndex = 0;    // group indexes start at 0
+    gtb.Protocol = 0x11;        // 0x11 = MIDI 2.0
+    gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL;
+    gtb.Name = L"IO";           // todo: we could get this from properties so folks can control the port name
+
+    blocks.push_back(gtb);
+    
+    std::vector<std::byte> groupTerminalBlockData;
+    if (internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, groupTerminalBlockData))
+    {
+        interfaceDeviceProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data() });
+    }
+
+
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
-        false,                                                  // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
+        definition->UMPOnly,                                    // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
         (ULONG)interfaceDeviceProperties.size(),

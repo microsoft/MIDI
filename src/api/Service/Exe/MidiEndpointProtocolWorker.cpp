@@ -30,6 +30,22 @@ CMidiEndpointProtocolWorker::Initialize(
         TraceLoggingWideString(endpointDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
+
+    DWORD discoveryTimeoutMS{ MIDI_DISCOVERY_TIMEOUT_DEFAULT_VALUE };
+    if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_DISCOVERY_TIMEOUT_REG_VALUE, &discoveryTimeoutMS)))
+    {
+        discoveryTimeoutMS = max(discoveryTimeoutMS, MIDI_DISCOVERY_TIMEOUT_MINIMUM_VALUE);
+        discoveryTimeoutMS = min(discoveryTimeoutMS, MIDI_DISCOVERY_TIMEOUT_MAXIMUM_VALUE);
+
+        m_discoveryTimeoutMS = discoveryTimeoutMS;
+    }
+    else
+    {
+        // default discovery to enabled if the reg key is inaccessible in some way
+        m_discoveryTimeoutMS = MIDI_DISCOVERY_TIMEOUT_DEFAULT_VALUE;
+    }
+
+
     m_transportId = transportId;
     m_sessionId = sessionId;
     m_endpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
@@ -245,8 +261,7 @@ CMidiEndpointProtocolWorker::Start(
         LOG_IF_FAILED(RequestAllEndpointDiscoveryInformation());
 
         // hang out until all info comes in or we time out
-        DWORD timeoutMilliseconds{ 20000 };
-        m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(timeoutMilliseconds);
+        m_allInitialDiscoveryAndNegotiationMessagesReceived.wait(m_discoveryTimeoutMS);
 
         RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
 
