@@ -2529,13 +2529,15 @@ CMidiDeviceManager::SyncMidi1Ports(
                     friendlyName = baseFriendlyName;
                 }
 
-
                 // if the device is a new MIDI 2 device, we'll add the group number. Otherwise, we'll leave
                 // off the differentiator. This is in testing with community. If you still see this in 
                 // after the Canary period ends, then this was preferred :)
                 //
                 // The next step if this doesn't work is to see if the name is already used, and then
                 // add the differentiator only in that case.
+                // 
+                // May also be good to, even if it's a UMP device, not add the differentiator if there's
+                // only one active group. Example: the Iridium only lists Group 1
 
                 if (nativeDataFormat == MidiDataFormats::MidiDataFormats_UMP)
                 {
