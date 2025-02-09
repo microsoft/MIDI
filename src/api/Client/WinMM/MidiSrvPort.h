@@ -46,8 +46,6 @@
                     status == MIDI_SONGSELECT)
 
 #define MIDI_MESSAGE_IS_ONE_BYTE(status) ( \
-                    status == MIDI_PROGRAMCHANGE || \
-                    status == MIDI_MONOAFTERTOUCH || \
                     status == MIDI_TIMINGCLOCK || \
                     status == MIDI_TUNEREQUEST || \
                     status == MIDI_START || \
@@ -136,4 +134,4 @@ private:
     wil::unique_event m_BuffersAdded{wil::EventOptions::None};
 
     std::unique_ptr<CMidi2MidiSrv> m_MidisrvTransport;
-};
+};
