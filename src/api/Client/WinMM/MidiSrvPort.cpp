@@ -720,9 +720,30 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
         // This should be on an initialized midi out port
         RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidisrvTransport);
 
+        // NOTE: sizeof(midiMessage) there is not correct for how the service reads data. This results
+        // in extra 00 byte data being sent to the service, and then in the translator, being read as
+        // running status values for the initial status byte.
+
+        UINT messageSize{ sizeof(UINT32) };
+        byte status = midiMessage & 0x000000FF;
+        //byte* messagePointer = (byte*)(&midiMessage);
+
+        if (MIDI_MESSAGE_IS_ONE_BYTE(status))
+        {
+            messageSize = 1;
+        }
+        else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
+        {
+            messageSize = 2;
+        }
+        else if (MIDI_MESSAGE_IS_THREE_BYTES(status))
+        {
+            messageSize = 3;
+        }
+
         // send the message to the transport
         // pass a timestamp of 0 to bypass scheduler
-        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, sizeof(midiMessage), 0));
+        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, messageSize, 0));
     }
 
     return S_OK;
