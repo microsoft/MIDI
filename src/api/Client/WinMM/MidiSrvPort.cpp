@@ -431,7 +431,6 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         DWORD callbackDataRemaining {size};
         BYTE *callbackData = (BYTE *)data;
 
-
         // The data in here is all coming from midisrv, so we can make a few assumptions:
         // 
         // 1. No running status. Messages translated from UMP to bytestream do not use
@@ -548,8 +547,13 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     else
                     {
                         // This is bad data. Could be the rest of an interrupted SysEx message.
-                        // Either way, discarding it here because we are not in SysEx and we do not
-                        // have a valid status byte yet for it to be a regular message.
+                        // We can just discard it, but it could be better for the receiving program
+                        // to do that. We could even put in a reg setting to control this behavior.
+
+                        // Convert from the QPC time to the number of ticks elapsed from the start time.
+                        DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                        UINT32 midiMessage = *callbackData;
+                        WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
                     }
                 }
             }
