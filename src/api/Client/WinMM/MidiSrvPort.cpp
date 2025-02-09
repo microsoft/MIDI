@@ -728,22 +728,32 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
         byte status = midiMessage & 0x000000FF;
         //byte* messagePointer = (byte*)(&midiMessage);
 
-        if (MIDI_MESSAGE_IS_ONE_BYTE(status))
+        // if it's a valid status byte, then figure
+        // out the actual size of the message. If it's
+        // not a valid status byte, then we just drop it
+        if (MIDI_BYTE_IS_STATUS_BYTE(status))
         {
-            messageSize = 1;
-        }
-        else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
-        {
-            messageSize = 2;
-        }
-        else if (MIDI_MESSAGE_IS_THREE_BYTES(status))
-        {
-            messageSize = 3;
-        }
+            if (MIDI_MESSAGE_IS_ONE_BYTE(status))
+            {
+                messageSize = 1;
+            }
+            else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
+            {
+                messageSize = 2;
+            }
+            else if (MIDI_MESSAGE_IS_THREE_BYTES(status))
+            {
+                messageSize = 3;
+            }
 
-        // send the message to the transport
-        // pass a timestamp of 0 to bypass scheduler
-        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, messageSize, 0));
+            // send the message to the transport
+            // pass a timestamp of 0 to bypass scheduler
+            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, messageSize, 0));
+        }
+        else
+        {
+            return E_INVALIDARG;
+        }
     }
 
     return S_OK;
@@ -789,7 +799,8 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         // TODO: based on the buffer length, this message may require chunking into smaller
         // pieces to ensure it fits into the cross process queue.
         // 
-        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBytesRecorded, 0));
+        //RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBytesRecorded, 0));
+        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBufferLength, 0));
     }
 
     // mark the buffer as completed
