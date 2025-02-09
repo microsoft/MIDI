@@ -767,7 +767,8 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         // pass a timestamp of 0 to bypass scheduler
         // TODO: based on the buffer length, this message may require chunking into smaller
         // pieces to ensure it fits into the cross process queue.
-        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBufferLength, 0));
+        // 
+        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBytesRecorded, 0));
     }
 
     // mark the buffer as completed
