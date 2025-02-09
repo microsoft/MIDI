@@ -30,6 +30,7 @@ BEGIN
     IDS_SUBMIXER_MUTE_SHORT         "Mute"
     IDS_SUBMIXER_MUTE_LONG          "Mute"
 
-    IDS_MIDI_UNAVAILABLE_ENDPOINT   "(unavailable)"
+    IDS_MIDI_UNAVAILABLE_ENDPOINT       "(unavailable)"
+    IDS_MIDI_DEFAULT_WINMM_SESSION_NAME "WinMM client"
 END
 
