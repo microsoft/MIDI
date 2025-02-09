@@ -197,7 +197,7 @@ CMidi2LoopbackMidiEndpointManager::DeleteSingleEndpoint(
         TraceLoggingWideString(definition.EndpointDescription.c_str(), "description")
     );
 
-    return m_MidiDeviceManager->DeactivateEndpoint(definition.CreatedShortClientInstanceId.c_str());
+    return m_MidiDeviceManager->RemoveEndpoint(definition.CreatedShortClientInstanceId.c_str());
 }
 
 
