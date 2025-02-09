@@ -440,15 +440,19 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         // 2. Messages that fit into a single UMP will not be interrupted by system
         //    real-time messages. So the MIDI 1.0 scenario where a clock message could
         //    show up in between the data bytes in a channel voice message will not 
-        //    happen here.
+        //    happen here. It's easy enough to handle that, but not required.
         // 
         // 3. SysEx messages could be interrupted by system real-time messages, so 
         //    we do need to handle that case. 
         // 
         // 4. SysEx messages could be interrupted by non-sysex, non-real-time messages
+        //    and so need to be terminated.
         //
         // 5. SysEx messages could be incomplete. It's possible to send a SysEx start
-        //    UMP and never send a SysEx complete UMP
+        //    UMP and never send a SysEx complete UMP. Even in WinMM today, this never
+        //    sends the SysEx buffer because there is no timeout or anything with
+        //    the buffers. Fixing that is not in scope here, beyond making sure we
+        //    do not crash when it happens.
         //
         // 6. SysEx start messages could be incorrect. For example, we could get a 
         //    SysEx start message followed by another SysEx start message. This 
@@ -468,13 +472,13 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         // we process one byte at a time here
         while (callbackDataRemaining > 0 && started)
         {
-            // Handle all system real-time messages first
+            // Handle all system real-time messages first, no matter
+            // where they appear in a stream
             if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(*callbackData))
             {
                 // send the single-byte message immediately
                 // do not add it to the inProgressMidiMessage or any buffer even though
-                // this shouldn't happen with midisrv-supplied message data (this is here
-                // in case libmidi2 promotes real-time when other messages are in progress)
+                // this shouldn't happen with midisrv-supplied message data
 
                 immediateSingleByteMessage = *callbackData;
             }
@@ -489,6 +493,10 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                 }
                 else if (MIDI_BYTE_IS_SYSEX_START_STATUS(*callbackData))
                 {
+                    // we weren't in SysEx mode, and now we're kicking
+                    // into a SysEx stream
+
+                    // starting a new buffer of SysEx
                     {
                         auto lock = m_BuffersLock.lock();
                         if (!m_InBuffers.empty())
@@ -513,7 +521,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     {
                         // couldn't get the buffer and couldn't add the sysex start byte
                         // wait for either a buffer or the port to be stopped. 
-                        // Note: this blocks other data processing
+                        // Note: this blocks other data processing with an infinite wait
 
                         HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
                         WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
@@ -557,6 +565,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
 
                 if (buffer)
                 {
+                    // we have a status byte that is not the end status
                     if (MIDI_BYTE_IS_STATUS_BYTE(*callbackData) && !MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                     {
                         // other statuses do not get added to the buffer, so we handle it here.
@@ -567,9 +576,11 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                         // is not a real-time status byte will terminate current SysEx
                         RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, position));
 
-                        // spin back around so we reprocess this byte now that we've ended sysex
+                        // spin back around so we reprocess this byte now that we've terminated sysex
                         continue;
                     }
+
+                    // we have a data byte, or the end status. Either way, we're going to add it to the buffer.
                     else if (MIDI_BYTE_IS_DATA_BYTE(*callbackData) || MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                     {
                         // either the end byte or a data byte, for sysex. Either way, add it to the buffer
@@ -600,7 +611,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     HANDLE handles[] = { m_BuffersAdded.get(), m_Stopped.get() };
                     WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
 
-                    // now that we have a buffer, or have stopped, reprocess
+                    // now that we have a buffer, or have stopped, reprocess this byte or end the loop
                     continue;
                 }
 

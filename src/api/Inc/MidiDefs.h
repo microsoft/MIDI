@@ -93,6 +93,12 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 #define MIDI_DISCOVERY_ENABLED_REG_VALUE                L"Midi2DiscoveryEnabled"
 #define MIDI_DISCOVERY_ENABLED_REG_DEFAULT_VALUE        0x00000001
 
+#define MIDI_DISCOVERY_TIMEOUT_REG_VALUE                L"Midi2DiscoveryTimeoutMS"
+#define MIDI_DISCOVERY_TIMEOUT_DEFAULT_VALUE            10000
+#define MIDI_DISCOVERY_TIMEOUT_MINIMUM_VALUE            1000
+#define MIDI_DISCOVERY_TIMEOUT_MAXIMUM_VALUE            50000
+
+
 
 #define MIDI_ROOT_APP_SDK_REG_KEY                       MIDI_ROOT_REG_KEY L"\\Desktop App SDK Runtime"
 #define MIDI_APP_SDK_INSTALLED_REG_VALUE                L"Installed"

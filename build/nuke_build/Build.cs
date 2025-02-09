@@ -510,14 +510,15 @@ class Build : NukeBuild
                 Console.Out.WriteLine($"SolutionDir:   {solutionDir}");
                 Console.Out.WriteLine($"Platform:      {platform}");
 
-                string[] toolsDirectories =
+                string[] toolsDirectoriesNeedingSdkPackageUpdates =
                     {
                         Path.Combine(solutionDir, "mididiag"),
                         Path.Combine(solutionDir, "midiusbinfo"),
                         Path.Combine(solutionDir, "midimdnsinfo"),
+                        /* Path.Combine(solutionDir, "midi1monitor"), */
                     };
 
-                foreach (var projectFolder in toolsDirectories)
+                foreach (var projectFolder in toolsDirectoriesNeedingSdkPackageUpdates)
                 {
                     // only send paths that have a packages config in them
 
@@ -577,6 +578,7 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiksinfo" / stagingPlatform / Configuration.Release / $"midiksinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midimdnsinfo" / stagingPlatform / Configuration.Release / $"midimdnsinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midi1monitor" / stagingPlatform / Configuration.Release / $"midi1monitor.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
         });
 

@@ -77,33 +77,64 @@ void DisplayAllWinMMInputs()
 uint32_t m_countAllBytesReceived{ 0 };
 uint32_t m_countStatusBytesReceived{ 0 };
 
-void DisplayStatusByte(byte status)
+void DisplayStatusByte(byte status, bool isError)
 {
     if (status == MIDI_SYSEX)
     {
         std::cout << std::endl;
-        std::cout << std::hex << std::setw(2) << dye::yellow((uint16_t)status);
+        if (isError)
+        {
+            std::cout << std::hex << std::setw(2) << dye::light_red((uint16_t)status);
+        }
+        else
+        {
+            std::cout << std::hex << std::setw(2) << dye::yellow((uint16_t)status);
+        }
     }
     else if (status == MIDI_EOX)
     {
         std::cout << " ";
-        std::cout << std::hex << std::setw(2) << dye::yellow((uint16_t)status);
+
+        if (isError)
+        {
+            std::cout << std::hex << std::setw(2) << dye::light_red((uint16_t)status);
+        }
+        else
+        {
+            std::cout << std::hex << std::setw(2) << dye::yellow((uint16_t)status);
+        }
     }
     else
     {
         std::cout << std::endl;
-        std::cout << std::hex << std::setw(2) << dye::aqua((uint16_t)status);
+        if (isError)
+        {
+            std::cout << std::hex << std::setw(2) << dye::light_red((uint16_t)status);
+        }
+        else
+        {
+            std::cout << std::hex << std::setw(2) << dye::light_purple((uint16_t)status);
+        }
+
     }
 }
 
-void DisplayDataByte(byte data)
+void DisplayDataByte(byte data, bool isError)
 {
     std::cout << " ";
-    std::cout << std::setfill('0') << std::hex << std::setw(2) << dye::grey((uint16_t)data);
+
+    if (isError)
+    {
+        std::cout << std::setfill('0') << std::hex << std::setw(2) << dye::red((uint16_t)data);
+    }
+    else
+    {
+        std::cout << std::setfill('0') << std::hex << std::setw(2) << dye::grey((uint16_t)data);
+    }
 }
 
 
-void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp)
+void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
 {
     // message format 0 | data 2 | data 1 | status
 
@@ -111,24 +142,24 @@ void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp)
     byte data1 = (dwMidiMessage & 0x0000FF00) >> 8;
     byte data2 = (dwMidiMessage & 0x00FF0000) >> 16;
 
-    DisplayStatusByte(status);
+    DisplayStatusByte(status, isError);
     m_countStatusBytesReceived++;
     m_countAllBytesReceived++;
 
     if (MIDI_MESSAGE_IS_TWO_BYTES(status) || MIDI_MESSAGE_IS_THREE_BYTES(status))
     {
-        DisplayDataByte(data1);
+        DisplayDataByte(data1, isError);
         m_countAllBytesReceived++;
     }
 
     if (MIDI_MESSAGE_IS_THREE_BYTES(status))
     {
-        DisplayDataByte(data2);
+        DisplayDataByte(data2, isError);
         m_countAllBytesReceived++;
     }
 }
 
-void DisplayMidiLongMessage(LPMIDIHDR header, DWORD dwTimestamp)
+void DisplayMidiLongMessage(LPMIDIHDR header, DWORD dwTimestamp, bool error)
 {
     if (header)
     {
@@ -138,21 +169,19 @@ void DisplayMidiLongMessage(LPMIDIHDR header, DWORD dwTimestamp)
         {
             if (MIDI_BYTE_IS_STATUS_BYTE(*current))
             {
-                DisplayStatusByte(*current);
+                DisplayStatusByte(*current, error);
                 m_countStatusBytesReceived++;
                 m_countAllBytesReceived++;
             }
             else
             {
-                DisplayDataByte(*current);
+                DisplayDataByte(*current, error);
                 m_countAllBytesReceived++;
             }
 
             current++;
             m_countAllBytesReceived++;
         }
-
-
     }
     else
     {
@@ -183,15 +212,18 @@ void CALLBACK OnMidiMessageReceived(
     case MIM_CLOSE:
         break;
     case MIM_DATA:
-        DisplayMidiMessage(dwParam1, dwParam2);
+        DisplayMidiMessage(dwParam1, dwParam2, false);
         break;
     case MIM_LONGDATA:
-        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, dwParam2);
+        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, dwParam2, false);
         midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
         break;
     case MIM_ERROR:
+        DisplayMidiMessage(dwParam1, dwParam2, true);
         break;
     case MIM_LONGERROR:
+        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, dwParam2, true);
+        midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
         break;
     case MIM_MOREDATA:
         break;
@@ -200,7 +232,10 @@ void CALLBACK OnMidiMessageReceived(
     }
 }
 
-int __cdecl main()
+#define RETURN_INVALID_PORT_NUMBER 1
+#define RETURN_UNABLE_TO_OPEN_PORT 2
+
+int __cdecl main(int argc, char* argv[])
 {
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" Monitor a MIDI 1.0 port through WinMM/MME") << std::endl;
@@ -208,27 +243,47 @@ int __cdecl main()
 
     LoadWinMMDevices();
 
-    DisplayAllWinMMInputs();
-
     // enter number to monitor
 
     uint16_t portNumber{ 0 };
+    bool portNumberProvided{ false };
 
-    std::cout << std::endl;
-    WriteInfo("Enter port number to monitor:");
-    std::cin >> portNumber;
+    if (argc > 1)
+    {
+        try
+        {
+            portNumber = std::stoi(argv[1]);
+            portNumberProvided = true;
+        }
+        catch (...)
+        {
+            portNumber = 0;
+            portNumberProvided = false;
+        }
+    }
+
+    if (!portNumberProvided)
+    {
+        DisplayAllWinMMInputs();
+
+        std::cout << std::endl;
+        WriteInfo("Enter port number to monitor:");
+        std::cin >> portNumber;
+    }
+
 
     if (auto const& port = m_midiInputDevices.find(portNumber); port != m_midiInputDevices.end())
     {
-        std::cout << dye::yellow("Monitoring ");
+        std::cout << dye::aqua("Monitoring ");
         std::wcout << port->second.szPname;
-        std::cout << dye::yellow(" for input. Hit escape to cancel.");
+        std::cout << dye::aqua(" for input. Hit escape to cancel.");
         std::cout << std::endl << std::endl;
 
     }
     else
     {
-        WriteError("Invalid port number.");
+        WriteError(std::to_string(portNumber) + " is not a valid port number.");
+        return RETURN_INVALID_PORT_NUMBER;
     }
 
     if (midiInOpen(&m_hMidiIn, portNumber, (DWORD_PTR)&OnMidiMessageReceived, 0, CALLBACK_FUNCTION) == MMSYSERR_NOERROR)
@@ -245,6 +300,7 @@ int __cdecl main()
     else
     {
         WriteError("Unable to open port for input.");
+        return RETURN_UNABLE_TO_OPEN_PORT;
     }
 
     while (true)
