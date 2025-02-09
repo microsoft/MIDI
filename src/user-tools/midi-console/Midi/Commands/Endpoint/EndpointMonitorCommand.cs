@@ -34,8 +34,8 @@ namespace Microsoft.Midi.ConsoleApp
     {
         // we have this struct so we can separate the relatively fast received processing
         // and its calculations from the comparatively slow displays processing
-        private Queue<ReceivedMidiMessage> m_receivedMessagesQueue = new Queue<ReceivedMidiMessage>(2000);
-        private Queue<ReceivedMidiMessage> m_displayMessageQueue = new Queue<ReceivedMidiMessage>(1000);
+        private Queue<ReceivedMidiMessage> m_receivedMessagesQueue = new Queue<ReceivedMidiMessage>(4000);
+        private Queue<ReceivedMidiMessage> m_displayMessageQueue = new Queue<ReceivedMidiMessage>(2000);
         private Queue<ReceivedMidiMessage> m_fileWriterMessagesQueue = new Queue<ReceivedMidiMessage>(1000);
 
 
