@@ -103,8 +103,6 @@ namespace internal = ::WindowsMidiServicesInternal;
                     status == MIDI_SONGSELECT)
 
 #define MIDI_MESSAGE_IS_ONE_BYTE(status) ( \
-                    status == MIDI_PROGRAMCHANGE || \
-                    status == MIDI_MONOAFTERTOUCH || \
                     status == MIDI_TIMINGCLOCK || \
                     status == MIDI_TUNEREQUEST || \
                     status == MIDI_START || \
@@ -113,7 +111,6 @@ namespace internal = ::WindowsMidiServicesInternal;
                     status == MIDI_ACTIVESENSE || \
                     status == MIDI_RESET || \
                     status == MIDI_EOX)
-
 
 #define MIDI_MESSAGE_TERMINATES_RUNNING_STATUS(status) (\
                     status >= MIDI_SYSEX && \

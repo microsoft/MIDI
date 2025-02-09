@@ -463,7 +463,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         BYTE inProgressMidiMessage[3]{ 0 };         // status, data 1, data 2
         BYTE countMidiMessageBytesReceived = 0;
 
-        BYTE immediateSingleByteMessage{ 0 }; // real time or other single-byte message that could interrupt the in-progress message
+        BYTE prioritySingleByteMessage{ 0 }; // real time or other single-byte message that could interrupt the in-progress message
 
         LPMIDIHDR buffer{ nullptr };
 
@@ -479,7 +479,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                 // do not add it to the inProgressMidiMessage or any buffer even though
                 // this shouldn't happen with midisrv-supplied message data
 
-                immediateSingleByteMessage = *callbackData;
+                prioritySingleByteMessage = *callbackData;
             }
             else if (!m_IsInSysex)
             {
@@ -488,7 +488,10 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                 {
                     // we're not in SysEx mode, but this byte was provided
                     // so we'll send it anyway
-                    immediateSingleByteMessage = *callbackData;
+                    // Convert from the QPC time to the number of ticks elapsed from the start time.
+                    DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                    DWORD_PTR midiMessage = *callbackData;
+                    WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
                 }
                 else if (MIDI_BYTE_IS_SYSEX_START_STATUS(*callbackData))
                 {
@@ -539,10 +542,9 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                 {
                     // Handle a data byte, and not sysex.
 
-                    if (countMidiMessageBytesReceived > 0 && countMidiMessageBytesReceived < 3)
+                    if (countMidiMessageBytesReceived >= 1 && countMidiMessageBytesReceived < 3)
                     {
-                        inProgressMidiMessage[countMidiMessageBytesReceived] = *callbackData;
-                        countMidiMessageBytesReceived++;
+                        inProgressMidiMessage[countMidiMessageBytesReceived++] = *callbackData;
                     }
                     else
                     {
@@ -551,9 +553,9 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                         // to do that. We could even put in a reg setting to control this behavior.
 
                         // Convert from the QPC time to the number of ticks elapsed from the start time.
-                        DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
-                        UINT32 midiMessage = *callbackData;
-                        WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
+                        //DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                        //DWORD_PTR midiMessage = *callbackData;
+                        //WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
                     }
                 }
             }
@@ -621,40 +623,46 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
 
             }
 
-            if (immediateSingleByteMessage > 0)
+            if (MIDI_BYTE_IS_STATUS_BYTE(prioritySingleByteMessage))
             {
                 // Convert from the QPC time to the number of ticks elapsed from the start time.
                 DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
-                UINT32 midiMessage = *callbackData;
+                DWORD_PTR midiMessage{ prioritySingleByteMessage };
                 WinmmClientCallback(MIM_DATA, midiMessage, ticks);
 
-                immediateSingleByteMessage = 0;
+                prioritySingleByteMessage = 0;
             }
 
             // do we have a complete non-SysEx message to send? If so, send it
-            if (countMidiMessageBytesReceived == 3 && MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]) ||
-                countMidiMessageBytesReceived == 2 && MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) ||
-                countMidiMessageBytesReceived == 1 && MIDI_MESSAGE_IS_ONE_BYTE(inProgressMidiMessage[0]))
+            if (countMidiMessageBytesReceived > 0)
             {
-                // Convert from the QPC time to the number of ticks elapsed from the start time.
-                DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
-                UINT32 midiMessage{ inProgressMidiMessage[0] };
-                
-                if (MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) || MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]))
+                if (countMidiMessageBytesReceived == 3 && MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]) ||
+                    countMidiMessageBytesReceived == 2 && MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) ||
+                    countMidiMessageBytesReceived == 1 && MIDI_MESSAGE_IS_ONE_BYTE(inProgressMidiMessage[0]))
                 {
-                    midiMessage |= (inProgressMidiMessage[1] << 8);
+                    // Convert from the QPC time to the number of ticks elapsed from the start time.
+                    DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                    DWORD_PTR midiMessage{ static_cast<DWORD_PTR>(inProgressMidiMessage[0]) };
+
+                    if (MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) || MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]))
+                    {
+                        midiMessage |= (static_cast<DWORD_PTR>(inProgressMidiMessage[1]) << 8);
+                    }
+
+                    if (MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]))
+                    {
+                        midiMessage |= (static_cast<DWORD_PTR>(inProgressMidiMessage[2]) << 16);
+                    }
+
+                    WinmmClientCallback(MIM_DATA, midiMessage, ticks);
+
+                    // reset for next message
+                    countMidiMessageBytesReceived = 0;
+
+                    inProgressMidiMessage[0] = 0;
+                    inProgressMidiMessage[1] = 0;
+                    inProgressMidiMessage[2] = 0;
                 }
-
-                if (MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]))
-                {
-                    midiMessage |= (inProgressMidiMessage[2] << 16);
-                }
-
-                WinmmClientCallback(MIM_DATA, midiMessage, ticks);
-
-                // reset for next message
-                countMidiMessageBytesReceived = 0;
-                inProgressMidiMessage[0] = 0;
             }
 
             // move to the next byte of data in the loop
@@ -712,9 +720,30 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
         // This should be on an initialized midi out port
         RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidisrvTransport);
 
+        // NOTE: sizeof(midiMessage) there is not correct for how the service reads data. This results
+        // in extra 00 byte data being sent to the service, and then in the translator, being read as
+        // running status values for the initial status byte.
+
+        UINT messageSize{ sizeof(UINT32) };
+        byte status = midiMessage & 0x000000FF;
+        //byte* messagePointer = (byte*)(&midiMessage);
+
+        if (MIDI_MESSAGE_IS_ONE_BYTE(status))
+        {
+            messageSize = 1;
+        }
+        else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
+        {
+            messageSize = 2;
+        }
+        else if (MIDI_MESSAGE_IS_THREE_BYTES(status))
+        {
+            messageSize = 3;
+        }
+
         // send the message to the transport
         // pass a timestamp of 0 to bypass scheduler
-        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, sizeof(midiMessage), 0));
+        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, messageSize, 0));
     }
 
     return S_OK;
@@ -759,7 +788,8 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         // pass a timestamp of 0 to bypass scheduler
         // TODO: based on the buffer length, this message may require chunking into smaller
         // pieces to ensure it fits into the cross process queue.
-        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBufferLength, 0));
+        // 
+        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBytesRecorded, 0));
     }
 
     // mark the buffer as completed

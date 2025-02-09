@@ -44,13 +44,16 @@ public:
         TEST_METHOD(TestTranslateToBytesWithInterruptedSysEx7);
         TEST_METHOD(TestTranslateToBytesWithCanceledSysEx7);
 
-    void InternalTestSysEx(
+        TEST_METHOD(TestProgramChangeFromBytes);
+        TEST_METHOD(TestProgramChangeToBytes);
+
+    void InternalTranslateMidi1BytesToUmpWords(
         _In_ uint8_t const groupIndex, 
         _In_reads_bytes_(byteCount) uint8_t const sysexBytes[], 
         _In_ uint32_t const byteCount, 
         _In_ std::vector<uint32_t> const expectedWords);
 
-    void InternalTestSysExFromBytes(
+    void InternalTranslateUmpWordsToMidi1Bytes(
         _In_ std::vector<uint32_t> const messageWords,
         _In_ std::vector<uint8_t> const expectedBytes);
 

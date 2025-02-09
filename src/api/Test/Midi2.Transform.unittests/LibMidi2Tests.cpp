@@ -16,7 +16,7 @@
 #include "libmidi2\umpToBytestream.h"
 
 _Use_decl_annotations_
-void LibMidi2Tests::InternalTestSysEx(
+void LibMidi2Tests::InternalTranslateMidi1BytesToUmpWords(
     uint8_t groupIndex, 
     uint8_t const sysexBytes[], 
     uint32_t const byteCount, 
@@ -71,7 +71,7 @@ void LibMidi2Tests::InternalTestSysEx(
 }
 
 _Use_decl_annotations_
-void LibMidi2Tests::InternalTestSysExFromBytes(
+void LibMidi2Tests::InternalTranslateUmpWordsToMidi1Bytes(
     std::vector<uint32_t> messageWords,
     std::vector<uint8_t> const expectedBytes)
 {
@@ -144,7 +144,7 @@ void LibMidi2Tests::TestTranslateFromBytesWithSysEx7()
         0x30351b1c, 0x1d1e1f00 
     };
 
-    InternalTestSysEx(0, sysexBytes, _countof(sysexBytes), expectedWords);
+    InternalTranslateMidi1BytesToUmpWords(0, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 void LibMidi2Tests::TestTranslateFromBytesWithSysEx7AndNonZeroGroup()
@@ -161,7 +161,7 @@ void LibMidi2Tests::TestTranslateFromBytesWithSysEx7AndNonZeroGroup()
         0x39351b1c, 0x1d1e1f00 
     };
 
-    InternalTestSysEx(9, sysexBytes, _countof(sysexBytes), expectedWords);
+    InternalTranslateMidi1BytesToUmpWords(9, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 
@@ -184,7 +184,7 @@ void LibMidi2Tests::TestTranslateFromBytesWithEmbeddedRealTimeAndSysEx7()
         0x30352b2c, 0x2d2e2f00
     };
 
-    InternalTestSysEx(0, sysexBytes, _countof(sysexBytes), expectedWords);
+    InternalTranslateMidi1BytesToUmpWords(0, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 
@@ -211,7 +211,7 @@ void LibMidi2Tests::TestTranslateFromBytesWithEmbeddedStartStopSysEx7()
         0x30027a7b, 0x00000000
     };
 
-    InternalTestSysEx(0, sysexBytes, _countof(sysexBytes), expectedWords);
+    InternalTranslateMidi1BytesToUmpWords(0, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 void LibMidi2Tests::TestTranslateFromBytesWithLongSysEx7()
@@ -229,8 +229,69 @@ void LibMidi2Tests::TestTranslateFromBytesWithLongSysEx7()
     //sysexBytes[0] = 0xf0;
     //sysexBytes[byteCount - 1] = 0xf7;
 
-    //InternalTestSysEx(0, sysexBytes, byteCount, expectedWords);
+    //InternalTranslateBytesToUmpWords(0, sysexBytes, byteCount, expectedWords);
 }
+
+
+void LibMidi2Tests::TestProgramChangeFromBytes()
+{
+    const uint8_t bytes[] =
+    {
+        0xC0, 0x12,
+        0xB0, 0x00, 0x40,
+        0xC0, 0x34,
+        0xB0, 0x20, 0x30,
+        0xC0, 0x56,
+        0xB0, 0x20, 0x20,
+        0xC0, 0x78,
+    };
+
+    std::vector<uint32_t> expectedWords
+    { 
+        0x20C01200,
+        0x20B00040,
+        0x20C03400,
+        0x20B02030,
+        0x20C05600,
+        0x20B02020,
+        0x20C07800,
+    };
+
+    InternalTranslateMidi1BytesToUmpWords(0, bytes, _countof(bytes), expectedWords);
+}
+
+void LibMidi2Tests::TestProgramChangeToBytes()
+{
+
+    std::vector<uint32_t> words
+    {
+        0x20C01200,
+        0x20B00040,
+        0x20C03400,
+        0x20B02030,
+        0x20C05600,
+        0x20B02020,
+        0x20C07800,
+    };
+
+    std::vector<uint8_t> bytes =
+    {
+        0xC0, 0x12,
+        0xB0, 0x00, 0x40,
+        0xC0, 0x34,
+        0xB0, 0x20, 0x30,
+        0xC0, 0x56,
+        0xB0, 0x20, 0x20,
+        0xC0, 0x78,
+    };
+
+    InternalTranslateUmpWordsToMidi1Bytes(words, bytes);
+}
+
+
+
+
+
 
 
 void LibMidi2Tests::TestTranslateFromBytesWithEmptySysEx7()
@@ -242,7 +303,7 @@ void LibMidi2Tests::TestTranslateFromBytesWithEmptySysEx7()
 
     std::vector<uint32_t> expectedWords{ 0x30000000, 0x00000000 };
 
-    InternalTestSysEx(0, sysexBytes, _countof(sysexBytes), expectedWords);
+    InternalTranslateMidi1BytesToUmpWords(0, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 void LibMidi2Tests::TestTranslateFromBytesWithShortSysEx7()
@@ -254,7 +315,7 @@ void LibMidi2Tests::TestTranslateFromBytesWithShortSysEx7()
 
     std::vector<uint32_t> expectedWords{ 0x30020a0b, 0x00000000 };
 
-    InternalTestSysEx(0, sysexBytes, _countof(sysexBytes), expectedWords);
+    InternalTranslateMidi1BytesToUmpWords(0, sysexBytes, _countof(sysexBytes), expectedWords);
 }
 
 
@@ -274,7 +335,7 @@ void LibMidi2Tests::TestTranslateToBytesWithSysEx7()
         0xF0, 0x08, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xF7
     };
 
-    InternalTestSysExFromBytes(input, expectedOutput);
+    InternalTranslateUmpWordsToMidi1Bytes(input, expectedOutput);
 
 }
 
@@ -296,7 +357,7 @@ void LibMidi2Tests::TestTranslateToBytesWithInterruptedSysEx7()
         0x06, 0x07, 0xF7
     };
 
-    InternalTestSysExFromBytes(input, expectedOutput);
+    InternalTranslateUmpWordsToMidi1Bytes(input, expectedOutput);
 }
 
 void LibMidi2Tests::TestTranslateToBytesWithCanceledSysEx7()
@@ -321,6 +382,6 @@ void LibMidi2Tests::TestTranslateToBytesWithCanceledSysEx7()
         0x06, 0x07, 0xF7    // rest of sysex, including F7
     };
 
-    InternalTestSysExFromBytes(input, expectedOutput);
+    InternalTranslateUmpWordsToMidi1Bytes(input, expectedOutput);
 
 }
