@@ -55,6 +55,11 @@ CMidiPorts::RuntimeClassInitialize()
 
     RETURN_IF_FAILED(UuidCreate(&m_SessionId));
 
+
+    WCHAR sessionName[MIDI_MAX_SESSION_NAME_LENGTH];
+    ::LoadStringW(HINST_WDMAUD2, IDS_MIDI_DEFAULT_WINMM_SESSION_NAME, sessionName, MIDI_MAX_SESSION_NAME_LENGTH);
+    m_SessionName = sessionName;
+
     std::unique_ptr<CMidi2MidiSrv> midiSrv(new (std::nothrow) CMidi2MidiSrv());
     RETURN_IF_NULL_ALLOC(midiSrv);
 

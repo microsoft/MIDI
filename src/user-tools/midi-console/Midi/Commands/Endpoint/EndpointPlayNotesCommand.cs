@@ -187,21 +187,22 @@ namespace Microsoft.Midi.ConsoleApp
 
                         if (settings.Midi2)
                         {
-                            UInt32 velocity = (UInt32)(settings.Velocity / 100.0) * UInt32.MaxValue;
+                            UInt32 velocity = (UInt32)(((float)settings.Velocity / 100.0) * UInt16.MaxValue) << 16;
+                            UInt16 note = (UInt16)((UInt16)settings.NoteIndexes![noteArrayIndex] << 8);
 
                             var noteOnMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
                                                                 group,
                                                                 Midi2ChannelVoiceMessageStatus.NoteOn,
                                                                 channel,
-                                                                (ushort)settings.NoteIndexes![noteArrayIndex],
+                                                                note,
                                                                 velocity);
 
                             noteOnSendResult = connection.SendSingleMessagePacket(noteOnMessage);
                         }
                         else
                         {
-                            byte velocity = (byte)settings.Velocity;
+                            byte velocity = (byte)((float)(settings.Velocity / 100.0) * 127);
 
                             var noteOnMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
@@ -231,21 +232,22 @@ namespace Microsoft.Midi.ConsoleApp
 
                             if (settings.Midi2)
                             {
-                                UInt32 velocity = (UInt32)(settings.Velocity / 100.0) * UInt32.MaxValue;
+                                UInt32 velocity = (UInt32)((float)(settings.Velocity / 100.0) * UInt16.MaxValue) << 16;
+                                UInt16 note = (UInt16)((UInt16)settings.NoteIndexes![noteArrayIndex] << 8);
 
                                 var noteOffMessage = MidiMessageBuilder.BuildMidi2ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
                                                                 group,
                                                                 Midi2ChannelVoiceMessageStatus.NoteOff,
                                                                 channel,
-                                                                (ushort)settings.NoteIndexes![noteArrayIndex],
+                                                                note,
                                                                 velocity);
 
                                 noteOffSendResult = connection.SendSingleMessagePacket(noteOffMessage);
                             }
                             else
                             {
-                                byte velocity = (byte)settings.Velocity;
+                                byte velocity = (byte)((float)(settings.Velocity / 100.0) * 127);
 
                                 var noteOffMessage = MidiMessageBuilder.BuildMidi1ChannelVoiceMessage(
                                                                 MidiClock.TimestampConstantSendImmediately,
