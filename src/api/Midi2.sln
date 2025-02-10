@@ -114,7 +114,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Midi2.VirtualMidiTransport"
 		{EFB7CF90-7DEF-44CF-868A-191CA30E0FCF} = {EFB7CF90-7DEF-44CF-868A-191CA30E0FCF}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Endpoint Transport Transports", "Endpoint Transport Transports", "{69CC5CD9-47DC-4118-A3C7-E0D071407185}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Endpoint Transports", "Endpoint Transports", "{69CC5CD9-47DC-4118-A3C7-E0D071407185}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Drivers", "Drivers", "{DDB8BEE6-BEDC-4AE8-8E61-67EE655E35EF}"
 EndProject

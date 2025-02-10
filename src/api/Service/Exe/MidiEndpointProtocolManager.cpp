@@ -45,8 +45,10 @@ CMidiEndpointProtocolManager::Initialize(
     }
     else
     {
-        m_discoveryAndProtocolNegotiationEnabled = false;
+        // default discovery to enabled if the reg key is inaccessible in some way
+        m_discoveryAndProtocolNegotiationEnabled = true;
     }
+
 
     // we only spin this all up if negotiation is enabled
     if (m_discoveryAndProtocolNegotiationEnabled)

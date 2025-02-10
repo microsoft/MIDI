@@ -9,6 +9,7 @@
 #include "stdafx.h"
 #include "ks.h"
 #include "Midi2KSAggregateTransport.h"
+#include "Midi2KSTransport.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -1489,11 +1490,11 @@ CMidiDeviceManager::UpdateEndpointProperties
                 { PKEY_MIDI_CustomPortNumber, false, 0, 0 },
                 { PKEY_MIDI_CustomEndpointName, false, 0, 0 },
                 { PKEY_MIDI_GroupTerminalBlocks, false, 0, 0 },
-                { PKEY_MIDI_FunctionBlockDeclaredCount, false, 0, 0 },
+              /*  {PKEY_MIDI_FunctionBlockDeclaredCount, false, 0, 0},
                 { PKEY_MIDI_FunctionBlocksAreStatic, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlocksLastUpdateTime, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlock00, true, PKEY_MIDI_FunctionBlock00.pid, PKEY_MIDI_FunctionBlock31.pid },
-                { PKEY_MIDI_FunctionBlockName00, true, PKEY_MIDI_FunctionBlockName00.pid, PKEY_MIDI_FunctionBlockName31.pid },
+                { PKEY_MIDI_FunctionBlockName00, true, PKEY_MIDI_FunctionBlockName00.pid, PKEY_MIDI_FunctionBlockName31.pid }, */
                 { PKEY_MIDI_EndpointDiscoveryProcessComplete, false, 0, 0 },
                 };
 
@@ -2456,7 +2457,18 @@ CMidiDeviceManager::SyncMidi1Ports(
                         transportId = winrt::unbox_value<winrt::guid>(prop);
                     }
 
-                    if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)))
+                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
+                    if (prop)
+                    {
+                        nativeDataFormat = (MidiDataFormats)winrt::unbox_value<uint8_t>(prop);
+                        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
+                            DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
+                    }
+
+                    // KSA uses port names for the GTB names. But the new MIDI 2.0 UMP driver
+                    // does the same for MIDI 1.0 devices. So we check both KSA and KS here.
+                    if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)) ||
+                        (transportId == winrt::guid(__uuidof(Midi2KSTransport)) && nativeDataFormat == MidiDataFormats::MidiDataFormats_ByteStream))
                     {
                         usePortInfoName = true;
                     }
@@ -2505,13 +2517,6 @@ CMidiDeviceManager::SyncMidi1Ports(
                             DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(dataFormats)) });
                     }
 
-                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_NativeDataFormat);
-                    if (prop)
-                    {
-                        nativeDataFormat = (MidiDataFormats) winrt::unbox_value<uint8_t>(prop);
-                        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NativeDataFormat, DEVPROP_STORE_SYSTEM, nullptr},
-                            DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
-                    }
                 }
 
                 // Create the friendly name for this interface and add it to the properties list
@@ -2529,15 +2534,33 @@ CMidiDeviceManager::SyncMidi1Ports(
                     friendlyName = baseFriendlyName;
                 }
 
-                // append the flow(Input or Output) & group number (group index + 1) to the friendly name.
-                if (MidiFlowIn == (MidiFlow) flow)
+                // if the device is a new MIDI 2 device, we'll add the group number. Otherwise, we'll leave
+                // off the differentiator. This is in testing with community. If you still see this in 
+                // after the Canary period ends, then this was preferred :)
+                //
+                // The next step if this doesn't work is to see if the name is already used, and then
+                // add the differentiator only in that case.
+                // 
+                // May also be good to, even if it's a UMP device, not add the differentiator if there's
+                // only one active group. Example: the Iridium only lists Group 1
+
+                if (nativeDataFormat == MidiDataFormats::MidiDataFormats_UMP)
                 {
-                    friendlyName = friendlyName + L" I-" + std::to_wstring(groupIndex+1);
+                    // append the flow(Input or Output) & group number (group index + 1) to the friendly name.
+                    if (MidiFlowIn == (MidiFlow)flow)
+                    {
+                        friendlyName = friendlyName + L" I-" + std::to_wstring(groupIndex + 1);
+                    }
+                    else
+                    {
+                        friendlyName = friendlyName + L" O-" + std::to_wstring(groupIndex + 1);
+                    }
                 }
                 else
                 {
-                    friendlyName = friendlyName + L" O-" + std::to_wstring(groupIndex+1);
+                    // native bytestream port. Leaving off the differentiator for now per Canary note above.
                 }
+
                 interfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(friendlyName.c_str()) + 1)), (PVOID)friendlyName.c_str() });
 

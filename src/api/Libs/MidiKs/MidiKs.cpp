@@ -280,12 +280,16 @@ KSMidiOutDevice::SendMidiMessage(
 
     if (m_CrossProcessMidiPump)
     {
-        return m_CrossProcessMidiPump->SendMidiMessage(midiData, length, position);
+        auto hr = m_CrossProcessMidiPump->SendMidiMessage(midiData, length, position);
+        LOG_IF_FAILED(hr);
+        return hr;
     }
     else
     {
         // using standard, write via standard streaming ioctls
-        return WritePacketMidiData(midiData, length, position);
+        auto hr = WritePacketMidiData(midiData, length, position);
+        LOG_IF_FAILED(hr);
+        return hr;
     }
 }
 
