@@ -371,6 +371,12 @@ CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
     return S_OK;
 }
 
+
+
+
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
@@ -579,6 +585,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                         // spin back around so we reprocess this byte now that we've terminated sysex
                         continue;
                     }
+
                     // we have a data byte, or the end status. Either way, we're going to add it to the buffer.
                     else if (MIDI_BYTE_IS_DATA_BYTE(*callbackData) || MIDI_BYTE_IS_SYSEX_END_STATUS(*callbackData))
                     {
