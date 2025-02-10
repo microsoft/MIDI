@@ -3,9 +3,9 @@ using Microsoft.UI.Xaml.Data;
 
 namespace Microsoft.Midi.Settings.Helpers;
 
-public partial class BooleanToEmojiCheckConverter : IValueConverter
+public partial class BooleanToFluentCheckConverter : IValueConverter
 {
-    public BooleanToEmojiCheckConverter()
+    public BooleanToFluentCheckConverter()
     {
     }
 
@@ -15,13 +15,13 @@ public partial class BooleanToEmojiCheckConverter : IValueConverter
         {
             if (val)
             {
-                return "☑️";
+                return "\uf16c";
             }
 
-            return "❌";
+            return "\uf16b";
         }
 
-        throw new ArgumentException("BooleanToEmojiCheckConverter object must be a bool");
+        throw new ArgumentException("BooleanToFluentCheckConverter object must be a bool");
     }
 
     public object? ConvertBack(object value, Type targetType, object parameter, string language)

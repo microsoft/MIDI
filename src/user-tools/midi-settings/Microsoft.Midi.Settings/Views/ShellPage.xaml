@@ -157,6 +157,15 @@
                 </NavigationViewItem>
                 -->
 
+                <NavigationViewItem x:Name="SectionDIAG" Visibility="Collapsed" x:Uid="Shell_EndpointsDiagnostic" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsDiagViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+
+
+
                 <NavigationViewItemHeader x:Uid="Shell_ManagementNavHeader"/>
 
 
@@ -173,7 +182,7 @@
                 
                 <NavigationViewItem x:Uid="Shell_PluginsTransport" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsTransportViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe912;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb4d;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <!--
@@ -184,7 +193,6 @@
                 </NavigationViewItem>
                 -->
 
-                <!--
                 <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
 
                 <NavigationViewItem x:Uid="Shell_ToolsSysEx" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel">
@@ -192,6 +200,8 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9f5;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+
+                <!--
                 <NavigationViewItem x:Uid="Shell_ToolsTest" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsTestViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
@@ -205,7 +215,7 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>-->
 
-
+<!--
                 <NavigationViewItemHeader x:Uid="Shell_Midi1ApiNavHeader"/>
 
                 <NavigationViewItem x:Uid="Shell_WinRTMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinRTMidi1DevicesViewModel">
@@ -214,12 +224,12 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <!--<NavigationViewItem x:Uid="Shell_WinMMMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinMMMidi1DevicesViewModel">
+                <NavigationViewItem x:Uid="Shell_WinMMMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinMMMidi1DevicesViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
-                </NavigationViewItem>-->
-
+                </NavigationViewItem>
+-->
 
                 <!--
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>
