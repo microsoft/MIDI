@@ -21,6 +21,8 @@ public class PageService : IPageService
         Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
         Configure<EndpointsNet2UdpViewModel, EndpointsNet2UdpPage>();
 
+        Configure<EndpointsDiagViewModel, EndpointsDiagPage>();
+
 
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
         Configure<RoutesViewModel, RoutesPage>();

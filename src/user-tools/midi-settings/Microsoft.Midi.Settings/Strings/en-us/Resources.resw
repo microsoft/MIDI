@@ -378,4 +378,37 @@
   <data name="DeviceDetailPage_ParentDeviceExpander.Description" xml:space="preserve">
     <value>Devices may have more than one MIDI Endpoint. This is the parent device for this endpoint.</value>
   </data>
+  <data name="Shell_EndpointsDiagnostic.Content" xml:space="preserve">
+    <value>Diagnostic</value>
+  </data>
+  <data name="CommonTasks_SetServiceAutoStart.Text" xml:space="preserve">
+    <value>Set MIDI Service to auto-start at boot (requires Administrator account)</value>
+  </data>
+  <data name="CommonTasks_AssignMidi1DeviceToNewDriver.Text" xml:space="preserve">
+    <value>Set a USB MIDI 1.0 device to use the new fast UMP MIDI 2.0 driver (requires Administrator account)</value>
+  </data>
+  <data name="CommonTasks_CreateLoopbackEndpoints.Text" xml:space="preserve">
+    <value>Create a loopback endpoint so two or more applications can communicate using MIDI messages</value>
+  </data>
+  <data name="CommonTasks_SendSysExFile.Text" xml:space="preserve">
+    <value>Send a file of System Exclusive data (patches, firmware, etc.) to an endpoint</value>
+  </data>
+  <data name="CommonTasks_CaptureMidiDiag.Text" xml:space="preserve">
+    <value>Capture MIDI Diagnostics information to a text file for use with technical support</value>
+  </data>
+  <data name="CommonTasks_OpenConsole.Text" xml:space="preserve">
+    <value>Open Windows MIDI Services Console</value>
+  </data>
+  <data name="CommonTasks_SetUpNetworkMidi2.Text" xml:space="preserve">
+    <value>Set up Network MIDI 2.0 to enable MIDI messages to be sent to other devices on your local network.</value>
+  </data>
+  <data name="CommonTasksGroup_Endpoints.Text" xml:space="preserve">
+    <value>Endpoints</value>
+  </data>
+  <data name="CommonTasksGroup_ServiceAndDrivers.Text" xml:space="preserve">
+    <value>Service and Drivers</value>
+  </data>
+  <data name="CommonTasksGroup_Other.Text" xml:space="preserve">
+    <value>Other</value>
+  </data>
 </root>

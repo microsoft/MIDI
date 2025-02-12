@@ -59,73 +59,86 @@
                         <StackPanel>
                             <TextBlock Text="Common MIDI tasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
                             <TextBlock Text="Common tasks and settings for Windows MIDI Services." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
-                            <TextBlock Text="PREVIEW NOTE: These are not yet enabled." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                            <TextBlock Text="PREVIEW NOTE: Some of these are not yet enabled." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
                         </StackPanel>
                     </controls:SettingsExpander.Header>
                     <controls:SettingsExpander.Items>
 
-                        <controls:SettingsCard IsClickEnabled="True">
-                            <controls:SettingsCard.Header>
-                                <TextBlock Text="Set MIDI Service to auto-start at boot (requires Administrator account)" TextWrapping="WrapWholeWords" />
-                            </controls:SettingsCard.Header>
-                            <controls:SettingsCard.HeaderIcon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef31;" Style="{StaticResource CommonTasksIconStyles}"/>
-                            </controls:SettingsCard.HeaderIcon>
-                        </controls:SettingsCard>
+                        <Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0">
+                            <TextBlock x:Uid="CommonTasksGroup_Endpoints" Style="{StaticResource HomeCardItemSeparatorStyle}" />
+                        </Border>
 
-                        <controls:SettingsCard IsClickEnabled="True">
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="True">
                             <controls:SettingsCard.Header>
-                                <TextBlock Text="Set a USB MIDI 1.0 device to use the new fast UMP MIDI 2.0 driver (requires Administrator account)" TextWrapping="WrapWholeWords" />
-                            </controls:SettingsCard.Header>
-                            <controls:SettingsCard.HeaderIcon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb9d;" Style="{StaticResource CommonTasksIconStyles}"/>
-                            </controls:SettingsCard.HeaderIcon>
-                        </controls:SettingsCard>
-
-                        <controls:SettingsCard IsClickEnabled="True">
-                            <controls:SettingsCard.Header>
-                                <TextBlock Text="Create a loopback endpoint so two applications can talk to each other over MIDI" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="CommonTasks_CreateLoopbackEndpoints" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
                             <controls:SettingsCard.HeaderIcon>
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8ee;" Style="{StaticResource CommonTasksIconStyles}"/>
                             </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
-                        <controls:SettingsCard IsClickEnabled="True">
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
                             <controls:SettingsCard.Header>
-                                <TextBlock Text="View all current Universal MIDI Packet (UMP) Endpoints" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="CommonTasks_SetUpNetworkMidi2" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
                             <controls:SettingsCard.HeaderIcon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe772;" Style="{StaticResource CommonTasksIconStyles}"/>
-                            </controls:SettingsCard.HeaderIcon>                            
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xee77;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
-                        <controls:SettingsCard IsClickEnabled="True">
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="True">
                             <controls:SettingsCard.Header>
-                                <TextBlock Text="Send System Exclusive data to a device" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="CommonTasks_SendSysExFile" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
                             <controls:SettingsCard.HeaderIcon>
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe898;" Style="{StaticResource CommonTasksIconStyles}"/>
                             </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
-                        <controls:SettingsCard IsClickEnabled="True">
+                        <Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0,1,0,0">
+                            <TextBlock x:Uid="CommonTasksGroup_ServiceAndDrivers" Style="{StaticResource HomeCardItemSeparatorStyle}"/>
+                        </Border>
+
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
                             <controls:SettingsCard.Header>
-                                <TextBlock Text="Open Windows MIDI Services Console" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="CommonTasks_SetServiceAutoStart" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef31;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <TextBlock x:Uid="CommonTasks_AssignMidi1DeviceToNewDriver" TextWrapping="WrapWholeWords" />
+                            </controls:SettingsCard.Header>
+                            <controls:SettingsCard.HeaderIcon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb9d;" Style="{StaticResource CommonTasksIconStyles}"/>
+                            </controls:SettingsCard.HeaderIcon>
+                        </controls:SettingsCard>
+
+                        <Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0,1,0,0">
+                            <TextBlock x:Uid="CommonTasksGroup_Other" Style="{StaticResource HomeCardItemSeparatorStyle}"/>
+                        </Border>
+
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
+                            <controls:SettingsCard.Header>
+                                <TextBlock x:Uid="CommonTasks_OpenConsole" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
                             <controls:SettingsCard.HeaderIcon>
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;" Style="{StaticResource CommonTasksIconStyles}"/>
                             </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
-                        <controls:SettingsCard IsClickEnabled="True">
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
                             <controls:SettingsCard.Header>
-                                <TextBlock Text="Set up Network MIDI 2.0" TextWrapping="WrapWholeWords" />
+                                <TextBlock x:Uid="CommonTasks_CaptureMidiDiag" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
                             <controls:SettingsCard.HeaderIcon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xee77;" Style="{StaticResource CommonTasksIconStyles}"/>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe792;" Style="{StaticResource CommonTasksIconStyles}"/>
                             </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
+
 
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>

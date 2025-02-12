@@ -109,6 +109,9 @@ public partial class App : Application
             services.AddTransient<EndpointsLoopPage>();
             services.AddTransient<EndpointsLoopViewModel>();
 
+            services.AddTransient<EndpointsDiagPage>();
+            services.AddTransient<EndpointsDiagViewModel>();
+
 
             services.AddTransient<DeviceDetailPage>();
             services.AddTransient<DeviceDetailViewModel>();

@@ -35,3 +35,17 @@ void MidiGroupTests::TestInvalidData()
 
     VERIFY_ARE_EQUAL(g.Index(), 0x0C);
 }
+
+void MidiGroupTests::TestConstructor()
+{
+    // The class is designed to ignore the most significant nibble because
+    // that allows for passing in a full status + channel byte without pre-cleaning
+
+    MidiGroup g0(static_cast<uint8_t>(0));
+    MidiGroup g1(static_cast<uint8_t>(1));
+    MidiGroup g15(static_cast<uint8_t>(15));
+
+    VERIFY_ARE_EQUAL(g0.Index(), 0x0);
+    VERIFY_ARE_EQUAL(g1.Index(), 0x1);
+    VERIFY_ARE_EQUAL(g15.Index(), 0x15);
+}

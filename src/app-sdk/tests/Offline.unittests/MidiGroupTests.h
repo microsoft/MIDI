@@ -28,6 +28,7 @@ public:
     TEST_METHOD(TestBasics);
     TEST_METHOD(TestInvalidData);
     TEST_METHOD(TestLabels);
+    TEST_METHOD(TestConstructor);
 
 
 private:

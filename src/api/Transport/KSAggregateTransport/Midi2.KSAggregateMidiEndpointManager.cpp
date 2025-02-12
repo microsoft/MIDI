@@ -91,53 +91,53 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 
 
 
-// this will be used for the group terminal block name but also for the WinMM port name
-HRESULT
-CreateGroupTerminalBlockName(
-    _In_ std::wstring parentDeviceName,
-    _In_ std::wstring filterName,
-    _In_ std::wstring currentPinName, 
-    _Inout_ std::wstring& newGroupTerminalBlockName)
-{
-    std::wstring cleanedPinName{};
-
-    // MOTU-specific. We don't want to mess up other names, so check only for whole word
-    if (currentPinName == L"MIDI")
-    {
-        cleanedPinName = L"";
-    }
-    else
-    {
-        cleanedPinName = currentPinName;
-    }
-
-    // the double and triple space entries need to be last
-    // there are other ways to do this with pattern matching, 
-    // but just banging this through for this version
-    std::wstring wordsToRemove[] = 
-    { 
-        parentDeviceName, filterName, 
-        L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
-        L"  ", L"   ", L"    "
-    };
-
-    for (auto const& word : wordsToRemove)
-    {
-        if (cleanedPinName.length() >= word.length())
-        {
-            auto idx = cleanedPinName.find(word);
-
-            if (idx != std::wstring::npos)
-            {
-                cleanedPinName = cleanedPinName.erase(idx, word.length());
-            }
-        }
-    }
-
-    newGroupTerminalBlockName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
-
-    return S_OK;
-}
+//// this will be used for the group terminal block name but also for the WinMM port name
+//HRESULT
+//CreateGroupTerminalBlockName(
+//    _In_ std::wstring parentDeviceName,
+//    _In_ std::wstring filterName,
+//    _In_ std::wstring currentPinName, 
+//    _Inout_ std::wstring& newGroupTerminalBlockName)
+//{
+//    std::wstring cleanedPinName{};
+//
+//    // Used by ESI, MOTU, and others. We don't want to mess up other names, so check only for whole word
+//    if (currentPinName == L"MIDI")
+//    {
+//        cleanedPinName = L"";
+//    }
+//    else
+//    {
+//        cleanedPinName = currentPinName;
+//    }
+//
+//    // the double and triple space entries need to be last
+//    // there are other ways to do this with pattern matching, 
+//    // but just banging this through for this version
+//    std::wstring wordsToRemove[] = 
+//    { 
+//        parentDeviceName, filterName, 
+//        L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
+//        L"  ", L"   ", L"    "
+//    };
+//
+//    for (auto const& word : wordsToRemove)
+//    {
+//        if (cleanedPinName.length() >= word.length())
+//        {
+//            auto idx = cleanedPinName.find(word);
+//
+//            if (idx != std::wstring::npos)
+//            {
+//                cleanedPinName = cleanedPinName.erase(idx, word.length());
+//            }
+//        }
+//    }
+//
+//    newGroupTerminalBlockName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
+//
+//    return S_OK;
+//}
 
 
 typedef struct {
@@ -218,6 +218,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     std::vector<internal::GroupTerminalBlockInternal> blocks{ };
     std::vector<PinMapEntryStagingEntry> pinMapEntries{ };
 
+    std::vector<std::wstring> portNamesUserFlowOut{ };
+    std::vector<std::wstring> portNamesUserFlowIn{ };
+
     for (auto const& pin : masterEndpointDefinition.MidiPins)
     {
         RETURN_HR_IF(E_INVALIDARG, pin.FilterDeviceId.empty());
@@ -233,26 +236,78 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         pinMapEntry.FilterId = pin.FilterDeviceId;
         pinMapEntry.PinDataFlow = pin.PinDataFlow;
 
+        MidiFlow flowFromUserPerspective;
+
+
+        std::wstring userSuppliedPortName{};            // TODO: This should come from config file
+        bool useOldStyleNaming{ false };                // TODO: This should come from registry and property
+        std::wstring deviceContainerName{};             // TODO: Need to get this from the device info
+        std::wstring parentDeviceManufacturerName{};    // TODO: Need to get this from the parent device
+        bool isUsingVendorDriver{ false };              // TODO: Need to get this from the device information
+
+
         if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
         {
+            flowFromUserPerspective = MidiFlow::MidiFlowOut;
+
             pinMapEntry.GroupIndex = currentGtbInputGroupIndex;
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
             gtb.FirstGroupIndex = currentGtbInputGroupIndex;
             currentGtbInputGroupIndex++;
+
+            gtb.Name = internal::Midi1PortNaming::GenerateMidi1PortName(
+                useOldStyleNaming,                          // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
+                userSuppliedPortName,                       // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
+                deviceContainerName,                        // oddly some old WinMM code picks up the deviceContainerName somehow
+                masterEndpointDefinition.ParentDeviceName,  // the name of the actual connected device from which the UMP interface is generated
+                parentDeviceManufacturerName,               // the name of the parent device
+                pin.FilterName,                             // the name of the filter. This is sometimes the same as the parent device
+                pin.PinName,                                // the name of the KS Filter pin. This can be the same as the USB iJack
+                gtb.FirstGroupIndex,
+                flowFromUserPerspective,
+                false,                                      // this is not a native UMP device, it is a native byte stream device
+                isUsingVendorDriver,
+                true,                                       // we truncate to the WinMM max name limit (32 chars including nul)
+                portNamesUserFlowOut
+            );
+
+            // this is kept just so we can add ordinal differentiators if we need to
+            portNamesUserFlowOut.push_back(gtb.Name);
         }
         else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)
         {
+            flowFromUserPerspective = MidiFlow::MidiFlowIn;
+
             pinMapEntry.GroupIndex = currentGtbOutputGroupIndex;
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
             gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
             currentGtbOutputGroupIndex++;
+
+            gtb.Name = internal::Midi1PortNaming::GenerateMidi1PortName(
+                useOldStyleNaming,                          // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
+                userSuppliedPortName,                       // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
+                deviceContainerName,                        // oddly some old WinMM code picks up the deviceContainerName somehow
+                masterEndpointDefinition.ParentDeviceName,  // the name of the actual connected device from which the UMP interface is generated
+                parentDeviceManufacturerName,               // the name of the parent device
+                pin.FilterName,                             // the name of the filter. This is sometimes the same as the parent device
+                pin.PinName,                                // the name of the KS Filter pin. This can be the same as the USB iJack
+                gtb.FirstGroupIndex,
+                flowFromUserPerspective,
+                false,                                      // this is not a native UMP device, it is a native byte stream device
+                isUsingVendorDriver,
+                true,                                       // we truncate to the WinMM max name limit (32 chars including nul)
+                portNamesUserFlowIn
+            );
+
+            // this is kept just so we can add ordinal differentiators if we need to
+            portNamesUserFlowIn.push_back(gtb.Name);
         }
         else
         {
             RETURN_IF_FAILED(E_INVALIDARG);
         }
 
-        LOG_IF_FAILED(CreateGroupTerminalBlockName(masterEndpointDefinition.ParentDeviceName, pin.FilterName, pin.PinName, gtb.Name));
+        //LOG_IF_FAILED(CreateGroupTerminalBlockName(masterEndpointDefinition.ParentDeviceName, pin.FilterName, pin.PinName, gtb.Name));
 
         // default values as defined in the MIDI 2.0 USB spec
         gtb.Protocol = 0x01;                // midi 1.0
@@ -810,9 +865,19 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
 }
 
 _Use_decl_annotations_
-HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate)
+HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate update)
 {
     //see this function for info on the IDeviceInformationUpdate object: https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/enumerate-devices#enumerate-and-watch-devices
+
+    // NOTE: When you change the assigned driver for the device, instead of sending 
+    // separate remove/add events, this gets a couple of OnDeviceUpdate notifications.
+
+    for (auto const& prop : update.Properties())
+    {
+        OutputDebugString((std::wstring(L"KSA: ") + std::wstring(prop.Key().c_str())).c_str());
+    }
+
+
     return S_OK;
 }
 
