@@ -33,9 +33,9 @@ The `MidiGroup` class is used to provide formatting and data validation for MIDI
 ## Static Properties
 
 | `ShortLabel` | Returns the localized abbreviation. For example, "Gr" in English. |
-| `ShortLabelPlural` | Returns the localized abbreviation. For example, "Grs" in English. |
+| `ShortLabelPlural` | Returns the localized plural abbreviation. |
 | `LongLabel` | Returns the localized full name. For example, "Group" in English. |
-| `LongLabelPlural` | Returns the localized full name. For example, "Groups" in English. |
+| `LongLabelPlural` | Returns the localized full plural name.|
 
 ## Static Methods
 
