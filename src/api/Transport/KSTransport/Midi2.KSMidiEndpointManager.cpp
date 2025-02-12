@@ -847,9 +847,15 @@ HRESULT CMidi2KSMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInform
 }
 
 _Use_decl_annotations_
-HRESULT CMidi2KSMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate)
+HRESULT CMidi2KSMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate update)
 {
     //see this function for info on the IDeviceInformationUpdate object: https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/enumerate-devices#enumerate-and-watch-devices
+
+    for (auto const& prop : update.Properties())
+    {
+        OutputDebugString((std::wstring(L"KS: ") + std::wstring(prop.Key().c_str())).c_str() );
+    }
+
     return S_OK;
 }
 
