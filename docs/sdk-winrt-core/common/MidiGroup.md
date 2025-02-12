@@ -22,7 +22,8 @@ The `MidiGroup` class is used to provide formatting and data validation for MIDI
 
 ## Constructors
 
-| `MidiGroup(UInt8)` | Create a MidiGroup with the specified group Index (0-15) |
+| `MidiGroup()` | Create a MidiGroup initialized with group Index 0 |
+| `MidiGroup(UInt8)` | Create a MidiGroup with the specified group Index (0-15). C++ note: C++/WinRT creates a constructor which takes nullptr, as a result `MidiGroup(0)` will fail to compile if you have the compiler option set to equate 0 and nullptr. To avoid this, use `MidiGroup(static_cast<uint8_t>(0))` or simply `MidiGroup()` |
 
 ## Properties
 
