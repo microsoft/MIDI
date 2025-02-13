@@ -28,6 +28,8 @@
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
+#include <wil\registry.h>
+#include <wil\registry_helpers.h>
 
 #include <SDKDDKVer.h>
 
@@ -78,6 +80,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "resource_util.h"
 #include "ump_helpers.h"
 #include "MidiXProc.h"
+
 #include "midi_naming.h"
 
 
