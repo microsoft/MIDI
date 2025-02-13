@@ -48,7 +48,60 @@ winrt::hstring GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring 
     return value;
 }
 
-#define LINE_LENGTH 79
+#define LINE_LENGTH 125
+
+
+HRESULT
+GetKSDriverSuppliedName(_In_ HANDLE hInstantiatedFilter, _Inout_ std::wstring& name)
+{
+    // get the name GUID
+
+    KSCOMPONENTID componentId{};
+    KSPROPERTY prop{};
+    ULONG countBytesReturned{};
+
+    prop.Id = KSPROPERTY_GENERAL_COMPONENTID;
+    prop.Set = KSPROPSETID_General;
+    prop.Flags = KSPROPERTY_TYPE_GET;
+
+    auto hrComponent = SyncIoctl(
+        hInstantiatedFilter,
+        IOCTL_KS_PROPERTY,
+        &prop,
+        sizeof(KSPROPERTY),
+        &componentId,
+        sizeof(KSCOMPONENTID),
+        &countBytesReturned
+    );
+
+    if (SUCCEEDED(hrComponent))
+    {
+        if (componentId.Name != GUID_NULL)
+        {
+            // we have the GUID where this name is stored, so get the driver-supplied name from the registry
+
+            WCHAR nameFromRegistry[MAX_PATH]{ 0 };   // this should only be MAXPNAMELEN, but if someone tampered with it, could be larger, hence MAX_PATH
+
+            std::wstring regKey = L"SYSTEM\\CurrentControlSet\\Control\\MediaCategories\\" + internal::GuidToString(componentId.Name);
+
+            if (SUCCEEDED(wil::reg::get_value_string_nothrow(HKEY_LOCAL_MACHINE, regKey.c_str(), L"Name", nameFromRegistry)))
+            {
+                name = nameFromRegistry;
+                return S_OK;
+            }
+        }
+    }
+    else
+    {
+        RETURN_IF_FAILED(hrComponent);
+    }
+
+    return E_NOTFOUND;
+}
+
+
+
+
 
 int __cdecl main()
 {
@@ -76,7 +129,8 @@ int __cdecl main()
 
     // {4d36e96c-e325-11ce-bfc1-08002be10318} is the MEDIA class guid
     winrt::hstring mediaDeviceSelector(
-        L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\"");
+        L"System.Devices.ClassGuid:=\"{4d36e96c-e325-11ce-bfc1-08002be10318}\" AND " \
+        L"System.Devices.Present:=System.StructuredQueryType.Boolean#True");
 
     auto mediaDevices = DeviceInformation::FindAllAsync(mediaDeviceSelector, nullptr, DeviceInformationKind::Device).get();
 
@@ -93,7 +147,7 @@ int __cdecl main()
             }
 
             WriteLabel("Parent Device");
-            std::cout << dye::aqua(winrt::to_string(parentDevice.Name())) << std::endl;
+            std::cout << dye::light_aqua(winrt::to_string(parentDevice.Name())) << std::endl;
             WriteLabel(" - Instance Id");
             std::cout << dye::yellow(winrt::to_string(deviceInstanceId)) << std::endl;
 
@@ -109,17 +163,17 @@ int __cdecl main()
             {
                 WriteLabel(" - Filter Count");
                 std::cout << filterDevices.Size() << std::endl;
+                std::cout << std::endl;
 
                 for (auto const& filterDevice : filterDevices)
                 {
                     bool isMidi1Filter{ false };
 
-                    WriteLabel(" - KS Filter Name");
-                    std::cout << dye::light_aqua(winrt::to_string(filterDevice.Name())) << std::endl;
-
                     WriteLabel(" - Filter Id");
                     std::cout << dye::yellow(winrt::to_string(filterDevice.Id())) << std::endl;
 
+                    WriteLabel(" - KS Filter Name");
+                    std::cout << dye::light_aqua(winrt::to_string(filterDevice.Name())) << std::endl;
 
                     // instantiate the filter and then enumerate the pins
 
@@ -129,6 +183,23 @@ int __cdecl main()
                         std::cout << " - Failed to instantiate filter." << std::endl;
                         continue;
                     }
+
+                    std::wstring nameFromDriver{};
+                    auto driverNameHR = GetKSDriverSuppliedName(hFilter.get(), nameFromDriver);
+
+                    WriteLabel(" - KS Reported Name");
+                    if (SUCCEEDED(driverNameHR))
+                    {
+                        std::cout << hue::light_aqua;
+                        std::wcout << nameFromDriver;
+                        std::cout << hue::reset << std::endl;
+
+                    }
+                    else
+                    {
+                        std::cout << dye::grey("(not available)") << std::endl;
+                    }
+
 
                     ULONG cPins{ 0 };
 
@@ -148,7 +219,7 @@ int __cdecl main()
                         if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), pinIndex, MidiTransport_CyclicUMP, &hPin)))
                         {
                             std::cout << dye::grey("   Pin ") << dye::grey(pinIndex) << std::endl;
-                            std::cout << dye::grey("UMP Cyclic pin. Ignoring for this utility.") << std::endl;
+                            std::cout << dye::grey("    - UMP Cyclic pin (MIDI 2.0 driver). Ignoring for this utility.") << std::endl;
                             continue;
                         }
                         else if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), pinIndex, MidiTransport_StandardByteStream, &hPin)))
@@ -180,7 +251,7 @@ int __cdecl main()
                                 if (pinNameDataSize > 0)
                                 {
                                     std::wstring pinName{ pinNameData.get() };
-                                    std::cout << hue::aqua;
+                                    std::cout << hue::light_aqua;
                                     std::wcout << pinName;
                                     std::cout << hue::reset << std::endl;
                                 }
@@ -209,12 +280,12 @@ int __cdecl main()
                             {
                                 if (dataFlow == KSPIN_DATAFLOW_IN)
                                 {
-                                    std::cout << dye::purple("KSPIN_DATAFLOW_IN") << " Message Destination (MIDI 1.0 Out from PC to device)" << std::endl;
+                                    std::cout << dye::aqua("Message Destination") << dye::grey(" (KSPIN_DATAFLOW_IN: MIDI 1.0 Out from PC to device)") << std::endl;
 
                                 }
                                 else if (dataFlow == KSPIN_DATAFLOW_OUT)
                                 {
-                                    std::cout << dye::green("KSPIN_DATAFLOW_OUT") << " Message Source (MIDI 1.0 In to PC from device)" << std::endl;
+                                    std::cout << dye::aqua("Message Source") << dye::grey(" (KSPIN_DATAFLOW_OUT: MIDI 1.0 In to PC from device)") << std::endl;
 
                                 }
                                 else
@@ -224,7 +295,7 @@ int __cdecl main()
                             }
                             else
                             {
-                                std::cout << dye::red("Failed to get data flow") << std::endl;
+                                std::cout << dye::light_red("Failed to get data flow") << std::endl;
                             }
 
                         }
@@ -245,11 +316,11 @@ int __cdecl main()
             }
             else
             {
-                std::cout << " - Device has no KS_CATEGORY_AUDIO filters" << std::endl;
+                std::cout << dye::grey(" - Device has no enabled KS_CATEGORY_AUDIO filters available at this time.") << std::endl;
             }
 
             std::cout << std::endl;
-            std::cout << dye::grey("----------------------------------------------------------------------") << std::endl;
+            std::cout << dye::light_blue(std::string(LINE_LENGTH, '-')) << std::endl;
 
         }
     }

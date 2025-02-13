@@ -240,9 +240,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
 
         std::wstring userSuppliedPortName{};            // TODO: This should come from config file
-        bool useOldStyleNaming{ false };                // TODO: This should come from registry and property
+        bool useOldStyleNaming{ true };                // TODO: This should come from registry and property
         std::wstring deviceContainerName{};             // TODO: Need to get this from the device info
-        std::wstring parentDeviceManufacturerName{};    // TODO: Need to get this from the parent device
+        std::wstring deviceManufacturerName{};          // TODO: Need to get this from the parent device
         bool isUsingVendorDriver{ false };              // TODO: Need to get this from the device information
 
 
@@ -255,17 +255,17 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             gtb.FirstGroupIndex = currentGtbInputGroupIndex;
             currentGtbInputGroupIndex++;
 
-            gtb.Name = internal::Midi1PortNaming::GenerateMidi1PortName(
+            gtb.Name = internal::Midi1PortNaming::GenerateGtbNameFromMidi1Device(
                 useOldStyleNaming,                          // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
                 userSuppliedPortName,                       // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
                 deviceContainerName,                        // oddly some old WinMM code picks up the deviceContainerName somehow
+                pin.KSDriverSuppliedName,
                 masterEndpointDefinition.ParentDeviceName,  // the name of the actual connected device from which the UMP interface is generated
-                parentDeviceManufacturerName,               // the name of the parent device
+                deviceManufacturerName,                     // manufacturer name
                 pin.FilterName,                             // the name of the filter. This is sometimes the same as the parent device
                 pin.PinName,                                // the name of the KS Filter pin. This can be the same as the USB iJack
                 gtb.FirstGroupIndex,
                 flowFromUserPerspective,
-                false,                                      // this is not a native UMP device, it is a native byte stream device
                 isUsingVendorDriver,
                 true,                                       // we truncate to the WinMM max name limit (32 chars including nul)
                 portNamesUserFlowOut
@@ -283,17 +283,17 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
             currentGtbOutputGroupIndex++;
 
-            gtb.Name = internal::Midi1PortNaming::GenerateMidi1PortName(
+            gtb.Name = internal::Midi1PortNaming::GenerateGtbNameFromMidi1Device(
                 useOldStyleNaming,                          // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
                 userSuppliedPortName,                       // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
                 deviceContainerName,                        // oddly some old WinMM code picks up the deviceContainerName somehow
+                pin.KSDriverSuppliedName,
                 masterEndpointDefinition.ParentDeviceName,  // the name of the actual connected device from which the UMP interface is generated
-                parentDeviceManufacturerName,               // the name of the parent device
+                deviceManufacturerName,                     // manufacturer name
                 pin.FilterName,                             // the name of the filter. This is sometimes the same as the parent device
                 pin.PinName,                                // the name of the KS Filter pin. This can be the same as the USB iJack
                 gtb.FirstGroupIndex,
                 flowFromUserPerspective,
-                false,                                      // this is not a native UMP device, it is a native byte stream device
                 isUsingVendorDriver,
                 true,                                       // we truncate to the WinMM max name limit (32 chars including nul)
                 portNamesUserFlowIn
@@ -556,6 +556,57 @@ HRESULT GetPinDataFlow(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Ino
 }
 
 
+_Use_decl_annotations_
+HRESULT 
+CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiatedFilter, std::wstring& name)
+{
+    // get the name GUID
+
+    KSCOMPONENTID componentId{};
+    KSPROPERTY prop{};
+    ULONG countBytesReturned{};
+
+    prop.Id = KSPROPERTY_GENERAL_COMPONENTID;
+    prop.Set = KSPROPSETID_General;
+    prop.Flags = KSPROPERTY_TYPE_GET;
+
+    auto hrComponent = SyncIoctl(
+        hInstantiatedFilter,
+        IOCTL_KS_PROPERTY,
+        &prop,
+        sizeof(KSPROPERTY),
+        &componentId,
+        sizeof(KSCOMPONENTID),
+        &countBytesReturned
+    );
+
+    RETURN_IF_FAILED(hrComponent);
+
+    componentId.Name;   // this is the GUID which points to the registry location with the driver-supplied name
+
+    if (componentId.Name != GUID_NULL)
+    {
+        // we have the GUID where this name is stored, so get the driver-supplied name from the registry
+
+
+        WCHAR nameFromRegistry[MAX_PATH]{ 0 };   // this should only be MAXPNAMELEN, but if someone tampered with it, could be larger, hence MAX_PATH
+
+        std::wstring regKey = L"SYSTEM\\CurrentControlSet\\Control\\MediaCategories\\" + internal::GuidToString(componentId.Name);
+
+        if (SUCCEEDED(wil::reg::get_value_string_nothrow(HKEY_LOCAL_MACHINE, regKey.c_str(), L"Name", nameFromRegistry)))
+        {
+            name = nameFromRegistry;
+        }
+
+        return S_OK;
+    }
+
+    return E_NOTFOUND;
+}
+
+
+
+
 
 
 _Use_decl_annotations_
@@ -638,6 +689,10 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                 continue;
             }
 
+            std::wstring driverSuppliedName{};
+
+            LOG_IF_FAILED(GetKSDriverSuppliedName(hFilter.get(), driverSuppliedName));
+
             // enumerate all the pins for this filter
             ULONG cPins{ 0 };
             if (FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins))))
@@ -693,6 +748,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                     isCompatibleMidi1Device = true;
 
                     KsAggregateEndpointMidiPinDefinition pinDefinition{ };
+                    pinDefinition.KSDriverSuppliedName = driverSuppliedName;
                     pinDefinition.PinNumber = pinIndex;
                     pinDefinition.FilterDeviceId = std::wstring{ filterDevice.Id() };
                     pinDefinition.FilterName = std::wstring{ filterDevice.Name() };

@@ -64,9 +64,9 @@
                     </controls:SettingsExpander.Header>
                     <controls:SettingsExpander.Items>
 
-                        <Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0">
+                        <!--<Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0">
                             <TextBlock x:Uid="CommonTasksGroup_Endpoints" Style="{StaticResource HomeCardItemSeparatorStyle}" />
-                        </Border>
+                        </Border>-->
 
                         <controls:SettingsCard IsClickEnabled="True" IsEnabled="True">
                             <controls:SettingsCard.Header>
@@ -95,9 +95,9 @@
                             </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
-                        <Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0,1,0,0">
+                        <!--<Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0,1,0,0">
                             <TextBlock x:Uid="CommonTasksGroup_ServiceAndDrivers" Style="{StaticResource HomeCardItemSeparatorStyle}"/>
-                        </Border>
+                        </Border>-->
 
                         <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
                             <controls:SettingsCard.Header>
@@ -117,9 +117,9 @@
                             </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
-                        <Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0,1,0,0">
+                        <!--<Border Background="{ ThemeResource CardBackgroundFillColorDefault }" Margin="0,1,0,0">
                             <TextBlock x:Uid="CommonTasksGroup_Other" Style="{StaticResource HomeCardItemSeparatorStyle}"/>
-                        </Border>
+                        </Border>-->
 
                         <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
                             <controls:SettingsCard.Header>

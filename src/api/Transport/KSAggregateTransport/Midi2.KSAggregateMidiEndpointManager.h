@@ -13,6 +13,7 @@ using namespace winrt::Windows::Devices::Enumeration;
 
 struct KsAggregateEndpointMidiPinDefinition
 {
+    std::wstring KSDriverSuppliedName;
     std::wstring FilterDeviceId;
     std::wstring FilterName;
 
@@ -71,7 +72,7 @@ private:
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::EnumerationCompleted_revoker m_DeviceEnumerationCompleted;
     wil::unique_event m_EnumerationCompleted{wil::EventOptions::None};
 
-
+    HRESULT GetKSDriverSuppliedName(_In_ HANDLE hFilter, _Inout_ std::wstring& name);
 
 
 };
