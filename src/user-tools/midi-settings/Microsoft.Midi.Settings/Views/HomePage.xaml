@@ -13,15 +13,43 @@
     mc:Ignorable="d"
     >
 
+    <Page.Resources>
+        <ResourceDictionary>
+            <helpers:BooleanToInverseVisibilityConverter x:Key="BooleanToInverseVisibilityConverter" />
+        </ResourceDictionary>
+    </Page.Resources>    
+    
     <Grid x:Name="ContentArea">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--<TextBlock Grid.Row="0" x:Uid="HomePage_Description" Margin="0,0,0,8" />-->
+
+        <!-- Reserved for the first-run experience, when needed -->
+
+        <!--                      Background="#342255"
+                     BorderBrush="Black"
+                     Foreground="White"-->
+        <Grid Grid.Row="0" Visibility="{x:Bind ViewModel.IsFirstRunSetupComplete, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
+            <InfoBar Margin="0,0,15,15"
+                     CornerRadius="9"
+                     IsOpen="True"
+                     Title="Finish setting up MIDI on this PC"
+                     Message="Customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
+                     Severity="Warning"
+                     >
+                <InfoBar.ActionButton>
+                    <Button Content="Finish MIDI Setup"
+                            Command="{x:Bind ViewModel.LaunchFirstRunExperience}" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+        </Grid>
         
+       
         <Grid Grid.Row="1">
             <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
                 <controls:SettingsExpander.Header>

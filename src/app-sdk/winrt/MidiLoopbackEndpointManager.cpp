@@ -111,4 +111,95 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         return result;
     }
 
+
+    _Use_decl_annotations_
+    midi2::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
+        midi2::MidiEndpointDeviceInformation const& loopbackEndpoint
+    )
+    {
+        auto domain = midi2::MidiEndpointDeviceInformation::FindAll();
+
+        return GetAssociatedLoopbackEndpoint(loopbackEndpoint, domain);
+    }
+
+
+    _Use_decl_annotations_
+        midi2::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpointForId(
+        winrt::hstring loopbackEndpointId
+    )
+    {
+        auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(loopbackEndpointId);
+
+        auto info = midi2::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(cleanId);
+
+        return GetAssociatedLoopbackEndpoint(info);
+    }
+
+
+    _Use_decl_annotations_
+    midi2::MidiEndpointDeviceInformation MidiLoopbackEndpointManager::GetAssociatedLoopbackEndpoint(
+        midi2::MidiEndpointDeviceInformation const& loopbackEndpoint,
+        collections::IIterable<midi2::MidiEndpointDeviceInformation> endpointsToSearch)
+    {
+        if (loopbackEndpoint == nullptr)
+        {
+            return nullptr;
+        }
+
+        if (endpointsToSearch == nullptr)
+        {
+            return nullptr;
+        }
+
+        auto transportId = loopbackEndpoint.GetTransportSuppliedInfo().TransportId;
+
+        if (transportId != TransportId())
+        {
+            // not a loopback endpoint
+            return nullptr;
+        }
+
+        // get the endpoint's association id
+
+        if (loopbackEndpoint.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) && 
+            loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
+        {
+            auto associator = winrt::unbox_value<winrt::hstring>(loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
+
+            // find the other endpoint that has this associator
+            // this is wasteful to get everything and then iterate, but there's 
+            // no AQS way to search using our custom DEVPKEY properties
+
+            winrt::hstring query{ MIDI_ENDPOINT_DEVICE_AQS_FILTER };
+
+            for (auto const& ep : endpointsToSearch)
+            {
+                auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(ep.EndpointDeviceId());
+
+                // don't process the endpoint that was passed in, of course
+                if (id != loopbackEndpoint.EndpointDeviceId())
+                {
+                    if (ep.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) && 
+                        ep.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
+                    {
+                        auto thisAssociator = winrt::unbox_value<winrt::hstring>(loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
+
+                        if (!thisAssociator.empty())
+                        {
+                            // return the endpoint if it has the matching association id
+                            if (thisAssociator == associator)
+                            {
+                                // create the endpoint
+                                return MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return nullptr;
+
+    }
+
 }

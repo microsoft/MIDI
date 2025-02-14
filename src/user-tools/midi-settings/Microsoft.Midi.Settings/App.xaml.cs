@@ -71,6 +71,10 @@ public partial class App : Application
             services.AddSingleton<ISampleDataService, SampleDataService>();
             services.AddSingleton<IFileService, FileService>();
 
+            // MIDI Services
+            services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
+
+
             // Views and ViewModels
             services.AddTransient<WinRTMidi1DevicesViewModel>();
             services.AddTransient<WinRTMidi1DevicesPage>();
@@ -146,6 +150,9 @@ public partial class App : Application
 
             services.AddTransient<HomePage>();
             services.AddTransient<HomeViewModel>();
+
+            services.AddTransient<FirstRunExperiencePage>();
+            services.AddTransient<FirstRunExperienceViewModel>();
 
             // Configuration
             services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
