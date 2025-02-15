@@ -59,6 +59,10 @@ namespace Microsoft.Midi.Settings.Views
             ((MidiEndpointDeviceListItemControl)sender).ViewDeviceDetailsCommand = ViewModel.ViewDeviceDetailsCommand;
         }
 
+        private async void CreateNewLoopbackPair_Click(object sender, RoutedEventArgs e)
+        {
+            var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
+        }
     }
 }
 

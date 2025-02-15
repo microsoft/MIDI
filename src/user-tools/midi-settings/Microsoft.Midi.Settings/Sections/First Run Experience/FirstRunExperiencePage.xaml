@@ -17,7 +17,7 @@
 
         <ContentDialog x:Name="Dialog_CreateConfigFile"
                        PrimaryButtonText="OK" 
-                       IsPrimaryButtonEnabled="True"
+                       IsPrimaryButtonEnabled="{x:Bind ViewModel.ConfigExists, Converter={StaticResource BoolNegationConverter}, Mode=OneWay}"
                        CloseButtonText="Cancel"
                        PrimaryButtonCommand="{x:Bind ViewModel.CreateConfigFileCommand}"
                        >
@@ -43,13 +43,14 @@
                            Margin="13"/>
 
                 <TextBox Header="Configuration Name" 
-                         Text="{x:Bind ViewModel.ConfigName, Mode=TwoWay}"
+                         Text="{x:Bind ViewModel.ConfigName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          MaxLength="50"
                          Margin="13"/>
 
 
                 <Grid Margin="11" Padding="2">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
@@ -64,16 +65,32 @@
                                Style="{StaticResource SmallPropertyLabel}"/>
 
                     <TextBlock Grid.Row="0"
-                               Grid.Column="1" 
+                               Grid.Column="1"
                                Text="{x:Bind ViewModel.ConfigFileName, Mode=OneWay}" 
-                               Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                               Style="{StaticResource SmallEmphasizedPropertyValue}" 
+                               />
 
                     <TextBlock Grid.Row="1" 
+                               Grid.Column="1"
+                               Text="Config exists. Please choose a different name."
+                               Style="{StaticResource SmallEmphasizedPropertyValue}"
+                               Visibility="{x:Bind ViewModel.ConfigExists, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}"
+                               Foreground="OrangeRed"/>
+
+                    <TextBlock Grid.Row="1" 
+                               Grid.Column="1"
+                               Text="Valid configuration name."
+                               Style="{StaticResource SmallEmphasizedPropertyValue}"
+                               Visibility="{x:Bind ViewModel.ConfigExists, Converter={StaticResource BooleanToInverseVisibilityConverter}, Mode=OneWay}"
+                               Foreground="Green"/>
+
+
+                    <TextBlock Grid.Row="2" 
                                Grid.Column="0" 
                                Text="In Location:" 
                                Style="{StaticResource SmallPropertyLabel}"/>
                     
-                    <TextBlock Grid.Row="1" 
+                    <TextBlock Grid.Row="2" 
                                Grid.Column="1" 
                                Text="{x:Bind ViewModel.ConfigFileLocation, Mode=OneWay}" 
                                Style="{StaticResource SmallEmphasizedPropertyValue}"/>
@@ -84,7 +101,6 @@
 
         <ContentDialog x:Name="Dialog_CreateDefaultLoopback"
                         PrimaryButtonText="OK" 
-                        IsPrimaryButtonEnabled="True"
                         CloseButtonText="Cancel">
             <TextBlock Text="Create Default Loopback" />
 

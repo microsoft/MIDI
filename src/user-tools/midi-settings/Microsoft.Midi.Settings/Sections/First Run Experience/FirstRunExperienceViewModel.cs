@@ -26,9 +26,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 m_configName = m_configFileService.CleanupConfigName(value);
 
                 UpdateConfigFileName();
-
                 OnPropertyChanged("ConfigName");
-                OnPropertyChanged("ConfigFileName");
             }
         }
 
@@ -45,6 +43,15 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
+        public bool ConfigExists
+        {
+            get
+            {
+                return m_configFileService.ConfigExists(ConfigName);
+            }
+        }
+
+        
 
         public ICommand CreateConfigFileCommand
         {
@@ -55,17 +62,21 @@ namespace Microsoft.Midi.Settings.ViewModels
         private void UpdateConfigFileName()
         {
             ConfigFileName = m_configFileService.BuildConfigFileName(ConfigName);
+
+            OnPropertyChanged("ConfigFileName");
+            OnPropertyChanged("ConfigExists");
         }
 
         public FirstRunExperienceViewModel(IMidiConfigFileService configService)
         {
             m_configFileService = configService;
-            m_configName = m_configFileService.GetDefaultConfigName();
+            ConfigName = m_configFileService.GetDefaultConfigName();
 
             UpdateConfigFileName();
 
             CreateConfigFileCommand = new RelayCommand(() =>
                 {
+
                     if (m_configFileService.CreateNewConfigFile(ConfigName))
                     {
                         m_configFileService.SetCurrentConfig(ConfigName);

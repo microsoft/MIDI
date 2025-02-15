@@ -13,15 +13,6 @@
     mc:Ignorable="d"
     >
 
-    <Page.Resources>
-        <ResourceDictionary>
-            <helpers:HasUniqueIdToVisibilityConverter x:Key="HasUniqueIdToVisibilityConverter" />
-            <helpers:HasUniqueIdToInverseVisibilityConverter x:Key="HasUniqueIdToInverseVisibilityConverter" />
-            <helpers:MidiEndpointNativeDataFormatConverter x:Key="MidiEndpointNativeDataFormatConverter" />
-            <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-            <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
-        </ResourceDictionary>
-    </Page.Resources>
 
     <Grid x:Name="ContentArea">
         <Grid.RowDefinitions>

@@ -1,5 +1,7 @@
 ﻿<Application
     x:Class="Microsoft.Midi.Settings.App"
+    xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
+    xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
@@ -13,6 +15,29 @@
                 <ResourceDictionary Source="/Styles/MessageTemplates.xaml" />
                 <ResourceDictionary Source="/Styles/MidiStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <helpers:HasUniqueIdToVisibilityConverter x:Key="HasUniqueIdToVisibilityConverter" />
+            <helpers:HasUniqueIdToInverseVisibilityConverter x:Key="HasUniqueIdToInverseVisibilityConverter" />
+
+            <helpers:MidiEndpointNativeDataFormatConverter x:Key="MidiEndpointNativeDataFormatConverter" />
+            <helpers:MidiEndpointDevicePurposeConverter x:Key="EndpointDevicePurposeConverter"/>
+            <helpers:MidiGroupIndexConverter x:Key="MidiGroupIndexConverter"/>
+            <helpers:MidiEndpointNativeDataFormatConverter x:Key="EndpointNativeDataFormatConverter"/>
+            <helpers:MidiFunctionBlockSysEx8FormatConverter x:Key="MidiFunctionBlockSysEx8FormatConverter" />
+            <helpers:MidiFunctionBlockMidi10Converter x:Key="MidiFunctionBlockMidi10Converter" />
+            <helpers:MidiFunctionBlockDirectionConverter x:Key="MidiFunctionBlockDirectionConverter" />
+            <helpers:MidiFunctionBlockUIHintConverter x:Key="MidiFunctionBlockUIHintConverter" />
+            <helpers:MidiGroupTerminalBlockDirectionToFontIconConverter x:Key="MidiGroupTerminalBlockDirectionToFontIconConverter" />
+            <helpers:MidiGroupTerminalBlockDirectionConverter x:Key="MidiGroupTerminalBlockDirectionConverter" />
+
+            <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <helpers:BooleanToInverseVisibilityConverter x:Key="BooleanToInverseVisibilityConverter" />
+            <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
+            <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
+            
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

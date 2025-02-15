@@ -72,6 +72,7 @@ public partial class App : Application
             services.AddSingleton<IFileService, FileService>();
 
             // MIDI Services
+            services.AddSingleton<IMidiTransportInfoService, MidiTransportInfoService>();
             services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
 
 
