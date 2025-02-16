@@ -1366,6 +1366,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Restart the service when complete.
+        /// </summary>
+        internal static string ParameterServiceRestart {
+            get {
+                return ResourceManager.GetString("ParameterServiceRestart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Report additional details about the service.
         /// </summary>
         internal static string ParameterServiceStatusVerbose {
@@ -2312,6 +2321,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string SendMessageSessionNameSuffix {
             get {
                 return ResourceManager.GetString("SendMessageSessionNameSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set the MIDI Service to start shortly after Windows starts, to avoid connection delays with the first connection made by an app..
+        /// </summary>
+        internal static string ServiceSetAutoDelayedStartDescription {
+            get {
+                return ResourceManager.GetString("ServiceSetAutoDelayedStartDescription", resourceCulture);
             }
         }
         

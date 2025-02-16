@@ -59,6 +59,7 @@
                     Guid="f4f2b375-347b-413c-b81d-e900f392f786">
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.ico" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.png" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LoopbackDiagram.svg" />
         </Component>
         
         <Feature Id="WindowsMidiServicesSettings">

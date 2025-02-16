@@ -15,6 +15,7 @@ namespace Microsoft.Midi.Settings.ViewModels
     public class HomeViewModel : ObservableRecipient, INavigationAware
     {
         private readonly INavigationService _navigationService;
+        private readonly IMidiConfigFileService m_configFileService;
 
         public ICommand LaunchFirstRunExperience
         {
@@ -62,20 +63,41 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
+        public bool IsValidConfigLoaded
+        {
+            get => m_configFileService.IsConfigFileActive;
+        }
+
 
         public bool IsFirstRunSetupComplete
         {
             get
             {
-                //TEMP!
-                return false;
+                return m_configFileService.IsConfigFileActive;
+            }
+        }
+
+        public string CurrentConfigurationName
+        {
+            get
+            {
+                return m_configFileService.CurrentConfig.Header.Name;
+            }
+        }
+
+        public string CurrentConfigurationFileName
+        {
+            get
+            {
+                return m_configFileService.CurrentConfig.FileName;
             }
         }
 
 
-        public HomeViewModel(INavigationService navigationService)
+        public HomeViewModel(INavigationService navigationService, IMidiConfigFileService midiConfigFileService)
         {
             _navigationService = navigationService;
+            m_configFileService = midiConfigFileService;
 
             LaunchFirstRunExperience = new RelayCommand(
                 () =>

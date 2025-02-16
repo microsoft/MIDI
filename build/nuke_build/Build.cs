@@ -882,6 +882,7 @@ class Build : NukeBuild
 
                 paths.Add(settingsOutputFolder / "Assets" / "AppIcon.ico");
                 paths.Add(settingsOutputFolder / "Assets" / "AppIcon.png");
+                paths.Add(settingsOutputFolder / "Assets" / "LoopbackDiagram.svg");
 
 
                 // TODO: This doesn't deal with any localization content

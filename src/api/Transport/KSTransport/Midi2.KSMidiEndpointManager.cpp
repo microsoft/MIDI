@@ -87,6 +87,9 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         TraceLoggingWideString(device.Id().c_str(), "device id")
     );
 
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+
     wil::unique_handle hFilter;
     std::wstring deviceName;
     std::wstring deviceId;
@@ -542,6 +545,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
         capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
 
+
         interfaceDevProperties.push_back({ {DEVPKEY_KsMidiPort_KsFilterInterfaceId, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_STRING, static_cast<ULONG>((MidiPin->Id.length() + 1) * sizeof(WCHAR)), (PVOID)MidiPin->Id.c_str() });
         interfaceDevProperties.push_back({ {DEVPKEY_KsTransport, DEVPROP_STORE_SYSTEM, nullptr },
@@ -606,6 +610,26 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         {
             interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
                     DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSize, (PVOID)MidiPin->GroupTerminalBlockData.get() });
+
+
+            if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
+            {
+                // if a UMP device, we don't necessarily use the GTBs to name MIDI 1 ports
+                interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID) & (devPropFalse) });
+            }
+            else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
+            {
+                // for a native MIDI 1 device, the driver provides a MIDI 1 port name in the GTB
+                interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), (PVOID) & (devPropTrue) });
+            }
+        }
+        else
+        {
+            interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID) & (devPropFalse) });
+
         }
 
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.

@@ -236,7 +236,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     std::wstring transportCode(TRANSPORT_CODE);
 
-    //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     std::wstring endpointName = definition->EndpointName;
@@ -320,24 +320,37 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     std::vector<internal::GroupTerminalBlockInternal> blocks{ };
 
-    internal::GroupTerminalBlockInternal gtb;
-    gtb.Number = 1;             // gtb indexes start at 1
-    gtb.GroupCount = 1;         // todo: we could get this from properties
-    gtb.FirstGroupIndex = 0;    // group indexes start at 0
-    gtb.Protocol = 0x11;        // 0x11 = MIDI 2.0
-    gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL;
-    gtb.Name = L"IO";           // todo: we could get this from properties so folks can control the port name
+    internal::GroupTerminalBlockInternal gtb1;
+    gtb1.Number = 1;             // gtb indexes start at 1
+    gtb1.GroupCount = 1;         // todo: we could get this from properties
+    gtb1.FirstGroupIndex = 0;    // group indexes start at 0
+    gtb1.Protocol = 0x11;        // 0x11 = MIDI 2.0
+    gtb1.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // MIDI Out from user's perspective
+    gtb1.Name = friendlyName + L" Out";           // todo: get this from properties so folks can control the port name
+    blocks.push_back(gtb1);
 
-    blocks.push_back(gtb);
-    
+    internal::GroupTerminalBlockInternal gtb2;
+    gtb2.Number = 1;             // gtb indexes start at 1
+    gtb2.GroupCount = 1;         // todo: we could get this from properties
+    gtb2.FirstGroupIndex = 0;    // group indexes start at 0
+    gtb2.Protocol = 0x11;        // 0x11 = MIDI 2.0
+    gtb2.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;  // MIDI In from user's perspective
+    gtb2.Name = friendlyName + L" In";           // todo: get this from properties so folks can control the port name
+    blocks.push_back(gtb2);
+
+
     std::vector<std::byte> groupTerminalBlockData;
     if (internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, groupTerminalBlockData))
     {
         interfaceDeviceProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data() });
+
+        interfaceDeviceProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(devPropTrue), (PVOID)&devPropTrue});
+
     }
 
-
+    
     RETURN_IF_FAILED(m_MidiDeviceManager->ActivateEndpoint(
         (PCWSTR)m_parentDeviceId.c_str(),                       // parent instance Id
         definition->UMPOnly,                                    // UMP-only. When set to false, WinMM MIDI 1.0 ports are created

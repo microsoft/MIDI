@@ -29,7 +29,7 @@ namespace Microsoft.Midi.ConsoleApp
             if (!UserHelper.CurrentUserHasAdminRights())
             { 
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("This command must be run as Administrator."));
-                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+                return (int)MidiConsoleReturnCode.ErrorInsufficientPermissions;
             }
 
 

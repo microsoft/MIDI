@@ -124,7 +124,6 @@ namespace Microsoft.Midi.Settings.ViewModels
             // if endpoint A or B unique ids are empty, do not close. display suggestion to generate them
             // todo: need to limit to alpha plus just a couple other characters, and only 32 in length
 
-            // descriptions are optional
 
 
             endpointA.Name = NewLoopbackEndpointAName.Trim();
@@ -133,6 +132,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             endpointA.UniqueId = CleanupUniqueId(NewUniqueIdentifier);
             endpointB.UniqueId = CleanupUniqueId(NewUniqueIdentifier);
 
+            // descriptions are optional
             endpointA.Description = string.Empty;
             endpointB.Description = string.Empty;
 
@@ -148,9 +148,16 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 if (result.Success)
                 {
-                    m_midiConfigFileService.StoreLoopbackEndpointPair(creationConfig);
+                    if (m_midiConfigFileService.CurrentConfig != null)
+                    {
+                        m_midiConfigFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
 
-                    RefreshDeviceCollection();
+                        RefreshDeviceCollection();
+                    }
+                    else
+                    {
+                        // no config file
+                    }
                 }
                 else
                 {
@@ -164,6 +171,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             m_midiConfigFileService = midiConfigFileService;
 
             GenerateNewUniqueId();
+
+            if (m_midiConfigFileService.IsConfigFileActive)
+            {
+                NewLoopbackIsPersistent = true;
+            }
 
             CreateLoopbackPairsCommand = new RelayCommand(
                 () =>

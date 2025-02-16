@@ -47,7 +47,7 @@ namespace Microsoft.Midi.Settings.Views
 
         private async void ShowFirstStep()
         {
-            var result = await Dialog_CreateConfigFile.ShowAsync();
+            var result = await Dialog_FirstRunSetup.ShowAsync();
 
 
         }
