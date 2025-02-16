@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
+using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -15,7 +16,7 @@ public class ShellViewModel : ObservableRecipient
 
     private readonly IGeneralSettingsService _generalSettingsService;
 
-
+    private readonly IMidiConfigFileService m_configFileService;
 
     public bool AreDeveloperOptionsEnabled
     {
@@ -44,14 +45,25 @@ public class ShellViewModel : ObservableRecipient
         set => SetProperty(ref _selected, value);
     }
 
+    public bool IsValidConfigLoaded
+    {
+        get => m_configFileService.IsConfigFileActive;
+    }
+
+    
+
+
+
     public ShellViewModel(INavigationService navigationService, 
         INavigationViewService navigationViewService, 
-        IGeneralSettingsService generalSettingsService)
+        IGeneralSettingsService generalSettingsService,
+        IMidiConfigFileService midiConfigFileService)
     {
         NavigationService = navigationService;
         NavigationService.Navigated += OnNavigated;
         NavigationViewService = navigationViewService;
 
+        m_configFileService = midiConfigFileService;
         _generalSettingsService = generalSettingsService;
         _generalSettingsService.SettingsChanged += _generalSettingsService_SettingsChanged;
     }

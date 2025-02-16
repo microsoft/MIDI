@@ -652,8 +652,11 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVP
 #define STRING_PKEY_MIDI_UseOldMidi1PortNamingScheme MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1000"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UseOldMidi1PortNamingScheme, 1000);     // DEVPROP_TYPE_BOOL
 
+#define STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1010"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, 1010);     // DEVPROP_TYPE_BOOLEAN
 
-
+#define STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1020"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 1020);     // DEVPROP_TYPE_BOOLEAN
 
 
 // Structures for properties =================================================================

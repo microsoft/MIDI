@@ -10,6 +10,7 @@ using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml;
+using System.Runtime.InteropServices;
 using Windows.UI.Popups;
 
 namespace Microsoft.Midi.Settings;
@@ -70,6 +71,12 @@ public partial class App : Application
             // Core Services
             services.AddSingleton<ISampleDataService, SampleDataService>();
             services.AddSingleton<IFileService, FileService>();
+
+            // MIDI Services
+            services.AddSingleton<IMidiTransportInfoService, MidiTransportInfoService>();
+            services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
+            services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
+
 
             // Views and ViewModels
             services.AddTransient<WinRTMidi1DevicesViewModel>();
@@ -147,6 +154,9 @@ public partial class App : Application
             services.AddTransient<HomePage>();
             services.AddTransient<HomeViewModel>();
 
+            services.AddTransient<FirstRunExperiencePage>();
+            services.AddTransient<FirstRunExperienceViewModel>();
+
             // Configuration
             services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
         }).
@@ -169,6 +179,14 @@ public partial class App : Application
 
     public MidiDesktopAppSdkInitializer? MidiInitializer => _midiInitializer;
 
+
+    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern int MessageBox(
+            IntPtr hWnd, 
+            string lpText, 
+            string lpCaption,
+            int uType);
+
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
         base.OnLaunched(args);
@@ -178,6 +196,16 @@ public partial class App : Application
         {
             await App.GetService<IActivationService>().ActivateAsync(args);
 
+        }
+        else
+        {
+            // This dialog does not work here. Need either a low-level non-WinUI dialog to show, or use another approach
+            //var dlg = new MessageDialog("Unable to initialize Windows MIDI Services SDK Runtime. Is it installed?");
+            //await dlg.ShowAsync();
+
+            MessageBox((IntPtr)0, "Unable to initialize Windows MIDI Services SDK Runtime. Is it installed?", "Error Starting Settings App", 0);
+
+            Exit();
         }
     }
 }

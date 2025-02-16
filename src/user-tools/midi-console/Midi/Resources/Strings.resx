@@ -911,4 +911,10 @@ Timestamp</value>
   <data name="ParameterPlayNotesMidi2" xml:space="preserve">
     <value>Set to true to use MIDI 2.0 protocol messages (type 4) instead of MIDI 1.0 protocol (type 2)</value>
   </data>
+  <data name="ServiceSetAutoDelayedStartDescription" xml:space="preserve">
+    <value>Set the MIDI Service to start shortly after Windows starts, to avoid connection delays with the first connection made by an app.</value>
+  </data>
+  <data name="ParameterServiceRestart" xml:space="preserve">
+    <value>Restart the service when complete</value>
+  </data>
 </root>

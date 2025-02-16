@@ -11,8 +11,11 @@ import "MidiLoopbackEndpointCreationResult.idl";
 import "MidiLoopbackEndpointCreationConfig.idl";
 import "MidiLoopbackEndpointRemovalConfig.idl";
 
+import "MidiEndpointDeviceInformation.idl";
+
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
+    [experimental]
     static runtimeclass MidiLoopbackEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };
@@ -24,6 +27,16 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 
         static Boolean RemoveTransientLoopbackEndpoints(
             MidiLoopbackEndpointRemovalConfig removalConfig);
+
+        static Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
+            String loopbackEndpointId);
+
+        static Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation loopbackEndpoint,
+            IIterable<Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation> endpointsToSearch);
+
+        static Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation loopbackEndpoint);
     }
 }
 

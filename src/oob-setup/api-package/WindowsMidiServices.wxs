@@ -84,6 +84,7 @@
 
         </Component>
 
+        <!--
         <Component Id="WinMMCompatRegistryEntries"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
@@ -92,8 +93,8 @@
             <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32">
                 <RegistryValue Type="integer" Name="MidisrvTransferComplete" Value="0" />
             </RegistryKey>
-
         </Component>
+        -->
 
         <Component Id="ConfigurationRegistryEntries"
                 Bitness="always64"
@@ -104,7 +105,7 @@
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
-                <RegistryValue Type="string" Name="CurrentConfig" Value="Default.midiconfig.json" />
+                <!--<RegistryValue Type="string" Name="CurrentConfig" Value="Default.midiconfig.json" /> -->
                 <RegistryValue Type="integer" Name="Midi2DiscoveryEnabled" Value="1" />
                 <RegistryValue Type="integer" Name="UseMMCSS" Value="0" />
 
@@ -137,7 +138,8 @@
                 </RegistryKey>
             </RegistryKey>
         </Component>
-        
+
+        <!--
         <Component Id="ConfigurationFile"
                    Bitness="always64"
                    Directory="CONFIGURATION_FOLDER"
@@ -146,7 +148,7 @@
                    >
             <File Source="$(StagingSourceRootFolder)\configuration\Default.midiconfig.json" />
         </Component>
-
+        -->
 
         <!-- Elevated permissions are required for these steps -->
         <CustomAction Id="SelfInstallService"
@@ -164,12 +166,12 @@
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceTransports"/>
             <ComponentRef Id="WindowsService"/>
-            <ComponentRef Id="WinMMCompatRegistryEntries"/>
+            <!--<ComponentRef Id="WinMMCompatRegistryEntries"/> -->
             <!-- <ComponentRef Id="WinMMAPIRedirectDriver"/> -->
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>
             
-            <ComponentRef Id="ConfigurationFile"/>
+            <!-- <ComponentRef Id="ConfigurationFile"/> -->
             <ComponentRef Id="ConfigurationRegistryEntries"/>
 
         </Feature>

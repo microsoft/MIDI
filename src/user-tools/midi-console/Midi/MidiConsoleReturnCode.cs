@@ -27,6 +27,8 @@ namespace Microsoft.Midi.ConsoleApp
 
         ErrorServiceNotAvailable = 800,
 
+        ErrorInsufficientPermissions = 850,
+
         ErrorNotImplemented = 998,
         ErrorGeneralFailure = 999
     }

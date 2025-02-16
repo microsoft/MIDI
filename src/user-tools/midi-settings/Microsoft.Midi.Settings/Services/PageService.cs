@@ -44,6 +44,9 @@ public class PageService : IPageService
         Configure<WinRTMidi1DevicesViewModel, WinRTMidi1DevicesPage>();
         Configure<WinMMMidi1DevicesViewModel, WinMMMidi1DevicesPage>();
 
+        Configure<FirstRunExperienceViewModel, FirstRunExperiencePage>();
+
+
         Configure<HomeViewModel, HomePage>();
     }
 

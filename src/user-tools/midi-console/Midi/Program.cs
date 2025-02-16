@@ -206,6 +206,14 @@ app.Configure(config =>
             .WithExample("service", "stop")
             ;
 
+        service.AddCommand<ServiceSetAutoStart>("set-auto-start")
+            .WithDescription(Strings.ServiceSetAutoDelayedStartDescription)
+            .WithExample("service", "set-auto-start", "--restart")
+            ;
+
+        
+
+
     }).WithAlias("svc");
 
 

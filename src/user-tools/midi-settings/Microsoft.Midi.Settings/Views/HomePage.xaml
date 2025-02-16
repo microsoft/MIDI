@@ -13,15 +13,71 @@
     mc:Ignorable="d"
     >
 
+    <Page.Resources>
+        <ResourceDictionary>
+            <helpers:BooleanToInverseVisibilityConverter x:Key="BooleanToInverseVisibilityConverter" />
+        </ResourceDictionary>
+    </Page.Resources>    
+    
     <Grid x:Name="ContentArea">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--<TextBlock Grid.Row="0" x:Uid="HomePage_Description" Margin="0,0,0,8" />-->
+
+        <!-- Reserved for the first-run experience, when needed -->
+
+        <!--                      Background="#342255"
+                     BorderBrush="Black"
+                     Foreground="White"-->
+        <Grid Grid.Row="0">
+            <InfoBar Margin="0,0,15,15"
+                     CornerRadius="9"
+                     IsOpen="{x:Bind ViewModel.IsFirstRunSetupComplete, Converter={StaticResource BoolNegationConverter}}"
+                     Title="Finish setting up MIDI on this PC"
+                     Message="Customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
+                     Severity="Warning"
+                     >
+                <InfoBar.ActionButton>
+                    <Button Content="Finish MIDI Setup"
+                            Command="{x:Bind ViewModel.LaunchFirstRunExperience}" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+
+            <controls:SettingsExpander IsExpanded="True" 
+                                       Margin="0,0,15,15" 
+                                       CornerRadius="9"
+                                       Visibility="{x:Bind ViewModel.IsValidConfigLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <controls:SettingsExpander.Header>
+                    <StackPanel>
+                        <TextBlock Text="Current Configuration" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                        <TextBlock Text="This is the currently loaded configuration, where your Windows MIDI Services customizations are stored." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                    </StackPanel>
+                </controls:SettingsExpander.Header>
+                <controls:SettingsExpander.Items>
+                    <controls:SettingsCard IsClickEnabled="False">
+                        <controls:SettingsCard.Header>
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="{x:Bind ViewModel.CurrentConfigurationName}" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                                <TextBlock Text="{x:Bind ViewModel.CurrentConfigurationFileName}" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                            </StackPanel>
+                        </controls:SettingsCard.Header>
+                    </controls:SettingsCard>
+                </controls:SettingsExpander.Items>
+            </controls:SettingsExpander>
+
+
+
+
+
+        </Grid>
         
+       
         <Grid Grid.Row="1">
             <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
                 <controls:SettingsExpander.Header>

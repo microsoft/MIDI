@@ -10,6 +10,7 @@
 #include "ks.h"
 #include "Midi2KSAggregateTransport.h"
 #include "Midi2KSTransport.h"
+#include "Midi2LoopbackMidiTransport.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -2329,6 +2330,8 @@ CMidiDeviceManager::SyncMidi1Ports(
     additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
     additionalProperties.Append(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete);
     additionalProperties.Append(STRING_PKEY_MIDI_CustomPortAssignments);
+    additionalProperties.Append(STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames);
+    additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
 
     // We have function blocks to retrieve
     // build up the property keys to query for the function blocks
@@ -2343,6 +2346,21 @@ CMidiDeviceManager::SyncMidi1Ports(
     }
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpMidiPort->DeviceInterfaceId.get(), additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+    // First, let's check to see if we should be creating MIDI 1 ports for this endpoint
+    // default action, if unspecified, is to create the ports
+    auto createMidi1PortsProp = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
+    if (createMidi1PortsProp)
+    {
+        auto createPorts = winrt::unbox_value<bool>(createMidi1PortsProp);
+
+        if (!createPorts)
+        {
+            // it's not an error condition to skip creating MIDI 1 ports for an endpoint
+            return S_OK;
+        }
+    }
+
 
     // get the current function block information from the UMP SWD, if present, else fall back to
     // GTB if that is present. If neither, then there's nothing more to do.
@@ -2475,12 +2493,13 @@ CMidiDeviceManager::SyncMidi1Ports(
                             DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
                     }
 
-                    // KSA uses port names for the GTB names. But the new MIDI 2.0 UMP driver
-                    // does the same for MIDI 1.0 devices. So we check both KSA and KS here.
-                    if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)) ||
-                        (transportId == winrt::guid(__uuidof(Midi2KSTransport)) && WI_IsFlagSet(nativeDataFormat, MidiDataFormats::MidiDataFormats_ByteStream)))
+                    //if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)) ||
+                    //    transportId == winrt::guid(__uuidof(Midi2LoopbackMidiTransport)) ||
+                    //    (transportId == winrt::guid(__uuidof(Midi2KSTransport)) && WI_IsFlagSet(nativeDataFormat, MidiDataFormats::MidiDataFormats_ByteStream)))
+                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames);
+                    if (prop)
                     {
-                        usePortInfoName = true;
+                        usePortInfoName = winrt::unbox_value<bool>(prop);
                     }
 
                     prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CustomEndpointName);

@@ -164,6 +164,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
         );
 
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
     // we require at least one valid pin
     RETURN_HR_IF(E_INVALIDARG, masterEndpointDefinition.MidiPins.size() < 1);
@@ -403,6 +404,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     {
         interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data()});
+
+        interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(devPropTrue), (PVOID)&devPropTrue });
     }
     else
     {
