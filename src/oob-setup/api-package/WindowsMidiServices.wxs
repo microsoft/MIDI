@@ -84,7 +84,7 @@
 
         </Component>
 
-        <!--
+        
         <Component Id="WinMMCompatRegistryEntries"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
@@ -94,7 +94,7 @@
                 <RegistryValue Type="integer" Name="MidisrvTransferComplete" Value="0" />
             </RegistryKey>
         </Component>
-        -->
+        
 
         <Component Id="ConfigurationRegistryEntries"
                 Bitness="always64"
@@ -166,7 +166,7 @@
         <Feature Id="WindowsMIDIServices">
             <ComponentRef Id="WindowsServiceTransports"/>
             <ComponentRef Id="WindowsService"/>
-            <!--<ComponentRef Id="WinMMCompatRegistryEntries"/> -->
+            <ComponentRef Id="WinMMCompatRegistryEntries"/>
             <!-- <ComponentRef Id="WinMMAPIRedirectDriver"/> -->
 
             <ComponentRef Id="Permission.SharedAppDataFolder"/>

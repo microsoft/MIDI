@@ -80,9 +80,6 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "WindowsMidiServices.h"
 
-// naming
-#include "midi_naming.h"
-
 // RPC Calls
 
 #include "MidiSrvRpc.h"

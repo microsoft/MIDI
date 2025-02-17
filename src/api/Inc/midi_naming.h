@@ -122,6 +122,11 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             // TEMPORARY code
             name = transportSuppliedEndpointName;
 
+            if (name.empty())
+            {
+                name = blockName;
+            }
+
 
             return truncateToWinMMLimit ? name.substr(0, MAXPNAMELEN - 1) : name;
         }
@@ -172,15 +177,27 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             return name + L" " + suffix;
         }
 
-        // this is the fallback
+
+        // this is the fallback. This needs better calculation to better support block name
 
         std::wstring name;
 
-        if (blockName != parentDeviceName)
+        if (!transportSuppliedEndpointName.empty())
         {
-            name = parentDeviceName + L" " + blockName;
+            if (auto pos = blockName.find(transportSuppliedEndpointName); pos != std::wstring::npos)
+            {
+                name = internal::TrimmedWStringCopy(transportSuppliedEndpointName + L" " + internal::TrimmedWStringCopy(blockName.substr(pos + transportSuppliedEndpointName.length())));
+            }
+            else
+            {
+                name = internal::TrimmedWStringCopy(transportSuppliedEndpointName + L" " + blockName);
+            }
         }
-        else
+        else if (!blockName.empty())
+        {
+            name = blockName;
+        }
+        else if (!parentDeviceName.empty())
         {
             name = parentDeviceName;
         }
