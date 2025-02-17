@@ -14,7 +14,7 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class EndpointsNet2UdpViewModel : SingleTransportEndpointViewModelBase, INavigationAware
+    public partial class EndpointsNet2UdpViewModel : SingleTransportEndpointViewModelBase
     {
         public EndpointsNet2UdpViewModel(INavigationService navigationService) : base("NET2UDP", navigationService)
         {

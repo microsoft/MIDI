@@ -14,7 +14,7 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class SingleTransportEndpointViewModelBase : ObservableRecipient, INavigationAware
+    public partial class SingleTransportEndpointViewModelBase : ObservableRecipient
     {
         private readonly INavigationService _navigationService;
 
@@ -86,15 +86,5 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         }
 
-
-
-        public void OnNavigatedFrom()
-        {
-        }
-
-
-        public void OnNavigatedTo(object parameter)
-        {
-        }
     }
 }
