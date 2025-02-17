@@ -39,13 +39,20 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             cleanedPinName = pinName;
         }
 
+        cleanedPinName = internal::TrimmedWStringCopy(cleanedPinName);
+        auto comparePinName = internal::ToUpperWStringCopy(cleanedPinName);         // this needs to be just the uppercase of cleanedPinName for the replace to work
+
+        auto compareParentName = internal::ToUpperWStringCopy(parentDeviceName);
+        auto compareFilterName = internal::ToUpperWStringCopy(filterName);
+            
         // the double and triple space entries need to be last
         // there are other ways to do this with pattern matching, 
         // but just banging this through for this version
-        const std::wstring wordsToRemove[] =
+        // these must all be uppercase when alpha characters are included
+        std::wstring wordsToRemove[] =
         {
             // many of these are added by our USB and KS stack, not by the device, which is why they are here
-            parentDeviceName, filterName,
+            compareParentName, compareFilterName,
             L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
             L"  ", L"   ", L"    "
         };
@@ -54,11 +61,12 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         {
             if (cleanedPinName.length() >= word.length())
             {
-                auto idx = cleanedPinName.find(word);
+                auto idx = comparePinName.find(word);
 
                 if (idx != std::wstring::npos)
                 {
                     cleanedPinName = cleanedPinName.erase(idx, word.length());
+                    comparePinName = comparePinName.erase(idx, word.length());
                 }
             }
         }
@@ -105,6 +113,18 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             return truncateToWinMMLimit ? customPortName.substr(0, MAXPNAMELEN - 1) : customPortName;
         }
 
+        if (useOldStyleNamingForNonUmpDevice && !isNativeUmpDevice)
+        {
+            // TODO: Find the old naming code in the source tree, and reimplement it here
+
+            std::wstring name;
+
+            // TEMPORARY code
+            name = transportSuppliedEndpointName;
+
+
+            return truncateToWinMMLimit ? name.substr(0, MAXPNAMELEN - 1) : name;
+        }
 
         if (isNativeUmpDevice)
         {
@@ -152,34 +172,13 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             return name + L" " + suffix;
         }
 
+        // this is the fallback
 
-        if (useOldStyleNamingForNonUmpDevice)
-        {
-            // TODO: Find the old naming code in the source tree, and reimplement it here
+        std::wstring name;
 
-            std::wstring name;
+        name = parentDeviceName;
 
-            // TEMPORARY code
-            name = transportSuppliedEndpointName;
-
-
-            return truncateToWinMMLimit ? name.substr(0, MAXPNAMELEN - 1) : name;
-        }
-        else
-        {
-
-            std::wstring name;
-
-            // TEMPORARY code
-
-            name = parentDeviceName;
-
-
-            return truncateToWinMMLimit ? name.substr(0, MAXPNAMELEN - 1) : name;
-        }
-
-
-        return L"No name available";
+        return truncateToWinMMLimit ? name.substr(0, MAXPNAMELEN - 1) : name;
     }
 
 
