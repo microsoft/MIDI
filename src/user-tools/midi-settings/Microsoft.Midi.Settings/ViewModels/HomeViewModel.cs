@@ -81,7 +81,14 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                return m_configFileService.CurrentConfig.Header.Name;
+                if (IsValidConfigLoaded && m_configFileService.CurrentConfig.Header != null)
+                {
+                    return m_configFileService.CurrentConfig.Header.Name;
+                }
+                else
+                {
+                    return string.Empty;
+                }
             }
         }
 
@@ -89,7 +96,14 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                return m_configFileService.CurrentConfig.FileName;
+                if (m_configFileService.CurrentConfig != null)
+                {
+                    return m_configFileService.CurrentConfig.FileName;
+                }
+                else
+                {
+                    return string.Empty;
+                }
             }
         }
 

@@ -170,29 +170,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             // this is wasteful to get everything and then iterate, but there's 
             // no AQS way to search using our custom DEVPKEY properties
 
-            winrt::hstring query{ MIDI_ENDPOINT_DEVICE_AQS_FILTER };
-
             for (auto const& ep : endpointsToSearch)
             {
-                auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(ep.EndpointDeviceId());
+                if (ep.GetTransportSuppliedInfo().TransportId != TransportId()) continue;
+                if (ep.EndpointDeviceId() == loopbackEndpoint.EndpointDeviceId()) continue;
 
-                // don't process the endpoint that was passed in, of course
-                if (id != loopbackEndpoint.EndpointDeviceId())
+
+                if (ep.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) &&
+                    ep.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
                 {
-                    if (ep.Properties().HasKey(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) && 
-                        ep.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator) != nullptr)
-                    {
-                        auto thisAssociator = winrt::unbox_value<winrt::hstring>(loopbackEndpoint.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
+                    auto thisAssociator = winrt::unbox_value<winrt::hstring>(ep.Properties().Lookup(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
 
-                        if (!thisAssociator.empty())
-                        {
-                            // return the endpoint if it has the matching association id
-                            if (thisAssociator == associator)
-                            {
-                                // create the endpoint
-                                return MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(id);
-                            }
-                        }
+                    // return the endpoint if it has the matching association id
+                    if (thisAssociator == associator)
+                    {
+                        return ep;
                     }
                 }
             }

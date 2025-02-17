@@ -167,6 +167,8 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
 
     Write-Host "Taking ownership of wdmaud2.drv..." -ForegroundColor DarkCyan
     cmd.exe /c "takeown /F %windir%\System32\wdmaud2.drv"
+    #cmd.exe /c "icacls %windir%\System32\wdmaud2.drv /grant administrators:F"
+    Write-Host "wdmaud2.drv is protected by Windows Resource Protection (WRP) and cannot be replaced in public builds without first disabling WRP." -ForegroundColor DarkCyan
 
     Write-Host
     Write-Host "You may now install the development version of the service and plugins." -ForegroundColor Green

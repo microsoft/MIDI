@@ -611,6 +611,24 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                 OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_USER_SUPPLIED_DESC, userInfo.Description);
             }
 
+
+            // show any GTBs. This is needed to help debug some winmm enumeration issues
+
+            for (auto const& gtb : device.GetGroupTerminalBlocks())
+            {
+                OutputBlankLine();
+
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_GTB_NUMBER, gtb.Number());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_GTB_NAME, gtb.Name());
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_GTB_FIRST_GROUP, gtb.FirstGroup().DisplayValue());
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_GTB_GROUP_COUNT, gtb.GroupCount());
+            }
+
+            if (device.GetGroupTerminalBlocks().Size() > 0)
+            {
+                OutputBlankLine();
+            }
+
             auto parent = device.GetParentDeviceInformation();
 
             if (parent != nullptr)

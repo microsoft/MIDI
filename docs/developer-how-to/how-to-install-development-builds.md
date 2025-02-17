@@ -70,3 +70,9 @@ If everything worked, you'll see the files reported as being from `Program Files
 In some cases, you may want to leave the existing service, but install only a preview plugin. In that case, the service and other components will still show `System32`, but the new component will show `Program Files` as the location.
 
 > Note: These scripts only know about the plugins we've developed. Additional third-party components will not be shown in the output unless we know about and add them.
+
+## wdmaud2.drv the WinMM bridge to Windows MIDI Services
+
+The WinMM compatibility component, `wdmaud2.drv`, is a system-protected file under Windows 11 Resource Protection (WRP). It is possible to take ownership of it using the `takeown` command, but if you replace it, WRP will kick in and put the official version back in place. The mechanisms used to bypass Windows File Protection (WFP) with older versions of Windows do not necessarily apply here.
+
+[Learn more about Windows Resource Protection](https://learn.microsoft.com/windows/win32/wfp/about-windows-file-protection)
