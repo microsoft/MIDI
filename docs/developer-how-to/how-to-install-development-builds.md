@@ -15,6 +15,10 @@ If you are a regular musician, we generally recommend you stick with what is ins
 
 > Note: The steps in this file will eventually be replaced by developer-mode settings in the MIDI Settings app.
 
+## Enable developer mode
+
+In Windows Settings, you must enable developer mode. System > For Developers > 
+
 ## Install PowerShell 7
 
 The scripts require PowerShell 7 or newer. You can install PowerShell [following these instructions](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).

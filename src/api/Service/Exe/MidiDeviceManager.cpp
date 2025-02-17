@@ -2466,8 +2466,7 @@ CMidiDeviceManager::SyncMidi1Ports(
         {
             if (portInfo[flow][groupIndex].IsEnabled && !portInfo[flow][groupIndex].InterfaceId.empty())
             {
-
-                bool useOldStyleWinMMPortNaming{ true };        // TODO: Get this from reg key and local property
+                bool useOldStyleWinMMPortNaming{ true };        // TODO: Get this from reg key and local property, not from being hard-coded here
 
                 if (interfaceProperties.empty())
                 {
@@ -2493,9 +2492,13 @@ CMidiDeviceManager::SyncMidi1Ports(
                             DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
                     }
 
-                    //if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)) ||
-                    //    transportId == winrt::guid(__uuidof(Midi2LoopbackMidiTransport)) ||
-                    //    (transportId == winrt::guid(__uuidof(Midi2KSTransport)) && WI_IsFlagSet(nativeDataFormat, MidiDataFormats::MidiDataFormats_ByteStream)))
+                    // TEMP! This needs to be controlled by a property
+                    if (transportId == winrt::guid(__uuidof(Midi2KSTransport)))
+                    {
+                        useOldStyleWinMMPortNaming = false;
+                    }
+
+                    // this tells us to use the GTB name, and only the GTB name, as the WinMM port name. It overrides other settings
                     prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames);
                     if (prop)
                     {
