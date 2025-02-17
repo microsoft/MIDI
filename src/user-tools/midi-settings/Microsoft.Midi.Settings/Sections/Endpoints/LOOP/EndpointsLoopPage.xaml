@@ -39,11 +39,11 @@
                         Click="CreateNewLoopbackPair_Click"/>
 
  
-                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiLoopbackEndpointPairs}" Margin="13">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiLoopbackEndpointPairs}">
                     <ItemsControl.ItemTemplate>
                         
                         <DataTemplate x:DataType="local:MidiLoopbackEndpointPair">
-                            <controls:SettingsCard>
+                            <controls:SettingsCard Margin="3">
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Vertical">
                                         <TextBlock Text="{x:Bind LoopA.Name}" />
@@ -68,6 +68,8 @@
         </ScrollViewer>
 
 
+
+
         <ContentDialog x:Name="Dialog_CreateLoopbackEndpoints"
                        PrimaryButtonText="OK" 
                        IsPrimaryButtonEnabled="{x:Bind ViewModel.NewLoopbackSettingsAreValid, Mode=OneWay}"
@@ -78,7 +80,7 @@
                 <x:Double x:Key="ContentDialogMaxWidth">800</x:Double>
                 <x:Double x:Key="ContentDialogMaxHeight">800</x:Double>
             </ContentDialog.Resources>
-            
+
             <StackPanel Orientation="Vertical" >
                 <TextBlock Text="Create MIDI Loopback Endpoints" 
                            Style="{StaticResource DialogHeaderTextBlockStyle}"
@@ -88,7 +90,7 @@
                            Text="With MIDI 2.0, all endpoints are bidirectional. Therefore, to have a proper loopback, you need to have two endpoints, A and B, cross-wired to each other. Anything sent out from Loopback A will arrive at Loopback B's input, and vice-versa."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
-                
+
                 <Image Source="/Assets/LoopbackDiagram.svg" Height="80" HorizontalAlignment="Center" Margin="0"/>
 
 
@@ -152,6 +154,7 @@
 
             </StackPanel>
         </ContentDialog>
+
 
     </Grid>
 

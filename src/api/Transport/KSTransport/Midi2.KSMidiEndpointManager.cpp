@@ -621,8 +621,9 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
                 // for a native MIDI 1 device, the driver provides a MIDI 1 port name in the GTB
+                // but it's just the pin (iJack) name, so we still set this to false. Change in behavior.
                 interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), (PVOID) & (devPropTrue) });
+                    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID) & (devPropFalse) });
             }
         }
         else

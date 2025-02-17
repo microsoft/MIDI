@@ -17,11 +17,22 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly INavigationService _navigationService;
         private readonly IMidiConfigFileService m_configFileService;
 
-        public ICommand LaunchFirstRunExperience
+        public ICommand LaunchFirstRunExperienceCommand
         {
             get; private set;
         }
 
+        public ICommand CommonTaskCreateLoopbackEndpointsCommand
+        {
+            get; private set;
+        }
+
+        public ICommand CommonTaskSendSysExCommand
+        {
+            get; private set;
+        }
+
+        
         public string SystemTimerCurrentResolutionFormattedMilliseconds
         {
             get; set;
@@ -113,13 +124,24 @@ namespace Microsoft.Midi.Settings.ViewModels
             _navigationService = navigationService;
             m_configFileService = midiConfigFileService;
 
-            LaunchFirstRunExperience = new RelayCommand(
+            LaunchFirstRunExperienceCommand = new RelayCommand(
                 () =>
                 {
-                    System.Diagnostics.Debug.WriteLine("View Device Details Command exec");
-
                     _navigationService.NavigateTo(typeof(FirstRunExperienceViewModel).FullName!);
                 });
+
+            CommonTaskCreateLoopbackEndpointsCommand = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(EndpointsLoopViewModel).FullName!, "create");
+                });
+
+            CommonTaskSendSysExCommand = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(ToolsSysExViewModel).FullName!, "send");
+                });
+
         }
 
         public void OnNavigatedFrom()

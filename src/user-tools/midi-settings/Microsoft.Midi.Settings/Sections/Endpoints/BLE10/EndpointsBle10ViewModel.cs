@@ -14,7 +14,7 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class EndpointsBle10ViewModel : SingleTransportEndpointViewModelBase, INavigationAware
+    public partial class EndpointsBle10ViewModel : SingleTransportEndpointViewModelBase
     {
         public EndpointsBle10ViewModel(INavigationService navigationService) : base("BLE10MS", navigationService)
         {

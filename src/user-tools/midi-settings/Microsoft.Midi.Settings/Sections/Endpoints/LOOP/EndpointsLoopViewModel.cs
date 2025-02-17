@@ -6,6 +6,7 @@ using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Markup;
 using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,11 @@ namespace Microsoft.Midi.Settings.ViewModels
     public partial class EndpointsLoopViewModel : SingleTransportEndpointViewModelBase, INavigationAware
     {
         private IMidiConfigFileService m_midiConfigFileService;
+
+        public ICommand ShowCreateLoopbackPairsDialogCommand
+        {
+            get; private set;
+        }
 
         public ICommand CreateLoopbackPairsCommand
         {
@@ -265,6 +271,33 @@ namespace Microsoft.Midi.Settings.ViewModels
                     CreateNewLoopbackEndpoints();
 
                 });
+
+            //ShowCreateLoopbackPairsDialogCommand = new RelayCommand(
+            //    async () =>
+            //    {
+            //        //var dialog = new Dialog_CreateLoopbackEndpoints();
+
+            //        var dialog = new ContentDialog();
+            //        dialog.Content = XamlReader.Load()
+
+            //        await dialog.ShowAsync();
+            //    });
+        }
+
+
+
+        public void OnNavigatedFrom()
+        {
+        }
+
+        public event EventHandler ShowCreateDialog;
+
+        public void OnNavigatedTo(object parameter)
+        {
+            if (parameter != null && ((string)parameter).ToLower() == "create")
+            {
+                ShowCreateDialog?.Invoke(this, new EventArgs());
+            }
         }
 
     }

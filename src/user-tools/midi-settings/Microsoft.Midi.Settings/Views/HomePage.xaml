@@ -44,7 +44,7 @@
                      >
                 <InfoBar.ActionButton>
                     <Button Content="Finish MIDI Setup"
-                            Command="{x:Bind ViewModel.LaunchFirstRunExperience}" />
+                            Command="{x:Bind ViewModel.LaunchFirstRunExperienceCommand}" />
                 </InfoBar.ActionButton>
             </InfoBar>
 
@@ -124,7 +124,8 @@
                             <TextBlock x:Uid="CommonTasksGroup_Endpoints" Style="{StaticResource HomeCardItemSeparatorStyle}" />
                         </Border>-->
 
-                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="True">
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                               Command="{x:Bind ViewModel.CommonTaskCreateLoopbackEndpointsCommand}">
                             <controls:SettingsCard.Header>
                                 <TextBlock x:Uid="CommonTasks_CreateLoopbackEndpoints" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>
@@ -142,7 +143,8 @@
                             </controls:SettingsCard.HeaderIcon>
                         </controls:SettingsCard>
 
-                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="True">
+                        <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                               Command="{x:Bind ViewModel.CommonTaskSendSysExCommand}">
                             <controls:SettingsCard.Header>
                                 <TextBlock x:Uid="CommonTasks_SendSysExFile" TextWrapping="WrapWholeWords" />
                             </controls:SettingsCard.Header>

@@ -15,7 +15,7 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class EndpointsAppViewModel : SingleTransportEndpointViewModelBase, INavigationAware
+    public partial class EndpointsAppViewModel : SingleTransportEndpointViewModelBase
     {
         public EndpointsAppViewModel(INavigationService navigationService) : base("APP", navigationService)
         {

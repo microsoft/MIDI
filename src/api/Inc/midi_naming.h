@@ -176,7 +176,14 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
         std::wstring name;
 
-        name = parentDeviceName;
+        if (blockName != parentDeviceName)
+        {
+            name = parentDeviceName + L" " + blockName;
+        }
+        else
+        {
+            name = parentDeviceName;
+        }
 
         return truncateToWinMMLimit ? name.substr(0, MAXPNAMELEN - 1) : name;
     }
