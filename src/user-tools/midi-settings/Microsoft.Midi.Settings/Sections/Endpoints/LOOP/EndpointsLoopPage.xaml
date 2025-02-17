@@ -34,30 +34,43 @@
                 <TextBlock Text="{x:Bind ViewModel.Transport.Description, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}"/>
 
                 <Button x:Name="CreateNewLoopbackPair" 
-                        Margin="13"
+                        Margin="5,13,13,13"
                         Content="Create New Loopback Endpoint Pair"
                         Click="CreateNewLoopbackPair_Click"/>
 
-                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiEndpointDevices}">
+ 
+                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiLoopbackEndpointPairs}" Margin="13">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="local:MidiEndpointDeviceListItem">
-                            <midicontrols:MidiEndpointDeviceListItemControl EndpointItem="{x:Bind}" 
-                                                                            Loaded="MidiEndpointDeviceListItemControl_Loaded"
-                                                                            Margin="3"/>
+                        
+                        <DataTemplate x:DataType="local:MidiLoopbackEndpointPair">
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="{x:Bind LoopA.Name}" />
+                                        <TextBlock Text="{x:Bind LoopB.Name}" />
+                                    </StackPanel>
+                                </controls:SettingsCard.Header>
+                                <controls:SettingsCard.Content>
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock Text="{x:Bind LoopA.EndpointDeviceId}" />
+                                        <TextBlock Text="{x:Bind LoopB.EndpointDeviceId}" />
+                                    </StackPanel>
+                                </controls:SettingsCard.Content>
+                               
+                            </controls:SettingsCard>
+                            
                         </DataTemplate>
 
                     </ItemsControl.ItemTemplate>
-                    
                 </ItemsControl>
-
+                
             </StackPanel>
-
         </ScrollViewer>
 
 
         <ContentDialog x:Name="Dialog_CreateLoopbackEndpoints"
                        PrimaryButtonText="OK" 
-                       IsPrimaryButtonEnabled="{x:Bind ViewModel.NewLoopbackSettingsAreValid, Converter={StaticResource BoolNegationConverter}, Mode=OneWay}"
+                       IsPrimaryButtonEnabled="{x:Bind ViewModel.NewLoopbackSettingsAreValid, Mode=OneWay}"
                        CloseButtonText="Cancel"
                        PrimaryButtonCommand="{x:Bind ViewModel.CreateLoopbackPairsCommand}"
                        >
@@ -65,6 +78,7 @@
                 <x:Double x:Key="ContentDialogMaxWidth">800</x:Double>
                 <x:Double x:Key="ContentDialogMaxHeight">800</x:Double>
             </ContentDialog.Resources>
+            
             <StackPanel Orientation="Vertical" >
                 <TextBlock Text="Create MIDI Loopback Endpoints" 
                            Style="{StaticResource DialogHeaderTextBlockStyle}"
@@ -75,8 +89,6 @@
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
                 
-                <!-- TODO: Diagram -->
-
                 <Image Source="/Assets/LoopbackDiagram.svg" Height="80" HorizontalAlignment="Center" Margin="0"/>
 
 
@@ -130,6 +142,13 @@
                               IsOn="{x:Bind ViewModel.NewLoopbackIsPersistent, Mode=TwoWay}"
                               Header="Retain this loopback pair across service restarts/reboots. If this control is disabled, please create a configuration file using the options on the home page." 
                               />
+
+
+                <TextBlock Text="{x:Bind ViewModel.ValidationErrorMessage, Mode=OneWay}"
+                           Margin="13"
+                           Style="{StaticResource ValidationErrorTextBlockStyle}"
+                           Visibility="{x:Bind ViewModel.NewLoopbackSettingsAreValid, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}" />
+
 
             </StackPanel>
         </ContentDialog>

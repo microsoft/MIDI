@@ -569,6 +569,7 @@ int __cdecl main()
     //}
 
     std::cout << std::endl;
+    std::cout << "-- End of Information --" << std::endl << std::endl;
 
     return 0;
 }

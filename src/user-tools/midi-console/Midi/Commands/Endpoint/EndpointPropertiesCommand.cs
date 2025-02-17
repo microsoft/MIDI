@@ -371,7 +371,8 @@ namespace Microsoft.Midi.ConsoleApp
                             }
 
                             groupInformation += $", [grey]{Strings.CommonStringProtocolSingular}[/] " + groupTerminalBlock.Protocol.ToString();
-                            groupInformation += $", [grey]{Strings.CommonStringDirectionSingular}[/] " + groupTerminalBlock.Direction.ToString();
+
+                            groupInformation += $", [grey]{Strings.CommonStringDirectionSingular}[/] " + MidiFriendlyNames.GroupTerminalBlockDirection(groupTerminalBlock.Direction);
 
                             table.AddRow(
                                 AnsiMarkupFormatter.FormatBlockNumber(groupTerminalBlock.Number) + " " +

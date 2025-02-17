@@ -917,4 +917,16 @@ Timestamp</value>
   <data name="ParameterServiceRestart" xml:space="preserve">
     <value>Restart the service when complete</value>
   </data>
+  <data name="DirectionMessageSource" xml:space="preserve">
+    <value>Message Source</value>
+  </data>
+  <data name="DirectionMessageDestination" xml:space="preserve">
+    <value>Message Destination</value>
+  </data>
+  <data name="DirectionMessageBiDi" xml:space="preserve">
+    <value>Source/Destination</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
 </root>

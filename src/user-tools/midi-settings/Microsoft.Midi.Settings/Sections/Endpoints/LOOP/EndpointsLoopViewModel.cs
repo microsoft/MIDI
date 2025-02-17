@@ -18,6 +18,13 @@ using Windows.Foundation;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
+    public class MidiLoopbackEndpointPair
+    {
+        public MidiEndpointDeviceInformation LoopA { get; internal set; }
+        public MidiEndpointDeviceInformation LoopB { get; internal set; }
+    }
+
+
     public partial class EndpointsLoopViewModel : SingleTransportEndpointViewModelBase, INavigationAware
     {
         private IMidiConfigFileService m_midiConfigFileService;
@@ -58,38 +65,74 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
+        private string m_newUniqueIdentifier;
         public string NewUniqueIdentifier
         {
-            get; set;
+            get { return m_newUniqueIdentifier; }
+            set
+            {
+                m_newUniqueIdentifier = value.Trim();
+
+                UpdateValidState();
+                OnPropertyChanged();
+            }
         }
 
-        public bool NewLoopbackIsPersistent
-        {
-            get; set;
-        }
+        [ObservableProperty]
+        public bool newLoopbackIsPersistent;
 
-        public bool NewLoopbackSettingsAreValid
-        {
-            get; internal set;
-        }
 
-        public string ValidationErrorMessage
-        {
-            get; internal set;
-        }
+        [ObservableProperty]
+        public bool newLoopbackSettingsAreValid;
+
+        [ObservableProperty]
+        public string validationErrorMessage;
 
 
         private void UpdateValidState()
         {
             // validate both names are not duplicates of each other
+            if (string.IsNullOrWhiteSpace(NewLoopbackEndpointAName) || 
+                string.IsNullOrWhiteSpace(NewLoopbackEndpointBName))
+            {
+                ValidationErrorMessage = "Both endpoint names are required.";
+                NewLoopbackSettingsAreValid = false;
+                return;
+            }
 
-            // validate both names are not duplicates of any other endpoint name
+            if (NewLoopbackEndpointAName.ToUpper().Trim() == NewLoopbackEndpointBName.ToUpper().Trim())
+            {
+                ValidationErrorMessage = "Endpoints A and B cannot have the same name.";
+                NewLoopbackSettingsAreValid = false;
+                return;
+            }
+
+
+            // TODO: validate both names are not duplicates of any other endpoint name
 
             // validate the unique id is good
+            if (string.IsNullOrWhiteSpace(NewUniqueIdentifier))
+            {
+                ValidationErrorMessage = "Unique identifier is required.";
+                NewLoopbackSettingsAreValid = false;
+                return;
+            }
+
 
             // validate the unique id isn't already in use with another loopback
+            foreach (var pair in MidiLoopbackEndpointPairs)
+            {
+                if (pair.LoopA.GetTransportSuppliedInfo().SerialNumber.ToUpper() == NewUniqueIdentifier.ToUpper() ||
+                    pair.LoopB.GetTransportSuppliedInfo().SerialNumber.ToUpper() == NewUniqueIdentifier.ToUpper())
+                {
+                    ValidationErrorMessage = "Unique identifier is already in use with another loopback endpoint.";
+                    NewLoopbackSettingsAreValid = false;
+                    return;
+                }
+            }
 
-            // update NewLoopbackSettingsAreValid and ValidationErrorMessage if needed
+            ValidationErrorMessage = string.Empty;
+            NewLoopbackSettingsAreValid = true;
         }
 
         private string CleanupUniqueId(string source)
@@ -118,13 +161,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             var endpointA = new MidiLoopbackEndpointDefinition();
             var endpointB = new MidiLoopbackEndpointDefinition();
-
-            // if endpoint A or B names are empty, do not close. display an error
-
-            // if endpoint A or B unique ids are empty, do not close. display suggestion to generate them
-            // todo: need to limit to alpha plus just a couple other characters, and only 32 in length
-
-
 
             endpointA.Name = NewLoopbackEndpointAName.Trim();
             endpointB.Name = NewLoopbackEndpointBName.Trim();
@@ -166,8 +202,49 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
+
+        public ObservableCollection<MidiLoopbackEndpointPair> MidiLoopbackEndpointPairs { get; } = [];
+        private void LoadExistingEndpointPairs()
+        {
+            // this keeps track of ids for dedup purposes
+            var ids = new Dictionary<string, bool>();
+
+            // we shouldn't be reloading here. optimize this later.
+            var endpoints = AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices
+                .Where(x => x.Value.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
+                .Select(i => i.Value);
+
+
+            foreach (var endpoint in endpoints)
+            {
+                var associated = MidiLoopbackEndpointManager.GetAssociatedLoopbackEndpoint(endpoint);
+
+                if (associated != null)
+                {
+                    if (!ids.ContainsKey(endpoint.EndpointDeviceId) &&
+                        !ids.ContainsKey(associated.EndpointDeviceId))
+                    {
+                        var pair = new MidiLoopbackEndpointPair();
+
+                        pair.LoopA = endpoint;
+                        pair.LoopB = associated;
+
+                        MidiLoopbackEndpointPairs.Add(pair);
+
+                        ids.Add(pair.LoopA.EndpointDeviceId, true);
+                        ids.Add(pair.LoopB.EndpointDeviceId, true);
+                    }
+                }
+            }
+        }
+
+
+
+
         public EndpointsLoopViewModel(INavigationService navigationService, IMidiConfigFileService midiConfigFileService) : base("LOOP", navigationService)
         {
+            LoadExistingEndpointPairs();
+
             m_midiConfigFileService = midiConfigFileService;
 
             GenerateNewUniqueId();
@@ -180,6 +257,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             CreateLoopbackPairsCommand = new RelayCommand(
                 () =>
                 {
+                    if (!NewLoopbackSettingsAreValid)
+                    {
+                        return;
+                    }
+
                     CreateNewLoopbackEndpoints();
 
                 });
