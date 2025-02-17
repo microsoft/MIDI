@@ -11,6 +11,10 @@
 #include "Midi2KSAggregateTransport.h"
 #include "Midi2KSTransport.h"
 #include "Midi2LoopbackMidiTransport.h"
+// naming
+#include "midi_naming.h"
+
+
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -2503,6 +2507,10 @@ CMidiDeviceManager::SyncMidi1Ports(
                     if (prop)
                     {
                         usePortInfoName = winrt::unbox_value<bool>(prop);
+                    }
+                    else
+                    {
+                        usePortInfoName = false;
                     }
 
                     prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CustomEndpointName);

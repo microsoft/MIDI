@@ -122,6 +122,11 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             // TEMPORARY code
             name = transportSuppliedEndpointName;
 
+            if (name.empty())
+            {
+                name = blockName;
+            }
+
 
             return truncateToWinMMLimit ? name.substr(0, MAXPNAMELEN - 1) : name;
         }
@@ -172,17 +177,18 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             return name + L" " + suffix;
         }
 
+
         // this is the fallback
 
         std::wstring name;
 
-        if (blockName != parentDeviceName)
+        if (!transportSuppliedEndpointName.empty() && blockName != transportSuppliedEndpointName)
         {
-            name = parentDeviceName + L" " + blockName;
+            name = internal::TrimmedWStringCopy(transportSuppliedEndpointName + L" " + blockName);
         }
         else
         {
-            name = parentDeviceName;
+            name = transportSuppliedEndpointName;
         }
 
         return truncateToWinMMLimit ? name.substr(0, MAXPNAMELEN - 1) : name;
