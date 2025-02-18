@@ -85,32 +85,33 @@ namespace internal = ::WindowsMidiServicesInternal;
                                             // a system realtime message must have all these bits set
 
 
-// For reference, this site is better than the formal MIDI 1.0 specs in many ways
-// http://midi.teragonaudio.com/tech/midispec.htm
+// For reference, http://midi.teragonaudio.com/tech/midispec.htm
+// and https://midi.org/expanded-midi-1-0-messages-list
 
 #define MIDI_MESSAGE_IS_THREE_BYTES(status) ( \
-                    status == MIDI_NOTEOFF || \
-                    status == MIDI_NOTEON || \
-                    status == MIDI_POLYAFTERTOUCH || \
-                    status == MIDI_CONTROLCHANGE || \
-                    status == MIDI_PITCHBEND || \
-                    status == MIDI_SONGPOSITIONPOINTER)
+                    ((status & MIDI_NOTEOFF) == MIDI_NOTEOFF) || \
+                    ((status & MIDI_NOTEON) == MIDI_NOTEON) || \
+                    ((status & MIDI_POLYAFTERTOUCH) == MIDI_POLYAFTERTOUCH) || \
+                    ((status & MIDI_CONTROLCHANGE) == MIDI_CONTROLCHANGE) || \
+                    ((status & MIDI_PITCHBEND) == MIDI_PITCHBEND) || \
+                    (status == MIDI_SONGPOSITIONPOINTER))
 
 #define MIDI_MESSAGE_IS_TWO_BYTES(status) ( \
-                    status == MIDI_PROGRAMCHANGE || \
-                    status == MIDI_MONOAFTERTOUCH || \
-                    status == MIDI_TIMECODE || \
-                    status == MIDI_SONGSELECT)
+                    ((status & MIDI_PROGRAMCHANGE) == MIDI_PROGRAMCHANGE) || \
+                    ((status & MIDI_MONOAFTERTOUCH) == MIDI_MONOAFTERTOUCH) || \
+                    (status == MIDI_TIMECODE) || \
+                    (status == MIDI_SONGSELECT))
 
 #define MIDI_MESSAGE_IS_ONE_BYTE(status) ( \
-                    status == MIDI_TIMINGCLOCK || \
-                    status == MIDI_TUNEREQUEST || \
-                    status == MIDI_START || \
-                    status == MIDI_CONTINUE || \
-                    status == MIDI_STOP || \
-                    status == MIDI_ACTIVESENSE || \
-                    status == MIDI_RESET || \
-                    status == MIDI_EOX)
+                    (status == MIDI_TIMINGCLOCK) || \
+                    (status == MIDI_TUNEREQUEST) || \
+                    (status == MIDI_START) || \
+                    (status == MIDI_CONTINUE) || \
+                    (status == MIDI_STOP) || \
+                    (status == MIDI_ACTIVESENSE) || \
+                    (status == MIDI_RESET) || \
+                    (status == MIDI_EOX))
+
 
 #define MIDI_MESSAGE_TERMINATES_RUNNING_STATUS(status) (\
                     status >= MIDI_SYSEX && \
@@ -134,3 +135,4 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #define MIDI_BYTE_IS_DATA_BYTE(b) (\
                     (b &  MIDI_STATUSBYTEFILTER) == 0)
+
