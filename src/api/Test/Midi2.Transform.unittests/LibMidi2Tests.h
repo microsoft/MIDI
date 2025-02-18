@@ -46,6 +46,7 @@ public:
 
         TEST_METHOD(TestProgramChangeFromBytes);
         TEST_METHOD(TestProgramChangeToBytes);
+        TEST_METHOD(TestSelectedChannelMessagesToBytes);
 
     void InternalTranslateMidi1BytesToUmpWords(
         _In_ uint8_t const groupIndex, 

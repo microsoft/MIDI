@@ -58,7 +58,10 @@ void LoadWinMMDevices()
 
 void DisplayAllWinMMInputs()
 {
-    WriteInfo("Available Input Ports");;
+    WriteInfo("Available Input Ports");
+
+    // todo: should sort this
+
 
     for (auto const& capsEntry : m_midiInputDevices)
     {
@@ -146,7 +149,8 @@ void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
     m_countStatusBytesReceived++;
     m_countAllBytesReceived++;
 
-    if (MIDI_MESSAGE_IS_TWO_BYTES(status) || MIDI_MESSAGE_IS_THREE_BYTES(status))
+    if (MIDI_MESSAGE_IS_TWO_BYTES(status) || 
+        MIDI_MESSAGE_IS_THREE_BYTES(status))
     {
         DisplayDataByte(data1, isError);
         m_countAllBytesReceived++;

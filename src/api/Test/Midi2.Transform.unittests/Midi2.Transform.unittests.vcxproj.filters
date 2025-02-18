@@ -24,6 +24,9 @@
     <ClCompile Include="LibMidi2Tests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiUMPToBSTransformTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LibMidi2Tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUMPToBSTransformTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

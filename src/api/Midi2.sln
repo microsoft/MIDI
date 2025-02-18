@@ -40,6 +40,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{A4512D
 		Inc\json_defs.h = Inc\json_defs.h
 		Inc\json_helpers.h = Inc\json_helpers.h
 		Inc\loopback_ids.h = Inc\loopback_ids.h
+		Inc\midi1_message_defs.h = Inc\midi1_message_defs.h
 		Inc\MidiDefs.h = Inc\MidiDefs.h
 		Inc\midi_group_terminal_blocks.h = Inc\midi_group_terminal_blocks.h
 		Inc\midi_naming.h = Inc\midi_naming.h
