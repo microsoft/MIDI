@@ -48,16 +48,16 @@
 // and https://midi.org/expanded-midi-1-0-messages-list
 
 #define MIDI_MESSAGE_IS_THREE_BYTES(status) ( \
-                    ((status & MIDI_NOTEOFF) == MIDI_NOTEOFF) || \
-                    ((status & MIDI_NOTEON) == MIDI_NOTEON) || \
-                    ((status & MIDI_POLYAFTERTOUCH) == MIDI_POLYAFTERTOUCH) || \
-                    ((status & MIDI_CONTROLCHANGE) == MIDI_CONTROLCHANGE) || \
-                    ((status & MIDI_PITCHBEND) == MIDI_PITCHBEND) || \
+                    ((status & 0xF0) == MIDI_NOTEOFF) || \
+                    ((status & 0xF0) == MIDI_NOTEON) || \
+                    ((status & 0xF0) == MIDI_POLYAFTERTOUCH) || \
+                    ((status & 0xF0) == MIDI_CONTROLCHANGE) || \
+                    ((status & 0xF0) == MIDI_PITCHBEND) || \
                     (status == MIDI_SONGPOSITIONPOINTER))
 
 #define MIDI_MESSAGE_IS_TWO_BYTES(status) ( \
-                    ((status & MIDI_PROGRAMCHANGE) == MIDI_PROGRAMCHANGE) || \
-                    ((status & MIDI_MONOAFTERTOUCH) == MIDI_MONOAFTERTOUCH) || \
+                    ((status & 0xF0) == MIDI_PROGRAMCHANGE) || \
+                    ((status & 0xF0) == MIDI_MONOAFTERTOUCH) || \
                     (status == MIDI_TIMECODE) || \
                     (status == MIDI_SONGSELECT))
 
