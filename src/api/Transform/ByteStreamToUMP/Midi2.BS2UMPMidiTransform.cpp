@@ -106,7 +106,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
                     m_BS2UMP.defaultGroup));
 
                 m_umpMessageCurrentWordCount = 0;
-                m_umpMessage[0] = m_umpMessage[1] = m_umpMessage[2] = m_umpMessage[3] = { 0 };
+                m_umpMessage[0] = m_umpMessage[1] = m_umpMessage[2] = m_umpMessage[3] = 0;
             }
 
         }
