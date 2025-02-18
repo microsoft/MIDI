@@ -56,29 +56,32 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
 {
     // Send the UMP(s) to the parser
     uint32_t *data = (uint32_t *)inputData;
-    for (UINT i = 0; i < (length / 4); i++)
+    for (UINT i = 0; i < (length / sizeof(uint32_t)); i++)
     {
         m_UMP2BS.UMPStreamParse(data[i]);
-    }
 
-    // retrieve the bytestream message from the parser
-    // and send it on
-    while (m_UMP2BS.availableBS())
-    {
-        BYTE byteStream[MAXIMUM_LIBMIDI2_BYTESTREAM_DATASIZE];
-        UINT byteCount;
-        for(byteCount = 0; byteCount < _countof(byteStream) && m_UMP2BS.availableBS(); byteCount++)
+        // retrieve the bytestream message from the parser
+        // and send it on
+        while (m_UMP2BS.availableBS())
         {
-            byteStream[byteCount] = m_UMP2BS.readBS();
-        }
+            UINT messageByteCount{ 0 };
 
-        if (byteCount > 0)
-        {
-            // TODO: If this fails, it leaves a bunch of stuff in the m_UMP2BS that will get sent next time
-            // around. Should likely drain that before moving on
+            BYTE byteStream[MAXIMUM_LIBMIDI2_BYTESTREAM_DATASIZE];
+            UINT byteIndex;
+            for(byteIndex = 0; byteIndex < _countof(byteStream) && m_UMP2BS.availableBS(); byteIndex++)
+            {
+                messageByteCount++;
+                byteStream[byteIndex] = m_UMP2BS.readBS();
+            }
 
-            // For transforms, by convention the context contains the group index.
-            RETURN_IF_FAILED(m_Callback->Callback(&(byteStream[0]), byteCount, position, m_UMP2BS.group));
+            if (messageByteCount > 0)
+            {
+                // TODO: If this fails, it leaves a bunch of stuff in the m_UMP2BS that will get sent next time
+                // around. Should likely drain that before moving on
+
+                // For transforms, by convention the context contains the group index.
+                RETURN_IF_FAILED(m_Callback->Callback(&(byteStream[0]), messageByteCount, position, m_UMP2BS.group));
+            }
         }
     }
 
