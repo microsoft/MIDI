@@ -10,6 +10,11 @@
 #include "ks.h"
 #include "Midi2KSAggregateTransport.h"
 #include "Midi2KSTransport.h"
+#include "Midi2LoopbackMidiTransport.h"
+// naming
+#include "midi_naming.h"
+
+
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -2325,11 +2330,12 @@ CMidiDeviceManager::SyncMidi1Ports(
     additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
     additionalProperties.Append(STRING_PKEY_MIDI_SupportedDataFormats);
     additionalProperties.Append(STRING_PKEY_MIDI_NativeDataFormat);
-    additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
     additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockDeclaredCount);
     additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
     additionalProperties.Append(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete);
     additionalProperties.Append(STRING_PKEY_MIDI_CustomPortAssignments);
+    additionalProperties.Append(STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames);
+    additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
 
     // We have function blocks to retrieve
     // build up the property keys to query for the function blocks
@@ -2344,6 +2350,21 @@ CMidiDeviceManager::SyncMidi1Ports(
     }
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(umpMidiPort->DeviceInterfaceId.get(), additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+    // First, let's check to see if we should be creating MIDI 1 ports for this endpoint
+    // default action, if unspecified, is to create the ports
+    auto createMidi1PortsProp = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
+    if (createMidi1PortsProp)
+    {
+        auto createPorts = winrt::unbox_value<bool>(createMidi1PortsProp);
+
+        if (!createPorts)
+        {
+            // it's not an error condition to skip creating MIDI 1 ports for an endpoint
+            return S_OK;
+        }
+    }
+
 
     // get the current function block information from the UMP SWD, if present, else fall back to
     // GTB if that is present. If neither, then there's nothing more to do.
@@ -2421,7 +2442,7 @@ CMidiDeviceManager::SyncMidi1Ports(
     }
 
     std::vector<DEVPROPERTY> interfaceProperties{};
-    std::wstring baseFriendlyName;
+    //std::wstring baseFriendlyName;
     bool usePortInfoName {false};
     SW_DEVICE_CREATE_INFO createInfo{};
     GUID transportGUID{};
@@ -2430,6 +2451,14 @@ CMidiDeviceManager::SyncMidi1Ports(
     createInfo.cbSize = sizeof(createInfo);
     createInfo.pszInstanceId = umpMidiPort->InstanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+
+    std::wstring parentDeviceName{};
+    std::wstring transportSuppliedEndpointName{};
+    std::wstring manufacturerName{};
+    std::wstring customUmpEndpointName{};
+    std::wstring filterName{};
+    std::wstring customMidi1PortName{};
+
     if (GUID_NULL != umpMidiPort->ContainerId)
     {
         createInfo.pContainerId = &(umpMidiPort->ContainerId);
@@ -2441,6 +2470,8 @@ CMidiDeviceManager::SyncMidi1Ports(
         {
             if (portInfo[flow][groupIndex].IsEnabled && !portInfo[flow][groupIndex].InterfaceId.empty())
             {
+                bool useOldStyleWinMMPortNaming{ true };        // TODO: Get this from reg key and local property, not from being hard-coded here
+
                 if (interfaceProperties.empty())
                 {
                     // This is the first creation, so we need to do some additional work to prepare.
@@ -2465,45 +2496,41 @@ CMidiDeviceManager::SyncMidi1Ports(
                             DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
                     }
 
-                    // KSA uses port names for the GTB names. But the new MIDI 2.0 UMP driver
-                    // does the same for MIDI 1.0 devices. So we check both KSA and KS here.
-                    if (transportId == winrt::guid(__uuidof(Midi2KSAggregateTransport)) ||
-                        (transportId == winrt::guid(__uuidof(Midi2KSTransport)) && nativeDataFormat == MidiDataFormats::MidiDataFormats_ByteStream))
+                    // TEMP! This needs to be controlled by a property
+                    if (transportId == winrt::guid(__uuidof(Midi2KSTransport)))
                     {
-                        usePortInfoName = true;
+                        useOldStyleWinMMPortNaming = false;
+                    }
+
+                    // this tells us to use the GTB name, and only the GTB name, as the WinMM port name. It overrides other settings
+                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames);
+                    if (prop)
+                    {
+                        usePortInfoName = winrt::unbox_value<bool>(prop);
+                    }
+                    else
+                    {
+                        usePortInfoName = false;
                     }
 
                     prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CustomEndpointName);
                     if (prop)
                     {
-                        baseFriendlyName = winrt::unbox_value<winrt::hstring>(prop).c_str();
+                        customUmpEndpointName = winrt::unbox_value<winrt::hstring>(prop).c_str();
                         // If we have a custom endpoint name, that overrides the port info name, use that instead.
                         usePortInfoName = false;
                     }
-                    else
+
+                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_ManufacturerName);
+                    if (prop)
                     {
-                        std::wstring shortName{};
+                        manufacturerName = winrt::unbox_value<winrt::hstring>(prop).c_str();
+                    }
 
-                        prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_ManufacturerName);
-                        if (prop)
-                        {
-                            baseFriendlyName += winrt::unbox_value<winrt::hstring>(prop).c_str();
-                            baseFriendlyName += L" ";
-                        }
-
-                        prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_EndpointName);
-                        if (prop)
-                        {
-                            shortName = winrt::unbox_value<winrt::hstring>(prop).c_str();
-                            baseFriendlyName += shortName;
-                        }
-        
-                        if (baseFriendlyName.size() > MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX)
-                        {
-                            // if the size of name + " O-nn\0" > 32, we need to lose the manufacturer name for WinMM compat
-                            shortName.resize(MAX_WINMM_ENDPOINT_NAME_SIZE_WITHOUT_GROUP_SUFFIX);        
-                            baseFriendlyName = shortName.c_str();
-                        }
+                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_EndpointName);
+                    if (prop)
+                    {
+                        transportSuppliedEndpointName = winrt::unbox_value<winrt::hstring>(prop).c_str();
                     }
 
                     interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_TransportLayer, DEVPROP_STORE_SYSTEM, nullptr},
@@ -2520,46 +2547,21 @@ CMidiDeviceManager::SyncMidi1Ports(
                 }
 
                 // Create the friendly name for this interface and add it to the properties list
-                std::wstring friendlyName;
+                std::wstring friendlyName = internal::Midi1PortNaming::GenerateMidi1PortNameFromCreatedUmpEndpoint(
+                    useOldStyleWinMMPortNaming,
+                    customMidi1PortName,
+                    portInfo[flow][groupIndex].Name,    // gtb name
+                    parentDeviceName,
+                    manufacturerName,
+                    transportSuppliedEndpointName,
+                    customUmpEndpointName,
+                    usePortInfoName,
+                    static_cast<uint8_t>(groupIndex),
+                    static_cast<MidiFlow>(flow),
+                    WI_IsFlagSet(nativeDataFormat, MidiDataFormats::MidiDataFormats_UMP),
+                    true
+                );
 
-                // if we are using the port info name, and the port info name is valid,
-                // use that as the friendly name base, otherwise use the baseFriendlyName
-                // created above.
-                if (usePortInfoName && portInfo[flow][groupIndex].Name.length() > 0)
-                {
-                    friendlyName = portInfo[flow][groupIndex].Name;
-                }
-                else
-                {
-                    friendlyName = baseFriendlyName;
-                }
-
-                // if the device is a new MIDI 2 device, we'll add the group number. Otherwise, we'll leave
-                // off the differentiator. This is in testing with community. If you still see this in 
-                // after the Canary period ends, then this was preferred :)
-                //
-                // The next step if this doesn't work is to see if the name is already used, and then
-                // add the differentiator only in that case.
-                // 
-                // May also be good to, even if it's a UMP device, not add the differentiator if there's
-                // only one active group. Example: the Iridium only lists Group 1
-
-                if (nativeDataFormat == MidiDataFormats::MidiDataFormats_UMP)
-                {
-                    // append the flow(Input or Output) & group number (group index + 1) to the friendly name.
-                    if (MidiFlowIn == (MidiFlow)flow)
-                    {
-                        friendlyName = friendlyName + L" I-" + std::to_wstring(groupIndex + 1);
-                    }
-                    else
-                    {
-                        friendlyName = friendlyName + L" O-" + std::to_wstring(groupIndex + 1);
-                    }
-                }
-                else
-                {
-                    // native bytestream port. Leaving off the differentiator for now per Canary note above.
-                }
 
                 interfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
                     DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (wcslen(friendlyName.c_str()) + 1)), (PVOID)friendlyName.c_str() });

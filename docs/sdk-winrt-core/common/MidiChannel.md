@@ -22,7 +22,8 @@ The `MidiChannel` class is used to provide formatting and data validation for MI
 
 ## Constructors
 
-| `MidiChannel(UInt8)` | Create a MidiChannel with the specified channel Index (0-15). Any data in the upper 4 bits of the provided byte is ignored, so you may pass in an entire status + channel value here without first cleaning it. |
+| `MidiChannel()` | Create a MidiChannel with index 0 |
+| `MidiChannel(UInt8)` | Create a MidiChannel with the specified channel Index (0-15). Any data in the upper 4 bits of the provided byte is ignored, so you may pass in an entire status + channel value here without first cleaning it. C++ note: C++/WinRT creates a constructor which takes nullptr, as a result `MidiChannel(0)` will fail to compile if you have the compiler option set to equate 0 and nullptr. To avoid this, use `MidiChannel(static_cast<uint8_t>(0))` or simply `MidiChannel()`|
 
 ## Properties
 
@@ -32,9 +33,9 @@ The `MidiChannel` class is used to provide formatting and data validation for MI
 ## Static Properties
 
 | `ShortLabel` | Returns the localized abbreviation. For example, "Ch" in English. |
-| `ShortLabelPlural` | Returns the localized abbreviation. For example, "Chs" in English. |
+| `ShortLabelPlural` | Returns the localized plural abbreviation. |
 | `LongLabel` | Returns the localized full name. For example, "Channel" in English. |
-| `LongLabelPlural` | Returns the localized full name. For example, "Channels" in English. |
+| `LongLabelPlural` | Returns the localized full plural name. |
 
 ## Static Methods
 

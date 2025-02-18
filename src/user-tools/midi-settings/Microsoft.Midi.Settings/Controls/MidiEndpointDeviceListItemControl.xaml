@@ -18,7 +18,7 @@
             <helpers:HasUniqueIdToInverseVisibilityConverter x:Key="HasUniqueIdToInverseVisibilityConverter" />
             <helpers:MidiEndpointNativeDataFormatConverter x:Key="MidiEndpointNativeDataFormatConverter" />
             <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-            <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
+            <helpers:BooleanToFluentCheckConverter x:Key="BooleanToFluentCheckConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -69,31 +69,36 @@
                 <TextBlock Grid.Row="0" Grid.Column="2" 
                            Text="MIDI 1.0" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
                 <TextBlock Grid.Row="0" Grid.Column="3"
-                           Text="{x:Bind EndpointItem.SupportsMidi10Protocol, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                           Text="{x:Bind EndpointItem.SupportsMidi10Protocol, Mode=OneTime, Converter={StaticResource BooleanToFluentCheckConverter}}"
+                           FontFamily="{StaticResource SymbolThemeFontFamily}"
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="2" 
                            Text="MIDI 2.0" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
                 <TextBlock Grid.Row="1" Grid.Column="3"
-                           Text="{x:Bind EndpointItem.SupportsMidi20Protocol, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                           Text="{x:Bind EndpointItem.SupportsMidi20Protocol, Mode=OneTime, Converter={StaticResource BooleanToFluentCheckConverter}}"
+                           FontFamily="{StaticResource SymbolThemeFontFamily}"
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
 
                 <TextBlock Grid.Row="0" Grid.Column="4" 
                            Text="Unique Id?" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
                 <TextBlock Grid.Row="0" Grid.Column="5"
-                           Text="☑️"
+                           Text="&#xf16c;"
+                           FontFamily="{StaticResource SymbolThemeFontFamily}"
                            Visibility="{x:Bind EndpointItem.TransportSuppliedSerialNumber, Mode=OneTime, Converter={StaticResource HasUniqueIdToVisibilityConverter}}" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
                 <TextBlock Grid.Row="0" Grid.Column="5"
-                           Text="❌"
+                           Text="&#xf16b;"
+                           FontFamily="{StaticResource SymbolThemeFontFamily}"
                            Visibility="{x:Bind EndpointItem.TransportSuppliedSerialNumber, Mode=OneTime, Converter={StaticResource HasUniqueIdToInverseVisibilityConverter}}" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="4" 
                            Text="Multi-client" Style="{StaticResource SmallPropertyLabel}" Margin="21,3,3,3"/>
                 <TextBlock Grid.Row="1" Grid.Column="5"
-                           Text="{x:Bind EndpointItem.SupportsMultiClient, Mode=OneTime, Converter={StaticResource BooleanToEmojiCheckConverter}}"
+                           Text="{x:Bind EndpointItem.SupportsMultiClient, Mode=OneTime, Converter={StaticResource BooleanToFluentCheckConverter}}"
+                           FontFamily="{StaticResource SymbolThemeFontFamily}"
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
             </Grid>

@@ -28,6 +28,8 @@
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
+#include <wil\registry.h>
+#include <wil\registry_helpers.h>
 
 #include <SDKDDKVer.h>
 
@@ -77,9 +79,9 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "swd_helpers.h"
 #include "resource_util.h"
 #include "ump_helpers.h"
-
 #include "MidiXProc.h"
 
+#include "midi_naming.h"
 
 
 #include "strsafe.h"
@@ -106,7 +108,6 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "Midi2UMP2BSTransform.h"
 #include "Midi2UMP2BSTransform_i.c"
-
 
 
 class CMidi2KSAggregateMidiEndpointManager;

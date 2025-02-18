@@ -45,7 +45,7 @@ void LoadWinMMDevices()
 
     for (uint16_t i = 0; i < inputDeviceCount; i++)
     {
-        MIDIINCAPSW inputCaps{};
+        MIDIINCAPSW inputCaps{ 0 };
 
         auto result = midiInGetDevCaps(i, &inputCaps, sizeof(inputCaps));
 

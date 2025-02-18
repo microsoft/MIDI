@@ -91,53 +91,53 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 
 
 
-// this will be used for the group terminal block name but also for the WinMM port name
-HRESULT
-CreateGroupTerminalBlockName(
-    _In_ std::wstring parentDeviceName,
-    _In_ std::wstring filterName,
-    _In_ std::wstring currentPinName, 
-    _Inout_ std::wstring& newGroupTerminalBlockName)
-{
-    std::wstring cleanedPinName{};
-
-    // MOTU-specific. We don't want to mess up other names, so check only for whole word
-    if (currentPinName == L"MIDI")
-    {
-        cleanedPinName = L"";
-    }
-    else
-    {
-        cleanedPinName = currentPinName;
-    }
-
-    // the double and triple space entries need to be last
-    // there are other ways to do this with pattern matching, 
-    // but just banging this through for this version
-    std::wstring wordsToRemove[] = 
-    { 
-        parentDeviceName, filterName, 
-        L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
-        L"  ", L"   ", L"    "
-    };
-
-    for (auto const& word : wordsToRemove)
-    {
-        if (cleanedPinName.length() >= word.length())
-        {
-            auto idx = cleanedPinName.find(word);
-
-            if (idx != std::wstring::npos)
-            {
-                cleanedPinName = cleanedPinName.erase(idx, word.length());
-            }
-        }
-    }
-
-    newGroupTerminalBlockName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
-
-    return S_OK;
-}
+//// this will be used for the group terminal block name but also for the WinMM port name
+//HRESULT
+//CreateGroupTerminalBlockName(
+//    _In_ std::wstring parentDeviceName,
+//    _In_ std::wstring filterName,
+//    _In_ std::wstring currentPinName, 
+//    _Inout_ std::wstring& newGroupTerminalBlockName)
+//{
+//    std::wstring cleanedPinName{};
+//
+//    // Used by ESI, MOTU, and others. We don't want to mess up other names, so check only for whole word
+//    if (currentPinName == L"MIDI")
+//    {
+//        cleanedPinName = L"";
+//    }
+//    else
+//    {
+//        cleanedPinName = currentPinName;
+//    }
+//
+//    // the double and triple space entries need to be last
+//    // there are other ways to do this with pattern matching, 
+//    // but just banging this through for this version
+//    std::wstring wordsToRemove[] = 
+//    { 
+//        parentDeviceName, filterName, 
+//        L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
+//        L"  ", L"   ", L"    "
+//    };
+//
+//    for (auto const& word : wordsToRemove)
+//    {
+//        if (cleanedPinName.length() >= word.length())
+//        {
+//            auto idx = cleanedPinName.find(word);
+//
+//            if (idx != std::wstring::npos)
+//            {
+//                cleanedPinName = cleanedPinName.erase(idx, word.length());
+//            }
+//        }
+//    }
+//
+//    newGroupTerminalBlockName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
+//
+//    return S_OK;
+//}
 
 
 typedef struct {
@@ -164,6 +164,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
         );
 
+    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
     // we require at least one valid pin
     RETURN_HR_IF(E_INVALIDARG, masterEndpointDefinition.MidiPins.size() < 1);
@@ -218,6 +219,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     std::vector<internal::GroupTerminalBlockInternal> blocks{ };
     std::vector<PinMapEntryStagingEntry> pinMapEntries{ };
 
+    std::vector<std::wstring> portNamesUserFlowOut{ };
+    std::vector<std::wstring> portNamesUserFlowIn{ };
+
     for (auto const& pin : masterEndpointDefinition.MidiPins)
     {
         RETURN_HR_IF(E_INVALIDARG, pin.FilterDeviceId.empty());
@@ -233,26 +237,78 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         pinMapEntry.FilterId = pin.FilterDeviceId;
         pinMapEntry.PinDataFlow = pin.PinDataFlow;
 
+        MidiFlow flowFromUserPerspective;
+
+
+        std::wstring userSuppliedPortName{};            // TODO: This should come from config file
+        bool useOldStyleNaming{ true };                // TODO: This should come from registry and property
+        std::wstring deviceContainerName{};             // TODO: Need to get this from the device info
+        std::wstring deviceManufacturerName{};          // TODO: Need to get this from the parent device
+        bool isUsingVendorDriver{ false };              // TODO: Need to get this from the device information
+
+
         if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
         {
+            flowFromUserPerspective = MidiFlow::MidiFlowOut;
+
             pinMapEntry.GroupIndex = currentGtbInputGroupIndex;
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
             gtb.FirstGroupIndex = currentGtbInputGroupIndex;
             currentGtbInputGroupIndex++;
+
+            gtb.Name = internal::Midi1PortNaming::GenerateGtbNameFromMidi1Device(
+                useOldStyleNaming,                          // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
+                userSuppliedPortName,                       // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
+                deviceContainerName,                        // oddly some old WinMM code picks up the deviceContainerName somehow
+                pin.KSDriverSuppliedName,
+                masterEndpointDefinition.ParentDeviceName,  // the name of the actual connected device from which the UMP interface is generated
+                deviceManufacturerName,                     // manufacturer name
+                pin.FilterName,                             // the name of the filter. This is sometimes the same as the parent device
+                pin.PinName,                                // the name of the KS Filter pin. This can be the same as the USB iJack
+                gtb.FirstGroupIndex,
+                flowFromUserPerspective,
+                isUsingVendorDriver,
+                true,                                       // we truncate to the WinMM max name limit (32 chars including nul)
+                portNamesUserFlowOut
+            );
+
+            // this is kept just so we can add ordinal differentiators if we need to
+            portNamesUserFlowOut.push_back(gtb.Name);
         }
         else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)
         {
+            flowFromUserPerspective = MidiFlow::MidiFlowIn;
+
             pinMapEntry.GroupIndex = currentGtbOutputGroupIndex;
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
             gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
             currentGtbOutputGroupIndex++;
+
+            gtb.Name = internal::Midi1PortNaming::GenerateGtbNameFromMidi1Device(
+                useOldStyleNaming,                          // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
+                userSuppliedPortName,                       // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
+                deviceContainerName,                        // oddly some old WinMM code picks up the deviceContainerName somehow
+                pin.KSDriverSuppliedName,
+                masterEndpointDefinition.ParentDeviceName,  // the name of the actual connected device from which the UMP interface is generated
+                deviceManufacturerName,                     // manufacturer name
+                pin.FilterName,                             // the name of the filter. This is sometimes the same as the parent device
+                pin.PinName,                                // the name of the KS Filter pin. This can be the same as the USB iJack
+                gtb.FirstGroupIndex,
+                flowFromUserPerspective,
+                isUsingVendorDriver,
+                true,                                       // we truncate to the WinMM max name limit (32 chars including nul)
+                portNamesUserFlowIn
+            );
+
+            // this is kept just so we can add ordinal differentiators if we need to
+            portNamesUserFlowIn.push_back(gtb.Name);
         }
         else
         {
             RETURN_IF_FAILED(E_INVALIDARG);
         }
 
-        LOG_IF_FAILED(CreateGroupTerminalBlockName(masterEndpointDefinition.ParentDeviceName, pin.FilterName, pin.PinName, gtb.Name));
+        //LOG_IF_FAILED(CreateGroupTerminalBlockName(masterEndpointDefinition.ParentDeviceName, pin.FilterName, pin.PinName, gtb.Name));
 
         // default values as defined in the MIDI 2.0 USB spec
         gtb.Protocol = 0x01;                // midi 1.0
@@ -348,6 +404,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     {
         interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data()});
+
+        interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(devPropTrue), (PVOID)&devPropTrue });
     }
     else
     {
@@ -501,6 +560,57 @@ HRESULT GetPinDataFlow(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Ino
 }
 
 
+_Use_decl_annotations_
+HRESULT 
+CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiatedFilter, std::wstring& name)
+{
+    // get the name GUID
+
+    KSCOMPONENTID componentId{};
+    KSPROPERTY prop{};
+    ULONG countBytesReturned{};
+
+    prop.Id = KSPROPERTY_GENERAL_COMPONENTID;
+    prop.Set = KSPROPSETID_General;
+    prop.Flags = KSPROPERTY_TYPE_GET;
+
+    auto hrComponent = SyncIoctl(
+        hInstantiatedFilter,
+        IOCTL_KS_PROPERTY,
+        &prop,
+        sizeof(KSPROPERTY),
+        &componentId,
+        sizeof(KSCOMPONENTID),
+        &countBytesReturned
+    );
+
+    RETURN_IF_FAILED(hrComponent);
+
+    componentId.Name;   // this is the GUID which points to the registry location with the driver-supplied name
+
+    if (componentId.Name != GUID_NULL)
+    {
+        // we have the GUID where this name is stored, so get the driver-supplied name from the registry
+
+
+        WCHAR nameFromRegistry[MAX_PATH]{ 0 };   // this should only be MAXPNAMELEN, but if someone tampered with it, could be larger, hence MAX_PATH
+
+        std::wstring regKey = L"SYSTEM\\CurrentControlSet\\Control\\MediaCategories\\" + internal::GuidToString(componentId.Name);
+
+        if (SUCCEEDED(wil::reg::get_value_string_nothrow(HKEY_LOCAL_MACHINE, regKey.c_str(), L"Name", nameFromRegistry)))
+        {
+            name = nameFromRegistry;
+        }
+
+        return S_OK;
+    }
+
+    return E_NOTFOUND;
+}
+
+
+
+
 
 
 _Use_decl_annotations_
@@ -583,6 +693,10 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                 continue;
             }
 
+            std::wstring driverSuppliedName{};
+
+            LOG_IF_FAILED(GetKSDriverSuppliedName(hFilter.get(), driverSuppliedName));
+
             // enumerate all the pins for this filter
             ULONG cPins{ 0 };
             if (FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins))))
@@ -638,6 +752,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                     isCompatibleMidi1Device = true;
 
                     KsAggregateEndpointMidiPinDefinition pinDefinition{ };
+                    pinDefinition.KSDriverSuppliedName = driverSuppliedName;
                     pinDefinition.PinNumber = pinIndex;
                     pinDefinition.FilterDeviceId = std::wstring{ filterDevice.Id() };
                     pinDefinition.FilterName = std::wstring{ filterDevice.Name() };
@@ -810,9 +925,19 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
 }
 
 _Use_decl_annotations_
-HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate)
+HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate update)
 {
     //see this function for info on the IDeviceInformationUpdate object: https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/enumerate-devices#enumerate-and-watch-devices
+
+    // NOTE: When you change the assigned driver for the device, instead of sending 
+    // separate remove/add events, this gets a couple of OnDeviceUpdate notifications.
+
+    for (auto const& prop : update.Properties())
+    {
+        OutputDebugString((std::wstring(L"KSA: ") + std::wstring(prop.Key().c_str())).c_str());
+    }
+
+
     return S_OK;
 }
 

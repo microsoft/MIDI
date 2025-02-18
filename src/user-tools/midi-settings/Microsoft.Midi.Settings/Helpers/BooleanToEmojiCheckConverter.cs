@@ -21,7 +21,7 @@ public partial class BooleanToEmojiCheckConverter : IValueConverter
             return "❌";
         }
 
-        throw new ArgumentException("BooleanToVisibilityConverter object must be a bool");
+        throw new ArgumentException("BooleanToEmojiCheckConverter object must be a bool");
     }
 
     public object? ConvertBack(object value, Type targetType, object parameter, string language)

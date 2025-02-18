@@ -70,80 +70,108 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysExTransfer::i
                 BS2UMP.defaultGroup = 0;
             }
 
-            const uint32_t chunkSize = 4096;
-            auto bytesRead = co_await reader.LoadAsync(chunkSize);
+            const uint32_t chunkSize = 512;
+            auto bytesRead = reader.LoadAsync(chunkSize).get();
 
-            bool done = (bytesRead == 0);
-            bool lastPass = (bytesRead < chunkSize);
+            //bool done = (bytesRead == 0);
+            //bool lastPass = (bytesRead < chunkSize);
             bool success = false;
 
-            if (done)
-            {
-                progressUpdate.LastErrorMessage = L"No data read from file.";
-            }
+            //if (done)
+            //{
+            //    progressUpdate.LastErrorMessage = L"No data read from file.";
+            //}
 
             progressUpdate.BytesRead = 0;
             progressUpdate.MessagesSent = 0;
             progress(progressUpdate);
 
+            uint32_t umpWords[2];       // Sysex7 is a 64 bit packet
+            uint8_t wordIndex{ 0 };
+
             // data is binary sysex 7 bytestream format
-            while (!done && !cancel())
+            while (!cancel() && bytesRead > 0 && reader.UnconsumedBufferLength() > 0)
             {
-                while (reader.UnconsumedBufferLength() > 0)
-                {
-                    byte b = reader.ReadByte();
-                    progressUpdate.BytesRead += 1;
+                byte b = reader.ReadByte();
+                BS2UMP.bytestreamParse(b);
 
-                    BS2UMP.bytestreamParse(b);
-                }
+                // todo: we may want to do this in chunks
+                progressUpdate.BytesRead += 1;
+                //progress(progressUpdate);
 
-                progress(progressUpdate);
-
-                // retrieve the UMP(s) from the parser
-                // and sent it on
                 while (BS2UMP.availableUMP())
                 {
-                    uint32_t umpWords[2];       // Sysex7 is a 64 bit packet
-                    uint8_t wordCount;
+                    umpWords[wordIndex] = BS2UMP.readUMP();
 
-                    for (wordCount = 0; wordCount < _countof(umpWords) && BS2UMP.availableUMP(); wordCount++)
+                    // Check for and handle non-sysex. Check to make sure it's a type 3. If it's not a type 3, then bail
+                    if (static_cast<MidiMessageType>(internal::GetUmpMessageTypeFromFirstWord(umpWords[0])) != MidiMessageType::DataMessage64)
                     {
-                        umpWords[wordCount] = BS2UMP.readUMP();
+                        progressUpdate.LastErrorMessage = L"Unexpected message found in source. Source should contain only System Exclusive messages and data.";
+                        progress(progressUpdate);
+                        co_return false;
                     }
 
-                    if (wordCount > 0)
+                    // Type 3 messages are 64 bit. If we have a complete 64 bit message, then send it
+                    if (wordIndex == 1)
                     {
-                        destination.SendSingleMessageWordArray(0, 0, wordCount, umpWords);
-
-                        progressUpdate.MessagesSent++;
-
-                        if (messageSpacingMilliseconds > 0)
+                        if (MidiEndpointConnection::SendMessageSucceeded(destination.SendSingleMessageWordArray(0, 0, _countof(umpWords), umpWords)))
                         {
-                            Sleep(messageSpacingMilliseconds);
+                            progressUpdate.MessagesSent++;
+
+                            wordIndex = 0;
+                            umpWords[0] = 0;
+                            umpWords[1] = 0;
+
+                            progress(progressUpdate);
+
+                            if (messageSpacingMilliseconds > 0)
+                            {
+                                Sleep(messageSpacingMilliseconds);
+                            }
+                        }
+                        else
+                        {
+                            // failed
+
+                            progressUpdate.LastErrorMessage = L"Failed to send System Exclusive message.";
+                            progress(progressUpdate);
+                            co_return false;
                         }
                     }
-                }
-
-                progress(progressUpdate);
-
-                if (!lastPass)
-                {
-                    auto bytesReadThisPass = co_await reader.LoadAsync(chunkSize);
-
-                    if (bytesReadThisPass < chunkSize)
+                    else
                     {
-                        lastPass = true;
+                        wordIndex++;
                     }
                 }
-                else
-                {
-                    // drained the end of the data
-                    done = true;
 
-                    success = true;
+                if (reader.UnconsumedBufferLength() == 0)
+                {
+                    bytesRead = reader.LoadAsync(chunkSize).get();
                 }
+
+
+                
+
+                //if (!lastPass)
+                //{
+                //    auto bytesReadThisPass = co_await reader.LoadAsync(chunkSize);
+
+                //    if (bytesReadThisPass < chunkSize)
+                //    {
+                //        lastPass = true;
+                //    }
+                //}
+                //else
+                //{
+                //    // drained the end of the data
+                //    done = true;
+
+                //    success = true;
+                //}
             }
 
+            success = true;
+            progress(progressUpdate);
             co_return success;
         }
         else if (sourceReaderFormat == sysex::MidiSystemExclusiveDataReaderFormat::Text &&

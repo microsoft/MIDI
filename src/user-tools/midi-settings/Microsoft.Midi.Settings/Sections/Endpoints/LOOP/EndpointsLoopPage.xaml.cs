@@ -15,6 +15,8 @@ using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Controls;
 using Microsoft.Midi.Settings.ViewModels;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
+using Microsoft.UI.Dispatching;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -40,24 +42,71 @@ namespace Microsoft.Midi.Settings.Views
             ViewModel = App.GetService<EndpointsLoopViewModel>();
             _loggingService = App.GetService<ILoggingService>();
 
-            Loaded += DevicesPage_Loaded;
+            ViewModel.ShowCreateDialog += ViewModel_ShowCreateDialog;
+
+            Loaded += Page_Loaded;
+            Unloaded += Page_Unloaded;
 
             InitializeComponent();
         }
 
-        private void DevicesPage_Loaded(object sender, RoutedEventArgs e)
+        bool m_showCreateDialog = false;
+
+        private void ViewModel_ShowCreateDialog(object? sender, EventArgs e)
+        {
+            m_showCreateDialog = true;
+        }
+
+
+        private void Page_Unloaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ShowCreateDialog -= ViewModel_ShowCreateDialog;
+        }
+        private void Page_Loaded(object sender, RoutedEventArgs e)
         {
             ViewModel.DispatcherQueue = this.DispatcherQueue;
 
             ViewModel.RefreshDeviceCollection();
+
+            if (m_showCreateDialog)
+            {
+                // showing the dialog fails if it is attempted before Loaded has completed
+                // as a result, we set a flag in the event from the VM and then
+                // show it here, in loaded. Not my favorite code.
+
+                DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
+                {
+                    var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
+                });
+
+                m_showCreateDialog = false;
+            }
+
         }
 
-
-        // work around WinUI binding bug
-        private void MidiEndpointDeviceListItemControl_Loaded(object sender, RoutedEventArgs e)
+        private async void CreateNewLoopbackPair_Click(object sender, RoutedEventArgs e)
         {
-            ((MidiEndpointDeviceListItemControl)sender).ViewDeviceDetailsCommand = ViewModel.ViewDeviceDetailsCommand;
+            var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
         }
+
+
+
+        //public void OnNavigatedFrom()
+        //{
+        //}
+
+        //public void OnNavigatedTo(object parameter)
+        //{
+        //    if (parameter != null && ((string)parameter).ToLower() == "create")
+        //    {
+        //        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
+        //        {
+        //            var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
+        //        });
+        //    }
+        //}
+
+
 
     }
 }

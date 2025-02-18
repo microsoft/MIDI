@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
 using System;
@@ -6,12 +8,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
     public class HomeViewModel : ObservableRecipient, INavigationAware
     {
+        private readonly INavigationService _navigationService;
+        private readonly IMidiConfigFileService m_configFileService;
 
+        public ICommand LaunchFirstRunExperienceCommand
+        {
+            get; private set;
+        }
+
+        public ICommand CommonTaskCreateLoopbackEndpointsCommand
+        {
+            get; private set;
+        }
+
+        public ICommand CommonTaskSendSysExCommand
+        {
+            get; private set;
+        }
+
+        
         public string SystemTimerCurrentResolutionFormattedMilliseconds
         {
             get; set;
@@ -53,6 +74,75 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
+        public bool IsValidConfigLoaded
+        {
+            get => m_configFileService.IsConfigFileActive;
+        }
+
+
+        public bool IsFirstRunSetupComplete
+        {
+            get
+            {
+                return m_configFileService.IsConfigFileActive;
+            }
+        }
+
+        public string CurrentConfigurationName
+        {
+            get
+            {
+                if (IsValidConfigLoaded && m_configFileService.CurrentConfig.Header != null)
+                {
+                    return m_configFileService.CurrentConfig.Header.Name;
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+        }
+
+        public string CurrentConfigurationFileName
+        {
+            get
+            {
+                if (m_configFileService.CurrentConfig != null)
+                {
+                    return m_configFileService.CurrentConfig.FileName;
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+        }
+
+
+        public HomeViewModel(INavigationService navigationService, IMidiConfigFileService midiConfigFileService)
+        {
+            _navigationService = navigationService;
+            m_configFileService = midiConfigFileService;
+
+            LaunchFirstRunExperienceCommand = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(FirstRunExperienceViewModel).FullName!);
+                });
+
+            CommonTaskCreateLoopbackEndpointsCommand = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(EndpointsLoopViewModel).FullName!, "create");
+                });
+
+            CommonTaskSendSysExCommand = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(ToolsSysExViewModel).FullName!, "send");
+                });
+
+        }
 
         public void OnNavigatedFrom()
         {
@@ -79,5 +169,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
 
         }
+
+
+
+
+
+
     }
 }

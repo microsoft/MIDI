@@ -25,6 +25,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
         static bool RemoveTransientLoopbackEndpoints(
             _In_ loop::MidiLoopbackEndpointRemovalConfig deletionConfig);
+
+        static midi2::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpointForId(
+            _In_ winrt::hstring loopbackEndpointId);
+
+        static midi2::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            _In_ midi2::MidiEndpointDeviceInformation const& loopbackEndpoint,
+            _In_ collections::IIterable<midi2::MidiEndpointDeviceInformation> endpointsToSearch);
+
+        static midi2::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
+            _In_ midi2::MidiEndpointDeviceInformation const& loopbackEndpoint);
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::factory_implementation

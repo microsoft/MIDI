@@ -86,6 +86,11 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 #define MIDI_USE_MMCSS_REG_VALUE                        L"UseMMCSS"
 #define MIDI_USE_MMCSS_REG_DEFAULT_VALUE                0x00000000
 
+// this is used as the default approach for how we name MIDI 1 ports
+// individual ports can override this via a property in the list below.
+#define MIDI_USE_OLD_MIDI1PORT_NAMING_DEFAULT_REG_VALUE L"DefaultToOldMidi1PortNaming"
+#define MIDI_USE_OLD_MIDI1PORT_NAMING_DEFAULT_VALUE     0x00000001
+
 #define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"
 
 // if value > 0, then endpoint discovery and protocol negotiation are enabled
@@ -93,9 +98,10 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 #define MIDI_DISCOVERY_ENABLED_REG_VALUE                L"Midi2DiscoveryEnabled"
 #define MIDI_DISCOVERY_ENABLED_REG_DEFAULT_VALUE        0x00000001
 
+// this is the amount of time we allocate to discovery across all native UMP format MIDI 2 devices
 #define MIDI_DISCOVERY_TIMEOUT_REG_VALUE                L"Midi2DiscoveryTimeoutMS"
 #define MIDI_DISCOVERY_TIMEOUT_DEFAULT_VALUE            10000
-#define MIDI_DISCOVERY_TIMEOUT_MINIMUM_VALUE            1000
+#define MIDI_DISCOVERY_TIMEOUT_MINIMUM_VALUE            500
 #define MIDI_DISCOVERY_TIMEOUT_MAXIMUM_VALUE            50000
 
 
@@ -634,12 +640,26 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DE
 // Starts at 900
 
 #define STRING_PKEY_MIDI_VirtualMidiEndpointAssociator MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"900"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVPROP_TYPE_GUID
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVPROP_TYPE_STRING
 
 
 
 
-// Structures for properties ================================================================
+// MIDI 1.0 Port Naming Properties  ==========================================================
+// Starts at 1000
+
+// this property is used on the parent UMP interface to control all generated MIDI 1 ports
+#define STRING_PKEY_MIDI_UseOldMidi1PortNamingScheme MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1000"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UseOldMidi1PortNamingScheme, 1000);     // DEVPROP_TYPE_BOOL
+
+#define STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1010"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, 1010);     // DEVPROP_TYPE_BOOLEAN
+
+#define STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1020"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 1020);     // DEVPROP_TYPE_BOOLEAN
+
+
+// Structures for properties =================================================================
 
 
 

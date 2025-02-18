@@ -78,6 +78,13 @@
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_ID                    "parent_id"
 #define MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_PARENT_NAME                  "parent_name"
 
+#define MIDIDIAG_FIELD_LABEL_GTB_NUMBER                                  "gtb_number"
+#define MIDIDIAG_FIELD_LABEL_GTB_NAME                                    "gtb_name"
+#define MIDIDIAG_FIELD_LABEL_GTB_FIRST_GROUP                             "gtb_first_group_number"
+#define MIDIDIAG_FIELD_LABEL_GTB_GROUP_COUNT                             "gtb_group_count"
+
+
+
 #define MIDIDIAG_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS                 "enum_winrt_midi1_api_input_ports"
 #define MIDIDIAG_SECTION_LABEL_MIDI1_API_OUTPUT_ENDPOINTS                "enum_winrt_midi1_api_output_ports"
 #define MIDIDIAG_FIELD_LABEL_MIDI1_ENDPOINT_ID                           "endpoint_device_id"

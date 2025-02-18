@@ -21,6 +21,8 @@ public class PageService : IPageService
         Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
         Configure<EndpointsNet2UdpViewModel, EndpointsNet2UdpPage>();
 
+        Configure<EndpointsDiagViewModel, EndpointsDiagPage>();
+
 
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
         Configure<RoutesViewModel, RoutesPage>();
@@ -41,6 +43,9 @@ public class PageService : IPageService
 
         Configure<WinRTMidi1DevicesViewModel, WinRTMidi1DevicesPage>();
         Configure<WinMMMidi1DevicesViewModel, WinMMMidi1DevicesPage>();
+
+        Configure<FirstRunExperienceViewModel, FirstRunExperiencePage>();
+
 
         Configure<HomeViewModel, HomePage>();
     }

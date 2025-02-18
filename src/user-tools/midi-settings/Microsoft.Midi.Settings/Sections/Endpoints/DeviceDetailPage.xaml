@@ -11,21 +11,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-    <Page.Resources>
-        <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
-        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-        <helpers:MidiEndpointDevicePurposeConverter x:Key="EndpointDevicePurposeConverter"/>
-        <helpers:MidiEndpointNativeDataFormatConverter x:Key="EndpointNativeDataFormatConverter"/>
-        <helpers:MidiGroupIndexConverter x:Key="MidiGroupIndexConverter"/>
-        <helpers:MidiFunctionBlockSysEx8FormatConverter x:Key="MidiFunctionBlockSysEx8FormatConverter" />
-        <helpers:MidiFunctionBlockMidi10Converter x:Key="MidiFunctionBlockMidi10Converter" />
-        <helpers:MidiFunctionBlockDirectionConverter x:Key="MidiFunctionBlockDirectionConverter" />
-        <helpers:MidiFunctionBlockUIHintConverter x:Key="MidiFunctionBlockUIHintConverter" />
 
-        <helpers:MidiGroupTerminalBlockDirectionToFontIconConverter x:Key="MidiGroupTerminalBlockDirectionToFontIconConverter" />
-        <helpers:MidiGroupTerminalBlockDirectionConverter x:Key="MidiGroupTerminalBlockDirectionConverter" />
-
-    </Page.Resources>
     
     <Grid HorizontalAlignment="Stretch">
         <Grid.RowDefinitions>

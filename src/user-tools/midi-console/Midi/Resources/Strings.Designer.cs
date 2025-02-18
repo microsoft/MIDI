@@ -421,6 +421,33 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Source/Destination.
+        /// </summary>
+        internal static string DirectionMessageBiDi {
+            get {
+                return ResourceManager.GetString("DirectionMessageBiDi", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Message Destination.
+        /// </summary>
+        internal static string DirectionMessageDestination {
+            get {
+                return ResourceManager.GetString("DirectionMessageDestination", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Message Source.
+        /// </summary>
+        internal static string DirectionMessageSource {
+            get {
+                return ResourceManager.GetString("DirectionMessageSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Endpoint disconnected.
         /// </summary>
         internal static string EndpointDisconnected {
@@ -1362,6 +1389,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ParameterServicePingVerbose {
             get {
                 return ResourceManager.GetString("ParameterServicePingVerbose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Restart the service when complete.
+        /// </summary>
+        internal static string ParameterServiceRestart {
+            get {
+                return ResourceManager.GetString("ParameterServiceRestart", resourceCulture);
             }
         }
         
@@ -2316,6 +2352,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Set the MIDI Service to start shortly after Windows starts, to avoid connection delays with the first connection made by an app..
+        /// </summary>
+        internal static string ServiceSetAutoDelayedStartDescription {
+            get {
+                return ResourceManager.GetString("ServiceSetAutoDelayedStartDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creating session and opening endpoint....
         /// </summary>
         internal static string StatusCreatingSessionAndOpeningEndpoint {
@@ -2348,6 +2393,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string TableColumnHeaderCommonTimestamp {
             get {
                 return ResourceManager.GetString("TableColumnHeaderCommonTimestamp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        internal static string Unknown {
+            get {
+                return ResourceManager.GetString("Unknown", resourceCulture);
             }
         }
         

@@ -42,6 +42,8 @@ namespace collections = winrt::Windows::Foundation::Collections;
 #include <wil\resource.h>
 #include <wil\result_macros.h>
 #include <wil\tracelogging.h>
+#include <wil\registry.h>
+#include <wil\registry_helpers.h>
 
 #include <wil\com.h>
 #include <wil\resource.h>
@@ -72,6 +74,9 @@ namespace collections = winrt::Windows::Foundation::Collections;
 
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
+
+
+
 
 // duplicated here to prevent pulling in all of MidiKSDef, which has a ton of baggage
 // Needed by MidiKSCommon from the service API

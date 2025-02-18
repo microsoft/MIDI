@@ -22,7 +22,8 @@ The `MidiGroup` class is used to provide formatting and data validation for MIDI
 
 ## Constructors
 
-| `MidiGroup(UInt8)` | Create a MidiGroup with the specified group Index (0-15) |
+| `MidiGroup()` | Create a MidiGroup initialized with group Index 0 |
+| `MidiGroup(UInt8)` | Create a MidiGroup with the specified group Index (0-15). C++ note: C++/WinRT creates a constructor which takes nullptr, as a result `MidiGroup(0)` will fail to compile if you have the compiler option set to equate 0 and nullptr. To avoid this, use `MidiGroup(static_cast<uint8_t>(0))` or simply `MidiGroup()` |
 
 ## Properties
 
@@ -32,9 +33,9 @@ The `MidiGroup` class is used to provide formatting and data validation for MIDI
 ## Static Properties
 
 | `ShortLabel` | Returns the localized abbreviation. For example, "Gr" in English. |
-| `ShortLabelPlural` | Returns the localized abbreviation. For example, "Grs" in English. |
+| `ShortLabelPlural` | Returns the localized plural abbreviation. |
 | `LongLabel` | Returns the localized full name. For example, "Group" in English. |
-| `LongLabelPlural` | Returns the localized full name. For example, "Groups" in English. |
+| `LongLabelPlural` | Returns the localized full plural name.|
 
 ## Static Methods
 

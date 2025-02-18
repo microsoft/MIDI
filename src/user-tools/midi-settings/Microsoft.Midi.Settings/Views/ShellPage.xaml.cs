@@ -69,6 +69,10 @@ public sealed partial class ShellPage : Page
                 case "NET2UDP":
                     SectionNET2UDP.Visibility = Visibility.Visible;
                     break;
+                case "DIAG":
+                    SectionDIAG.Visibility = Visibility.Visible;
+                    break;
+
             }
         }
     }
