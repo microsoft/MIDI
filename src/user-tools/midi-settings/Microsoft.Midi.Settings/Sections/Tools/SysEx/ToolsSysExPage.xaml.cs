@@ -16,6 +16,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Midi.Settings.ViewModels;
+using Windows.Storage.Pickers;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -49,5 +50,28 @@ namespace Microsoft.Midi.Settings.Views
             ViewModel.RefreshDeviceCollection();
         }
 
+        private async void OnPickSysExFile(object sender, RoutedEventArgs e)
+        {
+            var picker = new FileOpenPicker();
+
+            var window = App.MainWindow;
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hWnd);
+
+            picker.ViewMode = PickerViewMode.List;
+            picker.SuggestedStartLocation = PickerLocationId.Downloads;
+            picker.FileTypeFilter.Add(".syx");
+            picker.FileTypeFilter.Add(".mid");
+
+            var file = await picker.PickSingleFileAsync();
+
+            if (file != null)
+            {
+                ViewModel.SelectedFile = file;
+                ViewModel.SelectedFileName = file.Name;
+            }
+
+        }
     }
 }

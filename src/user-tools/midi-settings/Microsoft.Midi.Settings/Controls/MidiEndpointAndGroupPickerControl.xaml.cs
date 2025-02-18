@@ -25,19 +25,20 @@ namespace Microsoft.Midi.Settings.Controls
     // this contains everything including function block names etc.
     public class MidiGroupForDisplay
     {
-        public uint GroupNumberForDisplay = 0;
+        public MidiGroup Group { get; internal set; }
+
         public List<string> BlockNames = [];
+
+        public MidiGroupForDisplay (MidiGroup group)
+        {
+            Group = group;
+        }
 
         public override string ToString()
         {
-            if (GroupNumberForDisplay == 0)
-            {
-                return "Invalid Group";
-            }
-
             if (BlockNames.Count == 1)
             {
-                return MidiGroup.LongLabel + " " + GroupNumberForDisplay + " (" + BlockNames[0] + ")";
+                return MidiGroup.LongLabel + " " + (uint)Group.DisplayValue + " (" + BlockNames[0] + ")";
             }
             else if (BlockNames.Count > 1)
             {
@@ -53,13 +54,13 @@ namespace Microsoft.Midi.Settings.Controls
                     name += blockName;
                 }
 
-                name = MidiGroup.LongLabelPlural + " " + GroupNumberForDisplay + " (" + name + ")";
+                name = MidiGroup.LongLabelPlural + " " + (uint)Group.DisplayValue + " (" + name + ")";
 
                 return name;
             }
             else
             {
-                return MidiGroup.LongLabel + " " + GroupNumberForDisplay;
+                return MidiGroup.LongLabel + " " + (uint)Group.DisplayValue;
             }
         }
     }
@@ -70,20 +71,44 @@ namespace Microsoft.Midi.Settings.Controls
         [ObservableProperty]
         public ObservableCollection<MidiEndpointDeviceInformation>? endpoints;
 
-        private MidiEndpointDeviceInformation? _selectedEndpoint = null;
+
+        public static readonly DependencyProperty SelectedEndpointProperty = DependencyProperty.Register(
+            "SelectedEndpoint",
+            typeof(MidiEndpointDeviceInformation),
+            typeof(MidiEndpointAndGroupPickerControl),
+            new PropertyMetadata(null, new PropertyChangedCallback(OnSelectedEndpointChanged))
+            );
+
         public MidiEndpointDeviceInformation? SelectedEndpoint
         {
-            get { return _selectedEndpoint; }
-            set
-            {
-                SetProperty(ref _selectedEndpoint, value);
+            get { return (MidiEndpointDeviceInformation)GetValue(SelectedEndpointProperty); }
+            set { SetValue(SelectedEndpointProperty, value); }
+        }
+        private static void OnSelectedEndpointChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (MidiEndpointAndGroupPickerControl)d;
 
-                RebuildGroupList();
-            }
+            control.RebuildGroupList();
         }
 
-        [ObservableProperty]
-        public MidiGroupForDisplay? selectedGroup;
+
+
+        public static readonly DependencyProperty SelectedGroupProperty = DependencyProperty.Register(
+            "SelectedGroup",
+            typeof(MidiGroupForDisplay),
+            typeof(MidiEndpointAndGroupPickerControl),
+            new PropertyMetadata(null, new PropertyChangedCallback(OnSelectedGroupChanged))
+            );
+        public MidiGroupForDisplay? SelectedGroup
+        {
+            get { return (MidiGroupForDisplay)GetValue(SelectedGroupProperty); }
+            set { SetValue(SelectedGroupProperty, value); }
+        }
+        private static void OnSelectedGroupChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+
+            
+        }
 
         [ObservableProperty]
         public bool showMessageDestinationGroups;
@@ -101,9 +126,9 @@ namespace Microsoft.Midi.Settings.Controls
             this.InitializeComponent();
         }
 
-        private void RebuildGroupList()
+        protected void RebuildGroupList()
         {
-            if (_selectedEndpoint == null)
+            if (SelectedEndpoint == null)
             {
                 Groups.Clear();
                 return;
@@ -111,7 +136,7 @@ namespace Microsoft.Midi.Settings.Controls
 
             Dictionary<uint, MidiGroupForDisplay> groupsForDisplay = [];
 
-            var functionBlocks = _selectedEndpoint.GetDeclaredFunctionBlocks();
+            var functionBlocks = SelectedEndpoint.GetDeclaredFunctionBlocks();
 
             // do we have function blocks? If so, use them
             if (functionBlocks != null && functionBlocks.Count > 0)
@@ -120,7 +145,7 @@ namespace Microsoft.Midi.Settings.Controls
             }
             else
             {
-                var groupBlocks = _selectedEndpoint.GetGroupTerminalBlocks();
+                var groupBlocks = SelectedEndpoint.GetGroupTerminalBlocks();
 
                 // no function blocks. Do we have group terminal blocks?
                 if (groupBlocks != null && groupBlocks.Count > 0)
@@ -137,9 +162,14 @@ namespace Microsoft.Midi.Settings.Controls
                             {
                                 if (!groupsForDisplay.ContainsKey(groupNumber))
                                 {
-                                    groupsForDisplay[groupNumber] = new MidiGroupForDisplay();
-                                    groupsForDisplay[groupNumber].GroupNumberForDisplay = groupNumber;
-                                    groupsForDisplay[groupNumber].BlockNames.Add(block.Name);
+                                    var group = new MidiGroup((byte)(groupNumber - 1));
+
+                                    groupsForDisplay[groupNumber] = new MidiGroupForDisplay(group);
+
+                                    if (block.Name != string.Empty)
+                                    {
+                                        groupsForDisplay[groupNumber].BlockNames.Add(block.Name);
+                                    }
                                 }
 
                             }
@@ -150,18 +180,20 @@ namespace Microsoft.Midi.Settings.Controls
                 {
                     // if no function blocks or group terminal blocks, show all 16 in and 16 out
 
-                    for (uint groupNumber = 1; groupNumber <= 16; groupNumber++)
+                    for (byte groupIndex = 0; groupIndex < 16; groupIndex++)
                     {
-                        groupsForDisplay[groupNumber] = new MidiGroupForDisplay();
+                        var group = new MidiGroup(groupIndex);
+
+                        groupsForDisplay[group.DisplayValue] = new MidiGroupForDisplay(group);
                         
                         if (ShowMessageDestinationGroups)
                         {
-                            groupsForDisplay[groupNumber].BlockNames.Add("Output");
+                            groupsForDisplay[group.DisplayValue].BlockNames.Add("Output");
                         }
 
                         if (ShowMessageSourceGroups)
                         {
-                            groupsForDisplay[groupNumber].BlockNames.Add("Input");
+                            groupsForDisplay[group.DisplayValue].BlockNames.Add("Input");
                         }
                     }
                 }
