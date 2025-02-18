@@ -127,16 +127,17 @@ StreamEngine::Cleanup()
 }
 
 _Use_decl_annotations_
+NONPAGED_CODE_SEG
 void
 StreamEngine::WorkerThread(
     PVOID context
     )
 {
-    PAGED_CODE();
     auto streamEngine = reinterpret_cast<StreamEngine*>(context);
     streamEngine->HandleIo();
 }
 
+NONPAGED_CODE_SEG
 void
 StreamEngine::HandleIo()
 {
@@ -149,6 +150,7 @@ StreamEngine::HandleIo()
 
     // start with the even reset to indicate that the thread is running
     m_ThreadExitedEvent.clear();
+    m_ThreadExitEvent.clear();
 
     if (AcxPinGetId(m_Pin) == MidiPinTypeMidiOut)
     {
