@@ -623,6 +623,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
 
             }
 
+            // do we have a single-byte priority message to send?
             if (MIDI_BYTE_IS_STATUS_BYTE(prioritySingleByteMessage))
             {
                 // Convert from the QPC time to the number of ticks elapsed from the start time.
@@ -644,7 +645,8 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
                     DWORD_PTR midiMessage{ static_cast<DWORD_PTR>(inProgressMidiMessage[0]) };
 
-                    if (MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) || MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]))
+                    if (MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) || 
+                        MIDI_MESSAGE_IS_THREE_BYTES(inProgressMidiMessage[0]))
                     {
                         midiMessage |= (static_cast<DWORD_PTR>(inProgressMidiMessage[1]) << 8);
                     }

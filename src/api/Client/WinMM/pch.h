@@ -1,4 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
 
 #include <windows.h>
 #include <map>
@@ -35,6 +42,8 @@
 #include "MidiSrvRpc.h"
 #include "MidiXProc.h"
 #include "MidiSrvTransport.h"
+
+#include "midi1_message_defs.h"
 
 class WdmAud2TelemetryProvider : public wil::TraceLoggingProvider
 {
