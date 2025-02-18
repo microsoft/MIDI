@@ -15,6 +15,7 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 using Microsoft.Extensions.Logging.Abstractions;
+using Windows.Foundation;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
@@ -30,6 +31,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ToolsSysExViewModel()
         {
+            DelayBetweenMessagesText = DefaultDelayBetweenMessagesMilliseconds.ToString();
+
             SendSysExCommand = new RelayCommand(
                 () =>
                 {
@@ -113,16 +116,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                     true,
                     SelectedGroup.Group);
 
-                op.Progress = (info, status) =>
-                {
-                 //   TransferBytesRead = (double)(status.BytesRead);
-                    //status.MessagesSent;
-                };
-
-                op.Completed = (info, status) =>
-                {
-
-                };
+                op.Progress = new AsyncOperationProgressHandler<bool, MidiSystemExclusiveSendProgress>(
+                    (info, progress) =>
+                    {
+                        DispatcherQueue.TryEnqueue(() =>
+                        {
+                            TransferBytesRead = (double)(progress.BytesRead);
+                            TransferMessagesSent = progress.MessagesSent;
+                        });
+                    });
 
                 await op;
             }
@@ -168,7 +170,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ObservableCollection<MidiEndpointDeviceInformation> MidiEndpointDevices { get; } = [];
 
 
-        private const UInt16 DefaultDelayBetweenMessagesMilliseconds = 10;
+        private const UInt16 DefaultDelayBetweenMessagesMilliseconds = 50;
         private const UInt16 MaxDelayBetweenMessagesMilliseconds = 2000;
         private UInt16 _delayBetweenMessagesMilliseconds = DefaultDelayBetweenMessagesMilliseconds;
 

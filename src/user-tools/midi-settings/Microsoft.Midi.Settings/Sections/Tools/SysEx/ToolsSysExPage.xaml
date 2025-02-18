@@ -68,12 +68,20 @@
         <!-- Transfer Status -->
         <Grid Grid.Row="5" 
               Margin="0,26,13,0" 
-              Visibility="{x:Bind ViewModel.TransferInProgress, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
-            
-            <controls:SettingsCard CornerRadius="9">
-                <controls:SettingsCard.Header>
-                    <StackPanel Orientation="Vertical">
+              >
+
+            <Border CornerRadius="9"
+                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}">
+                <Grid Margin="13">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="2*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Vertical" Grid.Column="0"
+                                >
                         <TextBlock Text="Transfer Progress"
+                                   Margin="0,0,0,13"
                                    Style="{StaticResource DialogHeaderTextBlockStyle}"/>
 
                         <Grid>
@@ -84,20 +92,24 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <TextBlock Grid.Column="0"
                                        Grid.Row="0"
+                                       Margin="5"
                                        Text="File name"
                                        Style="{StaticResource SmallPropertyLabel}"/>
                             <TextBlock Grid.Column="1" 
                                        Grid.Row="0"
+                                       Margin="5"
                                        Text="{x:Bind ViewModel.SelectedFile.Name, Mode=OneWay}" 
                                        Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
-                            
+
                             <TextBlock Grid.Column="0"
                                        Grid.Row="1"
+                                       Margin="5"
                                        Text="Bytes Read"
                                        Style="{StaticResource SmallPropertyLabel}"/>
 
@@ -106,31 +118,52 @@
                                         Grid.Row="1">
 
                                 <TextBlock Text="{x:Bind ViewModel.TransferBytesRead, Mode=OneWay}" 
+                                       Margin="5"
                                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 <TextBlock Text=" / " 
+                                       Margin="5"
                                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 <TextBlock Text="{x:Bind ViewModel.TransferTotalBytesInFile, Mode=OneWay}" 
+                                       Margin="5"
                                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                             </StackPanel>
-                            
 
-                        
+
+                            <TextBlock Grid.Column="0"
+                                       Grid.Row="2"
+                                       Margin="5"
+                                       Text="Messages Sent"
+                                       Style="{StaticResource SmallPropertyLabel}"/>
+                            <TextBlock Grid.Column="1" 
+                                       Grid.Row="2"
+                                       Margin="5"
+                                       Text="{x:Bind ViewModel.TransferMessagesSent, Mode=OneWay}" 
+                                       Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+
                         </Grid>
-                        
+
                     </StackPanel>
-                </controls:SettingsCard.Header>
 
-                <ProgressBar Value="{x:Bind ViewModel.TransferBytesRead, Mode=OneWay}"
-                             Maximum="{x:Bind ViewModel.TransferTotalBytesInFile, Mode=OneWay}"
-                             >
 
-                </ProgressBar>
+                    <Grid HorizontalAlignment="Stretch" 
+                          Grid.Column="1">
+                        <ProgressBar Margin="26"
+                                     VerticalAlignment="Center"
+                                     Value="{x:Bind ViewModel.TransferBytesRead, Mode=OneWay}"
+                                     Maximum="{x:Bind ViewModel.TransferTotalBytesInFile, Mode=OneWay}"
+                                     >
+
+                        </ProgressBar>
+                    </Grid>
+                    
+                </Grid>
+            </Border>
 
             
-            </controls:SettingsCard>
         </Grid>
 
     </Grid>
