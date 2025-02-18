@@ -101,25 +101,38 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::SysExTransfer::i
 
                 // retrieve the UMP(s) from the parser
                 // and sent it on
+                uint32_t umpWords[2];       // Sysex7 is a 64 bit packet
+                uint8_t wordIndex{ 0 };
+
                 while (BS2UMP.availableUMP())
                 {
-                    uint32_t umpWords[2];       // Sysex7 is a 64 bit packet
-                    uint8_t wordCount;
-
-                    for (wordCount = 0; wordCount < _countof(umpWords) && BS2UMP.availableUMP(); wordCount++)
+                    for (; wordIndex < _countof(umpWords) && BS2UMP.availableUMP(); wordIndex++)
                     {
-                        umpWords[wordCount] = BS2UMP.readUMP();
+                        umpWords[wordIndex] = BS2UMP.readUMP();
                     }
 
-                    if (wordCount > 0)
+                    // if we have a complete 64 bit message, then send it
+                    if (wordIndex == 1)
                     {
-                        destination.SendSingleMessageWordArray(0, 0, wordCount, umpWords);
-
-                        progressUpdate.MessagesSent++;
-
-                        if (messageSpacingMilliseconds > 0)
+                        if (MidiEndpointConnection::SendMessageSucceeded(destination.SendSingleMessageWordArray(0, 0, _countof(umpWords), umpWords)))
                         {
-                            Sleep(messageSpacingMilliseconds);
+                            progressUpdate.MessagesSent++;
+
+                            wordIndex = 0;
+                            umpWords[0] = 0;
+                            umpWords[1] = 0;
+
+                            if (messageSpacingMilliseconds > 0)
+                            {
+                                Sleep(messageSpacingMilliseconds);
+                            }
+                        }
+                        else
+                        {
+                            // failed
+
+                            progressUpdate.LastErrorMessage = L"Failed to send System Exclusive message.";
+                            co_return false;
                         }
                     }
                 }

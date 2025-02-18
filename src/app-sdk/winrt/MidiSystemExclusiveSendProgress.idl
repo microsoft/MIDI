@@ -11,8 +11,8 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
 {
     struct MidiSystemExclusiveSendProgress
     {
-        UInt32 BytesRead;
-        UInt32 MessagesSent;
+        UInt64 BytesRead;
+        UInt64 MessagesSent;
         String LastErrorMessage;
     };
 }
