@@ -19,8 +19,10 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
+#include <mmsystem.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
+#include <devioctl.h>
 #include <ks.h>
 #include <ksmedia.h>
 #include <avrt.h>

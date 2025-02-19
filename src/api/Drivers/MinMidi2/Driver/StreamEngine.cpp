@@ -269,7 +269,7 @@ StreamEngine::HandleIo()
                             PVOID midiInWaitObjects[] = { m_ThreadExitEvent.get(), g_MidiInStreamEngine->m_ReadEvent };
 
                             // Wait for either room in the output buffer, or thread exit.
-                            status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+                            status = KeWaitForMultipleObjects(2, midiInWaitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
                             if (STATUS_WAIT_1 == status)
                             {
                                 // we have room in the input pin buffer, set the write event and break
