@@ -150,7 +150,6 @@ StreamEngine::HandleIo()
 
     // start with the even reset to indicate that the thread is running
     m_ThreadExitedEvent.clear();
-    m_ThreadExitEvent.clear();
 
     if (AcxPinGetId(m_Pin) == MidiPinTypeMidiOut)
     {
@@ -574,6 +573,8 @@ StreamEngine::Run()
     // transition from paused to run
     if (AcxPinGetId(m_Pin) == MidiPinTypeMidiOut)
     {
+        m_ThreadExitEvent.clear();
+
         // Create and start the midi out worker thread for the cyclic buffer.
         HANDLE handle = nullptr;
         NT_RETURN_IF_NTSTATUS_FAILED(PsCreateSystemThread(&handle, THREAD_ALL_ACCESS, 0, 0, 0, StreamEngine::WorkerThread, this));

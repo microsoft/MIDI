@@ -621,7 +621,6 @@ MidiPin::HandleIo()
 
     // start with the even reset to indicate that the thread is running
     m_ThreadExitedEvent.clear();
-    m_ThreadExitEvent.clear();
 
     if (m_Pin->DataFlow == KSPIN_DATAFLOW_IN)
     {
@@ -753,7 +752,7 @@ MidiPin::HandleIo()
                             PVOID midiInWaitObjects[] = { m_ThreadExitEvent.get(), g_MidiInPin->m_ReadEvent };
 
                             // Wait for either room in the output buffer, or thread exit.
-                            status = KeWaitForMultipleObjects(2, waitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
+                            status = KeWaitForMultipleObjects(2, midiInWaitObjects, WaitAny, Executive, KernelMode, FALSE, nullptr, nullptr);
                             if (STATUS_WAIT_1 == status)
                             {
                                 // we have room, retry writing this pass
@@ -884,6 +883,8 @@ MidiPin::SetDeviceState(
                     // midi out
                     if (This->m_IsLooped)
                     {
+                        This->m_ThreadExitEvent.clear();
+
                         // Create and start the midi out worker thread for the cyclic buffer.
                         HANDLE handle = NULL;
                         NT_RETURN_IF_NTSTATUS_FAILED(PsCreateSystemThread(&handle, THREAD_ALL_ACCESS, 0, 0, 0, MidiPin::WorkerThread, This));
