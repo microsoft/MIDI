@@ -14,6 +14,11 @@
 #include "color.hpp"
 
 
+bool m_showActiveSense{ false };
+bool m_showClock{ false };
+
+
+
 void WriteInfo(std::string info)
 {
     std::cout << dye::aqua(info) << std::endl;
@@ -82,44 +87,49 @@ uint32_t m_countStatusBytesReceived{ 0 };
 
 void DisplayStatusByte(byte status, bool isError)
 {
-    if (status == MIDI_SYSEX)
-    {
-        std::cout << std::endl;
-        if (isError)
-        {
-            std::cout << std::hex << std::setw(2) << dye::light_red((uint16_t)status);
-        }
-        else
-        {
-            std::cout << std::hex << std::setw(2) << dye::yellow((uint16_t)status);
-        }
-    }
-    else if (status == MIDI_EOX)
+    if (status == MIDI_EOX)
     {
         std::cout << " ";
-
-        if (isError)
-        {
-            std::cout << std::hex << std::setw(2) << dye::light_red((uint16_t)status);
-        }
-        else
-        {
-            std::cout << std::hex << std::setw(2) << dye::yellow((uint16_t)status);
-        }
     }
     else
     {
         std::cout << std::endl;
-        if (isError)
+    }
+
+    if (isError)
+    {
+        std::cout << std::hex << std::setw(2) << dye::light_red((uint16_t)status);
+        return;
+    }
+
+
+    if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
+    {
+        switch (status & 0xF0)
         {
-            std::cout << std::hex << std::setw(2) << dye::light_red((uint16_t)status);
-        }
-        else
-        {
+        case MIDI_NOTEOFF:
+            std::cout << std::hex << std::setw(2) << dye::aqua((uint16_t)status);
+            break;
+        case MIDI_NOTEON:
+            std::cout << std::hex << std::setw(2) << dye::light_aqua((uint16_t)status);
+            break;
+        case MIDI_MONOAFTERTOUCH:
+            std::cout << std::hex << std::setw(2) << dye::yellow((uint16_t)status);
+            break;
+        case MIDI_CONTROLCHANGE:
+            std::cout << std::hex << std::setw(2) << dye::light_blue((uint16_t)status);
+            break;
+        default:
             std::cout << std::hex << std::setw(2) << dye::light_purple((uint16_t)status);
         }
-
     }
+    else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
+    {
+
+
+        std::cout << std::hex << std::setw(2) << dye::grey((uint16_t)status);
+    }
+
 }
 
 void DisplayDataByte(byte data, bool isError)
@@ -137,6 +147,23 @@ void DisplayDataByte(byte data, bool isError)
 }
 
 
+void DisplayDecodedChannelVoiceMessage(std::string messageName, uint8_t channel, std::string labelForByte1, uint8_t byte1)
+{
+    std::cout << std::left << std::setw(18) << std::setfill(' ') << dye::aqua(messageName) << "  ";
+    std::cout << dye::grey("Channel: ") << std::setw(2) << std::right << std::dec << dye::yellow((uint16_t)channel) << ",  ";
+    std::cout << std::setw(12) << dye::grey(labelForByte1) << ": " << std::setw(3) << std::right << std::dec << dye::yellow((uint16_t)byte1);
+
+}
+
+void DisplayDecodedChannelVoiceMessage(std::string messageName, uint8_t channel, std::string labelForByte1, uint8_t byte1, std::string labelForByte2, uint8_t byte2)
+{
+    DisplayDecodedChannelVoiceMessage(messageName, channel, labelForByte1, byte1);
+
+    std::cout << ",  ";
+    std::cout << std::setw(12) << dye::grey(labelForByte2) << ": " << std::setw(3) << std::right << std::dec << dye::yellow((uint16_t)byte2);
+
+}
+
 void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
 {
     // message format 0 | data 2 | data 1 | status
@@ -145,9 +172,21 @@ void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
     byte data1 = (dwMidiMessage & 0x0000FF00) >> 8;
     byte data2 = (dwMidiMessage & 0x00FF0000) >> 16;
 
-    DisplayStatusByte(status, isError);
     m_countStatusBytesReceived++;
     m_countAllBytesReceived++;
+
+    if (status == MIDI_ACTIVESENSE && !m_showActiveSense)
+    {
+        return;
+    }
+
+    if (status == MIDI_TIMINGCLOCK && !m_showClock)
+    {
+        return;
+    }
+
+    DisplayStatusByte(status, isError);
+
 
     if (MIDI_MESSAGE_IS_TWO_BYTES(status) || 
         MIDI_MESSAGE_IS_THREE_BYTES(status))
@@ -161,6 +200,85 @@ void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
         DisplayDataByte(data2, isError);
         m_countAllBytesReceived++;
     }
+
+    // display a decoding of the message to the right
+
+    if (status != MIDI_SYSEX && status != MIDI_EOX)
+    {
+        uint16_t spaces{ 0 };
+
+        if (MIDI_MESSAGE_IS_ONE_BYTE(status))
+        {
+            spaces = 6;
+        }
+        else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
+        {
+            spaces = 3;
+        }
+        else
+        {
+            spaces = 1;
+        }
+
+        std::cout << std::setw(spaces + 2) << std::setfill(' ') << "";
+
+        if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
+        {
+            uint16_t channel = (status & 0x0F) + 1;
+
+            switch (status & 0xF0)
+            {
+            case MIDI_NOTEOFF:
+                DisplayDecodedChannelVoiceMessage("Note Off", channel, "Note", data1, "Velocity", data2);
+                break;
+            case MIDI_NOTEON:
+                DisplayDecodedChannelVoiceMessage("Note On", channel, "Note", data1, "Velocity", data2);
+                break;
+            case MIDI_POLYAFTERTOUCH:
+                DisplayDecodedChannelVoiceMessage("Poly Aftertouch", channel, "Note", data1, "Pressure", data2);
+                break;
+            case MIDI_CONTROLCHANGE:
+                DisplayDecodedChannelVoiceMessage("Control Change", channel, "Controller", data1, "Value", data2);
+                break;
+            case MIDI_PROGRAMCHANGE:
+                DisplayDecodedChannelVoiceMessage("Program Change", channel, "Program", data1);
+                break;
+            case MIDI_MONOAFTERTOUCH:
+                DisplayDecodedChannelVoiceMessage("Channel Pressure", channel, "Pressure", data1);
+                break;
+            case MIDI_PITCHBEND:
+                DisplayDecodedChannelVoiceMessage("Pitch Bend", channel, "LSB", data1, "MSB", data2);
+                break;
+            default:
+                break;
+            }
+        }
+        else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
+        {
+            switch (status)
+            {
+            case MIDI_TIMINGCLOCK:
+                std::cout << dye::light_aqua("System Real-Time: Clock");
+                break;
+            case MIDI_START:
+                std::cout << dye::green("System Real-Time: Start");
+                break;
+            case MIDI_CONTINUE:
+                std::cout << dye::light_yellow("System Real-Time: Continue");
+                break;
+            case MIDI_STOP:
+                std::cout << dye::red("System Real-Time: Stop");
+                break;
+            case MIDI_ACTIVESENSE:
+                std::cout << dye::grey("System Real-Time: Active Sense");
+                break;
+            case MIDI_RESET:
+                std::cout << dye::light_red("System Real-Time: Reset");
+                break;
+            }
+        }
+    }
+
 }
 
 void DisplayMidiLongMessage(LPMIDIHDR header, DWORD dwTimestamp, bool error)
@@ -266,6 +384,10 @@ int __cdecl main(int argc, char* argv[])
         }
     }
 
+    // todo: need to take a command-line arg to show active sense messages. Defaults to false.
+
+    // todo: need to take a command-line arg to show timing clock messages. Defaults to false.
+
     if (!portNumberProvided)
     {
         DisplayAllWinMMInputs();
@@ -283,6 +405,17 @@ int __cdecl main(int argc, char* argv[])
         std::cout << dye::aqua(" for input. Hit escape to cancel.");
         std::cout << std::endl << std::endl;
 
+        if (!m_showActiveSense)
+        {
+            std::cout << dye::aqua("Hiding active sense messages. ");
+        }
+
+        if (!m_showClock)
+        {
+            std::cout << dye::aqua("Hiding clock messages.");
+        }
+
+        std::cout << std::endl;
     }
     else
     {
