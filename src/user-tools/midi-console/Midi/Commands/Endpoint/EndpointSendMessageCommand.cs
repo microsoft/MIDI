@@ -209,6 +209,7 @@ namespace Microsoft.Midi.ConsoleApp
                 uint messagesSent = 0;
                 uint messagesAttempted = 0;
                 uint messageFailures = 0;
+                uint totalMessageRetries = 0;
 
                 UInt64 maxTimestampScheduled = 0;
 
@@ -259,22 +260,53 @@ namespace Microsoft.Midi.ConsoleApp
                         }
 
                         messagesAttempted++;
-                        var sendResult = connection.SendSingleMessageWordArray(timestamp, 0, (byte)_parsedWords!.Count(), _parsedWords);
 
-                        if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
+                        bool continueToRetry = true;
+                        uint retryAttempts = 0;
+                        uint maxRetryAttempts = 500;
+                        while (continueToRetry)
                         {
-                            messagesSent++;
+                            var sendResult = connection.SendSingleMessageWordArray(timestamp, 0, (byte)_parsedWords!.Count(), _parsedWords);
 
-                            if (timestamp > maxTimestampScheduled)
+                            if (MidiEndpointConnection.SendMessageSucceeded(sendResult))
                             {
-                                maxTimestampScheduled = timestamp;
-                            }
+                                messagesSent++;
+                                continueToRetry = false;    // message was sent, so no need to retry
 
+                                if (timestamp > maxTimestampScheduled)
+                                {
+                                    maxTimestampScheduled = timestamp;
+                                }
+                            }
+                            else
+                            {
+                                continueToRetry = false;
+
+                                // if the problem is that the buffer is full, we will retry
+                                // we should sleep in this loop, but the sleep resolution is not
+                                // low enough to make this a reasonable thing to do.
+                                if ((sendResult & MidiSendMessageResults.BufferFull) == MidiSendMessageResults.BufferFull)
+                                {
+                                    if (retryAttempts < maxRetryAttempts)
+                                    {
+                                        continueToRetry = true;
+                                        retryAttempts++;
+                                        totalMessageRetries++;
+                                    }
+                                    else
+                                    {
+                                        messageFailures++;
+                                    }
+                                }
+                                else
+                                {
+                                    messageFailures++;
+                                }
+                            }
                         }
-                        else
-                        {
-                            messageFailures++;
-                        }
+
+
+
 
                         if (settings.DelayBetweenMessages > 0)
                         {
@@ -355,7 +387,7 @@ namespace Microsoft.Midi.ConsoleApp
                 if (messageFailures > 0)
                 {
                     // todo: localize
-                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"Failed to send {messageFailures} of a planned {settings.Count} message(s)."));
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError($"{messageFailures} failed message sending attempts."));
                 }
                 else
                 {
@@ -396,9 +428,15 @@ namespace Microsoft.Midi.ConsoleApp
                     AnsiConsoleOutput.ConvertTicksToFriendlyTimeUnit(averageTicks, out averageTime, out averageTimeLabel);
 
                     AnsiConsole.MarkupLine($"Total send time [steelblue1]{totalTime.ToString("N2")} {totalTimeLabel}[/], averaging [steelblue1]{averageTime.ToString("N2")} {averageTimeLabel}[/] per message.");
-
                 }
 
+                if (totalMessageRetries > 0)
+                {
+                    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning($"{totalMessageRetries} retried send operations."));
+                }
+
+
+                // for scheduled messages, we wait
                 if (maxTimestampScheduled > MidiClock.Now)
                 {
                     int sleepMs = (int)Math.Ceiling(MidiClock.ConvertTimestampTicksToMilliseconds(maxTimestampScheduled - MidiClock.Now));
@@ -410,29 +448,34 @@ namespace Microsoft.Midi.ConsoleApp
                     Thread.Sleep(sleepMs);
                 }
 
-                // BEGIN TEMP --------------------------------------------------
-                //AnsiConsole.MarkupLine(Strings.MonitorPressEscapeToStopMonitoringMessage);
-                //AnsiConsole.WriteLine();
 
-                //bool continueWaiting = true;
+                if (!settings.NoWait)
+                {
+                    AnsiConsole.MarkupLine(Strings.SendMessagePressEscapeToCloseConnectionMessage);
+                    AnsiConsole.WriteLine();
 
-                //while (continueWaiting)
-                //{
-                //    if (Console.KeyAvailable)
-                //    {
-                //        var keyInfo = Console.ReadKey(true);
+                    bool continueWaiting = true;
 
-                //        if (keyInfo.Key == ConsoleKey.Escape)
-                //        {
-                //            continueWaiting = false;
+                    while (continueWaiting)
+                    {
+                        if (Console.KeyAvailable)
+                        {
+                            var keyInfo = Console.ReadKey(true);
 
-                //            AnsiConsole.WriteLine();
-                //            AnsiConsole.MarkupLine("🛑 " + Strings.MonitorEscapePressedMessage);
-                //        }
+                            if (keyInfo.Key == ConsoleKey.Escape)
+                            {
+                                continueWaiting = false;
 
-                //    }
-                //}
-                // END TEMP --------------------------------------------------
+                                AnsiConsole.WriteLine();
+                                AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
+                            }
+                        }
+                        else
+                        {
+                            Thread.Sleep(500);
+                        }
+                    }
+                }
 
                 session.DisconnectEndpointConnection(connection.ConnectionId);
 
