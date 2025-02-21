@@ -42,10 +42,20 @@ void WriteLabel(std::string label)
     std::cout << std::left << std::setw(25) << std::setfill(' ') << dye::grey(fullLabel);
 }
 
-std::map<uint16_t, MIDIINCAPSW> m_midiInputDevices;
+
+struct MidiInputPort
+{
+    uint16_t Index;
+    std::wstring Name;
+};
+
+std::vector<MidiInputPort> m_midiInputs{};
+
 
 void LoadWinMMDevices()
 {
+    //std::map<uint16_t, MIDIINCAPSW> midiInputDevices;
+
     auto inputDeviceCount = midiInGetNumDevs();
 
     for (uint16_t i = 0; i < inputDeviceCount; i++)
@@ -56,26 +66,34 @@ void LoadWinMMDevices()
 
         if (result == MMSYSERR_NOERROR)
         {
-            m_midiInputDevices.insert_or_assign(i, inputCaps);
+            MidiInputPort port{};
+            port.Index = i;
+            port.Name = inputCaps.szPname;
+
+            m_midiInputs.push_back(port);
         }
     }
+
+    std::sort(m_midiInputs.begin(), m_midiInputs.end(),
+        [](MidiInputPort a, MidiInputPort b)
+        {
+            return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
+        });
+
 }
 
 void DisplayAllWinMMInputs()
 {
-    WriteInfo("Available Input Ports");
+    WriteInfo(std::to_string(m_midiInputs.size()) + " Available Input Ports");
 
-    // todo: should sort this
-
-
-    for (auto const& capsEntry : m_midiInputDevices)
+    for (auto const& port : m_midiInputs)
     {
         std::cout
-            << std::setw(3) << dye::yellow(capsEntry.first)
+            << std::setw(3) << dye::yellow(port.Index)
             << dye::grey(" : ");
 
         std::wcout
-            << capsEntry.second.szPname
+            << port.Name
             << std::endl;
     }
 }
@@ -398,24 +416,27 @@ int __cdecl main(int argc, char* argv[])
     }
 
 
-    if (auto const& port = m_midiInputDevices.find(portNumber); port != m_midiInputDevices.end())
+    if (auto const& port = std::find_if(m_midiInputs.begin(), m_midiInputs.end(), 
+        [&portNumber](const MidiInputPort& p) { return p.Index == portNumber; }); 
+        port != m_midiInputs.end())
     {
+        std::cout << std::endl;
         std::cout << dye::aqua("Monitoring ");
-        std::wcout << port->second.szPname;
+        std::wcout << port->Name;
         std::cout << dye::aqua(" for input. Hit escape to cancel.");
-        std::cout << std::endl << std::endl;
+        std::cout << std::endl;
 
         if (!m_showActiveSense)
         {
-            std::cout << dye::aqua("Hiding active sense messages. ");
+            std::cout << dye::aqua("Hiding") << dye::light_red(" active sense ") << dye::aqua("messages. ");
         }
 
         if (!m_showClock)
         {
-            std::cout << dye::aqua("Hiding clock messages.");
+            std::cout << dye::aqua("Hiding") << dye::light_red(" clock ") << dye::aqua("messages.");
         }
 
-        std::cout << std::endl;
+        std::cout << std::endl << std::endl;
     }
     else
     {

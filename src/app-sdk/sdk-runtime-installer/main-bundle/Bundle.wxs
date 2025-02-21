@@ -23,6 +23,8 @@
 
         <BootstrapperApplication>
             <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
+                                                    SuppressOptionsUI="true"
+                                                    SuppressRepair="true"
                                                     Theme="hyperlinkLicense" 
                                                     LogoFile="midi_installer_logo_square.png"/>
         </BootstrapperApplication>

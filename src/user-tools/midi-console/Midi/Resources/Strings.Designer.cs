@@ -1294,6 +1294,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not prompt the user to hit any key to close the connection.
+        /// </summary>
+        internal static string ParameterSendMessageNoWait {
+            get {
+                return ResourceManager.GetString("ParameterSendMessageNoWait", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Path and filename of the text file to send. This can include lines which begin with # for a comment, or are completely empty for spacing. Remaining lines must be valid delimited (big-endian) hexadecimal UMP words..
         /// </summary>
         internal static string ParameterSendMessagesFileCommandFile {
@@ -2303,6 +2312,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string SendMessageFloodWarning {
             get {
                 return ResourceManager.GetString("SendMessageFloodWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press escape to close the connection when the endpoint has received all the messages..
+        /// </summary>
+        internal static string SendMessagePressEscapeToCloseConnectionMessage {
+            get {
+                return ResourceManager.GetString("SendMessagePressEscapeToCloseConnectionMessage", resourceCulture);
             }
         }
         

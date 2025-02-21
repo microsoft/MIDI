@@ -929,4 +929,10 @@ Timestamp</value>
   <data name="Unknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <data name="ParameterSendMessageNoWait" xml:space="preserve">
+    <value>Do not prompt the user to hit any key to close the connection</value>
+  </data>
+  <data name="SendMessagePressEscapeToCloseConnectionMessage" xml:space="preserve">
+    <value>Press escape to close the connection when the endpoint has received all the messages.</value>
+  </data>
 </root>
