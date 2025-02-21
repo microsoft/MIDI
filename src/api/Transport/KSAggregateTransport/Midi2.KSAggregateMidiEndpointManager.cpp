@@ -74,56 +74,6 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 }
 
 
-
-//// this will be used for the group terminal block name but also for the WinMM port name
-//HRESULT
-//CreateGroupTerminalBlockName(
-//    _In_ std::wstring parentDeviceName,
-//    _In_ std::wstring filterName,
-//    _In_ std::wstring currentPinName, 
-//    _Inout_ std::wstring& newGroupTerminalBlockName)
-//{
-//    std::wstring cleanedPinName{};
-//
-//    // Used by ESI, MOTU, and others. We don't want to mess up other names, so check only for whole word
-//    if (currentPinName == L"MIDI")
-//    {
-//        cleanedPinName = L"";
-//    }
-//    else
-//    {
-//        cleanedPinName = currentPinName;
-//    }
-//
-//    // the double and triple space entries need to be last
-//    // there are other ways to do this with pattern matching, 
-//    // but just banging this through for this version
-//    std::wstring wordsToRemove[] = 
-//    { 
-//        parentDeviceName, filterName, 
-//        L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
-//        L"  ", L"   ", L"    "
-//    };
-//
-//    for (auto const& word : wordsToRemove)
-//    {
-//        if (cleanedPinName.length() >= word.length())
-//        {
-//            auto idx = cleanedPinName.find(word);
-//
-//            if (idx != std::wstring::npos)
-//            {
-//                cleanedPinName = cleanedPinName.erase(idx, word.length());
-//            }
-//        }
-//    }
-//
-//    newGroupTerminalBlockName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
-//
-//    return S_OK;
-//}
-
-
 typedef struct {
     BYTE GroupIndex;                        // index (0-15) of the group this pin maps to
     UINT32 PinId;                           // KS Pin number
