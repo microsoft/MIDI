@@ -666,7 +666,9 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
     }
     else
     {
-        OutputError("Enumerating devices returned no matches. This is not expected and indicates an installation problem or that the service is not running.");
+        OutputError("Enumerating devices returned no matches. This is not expected and indicates an installation");
+        OutputError("problem, the service couldn't start, or you are running developer service components and do");
+        OutputError("not have developer mode set in Windows Settings.");
         return false;
     }
 
