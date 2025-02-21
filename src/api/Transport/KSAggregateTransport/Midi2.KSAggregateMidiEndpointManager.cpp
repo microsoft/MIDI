@@ -17,22 +17,6 @@ using namespace winrt::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-// if this is defined, then KSMidiEndpointManager will publish a BiDi endpoint
-// for pairs of midi in & out endpoints on the same filter.
-// Filters which do not have a a single pair of midi in and out,
-// separate midi in and out SWD's will always be created.
-//#define CREATE_KS_BIDI_SWDS
-
-// If this is defined, we will skip building midi in and midi out
-// SWD's for endpoints where BIDI SWD's are created.
-// Otherwise, MidiIn, Out, and BiDi will be created. Creating all 3
-// is OK for unit testing one at a time, however is not valid for
-// normal usage because MidiIn and MidiOut use the same pins as 
-// MidiBidi, so only MidiIn and MidiOut or MidiBidi can be used,
-// never all 3 at the same time.
-//#define BIDI_REPLACES_INOUT_SWDS
-
-
 
 _Use_decl_annotations_
 HRESULT
@@ -241,7 +225,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
 
         std::wstring userSuppliedPortName{};            // TODO: This should come from config file
-        bool useOldStyleNaming{ true };                // TODO: This should come from registry and property
+        bool useOldStyleNaming{ true };                 // TODO: This should come from registry and property
         std::wstring deviceContainerName{};             // TODO: Need to get this from the device info
         std::wstring deviceManufacturerName{};          // TODO: Need to get this from the parent device
         bool isUsingVendorDriver{ false };              // TODO: Need to get this from the device information
@@ -469,6 +453,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
         // todo: return new device interface id
 
+        auto lock = m_availableEndpointDefinitionsLock.lock();
 
         // Add to internal endpoint manager
         m_availableEndpointDefinitions.insert_or_assign(masterEndpointDefinition.ParentDeviceInstanceId, masterEndpointDefinition);
@@ -493,7 +478,8 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 }
 
 
-winrt::hstring GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
+winrt::hstring
+GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
 {
     auto prop = di.Properties().Lookup(propertyName);
 
@@ -512,7 +498,8 @@ winrt::hstring GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring 
     return value;
 }
 
-HRESULT GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName)
+HRESULT
+GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName)
 {
     std::unique_ptr<WCHAR> pinNameData;
     ULONG pinNameDataSize{ 0 };
@@ -540,7 +527,8 @@ HRESULT GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ 
     return E_FAIL;
 }
 
-HRESULT GetPinDataFlow(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ KSPIN_DATAFLOW& dataFlow)
+HRESULT
+GetPinDataFlow(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ KSPIN_DATAFLOW& dataFlow)
 {
     auto dataFlowHR = PinPropertySimple(
         hFilter,
@@ -564,6 +552,15 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiatedFilter, std::wstring& name)
 {
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     // get the name GUID
 
     KSCOMPONENTID componentId{};
@@ -591,7 +588,6 @@ CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiat
     if (componentId.Name != GUID_NULL)
     {
         // we have the GUID where this name is stored, so get the driver-supplied name from the registry
-
 
         WCHAR nameFromRegistry[MAX_PATH]{ 0 };   // this should only be MAXPNAMELEN, but if someone tampered with it, could be larger, hence MAX_PATH
 
@@ -877,7 +873,8 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
 
 _Use_decl_annotations_
-HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInformationUpdate device)
+HRESULT
+CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInformationUpdate device)
 {
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -894,6 +891,8 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
     // the interface is no longer active, search through our m_AvailableMidiPins to identify
     // every entry with this filter interface id, and remove the SWD and remove the pin(s) from
     // the m_AvailableMidiPins list.
+
+    auto lock = m_availableEndpointDefinitionsLock.lock();
     do
     {
         auto item = m_availableEndpointDefinitions.find((std::wstring)device.Id());
@@ -925,16 +924,28 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, Dev
 }
 
 _Use_decl_annotations_
-HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate update)
+HRESULT
+CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInformationUpdate update)
 {
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Device properties updated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(update.Id().c_str(), "device id"),
+        TraceLoggingUInt32(update.Properties().Size(), "count updated properties")
+    );
+
     //see this function for info on the IDeviceInformationUpdate object: https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/enumerate-devices#enumerate-and-watch-devices
 
     // NOTE: When you change the assigned driver for the device, instead of sending 
-    // separate remove/add events, this gets a couple of OnDeviceUpdate notifications.
+    // separate remove/add events, this SOMETIMES gets a couple of OnDeviceUpdate notifications.
 
     for (auto const& prop : update.Properties())
     {
-        OutputDebugString((std::wstring(L"KSA: ") + std::wstring(prop.Key().c_str())).c_str());
+        OutputDebugString((std::wstring(L"KSA Updated Property with Key: ") + std::wstring(prop.Key().c_str())).c_str());
     }
 
 
@@ -942,14 +953,16 @@ HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, Dev
 }
 
 _Use_decl_annotations_
-HRESULT CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+HRESULT
+CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
 {
     m_EnumerationCompleted.SetEvent();
     return S_OK;
 }
 
 _Use_decl_annotations_
-HRESULT CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+HRESULT
+CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
 {
     m_EnumerationCompleted.SetEvent();
     return S_OK;

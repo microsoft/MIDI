@@ -26,10 +26,13 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
         // Used by ESI, MOTU, and others. We don't want to mess up other names, so check only
         // for whole word. We do other removal in the next step
-        if (pinName == L"MIDI" || 
-            pinName == L"Out" || pinName == L"OUT" || pinName == L"out" ||
-            pinName == L"In" || pinName == L"IN" || pinName == L"in" ||
-            pinName == L"IO"
+
+        auto checkPinName = internal::ToLowerTrimmedWStringCopy(pinName);
+
+        if (checkPinName == L"midi" ||
+            checkPinName == L"out" ||
+            checkPinName == L"in" ||
+            checkPinName == L"io"
             )
         {
             cleanedPinName = L"";
@@ -267,6 +270,8 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
             if (truncateToWinMMLimit)
             {
+                // if the name is too long, try using just the pin name or just the filter name
+
                 if (name.length() + 1 > MAXPNAMELEN)
                 {
                     if (!cleanedPinName.empty())
