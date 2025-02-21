@@ -82,6 +82,7 @@
 #define MIDIDIAG_FIELD_LABEL_GTB_NAME                                    "gtb_name"
 #define MIDIDIAG_FIELD_LABEL_GTB_FIRST_GROUP                             "gtb_first_group_number"
 #define MIDIDIAG_FIELD_LABEL_GTB_GROUP_COUNT                             "gtb_group_count"
+#define MIDIDIAG_FIELD_LABEL_GTB_DIRECTION                               "gtb_direction"
 
 
 
