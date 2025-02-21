@@ -29,7 +29,8 @@ void WriteLabel(std::string label)
 
 
 
-winrt::hstring GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
+winrt::hstring 
+GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
 {
     auto prop = di.Properties().Lookup(propertyName);
 
@@ -48,7 +49,7 @@ winrt::hstring GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring 
     return value;
 }
 
-#define LINE_LENGTH 125
+#define LINE_LENGTH 131
 
 
 HRESULT
@@ -100,7 +101,288 @@ GetKSDriverSuppliedName(_In_ HANDLE hInstantiatedFilter, _Inout_ std::wstring& n
 }
 
 
+struct MidiKsPinInformation
+{
+    uint32_t Number;
+    std::wstring Name;
+    MidiDataFormats DataFormat{ MidiDataFormats::MidiDataFormats_Invalid };
+    KSPIN_DATAFLOW PinFlow{ };
+};
 
+struct MidiKsFilterInformation
+{
+    std::wstring Id;
+    std::wstring Name;
+    std::wstring NameFromRegistry;
+
+    std::vector<MidiKsPinInformation> Pins;
+};
+
+struct MidiKsDeviceInformation
+{
+    std::wstring Name;
+    std::wstring DeviceInstanceId;
+
+    bool IsMidiDevice{ false };
+    std::vector<MidiKsFilterInformation> Filters;
+};
+
+
+std::vector<MidiKsDeviceInformation> m_devices{ };
+
+
+
+
+
+
+void DisplayMidiDevices()
+{
+    std::cout << std::endl;
+
+    if (m_devices.size() == 0)
+    {
+        std::cout
+            << dye::light_red("No devices with MIDI 1.0 pins found.")
+            << std::endl;
+
+        return;
+    }
+
+
+    for (auto const& device : m_devices)
+    {
+        uint16_t indent{ 0 };
+
+        std::cout
+            << std::string(indent, ' ')
+            << dye::grey("Device Name")
+            << " "
+            << dye::light_aqua(winrt::to_string(device.Name)) 
+            << std::endl;
+
+        std::cout
+            << std::string(indent, ' ')
+            << dye::grey("Instance Id")
+            << " "
+            << dye::yellow(winrt::to_string(device.DeviceInstanceId)) 
+            << std::endl;
+
+        // we list all the filters once in a short format, to make it easier to read for some devices
+        // and then we list each filter and its pins. Only do this if there's more than one filter.
+
+        if (device.Filters.size() > 1)
+        {
+            uint16_t FilterNameColumnWidth{ 0 };
+            uint16_t FilterIdColumnWidth{ 0 };
+
+            for (auto const& filter : device.Filters)
+            {
+                FilterNameColumnWidth = max(FilterNameColumnWidth, filter.Name.length() + 1);
+                FilterIdColumnWidth = max(FilterIdColumnWidth, filter.Id.length() + 1);
+            }
+
+            bool firstFilter{ true };
+            for (auto const& filter : device.Filters)
+            {
+                indent = 5;
+
+                if (firstFilter)
+                {
+                    std::cout << std::endl;
+
+                    std::cout
+                        << std::string(indent, ' ')
+                        << dye::aqua("Device")
+                        << " "
+                        << dye::light_aqua(winrt::to_string(device.Name))
+                        << " "
+                        << dye::aqua("includes")
+                        << " "
+                        << dye::light_aqua(device.Filters.size())
+                        << " "
+                        << dye::aqua(device.Filters.size() == 1 ? "filter" : "filters")
+                        << " "
+                        << dye::aqua("with MIDI 1.0 Format Pins")
+                        << std::endl;
+
+                    std::cout << std::endl;
+
+                    // header row
+
+                    std::cout
+                        << std::string(indent, ' ')
+                        << std::setw(FilterNameColumnWidth) << std::left << dye::grey("Name")
+                        << std::setw(FilterIdColumnWidth) << std::left << dye::grey("Instance Id")
+                        << std::endl;
+
+                    std::cout
+                        << std::string(indent, ' ')
+                        << std::setw(FilterNameColumnWidth) << std::left << dye::grey(std::string(FilterNameColumnWidth - 1, '-'))
+                        << std::setw(FilterIdColumnWidth) << std::left << dye::grey(std::string(FilterIdColumnWidth - 1, '-'))
+                        << std::endl;
+
+                    firstFilter = false;
+                }
+
+
+                std::cout
+                    << std::string(indent, ' ')
+                    << std::setw(FilterNameColumnWidth) << std::left << dye::light_aqua(winrt::to_string(filter.Name))
+                    << std::setw(FilterIdColumnWidth) << std::left << dye::yellow(winrt::to_string(filter.Id))
+                    << std::endl;
+
+            }
+        }
+
+        // now we list all filters and their pins in more detail
+
+        bool firstFilter{ true };
+        for (auto const& filter : device.Filters)
+        {
+            indent = 5;
+
+            if (firstFilter)
+            {
+                std::cout << std::endl;
+
+                std::cout
+                    << std::string(indent, ' ')
+                    << dye::aqua("Details and MIDI 1.0 Pins for each Filter")
+                    << std::endl;
+
+                std::cout << std::endl;
+
+                firstFilter = false;
+            }
+
+
+            std::cout
+                << std::string(indent, ' ') 
+                << std::setw(18) << std::left
+                << dye::grey("Filter Id")
+                << " "
+                << dye::yellow(winrt::to_string(filter.Id)) 
+                << std::endl;
+
+            std::cout
+                << std::string(indent, ' ')
+                << std::setw(18) << std::left
+                << dye::grey("Filter Name")
+                << " "
+                << dye::light_aqua(winrt::to_string(filter.Name)) 
+                << std::endl;
+
+            std::cout
+                << std::string(indent, ' ')
+                << std::setw(18) << std::left
+                << dye::grey("Name from Registry")
+                << " "
+                << (filter.NameFromRegistry.empty() ? dye::grey("(not provided)") : dye::light_aqua(winrt::to_string(filter.NameFromRegistry)))
+                << std::endl;
+
+
+            bool firstPin = true;
+            for (auto const& pin : filter.Pins)
+            {
+                indent = 10;
+                const uint16_t PinIndexColumnWidth = 6;
+                const uint16_t PinDataFlowColumnWidth = 22;
+                const uint16_t PinDataFlowExplanationColumnWidth = 22;
+                const uint16_t PinNameColumnWidth = 32;
+
+                if (firstPin)
+                {
+                    std::cout << std::endl;
+
+                    std::cout
+                        << std::string(indent, ' ')
+                        << dye::aqua("Filter")
+                        << " "
+                        << dye::light_aqua(winrt::to_string(filter.Name))
+                        << " "
+                        << dye::aqua("includes")
+                        << " "
+                        << dye::light_aqua(filter.Pins.size())
+                        << " "
+                        << dye::aqua("MIDI 1.0 Format")
+                        << " "
+                        << dye::aqua(filter.Pins.size() == 1 ? "pin" : "pins")
+                        << std::endl;
+
+                    std::cout << std::endl;
+
+                    // header row
+
+                    std::cout
+                        << std::string(indent, ' ')
+                        << std::setw(PinIndexColumnWidth) << std::left << dye::grey("Index")
+                        << std::setw(PinDataFlowColumnWidth) << std::left << dye::grey("Data Flow")
+                        << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::grey("Port Type")
+                        << std::setw(PinNameColumnWidth) << std::left << dye::grey("Pin Name")
+                        << std::endl;
+
+                    std::cout
+                        << std::string(indent, ' ')
+                        << std::setw(PinIndexColumnWidth) << std::left << dye::grey(std::string(PinIndexColumnWidth-1, '-'))
+                        << std::setw(PinDataFlowColumnWidth) << std::left << dye::grey(std::string(PinDataFlowColumnWidth-1, '-'))
+                        << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::grey(std::string(PinDataFlowExplanationColumnWidth - 1, '-'))
+                        << std::setw(PinNameColumnWidth) << std::left << dye::grey(std::string(PinNameColumnWidth-1, '-'))
+                        << std::endl;
+
+                    firstPin = false;
+                }
+
+                std::wstring stringDataFlow{ L"Unknown" };
+                std::wstring stringDataFlowExplanation{};
+
+                if (pin.PinFlow == KSPIN_DATAFLOW_IN)
+                {
+                    stringDataFlow = L"Message Destination";
+                    stringDataFlowExplanation = L"MIDI Output from PC";
+
+                }
+                else if (pin.PinFlow == KSPIN_DATAFLOW_OUT)
+                {
+                    stringDataFlow = L"Message Source";
+                    stringDataFlowExplanation = L"MIDI Input to PC";
+                }
+
+                std::cout
+                    << std::string(indent, ' ')
+                    << std::setw(PinIndexColumnWidth) << std::left << dye::yellow(pin.Number)
+                    << std::setw(PinDataFlowColumnWidth) << std::left << dye::aqua(winrt::to_string(stringDataFlow))
+                    << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::aqua(winrt::to_string(stringDataFlowExplanation));
+
+                if (pin.Name.empty())
+                {
+                    std::cout
+                        << std::setw(PinNameColumnWidth) << std::left << dye::grey("(not provided)")
+                        << std::endl;
+                }
+                else
+                {
+                    std::cout
+                        << std::setw(PinNameColumnWidth) << std::left << dye::light_aqua(winrt::to_string(pin.Name))
+                        << std::endl;
+                }
+            }
+
+            if (filter.Pins.size() > 0)
+            {
+                std::cout << std::endl;
+            }
+
+        }
+
+        std::cout << std::endl;
+        std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+
+    }
+
+    std::cout << std::endl;
+    std::cout << "-- End of Information --" << std::endl << std::endl;
+
+}
 
 
 int __cdecl main()
@@ -108,23 +390,30 @@ int __cdecl main()
     winrt::init_apartment();
 
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" Enumerating MIDI 1.0 kernel streaming devices to discover MIDI pins") << std::endl;
-    std::cout << dye::aqua(" Typically, these are USB, but other KS drivers will be included") << std::endl;
+    std::cout << dye::aqua(" Enumerating MIDI 1.0 kernel streaming devices, using the MIDI 1.0 class driver or a third-party MIDI 1.0 driver.") << std::endl;
+    std::cout << dye::aqua(" Typically, these devices are USB, but other KS drivers will be included in the enumeration.") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
-    std::cout << dye::aqua(" If the MIDI service is running when you run this utility, some") << std::endl;
-    std::cout << dye::aqua(" devices may not report all pin properties because they are in-use.") << std::endl;
-    std::cout << dye::aqua(" It is recommended that you stop the midisrv service before running.") << std::endl;
-    std::cout << dye::aqua(" this utility.") << std::endl;
-    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    std::cout << dye::aqua(" If the MIDI service is running when you run this utility, some devices may not report all pin properties because they are in-use.") << std::endl;
+    std::cout << dye::aqua(" It is recommended that you stop midisrv (the MIDI service) before running this.") << std::endl << std::endl;
+    std::cout << dye::aqua(" Use ");
+    std::cout << dye::light_green("midi service stop");
+    std::cout << dye::aqua(" or ");
+    std::cout << dye::light_green("net stop midisrv");
+    std::cout << dye::aqua(" from an Administrator command prompt to stop the service.") << std::endl;
 
-    std::wcout 
-        << WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME 
-        << L" ("
-        << WINDOWS_MIDI_SERVICES_BUILD_SOURCE 
-        << L")"
+    std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
+
+    std::cout
+        << " "
+        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME))
+        << dye::grey(" (")
+        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_BUILD_SOURCE))
+        << dye::grey(")")
+        << " -- "
+        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_BUILD_VERSION_FULL))
         << std::endl;
 
-    std::wcout << WINDOWS_MIDI_SERVICES_BUILD_VERSION_FULL << std::endl;
+    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
 
 
     // {4d36e96c-e325-11ce-bfc1-08002be10318} is the MEDIA class guid
@@ -138,6 +427,8 @@ int __cdecl main()
     {
         for (auto const& parentDevice : mediaDevices)
         {
+            bool isMidi1Device{ false };
+
             auto deviceInstanceId = GetStringProperty(parentDevice, L"System.Devices.DeviceInstanceId", L"");
 
             if (deviceInstanceId.empty())
@@ -146,10 +437,10 @@ int __cdecl main()
                 continue;
             }
 
-            WriteLabel("Parent Device");
-            std::cout << dye::light_aqua(winrt::to_string(parentDevice.Name())) << std::endl;
-            WriteLabel(" - Instance Id");
-            std::cout << dye::yellow(winrt::to_string(deviceInstanceId)) << std::endl;
+            MidiKsDeviceInformation deviceInfo{};
+
+            deviceInfo.DeviceInstanceId = deviceInstanceId;
+            deviceInfo.Name = parentDevice.Name();
 
             // enumerate all KS_CATEGORY_AUDIO filters for this parent media device
             winrt::hstring filterDeviceSelector(
@@ -161,52 +452,28 @@ int __cdecl main()
 
             if (filterDevices.Size() > 0)
             {
-                WriteLabel(" - Filter Count");
-                std::cout << filterDevices.Size() << std::endl;
-                std::cout << std::endl;
-
                 for (auto const& filterDevice : filterDevices)
                 {
+                    MidiKsFilterInformation filterInfo{};
+
+                    filterInfo.Id = filterDevice.Id();
+                    filterInfo.Name = filterDevice.Name();
+
                     bool isMidi1Filter{ false };
-
-                    WriteLabel(" - Filter Id");
-                    std::cout << dye::yellow(winrt::to_string(filterDevice.Id())) << std::endl;
-
-                    WriteLabel(" - KS Filter Name");
-                    std::cout << dye::light_aqua(winrt::to_string(filterDevice.Name())) << std::endl;
 
                     // instantiate the filter and then enumerate the pins
 
                     wil::unique_handle hFilter;
                     if (FAILED(FilterInstantiate(filterDevice.Id().c_str(), &hFilter)))
                     {
-                        std::cout << " - Failed to instantiate filter." << std::endl;
+                        // can't instantiate the filter
                         continue;
                     }
 
-                    std::wstring nameFromDriver{};
-                    auto driverNameHR = GetKSDriverSuppliedName(hFilter.get(), nameFromDriver);
-
-                    WriteLabel(" - KS Reported Name");
-                    if (SUCCEEDED(driverNameHR))
-                    {
-                        std::cout << hue::light_aqua;
-                        std::wcout << nameFromDriver;
-                        std::cout << hue::reset << std::endl;
-
-                    }
-                    else
-                    {
-                        std::cout << dye::grey("(not available)") << std::endl;
-                    }
-
-
                     ULONG cPins{ 0 };
-
                     if (FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins))))
                     {
-                        std::cout << " - Failed to get pin count." << std::endl;
-
+                        // couldn't get pin info
                         continue;
                     }
 
@@ -216,20 +483,18 @@ int __cdecl main()
                         wil::unique_handle hPin;
 
 
-                        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), pinIndex, MidiTransport_CyclicUMP, &hPin)))
+                        /*if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), pinIndex, MidiTransport_CyclicUMP, &hPin)))
                         {
-                            std::cout << dye::grey("   Pin ") << dye::grey(pinIndex) << std::endl;
-                            std::cout << dye::grey("    - UMP Cyclic pin (MIDI 2.0 driver). Ignoring for this utility.") << std::endl;
                             continue;
                         }
-                        else if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), pinIndex, MidiTransport_StandardByteStream, &hPin)))
+                        else */ if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), pinIndex, MidiTransport_StandardByteStream, &hPin)))
                         {
+                            MidiKsPinInformation pinInfo{};
+                            pinInfo.Number = pinIndex;
+
                             isMidi1Pin = true;
                             isMidi1Filter = true;
-                            std::cout << dye::yellow("   Pin ") << dye::aqua(pinIndex) << std::endl;
-
-                           // WriteLabel("    - Data Format");
-                           // std::cout << "MIDI 1.0 byte format" << std::endl;
+                            isMidi1Device = true;
 
                             std::unique_ptr<WCHAR> pinNameData;
                             ULONG pinNameDataSize{ 0 };
@@ -245,20 +510,11 @@ int __cdecl main()
 
                             if (SUCCEEDED(pinNameHR) || pinNameHR == HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND))
                             {
-                                WriteLabel("    - Name");
-
                                 // Check to see if the pin has an iJack name
                                 if (pinNameDataSize > 0)
                                 {
                                     std::wstring pinName{ pinNameData.get() };
-                                    std::cout << hue::light_aqua;
-                                    std::wcout << pinName;
-                                    std::cout << hue::reset << std::endl;
-                                }
-                                else
-                                {
-                                    // no pin name provided
-                                    std::cout << "Not provided" << std::endl;
+                                    pinInfo.Name = pinName;
                                 }
                             }
 
@@ -273,303 +529,49 @@ int __cdecl main()
                                 sizeof(KSPIN_DATAFLOW)
                             );
 
-                            
-                            WriteLabel("    - Data Flow");
-
                             if (SUCCEEDED(dataFlowHR))
                             {
-                                if (dataFlow == KSPIN_DATAFLOW_IN)
-                                {
-                                    std::cout << dye::aqua("Message Destination") << dye::grey(" (KSPIN_DATAFLOW_IN: MIDI 1.0 Out from PC to device)") << std::endl;
-
-                                }
-                                else if (dataFlow == KSPIN_DATAFLOW_OUT)
-                                {
-                                    std::cout << dye::aqua("Message Source") << dye::grey(" (KSPIN_DATAFLOW_OUT: MIDI 1.0 In to PC from device)") << std::endl;
-
-                                }
-                                else
-                                {
-                                    std::cout << "Unknown" << std::endl;
-                                }
+                                pinInfo.PinFlow = dataFlow;
                             }
-                            else
+
+                            if (isMidi1Pin)
                             {
-                                std::cout << dye::light_red("Failed to get data flow") << std::endl;
+                                filterInfo.Pins.push_back(pinInfo);
                             }
-
-                        }
-                        else
-                        {
-                        //    std::cout << "Not a MIDI Pin. Ignoring for this utility." << std::endl;
                         }
 
                         hPin.reset();
                     }
 
-                    if (isMidi1Filter)
+
+                    // get the name that the device reported during installation. This is often empty
+
+                    std::wstring nameFromDriver{};
+                    auto driverNameHR = GetKSDriverSuppliedName(hFilter.get(), nameFromDriver);
+
+                    if (SUCCEEDED(driverNameHR))
                     {
-                        std::cout << std::endl;
+                        filterInfo.NameFromRegistry = nameFromDriver;
                     }
 
+                    if (isMidi1Filter)
+                    {
+                        deviceInfo.Filters.push_back(filterInfo);
+                    }
+
+                    hFilter.reset();
                 }
             }
-            else
+
+            if (isMidi1Device)
             {
-                std::cout << dye::grey(" - Device has no enabled KS_CATEGORY_AUDIO filters available at this time.") << std::endl;
+                m_devices.push_back(deviceInfo);
             }
-
-            std::cout << std::endl;
-            std::cout << dye::light_blue(std::string(LINE_LENGTH, '-')) << std::endl;
-
         }
     }
-    else
-    {
-        std::cout << "No media devices found" << std::endl;
-    }
 
 
-
-
-
-
-
-
-
-    //        std::cout << std::endl;
-    //        std::cout << dye::grey("----------------------------------------------------------------------") << std::endl;
-
-    //        wil::unique_handle hFilter;
-    //        std::string deviceName;
-    //        std::wstring deviceId;
-    //        std::wstring deviceInstanceId;
-    //        ULONG cPins{ 0 };
-
-    //        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-
-    //        auto properties = device.Properties();
-
-    //        // retrieve the device instance id from the DeviceInformation property store
-    //        auto prop = properties.Lookup(winrt::to_hstring(L"System.Devices.DeviceInstanceId"));
-    //        RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-    //        deviceInstanceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
-    //        deviceId = device.Id().c_str();
-
-    //        // Get the parent device name so it doesn't show as just the PC name
-    //        auto parentDeviceInfo = DeviceInformation::CreateFromIdAsync(deviceInstanceId,
-    //            additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
-    //        deviceName = winrt::to_string(parentDeviceInfo.Name());
-
-    //        WriteLabel("Filter Name");
-    //        std::cout << dye::light_aqua(winrt::to_string(device.Name())) << std::endl;
-    //        WriteLabel("Filter Id");
-    //        std::cout << dye::yellow(winrt::to_string(device.Id())) << std::endl;
-
-    //        WriteLabel("Parent Name");
-    //        std::cout << dye::aqua(deviceName) << std::endl;
-    //        WriteLabel("Parent Id");
-    //        std::cout << dye::green(winrt::to_string(parentDeviceInfo.Id())) << std::endl;
-
-    //        // instantiate the interface
-    //        if (FAILED(FilterInstantiate(deviceId.c_str(), &hFilter)))
-    //        {
-    //            std::cout << " - Failed to instantiate filter." << std::endl;
-
-    //            continue;
-    //        }
-
-    //        if (FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins))))
-    //        {
-    //            std::cout << " - Failed to get pin count." << std::endl;
-
-    //            continue;
-    //        }
-
-    //        // Enumerate all the pins
-
-    //        WriteLabel("Pin Count");
-    //        std::cout << cPins << std::endl;
-
-    //        for (UINT i = 0; i < cPins; i++)
-    //        {
-    //            std::cout << std::endl;
-
-    //            bool isMidiPin{ false };
-
-    //            wil::unique_handle hPin;
-    //            KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
-    //            KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
-    //            GUID nativeDataFormat{ 0 };
-
-    //            std::cout << dye::yellow("Pin ") << dye::aqua(i) << std::endl;
-
-    //            WriteLabel(" - Communication");
-
-    //            if (FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION))))
-    //            {
-    //                std::cout << dye::red("Failed to get pin communication property.") << std::endl;
-    //                continue;
-    //            }
-
-    //            if (communication == KSPIN_COMMUNICATION_NONE)
-    //            {
-    //                std::cout << "None" << std::endl;
-    //                continue;
-    //            }
-    //            else if (communication == KSPIN_COMMUNICATION_SINK)
-    //            {
-    //                std::cout << "Sink" << std::endl;
-    //            }
-    //            else if (communication == KSPIN_COMMUNICATION_SOURCE)
-    //            {
-    //                std::cout << "Source" << std::endl;
-    //            }
-    //            else if (communication == KSPIN_COMMUNICATION_BOTH)
-    //            {
-    //                std::cout << "Source and Sink" << std::endl;
-    //            }
-    //            else if (communication == KSPIN_COMMUNICATION_BRIDGE)
-    //            {
-    //                std::cout << "Bridge" << std::endl;
-    //                continue;
-    //            }
-    //            else
-    //            {
-    //                std::cout << "Unknown (" << communication << ")" << std::endl;
-    //                continue;
-    //            }
-
-
-    //            // try to instantiate as UMP
-    //            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicUMP, &hPin)))
-    //            {
-    //                isMidiPin = true;
-
-    //                WriteLabel(" - Communication Format");
-    //                std::cout << dye::light_purple("MIDI UMP cyclic format") << std::endl;
-
-    //                auto hr = PinPropertySimple(hPin.get(),
-    //                    i,
-    //                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-    //                    KSPROPERTY_MIDI2_NATIVEDATAFORMAT,
-    //                    &nativeDataFormat,
-    //                    sizeof(nativeDataFormat));
-
-    //                WriteLabel(" - Native Data Format");
-
-    //                if (SUCCEEDED(hr) || hr == HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND))
-    //                {
-    //                    if (nativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
-    //                    {
-    //                        std::cout << "Universal MIDI Packet (UMP)" << std::endl;
-    //                    }
-    //                    else if (nativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
-    //                    {
-    //                        std::cout << "MIDI 1.0 Data Format (bytes)" << std::endl;
-    //                    }
-    //                    else
-    //                    {
-    //                        std::cout << "Unknown" << std::endl;
-    //                    }
-    //                }
-    //                else
-    //                {
-    //                    std::cout << dye::red("Unable to get native data format") << std::endl;
-    //                }
-    //            }
-
-    //            hPin.reset();
-
-    //            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
-    //            {
-    //                isMidiPin = true;
-
-    //                std::unique_ptr<WCHAR> pinNameData;
-    //                ULONG pinNameDataSize{ 0 };
-
-    //                WriteLabel(" - Communication Format");
-    //                std::cout << dye::light_purple("MIDI 1.0 byte format") << std::endl;
-
-    //                auto pinNameHR = PinPropertyAllocate(
-    //                        hFilter.get(),
-    //                        i,
-    //                        KSPROPSETID_Pin,
-    //                        KSPROPERTY_PIN_NAME,
-    //                        (PVOID*)&pinNameData,
-    //                        &pinNameDataSize);
-
-    //                if (SUCCEEDED(pinNameHR) || pinNameHR == HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND))
-    //                {
-    //                    WriteLabel(" - Pin Name");
-
-    //                    // Check to see if the pin has an iJack name
-    //                    if (pinNameDataSize > 0)
-    //                    {
-    //                        std::wstring pinName{ pinNameData.get() };
-    //                        std::cout << hue::light_aqua;
-    //                        std::wcout << pinName;
-    //                        std::cout << hue::reset << std::endl;
-    //                    }
-    //                    else
-    //                    {
-    //                        // no pin name provided
-    //                        std::cout << "Not provided" << std::endl;
-    //                    }
-    //                }
-    //            }
-
-    //            hPin.reset();
-
-
-    //            if (isMidiPin)
-    //            {
-
-    //                auto dataFlowHR = PinPropertySimple(
-    //                    hFilter.get(),
-    //                    i,
-    //                    KSPROPSETID_Pin,
-    //                    KSPROPERTY_PIN_DATAFLOW,
-    //                    &dataFlow,
-    //                    sizeof(KSPIN_DATAFLOW)
-    //                );
-
-    //                WriteLabel(" - Data Flow");
-
-    //                if (SUCCEEDED(dataFlowHR))
-    //                {
-    //                    if (dataFlow == KSPIN_DATAFLOW_IN)
-    //                    {
-    //                        std::cout << "KSPIN_DATAFLOW_IN " << dye::purple("(MIDI Out from PC to device)") << std::endl;
-
-    //                    }
-    //                    else if (dataFlow == KSPIN_DATAFLOW_OUT)
-    //                    {
-    //                        std::cout << "KSPIN_DATAFLOW_OUT " << dye::purple("(MIDI In to PC from device)") << std::endl;
-
-    //                    }
-    //                    else
-    //                    {
-    //                        std::cout << "Unknown" << std::endl;
-    //                    }
-    //                }
-    //                else
-    //                {
-    //                    std::cout << dye::red("Failed to get data flow") << std::endl;
-    //                }
-    //            }
-
-    //        }
-
-    //    }
-    //}
-    //else
-    //{
-    //    std::cout << std::endl << dye::red("No compatible kernel streaming devices found") << std::endl;
-    //}
-
-    std::cout << std::endl;
-    std::cout << "-- End of Information --" << std::endl << std::endl;
+    DisplayMidiDevices();
 
     return 0;
 }
