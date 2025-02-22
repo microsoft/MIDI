@@ -18,10 +18,13 @@ public class ShellViewModel : ObservableRecipient
 
     private readonly IMidiConfigFileService m_configFileService;
 
-    public bool AreDeveloperOptionsEnabled
-    {
-        get => _generalSettingsService.ShowDeveloperOptions;
-    }
+    public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
+
+
+    //public bool AreDeveloperOptionsEnabled
+    //{
+    //    get => _generalSettingsService.ShowDeveloperOptions;
+    //}
 
     public INavigationService NavigationService
     {

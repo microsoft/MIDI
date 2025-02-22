@@ -20,7 +20,6 @@ public interface IMidiConfigFile
 
     bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig);
 
-
 }
 
 
@@ -43,6 +42,5 @@ public interface IMidiConfigFileService
     string BuildConfigLocalFileNameFromConfigName(string configName);
 
     bool UpdateRegistryCurrentConfigFile(string configFileName);
-
 
 }

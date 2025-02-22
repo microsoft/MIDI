@@ -68,9 +68,9 @@
                         <controls:SettingsCard.Header>
                             <Grid>
                                 <!--  Developer Mode is Enabled in Windows  -->
-                                <TextBlock x:Uid="SettingsPage_DeveloperModeIsEnabledInfo" Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBlock x:Uid="SettingsPage_DeveloperModeIsEnabledInfo" Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
                                 <!--  Developer Mode is Disabled in Windows  -->
-                                <TextBlock x:Uid="SettingsPage_DeveloperModeIsDisabledInfo" Visibility="{x:Bind ViewModel.ShowHowToEnableDeveloperMode, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                <TextBlock x:Uid="SettingsPage_DeveloperModeIsDisabledInfo" Visibility="{x:Bind ViewModel.ShowHowToEnableDeveloperMode, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
                             </Grid>
                         </controls:SettingsCard.Header>
                         <controls:SettingsCard.Description>
@@ -80,10 +80,12 @@
                                              Click="WindowsDeveloperSettingsHyperlinkButton_Click"/>
                         </controls:SettingsCard.Description>
                     </controls:SettingsCard>
+                    <!--
                     <controls:SettingsCard x:Uid="Settings_ShowDeveloperOptions" 
                                        IsEnabled="{x:Bind ViewModel.IsDeveloperModeEnabled}">
                         <ToggleSwitch IsOn="{x:Bind ViewModel.ShowDeveloperOptions, Mode=TwoWay}" />
                     </controls:SettingsCard>
+                    -->
                 </controls:SettingsExpander.Items>
             </controls:SettingsExpander>
 

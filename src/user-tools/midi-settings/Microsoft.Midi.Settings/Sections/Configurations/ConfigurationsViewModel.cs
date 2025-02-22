@@ -7,9 +7,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class SetupViewModel : ObservableRecipient
+    public class ConfigurationsViewModel : ObservableRecipient
     {
-        public SetupViewModel()
+        public ConfigurationsViewModel()
         {
         }   
     }

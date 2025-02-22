@@ -135,11 +135,11 @@
   <data name="Shell_PluginsProcessing.Content" xml:space="preserve">
     <value>Processing &amp; Filtering</value>
   </data>
-  <data name="Shell_Setup.Content" xml:space="preserve">
-    <value>Setups</value>
+  <data name="Shell_Configurations.Content" xml:space="preserve">
+    <value>Configurations</value>
   </data>
   <data name="Shell_SetupNavHeader.Content" xml:space="preserve">
-    <value>Devices &amp; Setups</value>
+    <value>Devices &amp; Configurations</value>
   </data>
   <data name="Shell_ManagementNavHeader.Content" xml:space="preserve">
     <value>Management</value>
@@ -202,16 +202,16 @@
     <value>Troubleshooting</value>
   </data>
   <data name="SettingsPage_DeveloperModeExpander.Description" xml:space="preserve">
-    <value>Normally off. Developer options are generally intended for developers, and those working with developers to test pre-release components. Non-developer MIDI users do not need to use developer options as they may adversely impact the stability, capability, or performance of MIDI on your computer. Developer options require that the PC be placed into Developer Mode in Windows settings.</value>
+    <value>Developer options are generally intended for developers, and those working with developers to test pre-release components. Non-developer MIDI users do not need to use developer options as they may adversely impact the stability, capability, or performance of MIDI on your computer. Developer options require that the PC be placed into Developer Mode in Windows settings.</value>
   </data>
   <data name="SettingsPage_DeveloperModeExpander.Header" xml:space="preserve">
-    <value>Show developer options for MIDI</value>
+    <value>Developer options for MIDI</value>
   </data>
   <data name="SettingsPage_DeveloperModeLink.Content" xml:space="preserve">
     <value>Open Windows Settings "For developers" page</value>
   </data>
   <data name="SettingsPage_DeveloperModeIsDisabledInfo.Text" xml:space="preserve">
-    <value>Developer Mode is not enabled. Enable developer mode in Windows Settings.</value>
+    <value>Developer Mode is not enabled. Enable developer mode in Windows Settings if you want to be able to install in-development and unsigned third-party service plugins.</value>
   </data>
   <data name="SettingsPage_DiscordLink.Content" xml:space="preserve">
     <value>Windows MIDI Services on Discord</value>
@@ -238,7 +238,7 @@
     <value>Show developer options for MIDI</value>
   </data>
   <data name="SettingsPage_DeveloperModeIsEnabledInfo.Text" xml:space="preserve">
-    <value>Developer Mode is currently enabled on this PC. To turn it off, use Windows Settings.</value>
+    <value>Developer Mode is currently enabled on this PC, enabling you to install in-development and third-party unsigned service plugins. To turn it off, use Windows Settings.</value>
   </data>
   <data name="SettingsPage_AboutCard.Header" xml:space="preserve">
     <value>MIDI Settings</value>
@@ -410,5 +410,65 @@
   </data>
   <data name="CommonTasksGroup_Other.Text" xml:space="preserve">
     <value>Other</value>
+  </data>
+  <data name="ForDevelopers_Discovery.Header" xml:space="preserve">
+    <value>Discovery and Protocol Negotiation</value>
+  </data>
+  <data name="ForDevelopers_Discovery.Description" xml:space="preserve">
+    <value>Normally on. By default, the MIDI Service performs MIDI 2.0 discovery and protocol negotiation for any natively UMP device. If you are testing a device which breaks when those messages are sent, disable the process here. Requires a MIDI Service restart.</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcss.Header" xml:space="preserve">
+    <value>Enable MMCSS for the Incoming Message Queue</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcss.Description" xml:space="preserve">
+    <value>Normally off. MMCSS threads are a limited resource in Windows, and are often used for audio processing threads in DAW applications. If this feature is enabled, Windows MIDI Services will use MMCSS threads for handling incoming messages. This reduces the number of MMCSS threads available to the client process, and may cause applications to fail to work properly.</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcssToggle.OffContent" xml:space="preserve">
+    <value>Windows MIDI Services will not use MMCSS threads in the client process. This is the recommended choice.</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryToggle.OffContent" xml:space="preserve">
+    <value>Service-based MIDI 2.0 discovery and protocol negotiation is currently disabled.</value>
+  </data>
+  <data name="ForDevelopers_EnableMmcssToggle.OnContent" xml:space="preserve">
+    <value>Windows MIDI Services will use MMCSS threads in the client process. This may cause some applications to malfunction.</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryToggle.OnContent" xml:space="preserve">
+    <value>Service-based MIDI 2.0 discovery and protocol negotiation is currently enabled. This is the recommended choice.</value>
+  </data>
+  <data name="ForDevelopers_ServiceRestartRequired.Message" xml:space="preserve">
+    <value>The Windows MIDI Service (midisrv.exe) must be restarted for changes to take effect.</value>
+  </data>
+  <data name="Button_RestartMidiService.Content" xml:space="preserve">
+    <value>Restart MIDI Service</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDocumentation.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midi</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDocumentation.Content" xml:space="preserve">
+    <value>Windows MIDI Services Documentation</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDiscord.Content" xml:space="preserve">
+    <value>Windows MIDI and ASIO Discord Server</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesDiscord.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/mididiscord</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesGitHub.Content" xml:space="preserve">
+    <value>Windows MIDI Services GitHub Repo</value>
+  </data>
+  <data name="HyperlinkButton_WindowsMidiServicesGitHub.NavigateUri" xml:space="preserve">
+    <value>https://aka.ms/midirepo</value>
+  </data>
+  <data name="HyperlinkButton_MidiSpecifications.NavigateUri" xml:space="preserve">
+    <value>https://midi.org/specs</value>
+  </data>
+  <data name="HyperlinkButton_MidiSpecifications.Content" xml:space="preserve">
+    <value>MIDI 1.0 and 2.0 Specifications at the MIDI Association</value>
+  </data>
+  <data name="ForDevelopers_DiscoveryTimeoutSlider.Header" xml:space="preserve">
+    <value>Discovery Timeout (milliseconds)</value>
+  </data>
+  <data name="ForDevelopers_CommitDiscoveryTimeoutButton.Content" xml:space="preserve">
+    <value>Save to Registry</value>
   </data>
 </root>

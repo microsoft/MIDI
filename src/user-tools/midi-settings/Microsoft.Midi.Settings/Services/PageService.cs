@@ -33,7 +33,7 @@ public class PageService : IPageService
         Configure<PluginsProcessingViewModel, PluginsProcessingPage>();
         Configure<PluginsTransportViewModel, PluginsTransportPage>();
         Configure<SettingsViewModel, SettingsPage>();
-        Configure<SetupViewModel, SetupPage>();
+        Configure<ConfigurationsViewModel, ConfigurationsPage>();
         //Configure<ShellViewModel, ShellPage>();
         //Configure<ToolsConsoleViewModel, ToolsConsolePage>();
         //Configure<ToolsMonitorViewModel, ToolsMonitorPage>();

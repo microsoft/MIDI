@@ -76,6 +76,7 @@ public partial class App : Application
             services.AddSingleton<IMidiTransportInfoService, MidiTransportInfoService>();
             services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
             services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
+            services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
 
 
             // Views and ViewModels
@@ -136,8 +137,8 @@ public partial class App : Application
             services.AddTransient<PluginsTransportPage>();
             services.AddTransient<PluginsTransportViewModel>();
 
-            services.AddTransient<SetupPage>();
-            services.AddTransient<SetupViewModel>();
+            services.AddTransient<ConfigurationsPage>();
+            services.AddTransient<ConfigurationsViewModel>();
 
             services.AddTransient<ToolsConsolePage>();
             services.AddTransient<ToolsConsoleViewModel>();
