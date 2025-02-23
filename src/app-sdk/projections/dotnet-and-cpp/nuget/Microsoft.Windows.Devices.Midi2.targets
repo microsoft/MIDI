@@ -14,8 +14,8 @@
     </ItemDefinitionGroup>
 
     <Target Name="SetupMIDIServicesSDKReference"
-			BeforeTargets="BeforeBuild;BeforeResolveReferences">
-        <Message Text="Copying Windows MIDI Services references .winmd files" />
+			BeforeTargets="BeforeResolveReferences">
+        <Message Text="-- Copying Windows MIDI Services references .winmd files" />
 
         <ItemGroup>
             <Reference Include="$(NugetRoot)ref\native\Microsoft.Windows.Devices.Midi2*.winmd" />

@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <Target Name="SetupMIDIServicesSDKReference"
+			BeforeTargets="BeforeResolveReferences">
+        <Message Text="-- Copying Windows MIDI Services references .winmd files" />
+
+        <ItemGroup>
+            <Reference Include="$(NugetRoot)ref\native\Microsoft.Windows.Devices.Midi2*.winmd" />
+        </ItemGroup>
+    </Target>
+
+    <Target Name="CopyWindowsMIDIServicesNetProjectionToOutputFolder"
+            AfterTargets="Build"
+            >
+        <Message Text="-- Copying Windows MIDI Services .NET Projection" />
+
+        <Copy Condition="'$(Platform)' == 'x64'"
+              SourceFiles="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\lib\net8.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
+              DestinationFolder="$(TargetDir)" />
+
+        <Copy Condition="'$(Platform)' == 'ARM64'"
+              SourceFiles="$(MSBuildThisFileDirectory)..\..\runtimes\win-arm64\lib\net8.0\Microsoft.Windows.Devices.Midi2.NetProjection.dll"
+              DestinationFolder="$(TargetDir)" />
+    </Target>
+
+</Project>
