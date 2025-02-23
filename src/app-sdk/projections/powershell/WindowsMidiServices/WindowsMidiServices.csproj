@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+      <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+      <ImplicitUsings>enable</ImplicitUsings>
+      <Nullable>enable</Nullable>
+      <StartupObject></StartupObject>
+      <RootNamespace>Microsoft.Midi.ConsoleApp</RootNamespace>
+      <PlatformTargets>x64, ARM64</PlatformTargets>
+      <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+
+      <PublishSingleFile>false</PublishSingleFile>
+      <PublishSelfContained>false</PublishSelfContained>
+      <SelfContained>false</SelfContained>
+      <PublishTrimmed>false</PublishTrimmed>
+      <PublishAot>false</PublishAot>
+
+      <Platforms>ARM64;x64</Platforms>
+      <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+      <!-- Without this, the build script gets "NETSDK1083: The specified RuntimeIdentifier 'win10-x64' is not recognized" -->
+      <!--<UseRidGraph>true</UseRidGraph>-->
+
+      <!-- Needed for System.Management for viewing service details -->
+      <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+
+      <AssemblyVersion></AssemblyVersion>
+
+      <!-- needed to copy the required winrt implmentation dlls to bin folder -->
+      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+      <RollForward>LatestMinor</RollForward>
+
+      <WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion>
+
+      <NoWin32Manifest>true</NoWin32Manifest>
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />
+    <PackageReference Include="System.Management.Automation" Version="7.4.7" />
+  </ItemGroup>
+
+
+    <ItemGroup>
+        <Compile Include="..\..\..\..\..\build\staging\version\WindowsMidiServicesVersion.cs" Link="WindowsMidiServicesVersion.cs" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <Folder Include="Types\" />
+    </ItemGroup>
+
+
+
+
+</Project>
