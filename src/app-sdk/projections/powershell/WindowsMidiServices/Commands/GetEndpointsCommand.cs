@@ -1,17 +1,21 @@
 ﻿using System.Management.Automation;
 
-using Microsoft.Windows.Devices.Midi2;
-using Microsoft.Windows.Devices.Midi2.Initialization;
-
 namespace WindowsMidiServices
 {
 
-    [Cmdlet(VerbsCommon.Get, "MidiEndpoints")]
+    [Cmdlet(VerbsCommon.Get, "MidiEndpointList")]
     public class GetEndpointsCommand : Cmdlet
     {
         protected override void ProcessRecord()
         {
-            var devices = MidiEndpointDeviceInformation.FindAll();
+            var sdkDevices = Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation.FindAll();
+
+            List<MidiEndpointDeviceInformation> devices = [];
+
+            foreach (var sdkDevice in sdkDevices)
+            {
+                devices.Add(new MidiEndpointDeviceInformation(sdkDevice));
+            }
 
             WriteObject(devices);
         }

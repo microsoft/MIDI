@@ -16,8 +16,23 @@ namespace WindowsMidiServices
     {
         protected override void ProcessRecord()
         {
-            Initializer.CreateInitializer();
-            Initializer.Initialize();
+            if (Initializer.CreateInitializer())
+            {
+                if (Initializer.Initialize())
+                {
+                    WriteVerbose("MIDI Initialized.");
+                }
+                else
+                {
+                    // unable to initialize
+                    //WriteError(new ErrorRecord())''
+                }
+            }
+            else
+            {
+                // unable to create initializer
+            }
+
         }
 
     }
@@ -27,7 +42,10 @@ namespace WindowsMidiServices
     {
         protected override void ProcessRecord()
         {
-            Initializer.Shutdown();
+            if (Initializer.Shutdown())
+            {
+                WriteVerbose("MIDI Shut down.");
+            }
         }
     }
 

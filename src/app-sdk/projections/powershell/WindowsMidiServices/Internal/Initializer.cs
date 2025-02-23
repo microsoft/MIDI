@@ -5,14 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Midi.ConsoleApp
+namespace WindowsMidiServices
 {
-    class Initializer
+    internal class Initializer
     {
         private static MidiDesktopAppSdkInitializer? m_initializer = null;
 
+        internal bool IsInitialized => (bool)(m_initializer != null);
+
         // todo: this could throw exceptions to pwsh. That may be better
-        public static bool CreateInitializer()
+        internal static bool CreateInitializer()
         {
             if (m_initializer != null)
             {
@@ -30,7 +32,7 @@ namespace Microsoft.Midi.ConsoleApp
             return true;
         }
 
-        public static bool Initialize()
+        internal static bool Initialize()
         {
             if (m_initializer == null)
             {
@@ -50,7 +52,7 @@ namespace Microsoft.Midi.ConsoleApp
             return true;
         }
 
-        public static bool Shutdown()
+        internal static bool Shutdown()
         {
             if (m_initializer == null)
             {

@@ -5,7 +5,7 @@
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <StartupObject></StartupObject>
-      <RootNamespace>Microsoft.Midi.ConsoleApp</RootNamespace>
+      <RootNamespace>WindowsMidiServices</RootNamespace>
       <PlatformTargets>x64, ARM64</PlatformTargets>
       <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
 
@@ -45,11 +45,6 @@
 
     <ItemGroup>
         <Compile Include="..\..\..\..\..\build\staging\version\WindowsMidiServicesVersion.cs" Link="WindowsMidiServicesVersion.cs" />
-    </ItemGroup>
-
-
-    <ItemGroup>
-      <Folder Include="Types\" />
     </ItemGroup>
 
 
