@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WindowsMidiServices
 {
-    public class MidiEndpointDeviceInformation
+    public class MidiEndpointDeviceInfo
     {
         public string Name => BackingDeviceInformation.Name;
         public string EndpointDeviceId => BackingDeviceInformation.EndpointDeviceId;
@@ -16,7 +16,7 @@ namespace WindowsMidiServices
 
         internal Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation BackingDeviceInformation { get; set; }
 
-        public MidiEndpointDeviceInformation(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation backingDeviceInformation)
+        public MidiEndpointDeviceInfo(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation backingDeviceInformation)
         {
             BackingDeviceInformation = backingDeviceInformation;
         }

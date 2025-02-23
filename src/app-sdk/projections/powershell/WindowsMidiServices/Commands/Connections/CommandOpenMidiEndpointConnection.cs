@@ -9,8 +9,8 @@ namespace WindowsMidiServices
 {
 
 
-    [Cmdlet(VerbsCommon.Open, "MidiConnection")]
-    public class ConnectToEndpointCommand : Cmdlet
+    [Cmdlet(VerbsCommon.Open, "MidiEndpointConnection")]
+    public class CommandOpenMidiEndpointConnection : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
         public MidiSession Session
@@ -65,13 +65,6 @@ namespace WindowsMidiServices
 
     }
 
-
-    [Cmdlet(VerbsCommon.Close, "MidiEndpoint")]
-    public class DisconnectFromEndpointCommand : Cmdlet
-    {
-
-
-    }
 
 
 }

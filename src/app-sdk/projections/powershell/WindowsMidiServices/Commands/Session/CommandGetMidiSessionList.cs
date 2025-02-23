@@ -4,20 +4,20 @@ namespace WindowsMidiServices
 {
 
     [Cmdlet(VerbsCommon.Get, "MidiSessionList")]
-    public class GetSessionsCommand : Cmdlet
+    public class CommandGetMidiSessionList : Cmdlet
     {
         protected override void ProcessRecord()
         {
             var sdkSessions = Microsoft.Windows.Devices.Midi2.Reporting.MidiReporting.GetActiveSessions();
 
-            //List<MidiEndpointDeviceInformation> devices = [];
+            List<MidiSessionInfo> sessions = [];
 
-            //foreach (var sdkDevice in sdkDevices)
-            //{
-            //    devices.Add(new MidiEndpointDeviceInformation(sdkDevice));
-            //}
+            foreach (var sdkSession in sdkSessions)
+            {
+                sessions.Add(new MidiSessionInfo(sdkSession));
+            }
 
-            WriteObject(sdkSessions);
+            WriteObject(sessions.AsReadOnly());
         }
     }
 

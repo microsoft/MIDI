@@ -32,6 +32,17 @@ namespace WindowsMidiServices
             return true;
         }
 
+        internal static string GetSdkDescription()
+        {
+            if (m_initializer == null)
+            {
+                return string.Empty;
+            }
+
+            return m_initializer.GetInstalledSdkDescription(true, true, true);
+        }
+
+
         internal static bool Initialize()
         {
             if (m_initializer == null)

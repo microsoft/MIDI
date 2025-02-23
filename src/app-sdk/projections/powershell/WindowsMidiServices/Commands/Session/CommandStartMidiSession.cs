@@ -11,7 +11,7 @@ namespace WindowsMidiServices
 
 
     [Cmdlet(VerbsLifecycle.Start, "MidiSession")]
-    public class StartSessionCommand : Cmdlet
+    public class CommandStartMidiSession : Cmdlet
     {
         [Parameter(Mandatory = true, Position = 0)]
         public string Name { get; set; }
@@ -35,32 +35,6 @@ namespace WindowsMidiServices
             }
         }
     }
-
-
-    [Cmdlet(VerbsLifecycle.Stop, "MidiSession")]
-    public class StopSessionCommand : Cmdlet
-    {
-        [Parameter(Mandatory = true)]
-        public MidiSession Session { get; set; }
-        protected override void ProcessRecord()
-        {
-            if (Session.BackingSession != null)
-            {
-                WriteVerbose("MIDI Session stopped.");
-                Session.BackingSession.Dispose();
-            }
-            else
-            {
-                WriteVerbose("MIDI Session was not previously started.");
-            }
-
-            Session = null;
-        }
-
-
-    }
-
-
 
 
 }

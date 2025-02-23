@@ -24,7 +24,7 @@ namespace WindowsMidiServices
         {
             if (BackingSession != null)
             {
-                BackingSession.Dispose();
+                //BackingSession.Dispose();
                 BackingSession = null;
             }
         }

@@ -20,6 +20,7 @@ namespace WindowsMidiServices
             {
                 if (Initializer.Initialize())
                 {
+                    WriteVerbose("MIDI SDK: " + Initializer.GetSdkDescription());
                     WriteVerbose("MIDI Initialized.");
                 }
                 else
@@ -36,19 +37,5 @@ namespace WindowsMidiServices
         }
 
     }
-
-    [Cmdlet(VerbsLifecycle.Stop, "Midi")]
-    public class ShutdownCommand : Cmdlet
-    {
-        protected override void ProcessRecord()
-        {
-            if (Initializer.Shutdown())
-            {
-                WriteVerbose("MIDI Shut down.");
-            }
-        }
-    }
-
-
 
 }
