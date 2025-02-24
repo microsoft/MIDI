@@ -11,6 +11,8 @@ Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "console-package", "console-
 EndProject
 Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "settings-package", "settings-package\settings-package.wixproj", "{8DDBE5CB-508C-4FAC-AC65-4B2ADAA1455B}"
 EndProject
+Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "powershell-package", "powershell-package\powershell-package.wixproj", "{64F78541-F086-E55B-E80B-17FA72C35E48}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -69,6 +71,18 @@ Global
 		{8DDBE5CB-508C-4FAC-AC65-4B2ADAA1455B}.Release|x64.Build.0 = Release|x64
 		{8DDBE5CB-508C-4FAC-AC65-4B2ADAA1455B}.Release|x86.ActiveCfg = Release|x86
 		{8DDBE5CB-508C-4FAC-AC65-4B2ADAA1455B}.Release|x86.Build.0 = Release|x86
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Debug|ARM64.Build.0 = Debug|ARM64
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Debug|x64.ActiveCfg = Debug|x64
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Debug|x64.Build.0 = Debug|x64
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Debug|x86.ActiveCfg = Debug|x86
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Debug|x86.Build.0 = Debug|x86
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Release|ARM64.ActiveCfg = Release|ARM64
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Release|ARM64.Build.0 = Release|ARM64
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Release|x64.ActiveCfg = Release|x64
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Release|x64.Build.0 = Release|x64
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Release|x86.ActiveCfg = Release|x86
+		{64F78541-F086-E55B-E80B-17FA72C35E48}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

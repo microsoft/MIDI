@@ -1,5 +1,5 @@
 #Requires -Version 7.4
-import-module .\WindowsMidiServices.dll
+import-module WindowsMidiServices
 
 $sdkinfo = Start-Midi | Write-Output
 

@@ -44,7 +44,7 @@
 
 
     <ItemGroup>
-        <Compile Include="..\..\..\..\..\build\staging\version\WindowsMidiServicesVersion.cs" Link="WindowsMidiServicesVersion.cs" />
+        <Compile Include="..\..\..\..\build\staging\version\WindowsMidiServicesVersion.cs" Link="WindowsMidiServicesVersion.cs" />
     </ItemGroup>
 
 
