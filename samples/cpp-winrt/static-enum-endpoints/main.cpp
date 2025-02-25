@@ -208,7 +208,7 @@ int main()
 
         for (auto const& functionBlock : functionBlocks)
         {
-            std::cout << "  - " << functionBlock.Number() << " : " << winrt::to_string(functionBlock.Name()) << std::endl;
+            std::cout << "  - " << int(functionBlock.Number()) << " : " << winrt::to_string(functionBlock.Name()) << std::endl;
         }
         
 
@@ -219,7 +219,7 @@ int main()
 
         for (auto const& groupTerminalBlock : groupTerminalBlocks)
         {
-            std::cout << "  - " << groupTerminalBlock.Number() << " : " << winrt::to_string(groupTerminalBlock.Name()) << std::endl;
+            std::cout << "  - " << int(groupTerminalBlock.Number()) << " : " << winrt::to_string(groupTerminalBlock.Name()) << std::endl;
         }
 
 
