@@ -2130,7 +2130,7 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
                 portInfo[MidiFlowOut][i].Flow = (MidiFlow) MidiFlowOut;
                 portInfo[MidiFlowOut][i].IsEnabled = portInfo[MidiFlowOut][i].IsEnabled || fb->IsActive;
                 portInfo[MidiFlowOut][i].InterfaceId = umpDeviceInterfaceId;
-                portInfo[MidiFlowIn][i].Name = functionBlockName;
+                portInfo[MidiFlowOut][i].Name = functionBlockName;
             }
         }
     }
