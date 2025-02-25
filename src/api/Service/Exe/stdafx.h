@@ -19,6 +19,7 @@
 #include <string>
 #include <iterator>
 #include <strsafe.h>
+#include <mmsystem.h>
 #include <wrl\module.h>
 #include <wrl\event.h>
 #include <avrt.h>
