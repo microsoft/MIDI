@@ -36,9 +36,6 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
     [Guid("8087b303-d551-bce2-1ead-a2500d50c580")]
     internal partial interface IMidiClientInitializer
     {
-        void Initialize();
-        void Shutdown();
-
         void GetInstalledWindowsMidiServicesSdkVersion(
             ref MidiAppSDKPlatform buildPlatform,
             ref UInt32 versionMajor,
@@ -87,7 +84,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
                 try
                 {
-                    cominit.Initialize();
+                  //  cominit.Initialize();
 
                     var initializer = new MidiDesktopAppSdkInitializer(cominit);
 
@@ -122,17 +119,19 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
         public bool InitializeSdkRuntime()
         {
-            try
-            {
-                _initializer.Initialize();
+            return true;
 
-                return true;
-            }
-            catch (Exception)
-            {
-                // todo: Log
-                return false;
-            }
+            //try
+            //{
+            //    _initializer.Initialize();
+
+            //    return true;
+            //}
+            //catch (Exception)
+            //{
+            //    // todo: Log
+            //    return false;
+            //}
         }
 
         public bool CheckForMinimumRequiredSdkVersion(
@@ -250,7 +249,8 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         {
             if (_initializer != null )
             {
-                _initializer.Shutdown();
+                //  _initializer.Shutdown();
+                _initializer = null;
             }
         }
 

@@ -462,6 +462,9 @@ RoResolveNamespaceDetour(
     //return hr;
 }
 
+wil::critical_section m_detourSetupLock;
+bool g_detourActive{ false };
+
 HRESULT 
 InstallWinRTActivationHooks()
 {
@@ -474,29 +477,36 @@ InstallWinRTActivationHooks()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    // If this is loaded in a Detours helper process and not the actual process
-    // to be hooked, just return without performing any other operations.
-    if (DetourIsHelperProcess())
-        return S_OK;
+    auto lock = m_detourSetupLock.lock();
 
-    DetourRestoreAfterWith();
+    if (!g_detourActive)
+    {
+        // If this is loaded in a Detours helper process and not the actual process
+        // to be hooked, just return without performing any other operations.
+        if (DetourIsHelperProcess())
+            return S_OK;
 
-    RETURN_IF_WIN32_ERROR(DetourTransactionBegin());
-    RETURN_IF_WIN32_ERROR(DetourUpdateThread(GetCurrentThread()));
-    RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoActivateInstance, RoActivateInstanceDetour));
-    RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoGetActivationFactory, RoGetActivationFactoryDetour));
-    RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoGetMetaDataFile, RoGetMetaDataFileDetour));
-    RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoResolveNamespace, RoResolveNamespaceDetour));
-    RETURN_IF_WIN32_ERROR(DetourTransactionCommit());
+        DetourRestoreAfterWith();
 
-    TraceLoggingWrite(
-        Midi2SdkTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(nullptr, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
+        RETURN_IF_WIN32_ERROR(DetourTransactionBegin());
+        RETURN_IF_WIN32_ERROR(DetourUpdateThread(GetCurrentThread()));
+        RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoActivateInstance, RoActivateInstanceDetour));
+        RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoGetActivationFactory, RoGetActivationFactoryDetour));
+        RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoGetMetaDataFile, RoGetMetaDataFileDetour));
+        RETURN_IF_WIN32_ERROR(DetourAttach(&(PVOID&)TrueRoResolveNamespace, RoResolveNamespaceDetour));
+        RETURN_IF_WIN32_ERROR(DetourTransactionCommit());
+
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(nullptr, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        g_detourActive = true;
+    }
 
     return S_OK;
 }
@@ -512,14 +522,20 @@ void RemoveWinRTActivationHooks()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    auto lock = m_detourSetupLock.lock();
 
-    DetourTransactionBegin();
-    DetourUpdateThread(GetCurrentThread());
-    DetourDetach(&(PVOID&)TrueRoActivateInstance, RoActivateInstanceDetour);
-    DetourDetach(&(PVOID&)TrueRoGetActivationFactory, RoGetActivationFactoryDetour);
-    DetourDetach(&(PVOID&)TrueRoGetMetaDataFile, RoGetMetaDataFileDetour);
-    DetourDetach(&(PVOID&)TrueRoResolveNamespace, RoResolveNamespaceDetour);
-    DetourTransactionCommit();
+    if (g_detourActive)
+    {
+        DetourTransactionBegin();
+        DetourUpdateThread(GetCurrentThread());
+        DetourDetach(&(PVOID&)TrueRoActivateInstance, RoActivateInstanceDetour);
+        DetourDetach(&(PVOID&)TrueRoGetActivationFactory, RoGetActivationFactoryDetour);
+        DetourDetach(&(PVOID&)TrueRoGetMetaDataFile, RoGetMetaDataFileDetour);
+        DetourDetach(&(PVOID&)TrueRoResolveNamespace, RoResolveNamespaceDetour);
+        DetourTransactionCommit();
+
+        g_detourActive = false;
+    }
 
     TraceLoggingWrite(
         Midi2SdkTelemetryProvider::Provider(),
@@ -529,7 +545,6 @@ void RemoveWinRTActivationHooks()
         TraceLoggingPointer(nullptr, "this"),
         TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
-
 }
 
 //extern "C" void WINAPI winrtact_Initialize()

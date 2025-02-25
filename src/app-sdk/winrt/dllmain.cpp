@@ -27,16 +27,30 @@ BOOL WINAPI DllMain(HINSTANCE hmodule, DWORD reason, LPVOID /*lpvReserved*/)
 
         // detours initialization is all done in the COM component
         // but we want only a single instance per-process
+        // the singleton enforcement happens in the class factory
         if (g_clientInitializer == nullptr)
         {
-            g_clientInitializer = winrt::make<MidiClientInitializer>();
-        }
+            // uses normal pointer to not increase ref count from the start
+            g_clientInitializer = std::make_shared<MidiClientInitializer>();
 
+            // Initialize via internal function
+            auto hr = g_clientInitializer->Initialize();
+
+            if (FAILED(hr))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+
+        }
     }
 
     if (reason == DLL_PROCESS_DETACH)
     {
-    //    g_clientInitializer = nullptr;
+        g_clientInitializer = nullptr;
     }
 
     TraceLoggingWrite(
@@ -57,6 +71,11 @@ DllCanUnloadNow()
 {
     // TODO: See if the initializer has any references. If not, then forward to the WinRT function
 
+    if (g_clientInitializer == nullptr) return true;
+
+    if (g_clientInitializer->CanUnloadNow()) return true;
+
+    // this is assuming applications are keeping the initializer around like they're supposed to.
     return WINRT_CanUnloadNow();
 }
 
@@ -83,8 +102,6 @@ DllGetClassObject(GUID const& clsid, GUID const& iid, void** result)
             return winrt::make<MidiClientInitializerFactory>()->QueryInterface(iid, result);
         }
 
-        // TODO: Is this going to fail for apps like MultitrackStudio which use the underlying COM interfaces for the WinRT classes?
-        // not a supported class
         return winrt::hresult_class_not_available().to_abi();
     }
     catch (...)

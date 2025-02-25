@@ -70,14 +70,19 @@ namespace WindowsMidiServices
                 return false;
             }
 
-            m_initializer.ShutdownSdkRuntime();
+            try
+            {
+                m_initializer.ShutdownSdkRuntime();
 
-            m_initializer.Dispose();
+                m_initializer.Dispose();
+                m_initializer = null;
 
-            m_initializer = null;
-
-            return true;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
-
     }
 }
