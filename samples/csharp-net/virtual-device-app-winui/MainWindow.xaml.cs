@@ -226,8 +226,6 @@ namespace MidiSample.AppToAppMidi
             declaredEndpointInfo.SupportsSendingJitterReductionTimestamps = false;
 
             declaredEndpointInfo.HasStaticFunctionBlocks = false;   // this makes it possible for us to update them later
-            declaredEndpointInfo.DeclaredFunctionBlockCount = 3;    // needs to match the number of function blocks in the collection
-
 
             // todo: set any device identity values if you want. This is optional
             // The SysEx id, if used, needs to be a valid one
