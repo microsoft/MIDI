@@ -3,6 +3,8 @@
 #include "pch.h"
 #include "MidiSrvPort.h"
 
+#define CALC_TICKS(pos) ((DWORD) (((pos) * 1000.0) / m_qpcFrequency))
+
 CMidiPort::CMidiPort()
 {
     TraceLoggingWrite(
@@ -354,7 +356,7 @@ CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
     }
 
     // calculate the timestamp for the message
-    DWORD ticks = (DWORD) (((position - m_StartTime) / m_qpcFrequency) * 1000.0);
+    DWORD ticks = CALC_TICKS(position - m_StartTime);
 
     // mark it completed
     buffer->dwFlags &= (~MHDR_INQUEUE);
@@ -489,7 +491,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     // we're not in SysEx mode, but this byte was provided
                     // so we'll send it anyway
                     // Convert from the QPC time to the number of ticks elapsed from the start time.
-                    DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                    DWORD ticks = CALC_TICKS(position - startTime);
                     DWORD_PTR midiMessage = *callbackData;
                     WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
                 }
@@ -553,7 +555,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                         // to do that. We could even put in a reg setting to control this behavior.
 
                         // Convert from the QPC time to the number of ticks elapsed from the start time.
-                        //DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                        //DWORD ticks = CALC_TICKS(position - startTime);
                         //DWORD_PTR midiMessage = *callbackData;
                         //WinmmClientCallback(MIM_ERROR, midiMessage, ticks);
                     }
@@ -627,7 +629,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             if (MIDI_BYTE_IS_STATUS_BYTE(prioritySingleByteMessage))
             {
                 // Convert from the QPC time to the number of ticks elapsed from the start time.
-                DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                DWORD ticks = CALC_TICKS(position - startTime);
                 DWORD_PTR midiMessage{ prioritySingleByteMessage };
                 WinmmClientCallback(MIM_DATA, midiMessage, ticks);
 
@@ -642,7 +644,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
                     countMidiMessageBytesReceived == 1 && MIDI_MESSAGE_IS_ONE_BYTE(inProgressMidiMessage[0]))
                 {
                     // Convert from the QPC time to the number of ticks elapsed from the start time.
-                    DWORD ticks = (DWORD)(((position - startTime) / m_qpcFrequency) * 1000.0);
+                    DWORD ticks = CALC_TICKS(position - startTime);
                     DWORD_PTR midiMessage{ static_cast<DWORD_PTR>(inProgressMidiMessage[0]) };
 
                     if (MIDI_MESSAGE_IS_TWO_BYTES(inProgressMidiMessage[0]) || 
