@@ -682,14 +682,14 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             }
         }
 
-        // We fell out of the loop. If callback data remaining is 0 and we have some sysex in the buffer, send it
-        if (buffer && started)
-        {
-            if (buffer->dwBytesRecorded > 0 && callbackDataRemaining == 0)
-            {
-                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
-            }
-        }
+        //// We fell out of the loop. If callback data remaining is 0 and we have some sysex in the buffer, send it
+        //if (buffer && started)
+        //{
+        //    if (buffer->dwBytesRecorded > 0 && callbackDataRemaining == 0)
+        //    {
+        //        RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGDATA, position));
+        //    }
+        //}
     }
 
     return S_OK;
