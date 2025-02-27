@@ -378,6 +378,34 @@ namespace Microsoft.Midi.ConsoleApp
                 }
 
 
+                if (!settings.NoWait)
+                {
+                    AnsiConsole.MarkupLine(Strings.SendMessagePressEscapeToCloseConnectionMessage);
+                    AnsiConsole.WriteLine();
+
+                    bool continueWaiting = true;
+
+                    while (continueWaiting)
+                    {
+                        if (Console.KeyAvailable)
+                        {
+                            var keyInfo = Console.ReadKey(true);
+
+                            if (keyInfo.Key == ConsoleKey.Escape)
+                            {
+                                continueWaiting = false;
+
+                                AnsiConsole.WriteLine();
+                                AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
+                            }
+                        }
+                        else
+                        {
+                            Thread.Sleep(500);
+                        }
+                    }
+                }
+
                 if (session != null)
                     session.Dispose();
 

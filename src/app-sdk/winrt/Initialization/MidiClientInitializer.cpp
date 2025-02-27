@@ -12,7 +12,7 @@
 
 // init code goes in dllmain
 
-winrt::com_ptr<IMidiClientInitializer> g_clientInitializer{ nullptr };
+std::unique_ptr<MidiClientInitializer> g_clientInitializer{ nullptr };
 
 
 
@@ -29,23 +29,31 @@ MidiClientInitializer::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    // initialize can only be called once so let it finish at least one time.
+    auto lock = m_initializeLock.lock();
+
     if (m_initialized)
     {
         return S_OK;
     }
 
+    auto cleanupOnError = wil::scope_exit([&]()
+        {
+            if (g_runtimeComponentCatalog)
+            {
+                g_runtimeComponentCatalog->Shutdown();
+                g_runtimeComponentCatalog = nullptr;
+            }
+
+            RemoveWinRTActivationHooks();
+        });
+
+
     // midisrv client initialization. Doesn't actually connect to service here
 
     RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_serviceTransport)));
-    RETURN_IF_FAILED(m_serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&m_sessionTracker));
-
-    RETURN_HR_IF_NULL(E_POINTER, m_sessionTracker);
-
-    RETURN_IF_FAILED(m_sessionTracker->Initialize());
-
 
     // SDK initialization
-
     g_runtimeComponentCatalog = std::make_shared<MidiAppSdkRuntimeComponentCatalog>();
 
     if (g_runtimeComponentCatalog == nullptr)
@@ -59,7 +67,7 @@ MidiClientInitializer::Initialize(
             TraceLoggingWideString(L"Unable to create runtime component catalog", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
-        RETURN_IF_FAILED(E_POINTER);
+        RETURN_IF_NULL_ALLOC(g_runtimeComponentCatalog);
     }
 
     auto hrcatalog = g_runtimeComponentCatalog->Initialize();
@@ -76,7 +84,6 @@ MidiClientInitializer::Initialize(
 
         RETURN_IF_FAILED(E_FAIL);
     }
-
 
     try
     {
@@ -112,7 +119,8 @@ MidiClientInitializer::Initialize(
         RETURN_IF_FAILED(E_FAIL);
     }
 
-
+    // success, so remove all the unwinding code
+    cleanupOnError.release();
     m_initialized = true;
 
     return S_OK;
@@ -142,6 +150,8 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
 
     try
     {
@@ -281,16 +291,40 @@ MidiClientInitializer::EnsureServiceAvailable() noexcept
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_serviceTransport);
 
-    RETURN_HR_IF_NULL(E_POINTER, m_sessionTracker);
+    wil::com_ptr_nothrow<IMidiSessionTracker> sessionTracker;
+    RETURN_IF_FAILED(m_serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker));
+    RETURN_HR_IF_NULL(E_POINTER, sessionTracker);
 
-    if (m_sessionTracker->VerifyConnectivity())
+    sessionTracker->Initialize();
+    bool connected = sessionTracker->VerifyConnectivity();
+    sessionTracker->Shutdown();
+    sessionTracker.reset();
+
+    if (connected)
     {
         return S_OK;
     }
-
-    return E_FAIL;
+    else
+    {
+        return E_FAIL;
+    }
 }
+
+bool
+MidiClientInitializer::CanUnloadNow() noexcept
+{
+    // if we've been initialized, the detours are in place, so cannot unload
+    if (m_initialized)
+    {
+        return false;
+    }
+
+    return true;
+}
+
 
 
 HRESULT
@@ -305,27 +339,74 @@ MidiClientInitializer::Shutdown() noexcept
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    auto lock = m_initializeLock.lock();
 
-    // Remove activation hooks
-    RemoveWinRTActivationHooks();
-
-    if (m_serviceTransport)
+    if (m_initialized)
     {
-        m_serviceTransport = nullptr;
-    }
+        // Remove activation hooks
+        RemoveWinRTActivationHooks();
 
-    if (m_sessionTracker)
-    {
-        m_sessionTracker->Shutdown();
-        m_serviceTransport = nullptr;
-    }
+        if (m_serviceTransport)
+        {
+            m_serviceTransport = nullptr;
+        }
 
-    if (g_runtimeComponentCatalog != nullptr)
-    {
-        g_runtimeComponentCatalog->Shutdown();
-        g_runtimeComponentCatalog.reset();
+        if (g_runtimeComponentCatalog != nullptr)
+        {
+            g_runtimeComponentCatalog->Shutdown();
+            g_runtimeComponentCatalog.reset();
+        }
+
+        // this just feels strange
+        g_clientInitializer.reset();
+
+        m_initialized = false;
     }
 
     return S_OK;
 }
 
+
+MidiClientInitializer::~MidiClientInitializer()
+{
+    //Shutdown();
+}
+
+
+ULONG __stdcall MidiClientInitializer::AddRef() noexcept
+{
+    return InterlockedIncrement(&m_cRef);
+}
+
+ULONG __stdcall MidiClientInitializer::Release() noexcept
+{
+    if (InterlockedDecrement(&m_cRef) == 0)
+    {
+        //delete this;
+        Shutdown();
+        return 0;
+    }
+
+    return m_cRef;
+}
+
+HRESULT __stdcall MidiClientInitializer::QueryInterface(const IID& iid, void** ppv) noexcept
+{
+    if (iid == IID_IUnknown)
+    {
+        *ppv = static_cast<IMidiClientInitializer*>(this);
+    }
+    else if (iid == __uuidof(IMidiClientInitializer))
+    {
+        *ppv = static_cast<IMidiClientInitializer*>(this);
+    }
+    else
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    reinterpret_cast<IUnknown*>(*ppv)->AddRef();
+
+    return S_OK;
+}

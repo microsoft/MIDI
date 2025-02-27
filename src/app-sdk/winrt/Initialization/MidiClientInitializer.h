@@ -24,8 +24,6 @@ typedef enum
 // famous arp + famous roland + famous yamaha (5=S)
 struct __declspec(uuid("8087b303-d551-bce2-1ead-a2500d50c580")) IMidiClientInitializer : ::IUnknown
 {
-    STDMETHOD(Initialize)() = 0;
-    STDMETHOD(Shutdown)() = 0;
 
     STDMETHOD(GetInstalledWindowsMidiServicesSdkVersion)(
         _Out_opt_ MidiAppSDKPlatform* buildPlatform,
@@ -55,8 +53,9 @@ struct __declspec(uuid("8087b303-d551-bce2-1ead-a2500d50c580")) IMidiClientIniti
 // famous tune played on that synthesizer (first letter is not a note, 6=g)
 struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitializer : winrt::implements<MidiClientInitializer, IMidiClientInitializer>
 {
-    STDMETHOD(Initialize)() noexcept override;
-    STDMETHOD(Shutdown)() noexcept override;
+    STDMETHOD(Initialize)() noexcept;       // not part of COM interface
+    STDMETHOD(Shutdown)() noexcept;         // not part of COM interface
+    bool CanUnloadNow() noexcept;           // not part of COM interface
 
     STDMETHOD(GetInstalledWindowsMidiServicesSdkVersion)(
         _Out_opt_ MidiAppSDKPlatform* buildPlatform,
@@ -74,15 +73,22 @@ struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitia
 
     STDMETHOD(EnsureServiceAvailable)() noexcept override;
 
+    ULONG __stdcall AddRef() noexcept override;
+    ULONG __stdcall Release() noexcept override;
+    HRESULT __stdcall QueryInterface(const IID& iid, void** ppv) noexcept override;
+
+    ~MidiClientInitializer();
 
 private:
+    ULONG m_cRef{ 0 };
+
     bool m_initialized{ false };
+    wil::critical_section m_initializeLock{};
 
     wil::com_ptr_nothrow<IMidiTransport> m_serviceTransport{ nullptr };
-    wil::com_ptr_nothrow<IMidiSessionTracker> m_sessionTracker{ nullptr };
 };
 
-extern winrt::com_ptr<IMidiClientInitializer> g_clientInitializer;
+extern std::unique_ptr<MidiClientInitializer> g_clientInitializer;
 
 // uuid
 // famous phone number
@@ -104,10 +110,28 @@ struct __declspec(uuid("18675309-5150-ca75-0b12-5648616c656e")) MidiClientInitia
                 return CLASS_E_NOAGGREGATION;
             }
 
+            // SINGLETON
             // we don't make a new instance here, because we want only
             // a single instance of this class per-process
-            return g_clientInitializer->QueryInterface(iid, result);
 
+            // detours initialization is all done in the COM component
+            // but we want only a single instance per-process
+            if (g_clientInitializer == nullptr)
+            {
+                // uses normal non-ref counted pointer to not increase ref count from the start, 
+                // and to hold the actual impl, not the COM interface
+                g_clientInitializer = std::make_unique<MidiClientInitializer>();
+                RETURN_IF_NULL_ALLOC(g_clientInitializer);
+                // Initialize via internal function
+                auto hr = g_clientInitializer->Initialize();
+
+                RETURN_IF_FAILED(hr);
+            }
+
+            auto hrqi = g_clientInitializer->QueryInterface(iid, result);
+            RETURN_IF_FAILED(hrqi);
+
+            return S_OK;
         }
         catch (...)
         {

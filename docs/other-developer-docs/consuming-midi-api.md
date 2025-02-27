@@ -77,13 +77,11 @@ You will follow a similar approach to C++ using windows-rs instead of C++/WinRT.
 
 ## Consuming from C++ without Visual Studio (using cmake or other tools)
 
-The C++/WinRT tool `cppwinrt.exe` will generate a set of standard C++ header files including `Microsoft.Windows.Devices.Midi2.h` which you can pull in and include in your project. The header file projections for WinRT types outside of `Microsoft::Windows::Devices::Midi2` are generated from the Windows SDK and included in a subfolder. When we ship Windows MIDI Services in-box in Windows, this new MIDI API will be projected in the same way as all the others in the Windows SDK.
+The C++/WinRT tool `cppwinrt.exe` will generate a set of standard C++ header files including `Microsoft.Windows.Devices.Midi2.h` which you can pull in and include in your project. The header file projections for WinRT types outside of `Microsoft::Windows::Devices::Midi2` are generated from the Windows SDK and included in a subfolder. 
 
 First, install the latest Windows SDK. You can get the SDK from the [Windows Dev Center](https://developer.microsoft.com/windows/downloads/windows-sdk/)
 
-The SDK install includes the `cppwinrt.exe` tool. For the 10.0.22621.0 version of the SDK, it is found here on my PC:
-`C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64` and
-`C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\arm64` . Pick the version appropriate for your development PC architecture.
+The SDK install includes a version  of the `cppwinrt.exe` tool. However, the latest version of this tool is [available via NuGet](https://www.nuget.org/packages/Microsoft.Windows.CppWinRT/), and is preferable to the older versions shipping in the Windows SDK. You can end up with version mismatches if you use an older version.
 
 Normally, all SDK header files, on my PC with the 10.0.22621.0 version of the SDK installed, are located here
 `C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\cppwinrt\winrt`

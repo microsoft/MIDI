@@ -306,6 +306,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
                     if (internal::EndpointDiscoveryFilterRequestsEndpointInfoNotification(filterFlags))
                     {
+                        // because we reuse the declaredendpointinfo type, it has a redundant field
+                        // which can cause problems during discovery (mostly a long timeout). So
+                        // just update the field here.
+                        m_declaredEndpointInfo.DeclaredFunctionBlockCount = static_cast<uint8_t>(m_functionBlocks.Size());
+
                         // send endpoint info notification
 
                         auto notification = msgs::MidiStreamMessageBuilder::BuildEndpointInfoNotificationMessage(
@@ -313,7 +318,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                             m_declaredEndpointInfo.SpecificationVersionMajor,
                             m_declaredEndpointInfo.SpecificationVersionMinor,
                             m_declaredEndpointInfo.HasStaticFunctionBlocks,
-                            m_declaredEndpointInfo.DeclaredFunctionBlockCount, /*(uint8_t)m_functionBlocks.Size(), */
+                            m_declaredEndpointInfo.DeclaredFunctionBlockCount,
                             m_declaredEndpointInfo.SupportsMidi20Protocol,
                             m_declaredEndpointInfo.SupportsMidi10Protocol,
                             m_declaredEndpointInfo.SupportsReceivingJitterReductionTimestamps,
@@ -339,11 +344,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
                     if (internal::EndpointDiscoveryFilterRequestsDeviceIdentityNotification(filterFlags))
                     {
-                     //   internal::LogInfo(__FUNCTION__, L"Building/Sending Device Identity Notification");
-
                         // send device identity notification
-
-                        // TODO: Need to validate no indexes out of bounds here
 
                         auto identityNotification = msgs::MidiStreamMessageBuilder::BuildDeviceIdentityNotificationMessage(
                             MidiClock::TimestampConstantSendImmediately(),
@@ -359,8 +360,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
                             m_declaredDeviceIdentity.SoftwareRevisionLevelByte3,                 // byte 3
                             m_declaredDeviceIdentity.SoftwareRevisionLevelByte4                  // byte 4
                         );
-
-                        //OutputDebugString(L"MIDI SDK: Responding with Device Identity Notification\n");
 
                         if (midi2::MidiEndpointConnection::SendMessageFailed(m_endpointConnection.SendSingleMessagePacket(identityNotification)))
                         {

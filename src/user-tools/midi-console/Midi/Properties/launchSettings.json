@@ -34,6 +34,10 @@
     "Enum Endpoints": {
       "commandName": "Project",
       "commandLineArgs": "enum endpoints"
+    },
+    "Blast Messages": {
+      "commandName": "Project",
+      "commandLineArgs": "endpoint send-message 0x20905060 --count 20000 --pause 0"
     }
   }
 }

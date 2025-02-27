@@ -104,6 +104,11 @@ class Build : NukeBuild
 
     AbsolutePath UserToolsRootFolder => SourceRootFolder / "user-tools";
 
+
+    AbsolutePath MidiPowerShellSolutionFolder => AppSdkSolutionFolder / "projections" / "powershell" ;
+    AbsolutePath MidiPowerShellStagingFolder => StagingRootFolder / "midi-powershell";
+
+
     AbsolutePath MidiConsoleSolutionFolder => UserToolsRootFolder / "midi-console";
     AbsolutePath MidiConsoleStagingFolder => StagingRootFolder / "midi-console";
     AbsolutePath ConsoleSetupSolutionFolder => UserToolsRootFolder / "midi-console-setup";
@@ -126,6 +131,7 @@ class Build : NukeBuild
 
     AbsolutePath SamplesCSWinRTSolutionFolder => SamplesRootFolder / "csharp-net";
 
+    MSBuildVerbosity BuildVerbosity => MSBuildVerbosity.Quiet;
 
     string[] SdkPlatforms => new string[] { "x64", "Arm64EC"  };
     string[] ServiceAndApiPlatforms => new string[] { "x64", "Arm64" };
@@ -255,7 +261,7 @@ class Build : NukeBuild
                 /*.SetTargets("Build") */
                 .SetProperties(msbuildProperties)
                 .SetConfiguration(Configuration.Release)
-                .SetVerbosity(MSBuildVerbosity.Minimal)
+                .SetVerbosity(BuildVerbosity)
                 .EnableNodeReuse()
             );
 
@@ -353,7 +359,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    .SetVerbosity(MSBuildVerbosity.Minimal)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -415,7 +421,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    //.SetVerbosity(MSBuildVerbosity.Minimal)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -515,7 +521,13 @@ class Build : NukeBuild
                         Path.Combine(solutionDir, "mididiag"),
                         Path.Combine(solutionDir, "midiusbinfo"),
                         Path.Combine(solutionDir, "midimdnsinfo"),
+                        Path.Combine(solutionDir, @"tests\InitializationExe"),
+                        Path.Combine(solutionDir, @"tests\Benchmarks"),
+                        Path.Combine(solutionDir, @"tests\Offline.unittests"),
+                        Path.Combine(solutionDir, @"tests\SdkInitialization.unittests"),
+                        Path.Combine(solutionDir, @"tests\Service.unittests"),
                         /* Path.Combine(solutionDir, "midi1monitor"), */
+                        /* Path.Combine(solutionDir, "midiksinfo"), */
                     };
 
                 foreach (var projectFolder in toolsDirectoriesNeedingSdkPackageUpdates)
@@ -557,7 +569,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    //.SetVerbosity(MSBuildVerbosity.Minimal)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -587,7 +599,8 @@ class Build : NukeBuild
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
         .DependsOn(BuildConsoleApp)
-        //.DependsOn(BuildSettingsApp)
+        .DependsOn(BuildSettingsApp)
+        .DependsOn(BuildPowerShellProjection)
         .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildAppSDKToolsAndTests)
         .Executes(() =>
@@ -620,6 +633,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -679,6 +693,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -725,6 +740,7 @@ class Build : NukeBuild
                 /*.SetTargets("Build") */
                 .SetProperties(msbuildProperties)
                 .SetConfiguration(Configuration.Release)
+                .SetVerbosity(BuildVerbosity)
                 .EnableNodeReuse()
             );
 
@@ -1034,6 +1050,101 @@ class Build : NukeBuild
         });
 
 
+    Target BuildPowerShellProjection => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildAndPackAllAppSDKs)
+        .Executes(() =>
+    {
+        var solution = MidiPowerShellSolutionFolder / "midi-powershell.sln";
+
+        // for the MIDI nuget package
+        NuGetTasks.NuGetInstall(_ => _
+            .SetProcessWorkingDirectory(MidiPowerShellSolutionFolder)
+            .SetPreRelease(true)
+            .SetSource(AppSdkNugetOutputFolder)
+            .SetPackageID(NugetPackageId)
+            .SetDependencyVersion(DependencyVersion.Highest)
+        );
+
+        NuGetTasks.NuGetRestore(_ => _
+            .SetProcessWorkingDirectory(MidiPowerShellSolutionFolder)
+            .SetSolutionDirectory(MidiPowerShellSolutionFolder)
+            .SetSource(AppSdkNugetOutputFolder)
+        );
+
+        // build x64 and Arm64, no Arm64EC
+        foreach (var platform in ToolsPlatforms)
+        {
+            string solutionDir = MidiPowerShellSolutionFolder.ToString() + @"\";
+
+            string rid = platform.ToLower() == "arm64" ? "win-arm64" : "win-x64";
+
+
+            //var msbuildProperties = new Dictionary<string, object>();
+            //msbuildProperties.Add("Platform", platform);
+            //msbuildProperties.Add("SolutionDir", solutionDir);          // to include trailing slash
+            //msbuildProperties.Add("RuntimeIdentifier", rid);          
+            ////msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+
+            //Console.Out.WriteLine($"----------------------------------------------------------------------");
+            //Console.Out.WriteLine($"Solution:    {solution}");
+            //Console.Out.WriteLine($"SolutionDir: {solutionDir}");
+            //Console.Out.WriteLine($"Platform:    {platform}");
+            //Console.Out.WriteLine($"RID:         {rid}");
+
+
+            DotNetTasks.DotNetBuild(_ => _
+                .SetProjectFile(MidiPowerShellSolutionFolder / "WindowsMidiServices.csproj")
+                .SetConfiguration(Configuration.Release)
+                .SetPublishSingleFile(false)
+                .SetPublishTrimmed(false)
+                .SetSelfContained(false)
+                .SetRuntime(rid)
+            );
+
+            // copy output to staging folder
+
+            // TODO: This doesn't deal with any localization content
+
+            var psOutputFolder = MidiPowerShellSolutionFolder / "bin" / Configuration.Release / "net8.0-windows10.0.20348.0" / rid;
+            //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
+            var runtimesFolder = psOutputFolder;
+
+            var stagingFolder = MidiPowerShellStagingFolder / platform;
+
+            FileSystemTasks.CopyFileToDirectory(MidiPowerShellSolutionFolder / "WindowsMidiServices.psd1", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "WindowsMidiServices.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "WindowsMidiServices.deps.json", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "WinRT.Runtime.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Microsoft.Windows.Devices.Midi2.NetProjection.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Microsoft.Windows.SDK.NET.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Microsoft.ApplicationInsights.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Microsoft.Win32.Registry.AccessControl.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "Newtonsoft.Json.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.CodeDom.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Configuration.ConfigurationManager.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Diagnostics.EventLog.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.DirectoryServices.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Management.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Security.Cryptography.Pkcs.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Security.Cryptography.ProtectedData.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Security.Permissions.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(psOutputFolder / "System.Windows.Extensions.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.dll", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //    FileSystemTasks.CopyFileToDirectory(runtimesFolder / "Microsoft.Windows.Devices.Midi2.Initialization.pri", stagingFolder, FileExistsPolicy.Overwrite, true);
+            //FileSystemTasks.CopyFileToDirectory(runtimesFolder / ns + ".winmd", stagingFolder, FileExistsPolicy.Overwrite, true);
+
+        }
+
+    });
+
+
     void RestoreNuGetPackagesForCPPProject(string vcxprojFilePath, string solutionDir, string packagesConfigFullPath)
     {
         var projectDir = Path.GetDirectoryName(vcxprojFilePath);
@@ -1225,7 +1336,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    //.SetVerbosity(MSBuildVerbosity.Minimal)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -1304,7 +1415,7 @@ class Build : NukeBuild
                 /*.SetTargets("Build") */
                 .SetProperties(msbuildProperties)
                 .SetConfiguration(Configuration.Release)
-                //.SetVerbosity(MSBuildVerbosity.Minimal)
+                .SetVerbosity(BuildVerbosity)
                 .EnableNodeReuse()
             );
         }

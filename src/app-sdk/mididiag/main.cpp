@@ -622,6 +622,23 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                 OutputStringField(MIDIDIAG_FIELD_LABEL_GTB_NAME, gtb.Name());
                 OutputNumericField(MIDIDIAG_FIELD_LABEL_GTB_FIRST_GROUP, gtb.FirstGroup().DisplayValue());
                 OutputNumericField(MIDIDIAG_FIELD_LABEL_GTB_GROUP_COUNT, gtb.GroupCount());
+
+                std::wstring gtbDirection{};
+
+                if (gtb.Direction() == midi2::MidiGroupTerminalBlockDirection::Bidirectional)
+                {
+                    gtbDirection = L"Bidirectional";
+                }
+                else if (gtb.Direction() == midi2::MidiGroupTerminalBlockDirection::BlockInput)
+                {
+                    gtbDirection = L"Message Destination";
+                }
+                else if (gtb.Direction() == midi2::MidiGroupTerminalBlockDirection::BlockOutput)
+                {
+                    gtbDirection = L"Message Source";
+                }
+
+                OutputStringField(MIDIDIAG_FIELD_LABEL_GTB_DIRECTION, gtbDirection);
             }
 
             if (device.GetGroupTerminalBlocks().Size() > 0)
@@ -649,7 +666,9 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
     }
     else
     {
-        OutputError("Enumerating devices returned no matches. This is not expected and indicates an installation problem or that the service is not running.");
+        OutputError("Enumerating devices returned no matches. This is not expected and indicates an installation");
+        OutputError("problem, the service couldn't start, or you are running developer service components and do");
+        OutputError("not have developer mode set in Windows Settings.");
         return false;
     }
 

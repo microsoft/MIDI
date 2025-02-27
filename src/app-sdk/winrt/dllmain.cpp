@@ -24,19 +24,11 @@ BOOL WINAPI DllMain(HINSTANCE hmodule, DWORD reason, LPVOID /*lpvReserved*/)
         wil::SetResultTelemetryFallback(Midi2SdkTelemetryProvider::FallbackTelemetryCallback);
 
         DisableThreadLibraryCalls(hmodule);
-
-        // detours initialization is all done in the COM component
-        // but we want only a single instance per-process
-        if (g_clientInitializer == nullptr)
-        {
-            g_clientInitializer = winrt::make<MidiClientInitializer>();
-        }
-
     }
 
     if (reason == DLL_PROCESS_DETACH)
     {
-    //    g_clientInitializer = nullptr;
+        g_clientInitializer = nullptr;
     }
 
     TraceLoggingWrite(
@@ -57,6 +49,10 @@ DllCanUnloadNow()
 {
     // TODO: See if the initializer has any references. If not, then forward to the WinRT function
 
+    if (g_clientInitializer == nullptr) return true;
+    if (g_clientInitializer->CanUnloadNow()) return true;
+
+    // this is assuming applications are keeping the initializer around like they're supposed to.
     return WINRT_CanUnloadNow();
 }
 
@@ -83,8 +79,6 @@ DllGetClassObject(GUID const& clsid, GUID const& iid, void** result)
             return winrt::make<MidiClientInitializerFactory>()->QueryInterface(iid, result);
         }
 
-        // TODO: Is this going to fail for apps like MultitrackStudio which use the underlying COM interfaces for the WinRT classes?
-        // not a supported class
         return winrt::hresult_class_not_available().to_abi();
     }
     catch (...)

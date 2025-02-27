@@ -14,7 +14,7 @@
     
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <Bundle Name="Windows MIDI Services (Tools and SDKs) $(SetupVersionName) $(SetupVersionNumber)" 
+    <Bundle Name="Windows MIDI Services (Tools and Runtime) $(SetupVersionName) $(SetupVersionNumber)" 
           Manufacturer="Microsoft Corporation" 
           Version="$(SetupVersionNumber)" 
           UpgradeCode="7afb7a7b-86d4-42d7-8cb5-08f65ddcb1a9">
@@ -23,6 +23,8 @@
 
         <BootstrapperApplication>
             <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
+                                                    SuppressOptionsUI="true"
+                                                    SuppressRepair="true"
                                                     Theme="hyperlinkLicense" 
                                                     LogoFile="midi_installer_logo_square.png"/>
         </BootstrapperApplication>
@@ -89,9 +91,8 @@
                 SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\WindowsAppRuntimeInstall-$(var.Platform).exe"
                 Compressed="yes"
                 />
-            
-            
         </PackageGroup>
+
         
         <PackageGroup Id="MidiServicesPackages">
             <MsiPackage
@@ -118,8 +119,15 @@
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesSettingsAppStandAloneSetup.msi">
             </MsiPackage>
-            
-            
+
+            <MsiPackage
+                Id="MidiServicesPowerShellSetup"
+                Vital="yes"
+                Permanent="no"
+                Compressed="yes"
+                SourceFile="WindowsMIDIServicesPowerShellSetup.msi">
+            </MsiPackage>
+
         </PackageGroup>
         
     </Fragment>

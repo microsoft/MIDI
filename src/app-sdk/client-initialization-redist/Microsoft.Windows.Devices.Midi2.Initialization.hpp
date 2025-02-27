@@ -21,7 +21,6 @@
 
 #include <string>           // for wstring
 #include <combaseapi.h>     // for COM activation CoCreateInstance etc.
-// we also use macros like SUCCEEDED
 
 
 #define SAFE_COTASKMEMFREE(p) \
@@ -43,10 +42,10 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
     struct __declspec(uuid("8087b303-d551-bce2-1ead-a2500d50c580")) IMidiClientInitializer : ::IUnknown
     {
         // initialize the SDK runtime, and set up WinRT detours
-        STDMETHOD(Initialize)() = 0;
+        //STDMETHOD(Initialize)() = 0;
 
         // clean up
-        STDMETHOD(Shutdown)() = 0;
+        //STDMETHOD(Shutdown)() = 0;
 
         // returns the SDK version info. Supply nullptr for arguments you don't care about
         STDMETHOD(GetInstalledWindowsMidiServicesSdkVersion)(
@@ -107,6 +106,25 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             }
         }
 
+        // This was used in unit tests for checking refcounting
+        // Feel free to remove it in your own use
+        //ULONG TESTGetCurrentRefCount()
+        //{
+        //    if (!m_initializer)
+        //    {
+        //        return 0;
+        //    }
+
+        //    ULONG count = m_initializer->AddRef();
+
+        //    if (count > 1)
+        //    {
+        //        m_initializer->Release();
+        //    }
+
+        //    return count - 1;
+        //}
+
         // IMPORTANT caller note: this is assuming that the caller has made the appropriate
         // winrt::init_apartment() (C++/WinRT) or Windows::Foundation::Initialize 
         // call before calling this function. Do not call CoInitializeEx because
@@ -116,28 +134,19 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             // check if already initialized
             if (m_initializer != nullptr) return false;
 
+            // creating the initializer will also initialize it if we are the first
+            // consumer in this process.
             if (SUCCEEDED(CoCreateInstance(
                     __uuidof(MidiClientInitializerUuid),
                     NULL,
                     CLSCTX::CLSCTX_INPROC_SERVER | CLSCTX::CLSCTX_FROM_DEFAULT_CONTEXT,
                     __uuidof(IMidiClientInitializer),
-                    (LPVOID*)&m_initializer
+                    reinterpret_cast<void**>(&m_initializer)
                 )))
             {
                 if (m_initializer != nullptr)
                 {
-                    if (SUCCEEDED(m_initializer->Initialize()))
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        // SDK failed to initialize. Possible cause would be a corrupted
-                        // install of some sort, this is being called from inside a packaged
-                        // app (this bootstrapper is for desktop apps only) or perhaps there's 
-                        // other code in this process which is redirecting WinRT type activation?
-                        return false;
-                    }
+                    return true;
                 }
                 else
                 {
@@ -204,19 +213,20 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         }
 
 
+        // TODO: This should be named "ReleaseSdkRuntime" or similar. 
+        // and it should also unload the DLL
         void ShutdownSdkRuntime()
         {
             if (m_initializer != nullptr)
             {
-                // release the COM component. When it shuts down, it will clean up
-                // the activation hooks.
 
-            //    m_initializer->Shutdown();  // if you are using wil error logging, this is a good place to use LOG_IF_FAILED(m_initializer->Shutdown())
-                m_initializer->Release();   // if using wil::com_ptr_nothrow, you can remove this
+                // release the COM component. After the last client releases the
+                // initializer referenced, it will clean up the hooks.
+
+                m_initializer->Release();   // if using wil::com_ptr_nothrow, winrt::com_ptr, or equivalent, you can remove this
 
                 m_initializer = nullptr;
             }
-
         }
 
         MidiDesktopAppSdkInitializer() = default;

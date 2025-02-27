@@ -62,6 +62,7 @@ private:
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
+    wil::critical_section m_availableEndpointDefinitionsLock;
     std::map<std::wstring, KsAggregateEndpointDefinition> m_availableEndpointDefinitions;
     
     DeviceWatcher m_watcher{0};

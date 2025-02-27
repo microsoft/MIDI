@@ -4,6 +4,10 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
+#pragma warning (push)
+#pragma warning (disable: 4005)
+
+
 #include <windows.h>
 
 #include <winrt/Windows.Foundation.h>
@@ -68,5 +72,8 @@ namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 #ifndef LOG_OUTPUT
 #define LOG_OUTPUT(fmt, ...)  WEX::Logging::Log::Comment(WEX::Common::String().Format(fmt, __VA_ARGS__))
 #endif
+
+
+#pragma warning (pop)
 
 #endif

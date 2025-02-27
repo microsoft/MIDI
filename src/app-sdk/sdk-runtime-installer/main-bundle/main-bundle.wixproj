@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\console-package\console-package.wixproj" />
+    <ProjectReference Include="..\powershell-package\powershell-package.wixproj" />
     <ProjectReference Include="..\sdk-package\sdk-redist-package.wixproj" />
     <ProjectReference Include="..\settings-package\settings-package.wixproj" />
   </ItemGroup>

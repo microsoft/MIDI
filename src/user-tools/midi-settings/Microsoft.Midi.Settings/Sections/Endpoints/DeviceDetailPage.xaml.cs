@@ -201,6 +201,8 @@ namespace Microsoft.Midi.Settings.Views
 
         private void OnOpenConsoleMonitor(object sender, RoutedEventArgs e)
         {
+            // TODO: Change this to use the Endpoint Monitor Service
+
             try
             {
                 string arguments =

@@ -20,19 +20,19 @@
 // TODO: Names should be moved to .rc for localization
 
 #define TRANSPORT_PARENT_ID L"MIDIU_DIAG_TRANSPORT"
-#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Diagnostics Devices"
+#define TRANSPORT_PARENT_DEVICE_NAME L"MIDI 2.0 Service Tests"
 
 #define DEFAULT_LOOPBACK_BIDI_A_ID L"MIDIU_DIAG_LOOPBACK_A"
 #define LOOPBACK_BIDI_A_UNIQUE_ID L"LOOPBACK_A"
-#define DEFAULT_LOOPBACK_BIDI_A_NAME L"Diagnostics Loopback A"
+#define DEFAULT_LOOPBACK_BIDI_A_NAME L"Service Test Loopback A"
 
 #define DEFAULT_LOOPBACK_BIDI_B_ID L"MIDIU_DIAG_LOOPBACK_B"
 #define LOOPBACK_BIDI_B_UNIQUE_ID L"LOOPBACK_B"
-#define DEFAULT_LOOPBACK_BIDI_B_NAME L"Diagnostics Loopback B"
+#define DEFAULT_LOOPBACK_BIDI_B_NAME L"Service Test Loopback B"
 
 #define DEFAULT_PING_BIDI_ID L"MIDIU_DIAG_PING"
 #define PING_BIDI_UNIQUE_ID L"PING"
-#define DEFAULT_PING_BIDI_NAME L"Diagnostics Ping (Internal)"
+#define DEFAULT_PING_BIDI_NAME L"Service Test Ping (Internal)"
 
 
 

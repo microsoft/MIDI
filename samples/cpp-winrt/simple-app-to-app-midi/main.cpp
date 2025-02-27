@@ -42,8 +42,7 @@ bool CreateVirtualDevice()
     std::cout << "Creating virtual device." << std::endl;
 
     MidiDeclaredEndpointInfo endpointInfo;
-    endpointInfo.DeclaredFunctionBlockCount = functionBlockCount;
-    endpointInfo.HasStaticFunctionBlocks = false;   // this allows us to change them after the fact
+    endpointInfo.HasStaticFunctionBlocks = false;   // this allows us to change them after the fact. The count cannot change, however, per spec.
     endpointInfo.Name = L"CPP Virtual Device";
     endpointInfo.ProductInstanceId = L"3263827-8675309-5150";
     endpointInfo.SupportsMidi10Protocol = true;
@@ -101,21 +100,6 @@ bool CreateVirtualDevice()
     block3.GroupCount(5);                                       // this gets us to index 15, which is max index
     block3.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
     blocks.push_back(block3);
-
-    if (blocks.size() != endpointInfo.DeclaredFunctionBlockCount)
-    {
-        std::cout << "Mismatch between declared and actual function block count. No function blocks added." << std::endl;
-        return false;
-    }
-    else
-    {
-        for (auto const& fb : blocks)
-        {
-            creationConfig.FunctionBlocks().Append(fb);
-        }
-
-        std::cout << "Added " << creationConfig.FunctionBlocks().Size() << " function blocks." << std::endl;
-    }
 
     // creates the device using the endpoint info provided above
     m_virtualDevice = MidiVirtualDeviceManager::CreateVirtualDevice(creationConfig);
@@ -249,8 +233,8 @@ int main()
                 std::cout << "Received UMP" << std::endl;
                 std::cout << "- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
                 std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
-                std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
-                std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
+                std::cout << "- UMP Msg Type:      0x" << std::hex << static_cast<uint32_t>(ump.MessageType()) << std::endl;
+                std::cout << "- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
                 std::cout << "- Data               " << winrt::to_string(args.GetMessagePacket().as<foundation::IStringable>().ToString()) << std::endl;
                 std::cout << "- Message:           " << winrt::to_string(MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())) << std::endl;
             };

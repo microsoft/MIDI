@@ -301,7 +301,6 @@ HRESULT
 CMidiEndpointProtocolWorker::CheckIfDiscoveryComplete()
 {
     if (m_taskEndpointInfoReceived &&
-        /*m_taskFinalStreamNegotiationResponseReceived && */
         m_taskEndpointNameReceived &&
         m_taskEndpointProductInstanceIdReceived &&
         m_taskDeviceIdentityReceived &&

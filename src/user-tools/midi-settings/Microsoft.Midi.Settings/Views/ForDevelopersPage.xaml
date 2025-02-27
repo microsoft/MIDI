@@ -27,94 +27,72 @@
                     Margin="1,0,0,8"
                     HorizontalAlignment="Left"
                     TextWrapping="Wrap">
-                    <Run Text="These settings are for development and prototyping purposes only. Changing the settings here may cause unexpected or undesirable behavior in applications and devices using Windows MIDI Services." />
+                    <Run Text="These settings are for development and prototyping purposes only. Changing the settings here may cause unexpected or undesirable behavior in applications and devices using Windows MIDI Services. These settings may be reset with a Windows upgrade." />
                 </TextBlock>
 
+                <InfoBar Margin="0"
+                         x:Uid="ForDevelopers_ServiceRestartRequired" 
+                         CornerRadius="9"
+                         IsOpen="{x:Bind ViewModel.ServiceRestartRequired, Mode=OneWay}"
+                         Severity="Warning">
+                    <InfoBar.ActionButton>
+                        <Button x:Uid="Button_RestartMidiService"
+                                Command="{x:Bind ViewModel.RestartServiceCommand}" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
 
-                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Diagnostics" />
 
-                <controls:SettingsCard Description="Normally off. Verbose debug output may slow down MIDI communication and other aspects of your system. This should only be used by developers debugging problems or prototyping new features. Use a tool like SysInternals Debug View to view the output." Header="Enable Verbose Debug Output">
-                    <controls:SettingsCard.HeaderIcon>
-                        <FontIcon Glyph="&#xe9d9;" />
-                    </controls:SettingsCard.HeaderIcon>
-                    <ToggleSwitch IsOn="False" />
-                </controls:SettingsCard>
+                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="MIDI 2.0 Features" />
 
-                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Message Handling" />
-
-                <controls:SettingsExpander
-                    x:Name="AutomaticMessageHandlingSettingsExpander"
-                    Description="Windows normally handles some infrastructure and metadata messages in the service in order to update the state of the system and/or allow substitution of information and preferences provided by the user."
-                    Header="Automatic Message Handling"
+                <controls:SettingsExpander CornerRadius="9"
+                    x:Uid="ForDevelopers_Discovery"
                     IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xe713;" />
                     </controls:SettingsExpander.HeaderIcon>
 
                     <controls:SettingsExpander.Items>
-                        <controls:SettingsCard Description="Normally on. Enable Windows to request and store the UMP Endpoint information responses and present through the API." Header="Handle UMP Endpoint Information Messages">
-                            <ToggleSwitch IsOn="True" />
+                        <controls:SettingsCard >
+                            <ToggleSwitch x:Uid="ForDevelopers_DiscoveryToggle" IsOn="{x:Bind ViewModel.EnableDiscoveryAndProtocolNegotiation, Mode=TwoWay}" />
                         </controls:SettingsCard>
-                        <controls:SettingsCard Description="Normally on. TBD. JR Timestamp Handling is currently being discussed by TMA OS API Working Group" Header="Handle UMP Jitter-Reduction Timestamp Messages">
-                            <ToggleSwitch IsOn="True" />
+                        <controls:SettingsCard >
+                            <StackPanel Orientation="Horizontal">
+                                <Slider x:Uid="ForDevelopers_DiscoveryTimeoutSlider" 
+                                        Margin="5"
+                                        Value="{x:Bind ViewModel.DiscoveryTimeout, Mode=TwoWay}" 
+                                        Minimum="{x:Bind ViewModel.DiscoveryTimeoutMinimum, Mode=OneTime}"
+                                        Maximum="{x:Bind ViewModel.DiscoveryTimeoutMaximum, Mode=OneTime}"
+                                        TickFrequency="2000"
+                                        StepFrequency="500"/>
+                                <Button Margin="20,5,5,5"
+                                        x:Uid="ForDevelopers_CommitDiscoveryTimeoutButton"
+                                        IsEnabled="{x:Bind ViewModel.DiscoveryTimeoutHasChanged, Mode=OneWay}"
+                                        Command="{x:Bind ViewModel.CommitDiscoveryTimeoutCommand}" />
+                            </StackPanel>
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
+                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="System Settings" />
 
-                <controls:SettingsExpander
-                    x:Name="MessageTranslationSettingsExpander"
-                    Description="Windows can translate UMP messages sent to endpoints. This applies only to UMP as any byte stream transformation is done at the driver level and is not affected by these settings. Note: these features require that Function Block and Endpoint messages are handled by Windows."
-                    Header="Message Translation"
+                <controls:SettingsExpander CornerRadius="9"
+                    x:Uid="ForDevelopers_EnableMmcss"
                     IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xe713;" />
                     </controls:SettingsExpander.HeaderIcon>
 
                     <controls:SettingsExpander.Items>
-                        <controls:SettingsCard Description="Normally on. Required by most MIDI 1.0 devices to make sense of the data." Header="Transform Outgoing MIDI 2.0 Protocol Messages to MIDI 1.0 for MIDI 1.0 Function Blocks">
-                            <ToggleSwitch IsOn="True" />
-                        </controls:SettingsCard>
-                        <controls:SettingsCard Description="Normally on. May be required by some MIDI 2.0 devices." Header="Transform Outgoing MIDI 1.0 Protocol Messages to MIDI 2.0 for MIDI 2.0 Function Blocks">
-                            <ToggleSwitch IsOn="True" />
+                        <controls:SettingsCard >
+                            <ToggleSwitch x:Uid="ForDevelopers_EnableMmcssToggle" IsOn="{x:Bind ViewModel.EnableMmcss, Mode=TwoWay}" />
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
-                <controls:SettingsExpander
-                    x:Name="MessageProcessingSettingsExpander"
-                    Description="The service runs a number of processing filters on incoming and outgoing messages. These filters perform transformations of groups, channels, remapping notes, etc. Some filters, like those which enable communication with MIDI 1.0 devices, cannot be turned off. Other processing and filters not happen in the SDK (Function Block handling, for example) and not in the service. To bypass those, use the SDK options available through the SDK."
-                    Header="Message Filters"
-                    IsExpanded="True">
-                    <controls:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xe713;" />
-                    </controls:SettingsExpander.HeaderIcon>
-
-                    <controls:SettingsExpander.Items>
-                        <controls:SettingsCard Description="Normally on." Header="Enable optional outgoing (from apps to the device) message processing">
-                            <ToggleSwitch IsOn="True" />
-                        </controls:SettingsCard>
-                        <controls:SettingsCard Description="Normally on." Header="Enable optional incoming (from device to apps) message processing">
-                            <ToggleSwitch IsOn="True" />
-                        </controls:SettingsCard>
-                    </controls:SettingsExpander.Items>
-                </controls:SettingsExpander>
-
-
-
-                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Multi-client" />
-
-                <controls:SettingsCard Description="Normally on. Prevent two apps from sending SysEx to the same Endpoint and Group at the same time. (TBD which approach the OS takes here. Could buffer, require lock, error, or something else)" Header="Prevent SysEx Collisions">
-                    <controls:SettingsCard.HeaderIcon>
-                        <FontIcon Glyph="&#xece4;" />
-                    </controls:SettingsCard.HeaderIcon>
-
-                    <ToggleSwitch IsOn="True" />
-                </controls:SettingsCard>
 
                 <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Related Developer Support" />
 
-                <controls:SettingsCard
+                <controls:SettingsCard CornerRadius="9"
                     HorizontalContentAlignment="Left"
                     ContentAlignment="Vertical"
                     Header="Reference Materials">
@@ -122,13 +100,13 @@
                         <FontIcon Glyph="&#xe7be;" />
                     </controls:SettingsCard.HeaderIcon>
                     <StackPanel Orientation="Vertical" Margin="-12,0,0,0">
-                        <HyperlinkButton>Windows MIDI Services Documentation</HyperlinkButton>
-                        <HyperlinkButton>Windows MIDI Services Discord Server</HyperlinkButton>
-                        <HyperlinkButton>Windows MIDI Services GitHub Repo</HyperlinkButton>
+                        <HyperlinkButton x:Uid="HyperlinkButton_WindowsMidiServicesDocumentation"/>
+                        <HyperlinkButton x:Uid="HyperlinkButton_WindowsMidiServicesDiscord"/>
+                        <HyperlinkButton x:Uid="HyperlinkButton_WindowsMidiServicesGitHub"/>
                     </StackPanel>
                 </controls:SettingsCard>
 
-                <controls:SettingsCard
+                <controls:SettingsCard CornerRadius="9"
                     HorizontalContentAlignment="Left"
                     ContentAlignment="Vertical"
                     Header="Specifications">
@@ -136,8 +114,7 @@
                         <FontIcon Glyph="&#xe7be;" />
                     </controls:SettingsCard.HeaderIcon>
                     <StackPanel Orientation="Vertical" Margin="-12,0,0,0">
-                        <HyperlinkButton>MIDI 2.0 Specifications at The MIDI Association</HyperlinkButton>
-                        <HyperlinkButton>USB MIDI 2.0 Specification at the USB-IF</HyperlinkButton>
+                        <HyperlinkButton x:Uid="HyperlinkButton_MidiSpecifications"/>
                     </StackPanel>
                 </controls:SettingsCard>
             </StackPanel>

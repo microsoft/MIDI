@@ -30,6 +30,11 @@ namespace Microsoft.Midi.ConsoleApp
         [DefaultValue(MidiWordDataFormat.Hex)]
         public MidiWordDataFormat WordDataFormat { get; set; }
 
+        [LocalizedDescription("ParameterSendMessageNoWait")]
+        [CommandOption("-n|--no-wait")]
+        [DefaultValue(false)]
+        public bool NoWait { get; set; }
+
         //[LocalizedDescription("TODO ParameterSendMessageAutoNegotiation")]
         //[CommandOption("-n|--auto-negotiation")]
         //[DefaultValue(true)]

@@ -84,7 +84,13 @@
                     (b & MIDI_STATUSBYTEFILTER) == MIDI_STATUSBYTEFILTER)
 
 #define MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(b) (\
-                    (b & MIDI_SYSTEM_REALTIME_FILTER) == MIDI_SYSTEM_REALTIME_FILTER)
+                    (b == MIDI_TIMINGCLOCK) || \
+                    (b == MIDI_START) || \
+                    (b == MIDI_CONTINUE) || \
+                    (b == MIDI_STOP) || \
+                    (b == MIDI_ACTIVESENSE) || \
+                    (b == MIDI_RESET) \
+                    )
 
 #define MIDI_BYTE_IS_SYSEX_START_STATUS(b) (\
                     b == MIDI_SYSEX)
@@ -95,6 +101,8 @@
 #define MIDI_BYTE_IS_DATA_BYTE(b) (\
                     (b &  MIDI_STATUSBYTEFILTER) == 0)
 
-
+#define MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(b) (\
+                    b < MIDI_SYSEX)
+                    
 
 #endif

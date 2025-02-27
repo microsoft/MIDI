@@ -94,16 +94,16 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader"/>
 
-                <!--
-                <NavigationViewItem x:Uid="Shell_Setup" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.SetupViewModel">
+                
+                <NavigationViewItem x:Uid="Shell_Configurations" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ConfigurationsViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe838;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                -->
-                
+
+                <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader"/>
+
                 <!--
                 <NavigationViewItem x:Uid="Shell_EndpointsAll" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
                     <NavigationViewItem.Icon>
@@ -243,7 +243,7 @@
                 
                 <NavigationViewItem x:Uid="Shell_ForDevelopers" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ForDevelopersViewModel"
-                                    Visibility="{x:Bind ViewModel.AreDeveloperOptionsEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xec7a;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
