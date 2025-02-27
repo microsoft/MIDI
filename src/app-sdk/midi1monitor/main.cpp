@@ -184,11 +184,13 @@ void DisplayDecodedChannelVoiceMessage(std::string messageName, uint8_t channel,
 
 void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
 {
+    UNREFERENCED_PARAMETER(dwTimestamp);
+
     // message format 0 | data 2 | data 1 | status
 
-    byte status = dwMidiMessage & 0x000000FF;
-    byte data1 = (dwMidiMessage & 0x0000FF00) >> 8;
-    byte data2 = (dwMidiMessage & 0x00FF0000) >> 16;
+    byte status = static_cast<byte>(dwMidiMessage & 0x000000FF);
+    byte data1 = static_cast<byte>((dwMidiMessage & 0x0000FF00) >> 8);
+    byte data2 = static_cast<byte>((dwMidiMessage & 0x00FF0000) >> 16);
 
     m_countStatusBytesReceived++;
     m_countAllBytesReceived++;
@@ -242,7 +244,7 @@ void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
 
         if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
         {
-            uint16_t channel = (status & 0x0F) + 1;
+            uint8_t channel = (status & 0x0F) + 1;
 
             switch (status & 0xF0)
             {
@@ -301,6 +303,8 @@ void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
 
 void DisplayMidiLongMessage(LPMIDIHDR header, DWORD dwTimestamp, bool error)
 {
+    UNREFERENCED_PARAMETER(dwTimestamp);
+
     if (header)
     {
         byte* current = (byte*)(header->lpData);
@@ -345,6 +349,9 @@ void CALLBACK OnMidiMessageReceived(
     DWORD_PTR dwParam2
 )
 {
+    UNREFERENCED_PARAMETER(dwInstance);
+    UNREFERENCED_PARAMETER(hMidiIn);
+
     switch (wMsg)
     {
     case MIM_OPEN:
@@ -352,17 +359,17 @@ void CALLBACK OnMidiMessageReceived(
     case MIM_CLOSE:
         break;
     case MIM_DATA:
-        DisplayMidiMessage(dwParam1, dwParam2, false);
+        DisplayMidiMessage(static_cast<DWORD>(dwParam1), static_cast<DWORD>(dwParam2), false);
         break;
     case MIM_LONGDATA:
-        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, dwParam2, false);
+        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, static_cast<DWORD>(dwParam2), false);
         midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
         break;
     case MIM_ERROR:
-        DisplayMidiMessage(dwParam1, dwParam2, true);
+        DisplayMidiMessage(static_cast<DWORD>(dwParam1), static_cast<DWORD>(dwParam2), true);
         break;
     case MIM_LONGERROR:
-        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, dwParam2, true);
+        DisplayMidiLongMessage((LPMIDIHDR)dwParam1, static_cast<DWORD>(dwParam2), true);
         midiInAddBuffer(m_hMidiIn, &m_header, sizeof(MIDIHDR));
         break;
     case MIM_MOREDATA:
@@ -392,7 +399,7 @@ int __cdecl main(int argc, char* argv[])
     {
         try
         {
-            portNumber = std::stoi(argv[1]);
+            portNumber = static_cast<uint16_t>(std::stoi(argv[1]));
             portNumberProvided = true;
         }
         catch (...)

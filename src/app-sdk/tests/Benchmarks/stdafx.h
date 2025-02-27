@@ -5,6 +5,9 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
+#pragma warning (push)
+#pragma warning (disable: 4005)
+
 
 #include <windows.h>
 
@@ -55,5 +58,6 @@ namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 #endif
 
 
+#pragma warning (pop)
 
 #endif

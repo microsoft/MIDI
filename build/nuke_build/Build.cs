@@ -131,6 +131,7 @@ class Build : NukeBuild
 
     AbsolutePath SamplesCSWinRTSolutionFolder => SamplesRootFolder / "csharp-net";
 
+    MSBuildVerbosity BuildVerbosity => MSBuildVerbosity.Quiet;
 
     string[] SdkPlatforms => new string[] { "x64", "Arm64EC"  };
     string[] ServiceAndApiPlatforms => new string[] { "x64", "Arm64" };
@@ -260,7 +261,7 @@ class Build : NukeBuild
                 /*.SetTargets("Build") */
                 .SetProperties(msbuildProperties)
                 .SetConfiguration(Configuration.Release)
-                .SetVerbosity(MSBuildVerbosity.Minimal)
+                .SetVerbosity(BuildVerbosity)
                 .EnableNodeReuse()
             );
 
@@ -358,7 +359,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    .SetVerbosity(MSBuildVerbosity.Minimal)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -420,7 +421,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    //.SetVerbosity(MSBuildVerbosity.Minimal)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -520,6 +521,7 @@ class Build : NukeBuild
                         Path.Combine(solutionDir, "mididiag"),
                         Path.Combine(solutionDir, "midiusbinfo"),
                         Path.Combine(solutionDir, "midimdnsinfo"),
+                        Path.Combine(solutionDir, @"tests\InitializationExe"),
                         Path.Combine(solutionDir, @"tests\Benchmarks"),
                         Path.Combine(solutionDir, @"tests\Offline.unittests"),
                         Path.Combine(solutionDir, @"tests\SdkInitialization.unittests"),
@@ -567,7 +569,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    //.SetVerbosity(MSBuildVerbosity.Minimal)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -631,6 +633,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -690,6 +693,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -736,6 +740,7 @@ class Build : NukeBuild
                 /*.SetTargets("Build") */
                 .SetProperties(msbuildProperties)
                 .SetConfiguration(Configuration.Release)
+                .SetVerbosity(BuildVerbosity)
                 .EnableNodeReuse()
             );
 
@@ -1331,7 +1336,7 @@ class Build : NukeBuild
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
-                    //.SetVerbosity(MSBuildVerbosity.Minimal)
+                    .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
                 );
 
@@ -1410,7 +1415,7 @@ class Build : NukeBuild
                 /*.SetTargets("Build") */
                 .SetProperties(msbuildProperties)
                 .SetConfiguration(Configuration.Release)
-                //.SetVerbosity(MSBuildVerbosity.Minimal)
+                .SetVerbosity(BuildVerbosity)
                 .EnableNodeReuse()
             );
         }

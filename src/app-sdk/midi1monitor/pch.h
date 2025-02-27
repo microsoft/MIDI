@@ -9,13 +9,13 @@
 
 #pragma once
 
+#pragma warning (push)
+#pragma warning (disable: 4005)
+
 #include <windows.h>
 //#include <winternl.h>
 
-//#pragma warning (disable: 4005)
 //#include <ntstatus.h>
-//#pragma warning (pop)
-
 
 #include <iostream>
 #include <chrono>
@@ -57,3 +57,4 @@
 
 namespace internal = ::WindowsMidiServicesInternal;
 
+#pragma warning (pop)
