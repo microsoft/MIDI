@@ -12,7 +12,7 @@
 
 // init code goes in dllmain
 
-std::shared_ptr<MidiClientInitializer> g_clientInitializer{ nullptr };
+std::unique_ptr<MidiClientInitializer> g_clientInitializer{ nullptr };
 
 
 
@@ -150,6 +150,8 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
 
     try
     {
@@ -289,6 +291,7 @@ MidiClientInitializer::EnsureServiceAvailable() noexcept
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_serviceTransport);
 
     wil::com_ptr_nothrow<IMidiSessionTracker> sessionTracker;
@@ -298,6 +301,7 @@ MidiClientInitializer::EnsureServiceAvailable() noexcept
     sessionTracker->Initialize();
     bool connected = sessionTracker->VerifyConnectivity();
     sessionTracker->Shutdown();
+    sessionTracker.reset();
 
     if (connected)
     {
@@ -353,6 +357,9 @@ MidiClientInitializer::Shutdown() noexcept
             g_runtimeComponentCatalog.reset();
         }
 
+        // this just feels strange
+        g_clientInitializer.reset();
+
         m_initialized = false;
     }
 
@@ -362,6 +369,44 @@ MidiClientInitializer::Shutdown() noexcept
 
 MidiClientInitializer::~MidiClientInitializer()
 {
-    Shutdown();
+    //Shutdown();
 }
 
+
+ULONG __stdcall MidiClientInitializer::AddRef() noexcept
+{
+    return InterlockedIncrement(&m_cRef);
+}
+
+ULONG __stdcall MidiClientInitializer::Release() noexcept
+{
+    if (InterlockedDecrement(&m_cRef) == 0)
+    {
+        //delete this;
+        Shutdown();
+        return 0;
+    }
+
+    return m_cRef;
+}
+
+HRESULT __stdcall MidiClientInitializer::QueryInterface(const IID& iid, void** ppv) noexcept
+{
+    if (iid == IID_IUnknown)
+    {
+        *ppv = static_cast<IMidiClientInitializer*>(this);
+    }
+    else if (iid == __uuidof(IMidiClientInitializer))
+    {
+        *ppv = static_cast<IMidiClientInitializer*>(this);
+    }
+    else
+    {
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    reinterpret_cast<IUnknown*>(*ppv)->AddRef();
+
+    return S_OK;
+}

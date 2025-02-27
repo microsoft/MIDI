@@ -19,8 +19,8 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"WindowsMidiServicesClientInitialization.dll")
     END_TEST_CLASS()
 
-        //TEST_CLASS_SETUP(ClassSetup);
-        //TEST_CLASS_CLEANUP(ClassCleanup);
+        TEST_CLASS_SETUP(ClassSetup);
+        TEST_CLASS_CLEANUP(ClassCleanup);
 
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
@@ -28,6 +28,7 @@ public:
         TEST_METHOD(TestInitialization);
         TEST_METHOD(TestMultipleInitialization);
         TEST_METHOD(TestResolvingTypes);
+        TEST_METHOD(ValidateBackwardsCompatibilityWinMD);
 
 private:
 

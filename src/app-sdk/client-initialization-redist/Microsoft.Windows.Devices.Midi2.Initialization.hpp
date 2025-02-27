@@ -21,7 +21,6 @@
 
 #include <string>           // for wstring
 #include <combaseapi.h>     // for COM activation CoCreateInstance etc.
-// we also use macros like SUCCEEDED
 
 
 #define SAFE_COTASKMEMFREE(p) \
@@ -107,6 +106,25 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             }
         }
 
+        // This was used in unit tests for checking refcounting
+        // Feel free to remove it in your own use
+        //ULONG TESTGetCurrentRefCount()
+        //{
+        //    if (!m_initializer)
+        //    {
+        //        return 0;
+        //    }
+
+        //    ULONG count = m_initializer->AddRef();
+
+        //    if (count > 1)
+        //    {
+        //        m_initializer->Release();
+        //    }
+
+        //    return count - 1;
+        //}
+
         // IMPORTANT caller note: this is assuming that the caller has made the appropriate
         // winrt::init_apartment() (C++/WinRT) or Windows::Foundation::Initialize 
         // call before calling this function. Do not call CoInitializeEx because
@@ -128,9 +146,6 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             {
                 if (m_initializer != nullptr)
                 {
-                    // if you use smart COM pointers from winrt:: or wil:: or elsewhere, you need to eliminate this
-                    m_initializer->AddRef();
-
                     return true;
                 }
                 else

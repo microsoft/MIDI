@@ -73,16 +73,22 @@ struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitia
 
     STDMETHOD(EnsureServiceAvailable)() noexcept override;
 
+    ULONG __stdcall AddRef() noexcept override;
+    ULONG __stdcall Release() noexcept override;
+    HRESULT __stdcall QueryInterface(const IID& iid, void** ppv) noexcept override;
+
     ~MidiClientInitializer();
 
 private:
+    ULONG m_cRef{ 0 };
+
     bool m_initialized{ false };
     wil::critical_section m_initializeLock{};
 
     wil::com_ptr_nothrow<IMidiTransport> m_serviceTransport{ nullptr };
 };
 
-extern std::shared_ptr<MidiClientInitializer> g_clientInitializer;
+extern std::unique_ptr<MidiClientInitializer> g_clientInitializer;
 
 // uuid
 // famous phone number
@@ -108,17 +114,24 @@ struct __declspec(uuid("18675309-5150-ca75-0b12-5648616c656e")) MidiClientInitia
             // we don't make a new instance here, because we want only
             // a single instance of this class per-process
 
-            if (g_clientInitializer)
+            // detours initialization is all done in the COM component
+            // but we want only a single instance per-process
+            if (g_clientInitializer == nullptr)
             {
-                auto hrqi = g_clientInitializer->QueryInterface(iid, result);
-                RETURN_IF_FAILED(hrqi);
+                // uses normal non-ref counted pointer to not increase ref count from the start, 
+                // and to hold the actual impl, not the COM interface
+                g_clientInitializer = std::make_unique<MidiClientInitializer>();
+                RETURN_IF_NULL_ALLOC(g_clientInitializer);
+                // Initialize via internal function
+                auto hr = g_clientInitializer->Initialize();
 
-                return S_OK;
+                RETURN_IF_FAILED(hr);
             }
-            else
-            {
-                return E_UNEXPECTED;
-            }
+
+            auto hrqi = g_clientInitializer->QueryInterface(iid, result);
+            RETURN_IF_FAILED(hrqi);
+
+            return S_OK;
         }
         catch (...)
         {

@@ -24,28 +24,6 @@ BOOL WINAPI DllMain(HINSTANCE hmodule, DWORD reason, LPVOID /*lpvReserved*/)
         wil::SetResultTelemetryFallback(Midi2SdkTelemetryProvider::FallbackTelemetryCallback);
 
         DisableThreadLibraryCalls(hmodule);
-
-        // detours initialization is all done in the COM component
-        // but we want only a single instance per-process
-        // the singleton enforcement happens in the class factory
-        if (g_clientInitializer == nullptr)
-        {
-            // uses normal pointer to not increase ref count from the start
-            g_clientInitializer = std::make_shared<MidiClientInitializer>();
-
-            // Initialize via internal function
-            auto hr = g_clientInitializer->Initialize();
-
-            if (FAILED(hr))
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-
-        }
     }
 
     if (reason == DLL_PROCESS_DETACH)
@@ -72,7 +50,6 @@ DllCanUnloadNow()
     // TODO: See if the initializer has any references. If not, then forward to the WinRT function
 
     if (g_clientInitializer == nullptr) return true;
-
     if (g_clientInitializer->CanUnloadNow()) return true;
 
     // this is assuming applications are keeping the initializer around like they're supposed to.
