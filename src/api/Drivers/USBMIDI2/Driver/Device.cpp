@@ -2150,6 +2150,8 @@ Return Value:
                 // No need to process further if invalid Cable ID
                 if (!(pDeviceContext->UsbInMask & (0x0001 << cbl_num)))
                 {
+                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Invalid Data, Received invalid cable number %lu", pReceivedWords[receivedIndex]);
+                    receivedIndex++;    // drop the data
                     continue;
                 }
 
@@ -2159,6 +2161,8 @@ Return Value:
                     &pDeviceContext->midi1IsInSysex[cbl_num],
                     &umpPacket))
                 {
+                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! USB MIDI 1.0 Packet not processed, parsing error %lu", pReceivedWords[receivedIndex]);
+                    receivedIndex++;    // skip the data
                     continue;
                 }
 
@@ -2469,6 +2473,17 @@ Return Value:Amy
             }
 
             UINT8 cbl_num = umpPacket.umpData.umpBytes[0] & UMP_GROUP_MASK; // if used, cable num is group block num
+
+            // Check to see if valid cable number for USB 1.0 Device
+            if (!(pDeviceContext->UsbInMask & (0x0001 << cbl_num)))
+            {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Invalid Data, Received invalid cable number %d", cbl_num);
+                // Not handled so ignore
+                numProcessed += umpPacket.wordCount;    // ignore this UMP packet as corrupted
+                umpWritePacket.wordCount = 0;
+
+                continue;
+            }
 
             switch (umpPacket.umpData.umpBytes[0] & UMP_MT_MASK)
             {
@@ -3057,7 +3072,6 @@ Return Value:
     }
 
     WdfRequestCompleteWithInformation(Request, status, bytesWritten);
-    //WdfObjectDelete(Request);
 
     return;
 }
