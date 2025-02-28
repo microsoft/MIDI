@@ -6,7 +6,7 @@ labels:
   - "bug :lady_beetle:"
   - "needs triage :ambulance:"
 assignees: ["Psychlist1972"]
-projects: microsoft-org/339
+projects: microsoft/339
 
 body:
 - type: markdown
@@ -34,7 +34,7 @@ body:
   validations:
     required: true
 
-- type: textarea
+- type: input
   id: sdk-version
   attributes:
     label: SDK version, if appropriate
