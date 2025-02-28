@@ -1641,14 +1641,29 @@ class Build : NukeBuild
             var arm64 = (zipRoot / "arm64").CreateOrCleanDirectory();
             var x64 = (zipRoot / "x64").CreateOrCleanDirectory();
 
+            var regHelpersLocation = RootDirectory / "src" / "dev-tools" / "reg-helpers";
+
+            var regHelperCmdFileName = "dev-replace-wdmaud2.cmd";
+            var regHelperPs1FileName = "midi-replace-wdmaud2-drv.ps1";
+
+
+            var regHelperCmdFileFullPath = regHelpersLocation / regHelperCmdFileName;
+            var regHelperPs1FileFullPath = regHelpersLocation / regHelperPs1FileName;
+
             string driverFile = "wdmaud2.drv";
 
             CopyFile(ApiStagingFolder / "arm64" / driverFile, arm64 / driverFile, FileExistsPolicy.Fail, false);
+            CopyFile(regHelperCmdFileFullPath, arm64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
+            CopyFile(regHelperPs1FileFullPath, arm64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
+
+
             CopyFile(ApiStagingFolder / "x64" / driverFile, x64 / driverFile, FileExistsPolicy.Fail, false);
+            CopyFile(regHelperCmdFileFullPath, x64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
+            CopyFile(regHelperPs1FileFullPath, x64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
 
-            // todo: add takeown / copy scripts
 
-            zipRoot.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-shim-driver.zip");
+            x64.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-x64.zip");
+            arm64.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-arm64.zip");
 
         });
 

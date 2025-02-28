@@ -49,10 +49,6 @@ MidiClientInitializer::Initialize(
         });
 
 
-    // midisrv client initialization. Doesn't actually connect to service here
-
-    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_serviceTransport)));
-
     // SDK initialization
     g_runtimeComponentCatalog = std::make_shared<MidiAppSdkRuntimeComponentCatalog>();
 
@@ -292,6 +288,10 @@ MidiClientInitializer::EnsureServiceAvailable() noexcept
     );
 
     RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
+
+    // midisrv client initialization. Doesn't actually connect to service here
+    RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_serviceTransport)));
+
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_serviceTransport);
 
     wil::com_ptr_nothrow<IMidiSessionTracker> sessionTracker;

@@ -471,4 +471,35 @@
   <data name="ForDevelopers_CommitDiscoveryTimeoutButton.Content" xml:space="preserve">
     <value>Save to Registry</value>
   </data>
+  <data name="ForDevelopers_EnableDeveloperInstallationExpander.Header" xml:space="preserve">
+    <value>Enable Installation of Developer Releases</value>
+  </data>
+  <data name="ForDevelopers_EnableDeveloperInstallationExpander.Description" xml:space="preserve">
+    <value>In order to install developer previews of the service or service components/plugins, you must first take ownership of the registry entries which are used for component registration. If you do not do this first, the install will appear to work, but the components used will not be the ones you expect.
+
+This step requires Administrator rights, and must be repeated after any new Windows upgrade (not update, but full OS upgrade).
+
+THIS FEATURE IS CURRENTLY IN PREVIEW/TESTING</value>
+  </data>
+  <data name="ForDevelopers_PrepareForDeveloperInstallButton.Content" xml:space="preserve">
+    <value>Prepare for Developer Install</value>
+  </data>
+  <data name="ForDevelopers_ReplaceWdmaud2DrvButton.Content" xml:space="preserve">
+    <value>Replace wdmaud2.drv with Developer Version</value>
+  </data>
+  <data name="ForDevelopers_RebootRequired.Message" xml:space="preserve">
+    <value>Changes made require that you restart your PC before they can take effect.</value>
+  </data>
+  <data name="Button_Reboot.Content" xml:space="preserve">
+    <value>Restart Now</value>
+  </data>
+  <data name="ShellPage_AdministratorIndicator.Text" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+  <data name="ShellPage_DeveloperModeIndicator.Text" xml:space="preserve">
+    <value>Developer Mode Enabled</value>
+  </data>
+  <data name="ShellPage_ServiceUnavailableIndicator.Text" xml:space="preserve">
+    <value>No MIDI Service</value>
+  </data>
 </root>

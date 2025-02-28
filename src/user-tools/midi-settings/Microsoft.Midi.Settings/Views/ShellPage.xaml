@@ -8,6 +8,7 @@
     xmlns:behaviors="using:Microsoft.Midi.Settings.Behaviors"
     xmlns:i="using:Microsoft.Xaml.Interactivity"
     xmlns:converters="using:CommunityToolkit.WinUI.Converters"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     Typography.Kerning="True"
     Typography.StylisticSet20="True"
     Typography.DiscretionaryLigatures="True"
@@ -16,7 +17,7 @@
     <Page.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Page.Resources>
-    
+
     <Grid>
         <Grid x:Name="AppTitleBar"
               Canvas.ZIndex="1"
@@ -27,12 +28,66 @@
                    HorizontalAlignment="Left"
                    Width="16"
                    Height="16" />
+
             <TextBlock x:Name="AppTitleBarText"
                        VerticalAlignment="Center"
                        TextWrapping="NoWrap"
                        Style="{StaticResource CaptionTextBlockStyle}"
-                       Margin="28,0,0,0"/>
-            
+                       Margin="28,0,28,0"/>
+
+
+            <StackPanel Orientation="Horizontal"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Right"
+                        Margin="0,5,175,0">
+
+                <Grid Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
+                      Padding="10,3,10,3"
+                      Margin="5,0,5,0"
+                      CornerRadius="4"
+                      Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
+
+                    <TextBlock x:Name="ServiceUnavailableIndicator"
+                               x:Uid="ShellPage_ServiceUnavailableIndicator"
+                               VerticalAlignment="Center"
+                               TextWrapping="NoWrap"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{StaticResource TextFillColorPrimary}"
+                       />
+                </Grid>
+
+                
+                <Grid Background="{StaticResource SystemFillColorCautionBackgroundBrush}"
+                      Padding="10,3,10,3"
+                      Margin="5,0,5,0"
+                      CornerRadius="4"
+                      Visibility="{x:Bind ViewModel.IsRunningAsAdministrator, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    
+                    <TextBlock x:Name="AdminModeIndicator"
+                               x:Uid="ShellPage_AdministratorIndicator"
+                               VerticalAlignment="Center"
+                               TextWrapping="NoWrap"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{StaticResource TextFillColorPrimary}"
+                       />
+                </Grid>
+
+                <Grid Background="{StaticResource SmokeFillColorDefaultBrush}"
+                      Padding="10,3,10,3"
+                      Margin="5,0,5,0"
+                      CornerRadius="4"
+                      Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock x:Name="DeveloperModeIndicator"
+                               x:Uid="ShellPage_DeveloperModeIndicator"
+                               VerticalAlignment="Center"
+                               TextWrapping="NoWrap"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{StaticResource TextFillColorPrimary}"
+                       />
+                </Grid>
+
+            </StackPanel>
+
         </Grid>
 
 
@@ -87,7 +142,8 @@
 
             <NavigationView.MenuItems>
 
-                <NavigationViewItem x:Uid="Shell_Home" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.HomeViewModel"
+                <NavigationViewItem x:Uid="Shell_Home" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.HomeViewModel"
                                     >
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe80f;" Style="{StaticResource NavigationMenuIconStyles}"/>
@@ -96,13 +152,16 @@
 
 
                 
-                <NavigationViewItem x:Uid="Shell_Configurations" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ConfigurationsViewModel">
+                <NavigationViewItem x:Uid="Shell_Configurations" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ConfigurationsViewModel"
+                                    Visibility="Collapsed">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe838;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader"/>
+                <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader" 
+                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                 <!--
                 <NavigationViewItem x:Uid="Shell_EndpointsAll" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
@@ -157,7 +216,8 @@
                 </NavigationViewItem>
                 -->
 
-                <NavigationViewItem x:Name="SectionDIAG" Visibility="Collapsed" x:Uid="Shell_EndpointsDiagnostic" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsDiagViewModel">
+                <NavigationViewItem x:Name="SectionDIAG" Visibility="Collapsed" x:Uid="Shell_EndpointsDiagnostic" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsDiagViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
@@ -166,10 +226,13 @@
 
 
 
-                <NavigationViewItemHeader x:Uid="Shell_ManagementNavHeader"/>
+                <NavigationViewItemHeader x:Uid="Shell_ManagementNavHeader"
+                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
 
-                <NavigationViewItem x:Uid="Shell_ManagementSessions" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ManagementSessionsViewModel">
+                <NavigationViewItem x:Uid="Shell_ManagementSessions" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ManagementSessionsViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeda3;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
@@ -180,7 +243,9 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>-->
                 
-                <NavigationViewItem x:Uid="Shell_PluginsTransport" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsTransportViewModel">
+                <NavigationViewItem x:Uid="Shell_PluginsTransport" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsTransportViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb4d;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
@@ -195,7 +260,9 @@
 
                 <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
 
-                <NavigationViewItem x:Uid="Shell_ToolsSysEx" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel">
+                <NavigationViewItem x:Uid="Shell_ToolsSysEx" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9f5;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>

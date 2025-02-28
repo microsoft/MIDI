@@ -1,0 +1,4 @@
+﻿FileOpenDialog
+IFileOpenDialog
+CoCreateInstance
+RtlAdjustPrivilege

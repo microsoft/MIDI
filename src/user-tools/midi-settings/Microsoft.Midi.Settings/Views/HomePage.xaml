@@ -38,46 +38,62 @@
                      BorderBrush="Black"
                      Foreground="White"-->
             <Grid Grid.Row="0">
-                <InfoBar Margin="0,0,15,15"
-                     CornerRadius="9"
-                     IsOpen="{x:Bind ViewModel.IsFirstRunSetupComplete, Converter={StaticResource BoolNegationConverter}}"
-                     Title="Finish setting up MIDI on this PC"
-                     Message="Customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
-                     Severity="Warning"
-                     >
-                    <InfoBar.ActionButton>
-                        <Button Content="Finish MIDI Setup"
-                            Command="{x:Bind ViewModel.LaunchFirstRunExperienceCommand}" />
-                    </InfoBar.ActionButton>
-                </InfoBar>
+                <StackPanel Orientation="Vertical">
+                    <InfoBar Margin="0,0,15,15"
+                             CornerRadius="8"
+                             IsOpen="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BoolNegationConverter}}"
+                             Title="Service is Unavailable"
+                             Message="The Windows MIDI Service was not able to be started. Most options will be unavailable."
+                             Severity="Error"
+                             >
+                    </InfoBar>
 
+                    <InfoBar Margin="0,0,15,15"
+                             CornerRadius="8"
+                             IsOpen="{x:Bind ViewModel.IsFirstRunSetupComplete, Converter={StaticResource BoolNegationConverter}}"
+                             Title="Finish setting up MIDI on this PC"
+                             Message="Customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
+                             Severity="Warning"
+                             >
+                        <InfoBar.ActionButton>
+                            <Button Content="Finish MIDI Setup"
+                                    Command="{x:Bind ViewModel.LaunchFirstRunExperienceCommand}" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
 
-                <controls:SettingsExpander IsExpanded="True" 
-                                       Margin="0,0,15,15" 
-                                       CornerRadius="9"
-                                       Visibility="{x:Bind ViewModel.IsValidConfigLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <controls:SettingsExpander.Header>
-                        <StackPanel>
-                            <TextBlock Text="Current Configuration" Style="{StaticResource HomeCardHeaderTitleStyle}" />
-                            <TextBlock Text="This is the currently loaded configuration, where your Windows MIDI Services customizations are stored." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
-                        </StackPanel>
-                    </controls:SettingsExpander.Header>
-                    <controls:SettingsExpander.Items>
-                        <controls:SettingsCard IsClickEnabled="False">
-                            <controls:SettingsCard.Header>
-                                <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="{x:Bind ViewModel.CurrentConfigurationName}" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
-                                    <TextBlock Text="{x:Bind ViewModel.CurrentConfigurationFileName}" Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
-                                </StackPanel>
-                            </controls:SettingsCard.Header>
-                        </controls:SettingsCard>
-                    </controls:SettingsExpander.Items>
-                </controls:SettingsExpander>
+                    <controls:SettingsExpander IsExpanded="True" 
+                                           Margin="0,0,15,15" 
+                                           CornerRadius="8"
+                                           Visibility="{x:Bind ViewModel.IsValidConfigLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <controls:SettingsExpander.Header>
+                            <StackPanel>
+                                <TextBlock Text="Current Configuration" Style="{StaticResource HomeCardHeaderTitleStyle}" />
+                                <TextBlock Text="This is the currently loaded configuration, where your Windows MIDI Services customizations are stored." Style="{StaticResource HomeCardHeaderDescriptionStyle}" />
+                            </StackPanel>
+                        </controls:SettingsExpander.Header>
+                        <controls:SettingsExpander.Items>
+                            <controls:SettingsCard IsClickEnabled="False">
+                                <controls:SettingsCard.Header>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Margin="5" Text="{x:Bind ViewModel.CurrentConfigurationName}" Style="{StaticResource SmallPropertyLabel}" FontWeight="Bold" />
+                                        <TextBlock Grid.Column="1" Margin="5" Text="{x:Bind ViewModel.CurrentConfigurationFileName}" Style="{StaticResource SmallPlainPropertyValue}" />
+                                        <!-- TODO: last column will have button to open file in editor -->
+                                    </Grid>
+                                </controls:SettingsCard.Header>
+                            </controls:SettingsCard>
+                        </controls:SettingsExpander.Items>
+                    </controls:SettingsExpander>
+                </StackPanel>
             </Grid>
 
 
             <Grid Grid.Row="1">
-                <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                     <controls:SettingsExpander.Header>
                         <StackPanel>
                             <TextBlock Text="Installed Windows MIDI Services SDK Runtime" Style="{StaticResource HomeCardHeaderTitleStyle}" />
@@ -108,7 +124,7 @@
 
                 <!-- Left Column -->
                 <StackPanel Grid.Column="0" >
-                    <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                    <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                         <controls:SettingsExpander.Header>
                             <StackPanel>
                                 <TextBlock Text="Common MIDI tasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
@@ -123,7 +139,8 @@
                         </Border>-->
 
                             <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
-                                               Command="{x:Bind ViewModel.CommonTaskCreateLoopbackEndpointsCommand}">
+                                                   Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                   Command="{x:Bind ViewModel.CommonTaskCreateLoopbackEndpointsCommand}">
                                 <controls:SettingsCard.Header>
                                     <TextBlock x:Uid="CommonTasks_CreateLoopbackEndpoints" TextWrapping="WrapWholeWords" />
                                 </controls:SettingsCard.Header>
@@ -132,7 +149,8 @@
                                 </controls:SettingsCard.HeaderIcon>
                             </controls:SettingsCard>
 
-                            <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
+                            <controls:SettingsCard IsClickEnabled="True" IsEnabled="False"
+                                                   Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <controls:SettingsCard.Header>
                                     <TextBlock x:Uid="CommonTasks_SetUpNetworkMidi2" TextWrapping="WrapWholeWords" />
                                 </controls:SettingsCard.Header>
@@ -142,7 +160,8 @@
                             </controls:SettingsCard>
 
                             <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
-                                               Command="{x:Bind ViewModel.CommonTaskSendSysExCommand}">
+                                                   Command="{x:Bind ViewModel.CommonTaskSendSysExCommand}"
+                                                   Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <controls:SettingsCard.Header>
                                     <TextBlock x:Uid="CommonTasks_SendSysExFile" TextWrapping="WrapWholeWords" />
                                 </controls:SettingsCard.Header>
@@ -209,7 +228,7 @@
 
 
                     <!--
-                <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                     <controls:SettingsExpander.Header>
                         <StackPanel>
                             <TextBlock Text="Other Common DAW Tasks" Style="{StaticResource HomeCardHeaderTitleStyle}" />
@@ -353,7 +372,7 @@
                 </controls:SettingsExpander>
 -->
 
-                    <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                    <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                         <controls:SettingsExpander.Header>
                             <StackPanel>
                                 <TextBlock Text="Helpful Links" Style="{StaticResource HomeCardHeaderTitleStyle}" />
@@ -425,7 +444,7 @@
                     </controls:SettingsExpander>
 
 
-                    <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="9">
+                    <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                         <controls:SettingsExpander.Header>
                             <StackPanel>
                                 <TextBlock Text="Useful tools" Style="{StaticResource HomeCardHeaderTitleStyle}" />

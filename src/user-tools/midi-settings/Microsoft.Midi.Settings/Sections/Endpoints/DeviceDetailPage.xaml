@@ -102,6 +102,7 @@
                 <controls:SettingsExpander Header="Personalization"
                                            IsExpanded="False"
                                            x:Uid="DeviceDetailPage_PersonalizationExpander"
+                                           CornerRadius="8"
                                            >
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe771;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -143,6 +144,7 @@
                 <!-- Information from the transport -->
 
                 <controls:SettingsExpander x:Uid="DeviceDetailPage_TransportExpander"
+                                           CornerRadius="8"
                                            IsExpanded="False">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe95a;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -190,6 +192,7 @@
 
                 <controls:SettingsExpander 
                     x:Uid="DeviceDetailPage_Midi2ProtocolExpander"
+                    CornerRadius="8"
                     IsExpanded="True"
                     Visibility="{x:Bind ViewModel.ShowMidi2Properties, Converter={StaticResource BoolToVisibilityConverter}}"
                     >
@@ -237,6 +240,7 @@
                 <!-- Function Blocks -->
                 <controls:SettingsExpander x:Uid="DeviceDetailPage_FunctionBlocksExpander"
                                            ItemsSource="{x:Bind ViewModel.FunctionBlocks, Mode=OneWay}"
+                                           CornerRadius="8"
                                            Visibility="{x:Bind ViewModel.HasFunctionBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
                                            IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
@@ -361,6 +365,7 @@
                 <!-- Group Terminal Blocks -->
                 <controls:SettingsExpander x:Uid="DeviceDetailPage_GroupTerminalBlocksExpander"
                                            ItemsSource="{x:Bind ViewModel.GroupTerminalBlocks, Mode=OneWay}"
+                                           CornerRadius="8"
                                            Visibility="{x:Bind ViewModel.HasGroupTerminalBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
                                            IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
@@ -469,6 +474,7 @@
 
                 <controls:SettingsExpander x:Uid="DeviceDetailPage_ParentDeviceExpander"
                     IsExpanded="True" Margin="0,0,0,20"
+                                           CornerRadius="8"
                     Visibility="{x:Bind ViewModel.HasParent, Converter={StaticResource BoolToVisibilityConverter}}">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe70c;" Style="{StaticResource CommonTasksIconStyles}"/>

@@ -63,6 +63,7 @@
     <Style x:Key="HomeCardHeaderTitleStyle" TargetType="TextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="SemiBold" />
+        <!--<Setter Property="Foreground" Value="CornflowerBlue" />-->
         <Setter Property="FontSize" Value="{StaticResource MediumLargeFontSize}" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="TextWrapping" Value="NoWrap" />

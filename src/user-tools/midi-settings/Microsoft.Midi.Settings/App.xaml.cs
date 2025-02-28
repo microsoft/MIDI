@@ -193,10 +193,12 @@ public partial class App : Application
         base.OnLaunched(args);
 
         // initialize the SDK
-        if (AppState.Current.Initialize())
+        if (AppState.Current.InitializeSdk())
         {
-            await App.GetService<IActivationService>().ActivateAsync(args);
+            // this is not required for app startup
+            AppState.Current.InitializeService();
 
+            await App.GetService<IActivationService>().ActivateAsync(args);
         }
         else
         {

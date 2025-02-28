@@ -20,13 +20,19 @@ public class AppState
     private static AppState? _current;
 
     private MidiDesktopAppSdkInitializer? _initializer;
+    private bool _serviceInitialized = false;
 
     private AppState()
     {
 
     }
 
-    public bool Initialize()
+    public bool IsServiceInitialized()
+    {
+        return _serviceInitialized;
+    }
+
+    public bool InitializeSdk()
     {
         _initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create();
 
@@ -40,20 +46,34 @@ public class AppState
         if (!_initializer!.InitializeSdkRuntime())
         {
             // TODO: Localize these messages
-            var dialog = new MessageDialog("Unable to initialize the Windows MIDI Services SDK runtime. Is it installed? Exiting.");
-            dialog.ShowAsync().Wait();
+            //var dialog = new MessageDialog("Unable to initialize the Windows MIDI Services SDK runtime. Is it installed? Exiting.");
+            //dialog.ShowAsync().Wait();
 
             return false;
+        }
+
+        return true;
+    }
+
+    public bool InitializeService()
+    {
+        if (_initializer == null)
+        {
+            // TODO: Failed
+            return false;
+
         }
 
         if (!_initializer!.EnsureServiceAvailable())
         {
             // TODO: Localize these messages
-            var dialog = new MessageDialog("The Windows MIDI Services SDK is installed, but we failed to start the service. Exiting.");
-            dialog.ShowAsync().Wait();
+            //var dialog = new MessageDialog("The Windows MIDI Services SDK is installed, but we failed to start the service.");
+            //dialog.ShowAsync().Wait();
 
             return false;
         }
+
+        _serviceInitialized = true;
 
         StartDeviceWatcher(true);
 
