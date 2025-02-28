@@ -106,6 +106,28 @@ if (!([Environment]::Is64BitProcess))
     Exit
 }
 
+# Running developer builds requires developer mode be set in Windows, otherwise the service plugins will not load
+$developerMode = 0
+
+$devModeRegPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+$devModePathExists = Test-Path -Path $devModeRegPath
+
+if ($devModePathExists)
+{
+    $regEntry = Get-ItemProperty -Path $devModeRegPath -Name AllowDevelopmentWithoutDevLicense -ErrorAction SilentlyContinue
+    if (regEntry)
+    {
+        $developerMode = $regEntry.AllowDevelopmentWithoutDevLicense
+    }
+}
+
+if ($developerMode -eq 0)
+{
+    Write-Host
+    Write-Host "You must have developer mode turned on in Settings > System > For developers > Developer Mode." -ForegroundColor Red
+    Write-Host
+    Exit
+}
 
 
 $confirmation = Read-Host "Do you want to continue? (y/n)"
@@ -165,13 +187,6 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
         Write-Host "Midisrv service was not present. No service action taken." -ForegroundColor DarkGray
     }
 
-    Write-Host "Taking ownership of wdmaud2.drv..." -ForegroundColor DarkCyan
-    cmd.exe /c "takeown /F %windir%\System32\wdmaud2.drv"
-    #cmd.exe /c "icacls %windir%\System32\wdmaud2.drv /grant administrators:F"
-    Write-Host "wdmaud2.drv is protected by Windows Resource Protection (WRP) and cannot be replaced in public builds without first disabling WRP." -ForegroundColor DarkCyan
-
-    Write-Host
-    Write-Host "You may now install the development version of the service and plugins." -ForegroundColor Green
 
 }
 else
