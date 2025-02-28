@@ -3,104 +3,104 @@ description: File a bug report
 type: Bug
 title: "[BUG]: "
 labels:
-    - "bug :lady_beetle:"
+  - "bug :lady_beetle:"
 assignees: ["Psychlist1972"]
 projects: microsoft-org/339
 
 body:
     - type: markdown
-        attributes:
-            value: Thank you for filing a bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug.
+      attributes:
+        value: Thank you for filing a bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug.
 
     - type: input
-        id: windows-version
-        attributes:
+      id: windows-version
+      attributes:
             label: Windows Version
             description: For Insider builds, this is at the bottom right of the screen. Example 27788.rs_prerelease
-        validations:
+      validations:
             required: true
 
     - type: dropdown
-        id: service-install-method
-        attributes:
+      id: service-install-method
+      attributes:
             label: Service Installation Method
             description: How was the MIDI Service and components installed?
             multiple: false
             options:
-                - In-box In Insider Build
-                - GitHub
-                - Other (please indicate below)
+            - In-box In Insider Build
+            - GitHub
+            - Other (please indicate below)
             validations:
                 required: true
 
     - type: textarea
-        id: sdk-version
-        attributes:
-            label: SDK version, if appropriate
-            description: Version of the SDK installed. You can find this in the Home page of the MIDI Settings app, or by typeing "midi" at the command line
+      id: sdk-version
+      attributes:
+        label: SDK version, if appropriate
+        description: Version of the SDK installed. You can find this in the Home page of the MIDI Settings app, or by typeing "midi" at the command line
 
     - type: dropdown
-        id: bug-location
-        attributes:
-            label: Location
-            description: Where did you discover this bug?
-            multiple: false
-            options:
-                - Non-Microsoft application using WinMM MIDI 1.0 (Classic API)
-                - Non-Microsoft application using WinRT MIDI 1.0 (Windows 10 MIDI)
-                - Non-Microsoft application using Windows MIDI Services SDK (MIDI 2.0)
-                - Windows MIDI Services Settings App
-                - Windows MIDI Services Console App
-                - Windows MIDI Services PowerShell Components
-                - Other Windows MIDI Servies Tools (midiksinfo, midi1monitor, etc.)
-                - Other or Unsure (please indicate in additional notes section below)
-            validations:
-                required: true   
+      id: bug-location
+      attributes:
+        label: Location
+        description: Where did you discover this bug?
+        multiple: false
+        options:
+          - Non-Microsoft application using WinMM MIDI 1.0 (Classic API)
+          - Non-Microsoft application using WinRT MIDI 1.0 (Windows 10 MIDI)
+          - Non-Microsoft application using Windows MIDI Services SDK (MIDI 2.0)
+          - Windows MIDI Services Settings App
+          - Windows MIDI Services Console App
+          - Windows MIDI Services PowerShell Components
+          - Other Windows MIDI Servies Tools (midiksinfo, midi1monitor, etc.)
+          - Other or Unsure (please indicate in additional notes section below)
+        validations:
+          required: true   
     
     - type: dropdown
-        id: bug-type
-        attributes:
-            label: Type of bug
-            description: How would you classify this bug report?
-            multiple: true
-            options:
-                - Application Crash
-                - Windows Crash (bluescreen / greenscreen - please include device id from Windows Settings About page)
-                - Cannot receive messages from MIDI 1.0 device
-                - Cannot send messages to MIDI 1.0 device
-                - Cannot receive messages from MIDI 2.0 device
-                - Cannot send messages to MIDI 2.0 device
-                - MIDI messages corrupted or not transmitted correctly (please specify)
-                - MIDI 1.0 (WinMM/WinRT MIDI) Port name not correct (please include details and output of midiksinfo.exe)
-                - Application not working as expected
-                - MIDI Performance not as expected (please include your tests and details)
-                - Other or Unsure (please indicate in additional notes section below)
-            validations:
-                required: true   
+      id: bug-type
+      attributes:
+        label: Type of bug
+        description: How would you classify this bug report?
+        multiple: true
+        options:
+        - Application Crash
+        - Windows Crash (bluescreen / greenscreen - please include device id from Windows Settings About page)
+        - Cannot receive messages from MIDI 1.0 device
+        - Cannot send messages to MIDI 1.0 device
+        - Cannot receive messages from MIDI 2.0 device
+        - Cannot send messages to MIDI 2.0 device
+        - MIDI messages corrupted or not transmitted correctly (please specify)
+        - MIDI 1.0 (WinMM/WinRT MIDI) Port name not correct (please include details and output of midiksinfo.exe)
+        - Application not working as expected
+        - MIDI Performance not as expected (please include your tests and details)
+        - Other or Unsure (please indicate in additional notes section below)
+        validations:
+          required: true   
 
         
     - type: textarea
-        id: repro-steps
-        attributes:
-            label: Steps to reproduce
-            description: Please include screenshots when possible
-            placeholder: Detailed steps to reproduct the bug
-        validations:
-            required: true
+      id: repro-steps
+      attributes:
+        label: Steps to reproduce
+        description: Please include screenshots when possible
+        placeholder: Detailed steps to reproduct the bug
+      validations:
+        required: true
 
     - type: textarea
-        id: expected-behavior
-        attributes:
-            label: Expected behavior            
-            placeholder: What were you expecting to happen?
-        validations:
-            required: false   
+      id: expected-behavior
+      attributes:
+        label: Expected behavior            
+        placeholder: What were you expecting to happen?
+      validations:
+        required: false   
     
     - type: textarea
-        id: additional-notes
-        attributes:
-            label: Additional notes
-            description: Any additional notes or information which may be relevant
-            placeholder: Any additional notes or information which may be relevant
-        validations:
-            required: false
+      id: additional-notes
+      attributes:
+        label: Additional notes
+        description: Any additional notes or information which may be relevant
+        placeholder: Any additional notes or information which may be relevant
+      validations:
+        required: false
