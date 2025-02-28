@@ -79,6 +79,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             get => m_configFileService.IsConfigFileActive;
         }
 
+        public bool IsServiceAvailable => AppState.Current.IsServiceInitialized();
+
 
         public bool IsFirstRunSetupComplete
         {

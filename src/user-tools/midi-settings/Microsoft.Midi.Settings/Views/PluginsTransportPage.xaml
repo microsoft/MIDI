@@ -39,7 +39,8 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="midirept:MidiServiceTransportPluginInfo">
                            
-                            <controls:SettingsCard IsClickEnabled="False" Margin="3">
+                            <controls:SettingsCard IsClickEnabled="False" Margin="3"
+                                                   CornerRadius="8">
                                 <controls:SettingsCard.Header>
                                     <Grid Grid.Column="0" Margin="0,0,21,0">
                                         <Grid.ColumnDefinitions>

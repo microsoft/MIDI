@@ -43,7 +43,7 @@
                     <ItemsControl.ItemTemplate>
                         
                         <DataTemplate x:DataType="local:MidiLoopbackEndpointPair">
-                            <controls:SettingsCard Margin="3">
+                            <controls:SettingsCard Margin="3" CornerRadius="8">
                                 <controls:SettingsCard.Header>
                                     <StackPanel Orientation="Vertical">
                                         <TextBlock Text="{x:Bind LoopA.Name}" />

@@ -24,6 +24,7 @@
 
     <Grid>
         <controls:SettingsCard x:Name="RootSettingsCard" 
+                               CornerRadius="8"
                                IsClickEnabled="True"
                                Loaded="EndpointSettingsCard_Loaded"
                                CommandParameter="{x:Bind EndpointItem.DeviceInformation}">

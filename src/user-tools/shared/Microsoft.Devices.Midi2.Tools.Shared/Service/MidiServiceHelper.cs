@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
@@ -25,9 +26,16 @@ namespace Microsoft.Midi.Settings.Helpers
             return "MidiSrv";
         }
 
-        public static ServiceController GetServiceController()
+        public static ServiceController? GetServiceController()
         {
-            return new System.ServiceProcess.ServiceController(GetServiceName());
+            try
+            {
+                return new System.ServiceProcess.ServiceController(GetServiceName());
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public static bool ServiceIsStopped(ServiceController serviceController)
@@ -48,34 +56,82 @@ namespace Microsoft.Midi.Settings.Helpers
 
         public static bool StopService(ServiceController controller)
         {
-            controller.Stop();
-
-            int i = 0;
-            while (i < MAX_TRIES && controller.Status != ServiceControllerStatus.Stopped)
+            try
             {
-                Thread.Sleep(SLEEP_MS_PER_ATTEMPT);
-                i++;
-                controller.Refresh();
-            }
+                controller.Stop();
 
-            return controller.Status == ServiceControllerStatus.Stopped;
+                int i = 0;
+                while (i < MAX_TRIES && controller.Status != ServiceControllerStatus.Stopped)
+                {
+                    Thread.Sleep(SLEEP_MS_PER_ATTEMPT);
+                    i++;
+                    controller.Refresh();
+                }
+
+                return controller.Status == ServiceControllerStatus.Stopped;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public static bool StartService(ServiceController controller)
         {
-            controller.Start();
-
-            int i = 0;
-            while (i < MAX_TRIES && controller.Status != System.ServiceProcess.ServiceControllerStatus.Running)
+            try
             {
-                Thread.Sleep(SLEEP_MS_PER_ATTEMPT);
-                controller.Refresh();
+                controller.Start();
 
-                i++;
+                int i = 0;
+                while (i < MAX_TRIES && controller.Status != System.ServiceProcess.ServiceControllerStatus.Running)
+                {
+                    Thread.Sleep(SLEEP_MS_PER_ATTEMPT);
+                    controller.Refresh();
+
+                    i++;
+                }
+
+                return controller.Status == ServiceControllerStatus.Running;
             }
-
-            return controller.Status == ServiceControllerStatus.Running;
+            catch (Exception)
+            {
+                return false;
+            }
         }
+
+
+        public static bool RemoveService(ServiceController controller)
+        {
+            try
+            {
+                const int timeoutMilliseconds = 20000;
+                string machineName = "";
+
+                ProcessStartInfo psi = new ProcessStartInfo("sc");
+                psi.Arguments = string.Format("{0} delete \"{1}\"", machineName, GetServiceName()).Trim();
+                psi.RedirectStandardOutput = true;
+                psi.UseShellExecute = false;
+
+                var process = Process.Start(psi);
+
+                process.WaitForExit(timeoutMilliseconds);
+
+                var output = process.StandardOutput.ReadToEnd();
+
+                if (process.ExitCode != 0)
+                {
+                    return false;
+                    //throw new Exception(string.Format("Service delete for Windows Service {0} failed.", serviceName));
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
 
     }
 }

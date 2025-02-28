@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
+using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml.Navigation;
@@ -20,6 +21,9 @@ public class ShellViewModel : ObservableRecipient
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
+    public bool IsRunningAsAdministrator => UserHelper.CurrentUserHasAdminRights();
+
+    public bool IsServiceAvailable => AppState.Current.IsServiceInitialized();
 
     //public bool AreDeveloperOptionsEnabled
     //{
