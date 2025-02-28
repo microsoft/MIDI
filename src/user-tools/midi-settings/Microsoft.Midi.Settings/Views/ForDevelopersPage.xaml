@@ -35,10 +35,12 @@
                          CornerRadius="9"
                          IsOpen="{x:Bind ViewModel.ServiceRestartRequired, Mode=OneWay}"
                          Severity="Warning">
+                    <!--
                     <InfoBar.ActionButton>
                         <Button x:Uid="Button_RestartMidiService"
                                 Command="{x:Bind ViewModel.RestartServiceCommand}" />
                     </InfoBar.ActionButton>
+                    -->
                 </InfoBar>
 
                 <InfoBar Margin="0"
@@ -46,10 +48,12 @@
                          CornerRadius="9"
                          IsOpen="{x:Bind ViewModel.RebootRequired, Mode=OneWay}"
                          Severity="Warning">
+                    <!--
                     <InfoBar.ActionButton>
                         <Button x:Uid="Button_Reboot"
                                 Command="{x:Bind ViewModel.RebootCommand}" />
                     </InfoBar.ActionButton>
+                    -->
                 </InfoBar>
 
                 <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Install Developer Preview Releases" />
