@@ -348,6 +348,8 @@ public partial class ForDevelopersViewModel : ObservableRecipient
         RestartServiceCommand = new RelayCommand(() =>
         {
             // TODO: Call into service service to restart
+
+
         });
 
         CommitDiscoveryTimeoutCommand = new RelayCommand(() =>
