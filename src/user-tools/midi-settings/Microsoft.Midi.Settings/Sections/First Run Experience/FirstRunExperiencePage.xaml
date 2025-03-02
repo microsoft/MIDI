@@ -26,51 +26,53 @@
                 <x:Double x:Key="ContentDialogMaxHeight">800</x:Double>
             </ContentDialog.Resources>
 
-            <StackPanel Orientation="Vertical">
-                <TextBlock Text="Set up Windows MIDI Services" 
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="Set up Windows MIDI Services" 
                            Style="{StaticResource DialogHeaderTextBlockStyle}"
                            Margin="13, 9, 13, 13"/>
-                
-                <TextBlock TextWrapping="WrapWholeWords" 
+
+                    <TextBlock TextWrapping="WrapWholeWords" 
                            Text="Many MIDI customizations are stored in a portable configuration file. These include customized endpoint properties like the name, definitions for persistent loopback endpoints, and your Network MIDI host and client reconnections."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
-                
-                <ToggleSwitch Margin="13"
+
+                    <ToggleSwitch Margin="13"
                               IsEnabled="True"
                               IsOn="{x:Bind ViewModel.CreateConfigurationFile, Mode=TwoWay}"
                               Header="Create default configuration file." 
                               />
-                
-                <!-- todo: give an option to name it here? -->
 
-                <TextBlock TextWrapping="WrapWholeWords" 
+                    <!-- todo: give an option to name it here? -->
+
+                    <TextBlock TextWrapping="WrapWholeWords" 
                            Text="Some applications and utilities, especially those on the web, rely on having a known loopback endpoint available. This requires a configuration file to store the loopback endpoint information."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
-                <ToggleSwitch Margin="13"
+                    <ToggleSwitch Margin="13"
                               IsEnabled="{x:Bind ViewModel.CanPersistChanges, Mode=OneWay}"
                               IsOn="{x:Bind ViewModel.CreateDefaultLoopbackEndpoints, Mode=TwoWay}"
                               Header="Create default loopback endpoints." 
                               />
 
-                <TextBlock TextWrapping="WrapWholeWords" 
+                    <TextBlock TextWrapping="WrapWholeWords" 
                            Text="By default, the MIDI Service is set to start only when the first MIDI connection is made by an app. This ensures Windows startup time is not impacted for those who do not use MIDI. But the first time a MIDI connection is made, it can take several seconds."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
-                <TextBlock TextWrapping="WrapWholeWords" 
+                    <TextBlock TextWrapping="WrapWholeWords" 
                            Text="If you use MIDI frequently, we recommend changing the service to start automatically with Windows, so you never have to wait when making a connection. This requires Administrator permissions to set."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
-                <ToggleSwitch Margin="13"
+                    <ToggleSwitch Margin="13"
                               IsEnabled="{x:Bind ViewModel.CreateConfigurationFile, Mode=OneWay}"
                               IsOn="{x:Bind ViewModel.SetServiceToAutoStart, Mode=TwoWay}"
                               Header="Set MIDI Service to auto-start with Windows" 
                               />
-            </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
             
         </ContentDialog>
         

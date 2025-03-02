@@ -1,5 +1,5 @@
 ﻿using System.Text;
-
+using System.Text.Json;
 using Microsoft.Midi.Settings.Core.Contracts.Services;
 
 using Newtonsoft.Json;
@@ -8,26 +8,30 @@ namespace Microsoft.Midi.Settings.Core.Services;
 
 public class FileService : IFileService
 {
-    public T Read<T>(string folderPath, string fileName)
+    public global::Windows.Data.Json.JsonObject Read(string folderPath, string fileName)
     {
         var path = Path.Combine(folderPath, fileName);
         if (File.Exists(path))
         {
             var json = File.ReadAllText(path);
-            return JsonConvert.DeserializeObject<T>(json);
+
+            return global::Windows.Data.Json.JsonObject.Parse(json);
+
+            //return JsonConvert.DeserializeObject<T>(json);
         }
 
         return default;
     }
 
-    public void Save<T>(string folderPath, string fileName, T content)
+    public void Save(string folderPath, string fileName, global::Windows.Data.Json.JsonObject content)
     {
         if (!Directory.Exists(folderPath))
         {
             Directory.CreateDirectory(folderPath);
         }
 
-        var fileContent = JsonConvert.SerializeObject(content);
+        var fileContent = content.Stringify();
+
         File.WriteAllText(Path.Combine(folderPath, fileName), fileContent, Encoding.UTF8);
     }
 
