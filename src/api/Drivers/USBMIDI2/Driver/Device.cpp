@@ -1815,6 +1815,7 @@ Return Value:
                 // Make sure we do not try to capture this string in future processing
                 grpTermBlockStringIndexes[numGrpTermBlocks] = 0;
                 grpTermBlockStringSizes[numGrpTermBlocks] = sizeof(WCHAR);
+                numGrpTermBlocks++;
                 continue;
             }
 
