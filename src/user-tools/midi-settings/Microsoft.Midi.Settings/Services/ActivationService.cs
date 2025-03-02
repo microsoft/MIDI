@@ -3,6 +3,9 @@ using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.Devices.Display;
+using Windows.Devices.Enumeration;
+using Windows.Win32.UI.Shell;
 
 namespace Microsoft.Midi.Settings.Services;
 
@@ -22,10 +25,59 @@ public class ActivationService : IActivationService
         _generalSettingsService = generalSettingsService;
     }
 
+    private void PositionMainWindow()
+    {
+        bool provided = false;
+
+        var extents = _generalSettingsService.GetMainWindowPositionAndSize();
+
+        if (extents == null)
+        {
+            extents = new WindowRect();
+        }
+        else
+        {
+            provided = true;
+
+            // TODO: This code needs to know the size of the monitor, and 
+            // these numbers are arbitrary
+            if (extents.Width < 1200)
+            {
+                extents.Width = 1200;
+            }
+
+            if (extents.Height < 700)
+            {
+                extents.Height = 700;
+            }
+        }
+
+        App.MainWindow.AppWindow.Resize(new global::Windows.Graphics.SizeInt32(extents.Width, extents.Height));
+
+
+        // TODO: Need to check to see if we're off-screen
+
+        //var hwnd = App.MainWindow.GetWindowHandle();
+        //var hmon = global::Windows.Win32.MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
+        if (!provided)
+        {
+            App.MainWindow.CenterOnScreen();
+        }
+        else
+        {
+            App.MainWindow.AppWindow.Move(new global::Windows.Graphics.PointInt32(extents.Left, extents.Top));
+        }
+    }
+
+
     public async Task ActivateAsync(object activationArgs)
     {
         // Execute tasks before activation.
         await InitializeAsync();
+
+        // restore window size from last close
+        PositionMainWindow();
 
         // Set the MainWindow Content.
         if (App.MainWindow.Content == null)

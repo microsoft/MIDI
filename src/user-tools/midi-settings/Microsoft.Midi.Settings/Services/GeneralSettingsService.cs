@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Core.Helpers;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.Midi.Settings.Services
 {
@@ -15,8 +17,9 @@ namespace Microsoft.Midi.Settings.Services
         private readonly ILocalSettingsService _localSettingsService;
 
 
-        private const string ShowDeveloperOptions_SettingsKey = "ShowDeveloperOptions";
-        private bool _showDeveloperOptions;
+        //private const string ShowDeveloperOptions_SettingsKey = "ShowDeveloperOptions";
+        private const string MainWindowPositionAndSize_SettingsKey = "MainWindowPositionAndSize";
+        //private bool _showDeveloperOptions;
 
         public event EventHandler? SettingsChanged;
 
@@ -25,57 +28,76 @@ namespace Microsoft.Midi.Settings.Services
             _localSettingsService = localSettingsService;
         }
 
-
-        public bool ShowDeveloperOptions
+        public async void SetMainWindowPositionAndSize(WindowRect value)
         {
-            get => _showDeveloperOptions;
-            set
-            {
-                if (value != _showDeveloperOptions)
-                {
-                    if (value)
-                    {
-                        // only allow setting this to true if dev mode is enabled
-                        value = WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
-                    }
-
-                    SaveShowDeveloperOptionsFromSettingsAsync(value).Wait();
-                    _showDeveloperOptions = value;
-
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            await _localSettingsService.SaveSettingAsync<WindowRect>(MainWindowPositionAndSize_SettingsKey, value);
         }
+
+        public WindowRect? GetMainWindowPositionAndSize()
+        {
+            try
+            {
+                return _localSettingsService.ReadSettingAsync<WindowRect>(MainWindowPositionAndSize_SettingsKey).GetAwaiter().GetResult();
+
+            }
+            catch (Exception)
+            {
+            }
+
+            // default
+            return null;
+        }
+
+        //public bool ShowDeveloperOptions
+        //{
+        //    get => _showDeveloperOptions;
+        //    set
+        //    {
+        //        if (value != _showDeveloperOptions)
+        //        {
+        //            if (value)
+        //            {
+        //                // only allow setting this to true if dev mode is enabled
+        //                value = WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
+        //            }
+
+        //            SaveShowDeveloperOptionsFromSettingsAsync(value).Wait();
+        //            _showDeveloperOptions = value;
+
+        //            SettingsChanged?.Invoke(this, EventArgs.Empty);
+        //        }
+        //    }
+        //}
 
         public async Task InitializeAsync()
         {
-            _showDeveloperOptions = await LoadShowDeveloperOptionsFromSettingsAsync();
+         //   _showDeveloperOptions = await LoadShowDeveloperOptionsFromSettingsAsync();
 
             await Task.CompletedTask;
         }
 
 
-        private async Task<bool> LoadShowDeveloperOptionsFromSettingsAsync()
-        {
-            WindowsDeveloperModeHelper.Refresh();
+        //private async Task<bool> LoadShowDeveloperOptionsFromSettingsAsync()
+        //{
+        //    WindowsDeveloperModeHelper.Refresh();
 
-            if (WindowsDeveloperModeHelper.IsDeveloperModeEnabled)
-            {
-                var settingsValue = await _localSettingsService.ReadSettingAsync<string>(ShowDeveloperOptions_SettingsKey);
-                bool result;
+        //    if (WindowsDeveloperModeHelper.IsDeveloperModeEnabled)
+        //    {
+        //        var settingsValue = await _localSettingsService.ReadSettingAsync<string>(ShowDeveloperOptions_SettingsKey);
+        //        bool result;
 
-                if (settingsValue != null && bool.TryParse(settingsValue, out result))
-                {
-                    return result;
-                }
-            }
+        //        if (settingsValue != null && bool.TryParse(settingsValue, out result))
+        //        {
+        //            return result;
+        //        }
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
-        private async Task SaveShowDeveloperOptionsFromSettingsAsync(bool showDeveloperOptions)
-        {
-            await _localSettingsService.SaveSettingAsync<bool>(ShowDeveloperOptions_SettingsKey, showDeveloperOptions);
-        }
+        //private async Task SaveShowDeveloperOptionsFromSettingsAsync(bool showDeveloperOptions)
+        //{
+        //    await _localSettingsService.SaveSettingAsync<bool>(ShowDeveloperOptions_SettingsKey, showDeveloperOptions);
+        //}
     }
 }

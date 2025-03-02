@@ -4,7 +4,8 @@ using Microsoft.Midi.Settings.Core.Contracts.Services;
 using Microsoft.Midi.Settings.Core.Helpers;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.Midi.Settings.Models;
-
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Windows.ApplicationModel;
 using Windows.Storage;
 
@@ -12,36 +13,35 @@ namespace Microsoft.Midi.Settings.Services;
 
 public class LocalSettingsService : ILocalSettingsService
 {
-    private const string _defaultApplicationDataFolder = "Microsoft\\Windows MIDI Services\\SettingsApp";
-    private const string _defaultLocalSettingsFile = "LocalSettings.json";
-
     private readonly IFileService _fileService;
-    private readonly LocalSettingsOptions _options;
+    //private readonly LocalSettingsOptions _options;
 
-    private readonly string _localApplicationData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+    private readonly string _programDataRoot;
     private readonly string _applicationDataFolder;
-    private readonly string _localsettingsFile;
+    private readonly string _settingsFile;
 
-    private IDictionary<string, object> _settings;
+    //private IDictionary<string, object> _settings;
+
+    private global::Windows.Data.Json.JsonObject _settings;
 
     private bool _isInitialized;
 
-    public LocalSettingsService(IFileService fileService, IOptions<LocalSettingsOptions> options)
+    public LocalSettingsService(IFileService fileService)
     {
+        _programDataRoot = Environment.ExpandEnvironmentVariables("%ProgramData%");
+        _applicationDataFolder = Path.Combine(_programDataRoot, @"Microsoft\MIDI\");
+        _settingsFile = "SettingsApp.appconfig.json";
+
         _fileService = fileService;
-        _options = options.Value;
 
-        _applicationDataFolder = Path.Combine(_localApplicationData, /*_options.ApplicationDataFolder ?? */ _defaultApplicationDataFolder);
-        _localsettingsFile = /*_options.LocalSettingsFile ??*/ _defaultLocalSettingsFile;
-
-        _settings = new Dictionary<string, object>();
+        //_settings = new Dictionary<string, object>();
     }
 
     private async Task InitializeAsync()
     {
         if (!_isInitialized)
         {
-            _settings = await Task.Run(() => _fileService.Read<IDictionary<string, object>>(_applicationDataFolder, _localsettingsFile)) ?? new Dictionary<string, object>();
+            _settings = await Task.Run(() => _fileService.Read(_applicationDataFolder, _settingsFile)) ?? global::Windows.Data.Json.JsonObject.Parse("{}");
 
             _isInitialized = true;
         }
@@ -62,7 +62,8 @@ public class LocalSettingsService : ILocalSettingsService
 
             if (_settings != null && _settings.TryGetValue(key, out var obj))
             {
-                return await Json.ToObjectAsync<T>((string)obj);
+                //return await Json.ToObjectAsync<T>((string)obj);
+                return Json.ToObject<T>(obj.Stringify());
             }
         }
 
@@ -79,9 +80,9 @@ public class LocalSettingsService : ILocalSettingsService
         {
             await InitializeAsync();
 
-            _settings[key] = await Json.StringifyAsync(value);
+            _settings[key] = global::Windows.Data.Json.JsonValue.Parse(await Json.StringifyAsync(value));
 
-            await Task.Run(() => _fileService.Save(_applicationDataFolder, _localsettingsFile, _settings));
+            await Task.Run(() => _fileService.Save(_applicationDataFolder, _settingsFile, _settings));
         }
     }
 }
