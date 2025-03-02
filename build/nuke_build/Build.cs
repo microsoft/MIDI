@@ -35,8 +35,8 @@ class Build : NukeBuild
 
 
     //string VersionName => "Developer Preview 9";
-    string VersionName => "Customer Preview 2";
-    string NuGetVersionName => "preview-11";
+    string VersionName => "Customer Preview 3";
+    string NuGetVersionName => "preview-12";
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
 

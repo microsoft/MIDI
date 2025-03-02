@@ -1,10 +1,12 @@
-﻿namespace Microsoft.Midi.Settings.Core.Contracts.Services;
+﻿using System.Text.Json;
+
+namespace Microsoft.Midi.Settings.Core.Contracts.Services;
 
 public interface IFileService
 {
-    T Read<T>(string folderPath, string fileName);
+    global::Windows.Data.Json.JsonObject Read(string folderPath, string fileName);
 
-    void Save<T>(string folderPath, string fileName, T content);
+    void Save(string folderPath, string fileName, global::Windows.Data.Json.JsonObject content);
 
     void Delete(string folderPath, string fileName);
 }
