@@ -4,6 +4,7 @@ type: Bug
 title: "[DOCS]: "
 labels:
   - "bug :lady_beetle:"
+  - "area-documentation :page_facing_up:"
   - "needs triage :ambulance:"
 assignees: ["Psychlist1972"]
 projects: microsoft/339
