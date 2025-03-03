@@ -1,0 +1,37 @@
+name: "📖 Docs Bug Report"
+description: File a correction / bug for the Windows MIDI Services documentation
+type: Bug
+title: "[DOCS]: "
+labels:
+  - "bug :lady_beetle:"
+  - "needs triage :ambulance:"
+assignees: ["Psychlist1972"]
+projects: microsoft/339
+
+body:
+- type: markdown
+  attributes:
+    value: Thank you for filing a bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug.
+
+- type: input
+  id: page-url
+  attributes:
+    label: URL of the docs page with the problem
+    description: Please paste the full URL of the page with the problem
+
+- type: textarea
+  id: bug-description
+  attributes:
+    label: Bug Description
+    placeholder: Please describe the bug, correction, or docs change you are reporting
+  validations:
+    required: true
+
+- type: textarea
+  id: additional-notes
+  attributes:
+    label: Additional notes
+    description: Any additional notes or information which may be relevant
+    placeholder: Any additional notes or information which may be relevant
+  validations:
+    required: false
