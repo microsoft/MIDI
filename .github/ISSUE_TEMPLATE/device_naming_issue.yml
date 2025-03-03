@@ -83,7 +83,7 @@ body:
     required: true
 
 - type: textarea
-  id: midi-ks-info-output
+  id: midi-endpoint-properties-output
   attributes:
     label: MIDI endpoint properties
     description: Please paste the output (text or screenshot) from running `midi endpoint properties` from the SDK, for this endpoint
