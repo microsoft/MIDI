@@ -1,0 +1,100 @@
+name: "🐞 Endpoint/Port Naming Issue"
+description: Report an issue with a device/endpoint/port name
+type: Bug
+title: "[NAME_BUG]: "
+labels:
+  - "bug :lady_beetle:"
+  - "needs triage :ambulance:"
+assignees: ["Psychlist1972"]
+projects: microsoft/339
+
+body:
+- type: markdown
+  attributes:
+    value: Thank you for filing a naming bug report for Windows MIDI Services. Please be sure to [search for existing issues](https://github.com/microsoft/MIDI/labels/bug%20%3Alady_beetle%3A) before filing a new bug.
+
+- type: input
+  id: windows-version
+  attributes:
+    label: Windows Version
+    description: For Insider builds, this is at the bottom right of the screen. Example 27788.rs_prerelease. For others, you can get it from Settings > About
+  validations:
+    required: true
+
+- type: dropdown
+  id: service-install-method
+  attributes:
+    label: Service Installation Method
+    description: How was the MIDI Service and components installed?
+    multiple: false
+    options:
+      - In-box In Insider Build
+      - GitHub
+      - Other (please indicate below)
+  validations:
+    required: true
+
+- type: dropdown
+  id: bug-location
+  attributes:
+    label: Location
+    description: Where did you discover this bug?
+    multiple: false
+    options:
+      - Application using WinMM MIDI 1.0 (Classic API)
+      - Application using WinRT MIDI 1.0 (Windows 10 MIDI)
+      - Application using Windows MIDI Services SDK (MIDI 2.0)
+      - Other or Unsure (please indicate in additional notes section below)
+  validations:
+    required: true   
+
+- type: input
+  id: device-model
+  attributes:
+    label: Device Make/Model
+    description: What is the device you are reporting an issue with? Actual physical device name if appropriate.
+  validations:
+    required: true
+  
+
+- type: input
+  id: name-shown
+  attributes:
+    label: Name(s) you saw
+    description: The name displayed in the tool or application
+  validations:
+    required: true
+
+- type: input
+  id: name-expected
+  attributes:
+    label: Name(s) you expected
+    description: The name(s) you expected to see
+  validations:
+    required: true
+          
+    
+- type: textarea
+  id: midi-ks-info-output
+  attributes:
+    label: MIDI KS Info Output
+    description: Please paste the output (text or screenshot) from running `midiksinfo.exe` from the SDK
+  validations:
+    required: true
+
+- type: textarea
+  id: midi-ks-info-output
+  attributes:
+    label: MIDI endpoint properties
+    description: Please paste the output (text or screenshot) from running `midi endpoint properties` from the SDK, for this endpoint
+  validations:
+    required: true
+  
+- type: textarea
+  id: additional-notes
+  attributes:
+    label: Additional notes
+    description: Any additional notes or information which may be relevant
+    placeholder: Any additional notes or information which may be relevant
+  validations:
+    required: false
