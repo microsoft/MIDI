@@ -1,5 +1,5 @@
-name: "🐞 Endpoint/Port Naming Issue"
-description: Report an issue with a device/endpoint/port name
+name: "🐞 Device, Endpoint, or Port Naming Issue"
+description: Report an issue with a MIDI Device, Endpoint, or Port name
 type: Bug
 title: "[NAME_BUG]: "
 labels:
@@ -51,7 +51,7 @@ body:
 - type: input
   id: device-model
   attributes:
-    label: Device Make/Model
+    label: Device Make and Model
     description: What is the device you are reporting an issue with? Actual physical device name if appropriate.
   validations:
     required: true
