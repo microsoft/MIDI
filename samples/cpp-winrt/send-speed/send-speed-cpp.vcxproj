@@ -156,7 +156,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main_send_speed.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

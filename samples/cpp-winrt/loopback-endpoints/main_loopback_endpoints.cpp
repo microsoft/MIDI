@@ -153,8 +153,8 @@ int main()
                 std::cout << "Received UMP" << std::endl;
                 std::cout << "- Current Timestamp: " << std::dec << MidiClock::Now() << std::endl;
                 std::cout << "- UMP Timestamp:     " << std::dec << ump.Timestamp() << std::endl;
-                std::cout << "- UMP Msg Type:      0x" << std::hex << (uint32_t)ump.MessageType() << std::endl;
-                std::cout << "- UMP Packet Type:   0x" << std::hex << (uint32_t)ump.PacketType() << std::endl;
+                std::cout << "- UMP Msg Type:      0x" << std::hex << static_cast<uint32_t>(ump.MessageType()) << std::endl;
+                std::cout << "- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
                 std::cout << "- Message:           " << winrt::to_string(MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())) << std::endl;
 
                 // if you wish to cast the IMidiUmp to a specific Ump Type, you can do so using .as<T> WinRT extension

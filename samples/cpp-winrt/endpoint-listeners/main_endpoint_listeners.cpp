@@ -109,7 +109,7 @@ int main()
 
     // listeners are less expensive than opening separate connections to the same endpoint
     MidiGroupEndpointListener groupListener0;
-    groupListener0.IncludedGroups().Append(MidiGroup((uint8_t)0));  // casting is required due to built-in WinRT constructor that takes a pointer
+    groupListener0.IncludedGroups().Append(MidiGroup(static_cast<uint8_t>(0)));  // casting is required due to built-in WinRT constructor that takes a pointer
     groupListener0.PreventCallingFurtherListeners(false);
     groupListener0.PreventFiringMainMessageReceivedEvent(true);
     groupListener0.PluginName(L"Group 1 Listener");                 // you can also set the tag to something meaningful that can be boxed to IInspectable 
