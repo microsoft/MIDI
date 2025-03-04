@@ -32,7 +32,7 @@ The MIDI messages defined in the MIDI 2.0 UMP specifications, excluding the MIDI
 
 Windows MIDI Services supports both MIDI 1.0 and MIDI 2.0 devices.
 
-| Device | Driver | Windows.Devices.Midi2 | Older MIDI 1.0 APIs |
+| Device | Driver | Microsoft.Windows.Devices.Midi2 | WinMM/WinRT MIDI 1.0 APIs |
 | ------------------- | --------------------- | -------------------------- | ------------------------ |
 | USB MIDI 1.0 Device | MIDI 2.0 Class Driver | To/From MIDI 1.0 in UMP by driver | To/from MIDI 1.0 byte data format by service |
 | USB MIDI 1.0 Device | Older MIDI 1.0 Class Driver | To/From MIDI 1.0 in UMP by service | To/from MIDI 1.0 byte data format by service |
@@ -41,13 +41,21 @@ Windows MIDI Services supports both MIDI 1.0 and MIDI 2.0 devices.
 | Any other MIDI 2.0 Device | (no driver. ex Virtual, Network 2.0) | No translation required | To/from MIDI 1.0 byte data format by service |
 | Any other MIDI 1.0 Device | (no driver. ex BLE) | To/From UMP by service | To/From MIDI 1.0 byte data format by service |
 
+### Translation for client APIs
+
+Incoming messages are translated between protocol and data format only when necessary, as explained above.
+
+WinMM and WinRT MIDI 1.0 will always receive correct MIDI 1.0 channel voice messages, no matter what the endpoint has.
+
+Microsoft.Windows.Devices.Midi2 will provide the UMP version of what it is provided. It does not upscale MIDI 1.0 channel voice messages to MIDI 2.0 channel voice messages. The client may use open source libraries to handle that if needed.
+
 ### Translation between Message type 2 (MIDI 1.0 Channel Voice) and Message type 4 (MIDI 2.0 Channel Voice)
 
-Currently, Windows MIDI Services does not translate messages based on Function Block declared protocol. Instead, for native UMP endpoints, applications should send the correct protocol messages (message type 2 for MIDI 1.0-compatible and message type 4 for MIDI 2.0-compatible messages) based upon the information provided by the `MidiEndpointDeviceInformation` class. In addition, for native MIDI 1.0 byte data format endpoints, applications should send the appropriate MIDI 1.0 messages in UMP.
+Currently, Windows MIDI Services does not translate messages based on **Function Block declared protocol**. Instead, for native UMP endpoints, applications should send the correct protocol messages (message type 2 for MIDI 1.0-compatible and message type 4 for MIDI 2.0-compatible messages) based upon the information provided by the `MidiEndpointDeviceInformation` class. In addition, for native MIDI 1.0 byte data format endpoints, applications should send the appropriate MIDI 1.0 messages in UMP.
 
-Windows MIDI Services will downscale messages as needed based on negotiated protocol. We plan to add upscaling (if an endpoing negotiates MIDI 2 but doesn't support MIDI 1), but that is not in place in the first release.
+Windows MIDI Services will downscale messages as needed based on **endpoint negotiated protocol**. We plan to add MIDI 1 -> MIDI 2upscaling (if an endpoint negotiates MIDI 2 but doesn't support MIDI 1), but that is not in place in the first release.
 
-If a MIDI 1.0 device is connected to the new MIDI 2.0 Class Driver, Windows MIDI Services *will* downscale Message Type 4 to Message Type 2 before sending to the driver. This is because the driver, when working with a MIDI 1.0 device, only handles UMP messages which can be directly translated to MIDI 1.0 data format.
+If a MIDI 1.0 device is connected to the new MIDI 2.0 Class Driver, Windows MIDI Services **will downscale Message Type 4 to Message Type 2 before sending to the driver**. This is because the driver, when working with a MIDI 1.0 device, only handles UMP messages which can be directly translated to MIDI 1.0 data format.
 
 ### Translation based on declared protocol for a Function Block or Group Terminal
 
