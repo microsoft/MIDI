@@ -56,7 +56,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementati
 
                     if (m_messageReceivedEvent)
                     {
-                        m_messageReceivedEvent((midi2::IMidiMessageReceivedEventSource)m_endpointConnection, args);
+                        m_messageReceivedEvent((midi2::IMidiMessageReceivedEventSource)*this, args);
                     }
 
                     break;
