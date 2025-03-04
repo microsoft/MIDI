@@ -41,9 +41,10 @@ body:
     description: Where did you discover this bug?
     multiple: false
     options:
-      - Application using WinMM MIDI 1.0 (Classic API)
-      - Application using WinRT MIDI 1.0 (Windows 10 MIDI)
-      - Application using Windows MIDI Services SDK (MIDI 2.0)
+      - App using WinMM MIDI 1.0 (Classic API)
+      - App using WinRT MIDI 1.0 (Windows 10 MIDI)
+      - App using Windows MIDI Services SDK (MIDI 2.0)
+      - Windows MIDI Services SDK or tools
       - Other or Unsure (please indicate in additional notes section below)
   validations:
     required: true   
@@ -52,7 +53,7 @@ body:
   id: device-model
   attributes:
     label: Device Make and Model
-    description: What is the device you are reporting an issue with? Actual physical device name if appropriate.
+    description: If a hardware device, what is the device you are reporting an issue with? Actual physical device name if appropriate.
   validations:
     required: true
   
@@ -78,7 +79,7 @@ body:
   id: midi-ks-info-output
   attributes:
     label: MIDI KS Info Output
-    description: Please paste the output (text or screenshot) from running `midiksinfo.exe` from the SDK
+    description: If a USB or other kernel streaming device, please paste the output (text or screenshot) from running `midiksinfo.exe` from the SDK
   validations:
     required: true
 
@@ -95,6 +96,6 @@ body:
   attributes:
     label: Additional notes
     description: Any additional notes or information which may be relevant
-    placeholder: Any additional notes or information which may be relevant
+    placeholder: Any additional notes or information
   validations:
     required: false
