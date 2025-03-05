@@ -238,7 +238,7 @@ CMidi2DiagnosticsEndpointManager::CreatePingEndpoint(
 
     MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
     commonProperties.TransportId = m_TransportTransportId;
-    commonProperties.EndpointDeviceType = MidiEndpointDeviceType_DiagnosticLoopback;
+    commonProperties.EndpointDeviceType = MidiEndpointDeviceType_DiagnosticPing;
     commonProperties.FriendlyName = friendlyName.c_str();
     commonProperties.TransportCode = transportCode.c_str();
     commonProperties.EndpointName = endpointName.c_str();
