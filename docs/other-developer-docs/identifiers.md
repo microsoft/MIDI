@@ -10,13 +10,13 @@ parent: For Developers
 
 In the WinMM API today, the port name is often used as a unique identifier, stored in files, and otherwise used in comparisons when checking to see if the required MIDI devices are connected to the PC. They were never intended to be used this way, but because the Port numbers would change based upon, among other things, the order in which devices are plugged in, there were no other reasonable options.
 
-We attempted to make the port numbers more "sticky" by keeping them static across device insert/removal events. However, the resulting sparse array of MIDI Ports broke around a third of the WinMM applications (they were not checking the result of the call to open a port, or worse, displayed an error dialog for each failed open). As a result, we had to scrap that approach and return to keeping that array fully populated, and the port numbers mobile.
+We attempted to make the port numbers more "sticky" by keeping them static across device insert/removal events. However, the resulting sparse array of MIDI Ports broke around a third of the WinMM applications (they were not checking the result of the call to open a port, or worse, displayed an error dialog for each failed open). As a result, we had to scrap that approach and return to keeping that array fully populated, and the port numbers fluid.
 
 For Windows MIDI Services, we provide additional information that a developer can use to identify an Endpoint. This information is all returned as properties of the `MidiEndpointDeviceInformation` class. The information below explains what properties can be relied upon and when/how.
 
 > Endpoint names in Windows MIDI Services are neither unique identifiers nor guaranteed to be static. They should not be used to identify an Endpoint. In addition to new algorithms for naming, the customer can rename the endpoints at will, and shall not be constrained or limited in providing names meaningful to them. **For Windows MIDI Services, the customer is always in control of their setup.**
 
-# What Identifier should I use?
+## What Identifier should I use?
 
 For Windows MIDI Services, the primary identifier for an endpoint on a single PC is `MidiEndpointDeviceInformation.EndpointDeviceId`. We do everything possible to keep this string consistent within the limitations of the device implementation (see notes below about USB). Although we attempt to make it portable when we can, it's not guaranteed to be portable to other PCs. If you need further identification information, please read on.
 
@@ -83,6 +83,12 @@ Unlike with MIDI 2.0, the group indexes included in an aggregated MIDI 1.0 endpo
 
 The equivalent of a MIDI 1.0 Port in WinMM, in this case, would be the `EndpointDeviceId` + the `FirstGroup.Index`.
 
+## MIDI Loopback and Virtual Device Endpoints (Windows MIDI Services)
+
+The unique identifiers for these are specified at creation time. As long as the user or application is consistent in those values, the devices will have the same `EndpointDeviceId` each time, even across PCs.
+
+For third-party loopback or virtual devices using their own drivers, we do not control how those devices are created or what information they provide, and so can offer no guidance there.
+
 # Future Transports
 
 ## Network MIDI 2.0 devices
@@ -99,3 +105,29 @@ Note that IP addresses and ports are not persistent identifiers for remote hosts
 ## Other MIDI 1.0 devices
 
 Information on upcoming BLE MIDI 1.0 will be provided when the transports are available.
+
+# Scenarios
+
+## I need to reconnect to a MIDI device between sessions on the same PC
+
+If your app needs to reconnect to a MIDI device on the same PC, use the `EndpointDeviceId` as the preferred string to store. The GUID at the end of it will be the same each time (it represents the UMP endpoint type), so it may be left off when stored if you need to save space. Please note the caveats at the top about how we try to keep this number consistent, but have some constraints due to different device implementations.
+
+Do not use the Endpoint Name, Function Block Names, Group Terminal Block Names, as the user can easily rename the device in different ways.
+
+## I need to reconnect to a USB MIDI device across PCs (Studio/Gig)
+
+If a USB devices has an `iSerialNumber` the generated `EndpointDeviceId` should be the same. You can also use VID/PID/Serial in the case of USB MIDI 1.0 and USB MIDI 2.0 devices, and other information described above (including Product Instance Id) in the case of any MIDI 2.0 devices.
+
+## I need to reconnect to a USB MIDI device across PC and Mac
+
+This will be a little more difficult given that the main identifier is not the same across Windows and Mac. Similarly, the WinMM port names have never been identical across Windows and Mac. Therefore, you can use the same heuristics you use today, or else consider VID/PID/Serial when available for USB devices.
+
+## I need to load specific templates or features for a make/model of USB MIDI device
+
+For devices which support it, prefer MIDI-CI as the mechanism for identifying a device and its capabilities.
+
+Additionally, the usual [MIDI 1.0 SysEx Identity Request](http://midi.teragonaudio.com/tech/midispec/identity.htm) can provide this information to you for many devices. The information provided in this is approximately the same as what is provided in MIDI 2.0 discovery, for the Device Identity.
+
+For USB MIDI (1.0 and 2.0) devices, the VID and PID will identify the make and model of the device for you when they are available.
+
+> NOTE: The VID/PID aren't available for MIDI 1.0 devices at the time of this writing, but it's being worked on before the official production release.
