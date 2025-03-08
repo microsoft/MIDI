@@ -16,7 +16,7 @@ For Windows MIDI Services, we provide additional information that a developer ca
 
 # What Identifier should I use?
 
-For Windows MIDI Services, the primary identifier for an endpoint on a single PC is `MidiEndpointDeviceInformation.EndpointDeviceId`. We do everything possible to keep this string consistent within the limitations of the device implementation (see notes below about USB). If you need further identification information, please read on.
+For Windows MIDI Services, the primary identifier for an endpoint on a single PC is `MidiEndpointDeviceInformation.EndpointDeviceId`. We do everything possible to keep this string consistent within the limitations of the device implementation (see notes below about USB). Although we attempt to make it portable when we can, it's not guaranteed to be portable to other PCs. If you need further identification information, please read on.
 
 Apps sometimes need to load specialized templates based upon the make/model of the device, and so have different identification requirements. The `EndpointDeviceId` is not portable across PCs. Although MIDI 2.0 includes MIDI Capability Inquiry (MICI-CI) as the correct long-term approach for discovering device capabilities, many devices today do not support MIDI-CI, and so there are other identifiers listed below which may be useful to you. In-particular, VID/PID for USB devices.
 
@@ -34,13 +34,13 @@ That's all to say that we can try our best to associate data with USB MIDI devic
 
 ## All MIDI 2.0 devices
 
-As mentioned above, the primary identifier is the `MidiEndpointDeviceInformation.EndpointDeviceId` property. At any one point in time, there cannot be more than one endpoint with the same identifier.
+As mentioned above, the primary identifier is the `MidiEndpointDeviceInformation.EndpointDeviceId` property. At any one point in time, there cannot be more than one endpoint with the same identifier attached to the same PC.
 
 Additionally, the device information includes other identifiers which may be useful to you.
 
 | Property | Source | Notes |
 | -------- | ------ | ------------------ |
-| `MidiEndpointDeviceInformation.EndpointDeviceId` | Windows | The primary identifer for the endpoint |
+| `MidiEndpointDeviceInformation.EndpointDeviceId` | Windows | The primary identifer for the endpoint on a single PC |
 | `MidiEndpointDeviceInformation.DeviceInstanceId` | Windows | The identifier for the parent device for this endpoint. In USB devices with an `iSerialNumber`, this typically contains the VID, PID, and iSerialNumber for the device. |
 | `MidiDeclaredEndpointInfo.ProductInstanceId` | UMP Endpoint discovery | This is the unique id that the endpoint declares. It is not guaranteed to be unique across brands or models, and is an optional but recommended part of MIDI 2.0 discovery. In the case of a single device with multiple endpoints (as can happen with Network MIDI 2.0) it is shared across all endpoints for the device. Nevertheless, this is at least as reliable as the old WinMM port names. |
 | `MidiDeclaredDeviceIdentity.*` | UMP Endpoint discovery | This contains the SysEx Ids, Device Family and Device Model Ids as declared by the device. When provided (it is optional) it is expected to remain consistent |
@@ -48,6 +48,8 @@ Additionally, the device information includes other identifiers which may be use
 ## USB MIDI 2.0
 
 The DDI for the USB MIDI 2.0 implementation on Windows includes the ability to request the VID, PID, Serial Number, and Manufacturer Name for a device. This makes it easy for us to provide that information as part of the device information.
+
+For USB devices, the VID/PID are a good combination for recognizing a type of USB device. If a serial number is provided, combined with the VID/PID, it's a good combination for recognizing a specific USB device.
 
 | Property | Source | Notes |
 | -------- | ------ | ------------------ |
@@ -73,7 +75,7 @@ Unlike with MIDI 2.0, the group indexes included in an aggregated MIDI 1.0 endpo
 
 | Property | Source | Notes |
 | -------- | ------ | ------------------ |
-| `MidiEndpointDeviceInformation.EndpointDeviceId` | Windows | The primary identifer for the endpoint, with USB caveats as explained above |
+| `MidiEndpointDeviceInformation.EndpointDeviceId` | Windows | The primary identifer for the endpoint on a single PC, with USB caveats as explained above |
 | `MidiEndpointDeviceInformation.DeviceInstanceId` | Windows | Same use as for USB MIDI 2.0 devices |
 | `MidiGroupTerminalBlock.FirstGroup` | Driver or service | Although the actual indexes are not the same, this ultimately maps to a KS Pin / USB Jack through an internal pin map. Each Group is a single MIDI 1.0 port |
 
