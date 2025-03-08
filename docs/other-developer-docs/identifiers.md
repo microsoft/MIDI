@@ -6,6 +6,8 @@ parent: For Developers
 
 # MIDI Identifiers
 
+> **IMPORTANT NOTE**: While in development, the actual identifiers may change. Once we release officially to production Windows, the identifiers will be consistent as described below.
+
 In the WinMM API today, the port name is often used as a unique identifier, stored in files, and otherwise used in comparisons when checking to see if the required MIDI devices are connected to the PC. They were never intended to be used this way, but because the Port numbers would change based upon, among other things, the order in which devices are plugged in, there were no other reasonable options.
 
 We attempted to make the port numbers more "sticky" by keeping them static across device insert/removal events. However, the resulting sparse array of MIDI Ports broke around a third of the WinMM applications (they were not checking the result of the call to open a port, or worse, displayed an error dialog for each failed open). As a result, we had to scrap that approach and return to keeping that array fully populated, and the port numbers mobile.
