@@ -1,5 +1,5 @@
 name: "🕷️ Bug Report"
-description: File a bug report
+description: File a bug report not related to endpoint naming or online documentation
 type: Bug
 title: "[BUG]: "
 labels:
@@ -47,13 +47,14 @@ body:
     description: Where did you discover this bug?
     multiple: false
     options:
-      - Non-Microsoft application using WinMM MIDI 1.0 (Classic API)
-      - Non-Microsoft application using WinRT MIDI 1.0 (Windows 10 MIDI)
-      - Non-Microsoft application using Windows MIDI Services SDK (MIDI 2.0)
+      - Application using WinMM MIDI 1.0 (Classic API)
+      - Application using WinRT MIDI 1.0 (Windows 10 MIDI)
+      - Application using Windows MIDI Services SDK (MIDI 2.0)
       - Windows MIDI Services Settings App
       - Windows MIDI Services Console App
       - Windows MIDI Services PowerShell Components
-      - Other Windows MIDI Servies Tools (midiksinfo, midi1monitor, etc.)
+      - Other Windows MIDI Services Tools (midiksinfo, midi1monitor, etc.)
+      - Directly in Windows MIDI Services SDK
       - Other or Unsure (please indicate in additional notes section below)
   validations:
     required: true   
@@ -66,15 +67,15 @@ body:
     multiple: true
     options:
       - Application Crash
-      - Windows Crash (bluescreen / greenscreen - please include device id from Windows Settings About page)
+      - Windows Crash (please include device id from Windows Settings About page)
       - Cannot receive messages from MIDI 1.0 device
       - Cannot send messages to MIDI 1.0 device
       - Cannot receive messages from MIDI 2.0 device
       - Cannot send messages to MIDI 2.0 device
-      - MIDI messages corrupted or not transmitted correctly (please specify)
-      - MIDI 1.0 (WinMM/WinRT MIDI) Port name not correct (please include details and output of midiksinfo.exe)
+      - MIDI messages corrupted
       - Application not working as expected
-      - MIDI Performance not as expected (please include your tests and details)
+      - Performance not as expected
+      - Windows MIDI Services SDK feature issue
       - Other or Unsure (please indicate in additional notes section below)
   validations:
     required: true   
