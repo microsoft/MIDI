@@ -42,7 +42,7 @@ int __cdecl main(int argc, char* argv[])
         std::cout << "Class not registered. Windows MIDI Services does NOT appear to be installed" << std::endl;
         return 1;
     }
-    else if (hr == E_POINTER)
+    else
     {
         std::cout << "Other error. Unexpected." << std::endl;
         return 1;
