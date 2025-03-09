@@ -1,10 +1,10 @@
 ---
 layout: page
-title: Identifiers
+title: Endpoint Identifiers
 parent: For Developers
 ---
 
-# MIDI Identifiers
+# MIDI Endpoint Identifiers
 
 > **IMPORTANT NOTE**: While in development, the actual identifiers may change. Once we release officially to production Windows, the identifiers will be consistent as described below.
 
@@ -16,7 +16,7 @@ For Windows MIDI Services, we provide additional information that a developer ca
 
 > Endpoint names in Windows MIDI Services are neither unique identifiers nor guaranteed to be static. They should not be used to identify an Endpoint. In addition to new algorithms for naming, the customer can rename the endpoints at will, and shall not be constrained or limited in providing names meaningful to them. **For Windows MIDI Services, the customer is always in control of their setup.**
 
-## What Identifier should I use?
+## What Identifier should I use to find a device?
 
 For Windows MIDI Services, the primary identifier for an endpoint on a single PC is `MidiEndpointDeviceInformation.EndpointDeviceId`. We do everything possible to keep this string consistent within the limitations of the device implementation (see notes below about USB). Although we attempt to make it portable when we can, it's not guaranteed to be portable to other PCs. If you need further identification information, please read on.
 
