@@ -7,13 +7,17 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiEnumerationApiContract, 1)]
     struct MidiDeclaredDeviceIdentity
     {
         // can't declare fixed-size arrays in MIDL 3.0
     
-        UInt8 SystemExclusiveIdByte1;
+        UInt8 SystemExclusiveIdByte1;   // if this value is zero, the actual identity is in bytes 2 and 3
         UInt8 SystemExclusiveIdByte2;
         UInt8 SystemExclusiveIdByte3;
 

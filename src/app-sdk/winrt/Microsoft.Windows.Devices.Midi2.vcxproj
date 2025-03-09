@@ -271,6 +271,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h" />
     <ClInclude Include="MidiNetworkAdvertisedHostAddedEventArgs.h" />
     <ClInclude Include="MidiNetworkAdvertisedHostRemovedEventArgs.h" />
     <ClInclude Include="MidiNetworkAdvertisedHostUpdatedEventArgs.h" />
@@ -392,6 +393,7 @@
     <ClInclude Include="MidiUniqueId.h">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiUniversalSystemExclusiveChannel.h" />
     <ClInclude Include="MidiVirtualDevice.h">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClInclude>
@@ -454,6 +456,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp" />
     <ClCompile Include="MidiNetworkAdvertisedHostAddedEventArgs.cpp" />
     <ClCompile Include="MidiNetworkAdvertisedHostRemovedEventArgs.cpp" />
     <ClCompile Include="MidiNetworkAdvertisedHostUpdatedEventArgs.cpp" />
@@ -663,6 +666,7 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiUniversalSystemExclusiveChannel.cpp" />
     <ClCompile Include="MidiVirtualDevice.cpp">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClCompile>
@@ -723,6 +727,7 @@
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
+    <Midl Include="MidiApiContracts.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiDeclaredEndpointInfo.idl" />
@@ -798,6 +803,8 @@
     <Midl Include="MidiStreamConfigRequestedSettings.idl" />
     <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl" />
     <Midl Include="MidiUniqueId.idl" />
+    <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
+    <Midl Include="MidiUniversalSystemExclusiveMessageBuilder.idl" />
     <Midl Include="MidiVirtualDevice.idl" />
     <Midl Include="MidiVirtualDeviceCreationConfig.idl" />
     <Midl Include="MidiVirtualDeviceManager.idl" />

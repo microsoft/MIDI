@@ -1,0 +1,64 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiApiContracts.idl";
+
+
+import "IMidiUniversalPacket.idl";
+
+
+import "MidiMessage32.idl";
+import "MidiMessage64.idl";
+import "MidiMessage96.idl";
+import "MidiMessage128.idl";
+
+import "MidiGroup.idl";
+import "MidiChannel.idl";
+import "MidiUniversalSystemExclusiveChannel.idl";
+
+import "MidiDeclaredDeviceIdentity.idl";
+
+
+namespace Microsoft.Windows.Devices.Midi2.Messages
+{
+    [experimental]
+    static runtimeclass MidiUniversalSystemExclusiveMessageBuilder
+    {
+
+        static Microsoft.Windows.Devices.Midi2.MidiMessage64 BuildIdentityRequest(
+            UInt64 timestamp,
+            Microsoft.Windows.Devices.Midi2.MidiUniversalSystemExclusiveChannel systemExclusiveChannel
+            );
+
+        static Windows.Foundation.Collections.IVector<Microsoft.Windows.Devices.Midi2.MidiMessage64> BuildIdentityRequestReply(
+            UInt64 timestamp,
+            Microsoft.Windows.Devices.Midi2.MidiDeclaredDeviceIdentity identity
+            );
+
+        static Microsoft.Windows.Devices.Midi2.MidiMessage64 BuildWait(
+            UInt64 timestamp
+            );
+
+        static Microsoft.Windows.Devices.Midi2.MidiMessage64 BuildCancel(
+            UInt64 timestamp
+            );
+
+        static Microsoft.Windows.Devices.Midi2.MidiMessage64 BuildNAK(
+            UInt64 timestamp
+            );
+
+        static Microsoft.Windows.Devices.Midi2.MidiMessage64 BuildACK(
+            UInt64 timestamp
+            );
+
+        // TODO: MIDI CI requests / responses, unless we want to package them in a different class
+
+
+    }
+}
+

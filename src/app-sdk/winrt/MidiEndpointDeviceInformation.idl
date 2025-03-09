@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiGroupTerminalBlock.idl";
 import "MidiProtocolEnum.idl";
 import "MidiEndpointNativeDataFormatEnum.idl";
@@ -23,6 +26,7 @@ import "MidiEndpointDeviceInformationFiltersEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiEnumerationApiContract, 1)]
     [default_interface]
     runtimeclass MidiEndpointDeviceInformation : Windows.Foundation.IStringable
     {

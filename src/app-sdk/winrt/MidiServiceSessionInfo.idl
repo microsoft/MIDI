@@ -7,10 +7,14 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiServiceSessionConnectionInfo.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Reporting
 {
+    [contract(MidiReportingApiContract, 1)]
     [default_interface]
     runtimeclass MidiServiceSessionInfo
     {

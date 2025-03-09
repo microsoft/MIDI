@@ -10,19 +10,26 @@
 import "MidiApiContracts.idl";
 
 
+// Unlike the 0-15 of normal MIDI channels, this kind of channel runs 
+// from 0-127, with 127 being a special value meaning to ignore all 
+// channel information and just proceed processing the message
+
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
     [default_interface]
-    runtimeclass MidiGroup : Windows.Foundation.IStringable
+    runtimeclass MidiUniversalSystemExclusiveChannel : Windows.Foundation.IStringable
     {
-        MidiGroup();
-        MidiGroup(UInt8 index);
+        MidiUniversalSystemExclusiveChannel();
+        MidiUniversalSystemExclusiveChannel(UInt8 index);
 
         static String ShortLabel{ get; };
         static String ShortLabelPlural{ get; };
         static String LongLabel{ get; };
         static String LongLabelPlural{ get; };
+
+        // returns a channel with the special value of 127
+        static MidiUniversalSystemExclusiveChannel DisregardChannel{ get; };
 
         UInt8 Index;
         UInt8 DisplayValue{ get; };

@@ -1,0 +1,90 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [contractversion(1)]
+    apicontract MidiCoreApiContract { };
+
+    [contractversion(1)]
+    apicontract MidiEnumerationApiContract{ };
+
+    [contractversion(1)]
+    apicontract MidiSessionAndConnectionApiContract{ };
+}
+
+namespace Microsoft.Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contractversion(1)]
+    apicontract MidiCapabilityInquiryApiContract { };
+}
+
+namespace Microsoft.Windows.Devices.Midi2.ClientPlugins
+{
+    [contractversion(1)]
+    apicontract MidiClientPluginsApiContract { };
+}
+
+namespace Microsoft.Windows.Devices.Midi2.Endpoints
+{
+    namespace Loopback
+    {
+        [contractversion(1)]
+        apicontract MidiEndpointsLoopbackApiContract { };
+    }
+
+    namespace Virtual
+    {
+        [contractversion(1)]
+        apicontract MidiEndpointsVirtualApiContract { };
+    }
+
+    //namespace Network
+    //{
+    //    [contractversion(1)]
+    //    apicontract MidiEndpointsNetworkApiContract { };
+    //}
+
+}
+
+//namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
+//{
+//    [contractversion(1)]
+//    apicontract MidiVirtualPatchBayApiContract { };
+//}
+
+namespace Microsoft.Windows.Devices.Midi2.Messages
+{
+    [contractversion(1)]
+    apicontract MidiMessageUtilitiesApiContract { };
+}
+
+namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
+{
+    [contractversion(1)]
+    apicontract MidiServiceConfigApiContract { };
+}
+
+namespace Microsoft.Windows.Devices.Midi2.Diagnostics
+{
+    [contractversion(1)]
+    apicontract MidiDiagnosticsApiContract { };
+}
+
+namespace Microsoft.Windows.Devices.Midi2.Reporting
+{
+    [contractversion(1)]
+    apicontract MidiReportingApiContract { };
+}
+
+//namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
+//{
+//    [contractversion(1)]
+//    apicontract MidiUtilitiesSysExTransferApiContract { };
+//}
+

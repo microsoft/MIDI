@@ -6,18 +6,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "pch.h"
+#include "MidiUniversalSystemExclusiveChannel.h"
+#include "MidiUniversalSystemExclusiveChannel.g.cpp"
 
-import "MidiApiContracts.idl";
-
-
-namespace Microsoft.Windows.Devices.Midi2
+namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
-    [contract(MidiEnumerationApiContract, 1)]
-    enum MidiFunctionBlockUIHint
+    winrt::hstring MidiUniversalSystemExclusiveChannel::ToString()
     {
-        Unknown =       0x0,
-        Receiver =      0x1,
-        Sender =        0x2,
-        Bidirectional = 0x3
-    };
+        return winrt::to_hstring(std::format("{} {}", winrt::to_string(midi2::MidiUniversalSystemExclusiveChannel::ShortLabel()), DisplayValue()));
+    }
 }

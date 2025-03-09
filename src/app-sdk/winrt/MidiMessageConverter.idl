@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
@@ -17,6 +20,7 @@ import "MidiMessage32.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
+    [contract(MidiMessageUtilitiesApiContract, 1)]
     static runtimeclass MidiMessageConverter
     {
         static Microsoft.Windows.Devices.Midi2.MidiMessage32 ConvertMidi1Message(

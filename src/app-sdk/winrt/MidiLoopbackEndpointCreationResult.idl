@@ -7,8 +7,12 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
+    [contract(MidiEndpointsLoopbackApiContract, 1)]
     struct MidiLoopbackEndpointCreationResult
     {
         Boolean Success;

@@ -7,12 +7,16 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiServiceTransportPluginInfo.idl";
 import "MidiServiceMessageProcessingPluginInfo.idl";
 import "MidiServiceSessionInfo.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Reporting
 {
+    [contract(MidiReportingApiContract, 1)]
     static runtimeclass MidiReporting
     {
         static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();

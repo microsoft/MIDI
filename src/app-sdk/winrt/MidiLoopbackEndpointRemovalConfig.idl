@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiLoopbackEndpointDefinition.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
@@ -14,7 +17,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
-    [experimental]
+    [contract(MidiEndpointsLoopbackApiContract, 1)]
     [default_interface]
     runtimeclass MidiLoopbackEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {

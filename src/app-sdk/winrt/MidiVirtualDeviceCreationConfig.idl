@@ -6,6 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+import "MidiApiContracts.idl";
+
+
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiDeclaredEndpointInfo.idl";
 import "MidiDeclaredDeviceIdentity.idl";
@@ -20,6 +23,7 @@ import "MidiFunctionBlock.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
+    [contract(MidiEndpointsVirtualApiContract, 1)]
     [default_interface]
     runtimeclass MidiVirtualDeviceCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {

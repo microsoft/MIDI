@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiEndpointDeviceInformationFiltersEnum.idl";
 import "MidiEndpointDeviceInformation.idl";
 
@@ -16,6 +19,7 @@ import "MidiEndpointDeviceInformationAddedEventArgs.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiEnumerationApiContract, 1)]
     [default_interface]
     runtimeclass MidiEndpointDeviceWatcher
     {

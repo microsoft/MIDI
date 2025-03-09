@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "IMidiUniversalPacket.idl";
 
 import "MidiMessage32.idl";
@@ -22,6 +25,7 @@ import "MidiMessageStruct.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiSessionAndConnectionApiContract, 1)]
     [default_interface]
     runtimeclass MidiMessageReceivedEventArgs
     {
