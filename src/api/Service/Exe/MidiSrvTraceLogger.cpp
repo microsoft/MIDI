@@ -20,7 +20,7 @@ void CMidiSrvTraceLogger::LogMidi2CreateClient(
         TraceLoggingHResult(hr, "HResult"),
         TraceLoggingValue(deviceInstanceId, "DeviceInstanceId"),
         TraceLoggingValue(processName, "ProcessName"),
-        TraceLoggingGuid(api, "CallingApi"),
+        TraceLoggingGuid(api, "CallingComponent"),
         TraceLoggingUInt8((static_cast<UINT8>(flow)), "Flow"),
         TraceLoggingUInt8((static_cast<UINT8>(format)), "DataFormat"),
         TraceLoggingValue(clientProcessId, "ClientProcessId")

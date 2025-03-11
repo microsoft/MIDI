@@ -95,14 +95,14 @@ namespace json = ::winrt::Windows::Data::Json;
 
 class CMidi2KSMidiEndpointManager;
 class CMidi2KSMidiConfigurationManager;
-class CMidi2KSMidiBiDi;
+class CMidi2KSMidiBidi;
 class TransportState;
 
 #include "Midi2.KSTransport.h"
 #include "Midi2.KSMidi.h"
 #include "Midi2.KSMidiIn.h"
 #include "Midi2.KSMidiOut.h"
-#include "Midi2.KSMidiBiDi.h"
+#include "Midi2.KSMidiBidi.h"
 #include "Midi2.KSMidiEndpointManager.h"
 #include "Midi2.KSMidiConfigurationManager.h"
 #include "Midi2.KSMidiPluginMetadataProvider.h"

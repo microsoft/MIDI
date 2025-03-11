@@ -91,8 +91,8 @@ class CMidi2DiagnosticsMidiConfigurationManager;
 
 //#include "Midi2.LoopbackMidiIn.h"
 //#include "Midi2.LoopbackMidiOut.h"
-#include "Midi2.LoopbackMidiBiDi.h"
-#include "Midi2.PingMidiBiDi.h"
+#include "Midi2.LoopbackMidiBidi.h"
+#include "Midi2.PingMidiBidi.h"
 
 #include "Midi2.DiagnosticsMidiConfigurationManager.h"
 

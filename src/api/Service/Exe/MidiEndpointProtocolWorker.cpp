@@ -183,14 +183,14 @@ CMidiEndpointProtocolWorker::Start(
     try
     {
         // we do this here instead of in initialize so this is created on the worker thread
-        if (!m_midiBiDiDevice)
+        if (!m_midiBidiDevice)
         {
             wil::com_ptr_nothrow<IMidiTransport> serviceTransport{ nullptr };
 
             // we only support UMP data format for protocol negotiation
             TRANSPORTCREATIONPARAMS transportCreationParams{ };
             transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
-            transportCreationParams.CallingApi = MIDISRV_APIID;
+            transportCreationParams.CallingComponent = MIDISRV_APIID;
 
             DWORD mmcssTaskId{ 0 };
             LONGLONG context{ 0 };
@@ -203,10 +203,10 @@ CMidiEndpointProtocolWorker::Start(
             RETURN_IF_NULL_ALLOC(serviceTransport);
 
             // create the bidi device
-            RETURN_IF_FAILED(serviceTransport->Activate(__uuidof(IMidiBiDi), (void**)&m_midiBiDiDevice));
-            RETURN_IF_NULL_ALLOC(m_midiBiDiDevice);
+            RETURN_IF_FAILED(serviceTransport->Activate(__uuidof(IMidiBidirectional), (void**)&m_midiBidiDevice));
+            RETURN_IF_NULL_ALLOC(m_midiBidiDevice);
 
-            RETURN_IF_FAILED(m_midiBiDiDevice->Initialize(
+            RETURN_IF_FAILED(m_midiBidiDevice->Initialize(
                 (LPCWSTR)(m_endpointDeviceInterfaceId.c_str()),
                 &transportCreationParams,
                 &mmcssTaskId,
@@ -857,7 +857,7 @@ CMidiEndpointProtocolWorker::RequestAllFunctionBlocks()
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_POINTER, m_midiBiDiDevice);
+    RETURN_HR_IF_NULL(E_POINTER, m_midiBidiDevice);
 
     // if we're not in initial discovery and the function blocks are static, we don't issue another request
     if (!m_inInitialFunctionBlockDiscovery && m_functionBlocksAreStatic)
@@ -873,7 +873,7 @@ CMidiEndpointProtocolWorker::RequestAllFunctionBlocks()
         MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_MESSAGE_ALL_FILTER_FLAGS);
 
     // send it immediately
-    RETURN_IF_FAILED(m_midiBiDiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0));
+    RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0));
 
     return S_OK;
 }
@@ -891,7 +891,7 @@ CMidiEndpointProtocolWorker::RequestAllEndpointDiscoveryInformation()
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_POINTER, m_midiBiDiDevice);
+    RETURN_HR_IF_NULL(E_POINTER, m_midiBidiDevice);
 
     internal::PackedUmp128 ump{};
 
@@ -903,7 +903,7 @@ CMidiEndpointProtocolWorker::RequestAllEndpointDiscoveryInformation()
     internal::SetMidiWordMostSignificantByte4(ump.word1, filterBitmap);
 
     // send it immediately
-    RETURN_IF_FAILED(m_midiBiDiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0));
+    RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -932,7 +932,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_POINTER, m_midiBiDiDevice);
+    RETURN_HR_IF_NULL(E_POINTER, m_midiBidiDevice);
 
     // see if all is what we want. If not, we'll send a request to change configuration.
 
@@ -960,7 +960,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
             m_alreadyTriedToNegotiationOnce = true;
 
             // send it immediately
-            RETURN_IF_FAILED(m_midiBiDiDevice->SendMidiMessage((byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0));
+            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0));
 
             return S_OK;
         }
@@ -979,7 +979,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
 
             LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
 
-            RETURN_IF_FAILED(m_midiBiDiDevice->SendMidiMessage((byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
+            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
             
             return S_OK;
         }
@@ -996,7 +996,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
 
         LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
 
-        RETURN_IF_FAILED(m_midiBiDiDevice->SendMidiMessage((byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
+        RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
 
         return S_OK;
     }
@@ -1019,10 +1019,10 @@ CMidiEndpointProtocolWorker::Shutdown()
     // signal to stop worker thread
     EndProcessing();
 
-    if (m_midiBiDiDevice)
+    if (m_midiBidiDevice)
     {
-        m_midiBiDiDevice->Shutdown();
-        m_midiBiDiDevice.reset();
+        m_midiBidiDevice->Shutdown();
+        m_midiBidiDevice.reset();
     }
 
     //if (m_sessionTracker)

@@ -50,7 +50,7 @@ typedef struct MIDISRV_CLIENTCREATION_PARAMS
     MidiDataFormats DataFormat;
     MidiFlow     Flow;
     ULONG        BufferSize;
-    GUID         CallingApi;
+    GUID         CallingComponent;
 } MIDISRV_CLIENTCREATION_PARAMS, *PMIDISRV_CLIENTCREATION_PARAMS;
 
 typedef struct MIDISRV_CLIENT

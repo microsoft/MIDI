@@ -24,7 +24,7 @@ public:
     STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT length, _In_ LONGLONG position, _In_ LONGLONG context);
 
     STDMETHOD(SetGroupTransforms)(_In_ std::map<uint8_t, uint8_t> groupTransformMap);
-    STDMETHOD(SetEndpointBiDi)(_In_ LPCWSTR resolvedEndpointDeviceInterfaceId, _In_ IMidiBiDi* destinationEndpointBiDi);
+    STDMETHOD(SetEndpointBidi)(_In_ LPCWSTR resolvedEndpointDeviceInterfaceId, _In_ IMidiBidirectional* destinationEndpointBidi);
 
     STDMETHOD(Cleanup)();
 
@@ -35,7 +35,7 @@ private:
     GUID m_endpointAbstractionId{ };
     std::wstring m_resolvedEndpointDeviceInterfaceId{ };
 
-    wil::com_ptr_nothrow<IMidiBiDi> m_endpointBiDi{ nullptr };
+    wil::com_ptr_nothrow<IMidiBidirectional> m_endpointBidi{ nullptr };
 
     // each entry in this array is the destination group. Index is the source group
     // all values in this array must be valid. Multiple source groups can map to the 

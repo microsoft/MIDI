@@ -95,7 +95,7 @@ HRESULT MidiSrvCreateClient(
                 failure.hr,
                 midiDevice,
                 processName.c_str(),
-                creationParams->CallingApi,
+                creationParams->CallingComponent,
                 creationParams->Flow,
                 creationParams->DataFormat,
                 EmptyProcessId);
@@ -143,7 +143,7 @@ HRESULT MidiSrvCreateClient(
         traceLogger->LogMidi2CreateClient(S_OK,
             midiDevice,
             processName.c_str(),
-            creationParams->CallingApi,
+            creationParams->CallingComponent,
             creationParams->Flow,
             creationParams->DataFormat,
             clientProcessId

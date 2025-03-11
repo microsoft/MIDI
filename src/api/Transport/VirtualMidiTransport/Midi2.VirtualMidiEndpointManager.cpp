@@ -305,7 +305,7 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
      // we need this for removal later
     entry.CreatedShortClientInstanceId = instanceId;
     entry.CreatedClientEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
-    entry.MidiClientBiDi = nullptr;
+    entry.MidiClientBidi = nullptr;
 
     // time to do protocol negotiation, request endpoint metadata, function blocks, etc.
 
@@ -409,8 +409,8 @@ CMidi2VirtualMidiEndpointManager::CreateDeviceSideEndpoint(
     entry.CreatedDeviceEndpointId = internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get());
     entry.CreatedClientEndpointId = L"";
     entry.CreatedShortClientInstanceId = L"";
-    entry.MidiDeviceBiDi = nullptr;
-    entry.MidiClientBiDi = nullptr;
+    entry.MidiDeviceBidi = nullptr;
+    entry.MidiClientBidi = nullptr;
 
     RETURN_IF_FAILED(TransportState::Current().GetEndpointTable()->AddCreatedEndpointDevice(entry));
 

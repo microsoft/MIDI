@@ -15,35 +15,35 @@
 // Endpoint Manager creates device-side endpoint based on configuration
 // 
 // Device App Initializes Device Endpoint
-// - When device-side endpoint BiDi is initialized, the endpoint manager creates the client-side endpoint
+// - When device-side endpoint Bidi is initialized, the endpoint manager creates the client-side endpoint
 // - Client endpoint property for which device endpoint it connects to is set in pnp properties
 // - Coupling between device-side and client-side endpoints is added to device table
 // - Each device is a single device endpoint which does not support multi-client
 // 
 // Client App Connects to Client Endpoint
 // - Client Endpoint is Initialized
-// - Client endpoint BiDi is added to device table. This endpoint supports multiclient.
+// - Client endpoint Bidi is added to device table. This endpoint supports multiclient.
 //  
 // Client app calls SendMessage
-// - Client BiDi receives Callback
-// - Client BiDi calls SendMessage on device side
-// - Device BiDi calls Callback on Device app
+// - Client Bidi receives Callback
+// - Client Bidi calls SendMessage on device side
+// - Device Bidi calls Callback on Device app
 // - Client (Device app is the client here) Pipe xproc stuff
 // - Device app receives Callback
 // 
 // Device app calls SendMessage
-// - Device BiDi receives Callback
-// - Device BiDi calls SendMessage on client BiDi
-// - Client BiDi calls Callback on Client app
+// - Device Bidi receives Callback
+// - Device Bidi calls SendMessage on client Bidi
+// - Client Bidi calls Callback on Client app
 // - Client Pipe xproc stuff
 // - Client app receives Callback
 //
 // Client app closes connection
-// - Client BiDi is torn down
+// - Client Bidi is torn down
 // - Client is removed from device table
 // 
 // Device app closes connection
-// - Device BiDi is torn down
+// - Device Bidi is torn down
 // - All clients connected to that device are removed from the routing table, and are torn down
 //
 //
@@ -53,8 +53,8 @@ class MidiEndpointTable
 public:
     HRESULT AddCreatedEndpointDevice(_In_ MidiVirtualDeviceEndpointEntry& entry) noexcept;
  
-    HRESULT OnDeviceConnected(_In_ std::wstring const deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* deviceBiDi) noexcept;
-    HRESULT OnClientConnected(_In_ std::wstring const clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBiDi* clientBiDi) noexcept;
+    HRESULT OnDeviceConnected(_In_ std::wstring const deviceEndpointInterfaceId, _In_ CMidi2VirtualMidiBidi* deviceBidi) noexcept;
+    HRESULT OnClientConnected(_In_ std::wstring const clientEndpointInterfaceId, _In_ CMidi2VirtualMidiBidi* clientBidi) noexcept;
 
     HRESULT OnDeviceDisconnected(_In_ std::wstring const deviceEndpointInterfaceId) noexcept;
     HRESULT OnClientDisconnected(_In_ std::wstring const clientEndpointInterfaceId) noexcept;

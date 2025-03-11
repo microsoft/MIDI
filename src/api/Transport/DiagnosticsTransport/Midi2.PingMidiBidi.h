@@ -10,10 +10,10 @@
 
 //#include "MidiPingBidiDevice.h"
 
-class CMidi2PingMidiBiDi :
+class CMidi2PingMidiBidi :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiBiDi,
+    IMidiBidirectional,
     IMidiCallback>
 {
 public:

@@ -18,7 +18,7 @@ CMidi2VirtualPatchBayAbstraction::Activate(
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == Interface);
 
-    if (__uuidof(IMidiBiDi) == Riid)
+    if (__uuidof(IMidiBidirectional) == Riid)
     {
         TraceLoggingWrite(
             MidiVirtualPatchBayAbstractionTelemetryProvider::Provider(),
@@ -26,7 +26,7 @@ CMidi2VirtualPatchBayAbstraction::Activate(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiBiDi is not supported by this abstraction", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            TraceLoggingWideString(L"IMidiBidirectional is not supported by this abstraction", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
         *Interface = nullptr;

@@ -17,7 +17,7 @@ using namespace winrt::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
-// if this is defined, then KSMidiEndpointManager will publish a BiDi endpoint
+// if this is defined, then KSMidiEndpointManager will publish a Bidi endpoint
 // for pairs of midi in & out endpoints on the same filter.
 
 #define CREATE_KS_BIDI_SWDS

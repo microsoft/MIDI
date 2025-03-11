@@ -12,7 +12,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiBiDi::Initialize(
+CMidi2VirtualMidiBidi::Initialize(
     LPCWSTR endpointId,
     PTRANSPORTCREATIONPARAMS,
     DWORD *,
@@ -50,7 +50,7 @@ CMidi2VirtualMidiBiDi::Initialize(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Initializing device-side BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Initializing device-side Bidi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                 TraceLoggingGuid(m_sessionId, "session id")
             );
@@ -67,7 +67,7 @@ CMidi2VirtualMidiBiDi::Initialize(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Initializing client-side BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Initializing client-side Bidi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                 TraceLoggingGuid(m_sessionId, "session id")
             );
@@ -105,7 +105,7 @@ CMidi2VirtualMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2VirtualMidiBiDi::Shutdown()
+CMidi2VirtualMidiBidi::Shutdown()
 {
     TraceLoggingWrite(
         MidiVirtualMidiTransportTelemetryProvider::Provider(),
@@ -122,9 +122,9 @@ CMidi2VirtualMidiBiDi::Shutdown()
     m_callback = nullptr;
     m_callbackContext = 0;
 
-    //UnlinkAllAssociatedBiDi();
-    m_linkedBiDi = nullptr;
-    m_linkedBiDiCallback = nullptr;
+    //UnlinkAllAssociatedBidi();
+    m_linkedBidi = nullptr;
+    m_linkedBidiCallback = nullptr;
 
 
     if (m_isDeviceSide)
@@ -141,7 +141,7 @@ CMidi2VirtualMidiBiDi::Shutdown()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiBiDi::SendMidiMessage(
+CMidi2VirtualMidiBidi::SendMidiMessage(
     PVOID Message,
     UINT Size,
     LONGLONG Position
@@ -167,9 +167,9 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, Message);
     RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
-    if (m_linkedBiDiCallback != nullptr)
+    if (m_linkedBidiCallback != nullptr)
     {
-        RETURN_IF_FAILED(m_linkedBiDiCallback->Callback(Message, Size, Position, m_callbackContext));
+        RETURN_IF_FAILED(m_linkedBidiCallback->Callback(Message, Size, Position, m_callbackContext));
 
         return S_OK;
     }
@@ -202,7 +202,7 @@ CMidi2VirtualMidiBiDi::SendMidiMessage(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualMidiBiDi::Callback(
+CMidi2VirtualMidiBidi::Callback(
     PVOID Message,
     UINT Size,
     LONGLONG Position,

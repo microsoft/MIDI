@@ -8,10 +8,10 @@
 
 #pragma once
 
-class CMidi2LoopbackMidiBiDi :
+class CMidi2LoopbackMidiBidi :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiBiDi,
+    IMidiBidirectional,
     IMidiCallback>
 {
 public:
@@ -23,25 +23,25 @@ public:
 
     void AssociationId(_In_ std::wstring newId) { m_associationId = newId; }
 
-    //void LinkAssociatedBiDi(_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> associatedBiDi) 
+    //void LinkAssociatedBidi(_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> associatedBidi) 
     //{ 
-    //    m_associatedBiDi = associatedBiDi; 
+    //    m_associatedBidi = associatedBidi; 
 
-    //    LOG_IF_FAILED(associatedBiDi->QueryInterface(__uuidof(IMidiCallback), (void**)&m_associatedBiDiCallback));
+    //    LOG_IF_FAILED(associatedBidi->QueryInterface(__uuidof(IMidiCallback), (void**)&m_associatedBidiCallback));
     //}
 
-    //void UnlinkAssociatedBiDi()
+    //void UnlinkAssociatedBidi()
     //{
-    //    m_associatedBiDi = nullptr;
-    //    m_associatedBiDiCallback = nullptr;
+    //    m_associatedBidi = nullptr;
+    //    m_associatedBidiCallback = nullptr;
     //}
 
 private:
     bool m_isEndpointA = false;
 
     std::wstring m_associationId{};
-    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> m_associatedBiDi;
-    //wil::com_ptr_nothrow<IMidiCallback> m_associatedBiDiCallback;
+    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> m_associatedBidi;
+    //wil::com_ptr_nothrow<IMidiCallback> m_associatedBidiCallback;
 
 
     wil::com_ptr_nothrow <IMidiCallback> m_callback{ nullptr };

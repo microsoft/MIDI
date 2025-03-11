@@ -13,7 +13,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2PingMidiBiDi::Initialize(
+CMidi2PingMidiBidi::Initialize(
     LPCWSTR endpointId,
     PTRANSPORTCREATIONPARAMS creationParams,
     DWORD*,
@@ -59,7 +59,7 @@ CMidi2PingMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2PingMidiBiDi::Shutdown()
+CMidi2PingMidiBidi::Shutdown()
 {
     TraceLoggingWrite(
         MidiDiagnosticsTransportTelemetryProvider::Provider(),
@@ -82,7 +82,7 @@ CMidi2PingMidiBiDi::Shutdown()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2PingMidiBiDi::SendMidiMessage(
+CMidi2PingMidiBidi::SendMidiMessage(
     PVOID message,
     UINT size,
     LONGLONG timestamp
@@ -98,7 +98,7 @@ CMidi2PingMidiBiDi::SendMidiMessage(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2PingMidiBiDi::Callback(
+CMidi2PingMidiBidi::Callback(
     PVOID message,
     UINT size,
     LONGLONG timestamp,

@@ -38,9 +38,9 @@ public:
     TEST_METHOD(TestMidiKSTransportCreationOrder_UMP);
     TEST_METHOD(TestMidiKSTransportCreationOrder_ByteStream);
     TEST_METHOD(TestMidiKSTransportCreationOrder_Any);
-    TEST_METHOD(TestMidiKSTransportBiDi_UMP);
-    TEST_METHOD(TestMidiKSTransportBiDi_ByteStream);
-    TEST_METHOD(TestMidiKSTransportBiDi_Any);
+    TEST_METHOD(TestMidiKSTransportBidi_UMP);
+    TEST_METHOD(TestMidiKSTransportBidi_ByteStream);
+    TEST_METHOD(TestMidiKSTransportBidi_Any);
     TEST_METHOD(TestMidiKSIO_Latency_UMP);
     TEST_METHOD(TestMidiKSIO_Latency_ByteStream);
     TEST_METHOD(TestMidiKSIOSlowMessages_Latency_UMP);
@@ -58,9 +58,9 @@ public:
     TEST_METHOD(TestMidiSrvTransportCreationOrder_UMP_MidiOne);
     TEST_METHOD(TestMidiSrvTransportCreationOrder_ByteStream_MidiOne);
     TEST_METHOD(TestMidiSrvTransportCreationOrder_Any_MidiOne);
-    TEST_METHOD(TestMidiSrvTransportBiDi_UMP);
-    TEST_METHOD(TestMidiSrvTransportBiDi_ByteStream);
-    TEST_METHOD(TestMidiSrvTransportBiDi_Any);
+    TEST_METHOD(TestMidiSrvTransportBidi_UMP);
+    TEST_METHOD(TestMidiSrvTransportBidi_ByteStream);
+    TEST_METHOD(TestMidiSrvTransportBidi_Any);
     TEST_METHOD(TestMidiSrvIO_Latency_UMP);
     TEST_METHOD(TestMidiSrvIO_Latency_ByteStream);
     TEST_METHOD(TestMidiSrvIOSlowMessages_Latency_UMP);
@@ -83,15 +83,15 @@ public:
     TEST_METHOD(TestMidiSrvMultiClient_ByteStream_Any_MidiOne);
     TEST_METHOD(TestMidiSrvMultiClient_Any_UMP_MidiOne);
     TEST_METHOD(TestMidiSrvMultiClient_UMP_Any_MidiOne);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_UMP_UMP);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_ByteStream_ByteStream);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_Any_Any);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_UMP_ByteStream);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_ByteStream_UMP);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_Any_ByteStream);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_ByteStream_Any);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_Any_UMP);
-    TEST_METHOD(TestMidiSrvMultiClientBiDi_UMP_Any);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_UMP_UMP);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_ByteStream_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_Any_Any);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_UMP_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_ByteStream_UMP);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_Any_ByteStream);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_ByteStream_Any);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_Any_UMP);
+    TEST_METHOD(TestMidiSrvMultiClientBidi_UMP_Any);
 
     STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
     {
@@ -110,10 +110,10 @@ public:
 private:
     void TestMidiTransport(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiTransportCreationOrder(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
-    void TestMidiTransportBiDi(_In_ REFIID, _In_ MidiDataFormats);
+    void TestMidiTransportBidi(_In_ REFIID, _In_ MidiDataFormats);
     void TestMidiIO_Latency(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiSrvMultiClient(_In_ MidiDataFormats, _In_ MidiDataFormats, _In_ BOOL);
-    void TestMidiSrvMultiClientBiDi(_In_ MidiDataFormats, _In_ MidiDataFormats);
+    void TestMidiSrvMultiClientBidi(_In_ MidiDataFormats, _In_ MidiDataFormats);
 
     std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
 

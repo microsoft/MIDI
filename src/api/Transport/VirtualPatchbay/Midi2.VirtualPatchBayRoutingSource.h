@@ -41,7 +41,7 @@ private:
     std::array<bool, 16> m_includedGroupIndexes{ true };
 
 
-    wil::com_ptr<IMidiBiDi> m_sourceEndpointBiDi{ nullptr };
+    wil::com_ptr<IMidiBidirectional> m_sourceEndpointBidi{ nullptr };
 
 };
 

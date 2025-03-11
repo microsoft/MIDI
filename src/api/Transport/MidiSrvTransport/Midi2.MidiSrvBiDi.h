@@ -8,10 +8,10 @@
 
 #pragma once
 
-class CMidi2MidiSrvBiDi : 
+class CMidi2MidiSrvBidi : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiBiDi>
+        IMidiBidirectional>
 {
 public:
     STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSPORTCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ GUID));

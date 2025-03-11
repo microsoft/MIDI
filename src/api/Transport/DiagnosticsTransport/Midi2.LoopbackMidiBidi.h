@@ -11,10 +11,10 @@
 //#include "MidiLoopbackBidiDevice.h"
 //#include "MidiPingBidiDevice.h"
 
-class CMidi2LoopbackMidiBiDi : 
+class CMidi2LoopbackMidiBidi : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiBiDi,
+        IMidiBidirectional,
         IMidiCallback>
 {
 public:
