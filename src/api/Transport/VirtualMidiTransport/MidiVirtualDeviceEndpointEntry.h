@@ -24,22 +24,22 @@ struct MidiVirtualDeviceEndpointEntry
 
     bool UMPOnly{ false };
 
-    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiDeviceBiDi{ nullptr };
+    wil::com_ptr_nothrow<CMidi2VirtualMidiBidi> MidiDeviceBidi{ nullptr };
     //wil::com_ptr_nothrow<IMidiCallback> MidiDeviceCallback{ nullptr };
 
-    wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi> MidiClientBiDi{ nullptr };
+    wil::com_ptr_nothrow<CMidi2VirtualMidiBidi> MidiClientBidi{ nullptr };
     //wil::com_ptr_nothrow<IMidiCallback> MidiClientCallback{ nullptr };
 
 
-    //   std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi>> MidiClientConnections{ };
+    //   std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBidi>> MidiClientConnections{ };
 
     ~MidiVirtualDeviceEndpointEntry()
     {
         //MidiClientConnections.clear();
 
-        if (MidiDeviceBiDi)
+        if (MidiDeviceBidi)
         {
-            MidiDeviceBiDi.reset();
+            MidiDeviceBidi.reset();
         }
 
         //if (MidiDeviceCallback)
@@ -47,9 +47,9 @@ struct MidiVirtualDeviceEndpointEntry
         //    MidiDeviceCallback.reset();
         //}
 
-        if (MidiClientBiDi)
+        if (MidiClientBidi)
         {
-            MidiClientBiDi.reset();
+            MidiClientBidi.reset();
         }
 
         //if (MidiClientCallback)

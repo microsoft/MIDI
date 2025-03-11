@@ -12,7 +12,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2LoopbackMidiBiDi::Initialize(
+CMidi2LoopbackMidiBidi::Initialize(
     LPCWSTR endpointId,
     PTRANSPORTCREATIONPARAMS creationParams,
     DWORD *,
@@ -48,14 +48,14 @@ CMidi2LoopbackMidiBiDi::Initialize(
     std::wstring id{ endpointId };
     internal::InPlaceToLower(id);
 
-    std::wstring pingBiDiId{ DEFAULT_PING_BIDI_ID };
-    internal::InPlaceToLower(pingBiDiId);
+    std::wstring pingBidiId{ DEFAULT_PING_BIDI_ID };
+    internal::InPlaceToLower(pingBidiId);
 
-    std::wstring loopBiDiAId{ DEFAULT_LOOPBACK_BIDI_A_ID };
-    internal::InPlaceToLower(loopBiDiAId);
+    std::wstring loopBidiAId{ DEFAULT_LOOPBACK_BIDI_A_ID };
+    internal::InPlaceToLower(loopBidiAId);
 
-    std::wstring loopBiDiBId{ DEFAULT_LOOPBACK_BIDI_B_ID };
-    internal::InPlaceToLower(loopBiDiBId);
+    std::wstring loopBidiBId{ DEFAULT_LOOPBACK_BIDI_B_ID };
+    internal::InPlaceToLower(loopBidiBId);
 
     
     // Both loopback endpoints share the same internal device as a simple way of routing between the two. 
@@ -65,7 +65,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
     m_LoopbackMidiDevice = nullptr;
     m_PingMidiDevice = nullptr;
 
-    if (id.find(pingBiDiId) != std::wstring::npos)
+    if (id.find(pingBidiId) != std::wstring::npos)
     {
         // ping bidi endpoint
 
@@ -74,7 +74,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
         m_PingMidiDevice = (MidiPingBidiDevice*)(MidiDeviceTable::Current().GetPingDevice());
         m_PingMidiDevice->SetCallback(this, 0);
     }
-    else if (id.find(loopBiDiAId) != std::wstring::npos)
+    else if (id.find(loopBidiAId) != std::wstring::npos)
     {
         // bidi endpoint A
 
@@ -82,7 +82,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
         m_LoopbackMidiDevice = (MidiLoopbackBidiDevice*)(MidiDeviceTable::Current().GetBidiDevice());
         m_LoopbackMidiDevice->SetCallbackA(this, 0);
     }
-    else if (id.find(loopBiDiBId) != std::wstring::npos)
+    else if (id.find(loopBidiBId) != std::wstring::npos)
     {
         // bidi endpoint B
 
@@ -101,7 +101,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2LoopbackMidiBiDi::Shutdown()
+CMidi2LoopbackMidiBidi::Shutdown()
 {
     TraceLoggingWrite(
         MidiDiagnosticsTransportTelemetryProvider::Provider(),
@@ -135,7 +135,7 @@ CMidi2LoopbackMidiBiDi::Shutdown()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2LoopbackMidiBiDi::SendMidiMessage(
+CMidi2LoopbackMidiBidi::SendMidiMessage(
     PVOID message,
     UINT size,
     LONGLONG timestamp
@@ -163,7 +163,7 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2LoopbackMidiBiDi::Callback(
+CMidi2LoopbackMidiBidi::Callback(
     PVOID message,
     UINT size,
     LONGLONG timestamp,

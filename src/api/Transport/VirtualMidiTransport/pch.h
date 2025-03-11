@@ -89,14 +89,14 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 
 class CMidi2VirtualMidiEndpointManager;
-class CMidi2VirtualMidiBiDi;
+class CMidi2VirtualMidiBidi;
 class TransportState;
 
 #include "MidiVirtualDeviceEndpointEntry.h"
 #include "MidiEndpointTable.h"
 
 #include "Midi2.VirtualMidiTransport.h"
-#include "Midi2.VirtualMidiBiDi.h"
+#include "Midi2.VirtualMidiBidi.h"
 #include "Midi2.VirtualMidiEndpointManager.h"
 #include "Midi2.VirtualMidiConfigurationManager.h"
 #include "TransportState.h"

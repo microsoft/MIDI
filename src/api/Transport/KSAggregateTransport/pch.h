@@ -116,14 +116,14 @@ class CMidi2KSAggregateMidiEndpointManager;
 class CMidi2KSAggregateMidiInProxy;
 class CMidi2KSAggregateMidiOutProxy;
 class CMidi2KSAggregateMidiConfigurationManager;
-class CMidi2KSAggregateMidiBiDi;
+class CMidi2KSAggregateMidiBidi;
 class TransportState;
 
 #include "Midi2.KSAggregateTransport.h"
 #include "Midi2.KSAggregateMidiInProxy.h"
 #include "Midi2.KSAggregateMidiOutProxy.h"
 #include "Midi2.KSAggregateMidi.h"
-#include "Midi2.KSAggregateMidiBiDi.h"
+#include "Midi2.KSAggregateMidiBidi.h"
 #include "Midi2.KSAggregateMidiEndpointManager.h"
 #include "Midi2.KSAggregateMidiConfigurationManager.h"
 #include "Midi2.KSAggregateMidiPluginMetadataProvider.h"

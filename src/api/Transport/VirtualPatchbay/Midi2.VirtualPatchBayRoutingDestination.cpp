@@ -62,7 +62,7 @@ CMidi2VirtualPatchBayRoutingDestination::Callback(
         newData = (byte*)data;
     }
 
-    RETURN_IF_FAILED(m_endpointBiDi->SendMidiMessage(newData, length, position));
+    RETURN_IF_FAILED(m_endpointBidi->SendMidiMessage(newData, length, position));
 
     return S_OK;
 }
@@ -94,12 +94,12 @@ CMidi2VirtualPatchBayRoutingDestination::SetGroupTransforms(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2VirtualPatchBayRoutingDestination::SetEndpointBiDi(
+CMidi2VirtualPatchBayRoutingDestination::SetEndpointBidi(
     LPCWSTR resolvedEndpointDeviceInterfaceId, 
-    IMidiBiDi* destinationEndpointBiDi)
+    IMidiBidirectional* destinationEndpointBidi)
 {
     UNREFERENCED_PARAMETER(resolvedEndpointDeviceInterfaceId);
-    UNREFERENCED_PARAMETER(destinationEndpointBiDi);
+    UNREFERENCED_PARAMETER(destinationEndpointBidi);
 
     return S_OK;
 }

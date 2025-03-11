@@ -540,7 +540,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
 
                 m_sessionActive = true;
 
-                // this is what the BiDi uses when it is created
+                // this is what the Bidi uses when it is created
                 RETURN_IF_FAILED(TransportState::Current().AssociateMidiEndpointWithConnection(m_sessionEndpointDeviceInterfaceId.c_str(), m_remoteHostName, m_remotePort.c_str()));
 
                 RETURN_IF_FAILED(StartOutboundMidiMessageProcessingThread());
@@ -679,7 +679,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
                 m_sessionEndpointDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(newEndpointDeviceInterfaceId);
                 m_sessionDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newDeviceInstanceId);
 
-                // this is what the BiDi uses when it is created
+                // this is what the Bidi uses when it is created
                 RETURN_IF_FAILED(TransportState::Current().AssociateMidiEndpointWithConnection(m_sessionEndpointDeviceInterfaceId.c_str(), m_remoteHostName, m_remotePort.c_str()));
 
                 RETURN_IF_FAILED(StartOutboundMidiMessageProcessingThread());

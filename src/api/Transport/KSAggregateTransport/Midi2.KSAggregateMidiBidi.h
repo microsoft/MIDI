@@ -8,10 +8,10 @@
 
 #pragma once
 
-class CMidi2KSAggregateMidiBiDi :
+class CMidi2KSAggregateMidiBidi :
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiBiDi>
+        IMidiBidirectional>
 {
 public:
 

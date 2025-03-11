@@ -11,7 +11,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2LoopbackMidiBiDi::Initialize(
+CMidi2LoopbackMidiBidi::Initialize(
     LPCWSTR endpointId,
     PTRANSPORTCREATIONPARAMS,
     DWORD *,
@@ -48,7 +48,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Initializing Side-A BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"Initializing Side-A Bidi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
@@ -67,7 +67,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Initializing Side-B BiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"Initializing Side-B Bidi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointId.c_str(), "endpoint id"),
             TraceLoggingWideString(m_associationId.c_str(), "association id")
         );
@@ -127,7 +127,7 @@ CMidi2LoopbackMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2LoopbackMidiBiDi::Shutdown()
+CMidi2LoopbackMidiBidi::Shutdown()
 {
     TraceLoggingWrite(
         MidiLoopbackMidiTransportTelemetryProvider::Provider(),
@@ -145,7 +145,7 @@ CMidi2LoopbackMidiBiDi::Shutdown()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2LoopbackMidiBiDi::SendMidiMessage(
+CMidi2LoopbackMidiBidi::SendMidiMessage(
     PVOID Message,
     UINT Size,
     LONGLONG Position
@@ -216,7 +216,7 @@ CMidi2LoopbackMidiBiDi::SendMidiMessage(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2LoopbackMidiBiDi::Callback(
+CMidi2LoopbackMidiBidi::Callback(
     PVOID Message,
     UINT Size,
     LONGLONG Position,

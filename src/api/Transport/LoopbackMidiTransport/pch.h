@@ -98,7 +98,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 
 class CMidi2LoopbackMidiEndpointManager;
-class CMidi2LoopbackMidiBiDi;
+class CMidi2LoopbackMidiBidi;
 class TransportState;
 
 #include "MidiLoopbackDeviceDefinition.h"
@@ -106,7 +106,7 @@ class TransportState;
 #include "MidiLoopbackDeviceTable.h"
 
 #include "Midi2.LoopbackMidiTransport.h"
-#include "Midi2.LoopbackMidiBiDi.h"
+#include "Midi2.LoopbackMidiBidi.h"
 #include "Midi2.LoopbackMidiEndpointManager.h"
 #include "Midi2.LoopbackMidiConfigurationManager.h"
 #include "TransportWorkQueue.h"

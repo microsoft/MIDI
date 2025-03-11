@@ -30,7 +30,7 @@ typedef enum
     MidiDataFormats_Invalid = 0,
     MidiDataFormats_ByteStream = 0x1,
     MidiDataFormats_UMP = 0x2,
-    MidiDataFormats_Any = 0xFFFF
+    MidiDataFormats_Any = 0xFFFFFFFF
 } MidiDataFormats;
 
 // Enumeration to communicate the direction of flow of midi data, with respect to the midi peripheral.
@@ -54,7 +54,7 @@ typedef enum
 typedef struct
 {
     MidiDataFormats DataFormat;
-    GUID CallingApi;
+    GUID CallingComponent;
 } TRANSPORTCREATIONPARAMS, * PTRANSPORTCREATIONPARAMS;
 
 
@@ -166,7 +166,7 @@ interface IMidiOut : IUnknown
     local,
     uuid(B89BBB45-7001-4BEA-BBD8-C7CC26E7836C)
 ]
-interface IMidiBiDi : IUnknown
+interface IMidiBidirectional : IUnknown
 {
     HRESULT Initialize(
         [in, string, annotation("_In_")] LPCWSTR endpointDeviceInterfaceId,
@@ -180,7 +180,7 @@ interface IMidiBiDi : IUnknown
     HRESULT Shutdown();
 
     // The format of the data sent through SendMidiMessage is determined by the creationParams provided
-    // during IMidiBiDi initialization.
+    // during IMidiBidirectional initialization.
     //
     // The position is specified as either 0, or a QPC.
     // The position should either be 0 indicating that it should be delivered immediately, or the QPC 
@@ -234,7 +234,8 @@ typedef struct
     LPCWSTR CustomEndpointDescription;
 
     // Contents varies by transport, contains a unique identifier that is repeatable
-    // for this endpoint, possibly a guid or peripheral serial number.
+    // for this endpoint on this transport, possibly a guid or peripheral serial number.
+    // This value does not have to be globally unique across all transports.
     LPCWSTR UniqueIdentifier;
     LPCWSTR ManufacturerName;
 

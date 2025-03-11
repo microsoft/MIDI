@@ -15,7 +15,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiBiDi::Initialize(
+CMidi2KSAggregateMidiBidi::Initialize(
     LPCWSTR device,
     PTRANSPORTCREATIONPARAMS creationParams,
     DWORD * mmCssTaskId,
@@ -73,7 +73,7 @@ CMidi2KSAggregateMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2KSAggregateMidiBiDi::Shutdown()
+CMidi2KSAggregateMidiBidi::Shutdown()
 {
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -97,7 +97,7 @@ CMidi2KSAggregateMidiBiDi::Shutdown()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiBiDi::SendMidiMessage(
+CMidi2KSAggregateMidiBidi::SendMidiMessage(
     PVOID data,
     UINT length,
     LONGLONG timestamp

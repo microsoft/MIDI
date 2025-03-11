@@ -37,13 +37,13 @@ public:
 
 
 
-    void RegisterEndpointA(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
+    void RegisterEndpointA(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
         //m_bidiA = endpoint;
         m_callbackA = callback;
     }
 
-    void RegisterEndpointB(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
+    void RegisterEndpointB(/*_In_ wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> endpoint,*/ _In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
         //m_bidiB = endpoint;
         m_callbackB = callback;
@@ -80,8 +80,8 @@ public:
 
 private:
     // these are needed to enable these two to find each other once opened
-    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> m_bidiA{ nullptr };
-    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBiDi> m_bidiB{ nullptr };
+    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> m_bidiA{ nullptr };
+    //wil::com_ptr_nothrow<CMidi2LoopbackMidiBidi> m_bidiB{ nullptr };
 
     wil::com_ptr_nothrow<IMidiCallback> m_callbackA{ nullptr };
     wil::com_ptr_nothrow<IMidiCallback> m_callbackB{ nullptr };
