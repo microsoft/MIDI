@@ -8,10 +8,10 @@
 
 #pragma once
 
-class CMidi2VirtualMidiBiDi :
+class CMidi2VirtualMidiBidi :
     public Microsoft::WRL::RuntimeClass<
     Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-    IMidiBiDi,
+    IMidiBidirectional,
     IMidiCallback>
 {
 public:
@@ -23,26 +23,26 @@ public:
 
     HRESULT LinkAssociatedCallback(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
-        if (m_linkedBiDiCallback != nullptr)
+        if (m_linkedBidiCallback != nullptr)
         {
-            m_linkedBiDiCallback.reset();
+            m_linkedBidiCallback.reset();
         }
 
-        m_linkedBiDiCallback = callback;
+        m_linkedBidiCallback = callback;
 
         return S_OK;
     }
 
     HRESULT UnlinkAssociatedCallback()
     {
-        if (m_linkedBiDi != nullptr)
+        if (m_linkedBidi != nullptr)
         {
-            m_linkedBiDi.reset();
+            m_linkedBidi.reset();
         }
 
-        if (m_linkedBiDiCallback != nullptr)
+        if (m_linkedBidiCallback != nullptr)
         {
-            m_linkedBiDiCallback.reset();
+            m_linkedBidiCallback.reset();
         }
 
         return S_OK;
@@ -54,11 +54,11 @@ public:
     //}
 
 private:
-    wil::com_ptr_nothrow<IMidiBiDi> m_linkedBiDi;
+    wil::com_ptr_nothrow<IMidiBidirectional> m_linkedBidi;
 
-    //std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBiDi>> m_linkedBiDiConnections{};
+    //std::vector<wil::com_ptr_nothrow<CMidi2VirtualMidiBidi>> m_linkedBidiConnections{};
 
-    wil::com_ptr_nothrow<IMidiCallback> m_linkedBiDiCallback;
+    wil::com_ptr_nothrow<IMidiCallback> m_linkedBidiCallback;
     wil::com_ptr_nothrow<IMidiCallback> m_callback;
     LONGLONG m_callbackContext;
 

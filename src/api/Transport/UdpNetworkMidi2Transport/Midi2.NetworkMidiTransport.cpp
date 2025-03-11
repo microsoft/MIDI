@@ -18,7 +18,7 @@ CMidi2NetworkMidiTransport::Activate(
 {
     RETURN_HR_IF(E_INVALIDARG, nullptr == requestedInterface);
 
-    if (__uuidof(IMidiBiDi) == riid)
+    if (__uuidof(IMidiBidirectional) == riid)
     {
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -26,12 +26,12 @@ CMidi2NetworkMidiTransport::Activate(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"IMidiBiDi", MIDI_TRACE_EVENT_INTERFACE_FIELD)
+            TraceLoggingWideString(L"IMidiBidirectional", MIDI_TRACE_EVENT_INTERFACE_FIELD)
         );
 
-        wil::com_ptr_nothrow<IMidiBiDi> midiBiDi;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiBiDi>(&midiBiDi));
-        *requestedInterface = midiBiDi.detach();
+        wil::com_ptr_nothrow<IMidiBidirectional> midiBidi;
+        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2NetworkMidiBidi>(&midiBidi));
+        *requestedInterface = midiBidi.detach();
     }
 
 

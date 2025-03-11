@@ -36,7 +36,7 @@ CMidiDevicePipe::Initialize(
     RETURN_IF_FAILED(CMidiPipe::Initialize(device, creationParams->Flow));
 
     transportCreationParams.DataFormat = creationParams->DataFormat;
-    transportCreationParams.CallingApi = MIDISRV_APIID;
+    transportCreationParams.CallingComponent = MIDISRV_APIID;
 
     // retrieve the transport layer GUID for this peripheral
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
@@ -73,8 +73,8 @@ CMidiDevicePipe::Initialize(
         wil::com_ptr_nothrow<IMidiTransport> midiTransport;
 
         RETURN_IF_FAILED(CoCreateInstance(m_TransportGuid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
-        RETURN_IF_FAILED(midiTransport->Activate(__uuidof(IMidiBiDi), (void**)&m_MidiBiDiDevice));
-        RETURN_IF_FAILED(m_MidiBiDiDevice->Initialize(device, &transportCreationParams, mmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
+        RETURN_IF_FAILED(midiTransport->Activate(__uuidof(IMidiBidirectional), (void**)&m_MidiBidiDevice));
+        RETURN_IF_FAILED(m_MidiBidiDevice->Initialize(device, &transportCreationParams, mmcssTaskId, this, INVALID_GROUP_INDEX, dummySessionId));
     }
     else if (MidiFlowIn == creationParams->Flow)
     {
@@ -184,9 +184,9 @@ CMidiDevicePipe::Shutdown()
     {
         auto lock = m_DevicePipeLock.lock();
 
-        if (m_MidiBiDiDevice)
+        if (m_MidiBidiDevice)
         {
-            LOG_IF_FAILED(m_MidiBiDiDevice->Shutdown());
+            LOG_IF_FAILED(m_MidiBidiDevice->Shutdown());
         }
         if (m_MidiInDevice)
         {
@@ -197,7 +197,7 @@ CMidiDevicePipe::Shutdown()
             LOG_IF_FAILED(m_MidiOutDevice->Shutdown());
         }
 
-        m_MidiBiDiDevice.reset();
+        m_MidiBidiDevice.reset();
         m_MidiInDevice.reset();
         m_MidiOutDevice.reset();
     }
@@ -259,9 +259,9 @@ CMidiDevicePipe::SendMidiMessageNow(
     // only one client may send a message to the device at a time
     auto lock = m_DevicePipeLock.lock();
 
-    if (m_MidiBiDiDevice)
+    if (m_MidiBidiDevice)
     {
-        auto hr = m_MidiBiDiDevice->SendMidiMessage(data, length, timestamp);
+        auto hr = m_MidiBidiDevice->SendMidiMessage(data, length, timestamp);
         RETURN_IF_FAILED(hr);
 
         return S_OK;

@@ -43,8 +43,8 @@ HRESULT MidiEndpointTable::AddCreatedEndpointDevice(MidiVirtualDeviceEndpointEnt
     // index by the association Id
     std::wstring cleanId = internal::ToUpperTrimmedWStringCopy(entry.VirtualEndpointAssociationId);
     entry.VirtualEndpointAssociationId = cleanId;
-    entry.MidiClientBiDi = nullptr;
-    entry.MidiDeviceBiDi = nullptr;
+    entry.MidiClientBidi = nullptr;
+    entry.MidiDeviceBidi = nullptr;
 
 
     if (auto endpoint = m_endpoints.find(cleanId); endpoint != m_endpoints.end())
@@ -67,7 +67,7 @@ _Use_decl_annotations_
 HRESULT 
 MidiEndpointTable::OnClientConnected(
     std::wstring const clientEndpointInterfaceId,
-    CMidi2VirtualMidiBiDi* clientBiDi) noexcept
+    CMidi2VirtualMidiBidi* clientBidi) noexcept
 {
     TraceLoggingWrite(
         MidiVirtualMidiTransportTelemetryProvider::Provider(),
@@ -79,11 +79,11 @@ MidiEndpointTable::OnClientConnected(
         TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    // get the device BiDi, and then wire them together
+    // get the device Bidi, and then wire them together
 
     try
     {
-        RETURN_HR_IF_NULL(E_UNEXPECTED, clientBiDi);
+        RETURN_HR_IF_NULL(E_UNEXPECTED, clientBidi);
 
         std::wstring cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(clientEndpointInterfaceId);
 
@@ -100,13 +100,13 @@ MidiEndpointTable::OnClientConnected(
                 // find this id in the table
                 auto entry = m_endpoints[associationId];
 
-                RETURN_HR_IF_NULL(E_UNEXPECTED, entry.MidiDeviceBiDi);
+                RETURN_HR_IF_NULL(E_UNEXPECTED, entry.MidiDeviceBidi);
 
                 // add the client
-                //entry.MidiClientConnections.push_back(clientBiDi);
-                entry.MidiClientBiDi = clientBiDi;
-                LOG_IF_FAILED(entry.MidiDeviceBiDi->LinkAssociatedCallback(entry.MidiClientBiDi));
-                LOG_IF_FAILED(entry.MidiClientBiDi->LinkAssociatedCallback(entry.MidiDeviceBiDi));
+                //entry.MidiClientConnections.push_back(clientBidi);
+                entry.MidiClientBidi = clientBidi;
+                LOG_IF_FAILED(entry.MidiDeviceBidi->LinkAssociatedCallback(entry.MidiClientBidi));
+                LOG_IF_FAILED(entry.MidiClientBidi->LinkAssociatedCallback(entry.MidiDeviceBidi));
 
                 m_endpoints[associationId] = entry;
             }
@@ -135,7 +135,7 @@ MidiEndpointTable::OnClientConnected(
 }
 
 
-// This is called from the BiDi Cleanup when it's the client-side BiDi
+// This is called from the Bidi Cleanup when it's the client-side Bidi
 _Use_decl_annotations_
 HRESULT
 MidiEndpointTable::OnClientDisconnected(
@@ -165,15 +165,15 @@ MidiEndpointTable::OnClientDisconnected(
                 auto entry = m_endpoints[associationId];
 
                 // we unlink the two, but only remove the client
-                if (entry.MidiDeviceBiDi != nullptr)
+                if (entry.MidiDeviceBidi != nullptr)
                 {
-                    LOG_IF_FAILED(entry.MidiDeviceBiDi->UnlinkAssociatedCallback());
+                    LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
                 }
 
-                if (entry.MidiClientBiDi != nullptr)
+                if (entry.MidiClientBidi != nullptr)
                 {
-                    LOG_IF_FAILED(entry.MidiClientBiDi->UnlinkAssociatedCallback());
-                    entry.MidiClientBiDi.reset();
+                    LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
+                    entry.MidiClientBidi.reset();
                 }
 
                 m_endpoints[associationId] = entry;
@@ -223,7 +223,7 @@ MidiEndpointTable::OnClientDisconnected(
 _Use_decl_annotations_
 HRESULT MidiEndpointTable::OnDeviceConnected(
     std::wstring const deviceEndpointInterfaceId,
-    CMidi2VirtualMidiBiDi* deviceBiDi) noexcept
+    CMidi2VirtualMidiBidi* deviceBidi) noexcept
 {
     TraceLoggingWrite(
         MidiVirtualMidiTransportTelemetryProvider::Provider(),
@@ -250,9 +250,9 @@ HRESULT MidiEndpointTable::OnDeviceConnected(
                 // find this id in the table
                 auto entry = m_endpoints[associationId];
 
-                if (entry.MidiDeviceBiDi == nullptr)
+                if (entry.MidiDeviceBidi == nullptr)
                 {
-                    entry.MidiDeviceBiDi = deviceBiDi;
+                    entry.MidiDeviceBidi = deviceBidi;
                     m_endpoints[associationId] = entry;
                 }
                 else
@@ -278,7 +278,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(
                 {
                     entry.CreatedClientEndpointId = L"";
                     entry.CreatedShortClientInstanceId = L"";
-                    entry.MidiClientBiDi = nullptr;
+                    entry.MidiClientBidi = nullptr;
 
                     RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->CreateClientVisibleEndpoint(entry));
 
@@ -342,7 +342,7 @@ HRESULT MidiEndpointTable::OnDeviceConnected(
     return S_OK;
 }
 
-// This is called from the BiDi Cleanup when it's the device side BiDi
+// This is called from the Bidi Cleanup when it's the device side Bidi
 _Use_decl_annotations_
 HRESULT MidiEndpointTable::OnDeviceDisconnected(
     std::wstring const deviceEndpointInterfaceId) noexcept
@@ -371,7 +371,7 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(
                 {
                     auto entry = m_endpoints[associationId];
 
-                    if (entry.MidiDeviceBiDi != nullptr)
+                    if (entry.MidiDeviceBidi != nullptr)
                     {
                         TraceLoggingWrite(
                             MidiVirtualMidiTransportTelemetryProvider::Provider(),
@@ -379,19 +379,19 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(
                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Unlinking from MidiDeviceBiDi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(L"Unlinking from MidiDeviceBidi", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                             TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                         );
 
 
-                        if (entry.MidiClientBiDi != nullptr)
+                        if (entry.MidiClientBidi != nullptr)
                         {
-                            LOG_IF_FAILED(entry.MidiClientBiDi->UnlinkAssociatedCallback());
-                            entry.MidiClientBiDi.reset();
+                            LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
+                            entry.MidiClientBidi.reset();
                         }
 
-                        LOG_IF_FAILED(entry.MidiDeviceBiDi->UnlinkAssociatedCallback());
-                        entry.MidiDeviceBiDi.reset();
+                        LOG_IF_FAILED(entry.MidiDeviceBidi->UnlinkAssociatedCallback());
+                        entry.MidiDeviceBidi.reset();
 
 
                         RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->DeleteClientEndpoint(entry.CreatedShortClientInstanceId));

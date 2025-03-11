@@ -191,7 +191,7 @@ Return Value:
     devCtx->DeviceOutGTBIDs = NULL;
     devCtx->DeviceWriteMemory = NULL;
     devCtx->DeviceWriteBuffer = NULL;
-    devCtx->DeviceWriteBufferIndex = NULL;
+    devCtx->DeviceWriteBufferIndex = 0;
     devCtx->UsbInMask = 0;
     devCtx->UsbOutMask = 0;
   
@@ -1815,6 +1815,7 @@ Return Value:
                 // Make sure we do not try to capture this string in future processing
                 grpTermBlockStringIndexes[numGrpTermBlocks] = 0;
                 grpTermBlockStringSizes[numGrpTermBlocks] = sizeof(WCHAR);
+                numGrpTermBlocks++;
                 continue;
             }
 
@@ -2150,6 +2151,8 @@ Return Value:
                 // No need to process further if invalid Cable ID
                 if (!(pDeviceContext->UsbInMask & (0x0001 << cbl_num)))
                 {
+                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Invalid Data, Received invalid cable number %lu", pReceivedWords[receivedIndex]);
+                    receivedIndex++;    // drop the data
                     continue;
                 }
 
@@ -2159,6 +2162,8 @@ Return Value:
                     &pDeviceContext->midi1IsInSysex[cbl_num],
                     &umpPacket))
                 {
+                    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! USB MIDI 1.0 Packet not processed, parsing error %lu", pReceivedWords[receivedIndex]);
+                    receivedIndex++;    // skip the data
                     continue;
                 }
 
@@ -2368,7 +2373,6 @@ Return Value:Amy
     PDEVICE_CONTEXT         pDeviceContext = NULL;
     WDFUSBPIPE              pipe = NULL;
     PUCHAR                  pBuffer;
-    PUINT32                 pWriteWords = NULL;
     WDF_OBJECT_ATTRIBUTES   writeMemoryAttributes;
     bool bEnterSysex;
     bool bEndSysex;
@@ -2470,6 +2474,17 @@ Return Value:Amy
 
             UINT8 cbl_num = umpPacket.umpData.umpBytes[0] & UMP_GROUP_MASK; // if used, cable num is group block num
 
+            // Check to see if valid cable number for USB 1.0 Device
+            if (!(pDeviceContext->UsbInMask & (0x0001 << cbl_num)))
+            {
+                TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Invalid Data, Received invalid cable number %d", cbl_num);
+                // Not handled so ignore
+                numProcessed += umpPacket.wordCount;    // ignore this UMP packet as corrupted
+                umpWritePacket.wordCount = 0;
+
+                continue;
+            }
+
             switch (umpPacket.umpData.umpBytes[0] & UMP_MT_MASK)
             {
             case UMP_MT_SYSTEM:  // System Common messages
@@ -2538,12 +2553,17 @@ Return Value:Amy
                 {
                 case UMP_SYSEX7_COMPLETE:
                     bEnterSysex = true;
+                    bEndSysex = true;
+                    break;
+
                 case UMP_SYSEX7_END:
                     bEndSysex = true;
                     break;
 
                 case UMP_SYSEX7_START:
                     bEnterSysex = true;
+                    break;
+
                 default:
                     bEndSysex = false;
                     break;
@@ -2607,7 +2627,7 @@ Return Value:Amy
 
                     if (numberBytes > 2)
                     {
-                        PUINT8 pumpBytes = (PUINT8) & umpWritePacket.umpData.umpWords[umpWritePacket.wordCount];
+                        PUINT8 pumpBytes = (PUINT8)&umpWritePacket.umpData.umpWords[umpWritePacket.wordCount];
                         for (UINT8 count = 0; count < 3; count++)
                         {
                             pumpBytes[count + 1] =
@@ -2668,74 +2688,72 @@ Return Value:Amy
                 umpWritePacket.wordCount = 0;
             }
 
-            if (umpWritePacket.wordCount)
+            // If there is data to manage plus a valid cable number
+            if (umpWritePacket.wordCount && (pDeviceContext->UsbOutMask & 0x0001 << cbl_num))
             {
-                // If currently no write buffer, create one
-                if (!pDeviceContext->DeviceWriteBuffer)
+                // Move data into buffer to send on USB
+                for (int count = 0; count < umpWritePacket.wordCount; count++)
                 {
-                    // Create Request
-                    status = WdfRequestCreate(
-                        NULL,       // attributes
-                        WdfUsbTargetPipeGetIoTarget(pipe),
-                        &pDeviceContext->DeviceUSBWriteRequest    // retuest object
-                    );
-                    if (!NT_SUCCESS(status))
+                    // Make sure we have a buffer to write into
+                    if (!pDeviceContext->DeviceWriteBuffer)
                     {
-                        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                            "%!FUNC! Error creating request for USB Write with status: %!STATUS!", status);
-                        goto DriverIoWriteExit;
+                        // Create Request
+                        status = WdfRequestCreate(
+                            NULL,       // attributes
+                            WdfUsbTargetPipeGetIoTarget(pipe),
+                            &pDeviceContext->DeviceUSBWriteRequest    // retuest object
+                        );
+                        if (!NT_SUCCESS(status))
+                        {
+                            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                                "%!FUNC! Error creating request for USB Write with status: %!STATUS!", status);
+                            goto DriverIoWriteExit;
+                        }
+
+                        WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
+                        writeMemoryAttributes.ParentObject = pDeviceContext->DeviceUSBWriteRequest;
+
+                        // Create Memory Object
+                        status = WdfMemoryCreate(
+                            &writeMemoryAttributes,
+                            NonPagedPoolNx,
+                            USBMIDI_POOLTAG,
+                            pDeviceContext->MidiOutMaxSize,
+                            &pDeviceContext->DeviceWriteMemory,
+                            NULL
+                        );
+                        if (!NT_SUCCESS(status))
+                        {
+                            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                                "%!FUNC! could not create WdfMemory with status: %!STATUS!", status);
+                            goto DriverIoWriteExit;
+                        }
+                        pDeviceContext->DeviceWriteBuffer = (PUCHAR)WdfMemoryGetBuffer(pDeviceContext->DeviceWriteMemory, NULL);
                     }
 
-                    WDF_OBJECT_ATTRIBUTES_INIT(&writeMemoryAttributes);
-                    writeMemoryAttributes.ParentObject = pDeviceContext->DeviceUSBWriteRequest;
+                    // Copy in word
+                    ((PUINT32)pDeviceContext->DeviceWriteBuffer)[pDeviceContext->DeviceWriteBufferIndex++] = umpWritePacket.umpData.umpWords[count];
 
-                    // Create Memory Object
-                    status = WdfMemoryCreate(
-                        &writeMemoryAttributes,
-                        NonPagedPoolNx,
-                        USBMIDI_POOLTAG,
-                        pDeviceContext->MidiOutMaxSize,
-                        &pDeviceContext->DeviceWriteMemory,
-                        NULL
-                    );
-                    if (!NT_SUCCESS(status))
+                    // Check if buffer full and send to USB if it is
+                    if ((pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32)) == pDeviceContext->MidiOutMaxSize)
                     {
-                        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                            "%!FUNC! could not create WdfMemory with status: %!STATUS!", status);
-                        goto DriverIoWriteExit;
-                    }
-                    pDeviceContext->DeviceWriteBuffer = (PUCHAR)WdfMemoryGetBuffer(pDeviceContext->DeviceWriteMemory, NULL);
-                }
-                pWriteWords = (PUINT32)pDeviceContext->DeviceWriteBuffer;
+                        // Write to buffer
+                        if (!USBMIDI2DriverSendToUSB(
+                            pDeviceContext->DeviceUSBWriteRequest,
+                            pDeviceContext->DeviceWriteMemory,
+                            pipe,
+                            pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32),
+                            pDeviceContext,
+                            true    // delete this request when complete
+                        ))
+                        {
+                            goto DriverIoWriteExit;
+                        }
 
-                // Write into buffer if proper cable number
-                if (pDeviceContext->UsbOutMask & 0x0001 << cbl_num)
-                {
-                    for (int count = 0; count < umpWritePacket.wordCount; count++)
-                    {
-                        pWriteWords[pDeviceContext->DeviceWriteBufferIndex++] = umpWritePacket.umpData.umpWords[count];
+                        // Indicate new buffer needed
+                        pDeviceContext->DeviceWriteBuffer = NULL;
+                        pDeviceContext->DeviceWriteBufferIndex = 0;
                     }
-                }
-                // else data is dropped
-
-                if ((pDeviceContext->DeviceWriteBufferIndex*sizeof(UINT32)) == pDeviceContext->MidiOutMaxSize)
-                {
-                    // Write to buffer
-                    if (!USBMIDI2DriverSendToUSB(
-                        pDeviceContext->DeviceUSBWriteRequest,
-                        pDeviceContext->DeviceWriteMemory,
-                        pipe,
-                        pDeviceContext->DeviceWriteBufferIndex*sizeof(UINT32),
-                        pDeviceContext,
-                        true    // delete this request when complete
-                    ))
-                    {
-                        goto DriverIoWriteExit;
-                    }
-
-                    // Indicate new bufRfer needed
-                    pDeviceContext->DeviceWriteBuffer = NULL;
-                    pDeviceContext->DeviceWriteBufferIndex = 0;
                 }
             }
         }
@@ -2882,7 +2900,7 @@ BOOLEAN USBMIDI2DriverSendToUSB(
     offset.BufferLength = Length;
     offset.BufferOffset = 0;
 
-    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
+    TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry with length: %lu", (ULONG)Length);
 
     // Send to USB Pipe
     status = WdfUsbTargetPipeFormatRequestForWrite(pipe,
@@ -3057,7 +3075,6 @@ Return Value:
     }
 
     WdfRequestCompleteWithInformation(Request, status, bytesWritten);
-    //WdfObjectDelete(Request);
 
     return;
 }

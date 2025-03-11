@@ -74,7 +74,7 @@ private:
     //MIDISRV_CLIENT m_midiClient{ };
 
     //std::shared_ptr<CMidiClientPipe> m_clientPipe{ nullptr };
-    wil::com_ptr_nothrow<IMidiBiDi> m_midiBiDiDevice;
+    wil::com_ptr_nothrow<IMidiBidirectional> m_midiBidiDevice;
 
 
     // these are holding locations while names are built

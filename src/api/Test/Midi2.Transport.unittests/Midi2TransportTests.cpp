@@ -69,10 +69,10 @@ GetEndpointGroupIndex(_In_ std::wstring midiDevice, _Inout_ DWORD& groupIndex)
     return S_OK;
 }
 
-BOOL GetBiDiEndpoint(MidiDataFormats dataFormat, BOOL midiSrv, std::wstring& midiBiDiInstanceId)
+BOOL GetBidiEndpoint(MidiDataFormats dataFormat, BOOL midiSrv, std::wstring& midiBidiInstanceId)
 {
-    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiBiDiDevices;
-    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiBiDiDevices, [&](PMIDIU_DEVICE device)
+    std::vector<std::unique_ptr<MIDIU_DEVICE>> midiBidiDevices;
+    VERIFY_SUCCEEDED(MidiSWDeviceEnum::EnumerateDevices(midiBidiDevices, [&](PMIDIU_DEVICE device)
     {
         // When testing directly against the KS transport, we're limited to endpoints created by
         // KS transport, and supporting the format we wish to test.
@@ -92,13 +92,13 @@ BOOL GetBiDiEndpoint(MidiDataFormats dataFormat, BOOL midiSrv, std::wstring& mid
         }
     }));
 
-    if (midiBiDiDevices.size() == 0)
+    if (midiBidiDevices.size() == 0)
     {
         WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test requires at least 1 midi bidi endpoint with the requested data format.");
         return FALSE;
     }
 
-    midiBiDiInstanceId = midiBiDiDevices[0]->DeviceId;
+    midiBidiInstanceId = midiBidiDevices[0]->DeviceId;
 
     return TRUE;
 }
@@ -535,26 +535,26 @@ void MidiTransportTests::TestMidiSrvTransportCreationOrder_Any_MidiOne()
 }
 
 _Use_decl_annotations_
-void MidiTransportTests::TestMidiTransportBiDi(REFIID iid, MidiDataFormats dataFormat)
+void MidiTransportTests::TestMidiTransportBidi(REFIID iid, MidiDataFormats dataFormat)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     wil::com_ptr_nothrow<IMidiTransport> midiTransport;
-    wil::com_ptr_nothrow<IMidiBiDi> midiBiDiDevice;
+    wil::com_ptr_nothrow<IMidiBidirectional> midiBidiDevice;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId {0};
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
     TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
-    std::wstring midiBiDirectionalInstanceId;
+    std::wstring midiBidirectionalInstanceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
-        if (midiBiDiDevice.get())
+        if (midiBidiDevice.get())
         {
-            midiBiDiDevice->Shutdown();
+            midiBidiDevice->Shutdown();
         }
 
         if (midiSessionTracker.get() != nullptr)
@@ -571,7 +571,7 @@ void MidiTransportTests::TestMidiTransportBiDi(REFIID iid, MidiDataFormats dataF
         VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
     }
 
-    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBiDi), (void **) &midiBiDiDevice));
+    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBidirectional), (void **) &midiBidiDevice));
 
     m_MidiInCallback = [&](PVOID payload, UINT32 payloadSize, LONGLONG payloadPosition, LONGLONG)
     {
@@ -590,16 +590,16 @@ void MidiTransportTests::TestMidiTransportBiDi(REFIID iid, MidiDataFormats dataF
     {
         // create the client session on the service before calling GetEndpoints, which will kickstart
         // the service if it's not already running.
-        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiTransportBiDi"));
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiTransportBidi"));
     }
 
-    if (!GetBiDiEndpoint(transportCreationParams.DataFormat, __uuidof(Midi2MidiSrvTransport) == iid, midiBiDirectionalInstanceId))
+    if (!GetBidiEndpoint(transportCreationParams.DataFormat, __uuidof(Midi2MidiSrvTransport) == iid, midiBidirectionalInstanceId))
     {
         return;
     }
 
-    LOG_OUTPUT(L"Initializing midi BiDi");
-    VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, m_SessionId));
+    LOG_OUTPUT(L"Initializing midi Bidi");
+    VERIFY_SUCCEEDED(midiBidiDevice->Initialize(midiBidirectionalInstanceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, m_SessionId));
 
     VERIFY_IS_TRUE(transportCreationParams.DataFormat == MidiDataFormats_UMP || transportCreationParams.DataFormat == MidiDataFormats_ByteStream);
 
@@ -607,31 +607,31 @@ void MidiTransportTests::TestMidiTransportBiDi(REFIID iid, MidiDataFormats dataF
     if (transportCreationParams.DataFormat == MidiDataFormats_UMP)
     {
         BYTE nativeDataFormat {0};
-        VERIFY_SUCCEEDED(GetEndpointNativeDataFormat(midiBiDirectionalInstanceId.c_str(), nativeDataFormat));
+        VERIFY_SUCCEEDED(GetEndpointNativeDataFormat(midiBidirectionalInstanceId.c_str(), nativeDataFormat));
 
         // if the peripheral native data format is bytestream, limit to 32 bit messages
         // that will roundtrip, the others will get dropped.
         if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), 0));
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), 0));
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), 0));
         }
     }
     else
     {
-        VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
     }
 
     // wait for up to 30 seconds for all the messages
@@ -646,7 +646,7 @@ void MidiTransportTests::TestMidiTransportBiDi(REFIID iid, MidiDataFormats dataF
     LOG_OUTPUT(L"Done, cleaning up");
 
     cleanupOnFailure.release();
-    VERIFY_SUCCEEDED(midiBiDiDevice->Shutdown());
+    VERIFY_SUCCEEDED(midiBidiDevice->Shutdown());
 
     if (midiSessionTracker.get() != nullptr)
     {
@@ -654,30 +654,30 @@ void MidiTransportTests::TestMidiTransportBiDi(REFIID iid, MidiDataFormats dataF
     }
 }
 
-void MidiTransportTests::TestMidiKSTransportBiDi_UMP()
+void MidiTransportTests::TestMidiKSTransportBidi_UMP()
 {
-    TestMidiTransportBiDi(__uuidof(Midi2KSTransport), MidiDataFormats_UMP);
+    TestMidiTransportBidi(__uuidof(Midi2KSTransport), MidiDataFormats_UMP);
 }
-void MidiTransportTests::TestMidiKSTransportBiDi_ByteStream()
+void MidiTransportTests::TestMidiKSTransportBidi_ByteStream()
 {
-    TestMidiTransportBiDi(__uuidof(Midi2KSTransport), MidiDataFormats_ByteStream);
+    TestMidiTransportBidi(__uuidof(Midi2KSTransport), MidiDataFormats_ByteStream);
 }
-void MidiTransportTests::TestMidiKSTransportBiDi_Any()
+void MidiTransportTests::TestMidiKSTransportBidi_Any()
 {
-    TestMidiTransportBiDi(__uuidof(Midi2KSTransport), MidiDataFormats_Any);
+    TestMidiTransportBidi(__uuidof(Midi2KSTransport), MidiDataFormats_Any);
 }
 
-void MidiTransportTests::TestMidiSrvTransportBiDi_UMP()
+void MidiTransportTests::TestMidiSrvTransportBidi_UMP()
 {
-    TestMidiTransportBiDi(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP);
+    TestMidiTransportBidi(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP);
 }
-void MidiTransportTests::TestMidiSrvTransportBiDi_ByteStream()
+void MidiTransportTests::TestMidiSrvTransportBidi_ByteStream()
 {
-    TestMidiTransportBiDi(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_ByteStream);
+    TestMidiTransportBidi(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_ByteStream);
 }
-void MidiTransportTests::TestMidiSrvTransportBiDi_Any()
+void MidiTransportTests::TestMidiSrvTransportBidi_Any()
 {
-    TestMidiTransportBiDi(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_Any);
+    TestMidiTransportBidi(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_Any);
 }
 
 _Use_decl_annotations_
@@ -688,7 +688,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
     DWORD messageDelay{ 10 };
 
     wil::com_ptr_nothrow<IMidiTransport> midiTransport;
-    wil::com_ptr_nothrow<IMidiBiDi> midiBiDiDevice;
+    wil::com_ptr_nothrow<IMidiBidirectional> midiBidiDevice;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
     DWORD mmcssTaskId{0};
     wil::unique_event_nothrow allMessagesReceived;
@@ -715,7 +715,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
 
     long double qpcPerMs = 0;
     TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
-    std::wstring midiBiDirectionalInstanceId;
+    std::wstring midiBidirectionalInstanceId;
 
     QueryPerformanceFrequency(&performanceFrequency);
 
@@ -726,9 +726,9 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
     VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
 
     auto cleanupOnFailure = wil::scope_exit([&]() {
-        if (midiBiDiDevice.get())
+        if (midiBidiDevice.get())
         {
-            midiBiDiDevice->Shutdown();
+            midiBidiDevice->Shutdown();
         }
 
         if (midiSessionTracker.get() != nullptr)
@@ -745,7 +745,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
         VERIFY_SUCCEEDED(midiSessionTracker->Initialize());
     }
 
-    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBiDi), (void**)&midiBiDiDevice));
+    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBidirectional), (void**)&midiBidiDevice));
 
     m_MidiInCallback = [&](PVOID , UINT32 , LONGLONG payloadPosition, LONGLONG)
     {
@@ -828,13 +828,13 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
         VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiIO_Latency"));
     }
 
-    if (!GetBiDiEndpoint(transportCreationParams.DataFormat, __uuidof(Midi2MidiSrvTransport) == iid, midiBiDirectionalInstanceId))
+    if (!GetBidiEndpoint(transportCreationParams.DataFormat, __uuidof(Midi2MidiSrvTransport) == iid, midiBidirectionalInstanceId))
     {
         return;
     }
 
-    LOG_OUTPUT(L"Initializing midi BiDi");
-    VERIFY_SUCCEEDED(midiBiDiDevice->Initialize(midiBiDirectionalInstanceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, m_SessionId));
+    LOG_OUTPUT(L"Initializing midi Bidi");
+    VERIFY_SUCCEEDED(midiBidiDevice->Initialize(midiBidirectionalInstanceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, m_SessionId));
 
     VERIFY_IS_TRUE(transportCreationParams.DataFormat == MidiDataFormats_UMP || transportCreationParams.DataFormat == MidiDataFormats_ByteStream);
 
@@ -861,11 +861,11 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
         QueryPerformanceCounter(&qpcBefore);
         if (transportCreationParams.DataFormat == MidiDataFormats_UMP)
         {
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiBiDiDevice->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), qpcBefore.QuadPart));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), qpcBefore.QuadPart));
         }
         QueryPerformanceCounter(&qpcAfter);
 
@@ -977,7 +977,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
     LOG_OUTPUT(L"Done, cleaning up");
 
     cleanupOnFailure.release();
-    VERIFY_SUCCEEDED(midiBiDiDevice->Shutdown());
+    VERIFY_SUCCEEDED(midiBidiDevice->Shutdown());
 
     if (midiSessionTracker.get() != nullptr)
     {
@@ -1369,14 +1369,14 @@ void MidiTransportTests::TestMidiSrvMultiClient_UMP_Any_MidiOne()
 }
 
 _Use_decl_annotations_
-void MidiTransportTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat1, MidiDataFormats dataFormat2)
+void MidiTransportTests::TestMidiSrvMultiClientBidi(MidiDataFormats dataFormat1, MidiDataFormats dataFormat2)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
     wil::com_ptr_nothrow<IMidiTransport> midiTransport;
     wil::com_ptr_nothrow<IMidiSessionTracker> midiSessionTracker;
-    wil::com_ptr_nothrow<IMidiBiDi> midiDevice1;
-    wil::com_ptr_nothrow<IMidiBiDi> midiDevice2;
+    wil::com_ptr_nothrow<IMidiBidirectional> midiDevice1;
+    wil::com_ptr_nothrow<IMidiBidirectional> midiDevice2;
     DWORD mmcssTaskId{ 0 };
     wil::unique_event_nothrow allMessagesReceived;
 
@@ -1418,8 +1418,8 @@ void MidiTransportTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat1,
     LONGLONG context1 = 1;
     LONGLONG context2 = 2;
 
-    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBiDi), (void**)&midiDevice1));
-    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBiDi), (void**)&midiDevice2));
+    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBidirectional), (void**)&midiDevice1));
+    VERIFY_SUCCEEDED(midiTransport->Activate(__uuidof(IMidiBidirectional), (void**)&midiDevice2));
 
     // may fail, depending on transport layer support, currently only midisrv transport supports
     // the session tracker.
@@ -1460,10 +1460,10 @@ void MidiTransportTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat1,
     {
         // create the client session on the service before calling GetEndpoints, which will kickstart
         // the service if it's not already running.
-        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiSrvMultiClientBiDi"));
+        VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestMidiSrvMultiClientBidi"));
     }
 
-    if (!GetBiDiEndpoint(dataFormat1, TRUE, midiInstanceId))
+    if (!GetBidiEndpoint(dataFormat1, TRUE, midiInstanceId))
     {
         return;
     }
@@ -1574,41 +1574,41 @@ void MidiTransportTests::TestMidiSrvMultiClientBiDi(MidiDataFormats dataFormat1,
     }
 }
 
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_UMP_UMP()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_UMP_UMP()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_UMP, MidiDataFormats_UMP);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_UMP, MidiDataFormats_UMP);
 }
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_ByteStream_ByteStream()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_ByteStream_ByteStream()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_ByteStream, MidiDataFormats_ByteStream);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_ByteStream, MidiDataFormats_ByteStream);
 }
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_Any_Any()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_Any_Any()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_Any, MidiDataFormats_Any);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_Any, MidiDataFormats_Any);
 }
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_UMP_ByteStream()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_UMP_ByteStream()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_UMP, MidiDataFormats_ByteStream);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_UMP, MidiDataFormats_ByteStream);
 }
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_ByteStream_UMP()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_ByteStream_UMP()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_ByteStream, MidiDataFormats_UMP);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_ByteStream, MidiDataFormats_UMP);
 }
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_Any_ByteStream()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_Any_ByteStream()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_Any, MidiDataFormats_ByteStream);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_Any, MidiDataFormats_ByteStream);
 }
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_ByteStream_Any()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_ByteStream_Any()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_ByteStream, MidiDataFormats_Any);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_ByteStream, MidiDataFormats_Any);
 }
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_Any_UMP()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_Any_UMP()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_Any, MidiDataFormats_UMP);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_Any, MidiDataFormats_UMP);
 }
-void MidiTransportTests::TestMidiSrvMultiClientBiDi_UMP_Any()
+void MidiTransportTests::TestMidiSrvMultiClientBidi_UMP_Any()
 {
-    TestMidiSrvMultiClientBiDi(MidiDataFormats_UMP, MidiDataFormats_Any);
+    TestMidiSrvMultiClientBidi(MidiDataFormats_UMP, MidiDataFormats_Any);
 }
 
 bool MidiTransportTests::TestSetup()

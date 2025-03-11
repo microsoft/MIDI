@@ -129,7 +129,7 @@ struct MidiNetworkHostDefinition;
 
 
 #include "Midi2.NetworkMidiTransport.h"
-#include "Midi2.NetworkMidiBiDi.h"
+#include "Midi2.NetworkMidiBidi.h"
 #include "Midi2.NetworkMidiEndpointManager.h"
 #include "Midi2.NetworkMidiConfigurationManager.h"
 #include "Midi2.NetworkMidiPluginMetadataProvider.h"

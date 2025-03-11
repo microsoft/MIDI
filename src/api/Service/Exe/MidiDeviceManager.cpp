@@ -32,6 +32,8 @@ const WCHAR szzMidiDeviceCompatibleId[] =  L"GenericMidiEndpoint" L"\0";
 #define MIDI_GROUP_TERMINAL_BLOCK_INPUT         0x01
 #define MIDI_GROUP_TERMINAL_BLOCK_OUTPUT        0x02
 
+#define SWD_CREATION_TIMEOUT 10000
+
 #pragma pack(push)
 #pragma pack(1)
 typedef struct
@@ -613,7 +615,19 @@ CMidiDeviceManager::ActivateVirtualParentDevice
         wil::out_param(creationContext.MidiParentDevice->SwDevice)));
 
     // wait 5 seconds for creation to complete
-    creationContext.CreationCompleted.wait(5000);
+    if (FALSE == creationContext.CreationCompleted.wait(SWD_CREATION_TIMEOUT))
+    {
+        // Activation of the SWD has failed, resetting the SwDevice handle
+        // may unblock the creation callback, letting it complete (with failure),
+        // give it an opportunity to complete.
+        // If the callback were to run after this function exits, 
+        // the service will crash because the creation context given to
+        // the callback will no longer exist.
+        midiParent->SwDevice.reset();
+        creationContext.CreationCompleted.wait(SWD_CREATION_TIMEOUT);
+        RETURN_IF_FAILED(midiParent->hr);
+        RETURN_IF_FAILED(E_FAIL);
+    }
 
     // confirm we were able to register the interface
     RETURN_IF_FAILED(creationContext.MidiParentDevice->hr);
@@ -1272,7 +1286,19 @@ CMidiDeviceManager::ActivateEndpointInternal
     if (SUCCEEDED(midiPort->hr))
     {
         // wait 10 seconds for creation to complete
-        creationContext.CreationCompleted.wait(10000);
+        if (FALSE == creationContext.CreationCompleted.wait(SWD_CREATION_TIMEOUT))
+        {
+            // Activation of the SWD has failed, resetting the SwDevice handle
+            // may unblock the creation callback, letting it complete (with failure),
+            // give it an opportunity to complete.
+            // If the callback were to run after this function exits, 
+            // the service will crash because the creation context given to
+            // the callback will no longer exist.
+            midiPort->SwDevice.reset();
+            creationContext.CreationCompleted.wait(SWD_CREATION_TIMEOUT);
+            RETURN_IF_FAILED(midiPort->hr);
+            RETURN_IF_FAILED(E_FAIL);
+        }
     }
     else if (HRESULT_FROM_WIN32(ERROR_ALREADY_EXISTS) == midiPort->hr)
     {
@@ -1835,7 +1861,6 @@ CMidiDeviceManager::AssignPortNumber(
     bool interfaceEnabled {false};
 
     winrt::hstring deviceSelector(flow == MidiFlowOut?MIDI1_OUTPUT_DEVICES:MIDI1_INPUT_DEVICES);
-    wil::unique_event enumerationCompleted{wil::EventOptions::None};
 
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);

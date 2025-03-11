@@ -13,7 +13,7 @@
 // thread-safe meyers singleton for storing the devices we'll use
 
 // for simple loopback, no need for a map or anything like we'll use 
-// for other transports. We have only three devices: Two for BiDi, 
+// for other transports. We have only three devices: Two for Bidi, 
 // the thirds is for In/Out, so just keep them as member variables.
 
 

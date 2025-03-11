@@ -12,7 +12,7 @@
 
 _Use_decl_annotations_
 HRESULT
-CMidi2NetworkMidiBiDi::Initialize(
+CMidi2NetworkMidiBidi::Initialize(
     LPCWSTR endpointDeviceInterfaceId,
     PTRANSPORTCREATIONPARAMS,
     DWORD *,
@@ -58,7 +58,7 @@ CMidi2NetworkMidiBiDi::Initialize(
 }
 
 HRESULT
-CMidi2NetworkMidiBiDi::Shutdown()
+CMidi2NetworkMidiBidi::Shutdown()
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -85,7 +85,7 @@ CMidi2NetworkMidiBiDi::Shutdown()
 
 _Use_decl_annotations_
 HRESULT
-CMidi2NetworkMidiBiDi::SendMidiMessage(
+CMidi2NetworkMidiBidi::SendMidiMessage(
     PVOID message,
     UINT size,
     LONGLONG position
@@ -106,7 +106,7 @@ CMidi2NetworkMidiBiDi::SendMidiMessage(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2NetworkMidiBiDi::Callback(
+CMidi2NetworkMidiBidi::Callback(
     PVOID message,
     UINT size,
     LONGLONG timestamp,

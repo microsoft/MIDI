@@ -8,10 +8,10 @@
 
 #pragma once
 
-class CMidi2NetworkMidiBiDi : 
+class CMidi2NetworkMidiBidi : 
     public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
-        IMidiBiDi,
+        IMidiBidirectional,
         IMidiCallback>
 {
 public:
