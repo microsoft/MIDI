@@ -244,6 +244,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
 
+        // WinMM / Naming properties ==========================================================
+  //      additionalProperties.Append(STRING_PKEY_MIDI_UseLegacyMidi1PortNamingScheme);
+        additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
+        additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
+        additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
 
         // these can be useful for debugging, but not much else. They are defined in MidiKSDef.h
         //additionalProperties.Append(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);

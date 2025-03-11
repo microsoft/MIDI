@@ -119,19 +119,50 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
         public bool InitializeSdkRuntime()
         {
-            return true;
+            if (_initializer == null)
+            {
+                return false;
+            }
+            else
+            {
+                try
+                {
+                    // try to make an SDK call. If we can't resolve the types
+                    // correctly, it'll throw.
 
-            //try
-            //{
-            //    _initializer.Initialize();
+                    MidiAppSDKPlatform buildPlatform = MidiAppSDKPlatform.x64;
+                    UInt32 versionMajor = 0;
+                    UInt32 versionMinor = 0;
+                    UInt32 versionRevision = 0;
+                    UInt32 versionDateNumber = 0;
+                    UInt32 versionTimeNumber = 0;
+                    string buildSource = string.Empty;
+                    string versionName = string.Empty;
+                    string versionFullString = string.Empty;
 
-            //    return true;
-            //}
-            //catch (Exception)
-            //{
-            //    // todo: Log
-            //    return false;
-            //}
+                    _initializer.GetInstalledWindowsMidiServicesSdkVersion(
+                        ref buildPlatform,
+                        ref versionMajor,
+                        ref versionMinor,
+                        ref versionRevision,
+                        ref versionDateNumber,
+                        ref versionTimeNumber,
+                        ref buildSource,
+                        ref versionName,
+                        ref versionFullString
+                        );
+
+                    if (versionFullString != string.Empty)
+                    {
+                        return true;
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
+
+            return false;
         }
 
         public bool CheckForMinimumRequiredSdkVersion(

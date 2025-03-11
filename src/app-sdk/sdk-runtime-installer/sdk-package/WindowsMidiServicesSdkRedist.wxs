@@ -26,6 +26,7 @@
         <!-- Install SDK -->
 
         <Component Id="WindowsMidiServicesAppSDK"
+                   Permanent="no"
                    Bitness="always64"
                    Directory="SDK_INSTALLFOLDER"
                    Guid="8016a59d-d844-4984-93e8-fa53f279abba">
@@ -42,6 +43,7 @@
 
         <!-- Install MIDI Diag Utility -->
         <Component Id="MidiDiagUtility"
+                   Permanent="no"
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="a10cb6cb-571a-462e-9df7-f388460da50f"  >
@@ -55,6 +57,7 @@
 
         <!-- Install MIDI USB Utility -->
         <Component Id="MidiUsbUtility"
+                   Permanent="no"
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="704c5cee-8af7-4826-a9b8-d45d14d24684"  >
@@ -68,6 +71,7 @@
 
         <!-- Install MIDI mDNS Utility -->
         <Component Id="MidiMdnsUtility"
+                   Permanent="no"
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="246488ea-a9de-45bc-82a0-a01a61c434ff"  >
@@ -81,6 +85,7 @@
 
         <!-- Install MIDI 1 monitor Utility -->
         <Component Id="Midi1MonitorUtility"
+                   Permanent="no"
                    Bitness="always64"
                    Directory="TOOLSROOT_INSTALLFOLDER"
                    Guid="7f65432f-5f95-4e8d-9e1b-c25405868244"  >
@@ -92,10 +97,24 @@
                             Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
         </Component>
 
+        <!-- Install MIDI 1 enum Utility -->
+        <Component Id="Midi1EnumUtility"
+                   Permanent="no"
+                   Bitness="always64"
+                   Directory="TOOLSROOT_INSTALLFOLDER"
+                   Guid="318aa3ff-3f4c-41c6-bce7-8e343b7b2ae4"  >
+            <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1enum.exe" Vital="true" />
+
+            <!-- Add folder to path -->
+            <Environment Id="AddMidi1EnumUtilityToSystemPath"
+                            Name="PATH" Action="set" Part="last" System="yes"
+                            Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
+        </Component>
 
 
         <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
         <Component Id="WindowsMidiServicesAppSdkImplementationRegEntries"
+                   Permanent="no"
                    Bitness="always64"
                    Directory="SDK_INSTALLFOLDER"
                    Guid="0ce8cde5-b1b8-4825-854d-c31427b91cb5">
@@ -115,6 +134,7 @@
             <ComponentRef Id="MidiUsbUtility"/>
             <ComponentRef Id="MidiMdnsUtility"/>
             <ComponentRef Id="Midi1MonitorUtility"/>
+            <ComponentRef Id="Midi1EnumUtility"/>
         </Feature>
 
     </Package>

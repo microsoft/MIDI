@@ -20,7 +20,7 @@ namespace Microsoft.Windows.Devices.Midi2.Reporting
     static runtimeclass MidiReporting
     {
         static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
-        static IVector<MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
+        //static IVector<MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
 
         static IVector<MidiServiceSessionInfo> GetActiveSessions();
     }

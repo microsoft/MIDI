@@ -13,7 +13,7 @@ using namespace winrt::Windows::Devices::Enumeration;
 
 struct KsAggregateEndpointMidiPinDefinition
 {
-    std::wstring KSDriverSuppliedName;
+    //std::wstring KSDriverSuppliedName;
     std::wstring FilterDeviceId;
     std::wstring FilterName;
 
@@ -24,6 +24,7 @@ struct KsAggregateEndpointMidiPinDefinition
 
     uint8_t GroupIndex{ 0 };
 
+    internal::Midi1PortNaming::Midi1PortNameEntry PortNames;
 };
 
 struct KsAggregateEndpointDefinition

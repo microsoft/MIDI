@@ -163,7 +163,7 @@
     <value>Device Test</value>
   </data>
   <data name="Shell_ForDevelopers.Content" xml:space="preserve">
-    <value>For Developers</value>
+    <value>Developers / Advanced Users</value>
   </data>
   <data name="Settings_Personalization.Text" xml:space="preserve">
     <value>Personalization</value>
@@ -475,14 +475,12 @@
     <value>Enable Installation of Developer Releases</value>
   </data>
   <data name="ForDevelopers_EnableDeveloperInstallationExpander.Description" xml:space="preserve">
-    <value>In order to install developer previews of the service or service components/plugins, you must first take ownership of the registry entries which are used for component registration. If you do not do this first, the install will appear to work, but the components used will not be the ones you expect.
+    <value>In order to install previews of the service or service components/plugins, you must first take ownership of the registry entries which are used for component registration. If you do not do this first, the install will appear to work, but the components used will not be the ones you expect.
 
-This step requires Administrator rights, and must be repeated after any new Windows upgrade (not update, but full OS upgrade).
-
-THIS FEATURE IS CURRENTLY IN PREVIEW/TESTING</value>
+This step requires Administrator rights, and must be repeated after any new Windows upgrade (not update, but full OS upgrade).</value>
   </data>
   <data name="ForDevelopers_PrepareForDeveloperInstallButton.Content" xml:space="preserve">
-    <value>Prepare for Developer Install</value>
+    <value>Prepare for Preview/Developer Install</value>
   </data>
   <data name="ForDevelopers_ReplaceWdmaud2DrvButton.Content" xml:space="preserve">
     <value>Replace wdmaud2.drv with Developer Version</value>
@@ -501,5 +499,29 @@ THIS FEATURE IS CURRENTLY IN PREVIEW/TESTING</value>
   </data>
   <data name="ShellPage_ServiceUnavailableIndicator.Text" xml:space="preserve">
     <value>No MIDI Service</value>
+  </data>
+  <data name="Error_UnableToInitializeMidiRuntime" xml:space="preserve">
+    <value>Unable to initialize the Windows MIDI Services Runtime. Is it installed?</value>
+  </data>
+  <data name="Error_StartupMessageBoxTitle" xml:space="preserve">
+    <value>Error Starting MIDI Settings App</value>
+  </data>
+  <data name="Error_ExceptionThrownDuringSdkInitialization" xml:space="preserve">
+    <value>Unable to initialize Windows MIDI Services Runtime. An exception was thrown: </value>
+  </data>
+  <data name="ForDevelopers_Description.Text" xml:space="preserve">
+    <value>These settings are for advanced users or development and prototyping purposes only. Changing the settings here may cause unexpected or undesirable behavior in applications and devices using Windows MIDI Services. These settings may be reset with a Windows upgrade.</value>
+  </data>
+  <data name="ForDevelopers_InstallPreviewSectionHeader.Text" xml:space="preserve">
+    <value>Install Developer / Preview Releases</value>
+  </data>
+  <data name="ForDevelopers_Midi2FeaturesSectionHeader.Text" xml:space="preserve">
+    <value>MIDI 2.0 Features</value>
+  </data>
+  <data name="ForDevelopers_RelatedSupportSectionHeader.Text" xml:space="preserve">
+    <value>Related Support</value>
+  </data>
+  <data name="ForDevelopers_SystemSettingsSectionHeader" xml:space="preserve">
+    <value>System Settings</value>
   </data>
 </root>

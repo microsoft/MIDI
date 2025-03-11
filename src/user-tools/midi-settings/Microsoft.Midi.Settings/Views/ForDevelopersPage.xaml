@@ -26,9 +26,9 @@
                 <TextBlock
                     Margin="1,0,0,8"
                     HorizontalAlignment="Left"
-                    TextWrapping="Wrap">
-                    <Run Text="These settings are for development and prototyping purposes only. Changing the settings here may cause unexpected or undesirable behavior in applications and devices using Windows MIDI Services. These settings may be reset with a Windows upgrade." />
-                </TextBlock>
+                    TextWrapping="Wrap"
+                    x:Uid="ForDevelopers_Description"/>
+
 
                 <InfoBar Margin="0"
                          x:Uid="ForDevelopers_ServiceRestartRequired" 
@@ -56,7 +56,8 @@
                     -->
                 </InfoBar>
 
-                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Install Developer Preview Releases" />
+                <TextBlock x:Uid="ForDevelopers_InstallPreviewSectionHeader" 
+                           Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
 
                 <controls:SettingsExpander CornerRadius="9"
                                            x:Uid="ForDevelopers_EnableDeveloperInstallationExpander"
@@ -79,7 +80,8 @@
                 </controls:SettingsExpander>
 
 
-                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="MIDI 2.0 Features" />
+                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
+                           x:Uid="ForDevelopers_Midi2FeaturesSectionHeader"/>
 
                 <controls:SettingsExpander CornerRadius="9"
                     x:Uid="ForDevelopers_Discovery"
@@ -110,7 +112,9 @@
                     </controls:SettingsExpander.Items>
                 </controls:SettingsExpander>
 
-                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="System Settings" />
+                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
+                           x:Uid="ForDevelopers_SystemSettingsSectionHeader"
+                           Text="System Settings" />
 
                 <controls:SettingsExpander CornerRadius="9"
                     x:Uid="ForDevelopers_EnableMmcss"
@@ -127,7 +131,8 @@
                 </controls:SettingsExpander>
 
 
-                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" Text="Related Developer Support" />
+                <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
+                           x:Uid="ForDevelopers_RelatedSupportSectionHeader"/>
 
                 <controls:SettingsCard CornerRadius="9"
                     HorizontalContentAlignment="Left"

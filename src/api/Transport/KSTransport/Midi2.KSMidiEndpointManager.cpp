@@ -88,7 +88,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     );
 
 //    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
-    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
+//    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     wil::unique_handle hFilter;
     std::wstring deviceName;
@@ -610,28 +610,17 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         {
             interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
                     DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSize, (PVOID)MidiPin->GroupTerminalBlockData.get() });
-
-
-            if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
-            {
-                // if a UMP device, we don't necessarily use the GTBs to name MIDI 1 ports
-                interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID) & (devPropFalse) });
-            }
-            else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
-            {
-                // for a native MIDI 1 device, the driver provides a MIDI 1 port name in the GTB
-                // but it's just the pin (iJack) name, so we still set this to false. Change in behavior from earlier when this was true.
-                interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID) & (devPropFalse) });
-            }
         }
-        else
-        {
-            interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropFalse)), (PVOID) & (devPropFalse) });
 
-        }
+
+        // TODO: This needs to be re-done to use user-specified properties
+        auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
+
+        interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
+
+        // TODO: Need to build names and add the property here
+
 
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.
         if (MidiPin->Flow == MidiFlowBidirectional)

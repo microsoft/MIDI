@@ -92,6 +92,24 @@ CMidiDeviceManager::Initialize(
         );
     }
 
+
+    // get the default naming approach for when it's not specified per-endpoint
+    DWORD defaultNamingRegValue{ MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE };
+    if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE, &defaultNamingRegValue)))
+    {
+        m_defaultMidi1PortNamingSelection = static_cast<Midi1PortNameSelectionProperty>(defaultNamingRegValue);
+
+        // make sure we don't get all recursive here
+        if (m_defaultMidi1PortNamingSelection == Midi1PortNameSelectionProperty::PortName_UseGlobalDefault)
+        {
+            m_defaultMidi1PortNamingSelection = static_cast<Midi1PortNameSelectionProperty>(MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE);
+        }
+    }
+
+
+
+
+
     // Get the enabled transport layers from the registry
 
     for (auto const& TransportLayer : m_configurationManager->GetEnabledTransports())
@@ -2226,7 +2244,7 @@ CMidiDeviceManager::UseFallbackMidi1PortDefinition(
     auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete);
     if (prop)
     {
-        auto endpointDiscoveryComplete = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<bool>>(prop);
+        auto endpointDiscoveryComplete = winrt::unbox_value<bool>(prop);
         if (endpointDiscoveryComplete)
         {
             TraceLoggingWrite(
@@ -2333,8 +2351,11 @@ CMidiDeviceManager::SyncMidi1Ports(
     additionalProperties.Append(STRING_PKEY_MIDI_FunctionBlockDeclaredCount);
     additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
     additionalProperties.Append(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete);
+
     additionalProperties.Append(STRING_PKEY_MIDI_CustomPortAssignments);
-    additionalProperties.Append(STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames);
+
+    additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
+    additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
     additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
 
     // We have function blocks to retrieve
@@ -2366,6 +2387,7 @@ CMidiDeviceManager::SyncMidi1Ports(
     }
 
 
+
     // get the current function block information from the UMP SWD, if present, else fall back to
     // GTB if that is present. If neither, then there's nothing more to do.
     hrTemp = GetFunctionBlockPortInfo(umpMidiPort->DeviceInterfaceId.get(), deviceInfo, portInfo);
@@ -2380,6 +2402,174 @@ CMidiDeviceManager::SyncMidi1Ports(
             RETURN_IF_FAILED(hrTemp);
         }
     }
+
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"About to get naming selection", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    // get the names from that parent endpoint
+
+    Midi1PortNameSelectionProperty namingSelection{ m_defaultMidi1PortNamingSelection };
+    auto namingSelectionProp = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_Midi1PortNamingSelection);
+    if (namingSelectionProp)
+    {
+        auto propValue = winrt::unbox_value<uint32_t>(namingSelectionProp);
+
+        namingSelection = static_cast<Midi1PortNameSelectionProperty>(propValue);
+    }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"About to get naming table property", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    auto nameTableProp = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_Midi1PortNameTable);
+    if (nameTableProp)
+    {
+        auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(nameTableProp);
+
+        if (refArray)
+        {
+            auto refData = refArray.Value();
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"About to read naming table data", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            auto nameEntries = internal::Midi1PortNaming::ReadMidi1PortNameTableFromPropertyData(refData.data(), refData.size());
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"About to run through naming table entries", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            // update the names in portInfo
+
+            for (auto const& nameEntry : nameEntries)
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Processing naming entry", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+
+                // if a custom name has been provided, we always use that, so start here
+                std::wstring selectedName{ nameEntry.CustomName };
+
+                if (selectedName.empty())
+                {
+                    bool named{ false };
+                    while (!named)
+                    {
+                        switch (namingSelection)
+                        {
+                        case Midi1PortNameSelectionProperty::PortName_UseGlobalDefault:
+                            // start over with the default value
+                            namingSelection = m_defaultMidi1PortNamingSelection;
+
+                            // A little guard to make sure we don't loop forever. Initialize also does this
+                            // but just guarding here as well
+                            if (namingSelection == Midi1PortNameSelectionProperty::PortName_UseGlobalDefault)
+                            {
+                                namingSelection = static_cast<Midi1PortNameSelectionProperty>(MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE);
+                            }
+                            named = false;
+                            break;
+                        case Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM:
+                            selectedName = nameEntry.LegacyWinMMName;
+                            named = true;
+                            break;
+                        case Midi1PortNameSelectionProperty::PortName_UsePinName:
+                            selectedName = nameEntry.PinName;
+                            named = true;
+                            break;
+                        case Midi1PortNameSelectionProperty::PortName_UseInterfacePlusPinName:
+                            selectedName = nameEntry.InterfacePlusPinName;
+                            named = true;
+                            break;
+                        case Midi1PortNameSelectionProperty::PortName_UseGroupTerminalBlocksExactly:
+                            selectedName = nameEntry.GroupTerminalBlockName;
+                            named = true;
+                            break;
+                        default:
+                            // invalid value and we don't want to spin forever
+                            namingSelection = static_cast<Midi1PortNameSelectionProperty>(MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE);
+                            named = false;
+                            break;
+                        }
+                    }
+                }
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(selectedName.c_str(), "selected name"),
+                    TraceLoggingUInt16(nameEntry.GroupIndex, "group index")
+                );
+
+                // TODO: should verify the portInfo entry exists, first
+
+                portInfo[nameEntry.DataFlowFromUserPerspective][nameEntry.GroupIndex].Name = selectedName;
+            }
+
+        }
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Name table processing complete", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+    }
+    else
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Name table property not present", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+    }
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"About to get custom port mapping", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
 
     // Now retrieve the custom port mappings, if they are present
     RETURN_IF_FAILED(GetCustomPortMapping(umpMidiPort->DeviceInterfaceId.get(), deviceInfo, portInfo));
@@ -2496,22 +2686,23 @@ CMidiDeviceManager::SyncMidi1Ports(
                             DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(nativeDataFormat)) });
                     }
 
+                    // TODO: Redo all this naming logic here to use shared code
                     // TEMP! This needs to be controlled by a property
                     if (transportId == winrt::guid(__uuidof(Midi2KSTransport)))
                     {
                         useOldStyleWinMMPortNaming = false;
                     }
 
-                    // this tells us to use the GTB name, and only the GTB name, as the WinMM port name. It overrides other settings
-                    prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames);
-                    if (prop)
-                    {
-                        usePortInfoName = winrt::unbox_value<bool>(prop);
-                    }
-                    else
-                    {
-                        usePortInfoName = false;
-                    }
+                    //// this tells us to use the GTB name, and only the GTB name, as the WinMM port name. It overrides other settings
+                    //prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames);
+                    //if (prop)
+                    //{
+                    //    usePortInfoName = winrt::unbox_value<bool>(prop);
+                    //}
+                    //else
+                    //{
+                    //    usePortInfoName = false;
+                    //}
 
                     prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CustomEndpointName);
                     if (prop)
@@ -2545,6 +2736,16 @@ CMidiDeviceManager::SyncMidi1Ports(
                     }
 
                 }
+
+
+
+                // TODO: Pull pin name table and get the entry the user has specified
+
+
+
+
+
+
 
                 // Create the friendly name for this interface and add it to the properties list
                 std::wstring friendlyName = internal::Midi1PortNaming::GenerateMidi1PortNameFromCreatedUmpEndpoint(

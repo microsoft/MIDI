@@ -75,10 +75,10 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 
 
 typedef struct {
-    BYTE GroupIndex;                        // index (0-15) of the group this pin maps to
-    UINT32 PinId;                           // KS Pin number
-    MidiFlow PinDataFlow;                   // an input pin is MidiFlowIn, and from the user's perspective, a MIDI Output
-    std::wstring FilterId;                 // full filter id for this pin
+    BYTE GroupIndex;        // index (0-15) of the group this pin maps to. It's also use when deciding on WinMM names
+    UINT32 PinId;           // KS Pin number
+    MidiFlow PinDataFlow;   // an input pin is MidiFlowIn, and from the user's perspective, a MIDI Output
+    std::wstring FilterId;  // full filter id for this pin
 } PinMapEntryStagingEntry;
 
 
@@ -146,8 +146,8 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     //    TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
     //);
 
-    uint8_t currentGtbInputGroupIndex{ 0 };
-    uint8_t currentGtbOutputGroupIndex{ 0 };
+    //uint8_t currentGtbInputGroupIndex{ 0 };
+    //uint8_t currentGtbOutputGroupIndex{ 0 };
     uint8_t currentBlockNumber{ 0 };
 
     std::vector<internal::GroupTerminalBlockInternal> blocks{ };
@@ -163,7 +163,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         internal::GroupTerminalBlockInternal gtb;
 
         gtb.Number = ++currentBlockNumber;
-        gtb.GroupCount = 1; // always a single group for aggregate devices
+        gtb.GroupCount = 1; // always a single group for aggregate MIDI 1.0 devices
 
         PinMapEntryStagingEntry pinMapEntry{ };
 
@@ -173,38 +173,15 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
         MidiFlow flowFromUserPerspective;
 
-
-        std::wstring userSuppliedPortName{};            // TODO: This should come from config file
-        bool useOldStyleNaming{ true };                 // TODO: This should come from registry and property
-        std::wstring deviceContainerName{};             // TODO: Need to get this from the device info
-        std::wstring deviceManufacturerName{};          // TODO: Need to get this from the parent device
-        bool isUsingVendorDriver{ false };              // TODO: Need to get this from the device information
-
+        pinMapEntry.GroupIndex = pin.GroupIndex;
+        gtb.FirstGroupIndex = pin.GroupIndex;
 
         if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
         {
             flowFromUserPerspective = MidiFlow::MidiFlowOut;
 
-            pinMapEntry.GroupIndex = currentGtbInputGroupIndex;
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
-            gtb.FirstGroupIndex = currentGtbInputGroupIndex;
-            currentGtbInputGroupIndex++;
-
-            gtb.Name = internal::Midi1PortNaming::GenerateGtbNameFromMidi1Device(
-                useOldStyleNaming,                          // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
-                userSuppliedPortName,                       // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
-                deviceContainerName,                        // oddly some old WinMM code picks up the deviceContainerName somehow
-                pin.KSDriverSuppliedName,
-                masterEndpointDefinition.ParentDeviceName,  // the name of the actual connected device from which the UMP interface is generated
-                deviceManufacturerName,                     // manufacturer name
-                pin.FilterName,                             // the name of the filter. This is sometimes the same as the parent device
-                pin.PinName,                                // the name of the KS Filter pin. This can be the same as the USB iJack
-                gtb.FirstGroupIndex,
-                flowFromUserPerspective,
-                isUsingVendorDriver,
-                true,                                       // we truncate to the WinMM max name limit (32 chars including nul)
-                portNamesUserFlowOut
-            );
+            gtb.Name = pin.PortNames.GroupTerminalBlockName;
 
             // this is kept just so we can add ordinal differentiators if we need to
             portNamesUserFlowOut.push_back(gtb.Name);
@@ -213,26 +190,8 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         {
             flowFromUserPerspective = MidiFlow::MidiFlowIn;
 
-            pinMapEntry.GroupIndex = currentGtbOutputGroupIndex;
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
-            gtb.FirstGroupIndex = currentGtbOutputGroupIndex;
-            currentGtbOutputGroupIndex++;
-
-            gtb.Name = internal::Midi1PortNaming::GenerateGtbNameFromMidi1Device(
-                useOldStyleNaming,                          // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
-                userSuppliedPortName,                       // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
-                deviceContainerName,                        // oddly some old WinMM code picks up the deviceContainerName somehow
-                pin.KSDriverSuppliedName,
-                masterEndpointDefinition.ParentDeviceName,  // the name of the actual connected device from which the UMP interface is generated
-                deviceManufacturerName,                     // manufacturer name
-                pin.FilterName,                             // the name of the filter. This is sometimes the same as the parent device
-                pin.PinName,                                // the name of the KS Filter pin. This can be the same as the USB iJack
-                gtb.FirstGroupIndex,
-                flowFromUserPerspective,
-                isUsingVendorDriver,
-                true,                                       // we truncate to the WinMM max name limit (32 chars including nul)
-                portNamesUserFlowIn
-            );
+            gtb.Name = pin.PortNames.GroupTerminalBlockName;
 
             // this is kept just so we can add ordinal differentiators if we need to
             portNamesUserFlowIn.push_back(gtb.Name);
@@ -241,8 +200,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         {
             RETURN_IF_FAILED(E_INVALIDARG);
         }
-
-        //LOG_IF_FAILED(CreateGroupTerminalBlockName(masterEndpointDefinition.ParentDeviceName, pin.FilterName, pin.PinName, gtb.Name));
 
         // default values as defined in the MIDI 2.0 USB spec
         gtb.Protocol = 0x01;                // midi 1.0
@@ -253,6 +210,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         pinMapEntries.push_back(pinMapEntry);
     }
 
+
+    // Write Pin Map Property
+    // =====================================================
 
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -332,20 +292,78 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         DEVPROP_TYPE_BINARY, (UINT32)totalMemoryBytes, pinMapData.get() });
 
 
+    // Write Group Terminal Block Property
+    // =====================================================
+
     std::vector<std::byte> groupTerminalBlockData;
 
     if (internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, groupTerminalBlockData))
     {
         interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data()});
-
-        interfaceDevProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(devPropTrue), (PVOID)&devPropTrue });
     }
     else
     {
         // write empty data
     }
+
+
+    // Write Name table property
+    // =====================================================
+
+    std::vector<internal::Midi1PortNaming::Midi1PortNameEntry> portNameEntries{};
+
+    for (auto const& pinEntry : masterEndpointDefinition.MidiPins)
+    {
+        portNameEntries.push_back(pinEntry.PortNames);
+    }
+
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt32(static_cast<uint32_t>(portNameEntries.size()), "port name entries count"),
+        TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+    );
+
+    std::vector<std::byte> nameTableData;
+
+    if (internal::Midi1PortNaming::WriteMidi1PortNameTableToPropertyDataPointer(portNameEntries, nameTableData))
+    {
+        interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BINARY, (ULONG)nameTableData.size(), (PVOID)nameTableData.data() });
+    }
+    else
+    {
+        // write empty data
+        interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_EMPTY, 0, nullptr });
+
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Unable to write MIDI 1 port name table to property data", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
+        );
+    }
+
+    // TODO: This needs to be re-done to use user-specified properties from config file
+    auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
+
+    interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
+
+    // ==============================================
+
+
+    // We present as a UMP endpoint, so we need to set this property so the service can create the MIDI 1 ports
+    interfaceDevProperties.push_back({ { PKEY_MIDI_EndpointDiscoveryProcessComplete, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(devPropTrue), (PVOID)&devPropTrue });
 
 
 
@@ -617,6 +635,9 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     {
         for (auto const& filterDevice : filterDevices)
         {
+            ULONG midiInputPinIndexForThisFilter{ 0 };
+            ULONG midiOutputPinIndexForThisFilter{ 0 };
+
             if (filterDevice.Id().empty())
             {
                 TraceLoggingWrite(
@@ -651,12 +672,17 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                 continue;
             }
 
+
+
             // process the pins for this filter. Not all will be MIDI pins
             for (UINT pinIndex = 0; pinIndex < cPins; pinIndex++)
             {
             //    bool isMidi1Pin{ false };
                 wil::unique_handle hPin;
 
+
+                // TODO
+                std::wstring customPortName{};
 
                 // Check the communication capabilities of the pin so we can fail fast
                 KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
@@ -698,7 +724,8 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                     isCompatibleMidi1Device = true;
 
                     KsAggregateEndpointMidiPinDefinition pinDefinition{ };
-                    pinDefinition.KSDriverSuppliedName = driverSuppliedName;
+
+                    //pinDefinition.KSDriverSuppliedName = driverSuppliedName;
                     pinDefinition.PinNumber = pinIndex;
                     pinDefinition.FilterDeviceId = std::wstring{ filterDevice.Id() };
                     pinDefinition.FilterName = std::wstring{ filterDevice.Name() };
@@ -720,15 +747,40 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                         {
                             // MIDI Out (input to device)
                             pinDefinition.PinDataFlow = MidiFlow::MidiFlowIn;
+                            pinDefinition.GroupIndex = static_cast<uint8_t>(midiOutputPinIndexForThisFilter);
+
+                            pinDefinition.PortNames.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;
+                            pinDefinition.PortNames.GroupIndex = pinDefinition.GroupIndex;
+
+                            midiOutputPinIndexForThisFilter++;
                         }
                         else if (dataFlow == KSPIN_DATAFLOW_OUT)
                         {
                             // MIDI In (output from device)
                             pinDefinition.PinDataFlow = MidiFlow::MidiFlowOut;
+                            pinDefinition.GroupIndex = static_cast<uint8_t>(midiInputPinIndexForThisFilter);
+
+                            pinDefinition.PortNames.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;
+                            pinDefinition.PortNames.GroupIndex = pinDefinition.GroupIndex;
+
+                            midiInputPinIndexForThisFilter++;
                         }
 
-                        endpointDefinition.MidiPins.push_back(pinDefinition);
+                        // This is where we build the proposed names
+                        // =================================================
 
+                        internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
+                            pinDefinition.PortNames,
+                            driverSuppliedName,
+                            endpointDefinition.ParentDeviceName,
+                            pinDefinition.FilterName,
+                            pinDefinition.PinName,
+                            customPortName,
+                            pinDefinition.PortNames.DataFlowFromUserPerspective,
+                            pinDefinition.GroupIndex
+                        );
+
+                        endpointDefinition.MidiPins.push_back(pinDefinition);
                     }
                     else
                     {

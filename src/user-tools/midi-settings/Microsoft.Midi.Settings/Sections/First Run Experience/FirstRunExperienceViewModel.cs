@@ -16,7 +16,7 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class FirstRunExperienceViewModel : ObservableRecipient
+    public partial class FirstRunExperienceViewModel : ObservableRecipient
     {
         private IMidiConfigFileService m_configFileService;
         private IMidiDefaultsService m_defaultsService;
@@ -49,22 +49,17 @@ namespace Microsoft.Midi.Settings.ViewModels
             get;
         }
 
+        [ObservableProperty]
+        public bool useNewStyleWinMMPortNames;
 
-        public bool CreateConfigurationFile
-        {
-            get;set;
-        }
+        [ObservableProperty]
+        public bool createConfigurationFile;
 
-        public bool CreateDefaultLoopbackEndpoints
-        {
-            get; set;
-        }
+        [ObservableProperty]
+        public bool createDefaultLoopbackEndpoints;
 
-        public bool SetServiceToAutoStart
-        {
-            get; set;
-        }
-
+        [ObservableProperty]
+        public bool setServiceToAutoStart;
 
         public bool CanPersistChanges
         {
@@ -76,6 +71,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private void CompleteFirstRunSetup()
         {
+            bool needServiceRestart = false;
+
             if (CreateConfigurationFile)
             {
                 string newConfigName = m_defaultsService.GetDefaultMidiConfigName(); ;
@@ -84,13 +81,13 @@ namespace Microsoft.Midi.Settings.ViewModels
                 if (m_configFileService.CreateNewConfigFile(newConfigName, newConfigFileName))
                 {
                     m_configFileService.UpdateRegistryCurrentConfigFile(ConfigFileName);
+                    needServiceRestart = true;
                 }
                 else
                 {
                     // TODO: show an error
                 }
             }
-
 
             if (CreateDefaultLoopbackEndpoints)
             {
@@ -111,6 +108,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
             }
 
+            if (UseNewStyleWinMMPortNames)
+            {
+                // update reg entry
+
+
+
+                needServiceRestart = true;
+            }
+
             if (SetServiceToAutoStart)
             {
                 ProcessStartInfo info = new ProcessStartInfo();
@@ -127,10 +133,9 @@ namespace Microsoft.Midi.Settings.ViewModels
                     // TODO: Need to wait for completion and then check return code                   
                 }
             }
-            else if (CreateConfigurationFile)
-            {
-                // we created a new config file, so we need to restart the service
 
+            if (needServiceRestart)
+            {
                 ProcessStartInfo info = new ProcessStartInfo();
                 info.FileName = "cmd.exe";
                 info.UseShellExecute = true;

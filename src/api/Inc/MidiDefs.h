@@ -75,6 +75,23 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 #define MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT (LONGLONG)3263827
 
 
+// a provided custom name will always override this. Up here because the registry entry.
+// The settings app on the client uses a copy of this enum in IMidiServiceRegistrySettingsService, 
+// so any updates to this need to be mirrored there
+enum Midi1PortNameSelectionProperty : uint32_t
+{
+    PortName_UseGlobalDefault = 0,                  // global default tells us which to defer to
+    PortName_UseLegacyWinMM = 10,                  // compatible with pre-Windows MIDI Services WinMM port names
+
+    PortName_UsePinName = 50,                      // names including the iJack name that customers have asked us for
+    PortName_UseInterfacePlusPinName = 51,         // names including the iJack name that customers have asked us for
+
+    PortName_UseGroupTerminalBlocksExactly = 500,   // for devices named by MIDI 2 driver
+};
+
+
+
+
 //
 // Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs
 // Everything is under HKLM
@@ -88,8 +105,8 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 
 // this is used as the default approach for how we name MIDI 1 ports
 // individual ports can override this via a property in the list below.
-#define MIDI_USE_OLD_MIDI1PORT_NAMING_DEFAULT_REG_VALUE L"DefaultToOldMidi1PortNaming"
-#define MIDI_USE_OLD_MIDI1PORT_NAMING_DEFAULT_VALUE     0x00000001
+#define MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE        L"DefaultMidi1PortNaming"
+#define MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE            ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM))
 
 #define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"
 
@@ -104,23 +121,18 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 #define MIDI_DISCOVERY_TIMEOUT_MINIMUM_VALUE            500
 #define MIDI_DISCOVERY_TIMEOUT_MAXIMUM_VALUE            50000
 
-
-
 #define MIDI_ROOT_APP_SDK_REG_KEY                       MIDI_ROOT_REG_KEY L"\\Desktop App SDK Runtime"
 #define MIDI_APP_SDK_INSTALLED_REG_VALUE                L"Installed"
-
 
 #define MIDI_ROOT_TRANSPORT_PLUGINS_REG_KEY             MIDI_ROOT_REG_KEY L"\\Transport Plugins"
 #define MIDI_ROOT_ENDPOINT_PROCESSING_PLUGINS_REG_KEY   MIDI_ROOT_REG_KEY L"\\Message Processing Plugins"
 #define MIDI_PLUGIN_ENABLED_REG_VALUE                   L"Enabled"
 #define MIDI_PLUGIN_CLSID_REG_VALUE                     L"CLSID"
 
-
-
 // we force this root so the service can't be told to open some other random file on the system
 // note that this is a restricted folder. The installer has to create this folder for us and
-// give rights to the users in the system so the service *and* the setup applications can 
-// read/write there.
+// give rights to the users in the system so the service *and* the non-admin setup applications
+// can read/write there.
 #define MIDI_CONFIG_FILE_FOLDER L"%ALLUSERSPROFILE%\\Microsoft\\MIDI\\"
 
 //
@@ -646,22 +658,21 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVP
 
 
 // MIDI 1.0 Port Naming Properties  ==========================================================
-// Starts at 1000
+// Starts at 950
 
-// this property is used on the parent UMP interface to control all generated MIDI 1 ports
-#define STRING_PKEY_MIDI_UseOldMidi1PortNamingScheme MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1000"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UseOldMidi1PortNamingScheme, 1000);     // DEVPROP_TYPE_BOOL
+#define STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"950"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 950);     // DEVPROP_TYPE_BOOLEAN
 
-#define STRING_PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1010"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, 1010);     // DEVPROP_TYPE_BOOLEAN
+// this is set at the parent endpoint level, and applies to all WinMM and WinRT MIDI 1.0 ports created from this endpoint
+#define STRING_PKEY_MIDI_Midi1PortNamingSelection MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"955"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 : MidiPortNameSelectionProperty enum
 
-#define STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"1020"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 1020);     // DEVPROP_TYPE_BOOLEAN
-
-
-// Structures for properties =================================================================
+// this is the name table. We can have up to 32 created ports from a single endpoint
+#define STRING_PKEY_MIDI_Midi1PortNameTable MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"960"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNameTable, 960);              // DEVPROP_TYPE_BINARY : Midi1PortNameTable
 
 
+// Other Structures for properties =================================================================
 
 
 

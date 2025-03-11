@@ -213,5 +213,8 @@ private:
     std::vector<std::unique_ptr<MIDIPORT>> m_midiPorts;
 
     std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_midiParents;
+
+    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingSelection{ MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE };
+
 };
 
