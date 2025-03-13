@@ -38,6 +38,8 @@
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS                     "reg_use_mmcss"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_CURRENT_CONFIG                "reg_current_config"
 
+#define MIDIDIAG_SECTION_DEV_MODE                                        "dev_mode"
+#define MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED                            "dev_mode_enabled"
 
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_INSTALLED                      "reg_sdk_installed"
 

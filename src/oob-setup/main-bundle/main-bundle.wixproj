@@ -12,7 +12,8 @@
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="midi_installer_logo_square.png" />
+    <Content Include="logo-sidebar.png" />
+    <Content Include="logo.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="WixToolset.Bal.wixext" Version="4.0.5" />

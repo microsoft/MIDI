@@ -1127,6 +1127,34 @@ void OutputProcessAndNativeMachine()
     }
 }
 
+bool DoSectionDevMode(_In_ bool verbose)
+{
+    // dev mode check
+
+    OutputSectionHeader(MIDIDIAG_SECTION_DEV_MODE);
+
+    wil::unique_hkey devModeKey{ };
+    if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock", devModeKey)))
+    {
+        auto devModeEnabledValue = wil::reg::try_get_value_dword(devModeKey.get(), L"AllowDevelopmentWithoutDevLicense");
+
+        if (devModeEnabledValue.has_value())
+        {
+            OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, (bool)(devModeEnabledValue.value() > 0));
+        }
+        else
+        {
+            OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, L"Value Not Present");
+        }
+    }
+    else
+    {
+        OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, L"Key Not Present");
+    }
+
+
+}
+
 
 bool DoSectionSystemInfo(_In_ bool verbose)
 {
@@ -1184,6 +1212,11 @@ bool DoSectionSystemInfo(_In_ bool verbose)
         OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_CURRENT_MS, actualResolutionMilliseconds, 3);
     }
 
+
+
+
+
+
     return true;
 }
 
@@ -1214,6 +1247,8 @@ int __cdecl main()
     {
         // do anything which doesn't rely on the service or SDK
         DoSectionSystemInfo(verbose);
+
+        DoSectionDevMode(verbose);
 
         // try to get all the classic MIDI 1.0 info up-front, so there's
         // some level of info available even if Windows MIDI Services is not installed

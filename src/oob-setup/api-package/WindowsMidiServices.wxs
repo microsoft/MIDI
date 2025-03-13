@@ -1,4 +1,5 @@
-﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
@@ -8,13 +9,10 @@
           Version="1.0.0.0"
           UpgradeCode="c552e144-54d0-4e18-8e16-ff0f0a2eb34f"
           Scope="perMachine"
-          Compressed="true"
-          
-          >
+          Compressed="true">
        
         <MediaTemplate EmbedCab="yes" />
 
-        
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
                 <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
@@ -38,6 +36,21 @@
             </Directory>
         </StandardDirectory>
 
+
+        <!--
+        <Component Id="RegistryTakeOwnership"
+                   Guid="e355d2a8-5967-4db5-8b03-1c6108082f2c">
+            <RegistryKey Root="HKLM" 
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services\Transport Plugins">
+                <util:PermissionEx
+                    TakeOwnership="yes"
+                    ChangePermission="yes"
+                    GenericAll="yes"
+                    User="Administrators">
+                </util:PermissionEx>
+            </RegistryKey>
+        </Component>
+        -->
 
         <!-- Install Windows Service -->
      
@@ -64,75 +77,113 @@
         <!--    <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll"                SelfRegCost="1" Vital="true" /> -->
         </Component>
 
-        <!-- The only way to copy this file over the existing one is to use sfpcopy, which is not a public tool -->
-        <!--
+        <!-- The main midi service transfer used by AudioEndpointBuilder . Don't overwrite -->
+        <Component Id="WinMMCompatRegistryEntries"
+                    Bitness="always64"
+                    Directory="SERVICE_INSTALLFOLDER"
+                    Guid="baa5b390-f949-4d92-a1da-42942f199e06"
+                    NeverOverwrite="true">
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32">
+                <RegistryValue Type="integer" Name="MidisrvTransferComplete" Value="0" />
+            </RegistryKey>
+        </Component>
+
+        <!-- This only works if we've run the custom actions first -->
         <Component Id="WinMMAPIRedirectDriver"
-                   Bitness="always64"
-                   Directory="System64Folder"
-                   Guid="8b7aef76-de74-4a61-8c76-d5315f5a60c9"
-                   NeverOverwrite="true">
+                    Bitness="always64"
+                    Directory="System64Folder"
+                    Guid="8b7aef76-de74-4a61-8c76-d5315f5a60c9"
+                    NeverOverwrite="false">
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\wdmaud2.drv"                     Vital="true" />
         </Component>
-        -->
 
+        <!-- The Windows service. This gets enabled in a different step -->
         <Component Id="WindowsService"
                    Bitness="always64"
                    Directory="SERVICE_INSTALLFOLDER"
                    NeverOverwrite="false"
                    Guid="d2557869-303c-4985-a6be-67feb11a11d9" >
+            
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
 
         </Component>
 
-        
-        <Component Id="WinMMCompatRegistryEntries"
-                   Bitness="always64"
-                   Directory="SERVICE_INSTALLFOLDER"
-                   Guid="baa5b390-f949-4d92-a1da-42942f199e06"
-                   NeverOverwrite="true">
-            <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32">
-                <RegistryValue Type="integer" Name="MidisrvTransferComplete" Value="0" />
-            </RegistryKey>
-        </Component>
-        
-
-        <Component Id="ConfigurationRegistryEntries"
+        <!-- Configuration entries. We don't overwrite these if present -->
+        <Component Id ="ConfigurationRegistryEntries"
                 Bitness="always64"
                 Directory="SERVICE_INSTALLFOLDER"
-                Guid="25E35CBB-4C66-4BEB-9B03-BC2E2D99317B"
+                Guid="30c5fc22-23c5-4f8c-9716-75ed00f85e2d"
+                NeverOverwrite="true">
+
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services">
+
+                <RegistryValue Type="integer" Name="Midi2DiscoveryEnabled" Value="1"  />
+                <RegistryValue Type="integer" Name="UseMMCSS" Value="0" />
+                <RegistryValue Type="integer" Name="DefaultMidi1PortNaming" Value="51" Action="write"/>
+            </RegistryKey>
+        </Component>
+
+        <!-- Enable plugins -->
+        <Component Id="PluginsRegistryEntries"
+                Bitness="always64"
+                Directory="SERVICE_INSTALLFOLDER"
+                Guid="465abd8d-3db8-4441-b84e-70e8e11bf001"
                 NeverOverwrite="false">
                    
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
-                <!--<RegistryValue Type="string" Name="CurrentConfig" Value="Default.midiconfig.json" /> -->
-                <RegistryValue Type="integer" Name="Midi2DiscoveryEnabled" Value="1" />
-                <RegistryValue Type="integer" Name="UseMMCSS" Value="0" />
-
-                <RegistryKey Key="Endpoint Processing Plugins">
+                <RegistryKey Key="Endpoint Processing Plugins" ForceCreateOnInstall="yes">
+                    <Permission GenericAll="yes" User="Administrators"/>
                     <!-- TODO: Any processing plugins -->
                 </RegistryKey>
 
-                <RegistryKey Key="Transport Plugins">
-                    
-                    <RegistryKey Key="Midi2KSTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                <RegistryKey Key="Transport Plugins" ForceCreateOnInstall="yes">
+                    <Permission GenericAll="yes" User="Administrators"/>
+
+                    <RegistryKey Key="Midi2KSTransport" ForceCreateOnInstall="yes">
+                        <Permission GenericAll="yes" User="Administrators"/>
+
+                        <RegistryValue Type="string" Name="CLSID" Value="{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}">
+                            <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
+                        <RegistryValue Type="integer" Name="Enabled" Value="1">
+                            <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
                     </RegistryKey>
 
-                    <RegistryKey Key="Midi2KSAggregateTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{0f273b18-e372-4d95-87ac-c31c3d22e937}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    <RegistryKey Key="Midi2KSAggregateTransport" ForceCreateOnInstall="yes">
+                        <Permission GenericAll="yes" User="Administrators"/>
+
+                        <RegistryValue Type="string" Name="CLSID" Value="{0f273b18-e372-4d95-87ac-c31c3d22e937}">
+                            <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
+                        <RegistryValue Type="integer" Name="Enabled" Value="1">
+                            <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
                     </RegistryKey>
 
-                    <RegistryKey Key="Midi2VirtualMidiTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{8FEAAD91-70E1-4A19-997A-377720A719C1}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    <RegistryKey Key="Midi2VirtualMidiTransport" ForceCreateOnInstall="yes">
+                        <Permission GenericAll="yes" User="Administrators"/>
+
+                        <RegistryValue Type="string" Name="CLSID" Value="{8FEAAD91-70E1-4A19-997A-377720A719C1}">
+                            <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
+                        <RegistryValue Type="integer" Name="Enabled" Value="1">
+                            <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
                     </RegistryKey>
 
-                    <RegistryKey Key="Midi2LoopbackMidiTransport">
-                        <RegistryValue Type="string" Name="CLSID" Value="{942BF02D-93C0-4EA8-B03E-D51156CA75E1}" />
-                        <RegistryValue Type="integer" Name="Enabled" Value="1" />
+                    <RegistryKey Key="Midi2LoopbackMidiTransport" ForceCreateOnInstall="yes">
+                        <Permission GenericAll="yes" User="Administrators"/>
+
+                        <RegistryValue Type="string" Name="CLSID" Value="{942BF02D-93C0-4EA8-B03E-D51156CA75E1}">
+                            <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
+                        <RegistryValue Type="integer" Name="Enabled" Value="1">
+                            <Permission GenericAll="yes" User="Administrators"/>
+                        </RegistryValue>
                     </RegistryKey>
 
                 </RegistryKey>
@@ -163,23 +214,87 @@
                       Directory="SERVICE_INSTALLFOLDER" 
                       ExeCommand="[SERVICE_INSTALLFOLDER]midisrv uninstall" />
 
-        <Feature Id="WindowsMIDIServices">
-            <ComponentRef Id="WindowsServiceTransports"/>
-            <ComponentRef Id="WindowsService"/>
-            <ComponentRef Id="WinMMCompatRegistryEntries"/>
-            <!-- <ComponentRef Id="WinMMAPIRedirectDriver"/> -->
 
-            <ComponentRef Id="Permission.SharedAppDataFolder"/>
+        <!-- Feature: wdmaud2.drv -->
+        <Feature Id="WinMMRedirectDriverWdmaud2"
+                 AllowAbsent="yes"
+                 TypicalDefault="install"
+                 Level="1"
+                 Description="Install wdmaud2.drv WinMM redirection (may require reboot)"
+                 Title="wdmaud2.drv">
             
-            <!-- <ComponentRef Id="ConfigurationFile"/> -->
-            <ComponentRef Id="ConfigurationRegistryEntries"/>
+            <ComponentRef Id="WinMMCompatRegistryEntries"/>
+            <ComponentRef Id="WinMMAPIRedirectDriver"/>
 
         </Feature>
 
+        <!-- Feature: MIDI Service and plugins -->
+        <Feature Id="ServiceAndPlugins"
+                 AllowAbsent="yes"
+                 TypicalDefault="install"
+                 Level="1"
+                 Description="Install the Windows MIDI Service and its transport plugins"
+                 Title="MIDI Service">
+            
+            <ComponentRef Id="WindowsServiceTransports"/>
+            <ComponentRef Id="WindowsService"/>
+            
+            <ComponentRef Id="ConfigurationRegistryEntries"/>
+            <ComponentRef Id="PluginsRegistryEntries"/>
+
+            <ComponentRef Id="Permission.SharedAppDataFolder"/>
+        </Feature>
+        
+        
+        <Binary Id="CustomActionBinary" 
+                SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+        <CustomAction Id="Action_TakeRegistryOwnership"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="TakeRegistryOwnership"
+                      Return="check"/>
+        
+        <CustomAction Id="Action_TakeWdmaud2Ownership"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="TakeWdmaud2Ownership"
+                      Return="check"/>
+
+        <CustomAction Id="Action_RemoveInBoxService"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="RemoveInBoxService"
+                      Return="check"/>
+
+        
         
         <InstallExecuteSequence>
-            <Custom Action="SelfInstallService" Before="InstallFinalize" Condition="(NOT Installed)" />
-            <Custom Action="SelfUninstallService" Before="RemoveFiles" Condition='(REMOVE="ALL")'/>
+            <Custom Action="Action_TakeRegistryOwnership" 
+                    Before="Action_RemoveInBoxService"
+                    Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+            <Custom Action="Action_RemoveInBoxService"
+                    Before="Action_TakeWdmaud2Ownership"
+                    Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+            <Custom Action="Action_TakeWdmaud2Ownership" 
+                    Before="CreateFolders"
+                    Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+            
+            
+            <Custom Action="SelfInstallService" 
+                    Before="InstallFinalize" 
+                    Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+            
+            <Custom Action="SelfUninstallService" 
+                    Before="RemoveFiles" 
+                    Condition='(REMOVE="ALL")' />
+
         </InstallExecuteSequence>
         
         

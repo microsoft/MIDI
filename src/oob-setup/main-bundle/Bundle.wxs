@@ -15,24 +15,35 @@
     
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
-    <Bundle Name="Windows MIDI Services (Service and Config) $(SetupVersionName) $(SetupVersionNumber)" 
+    <Bundle Name="Windows MIDI Services Preview" 
             Manufacturer="Microsoft Corporation" 
             Version="$(SetupVersionNumber)" 
             UpgradeCode="0ccb5d12-44a6-4dd8-8d07-0d130589c0a2">
 
-        <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
+        <!-- Require Dev Mode to be turned on to run this installer -->
+        <WixVariable Id="DevModeEnabled" Value="0" />
+        <util:RegistrySearch
+            Id="DevMode"
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+            Value="AllowDevelopmentWithoutDevLicense"
+            Variable="DevModeEnabled"
+            Result="value"/>
+
+        <bal:Condition Message="Developer mode in Windows Settings must be enabled to install this Windows MIDI Services preview package."
+                       Condition="DevModeEnabled=1" />
 
         <BootstrapperApplication>
-            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
+            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE"
                                                     SuppressOptionsUI="true"
                                                     SuppressRepair="true"
-                                                    Theme="hyperlinkLicense" 
-                                                    LogoFile="midi_installer_logo_square.png"/>
-
-        
+                                                    ShowVersion="true"
+                                                    LogoFile="logo.png"
+                                                    LogoSideFile="logo-sidebar.png"
+                                                    Theme="hyperlinkSidebarLicense" />
         </BootstrapperApplication>
 
+        
         <Chain>
             <PackageGroupRef Id="Prerequisites" />
             <PackageGroupRef Id="MidiServicesPackages" />
