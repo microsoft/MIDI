@@ -75,11 +75,11 @@ void LoadWinMMDevices()
         }
     }
 
-    std::sort(m_midiInputs.begin(), m_midiInputs.end(),
-        [](MidiPort a, MidiPort b)
-        {
-            return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
-        });
+    //std::sort(m_midiInputs.begin(), m_midiInputs.end(),
+    //    [](MidiPort a, MidiPort b)
+    //    {
+    //        return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
+    //    });
 
     // -----------------------------
 
@@ -101,11 +101,11 @@ void LoadWinMMDevices()
         }
     }
 
-    std::sort(m_midiOutputs.begin(), m_midiOutputs.end(),
-        [](MidiPort a, MidiPort b)
-        {
-            return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
-        });
+    //std::sort(m_midiOutputs.begin(), m_midiOutputs.end(),
+    //    [](MidiPort a, MidiPort b)
+    //    {
+    //        return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
+    //    });
 
 
 }
@@ -131,7 +131,7 @@ void DisplayAllWinMMInputs()
 
 void DisplayAllWinMMOutputs()
 {
-    WriteInfo(std::to_string(m_midiInputs.size()) + " Available Output Ports (MIDI Destinations)");
+    WriteInfo(std::to_string(m_midiOutputs.size()) + " Available Output Ports (MIDI Destinations)");
     std::wcout << std::endl;
 
     for (auto const& port : m_midiOutputs)

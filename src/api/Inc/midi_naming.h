@@ -17,9 +17,6 @@
 namespace WindowsMidiServicesInternal::Midi1PortNaming
 {
 
-#pragma pack(push)
-#pragma pack(1)
-
     // we always write the total size in bytes (size_t), and then a number of these entries
 
 #define MIDI1_PORT_NAME_ENTRY_HEADER_SIZE (sizeof(size_t))
@@ -32,14 +29,14 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         wchar_t CustomName[MAXPNAMELEN]{ };
         wchar_t LegacyWinMMName[MAXPNAMELEN]{ };
         wchar_t PinName[MAXPNAMELEN]{ };
-        wchar_t InterfacePlusPinName[MAXPNAMELEN]{ };
+        wchar_t FilterPlusPinName[MAXPNAMELEN]{ };
         wchar_t GroupTerminalBlockName[MAXPNAMELEN]{ };
+        wchar_t FilterPlusGroupTerminalBlockName[MAXPNAMELEN]{ };
     };
-#pragma pack(pop)
 
 // max of 32 total inputs/outputs
 #define MAX_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) * 32 + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
-
+#define MIN_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
 
 
 
@@ -116,7 +113,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
     {
         std::wstring generatedName{};
 
-        if (!nameFromRegistry.empty())
+        if (!internal::TrimmedWStringCopy(nameFromRegistry).empty())
         {
             // If name from registry is not blank, use that first
             // NOTE: There's an existing issue in WinMM that causes two of the same make/model of
@@ -124,13 +121,14 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             // share the same registry entry. To maintain compatibility, we cannot fix that here
             // Instead, the custom will need to use one of the other provided naming options.
 
-            generatedName = nameFromRegistry.substr(0, MAXPNAMELEN - 1);
+            generatedName = internal::TrimmedWStringCopy(nameFromRegistry).substr(0, MAXPNAMELEN - 1);
         }
         else
         {
             // If registry name is empty, use the device friendly name (filter name in this case)
-            generatedName = filterName.substr(0, MAXPNAMELEN - 1);
+            generatedName = internal::TrimmedWStringCopy(filterName).substr(0, MAXPNAMELEN - 1);
         }
+
 
         // if this is not the first port for this filter, instance prefix with MIDIIN/OUT #
 
@@ -169,7 +167,6 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
     )
     {
         UNREFERENCED_PARAMETER(filterName);
-        UNREFERENCED_PARAMETER(pinName);
         UNREFERENCED_PARAMETER(flowFromUserPerspective);
         UNREFERENCED_PARAMETER(portIndexWithinThisFilterAndDirection);
 
@@ -216,6 +213,43 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         return generatedName;
     }
 
+
+    inline std::wstring GenerateFilterPlusGroupTerminalBlockMidi1PortName(
+        _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
+        _In_ std::wstring const& filterName,
+        _In_ std::wstring const& groupTerminalBlockName
+    )
+    {
+        std::wstring generatedName{};
+
+        auto cleanedGtbName = CleanupKSPinName(groupTerminalBlockName, parentDeviceName, filterName);
+
+        generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedGtbName));
+
+        // if the name is too long, try using just the pin name or just the filter name
+
+        if (generatedName.length() + 1 > MAXPNAMELEN)
+        {
+            if (!cleanedGtbName.empty())
+            {
+                // we're over length, so just use the gtb name
+                generatedName = cleanedGtbName.substr(0, MAXPNAMELEN - 1);
+            }
+            else
+            {
+                // we're over length, and there's no gtb name
+                // so we use the filter name
+                generatedName = filterName.substr(0, MAXPNAMELEN - 1);
+            }
+        }
+
+        // TODO: do we need to do any port differentiators here? Look at the collection and see
+        // if there are already ports starting with the same name, and if so, increment a counter and append
+
+        return generatedName;
+    }
+
+
     inline void PopulateMidi1PortNameEntryNames(
         _In_ Midi1PortNameEntry& entry,
         _In_ std::wstring const& nameFromRegistry,
@@ -242,7 +276,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             filterName,
             pinName
         );
-        interfacePlusPinWinMMName.copy(entry.InterfacePlusPinName, MAXPNAMELEN - 1);
+        interfacePlusPinWinMMName.copy(entry.FilterPlusPinName, MAXPNAMELEN - 1);
 
         // Uses only the pin/iJack info to name the pin
         auto pinWinMMName = GeneratePinNameBasedMidi1PortName(
@@ -260,8 +294,13 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         }
 
         // GTB Name. We should set this later based on the user preference
-        interfacePlusPinWinMMName.copy(entry.GroupTerminalBlockName, MAXPNAMELEN - 1);
+        pinWinMMName.copy(entry.GroupTerminalBlockName, MAXPNAMELEN - 1);
 
+        auto filterPlusGroupTerminalBlockName = GenerateFilterPlusGroupTerminalBlockMidi1PortName(
+            parentDeviceName, 
+            filterName, 
+            pinName);
+        filterPlusGroupTerminalBlockName.copy(entry.FilterPlusGroupTerminalBlockName, MAXPNAMELEN - 1);
 
     }
 
@@ -519,44 +558,46 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
         size_t totalSizeBytes{ 0 };
 
-        if (dataSize > MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
+        if (dataSize >= MIN_PORT_NAME_TABLE_SIZE && dataSize <= MAX_PORT_NAME_TABLE_SIZE)
         {
-            totalSizeBytes = static_cast<size_t>(*tablePointer);
+            // the first size_t in the payload is the size of the entire table, including this size_t header
+            memcpy(&totalSizeBytes, tablePointer, sizeof(size_t));
+
+            if (totalSizeBytes != dataSize)
+            {
+                LOG_IF_FAILED(E_INVALIDARG);
+
+                // invalid size, so we return empty table
+                return nameTable;
+            }
         }
         else
         {
-            // invalid table property value
+            // invalid table property value, so we return empty table
+            LOG_IF_FAILED(E_INVALIDARG);
+
             return nameTable;
         }
 
+        // we've already read the header
         size_t bytesRead = MIDI1_PORT_NAME_ENTRY_HEADER_SIZE;
 
-        if (totalSizeBytes == 0 || totalSizeBytes > MAX_PORT_NAME_TABLE_SIZE)
+        // the rest of the data is just an array of the Midi1PortNameEntry structures
+
+        size_t numStructs = (totalSizeBytes - bytesRead) / sizeof(Midi1PortNameEntry);
+        size_t byteCountToCopy = sizeof(Midi1PortNameEntry) * numStructs;
+
+        if (numStructs > 0 && byteCountToCopy == (totalSizeBytes - bytesRead))
         {
-            return nameTable;
+            nameTable.resize(numStructs);
+
+            byte* readPosition = (byte*)(tablePointer + bytesRead);
+
+            memcpy(nameTable.data(), readPosition, byteCountToCopy);
         }
-
-        // we now have a valid amount of data to process, so have at it.
-
-        while (bytesRead < totalSizeBytes)
+        else
         {
-            if (totalSizeBytes - bytesRead >= sizeof(Midi1PortNameEntry))
-            {
-                // get next entry
-                Midi1PortNameEntry* portEntryPointer = (Midi1PortNameEntry*)(tablePointer + bytesRead);
-                Midi1PortNameEntry portEntry{};
-
-                memcpy(&portEntry, portEntryPointer, sizeof(Midi1PortNameEntry));
-
-                nameTable.push_back(portEntry);
-
-                bytesRead += sizeof(Midi1PortNameEntry);
-            }
-            else
-            {
-                // incomplete table. Bail
-                break;
-            }
+            LOG_IF_FAILED(E_FAIL);
         }
 
         return nameTable;

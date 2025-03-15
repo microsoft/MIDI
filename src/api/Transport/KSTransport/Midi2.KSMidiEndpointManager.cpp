@@ -23,6 +23,8 @@ using namespace Microsoft::WRL::Wrappers;
 #define CREATE_KS_BIDI_SWDS
 #define BIDI_REPLACES_INOUT_SWDS
 
+#define INITIAL_ENUMERATION_TIMEOUT_MS 10000
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiEndpointManager::Initialize(
@@ -70,7 +72,7 @@ CMidi2KSMidiEndpointManager::Initialize(
     m_Watcher.Start();
 
     // Wait for everything to be created so that they're available immediately after service start.
-    m_EnumerationCompleted.wait(10000);
+    m_EnumerationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
 
     return S_OK;
 }
@@ -584,6 +586,15 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 commonProperties.NativeDataFormat = MidiDataFormats_UMP;
                 capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
                 capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
+
+                // for native MIDI 2 devices, we use filter name + pin (gtb) name
+                // TODO: This needs to be re-done to use user-specified properties from config file
+                auto naming = Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName;
+                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
+
+
+
             }
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
@@ -602,6 +613,11 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
                 commonProperties.NativeDataFormat = MidiDataFormats_ByteStream;
                 capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+
+                // TODO: This needs to be updated to use user-specified properties from config file
+                auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
+                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
             }
             else
             {
@@ -616,15 +632,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             interfaceDevProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
                     DEVPROP_TYPE_BINARY, MidiPin->GroupTerminalBlockDataSize, (PVOID)MidiPin->GroupTerminalBlockData.get() });
         }
-
-
-        // TODO: This needs to be re-done to use user-specified properties
-        auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
-
-        interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
-
-        // TODO: Need to build names and add the property here
 
 
         // Bidirectional uses a different property for the in and out pins, since we currently require two separate ones.
@@ -662,6 +669,129 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             interfaceDevProperties.push_back({ { DEVPKEY_KsMidiPort_KsPinId, DEVPROP_STORE_SYSTEM, nullptr },
                 DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(UINT32)), &(MidiPin->PinId) });
         }
+
+
+        // Write Name table property
+        // =====================================================
+
+        // we have group terminal blocks data, so we need to create names starting from that
+
+        if (!MidiPin->CreateUMPOnly)
+        {
+            std::vector<internal::Midi1PortNaming::Midi1PortNameEntry> portNameEntries{};
+
+            // get the group terminal blocks and their names, because that's how the MIDI 2 driver reports the info about attached MIDI 1 devices
+            auto gtbs = internal::ReadGroupTerminalBlocksFromPropertyData(MidiPin->GroupTerminalBlockData.get(), MidiPin->GroupTerminalBlockDataSize);
+
+            for (auto const& gtb : gtbs)
+            {
+                // process each group. For MIDI 1 devices, count will always be 1. For MIDI 2, it could be anything from 1-16
+                for (uint8_t groupIndex = gtb.FirstGroupIndex; groupIndex < gtb.FirstGroupIndex + gtb.GroupCount; groupIndex++)
+                {
+                    std::wstring nameFromRegistry = L"";    // we don't have this with MIDI 2 devices
+                    std::wstring pinName = gtb.Name;
+
+                    // TODO: Here's where we should load any custom port name into the table, using the values from config
+                    std::wstring customPortName = L"";      // TODO: Get from config
+
+                    if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL)
+                    {
+                        // we need to create two entries for bidi
+                        internal::Midi1PortNaming::Midi1PortNameEntry entryInput;
+                        internal::Midi1PortNaming::Midi1PortNameEntry entryOutput;
+
+
+                        // MIDI Input
+                        internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
+                            entryInput,
+                            nameFromRegistry,
+                            MidiPin->Name,              // parent device name
+                            MidiPin->Name,              // filter name. For MIDI 2 devices, this ends up the same as the parent device name
+                            pinName,                    // we use gtb name here because the driver populates that with the pin name
+                            customPortName,
+                            MidiFlow::MidiFlowIn,
+                            groupIndex
+                        );
+
+                        // MIDI Output
+                        internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
+                            entryOutput,
+                            nameFromRegistry,
+                            MidiPin->Name,              // parent device name
+                            MidiPin->Name,              // filter name. For MIDI 2 devices, this ends up the same as the parent device name
+                            pinName,                    // we use gtb name here because the driver populates that with the pin name
+                            customPortName,
+                            MidiFlow::MidiFlowOut,
+                            groupIndex
+                        );
+
+                        portNameEntries.push_back(entryInput);
+                        portNameEntries.push_back(entryOutput);
+                    }
+                    else
+                    {
+                        internal::Midi1PortNaming::Midi1PortNameEntry entry;
+
+                        internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
+                            entry,
+                            nameFromRegistry,
+                            MidiPin->Name,              // parent device name
+                            MidiPin->Name,              // filter name. For MIDI 2 devices, this ends up the same as the parent device name
+                            pinName,                    // we use gtb name here because the driver populates that with the pin name
+                            customPortName,
+                            gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT ? MidiFlow::MidiFlowOut : MidiFlow::MidiFlowIn,    // always opposite
+                            groupIndex
+                        );
+
+                        portNameEntries.push_back(entry);
+
+                    }
+                }
+            }
+
+            TraceLoggingWrite(
+                MidiKSTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingUInt32(static_cast<uint32_t>(portNameEntries.size()), "port name entries count")
+            );
+
+            std::vector<std::byte> nameTableData;
+
+            if (internal::Midi1PortNaming::WriteMidi1PortNameTableToPropertyDataPointer(portNameEntries, nameTableData))
+            {
+                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BINARY, (ULONG)nameTableData.size(), (PVOID)nameTableData.data() });
+            }
+            else
+            {
+                // write empty data
+                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_EMPTY, 0, nullptr });
+
+                TraceLoggingWrite(
+                    MidiKSTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unable to write MIDI 1 port name table to property data", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+            }
+
+        }
+
+
+
+        // ==============================================
+
+
+
+
+
+
 
         //deviceDevProperties.push_back({ { DEVPKEY_Device_PresenceNotForDevice, DEVPROP_STORE_SYSTEM, nullptr },
         //        DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), &devPropTrue });

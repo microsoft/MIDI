@@ -72,6 +72,8 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "swd_helpers.h"
 #include "resource_util.h"
 #include "ump_helpers.h"
+#include "midi_group_terminal_blocks.h"
+#include "midi_naming.h"
 
 #include "MidiXProc.h"
 

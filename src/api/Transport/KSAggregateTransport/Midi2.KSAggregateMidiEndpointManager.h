@@ -23,6 +23,7 @@ struct KsAggregateEndpointMidiPinDefinition
     MidiFlow PinDataFlow;
 
     uint8_t GroupIndex{ 0 };
+    uint8_t PortIndexWithinThisFilterAndDirection{ 0 }; // not always the same as the group index. Example: MOTU Express 128 with separate filter for each in/out pair
 
     internal::Midi1PortNaming::Midi1PortNameEntry PortNames;
 };

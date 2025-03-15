@@ -122,6 +122,37 @@ namespace WindowsMidiServicesInternal
         return ::WindowsMidiServicesInternal::NormalizeDeviceInstanceIdWStringCopy(GetSwdStringProperty(cleanId, L"System.Devices.DeviceInstanceId", L""));
     }
 
+    // WinRT doesn't allow us pass the property bag around separately, so have to pass the whole deviceinformation object in here
+    template <class T>
+    inline T SafeGetSwdPropertyFromDeviceInformation(
+        _In_ winrt::hstring propertyStringKey, 
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInformation,
+        _In_ T defaultValue)
+    {
+        if (propertyStringKey.empty())
+        {
+            return defaultValue;
+        }
+
+        if (deviceInformation == nullptr || !deviceInformation.Properties().HasKey(propertyStringKey))
+        {
+            return defaultValue;
+        }
+
+        // lookup the property. It should provide us with an IInspectable
+        auto prop = deviceInformation.Properties().Lookup(propertyStringKey);
+
+        if (prop != nullptr)
+        {
+            return winrt::unbox_value_or<T>(prop, defaultValue);
+        }
+        else
+        {
+            return defaultValue;
+        }
+    }
+
+
 }
 
 #endif

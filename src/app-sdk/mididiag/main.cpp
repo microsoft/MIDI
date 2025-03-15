@@ -324,6 +324,8 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
 
         if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, drivers32KeyLocation.c_str(), drivers32Key, wil::reg::key_access::read)))
         {
+            bool wdmaud2drvFound{ false };
+
             for (const auto& valueData : wil::make_range(wil::reg::value_iterator{ drivers32Key.get() }, wil::reg::value_iterator{}))
             {
                 //valueData.name;
@@ -336,7 +338,19 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
                     if (val.has_value())
                     {
                         OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + val.value());
+
+                        // this is added by something in the korg uninstall process. Possibly third-party, possibly korg.
+                        // it's an invalid value that is not picked up by WinMM
+                        if (valueData.name == L"midi0")
+                        {
+                            OutputError("The above \"midi0\" entry is invalid. It should be named \"midi\" to be recognized by AudioEndpointBuilder.");
+                        }
+                        else if (internal::ToLowerTrimmedWStringCopy(val.value()) == L"wdmaud2.drv")
+                        {
+                            wdmaud2drvFound = true;
+                        }
                     }
+
                 }
                 else if (valueData.name == L"MidisrvTransferComplete")
                 {
@@ -347,7 +361,11 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
                         OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + std::to_wstring(val.value()));
                     }
                 }
+            }
 
+            if (!wdmaud2drvFound)
+            {
+                OutputError("No valid entry found with wdmaud2.drv listed in " + winrt::to_string(drivers32KeyLocation) +  ". Typically, this will be the \"midi1\" entry");
             }
         }
         else

@@ -4,7 +4,7 @@
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
     <Package  
-          Name="Windows MIDI Services $(var.Platform)"
+          Name="Windows MIDI Services (Preview Service) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
           Version="1.0.0.0"
           UpgradeCode="c552e144-54d0-4e18-8e16-ff0f0a2eb34f"
@@ -84,18 +84,20 @@
                     Guid="baa5b390-f949-4d92-a1da-42942f199e06"
                     NeverOverwrite="true">
             <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32">
-                <RegistryValue Type="integer" Name="MidisrvTransferComplete" Value="0" />
+                <RegistryValue Type="integer" Name="MidisrvTransferComplete" Value="1" />
             </RegistryKey>
         </Component>
 
         <!-- This only works if we've run the custom actions first -->
+        <!--
         <Component Id="WinMMAPIRedirectDriver"
-                    Bitness="always64"
-                    Directory="System64Folder"
-                    Guid="8b7aef76-de74-4a61-8c76-d5315f5a60c9"
-                    NeverOverwrite="false">
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\wdmaud2.drv"                     Vital="true" />
+                   Bitness="always64"
+                   Directory="System64Folder"
+                   Guid="8b7aef76-de74-4a61-8c76-d5315f5a60c9"
+                   NeverOverwrite="true">
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\wdmaud2.drv"                     Vital="true" System="yes" />
         </Component>
+        -->
 
         <!-- The Windows service. This gets enabled in a different step -->
         <Component Id="WindowsService"
@@ -120,7 +122,7 @@
 
                 <RegistryValue Type="integer" Name="Midi2DiscoveryEnabled" Value="1"  />
                 <RegistryValue Type="integer" Name="UseMMCSS" Value="0" />
-                <RegistryValue Type="integer" Name="DefaultMidi1PortNaming" Value="51" Action="write"/>
+                <!--<RegistryValue Type="integer" Name="DefaultMidi1PortNaming" Value="51"/> -->
             </RegistryKey>
         </Component>
 
@@ -217,20 +219,24 @@
 
         <!-- Feature: wdmaud2.drv -->
         <Feature Id="WinMMRedirectDriverWdmaud2"
-                 AllowAbsent="yes"
+                 AllowAbsent="no"
+                 AllowAdvertise="true"
+                 Display="expand"
                  TypicalDefault="install"
                  Level="1"
                  Description="Install wdmaud2.drv WinMM redirection (may require reboot)"
                  Title="wdmaud2.drv">
             
             <ComponentRef Id="WinMMCompatRegistryEntries"/>
-            <ComponentRef Id="WinMMAPIRedirectDriver"/>
+            <!-- <ComponentRef Id="WinMMAPIRedirectDriver"/> -->
 
         </Feature>
 
         <!-- Feature: MIDI Service and plugins -->
         <Feature Id="ServiceAndPlugins"
-                 AllowAbsent="yes"
+                 AllowAbsent="no"
+                 AllowAdvertise="true"
+                 Display="expand"
                  TypicalDefault="install"
                  Level="1"
                  Description="Install the Windows MIDI Service and its transport plugins"
@@ -278,18 +284,20 @@
                     Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
 
             <Custom Action="Action_RemoveInBoxService"
-                    Before="Action_TakeWdmaud2Ownership"
+                    Before="CreateFolders"
                     Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
 
+            <!--
             <Custom Action="Action_TakeWdmaud2Ownership" 
                     Before="CreateFolders"
                     Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+            -->
 
             
             
             <Custom Action="SelfInstallService" 
                     Before="InstallFinalize" 
-                    Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+                    Condition='NOT (REMOVE="ALL")' />
             
             <Custom Action="SelfUninstallService" 
                     Before="RemoveFiles" 

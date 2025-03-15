@@ -199,6 +199,12 @@ private:
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
+    HRESULT GetMidi1PortNames(
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+        _Inout_ std::map<UINT32, PORT_INFO> portInfo[2],
+        _In_ bool isNativeMidi2UmpEndpoint
+    );
+
     HRESULT SyncMidi1Ports(
         _In_ PMIDIPORT umpMidiPort
     );
@@ -214,7 +220,8 @@ private:
 
     std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_midiParents;
 
-    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingSelection{ MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE };
+    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForMidi1DeviceSelection{ MIDI_MIDI1_PORT_NAMING_MIDI1_DEFAULT_VALUE };
+    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForMidi2DeviceSelection{ MIDI_MIDI1_PORT_NAMING_MIDI2_DEFAULT_VALUE };
 
 };
 

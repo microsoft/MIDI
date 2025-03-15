@@ -80,13 +80,14 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 // so any updates to this need to be mirrored there
 enum Midi1PortNameSelectionProperty : uint32_t
 {
-    PortName_UseGlobalDefault = 0,                  // global default tells us which to defer to
-    PortName_UseLegacyWinMM = 10,                  // compatible with pre-Windows MIDI Services WinMM port names
+    PortName_UseGlobalDefault = 0,                              // global default tells us which to defer to
+    PortName_UseLegacyWinMM = 10,                               // compatible with pre-Windows MIDI Services WinMM port names
 
-    PortName_UsePinName = 50,                      // names including the iJack name that customers have asked us for
-    PortName_UseInterfacePlusPinName = 51,         // names including the iJack name that customers have asked us for
+    PortName_UsePinName = 50,                                   // names including the iJack name that customers have asked us for
+    PortName_UseFilterPlusPinName = 51,                         // names including the iJack name that customers have asked us for
 
-    PortName_UseGroupTerminalBlocksExactly = 500,   // for devices named by MIDI 2 driver
+    PortName_UseGroupTerminalBlocksExactly = 500,               // for MIDI 1 devices named by MIDI 2 driver
+    PortName_UseFilterPlusGroupTerminalBlockName = 501,         // normal for MIDI 2 native devices
 };
 
 
@@ -105,8 +106,11 @@ enum Midi1PortNameSelectionProperty : uint32_t
 
 // this is used as the default approach for how we name MIDI 1 ports
 // individual ports can override this via a property in the list below.
-#define MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE        L"DefaultMidi1PortNaming"
-#define MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE            ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM))
+#define MIDI_MIDI1_PORT_NAMING_MIDI1_DEFAULT_REG_VALUE        L"DefaultMidi1PortNamingForMidi1Devices"
+#define MIDI_MIDI1_PORT_NAMING_MIDI1_DEFAULT_VALUE            ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM))
+
+#define MIDI_MIDI1_PORT_NAMING_MIDI2_DEFAULT_REG_VALUE        L"DefaultMidi1PortNamingForMidi2Devices"
+#define MIDI_MIDI1_PORT_NAMING_MIDI2_DEFAULT_VALUE            ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName))
 
 #define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"
 

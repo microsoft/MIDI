@@ -17,6 +17,7 @@ using namespace winrt::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
 
+#define INITIAL_ENUMERATION_TIMEOUT_MS 10000
 
 _Use_decl_annotations_
 HRESULT
@@ -74,7 +75,7 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
     m_watcher.Start();
 
     // Wait for everything to be created so that they're available immediately after service start.
-    m_EnumerationCompleted.wait(10000);
+    m_EnumerationCompleted.wait(INITIAL_ENUMERATION_TIMEOUT_MS);
 
     return S_OK;
 }
@@ -637,6 +638,9 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
     auto filterDevices = DeviceInformation::FindAllAsync(filterDeviceSelector).get();
 
+    ULONG midiInputGroupIndexForDevice{ 0 };
+    ULONG midiOutputGroupIndexForDevice{ 0 };
+
     if (filterDevices.Size() > 0)
     {
         for (auto const& filterDevice : filterDevices)
@@ -753,23 +757,29 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                         {
                             // MIDI Out (input to device)
                             pinDefinition.PinDataFlow = MidiFlow::MidiFlowIn;
-                            pinDefinition.GroupIndex = static_cast<uint8_t>(midiOutputPinIndexForThisFilter);
+                            pinDefinition.PortNames.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;    // opposite
 
-                            pinDefinition.PortNames.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;
+                            pinDefinition.GroupIndex = static_cast<uint8_t>(midiOutputGroupIndexForDevice);
                             pinDefinition.PortNames.GroupIndex = pinDefinition.GroupIndex;
 
+                            pinDefinition.PortIndexWithinThisFilterAndDirection = static_cast<uint8_t>(midiOutputPinIndexForThisFilter);
+
                             midiOutputPinIndexForThisFilter++;
+                            midiOutputGroupIndexForDevice++;
                         }
                         else if (dataFlow == KSPIN_DATAFLOW_OUT)
                         {
                             // MIDI In (output from device)
                             pinDefinition.PinDataFlow = MidiFlow::MidiFlowOut;
-                            pinDefinition.GroupIndex = static_cast<uint8_t>(midiInputPinIndexForThisFilter);
+                            pinDefinition.PortNames.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;     // opposite
 
-                            pinDefinition.PortNames.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;
+                            pinDefinition.GroupIndex = static_cast<uint8_t>(midiInputGroupIndexForDevice);
                             pinDefinition.PortNames.GroupIndex = pinDefinition.GroupIndex;
 
+                            pinDefinition.PortIndexWithinThisFilterAndDirection = static_cast<uint8_t>(midiInputPinIndexForThisFilter);
+
                             midiInputPinIndexForThisFilter++;
+                            midiInputGroupIndexForDevice++;
                         }
 
                         // This is where we build the proposed names
@@ -783,7 +793,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                             pinDefinition.PinName,
                             customPortName,
                             pinDefinition.PortNames.DataFlowFromUserPerspective,
-                            pinDefinition.GroupIndex
+                            pinDefinition.PortIndexWithinThisFilterAndDirection
                         );
 
                         endpointDefinition.MidiPins.push_back(pinDefinition);

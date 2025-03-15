@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Security.Principal;
 using WixToolset.Dtf.WindowsInstaller;
 using static System.Collections.Specialized.BitVector32;
 
@@ -21,90 +22,6 @@ namespace custom_actions
                out bool PreviousValue
             );
 
-        private enum RegLocation
-        {
-            HKCR,
-            HKLM
-        }
-
-        private static System.Security.Principal.SecurityIdentifier sid = new System.Security.Principal.SecurityIdentifier("S-1-5-32-545");
-
-        private static bool GrantAdministratorFullRegKeyPermissions(Session session, RegLocation location, string key, uint recurseLevel = 0)
-        {
-            // call RtlAdjustPrivilege to grant administrator rights
-            // SeTakeOwnership, SeBackup, and SeRestore
-            // recursive
-
-            session.Log($"GrantAdministratorFullRegKeyPermissions: Granting reg key permissions to {location.ToString()}:{key}.");
-
-            Microsoft.Win32.RegistryKey rootKey;
-
-            switch (location)
-            {
-                case RegLocation.HKCR:
-                    rootKey = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64);
-                    break;
-                case RegLocation.HKLM:
-                    rootKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
-                    break;
-                default:
-                    return false;
-            }
-
-            var regKey = rootKey.OpenSubKey(
-                key,
-                Microsoft.Win32.RegistryKeyPermissionCheck.ReadWriteSubTree,
-                System.Security.AccessControl.RegistryRights.TakeOwnership);
-
-            if (regKey != null)
-            {
-                var acl = new System.Security.AccessControl.RegistrySecurity();
-                acl.SetOwner(sid);
-
-                regKey.SetAccessControl(acl);
-
-                acl.SetAccessRuleProtection(false, false);
-                regKey.SetAccessControl(acl);
-
-                // only for top level keys, change permission for key and prop to subkeys
-                if (recurseLevel == 0)
-                {
-                    regKey = regKey.OpenSubKey(
-                        "",
-                        Microsoft.Win32.RegistryKeyPermissionCheck.ReadWriteSubTree,
-                        System.Security.AccessControl.RegistryRights.TakeOwnership);
-
-                    var rule = new System.Security.AccessControl.RegistryAccessRule(
-                        sid,
-                        System.Security.AccessControl.RegistryRights.FullControl,
-                        System.Security.AccessControl.InheritanceFlags.ContainerInherit,
-                        System.Security.AccessControl.PropagationFlags.None,
-                        System.Security.AccessControl.AccessControlType.Allow);
-
-                    acl.ResetAccessRule(rule);
-
-                    regKey.SetAccessControl(acl);
-                }
-
-
-                // recurse
-                foreach (var subKey in regKey.OpenSubKey("").GetSubKeyNames())
-                {
-                    GrantAdministratorFullRegKeyPermissions(session, location, key + "\\" + subKey, recurseLevel + 1);
-                }
-
-            }
-            else
-            {
-                session.Log($"WARNING: Unable to open registry key {location.ToString()}:{key}. This is fine if a first install.");
-
-                // we don't bail, because it just may mean the key is not there
-
-                //return false;
-            }
-
-            return true;
-        }
 
         private static bool RunCommand(Session session, string command, int timeoutMS = 5000)
         {
@@ -178,9 +95,10 @@ namespace custom_actions
             }
         }
 
+        // the /A is for Administrators group. Otherwise, it goes to a workgroup account
         private static bool TakeOwnershipOfFile(Session session, string fullFilePath)
         {
-            var takeOwnCommand = "takeown /F " + fullFilePath;
+            var takeOwnCommand = "takeown /F /A " + fullFilePath;
 
             return RunCommand(session, takeOwnCommand);
         }
@@ -283,10 +201,118 @@ namespace custom_actions
         }
 
 
+
+
+
+
+
+
+
+
+        private enum RegLocation
+        {
+            HKCR,
+            HKLM
+        }
+
+        // S-1-5-32-545 is the local users group (all users)
+        //private static System.Security.Principal.SecurityIdentifier sid = new System.Security.Principal.SecurityIdentifier("S-1-5-32-545");
+
+        // S-1-5-32-544 is local Administrators group
+        private static System.Security.Principal.SecurityIdentifier sid = new System.Security.Principal.SecurityIdentifier("S-1-5-32-544");
+
+        private static bool GrantAdministratorFullRegKeyPermissions(Session session, RegLocation location, string key, uint recurseLevel = 0)
+        {
+            // call RtlAdjustPrivilege to grant administrator rights
+            // SeTakeOwnership, SeBackup, and SeRestore
+            // recursive
+
+            session.Log($"GrantAdministratorFullRegKeyPermissions: {recurseLevel} Granting reg key permissions to {location.ToString()}:{key}.");
+
+            Microsoft.Win32.RegistryKey rootKey;
+
+            switch (location)
+            {
+                case RegLocation.HKCR:
+                    rootKey = RegistryKey.OpenBaseKey(RegistryHive.ClassesRoot, RegistryView.Registry64);
+                    break;
+                case RegLocation.HKLM:
+                    rootKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+                    break;
+                default:
+                    return false;
+            }
+
+            session.Log($"GrantAdministratorFullRegKeyPermissions: {recurseLevel} Opening sub key {location.ToString()}:{key} to take ownership.");
+
+            var regKey = rootKey.OpenSubKey(
+                key,
+                Microsoft.Win32.RegistryKeyPermissionCheck.ReadWriteSubTree,
+                System.Security.AccessControl.RegistryRights.TakeOwnership);
+
+            if (regKey != null)
+            {
+                session.Log($"GrantAdministratorFullRegKeyPermissions: {recurseLevel} Setting owner of {location.ToString()}:{key}.");
+                var acl = new System.Security.AccessControl.RegistrySecurity();
+                acl.SetOwner(sid);
+                regKey.SetAccessControl(acl);
+
+                session.Log($"GrantAdministratorFullRegKeyPermissions: {recurseLevel} Setting access rule protection for {location.ToString()}:{key}.");
+                acl.SetAccessRuleProtection(false, false);
+                regKey.SetAccessControl(acl);
+
+                // only for top level keys, change permission for key and prop to subkeys
+                if (recurseLevel == 0)
+                {
+                    session.Log($"GrantAdministratorFullRegKeyPermissions: {recurseLevel} opening null subkey for {location.ToString()}:{key}.");
+
+                    regKey = regKey.OpenSubKey(
+                        "",
+                        Microsoft.Win32.RegistryKeyPermissionCheck.ReadWriteSubTree,
+                        System.Security.AccessControl.RegistryRights.ChangePermissions);
+
+                    session.Log($"GrantAdministratorFullRegKeyPermissions: {recurseLevel} setting registry access rule for {location.ToString()}:{key}.");
+
+                    var rule = new System.Security.AccessControl.RegistryAccessRule(
+                        sid,
+                        System.Security.AccessControl.RegistryRights.FullControl,
+                        System.Security.AccessControl.InheritanceFlags.ContainerInherit,
+                        System.Security.AccessControl.PropagationFlags.None,
+                        System.Security.AccessControl.AccessControlType.Allow);
+
+                    acl.ResetAccessRule(rule);
+                    regKey.SetAccessControl(acl);
+                }
+
+
+                // recurse
+                foreach (var subKey in regKey.OpenSubKey("").GetSubKeyNames())
+                {
+                    GrantAdministratorFullRegKeyPermissions(session, location, key + "\\" + subKey, recurseLevel + 1);
+                }
+
+            }
+            else
+            {
+                session.Log($"WARNING: Unable to open registry key {location.ToString()}:{key}. This is fine if a first install.");
+
+                // we don't bail, because it just may mean the key is not there
+
+                //return false;
+            }
+
+            return true;
+        }
+
         [CustomAction]
         public static ActionResult TakeRegistryOwnership(Session session)
         {
             session.Log("TakeRegistryOwnership: Started");
+
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+
+            session.Log($"TakeRegistryOwnership: Identity: \"{identity.Name}\" Is Administrator: \"{principal.IsInRole(WindowsBuiltInRole.Administrator)}\".");
 
             string[] hklmRegKeysToOwn =
             {
@@ -314,27 +340,26 @@ namespace custom_actions
             const uint SeBackup = 17;
             const uint SeRestore = 18;
 
-            bool enabled;
             int privSucceeded;
 
-            enabled = false;
-            privSucceeded = RtlAdjustPrivilege(SeTakeOwnership, true, false, out enabled);
+            bool enabledSeTakeOwnership = false;
+            privSucceeded = RtlAdjustPrivilege(SeTakeOwnership, true, false, out enabledSeTakeOwnership);
             if (privSucceeded < 0)
             {
                 session.Log($"ERROR: TakeRegistryOwnership: unable to RtlAdjustPrivilege SeTakeOwnership");
                 return ActionResult.Failure;
             }
 
-            enabled = false;
-            privSucceeded = RtlAdjustPrivilege(SeBackup, true, false, out enabled);
+            bool enabledSeBackup = false;
+            privSucceeded = RtlAdjustPrivilege(SeBackup, true, false, out enabledSeBackup);
             if (privSucceeded < 0)
             {
                 session.Log($"ERROR: TakeRegistryOwnership: unable to RtlAdjustPrivilege SeBackup");
                 return ActionResult.Failure;
             }
 
-            enabled = false;
-            privSucceeded = RtlAdjustPrivilege(SeRestore, true, false, out enabled);
+            bool enabledSeRestore = false;
+            privSucceeded = RtlAdjustPrivilege(SeRestore, true, false, out enabledSeRestore);
             if (privSucceeded < 0)
             {
                 session.Log($"ERROR: TakeRegistryOwnership: unable to RtlAdjustPrivilege SeRestore");
@@ -364,6 +389,14 @@ namespace custom_actions
                     return ActionResult.Failure;
                 }
             }
+
+            // restore to original values
+
+            session.Log("TakeRegistryOwnership: Restoring original process privileges");
+
+            privSucceeded = RtlAdjustPrivilege(SeTakeOwnership, enabledSeTakeOwnership, false, out enabledSeTakeOwnership);
+            privSucceeded = RtlAdjustPrivilege(SeBackup, enabledSeBackup, false, out enabledSeBackup);
+            privSucceeded = RtlAdjustPrivilege(SeRestore, enabledSeRestore, false, out enabledSeRestore);
 
             session.Log("TakeRegistryOwnership: Completed");
 

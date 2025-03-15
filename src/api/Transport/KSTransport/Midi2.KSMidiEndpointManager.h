@@ -26,6 +26,9 @@ public:
     HRESULT SwdCreation{ S_OK };
     std::unique_ptr<BYTE> GroupTerminalBlockData;
     ULONG GroupTerminalBlockDataSize {0};
+
+    std::vector<internal::GroupTerminalBlockInternal> blocks{ }; // we need this for naming
+
     GUID NativeDataFormat{0};
 
     std::wstring SerialNumber;
