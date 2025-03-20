@@ -6,6 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+import "MidiApiContracts.idl";
+
+
 import "MidiNetworkAdvertisedHostAddedEventArgs.idl";
 import "MidiNetworkAdvertisedHostRemovedEventArgs.idl";
 import "MidiNetworkAdvertisedHostUpdatedEventArgs.idl";

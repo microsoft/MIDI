@@ -7,8 +7,12 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiCoreApiContract,1)]
     [default_interface]
     runtimeclass MidiGroup : Windows.Foundation.IStringable
     {

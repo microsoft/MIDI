@@ -53,6 +53,11 @@ CMidiEndpointProtocolManager::Initialize(
     // we only spin this all up if negotiation is enabled
     if (m_discoveryAndProtocolNegotiationEnabled)
     {
+        // calling winrt::init_apartment more than once on the same thread is ok. We need to 
+        // guarantee it is called before we use the watcher.
+        winrt::init_apartment(winrt::apartment_type::multi_threaded);
+
+
         // use our clsid as the session id. 
         m_sessionId = __uuidof(IMidiEndpointProtocolManager);
 
@@ -76,7 +81,8 @@ CMidiEndpointProtocolManager::Initialize(
             nullptr));
 
         winrt::hstring deviceSelector(
-            L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+            L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND " \
+            L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
 
         m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
 

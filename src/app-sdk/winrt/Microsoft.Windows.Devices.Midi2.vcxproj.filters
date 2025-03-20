@@ -94,6 +94,12 @@
     <ClCompile Include="MidiNetworkAdvertisedHostAddedEventArgs.cpp">
       <Filter>SDK\Endpoints\Network\Watcher</Filter>
     </ClCompile>
+    <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiUniversalSystemExclusiveChannel.cpp">
+      <Filter>SDK\Core\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -189,6 +195,12 @@
     </ClInclude>
     <ClInclude Include="MidiNetworkAdvertisedHostAddedEventArgs.h">
       <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiUniversalSystemExclusiveChannel.h">
+      <Filter>SDK\Core\Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -522,6 +534,15 @@
     <Midl Include="MidiNetworkAdvertisedHostUpdatedEventArgs.idl">
       <Filter>SDK\Endpoints\Network\Watcher</Filter>
     </Midl>
+    <Midl Include="MidiUniversalSystemExclusiveMessageBuilder.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
+    <Midl Include="MidiUniversalSystemExclusiveChannel.idl">
+      <Filter>SDK\Core\Common</Filter>
+    </Midl>
+    <Midl Include="MidiApiContracts.idl">
+      <Filter>SDK\API Contracts</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -633,6 +654,9 @@
     </Filter>
     <Filter Include="SDK\Endpoints\Network\Watcher">
       <UniqueIdentifier>{60e7ce2d-4313-4103-8448-6de522b5c236}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\API Contracts">
+      <UniqueIdentifier>{3657e141-cfc8-4832-bf66-68b366e31504}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

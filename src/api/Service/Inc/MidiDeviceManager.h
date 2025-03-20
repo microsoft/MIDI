@@ -199,6 +199,13 @@ private:
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
+    HRESULT GetMidi1PortNames(
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+        _Inout_ std::map<UINT32, PORT_INFO> portInfo[2],
+        _In_ bool isNativeMidi2UmpEndpoint,
+        _In_ bool isUsingMidi2UmpDriver
+    );
+
     HRESULT SyncMidi1Ports(
         _In_ PMIDIPORT umpMidiPort
     );
@@ -213,5 +220,10 @@ private:
     std::vector<std::unique_ptr<MIDIPORT>> m_midiPorts;
 
     std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_midiParents;
+
+    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForByteDriverSelection{ MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_VALUE };   // KSA with MIDI 1 device
+    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForUmpDriverUmpNativeSelection{ MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_VALUE };  // KS or others with MIDI 2 device
+    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForUmpDriverByteNativeSelection{ MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE };    // KS with MIDI 1 device
+
 };
 

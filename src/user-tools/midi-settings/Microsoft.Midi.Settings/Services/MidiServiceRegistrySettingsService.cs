@@ -150,15 +150,34 @@ namespace Microsoft.Midi.Settings.Services
         //    return false;
         //}
 
-        const string ValueName_DefaultToOldMidi1PortNaming = "DefaultToOldMidi1PortNaming";
+        const string ValueName_DefaultMidi1PortNaming = "DefaultMidi1PortNaming";
         const string ValueName_Midi2DiscoveryEnabled = "Midi2DiscoveryEnabled";
         const string ValueName_Midi2DiscoveryTimeoutMS = "Midi2DiscoveryTimeoutMS";
         const string ValueName_UseMMCSS = "UseMMCSS";
 
-        public bool GetDefaultToOldMidi1PortNaming()
+
+
+        public bool GetDefaultUseNewStyleMidi1PortNaming()
         {
-            return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_DefaultToOldMidi1PortNaming, SettingsDefaultMidi1PortNaming);
+            //return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_DefaultToOldMidi1PortNaming, SettingsDefaultMidi1PortNaming);
+
+            var val = GetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_DefaultMidi1PortNaming, (uint)(Midi1PortNameSelectionProperty.PortName_UseLegacyWinMM));
+
+            if ((Midi1PortNameSelectionProperty)val == Midi1PortNameSelectionProperty.PortName_UseLegacyWinMM)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+
         }
+        public bool SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNameSelectionProperty newValue)
+        {
+            return SetRegistryNumericDWORDValue(MidiRootRegKey, ValueName_DefaultMidi1PortNaming, (uint)newValue);
+        }
+
 
         public bool GetMidi2DiscoveryEnabled()
         {
@@ -175,12 +194,6 @@ namespace Microsoft.Midi.Settings.Services
             return GetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_UseMMCSS, SettingsDefaultUseMMCSS);
         }
 
-        public bool SetDefaultToOldMidi1PortNaming(bool newValue)
-        {
-            // TODO: if the new value is the default, then just delete the reg entry
-
-            return SetRegistryBooleanDWORDValue(MidiRootRegKey, ValueName_DefaultToOldMidi1PortNaming, newValue);
-        }
 
         public bool SetMidi2DiscoveryEnabled(bool newValue)
         {

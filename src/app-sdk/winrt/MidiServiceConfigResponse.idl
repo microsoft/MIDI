@@ -7,10 +7,14 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiServiceConfigResponseStatusEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
+    [contract(MidiServiceConfigApiContract, 1)]
     struct MidiServiceConfigResponse
     {
         MidiServiceConfigResponseStatus Status;

@@ -236,7 +236,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     std::wstring transportCode(TRANSPORT_CODE);
 
-    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+    //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
     std::wstring endpointName = definition->EndpointName;
@@ -345,8 +345,10 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
         interfaceDeviceProperties.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, (ULONG)groupTerminalBlockData.size(), (PVOID)groupTerminalBlockData.data() });
 
-        interfaceDeviceProperties.push_back({ { PKEY_MIDI_UseGroupTerminalBlocksForExactMidi1PortNames, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(devPropTrue), (PVOID)&devPropTrue});
+        auto naming = Midi1PortNameSelectionProperty::PortName_UseGroupTerminalBlocksExactly;
+
+        interfaceDeviceProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
 
     }
 

@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
 import "MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl";
@@ -15,6 +18,7 @@ import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiEnumerationApiContract, 1)]
     [default_interface]
     runtimeclass MidiFunctionBlock : Windows.Foundation.IStringable
     {

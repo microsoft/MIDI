@@ -6,10 +6,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+import "MidiApiContracts.idl";
+
+
 import "MidiProtocolEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
+    [contract(MidiEndpointsVirtualApiContract, 1)]
     struct MidiStreamConfigRequestedSettings
     {
         UInt8 SpecificationVersionMajor;

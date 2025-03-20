@@ -446,7 +446,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 m_endpointTransport = nullptr;
             }
 
-            auto result = m_serviceTransport->Activate(__uuidof(IMidiBiDi), (void**) &m_endpointTransport);
+            auto result = m_serviceTransport->Activate(__uuidof(IMidiBidirectional), (void**) &m_endpointTransport);
 
             if (SUCCEEDED(result) && m_endpointTransport != nullptr)
             {

@@ -505,6 +505,7 @@ namespace Microsoft.Midi.ConsoleApp
                 {
                     AnsiConsole.WriteLine();
                     AnsiConsole.WriteLine(Strings.PropertyTableHeaderRawProperties);
+                    AnsiConsole.WriteLine($"{di.Properties.Count} properties");
                     AnsiConsole.WriteLine();
 
                     // spit out all properties by key / value in a new table
@@ -555,7 +556,7 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                     else
                     {
-                        // not a MIDI property key
+                        // not a MIDI property key, so just output the key info
                         friendlyKey = key;
                     }
 
@@ -587,12 +588,23 @@ namespace Microsoft.Midi.ConsoleApp
                             {
                                 string s = string.Empty;
 
-                                foreach (byte b in (byte[])value)
+                                var bytes = (byte[])value;
+
+                                foreach (byte b in bytes)
                                 {
-                                    s += string.Format("{0:X2} ", b);
+                                    if (char.IsAsciiLetterOrDigit((char)b))
+                                    {
+                                        s += string.Format("[grey35]{0:X2}[/][cyan]{1}[/] ", b, (char)b);
+                                    }
+                                    else
+                                    {
+                                        s += string.Format("{0:X2}  ", b);
+                                    }
                                 }
 
                                 table.AddRow(friendlyKey, s);
+                                table.AddRow("", $"[cyan]({bytes.Length} bytes)[/]");
+
                             }
                             else
                             {

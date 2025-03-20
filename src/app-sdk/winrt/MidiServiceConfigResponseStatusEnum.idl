@@ -7,8 +7,12 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
+    [contract(MidiServiceConfigApiContract, 1)]
     enum MidiServiceConfigResponseStatus
     {
         Success =                       0,

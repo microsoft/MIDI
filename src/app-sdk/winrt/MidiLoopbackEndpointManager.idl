@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiLoopbackEndpointCreationResult.idl";
 import "MidiLoopbackEndpointCreationConfig.idl";
 import "MidiLoopbackEndpointRemovalConfig.idl";
@@ -15,7 +18,7 @@ import "MidiEndpointDeviceInformation.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
-    [experimental]
+    [contract(MidiEndpointsLoopbackApiContract, 1)]
     static runtimeclass MidiLoopbackEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };

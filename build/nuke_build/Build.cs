@@ -591,6 +591,7 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiksinfo" / stagingPlatform / Configuration.Release / $"midiksinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midimdnsinfo" / stagingPlatform / Configuration.Release / $"midimdnsinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midi1monitor" / stagingPlatform / Configuration.Release / $"midi1monitor.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midi1enum" / stagingPlatform / Configuration.Release / $"midi1enum.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
         });
 
@@ -632,6 +633,7 @@ class Build : NukeBuild
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
                     .SetProperties(msbuildProperties)
+                    .SetTargets("Clean", "Rebuild")
                     .SetConfiguration(Configuration.Release)
                     .SetVerbosity(BuildVerbosity)
                     .EnableNodeReuse()
@@ -694,6 +696,7 @@ class Build : NukeBuild
                     .SetProperties(msbuildProperties)
                     .SetConfiguration(Configuration.Release)
                     .SetVerbosity(BuildVerbosity)
+                    .SetTargets("Clean", "Rebuild")
                     .EnableNodeReuse()
                 );
 
@@ -740,6 +743,7 @@ class Build : NukeBuild
                 /*.SetTargets("Build") */
                 .SetProperties(msbuildProperties)
                 .SetConfiguration(Configuration.Release)
+                .SetTargets("Clean", "Rebuild")
                 .SetVerbosity(BuildVerbosity)
                 .EnableNodeReuse()
             );

@@ -16,18 +16,69 @@
 
 namespace WindowsMidiServicesInternal::Midi1PortNaming
 {
-    inline std::wstring CleanupKSPinName(
-        _In_ std::wstring const& pinName, 
-        _In_ std::wstring parentDeviceName, 
+
+    // we always write the total size in bytes (size_t), and then a number of these entries
+
+#define MIDI1_PORT_NAME_ENTRY_HEADER_SIZE (sizeof(size_t))
+
+    struct Midi1PortNameEntry
+    {
+        uint8_t GroupIndex{ 0 };
+        MidiFlow DataFlowFromUserPerspective{ MidiFlow::MidiFlowIn };   // MidiFlowIn is 0
+
+        wchar_t CustomName[MAXPNAMELEN]{ 0 };
+        wchar_t LegacyWinMMName[MAXPNAMELEN]{ 0 };
+        wchar_t PinName[MAXPNAMELEN]{ 0 };
+        wchar_t FilterPlusPinName[MAXPNAMELEN]{ 0 };
+        wchar_t GroupTerminalBlockName[MAXPNAMELEN]{ 0 };
+        wchar_t FilterPlusGroupTerminalBlockName[MAXPNAMELEN]{ 0 };
+    };
+
+// max of 32 total inputs/outputs
+#define MAX_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) * 32 + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
+#define MIN_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
+
+
+    inline std::wstring RemoveJustKSPinGeneratedSuffix(
+        _In_ std::wstring const& pinName
+    )
+    {
+        std::wstring cleanedPinName{ pinName };
+
+        std::wstring wordsToRemove[] =
+        {
+            // In every case I've seen, these are added by our USB and KS stack, not by the device
+            L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
+        };
+
+        for (auto const& word : wordsToRemove)
+        {
+            if (pinName.length() >= word.length())
+            {
+                auto idx = cleanedPinName.find(word);
+
+                if (idx != std::wstring::npos)
+                {
+                    cleanedPinName = cleanedPinName.erase(idx, word.length());
+                }
+            }
+        }
+
+        return cleanedPinName;
+    }
+
+    inline std::wstring FullyCleanupKSPinName(
+        _In_ std::wstring const& pinName,
+        _In_ std::wstring parentDeviceName,
         _In_ std::wstring filterName
     )
     {
-        std::wstring cleanedPinName{};
+        std::wstring cleanedPinName{ ::WindowsMidiServicesInternal::TrimmedWStringCopy(RemoveJustKSPinGeneratedSuffix(pinName)) };
 
         // Used by ESI, MOTU, and others. We don't want to mess up other names, so check only
-        // for whole word. We do other removal in the next step
+        // for whole word, not substring. We do other removal in the next step
 
-        auto checkPinName = internal::ToLowerTrimmedWStringCopy(pinName);
+        auto checkPinName = ::WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(cleanedPinName);
 
         if (checkPinName == L"midi" ||
             checkPinName == L"out" ||
@@ -37,26 +88,20 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         {
             cleanedPinName = L"";
         }
-        else
-        {
-            cleanedPinName = pinName;
-        }
 
-        cleanedPinName = internal::TrimmedWStringCopy(cleanedPinName);
-        auto comparePinName = internal::ToUpperWStringCopy(cleanedPinName);         // this needs to be just the uppercase of cleanedPinName for the replace to work
+        auto comparePinName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(cleanedPinName);         // this needs to be just the uppercase of cleanedPinName for the replace to work
 
-        auto compareParentName = internal::ToUpperWStringCopy(parentDeviceName);
-        auto compareFilterName = internal::ToUpperWStringCopy(filterName);
-            
+        // some pins include the filter or parent device name. We don't want that here because some options re-add it.
+        auto compareParentName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(parentDeviceName);
+        auto compareFilterName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(filterName);
+
         // the double and triple space entries need to be last
         // there are other ways to do this with pattern matching, 
         // but just banging this through for this version
         // these must all be uppercase when alpha characters are included
         std::wstring wordsToRemove[] =
         {
-            // many of these are added by our USB and KS stack, not by the device, which is why they are here
             compareParentName, compareFilterName,
-            L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
             L"  ", L"   ", L"    "
         };
 
@@ -80,6 +125,225 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
     }
 
 
+    inline std::wstring GenerateLegacyMidi1PortName(
+        _In_ std::wstring const& nameFromRegistry,              
+        _In_ std::wstring const& filterName,
+        _In_ MidiFlow const flowFromUserPerspective,
+        _In_ uint8_t const portIndexWithinThisFilterAndDirection
+    )
+    {
+        std::wstring generatedName{};
+
+        if (!internal::TrimmedWStringCopy(nameFromRegistry).empty())
+        {
+            // If name from registry is not blank, use that first
+            // NOTE: There's an existing issue in WinMM that causes two of the same make/model of
+            // device to have the same name, even if they report different names, because they 
+            // share the same registry entry. To maintain compatibility, we cannot fix that here
+            // Instead, the custom will need to use one of the other provided naming options.
+
+            generatedName = internal::TrimmedWStringCopy(nameFromRegistry).substr(0, MAXPNAMELEN - 1);
+        }
+        else
+        {
+            // If registry name is empty, use the device friendly name (filter name in this case)
+            generatedName = internal::TrimmedWStringCopy(filterName).substr(0, MAXPNAMELEN - 1);
+        }
+
+
+        // if this is not the first port for this filter, instance prefix with MIDIIN/OUT #
+
+        if (portIndexWithinThisFilterAndDirection > 0)
+        {
+            // switching back and forth between wstring and string here is probably not a great idea, but the original
+            // values from USB should all be narrow standard strings anyway.
+            if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
+            {
+                auto formatted = std::format("MIDIIN{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
+                return std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN-1);
+            }
+            else if (flowFromUserPerspective == MidiFlow::MidiFlowOut)
+            {
+                auto formatted = std::format("MIDIOUT{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
+                return std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1);
+            }
+            else
+            {
+                // unexpected
+                return generatedName;
+            }
+            
+        }
+        else
+        {
+            return generatedName;
+        }
+    }
+
+    inline std::wstring GeneratePinNameBasedMidi1PortName(
+        _In_ std::wstring const& filterName,
+        _In_ std::wstring const& pinName,
+        _In_ MidiFlow const flowFromUserPerspective,
+        _In_ uint8_t const portIndexWithinThisFilterAndDirection
+    )
+    {
+        UNREFERENCED_PARAMETER(filterName);
+        UNREFERENCED_PARAMETER(flowFromUserPerspective);
+        UNREFERENCED_PARAMETER(portIndexWithinThisFilterAndDirection);
+
+        std::wstring generatedName{ RemoveJustKSPinGeneratedSuffix(pinName) };
+
+        // we use the pin name exactly as it is in the device
+        generatedName = generatedName.substr(0, MAXPNAMELEN - 1);
+
+        return generatedName;
+    }
+
+    inline std::wstring GenerateDevicePlusPinNameBasedMidi1PortName(
+        _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
+        _In_ std::wstring const& filterName,
+        _In_ std::wstring const& pinName
+    )
+    {
+        std::wstring generatedName{};
+
+        auto cleanedPinName = FullyCleanupKSPinName(pinName, parentDeviceName, filterName);
+
+        generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
+
+        // if the name is too long, try using just the pin name or just the filter name
+
+        if (generatedName.length() + 1 > MAXPNAMELEN)
+        {
+            if (!cleanedPinName.empty())
+            {
+                // we're over length, so just use the pin name
+                generatedName = cleanedPinName.substr(0, MAXPNAMELEN - 1);
+            }
+            else
+            {
+                // we're over length, and there's no pin name
+                // so we use the filter name
+                generatedName = filterName.substr(0, MAXPNAMELEN - 1);
+            }
+        }
+
+        // TODO: do we need to do any port differentiators here? Look at the collection and see
+        // if there are already ports starting with the same name, and if so, increment a counter and append
+
+        return generatedName;
+    }
+
+
+    inline std::wstring GenerateFilterPlusGroupTerminalBlockMidi1PortName(
+        _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
+        _In_ std::wstring const& filterName,
+        _In_ std::wstring const& groupTerminalBlockName
+    )
+    {
+        std::wstring generatedName{};
+
+        auto cleanedGtbName = FullyCleanupKSPinName(groupTerminalBlockName, parentDeviceName, filterName);
+
+        generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedGtbName));
+
+        // if the name is too long, try using just the pin name or just the filter name
+
+        if (generatedName.length() + 1 > MAXPNAMELEN)
+        {
+            if (!cleanedGtbName.empty())
+            {
+                // we're over length, so just use the gtb name
+                generatedName = cleanedGtbName.substr(0, MAXPNAMELEN - 1);
+            }
+            else
+            {
+                // we're over length, and there's no gtb name
+                // so we use the filter name
+                generatedName = filterName.substr(0, MAXPNAMELEN - 1);
+            }
+        }
+
+        // TODO: do we need to do any port differentiators here? Look at the collection and see
+        // if there are already ports starting with the same name, and if so, increment a counter and append
+
+        return generatedName;
+    }
+
+
+    inline void PopulateMidi1PortNameEntryNames(
+        _In_ Midi1PortNameEntry& entry,
+        _In_ std::wstring const& nameFromRegistry,
+        _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
+        _In_ std::wstring const& filterName,
+        _In_ std::wstring const& pinName,
+        _In_ std::wstring const& customPortName,
+        _In_ MidiFlow const flowFromUserPerspective,
+        _In_ uint8_t const portIndexWithinThisFilterAndDirection
+    )
+    {
+        // classic WinMM name. Not great, and sometimes buggy
+        auto legacyWinMMName = GenerateLegacyMidi1PortName(
+            nameFromRegistry,
+            filterName,
+            flowFromUserPerspective,
+            portIndexWithinThisFilterAndDirection
+        );
+        legacyWinMMName.copy(entry.LegacyWinMMName, MAXPNAMELEN - 1);
+
+        // Uses device and iJack info to create the name
+        auto interfacePlusPinWinMMName = GenerateDevicePlusPinNameBasedMidi1PortName(
+            parentDeviceName,
+            filterName,
+            pinName
+        );
+        interfacePlusPinWinMMName.copy(entry.FilterPlusPinName, MAXPNAMELEN - 1);
+
+        // Uses only the pin/iJack info to name the pin
+        auto pinWinMMName = GeneratePinNameBasedMidi1PortName(
+            filterName,
+            pinName,
+            flowFromUserPerspective,
+            portIndexWithinThisFilterAndDirection
+        );
+        pinWinMMName.copy(entry.PinName, MAXPNAMELEN - 1);
+
+        // User-supplied name
+        if (!customPortName.empty())
+        {
+            customPortName.copy(entry.CustomName, MAXPNAMELEN - 1);
+        }
+
+        // GTB Name. We should set this later based on the user preference
+        pinWinMMName.copy(entry.GroupTerminalBlockName, MAXPNAMELEN - 1);
+
+        auto filterPlusGroupTerminalBlockName = GenerateFilterPlusGroupTerminalBlockMidi1PortName(
+            parentDeviceName, 
+            filterName, 
+            pinName);
+        filterPlusGroupTerminalBlockName.copy(entry.FilterPlusGroupTerminalBlockName, MAXPNAMELEN - 1);
+    }
+
+    //inline std::wstring GenerateGroupTerminalBlockNameFromDeviceInformation(
+    //    _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
+    //    _In_ std::wstring const& filterName,
+    //    _In_ std::wstring const& existingBlockName,             // devices using the new driver come with a GTB name already, but we may need to clean it
+    //    _In_ uint8_t const& groupIndex
+    //)
+    //{
+    //    UNREFERENCED_PARAMETER(parentDeviceName);
+    //    UNREFERENCED_PARAMETER(existingBlockName);
+    //    UNREFERENCED_PARAMETER(filterName);
+    //    UNREFERENCED_PARAMETER(groupIndex);
+
+    //    std::wstring generatedName{};
+
+
+
+    //    return generatedName;
+    //}
+
+
     inline std::wstring GenerateMidi1PortNameFromCreatedUmpEndpoint(
         _In_ bool const useOldStyleNamingForNonUmpDevice,       // this comes from the property on the device, and if not specified, from the registry. Controls using old WinMM-style naming
         _In_ std::wstring const& customPortName,                // if the user has supplied a name for the generated port, and we're not using old-style naming, this wins
@@ -93,7 +357,6 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         _In_ MidiFlow const flowFromUserPerspective,
         _In_ bool const isNativeUmpDevice,
         _In_ bool const truncateToWinMMLimit
-        /*_In_ std::vector<std::wstring> const& otherExistingMidi1PortNamesForThisDeviceAndFlow*/
     )
     {
         UNREFERENCED_PARAMETER(flowFromUserPerspective);
@@ -264,7 +527,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         {
             std::wstring name{};
 
-            auto cleanedPinName = CleanupKSPinName(pinName, parentDeviceName, filterName);
+            auto cleanedPinName = FullyCleanupKSPinName(pinName, parentDeviceName, filterName);
 
             name = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
 
@@ -297,6 +560,97 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
         return L"No name available";
     }
+
+
+
+    inline std::vector<Midi1PortNameEntry> ReadMidi1PortNameTableFromPropertyData(
+        _In_reads_bytes_(dataSize) uint8_t* tablePointer,
+        _In_ uint32_t const dataSize
+    ) noexcept
+    {
+        std::vector<Midi1PortNameEntry> nameTable{};
+
+        if (tablePointer == nullptr)
+        {
+            return nameTable;   // empty table
+        }
+
+        size_t totalSizeBytes{ 0 };
+
+        if (dataSize >= MIN_PORT_NAME_TABLE_SIZE && dataSize <= MAX_PORT_NAME_TABLE_SIZE)
+        {
+            // the first size_t in the payload is the size of the entire table, including this size_t header
+            memcpy(&totalSizeBytes, tablePointer, sizeof(size_t));
+
+            if (totalSizeBytes != dataSize)
+            {
+                LOG_IF_FAILED(E_INVALIDARG);
+
+                // invalid size, so we return empty table
+                return nameTable;
+            }
+        }
+        else
+        {
+            // invalid table property value, so we return empty table
+            LOG_IF_FAILED(E_INVALIDARG);
+
+            return nameTable;
+        }
+
+        // we've already read the header
+        size_t bytesRead = MIDI1_PORT_NAME_ENTRY_HEADER_SIZE;
+
+        // the rest of the data is just an array of the Midi1PortNameEntry structures
+
+        size_t numStructs = (totalSizeBytes - bytesRead) / sizeof(Midi1PortNameEntry);
+        size_t byteCountToCopy = sizeof(Midi1PortNameEntry) * numStructs;
+
+        if (numStructs > 0 && byteCountToCopy == (totalSizeBytes - bytesRead))
+        {
+            nameTable.resize(numStructs);
+
+            byte* readPosition = (byte*)(tablePointer + bytesRead);
+
+            memcpy(nameTable.data(), readPosition, byteCountToCopy);
+        }
+        else
+        {
+            LOG_IF_FAILED(E_FAIL);
+        }
+
+        return nameTable;
+    }
+
+
+    inline bool WriteMidi1PortNameTableToPropertyDataPointer(
+        _In_ std::vector<Midi1PortNameEntry> const& entries,
+        _Inout_ std::vector<std::byte>& propertyData
+    )
+    {
+        if (entries.size() == 0) return false;
+
+        // calculate the total size
+        size_t entriesSizeBytes = entries.size() * sizeof(Midi1PortNameEntry);
+        size_t totalSizeBytes = (size_t)(entriesSizeBytes + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE);
+
+        propertyData.resize(totalSizeBytes, (std::byte)0);
+
+        if (propertyData.size() != totalSizeBytes)
+        {
+            LOG_IF_FAILED(E_POINTER);
+            return false;
+        }
+
+        // header value (byte count)
+        memcpy((byte*)(propertyData.data()), (byte*)&totalSizeBytes, MIDI1_PORT_NAME_ENTRY_HEADER_SIZE);
+
+        // copy in all the name data. Vectors are guaranteed to be contiguous.
+        memcpy((byte*)(propertyData.data() + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE), (byte*)entries.data(), entriesSizeBytes);
+
+        return true;
+    }
+
 
 }
 

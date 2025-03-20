@@ -7,11 +7,15 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiEndpointConnection.idl";
 import "IMidiEndpointConnectionSettings.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiSessionAndConnectionApiContract, 1)]
     [default_interface]
     runtimeclass MidiSession : Windows.Foundation.IClosable, Windows.Foundation.IStringable
     {

@@ -223,7 +223,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
 
-        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_UseOldMidi1PortNamingScheme));
+        //AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_UseLegacyMidi1PortNamingScheme));
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint));
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_Midi1PortNamingSelection));
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_Midi1PortNameTable));
+
 
         m_initialized = true;
     }

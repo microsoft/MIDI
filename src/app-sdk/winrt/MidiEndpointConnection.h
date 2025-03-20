@@ -217,7 +217,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool m_closeHasBeenCalled{ false };
 
         winrt::com_ptr<IMidiTransport> m_serviceTransport{ nullptr };
-        winrt::com_ptr<IMidiBiDi> m_endpointTransport{ nullptr };
+        winrt::com_ptr<IMidiBidirectional> m_endpointTransport{ nullptr };
 
 
         winrt::event<foundation::TypedEventHandler<midi2::IMidiMessageReceivedEventSource, midi2::MidiMessageReceivedEventArgs>> m_messageReceivedEvent;
@@ -238,12 +238,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         _Success_(return == true)
         midi2::MidiSendMessageResults SendUmpInternal(
-            _In_ winrt::com_ptr<IMidiBiDi> endpoint,
+            _In_ winrt::com_ptr<IMidiBidirectional> endpoint,
             _In_ midi2::IMidiUniversalPacket const& ump);
 
         _Success_(return == true)
         midi2::MidiSendMessageResults SendMessageRaw(
-            _In_ winrt::com_ptr<IMidiBiDi> endpoint,
+            _In_ winrt::com_ptr<IMidiBidirectional> endpoint,
             _In_ void* data,
             _In_ uint8_t sizeInBytes,
             _In_ internal::MidiTimestamp timestamp);

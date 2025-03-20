@@ -8,8 +8,12 @@
 
 import "MidiSystemTimerSettings.idl";
 
+import "MidiApiContracts.idl";
+
+
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiCoreApiContract,1)]
     static runtimeclass MidiClock
     {
         static UInt64 Now{ get; };

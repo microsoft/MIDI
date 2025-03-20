@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiSendMessageResultsEnum.idl";
@@ -15,6 +18,7 @@ import "IMidiEndpointConnectionSource.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiSessionAndConnectionApiContract, 1)]
     [default_interface]
     runtimeclass MidiEndpointConnection : IMidiMessageReceivedEventSource,
                                           IMidiEndpointConnectionSource,

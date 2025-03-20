@@ -6,9 +6,13 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+import "MidiApiContracts.idl";
+
+
 
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiEnumerationApiContract, 1)]
     [flags]
     enum MidiEndpointDeviceInformationFilters
     {

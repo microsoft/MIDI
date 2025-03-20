@@ -7,10 +7,14 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiServicePingResponse.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Diagnostics
 {
+    [contract(MidiDiagnosticsApiContract, 1)]
     [default_interface]
     runtimeclass MidiServicePingResponseSummary
     {

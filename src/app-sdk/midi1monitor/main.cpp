@@ -208,7 +208,7 @@ void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
     DisplayStatusByte(status, isError);
 
 
-    if (MIDI_MESSAGE_IS_TWO_BYTES(status) || 
+    if (MIDI_MESSAGE_IS_TWO_BYTES(status) ||
         MIDI_MESSAGE_IS_THREE_BYTES(status))
     {
         DisplayDataByte(data1, isError);
@@ -385,6 +385,10 @@ void CALLBACK OnMidiMessageReceived(
 int __cdecl main(int argc, char* argv[])
 {
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
+    std::cout << dye::aqua(" Copyright 2025- Microsoft Corporation.") << std::endl;
+    std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
+    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" Monitor a MIDI 1.0 port through WinMM/MME") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
 
@@ -423,14 +427,18 @@ int __cdecl main(int argc, char* argv[])
     }
 
 
-    if (auto const& port = std::find_if(m_midiInputs.begin(), m_midiInputs.end(), 
-        [&portNumber](const MidiInputPort& p) { return p.Index == portNumber; }); 
+    if (auto const& port = std::find_if(m_midiInputs.begin(), m_midiInputs.end(),
+        [&portNumber](const MidiInputPort& p) { return p.Index == portNumber; });
         port != m_midiInputs.end())
     {
         std::cout << std::endl;
         std::cout << dye::aqua("Monitoring ");
         std::wcout << port->Name;
-        std::cout << dye::aqua(" for input. Hit escape to cancel.");
+        std::cout << dye::aqua(" for input. Hit ");
+        std::cout << dye::green("escape");
+        std::cout << dye::aqua(" to cancel. Hit ");
+        std::cout << dye::green("spacebar");
+        std::cout << dye::aqua(" to toggle showing hidden messages.");
         std::cout << std::endl;
 
         if (!m_showActiveSense)
@@ -470,21 +478,31 @@ int __cdecl main(int argc, char* argv[])
 
     while (true)
     {
-        if (GetAsyncKeyState(VK_ESCAPE) & 0x8000)
-        {
-            std::cout << std::endl;
+        auto ch = getch();
 
-            WriteInfo("Closing");
+        if (ch == KEY_ESCAPE)
+        {
+            WriteInfo("\nClosing");
             break;
         }
+        else if (ch == KEY_SPACE)
+        {
+            // toggle showing hidden messages
+
+            WriteInfo("\nToggling showing active sense and clock messages");
+
+            m_showActiveSense = !m_showActiveSense;
+            m_showClock = !m_showClock;
+        }
+
     }
 
     midiInUnprepareHeader(m_hMidiIn, &m_header, sizeof(MIDIHDR));
 
     midiInStop(m_hMidiIn);
-
     midiInClose(m_hMidiIn);
 
     return 0;
 }
+
 

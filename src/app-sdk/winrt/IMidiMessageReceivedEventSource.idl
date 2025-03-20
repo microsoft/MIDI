@@ -7,10 +7,14 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiMessageReceivedEventArgs.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
+    [contract(MidiSessionAndConnectionApiContract, 1)]
     [uuid("101ceb4b-cca4-48a1-b91e-6002b928613c"), version(1.0)]
     interface IMidiMessageReceivedEventSource
     {      

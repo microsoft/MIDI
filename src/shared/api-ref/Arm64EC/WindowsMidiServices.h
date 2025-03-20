@@ -80,11 +80,11 @@ typedef interface IMidiOut IMidiOut;
 #endif 	/* __IMidiOut_FWD_DEFINED__ */
 
 
-#ifndef __IMidiBiDi_FWD_DEFINED__
-#define __IMidiBiDi_FWD_DEFINED__
-typedef interface IMidiBiDi IMidiBiDi;
+#ifndef __IMidiBidirectional_FWD_DEFINED__
+#define __IMidiBidirectional_FWD_DEFINED__
+typedef interface IMidiBidirectional IMidiBidirectional;
 
-#endif 	/* __IMidiBiDi_FWD_DEFINED__ */
+#endif 	/* __IMidiBidirectional_FWD_DEFINED__ */
 
 
 #ifndef __IMidiDeviceManager_FWD_DEFINED__
@@ -297,7 +297,7 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0001
         MidiDataFormats_Invalid	= 0,
         MidiDataFormats_ByteStream	= 0x1,
         MidiDataFormats_UMP	= 0x2,
-        MidiDataFormats_Any	= 0xffff
+        MidiDataFormats_Any	= 0xffffffff
     } 	MidiDataFormats;
 
 typedef /* [public][public] */ 
@@ -321,7 +321,7 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003
 typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004
     {
     MidiDataFormats DataFormat;
-    GUID CallingApi;
+    GUID CallingComponent;
     } 	TRANSPORTCREATIONPARAMS;
 
 typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004 *PTRANSPORTCREATIONPARAMS;
@@ -762,19 +762,19 @@ EXTERN_C const IID IID_IMidiOut;
 #endif 	/* __IMidiOut_INTERFACE_DEFINED__ */
 
 
-#ifndef __IMidiBiDi_INTERFACE_DEFINED__
-#define __IMidiBiDi_INTERFACE_DEFINED__
+#ifndef __IMidiBidirectional_INTERFACE_DEFINED__
+#define __IMidiBidirectional_INTERFACE_DEFINED__
 
-/* interface IMidiBiDi */
+/* interface IMidiBidirectional */
 /* [uuid][local][object] */ 
 
 
-EXTERN_C const IID IID_IMidiBiDi;
+EXTERN_C const IID IID_IMidiBidirectional;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
     
     MIDL_INTERFACE("B89BBB45-7001-4BEA-BBD8-C7CC26E7836C")
-    IMidiBiDi : public IUnknown
+    IMidiBidirectional : public IUnknown
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Initialize( 
@@ -806,28 +806,28 @@ EXTERN_C const IID IID_IMidiBiDi;
     
 #else 	/* C style interface */
 
-    typedef struct IMidiBiDiVtbl
+    typedef struct IMidiBidirectionalVtbl
     {
         BEGIN_INTERFACE
         
         DECLSPEC_XFGVIRT(IUnknown, QueryInterface)
         HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IMidiBiDi * This,
+            IMidiBidirectional * This,
             /* [in] */ REFIID riid,
             /* [annotation][iid_is][out] */ 
             _COM_Outptr_  void **ppvObject);
         
         DECLSPEC_XFGVIRT(IUnknown, AddRef)
         ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IMidiBiDi * This);
+            IMidiBidirectional * This);
         
         DECLSPEC_XFGVIRT(IUnknown, Release)
         ULONG ( STDMETHODCALLTYPE *Release )( 
-            IMidiBiDi * This);
+            IMidiBidirectional * This);
         
-        DECLSPEC_XFGVIRT(IMidiBiDi, Initialize)
+        DECLSPEC_XFGVIRT(IMidiBidirectional, Initialize)
         HRESULT ( STDMETHODCALLTYPE *Initialize )( 
-            IMidiBiDi * This,
+            IMidiBidirectional * This,
             /* [annotation][string][in] */ 
             _In_  LPCWSTR endpointDeviceInterfaceId,
             /* [annotation][in] */ 
@@ -841,13 +841,13 @@ EXTERN_C const IID IID_IMidiBiDi;
             /* [annotation][in] */ 
             _In_  GUID sessionId);
         
-        DECLSPEC_XFGVIRT(IMidiBiDi, Shutdown)
+        DECLSPEC_XFGVIRT(IMidiBidirectional, Shutdown)
         HRESULT ( STDMETHODCALLTYPE *Shutdown )( 
-            IMidiBiDi * This);
+            IMidiBidirectional * This);
         
-        DECLSPEC_XFGVIRT(IMidiBiDi, SendMidiMessage)
+        DECLSPEC_XFGVIRT(IMidiBidirectional, SendMidiMessage)
         HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
-            IMidiBiDi * This,
+            IMidiBidirectional * This,
             /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
@@ -856,11 +856,11 @@ EXTERN_C const IID IID_IMidiBiDi;
             _In_  LONGLONG position);
         
         END_INTERFACE
-    } IMidiBiDiVtbl;
+    } IMidiBidirectionalVtbl;
 
-    interface IMidiBiDi
+    interface IMidiBidirectional
     {
-        CONST_VTBL struct IMidiBiDiVtbl *lpVtbl;
+        CONST_VTBL struct IMidiBidirectionalVtbl *lpVtbl;
     };
 
     
@@ -868,23 +868,23 @@ EXTERN_C const IID IID_IMidiBiDi;
 #ifdef COBJMACROS
 
 
-#define IMidiBiDi_QueryInterface(This,riid,ppvObject)	\
+#define IMidiBidirectional_QueryInterface(This,riid,ppvObject)	\
     ( (This)->lpVtbl -> QueryInterface(This,riid,ppvObject) ) 
 
-#define IMidiBiDi_AddRef(This)	\
+#define IMidiBidirectional_AddRef(This)	\
     ( (This)->lpVtbl -> AddRef(This) ) 
 
-#define IMidiBiDi_Release(This)	\
+#define IMidiBidirectional_Release(This)	\
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiBiDi_Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,sessionId)	\
+#define IMidiBidirectional_Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,sessionId)	\
     ( (This)->lpVtbl -> Initialize(This,endpointDeviceInterfaceId,creationParams,mmcssTaskId,callback,context,sessionId) ) 
 
-#define IMidiBiDi_Shutdown(This)	\
+#define IMidiBidirectional_Shutdown(This)	\
     ( (This)->lpVtbl -> Shutdown(This) ) 
 
-#define IMidiBiDi_SendMidiMessage(This,message,size,position)	\
+#define IMidiBidirectional_SendMidiMessage(This,message,size,position)	\
     ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
 
 #endif /* COBJMACROS */
@@ -895,7 +895,7 @@ EXTERN_C const IID IID_IMidiBiDi;
 
 
 
-#endif 	/* __IMidiBiDi_INTERFACE_DEFINED__ */
+#endif 	/* __IMidiBidirectional_INTERFACE_DEFINED__ */
 
 
 /* interface __MIDL_itf_WindowsMidiServices_0000_0005 */

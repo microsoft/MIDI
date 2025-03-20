@@ -7,11 +7,15 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "MidiVirtualDeviceCreationConfig.idl";
 import "MidiVirtualDevice.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
+    [contract(MidiEndpointsVirtualApiContract, 1)]
     static runtimeclass MidiVirtualDeviceManager
     {
         static Boolean IsTransportAvailable{ get; };

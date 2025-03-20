@@ -7,12 +7,16 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "IMidiServiceTransportPluginConfig.idl";
 import "IMidiServiceMessageProcessingPluginConfig.idl";
 import "MidiServiceConfigResponse.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
+    [contract(MidiServiceConfigApiContract, 1)]
     static runtimeclass MidiServiceConfig
     {
         static MidiServiceConfigResponse UpdateTransportPluginConfig(

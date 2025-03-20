@@ -89,7 +89,7 @@ public partial class ForDevelopersViewModel : ObservableRecipient
 
     private bool GrantAdministratorFullRegKeyPermissions(RegLocation location, string key, uint recurseLevel = 0)
     {
-        // call RtlAdjustPrivilege to grant administator rights
+        // call RtlAdjustPrivilege to grant administrator rights
         // SeTakeOwnership, SeBackup, and SeRestore
         // recursive
 

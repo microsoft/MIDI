@@ -1,0 +1,39 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiApiContracts.idl";
+
+
+// Unlike the 0-15 of normal MIDI channels, this kind of channel runs 
+// from 0-127, with 127 being a special value meaning to ignore all 
+// channel information and just proceed processing the message
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [contract(MidiCoreApiContract,1)]
+    [default_interface]
+    runtimeclass MidiUniversalSystemExclusiveChannel : Windows.Foundation.IStringable
+    {
+        MidiUniversalSystemExclusiveChannel();
+        MidiUniversalSystemExclusiveChannel(UInt8 index);
+
+        static String ShortLabel{ get; };
+        static String ShortLabelPlural{ get; };
+        static String LongLabel{ get; };
+        static String LongLabelPlural{ get; };
+
+        // returns a channel with the special value of 127
+        static MidiUniversalSystemExclusiveChannel DisregardChannel{ get; };
+
+        UInt8 Index;
+        UInt8 DisplayValue{ get; };
+
+        static Boolean IsValidIndex(UInt8 index);
+    }
+}

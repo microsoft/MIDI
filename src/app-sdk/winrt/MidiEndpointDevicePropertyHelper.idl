@@ -6,9 +6,12 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+import "MidiApiContracts.idl";
+
+
 namespace Microsoft.Windows.Devices.Midi2
 {
-    [experimental]
+    [contract(MidiEnumerationApiContract, 1)]
     static runtimeclass MidiEndpointDevicePropertyHelper
     {
         static String GetMidiPropertyNameFromPropertyKey(Guid fmtid, UInt32 pid);

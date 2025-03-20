@@ -300,7 +300,7 @@ void DisplayMidiDevices()
             {
                 indent = 10;
                 const uint16_t PinIndexColumnWidth = 6;
-                const uint16_t PinDataFormatColumnWidth = 14;
+                const uint16_t PinDataFormatColumnWidth = 20;
                 const uint16_t PinDataFlowColumnWidth = 22;
                 const uint16_t PinDataFlowExplanationColumnWidth = 22;
                 const uint16_t PinNameColumnWidth = 32;
@@ -349,37 +349,33 @@ void DisplayMidiDevices()
                     firstPin = false;
                 }
 
-                std::wstring stringDataFlow{ L"Unknown" };
+                std::cout
+                    << std::string(indent, ' ')
+                    << std::setw(PinIndexColumnWidth) << std::left << dye::yellow(pin.Number);
+                    
+                if (WI_AreAllFlagsSet(pin.DataFormat,MidiDataFormats::MidiDataFormats_ByteStream))
+                {
+                    std::cout << std::setw(PinDataFormatColumnWidth) << std::left << dye::white("MIDI 1 byte format");
+                }
+                else if (WI_AreAllFlagsSet(pin.DataFormat, MidiDataFormats::MidiDataFormats_UMP))
+                {
+                    std::cout << std::setw(PinDataFormatColumnWidth) << std::left << dye::white("MIDI 2 UMP format");
+                }
+
+
                 std::wstring stringDataFlowExplanation{};
 
                 if (pin.PinFlow == KSPIN_DATAFLOW_IN)
                 {
-                    stringDataFlow = L"Message Destination";
-                    stringDataFlowExplanation = L"MIDI Output from PC";
-
+                    std::cout << std::setw(PinDataFlowColumnWidth) << std::left << dye::aqua("Message Destination");
+                    std::cout << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::aqua("MIDI Output from PC");
                 }
                 else if (pin.PinFlow == KSPIN_DATAFLOW_OUT)
                 {
-                    stringDataFlow = L"Message Source";
-                    stringDataFlowExplanation = L"MIDI Input to PC";
+                    std::cout << std::setw(PinDataFlowColumnWidth) << std::left << dye::light_purple("Message Source");
+                    std::cout << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::light_purple ("MIDI Input to PC");
                 }
 
-                std::wstring stringDataFormat{ L"Unknown" };
-                if (WI_AreAllFlagsSet(pin.DataFormat,MidiDataFormats::MidiDataFormats_ByteStream))
-                {
-                    stringDataFormat = L"MIDI 1 bytes";
-                }
-                else if (WI_AreAllFlagsSet(pin.DataFormat, MidiDataFormats::MidiDataFormats_UMP))
-                {
-                    stringDataFormat = L"MIDI 2 UMP";
-                }
-
-                std::cout
-                    << std::string(indent, ' ')
-                    << std::setw(PinIndexColumnWidth) << std::left << dye::yellow(pin.Number)
-                    << std::setw(PinDataFormatColumnWidth) << std::left << dye::aqua(winrt::to_string(stringDataFormat))
-                    << std::setw(PinDataFlowColumnWidth) << std::left << dye::aqua(winrt::to_string(stringDataFlow))
-                    << std::setw(PinDataFlowExplanationColumnWidth) << std::left << dye::aqua(winrt::to_string(stringDataFlowExplanation));
 
                 if (pin.Name.empty())
                 {
@@ -408,7 +404,7 @@ void DisplayMidiDevices()
     }
 
     std::cout << std::endl;
-    std::cout << "-- End of Information --" << std::endl << std::endl;
+    std::cout << dye::yellow("-- End of Information --") << std::endl << std::endl;
 
 }
 
@@ -417,6 +413,10 @@ int __cdecl main()
 {
     winrt::init_apartment();
 
+    std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
+    std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
+    std::cout << dye::aqua(" Copyright 2025- Microsoft Corporation.") << std::endl;
+    std::cout << dye::aqua(" Information, license, and source available at https ://aka.ms/midi") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" Enumerating MIDI kernel streaming devices, using the MIDI class drivers or a third-party MIDI 1.0/2.0 driver.") << std::endl;
     std::cout << dye::aqua(" Typically, these devices are USB, but other KS drivers will be included in the enumeration.") << std::endl;

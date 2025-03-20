@@ -282,6 +282,18 @@ void OutputRegDWordBooleanValue(std::string label, HKEY const key, std::wstring 
     }
 }
 
+void OutputRegDWordNumericValue(std::string label, HKEY const key, std::wstring value)
+{
+    auto keyValue = wil::reg::try_get_value_dword(key, value.c_str());
+    if (keyValue.has_value())
+    {
+        OutputNumericField(label, keyValue.value());
+    }
+    else
+    {
+        OutputStringField(label, std::wstring{ L"Not present" });
+    }
+}
 
 
 void OutputCOMComponentInfo(std::string const dllNameFieldName, std::wstring const classid)
@@ -324,6 +336,8 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
 
         if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, drivers32KeyLocation.c_str(), drivers32Key, wil::reg::key_access::read)))
         {
+            bool wdmaud2drvFound{ false };
+
             for (const auto& valueData : wil::make_range(wil::reg::value_iterator{ drivers32Key.get() }, wil::reg::value_iterator{}))
             {
                 //valueData.name;
@@ -336,7 +350,19 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
                     if (val.has_value())
                     {
                         OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + val.value());
+
+                        // this is added by something in the korg uninstall process. Possibly third-party, possibly korg.
+                        // it's an invalid value that is not picked up by WinMM
+                        if (valueData.name == L"midi0")
+                        {
+                            OutputError("The above \"midi0\" entry is invalid. It should be named \"midi\" to be recognized by AudioEndpointBuilder.");
+                        }
+                        else if (internal::ToLowerTrimmedWStringCopy(val.value()) == L"wdmaud2.drv")
+                        {
+                            wdmaud2drvFound = true;
+                        }
                     }
+
                 }
                 else if (valueData.name == L"MidisrvTransferComplete")
                 {
@@ -347,7 +373,13 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
                         OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + std::to_wstring(val.value()));
                     }
                 }
+            }
 
+            if (!wdmaud2drvFound)
+            {
+                OutputError("No valid entry found with wdmaud2.drv listed in " + winrt::to_string(drivers32KeyLocation) +  ".");
+                OutputError("Typically, this will be the \"midi1\" entry. Without this, WinMM apps will not see your MIDI 1.0 ports.");
+                OutputError("Run midifixreg.exe (installed with these tools) as Administrator to fix this.");
             }
         }
         else
@@ -368,6 +400,42 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
 }
 
 
+
+std::wstring GetDisplayValueFromNamingSelection(Midi1PortNameSelectionProperty namingSelection)
+{
+    std::wstring namingSelectionDisplayString{};
+
+    switch (namingSelection)
+    {
+    case Midi1PortNameSelectionProperty::PortName_UseGlobalDefault:
+        namingSelectionDisplayString = L"Use global default from registry";
+        break;
+    case Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM:
+        namingSelectionDisplayString = L"Use legacy WinMM-compatible names";
+        break;
+    case Midi1PortNameSelectionProperty::PortName_UseGroupTerminalBlocksExactly:
+        namingSelectionDisplayString = L"Use group terminal block names";
+        break;
+    case Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName:
+        namingSelectionDisplayString = L"Use KS filter + group terminal block names";
+        break;
+    case Midi1PortNameSelectionProperty::PortName_UsePinName:
+        namingSelectionDisplayString = L"Use pin (iJack) name";
+        break;
+    case Midi1PortNameSelectionProperty::PortName_UseFilterPlusPinName:
+        namingSelectionDisplayString = L"Use KS filter + pin (iJack) name";
+        break;
+    default:
+        namingSelectionDisplayString = L"INVALID VALUE";
+        break;
+    }
+
+    return namingSelectionDisplayString;
+}
+
+
+
+
 bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
@@ -385,7 +453,45 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
 
             OutputRegStringValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_CURRENT_CONFIG, rootKey.get(), MIDI_CONFIG_FILE_REG_VALUE);
             OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_ENABLED, rootKey.get(), MIDI_DISCOVERY_ENABLED_REG_VALUE);
+            OutputRegDWordNumericValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_TIMEOUT, rootKey.get(), MIDI_DISCOVERY_TIMEOUT_REG_VALUE);
             OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS, rootKey.get(), MIDI_USE_MMCSS_REG_VALUE);
+
+            // MIDI 1 device using MIDI 1 driver
+            auto midi1keyValue = wil::reg::try_get_value_dword(rootKey.get(), MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_REG_VALUE);
+            if (midi1keyValue.has_value())
+            {
+                auto namingSelection = (Midi1PortNameSelectionProperty)midi1keyValue.value();
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
+            }
+            else
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, L"Not present. Defaulted to: " + GetDisplayValueFromNamingSelection((Midi1PortNameSelectionProperty)MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_VALUE));
+            }
+
+            // MIDI 1 device using UMP driver
+            auto midi1UmpkeyValue = wil::reg::try_get_value_dword(rootKey.get(), MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_REG_VALUE);
+            if (midi1UmpkeyValue.has_value())
+            {
+                auto namingSelection = (Midi1PortNameSelectionProperty)midi1UmpkeyValue.value();
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_UMP_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
+            }
+            else
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_UMP_NAME_TABLE_SELECTION, L"Not present. Defaulted to: " + GetDisplayValueFromNamingSelection((Midi1PortNameSelectionProperty)MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE));
+            }
+
+            // MIDI 2 device using UMP driver
+            auto midi2keyValue = wil::reg::try_get_value_dword(rootKey.get(), MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_REG_VALUE);
+            if (midi2keyValue.has_value())
+            {
+                auto namingSelection = (Midi1PortNameSelectionProperty)midi2keyValue.value();
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
+            }
+            else
+            {
+                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION, L"Not present. Defaulted to: " + GetDisplayValueFromNamingSelection((Midi1PortNameSelectionProperty)MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE));
+            }
+
             OutputItemSeparator();
         }
         else
@@ -560,6 +666,7 @@ bool DoSectionTransports(_In_ bool const verbose)
     return true;
 }
 
+
 bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 {
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_MIDI2_API_ENDPOINTS);
@@ -645,6 +752,86 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             {
                 OutputBlankLine();
             }
+
+            // TODO: Get the reg keys that set the global defaults (move this up to the registry section)
+
+
+            // get the base device so we can use some of the service-based helpers, which
+            // don't know anything about the SDK types. These properties aren't normally
+            // used at the SDK-level
+            auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
+
+            additionalProps.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
+            additionalProps.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
+            auto basicDevice = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+                device.EndpointDeviceId(),
+                additionalProps,
+                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface
+                ).get();
+
+            // show which name property this endpoint has selected for MIDI 1 ports
+            auto namingSelection = (Midi1PortNameSelectionProperty)internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(STRING_PKEY_MIDI_Midi1PortNamingSelection, basicDevice, Midi1PortNameSelectionProperty::PortName_UseGlobalDefault);
+
+            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
+            OutputBlankLine();
+
+            // Show the full MIDI 1 port name table
+
+            auto nameTableRefArray = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(STRING_PKEY_MIDI_Midi1PortNameTable, basicDevice, nullptr);
+
+            if (nameTableRefArray != nullptr)
+            {
+                auto refData = nameTableRefArray.Value();
+
+                auto nameEntries = internal::Midi1PortNaming::ReadMidi1PortNameTableFromPropertyData(refData.data(), refData.size());
+
+                if (nameEntries.size() == 0)
+                {
+                    OutputError("No naming table found for device. This is expected ONLY when the device does not export endpoints to WinMM");
+                }
+                else
+                {
+                    for (auto const& nameEntry : nameEntries)
+                    {
+                        OutputNumericField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_GROUP_NUMBER, nameEntry.GroupIndex + 1);
+
+                        switch (nameEntry.DataFlowFromUserPerspective)
+                        {
+                        case MidiFlow::MidiFlowIn:
+                            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"MIDI In Port (Message Source)"));
+                            break;
+                        case MidiFlow::MidiFlowOut:
+                            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"MIDI Out Port (Message Destination)"));
+                            break;
+                        case MidiFlow::MidiFlowBidirectional:
+                            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"Bidirectional (This is unexpected)"));
+                            break;
+                        default:
+                            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"INVALID VALUE"));
+                            break;
+                        }
+
+                        auto customName = std::wstring{ nameEntry.CustomName };
+                        auto legacyWinMMName = std::wstring{ nameEntry.LegacyWinMMName };
+                        auto groupTerminalBlockName = std::wstring{ nameEntry.GroupTerminalBlockName };
+                        auto filterPlusGroupTerminalBlockName = std::wstring{ nameEntry.FilterPlusGroupTerminalBlockName };
+                        auto pinName = std::wstring{ nameEntry.PinName };
+                        auto filterPlusPinName = std::wstring{ nameEntry.FilterPlusPinName };
+
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_CUSTOM_NAME, customName);
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_LEGACY_WINMM_NAME, legacyWinMMName);
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_GTB_NAME, groupTerminalBlockName);
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_GTB_NAME, filterPlusGroupTerminalBlockName);
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_PIN_NAME, pinName);
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_PIN_NAME, filterPlusPinName);
+                        OutputBlankLine();
+                    }
+                }
+
+            }
+
+
+            // Parent device
 
             auto parent = device.GetParentDeviceInformation();
 
@@ -1127,6 +1314,34 @@ void OutputProcessAndNativeMachine()
     }
 }
 
+bool DoSectionDevMode(_In_ bool verbose)
+{
+    // dev mode check
+
+    OutputSectionHeader(MIDIDIAG_SECTION_DEV_MODE);
+
+    wil::unique_hkey devModeKey{ };
+    if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock", devModeKey)))
+    {
+        auto devModeEnabledValue = wil::reg::try_get_value_dword(devModeKey.get(), L"AllowDevelopmentWithoutDevLicense");
+
+        if (devModeEnabledValue.has_value())
+        {
+            OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, (bool)(devModeEnabledValue.value() > 0));
+        }
+        else
+        {
+            OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, L"Value Not Present");
+        }
+    }
+    else
+    {
+        OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, L"Key Not Present");
+    }
+
+
+}
+
 
 bool DoSectionSystemInfo(_In_ bool verbose)
 {
@@ -1184,6 +1399,11 @@ bool DoSectionSystemInfo(_In_ bool verbose)
         OutputDecimalMillisecondsField(MIDIDIAG_FIELD_LABEL_SYSTEM_INFO_TIMER_RESOLUTION_CURRENT_MS, actualResolutionMilliseconds, 3);
     }
 
+
+
+
+
+
     return true;
 }
 
@@ -1214,6 +1434,8 @@ int __cdecl main()
     {
         // do anything which doesn't rely on the service or SDK
         DoSectionSystemInfo(verbose);
+
+        DoSectionDevMode(verbose);
 
         // try to get all the classic MIDI 1.0 info up-front, so there's
         // some level of info available even if Windows MIDI Services is not installed

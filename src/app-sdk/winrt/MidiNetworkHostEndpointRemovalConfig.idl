@@ -7,6 +7,9 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
+
+
 import "IMidiServiceTransportPluginConfig.idl";
 
 

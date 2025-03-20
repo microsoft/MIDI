@@ -54,6 +54,7 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiChannel", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiGroup", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiClock", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiUniversalSystemExclusiveChannel", defaultThreading });
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceInformation", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceWatcher", defaultThreading });
@@ -82,6 +83,8 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiMessageConverter", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiMessageHelper", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiStreamMessageBuilder", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Messages.MidiUniversalSystemExclusiveMessageBuilder", defaultThreading });
+
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfig", defaultThreading });
 
@@ -96,6 +99,8 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveSender", defaultThreading });
+
+
 
     return types;
 }

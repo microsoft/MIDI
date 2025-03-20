@@ -57,6 +57,7 @@ namespace svc = winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include <wil/registry.h>
 
 #include <WindowsMidiServicesVersion.h>
+#include "WindowsMidiServices.h"
 
 //#include "WindowsMidiServicesClientInitialization.h"
 //#include "WindowsMidiServicesClientInitialization_i.c"
@@ -66,7 +67,9 @@ namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
 #include "wstring_util.h"
 #include "MidiDefs.h"
+#include "swd_helpers.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
+#include "midi_naming.h"
 
 #include "mididiag_field_defs.h"

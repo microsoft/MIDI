@@ -57,7 +57,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendMessageRaw(
-        winrt::com_ptr<IMidiBiDi> endpoint,
+        winrt::com_ptr<IMidiBidirectional> endpoint,
         void* data,
         uint8_t sizeInBytes,
         internal::MidiTimestamp timestamp)
@@ -181,7 +181,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     midi2::MidiSendMessageResults MidiEndpointConnection::SendUmpInternal(
-        winrt::com_ptr<IMidiBiDi> endpoint,
+        winrt::com_ptr<IMidiBidirectional> endpoint,
         midi2::IMidiUniversalPacket const& ump)
     {
 #ifdef _DEBUG
