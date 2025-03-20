@@ -104,13 +104,20 @@ enum Midi1PortNameSelectionProperty : uint32_t
 #define MIDI_USE_MMCSS_REG_VALUE                        L"UseMMCSS"
 #define MIDI_USE_MMCSS_REG_DEFAULT_VALUE                0x00000000
 
-// this is used as the default approach for how we name MIDI 1 ports
 // individual ports can override this via a property in the list below.
-#define MIDI_MIDI1_PORT_NAMING_MIDI1_DEFAULT_REG_VALUE        L"DefaultMidi1PortNamingForMidi1Devices"
-#define MIDI_MIDI1_PORT_NAMING_MIDI1_DEFAULT_VALUE            ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM))
 
-#define MIDI_MIDI1_PORT_NAMING_MIDI2_DEFAULT_REG_VALUE        L"DefaultMidi1PortNamingForMidi2Devices"
-#define MIDI_MIDI1_PORT_NAMING_MIDI2_DEFAULT_VALUE            ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName))
+// Default WinMM naming for MIDI 1 device using a MIDI 1 driver
+#define MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_REG_VALUE         L"DefaultPortNamingForMidi1Drivers"
+#define MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_VALUE             ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM))
+
+// Default WinMM naming for MIDI 1 device attached to UMP driver
+#define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_REG_VALUE   L"DefaultPortNamingForMidi1DevicesUsingUmpDriver"
+#define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE       ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseGroupTerminalBlocksExactly))
+
+// Default WinMM naming for MIDI 2 device using UMP driver
+#define MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_REG_VALUE          L"DefaultPortNamingForUmpNativeDevices"
+#define MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_VALUE              ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName))
+
 
 #define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"
 
@@ -119,7 +126,7 @@ enum Midi1PortNameSelectionProperty : uint32_t
 #define MIDI_DISCOVERY_ENABLED_REG_VALUE                L"Midi2DiscoveryEnabled"
 #define MIDI_DISCOVERY_ENABLED_REG_DEFAULT_VALUE        0x00000001
 
-// this is the amount of time we allocate to discovery across all native UMP format MIDI 2 devices
+// this is the amount of time we allocate to discovery across all native UMP format MIDI 2 devices. Needs to fit within uint16_t
 #define MIDI_DISCOVERY_TIMEOUT_REG_VALUE                L"Midi2DiscoveryTimeoutMS"
 #define MIDI_DISCOVERY_TIMEOUT_DEFAULT_VALUE            10000
 #define MIDI_DISCOVERY_TIMEOUT_MINIMUM_VALUE            500

@@ -23,15 +23,15 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
     struct Midi1PortNameEntry
     {
-        uint8_t GroupIndex;
-        MidiFlow DataFlowFromUserPerspective;           // a message destination is a MIDI Out
+        uint8_t GroupIndex{ 0 };
+        MidiFlow DataFlowFromUserPerspective{ MidiFlow::MidiFlowIn };   // MidiFlowIn is 0
 
-        wchar_t CustomName[MAXPNAMELEN]{ };
-        wchar_t LegacyWinMMName[MAXPNAMELEN]{ };
-        wchar_t PinName[MAXPNAMELEN]{ };
-        wchar_t FilterPlusPinName[MAXPNAMELEN]{ };
-        wchar_t GroupTerminalBlockName[MAXPNAMELEN]{ };
-        wchar_t FilterPlusGroupTerminalBlockName[MAXPNAMELEN]{ };
+        wchar_t CustomName[MAXPNAMELEN]{ 0 };
+        wchar_t LegacyWinMMName[MAXPNAMELEN]{ 0 };
+        wchar_t PinName[MAXPNAMELEN]{ 0 };
+        wchar_t FilterPlusPinName[MAXPNAMELEN]{ 0 };
+        wchar_t GroupTerminalBlockName[MAXPNAMELEN]{ 0 };
+        wchar_t FilterPlusGroupTerminalBlockName[MAXPNAMELEN]{ 0 };
     };
 
 // max of 32 total inputs/outputs
@@ -39,19 +39,46 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 #define MIN_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
 
 
+    inline std::wstring RemoveJustKSPinGeneratedSuffix(
+        _In_ std::wstring const& pinName
+    )
+    {
+        std::wstring cleanedPinName{ pinName };
 
-    inline std::wstring CleanupKSPinName(
+        std::wstring wordsToRemove[] =
+        {
+            // In every case I've seen, these are added by our USB and KS stack, not by the device
+            L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
+        };
+
+        for (auto const& word : wordsToRemove)
+        {
+            if (pinName.length() >= word.length())
+            {
+                auto idx = cleanedPinName.find(word);
+
+                if (idx != std::wstring::npos)
+                {
+                    cleanedPinName = cleanedPinName.erase(idx, word.length());
+                }
+            }
+        }
+
+        return cleanedPinName;
+    }
+
+    inline std::wstring FullyCleanupKSPinName(
         _In_ std::wstring const& pinName,
         _In_ std::wstring parentDeviceName,
         _In_ std::wstring filterName
     )
     {
-        std::wstring cleanedPinName{};
+        std::wstring cleanedPinName{ ::WindowsMidiServicesInternal::TrimmedWStringCopy(RemoveJustKSPinGeneratedSuffix(pinName)) };
 
         // Used by ESI, MOTU, and others. We don't want to mess up other names, so check only
-        // for whole word. We do other removal in the next step
+        // for whole word, not substring. We do other removal in the next step
 
-        auto checkPinName = internal::ToLowerTrimmedWStringCopy(pinName);
+        auto checkPinName = ::WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(cleanedPinName);
 
         if (checkPinName == L"midi" ||
             checkPinName == L"out" ||
@@ -61,16 +88,12 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         {
             cleanedPinName = L"";
         }
-        else
-        {
-            cleanedPinName = pinName;
-        }
 
-        cleanedPinName = internal::TrimmedWStringCopy(cleanedPinName);
-        auto comparePinName = internal::ToUpperWStringCopy(cleanedPinName);         // this needs to be just the uppercase of cleanedPinName for the replace to work
+        auto comparePinName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(cleanedPinName);         // this needs to be just the uppercase of cleanedPinName for the replace to work
 
-        auto compareParentName = internal::ToUpperWStringCopy(parentDeviceName);
-        auto compareFilterName = internal::ToUpperWStringCopy(filterName);
+        // some pins include the filter or parent device name. We don't want that here because some options re-add it.
+        auto compareParentName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(parentDeviceName);
+        auto compareFilterName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(filterName);
 
         // the double and triple space entries need to be last
         // there are other ways to do this with pattern matching, 
@@ -78,9 +101,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         // these must all be uppercase when alpha characters are included
         std::wstring wordsToRemove[] =
         {
-            // many of these are added by our USB and KS stack, not by the device, which is why they are here
             compareParentName, compareFilterName,
-            L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
             L"  ", L"   ", L"    "
         };
 
@@ -170,10 +191,10 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         UNREFERENCED_PARAMETER(flowFromUserPerspective);
         UNREFERENCED_PARAMETER(portIndexWithinThisFilterAndDirection);
 
-        std::wstring generatedName{};
+        std::wstring generatedName{ RemoveJustKSPinGeneratedSuffix(pinName) };
 
         // we use the pin name exactly as it is in the device
-        generatedName = pinName.substr(0, MAXPNAMELEN - 1);
+        generatedName = generatedName.substr(0, MAXPNAMELEN - 1);
 
         return generatedName;
     }
@@ -186,7 +207,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
     {
         std::wstring generatedName{};
 
-        auto cleanedPinName = CleanupKSPinName(pinName, parentDeviceName, filterName);
+        auto cleanedPinName = FullyCleanupKSPinName(pinName, parentDeviceName, filterName);
 
         generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
 
@@ -222,7 +243,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
     {
         std::wstring generatedName{};
 
-        auto cleanedGtbName = CleanupKSPinName(groupTerminalBlockName, parentDeviceName, filterName);
+        auto cleanedGtbName = FullyCleanupKSPinName(groupTerminalBlockName, parentDeviceName, filterName);
 
         generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedGtbName));
 
@@ -301,7 +322,6 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             filterName, 
             pinName);
         filterPlusGroupTerminalBlockName.copy(entry.FilterPlusGroupTerminalBlockName, MAXPNAMELEN - 1);
-
     }
 
     //inline std::wstring GenerateGroupTerminalBlockNameFromDeviceInformation(
@@ -507,7 +527,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         {
             std::wstring name{};
 
-            auto cleanedPinName = CleanupKSPinName(pinName, parentDeviceName, filterName);
+            auto cleanedPinName = FullyCleanupKSPinName(pinName, parentDeviceName, filterName);
 
             name = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
 
@@ -547,7 +567,6 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         _In_reads_bytes_(dataSize) uint8_t* tablePointer,
         _In_ uint32_t const dataSize
     ) noexcept
-
     {
         std::vector<Midi1PortNameEntry> nameTable{};
 
@@ -605,25 +624,29 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
 
     inline bool WriteMidi1PortNameTableToPropertyDataPointer(
-        _In_ std::vector<Midi1PortNameEntry>& entries,
+        _In_ std::vector<Midi1PortNameEntry> const& entries,
         _Inout_ std::vector<std::byte>& propertyData
     )
     {
         if (entries.size() == 0) return false;
 
         // calculate the total size
-        size_t entriesSize = entries.size() * sizeof(Midi1PortNameEntry);
-        size_t totalSize = static_cast<size_t>(entriesSize + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE);
-        size_t offset{ 0 };
+        size_t entriesSizeBytes = entries.size() * sizeof(Midi1PortNameEntry);
+        size_t totalSizeBytes = (size_t)(entriesSizeBytes + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE);
 
-        propertyData.resize(totalSize, (std::byte)0);
+        propertyData.resize(totalSizeBytes, (std::byte)0);
+
+        if (propertyData.size() != totalSizeBytes)
+        {
+            LOG_IF_FAILED(E_POINTER);
+            return false;
+        }
 
         // header value (byte count)
-        memcpy((propertyData.data()), &totalSize, MIDI1_PORT_NAME_ENTRY_HEADER_SIZE);
-        offset += MIDI1_PORT_NAME_ENTRY_HEADER_SIZE;
+        memcpy((byte*)(propertyData.data()), (byte*)&totalSizeBytes, MIDI1_PORT_NAME_ENTRY_HEADER_SIZE);
 
         // copy in all the name data. Vectors are guaranteed to be contiguous.
-        memcpy((propertyData.data() + offset), entries.data(), entriesSize);
+        memcpy((byte*)(propertyData.data() + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE), (byte*)entries.data(), entriesSizeBytes);
 
         return true;
     }

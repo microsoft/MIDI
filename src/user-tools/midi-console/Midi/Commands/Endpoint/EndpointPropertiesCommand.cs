@@ -588,7 +588,9 @@ namespace Microsoft.Midi.ConsoleApp
                             {
                                 string s = string.Empty;
 
-                                foreach (byte b in (byte[])value)
+                                var bytes = (byte[])value;
+
+                                foreach (byte b in bytes)
                                 {
                                     if (char.IsAsciiLetterOrDigit((char)b))
                                     {
@@ -601,6 +603,8 @@ namespace Microsoft.Midi.ConsoleApp
                                 }
 
                                 table.AddRow(friendlyKey, s);
+                                table.AddRow("", $"[cyan]({bytes.Length} bytes)[/]");
+
                             }
                             else
                             {

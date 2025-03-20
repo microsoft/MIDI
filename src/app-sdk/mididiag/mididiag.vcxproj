@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
-    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.3-preview-12.250314-2145</WindowsMidiServicesSdkPackage>
+    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.3-preview-12.250320-18</WindowsMidiServicesSdkPackage>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
@@ -122,9 +122,9 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,9 +152,9 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

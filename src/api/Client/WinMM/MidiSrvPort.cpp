@@ -819,15 +819,15 @@ _Use_decl_annotations_
 void
 CMidiPort::WinmmClientCallback(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
 {
-    TraceLoggingWrite(
-        WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingValue(msg, "msg"),
-        TraceLoggingValue(param1, "param1"),
-        TraceLoggingValue(param2, "param2"));
+    //TraceLoggingWrite(
+    //    WdmAud2TelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingValue(msg, "msg"),
+    //    TraceLoggingValue(param1, "param1"),
+    //    TraceLoggingValue(param2, "param2"));
 
     DriverCallback(m_OpenDesc.dwCallback,
                     HIWORD(m_Flags),

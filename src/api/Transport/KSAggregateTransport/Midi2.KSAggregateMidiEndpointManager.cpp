@@ -335,12 +335,12 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         TraceLoggingWideString(masterEndpointDefinition.EndpointName.c_str(), "name")
     );
 
-    std::vector<std::byte> nameTableData;
+    std::vector<std::byte> nameTablePropertyData{ };
 
-    if (internal::Midi1PortNaming::WriteMidi1PortNameTableToPropertyDataPointer(portNameEntries, nameTableData))
+    if (internal::Midi1PortNaming::WriteMidi1PortNameTableToPropertyDataPointer(portNameEntries, nameTablePropertyData))
     {
         interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BINARY, (ULONG)nameTableData.size(), (PVOID)nameTableData.data() });
+            DEVPROP_TYPE_BINARY, (ULONG)nameTablePropertyData.size(), (PVOID)nameTablePropertyData.data() });
     }
     else
     {
@@ -359,7 +359,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         );
     }
 
+    //
     // TODO: This needs to be re-done to use user-specified properties from config file
+    //
     auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
 
     interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },

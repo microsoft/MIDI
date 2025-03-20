@@ -157,7 +157,7 @@ namespace WindowsMidiServicesInternal
 
     // used by the service when creating new GTBs to be read by the API
     inline bool WriteGroupTerminalBlocksToPropertyDataPointer(
-        _In_ std::vector<GroupTerminalBlockInternal>& blocks,
+        _In_ std::vector<GroupTerminalBlockInternal> const& blocks,
         _Inout_ std::vector<std::byte>& propertyData
     )
     {

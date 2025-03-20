@@ -13,7 +13,7 @@
 
 #define MIDIDIAG_PRODUCT_NAME                                            "Microsoft Windows MIDI Services - Diagnostics Report"
 
-#define MIDIDIAG_MAX_FIELD_LABEL_WIDTH                                   25
+#define MIDIDIAG_MAX_FIELD_LABEL_WIDTH                                   36
 
 
 #define MIDIDIAG_FIELD_LABEL_FILE_VERSION                                "file_version"
@@ -35,6 +35,7 @@
 
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT                               "reg_root"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_ENABLED             "reg_discovery_enabled"
+#define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_TIMEOUT             "reg_discovery_timeout_ms"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS                     "reg_use_mmcss"
 #define MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_CURRENT_CONFIG                "reg_current_config"
 
@@ -85,6 +86,22 @@
 #define MIDIDIAG_FIELD_LABEL_GTB_FIRST_GROUP                             "gtb_first_group_number"
 #define MIDIDIAG_FIELD_LABEL_GTB_GROUP_COUNT                             "gtb_group_count"
 #define MIDIDIAG_FIELD_LABEL_GTB_DIRECTION                               "gtb_direction"
+
+#define MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION      "reg_default_midi1_winmm_naming"
+#define MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION  "reg_default_midi2_ump_winmm_naming"
+#define MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_UMP_NAME_TABLE_SELECTION  "reg_default_midi1_ump_winmm_naming"
+
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_SELECTION                        "name_table_selection"
+
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_GROUP_NUMBER                     "name_table_group_number"
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW                        "name_table_data_flow"
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_CUSTOM_NAME                      "name_table_custom_name"
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_LEGACY_WINMM_NAME                "name_table_legacy_winmm_name"
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_GTB_NAME                         "name_table_gtb_name"
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_GTB_NAME             "name_table_filter_plus_gtb_name"
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_PIN_NAME                         "name_table_pin_name"
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_PIN_NAME             "name_table_filter_plus_pin_name"
+
 
 
 
