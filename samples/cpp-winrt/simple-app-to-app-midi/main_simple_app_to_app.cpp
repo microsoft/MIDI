@@ -106,6 +106,12 @@ bool CreateVirtualDevice()
     block3.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
     blocks.push_back(block3);
 
+    // add the function blocks to the creation config
+    for (auto const& block : blocks)
+    {
+        creationConfig.FunctionBlocks().Append(block);
+    }
+
     // creates the device using the endpoint info provided above
     m_virtualDevice = MidiVirtualDeviceManager::CreateVirtualDevice(creationConfig);
     if (m_virtualDevice == nullptr)
