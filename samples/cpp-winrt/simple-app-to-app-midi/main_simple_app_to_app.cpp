@@ -43,7 +43,7 @@ bool CreateVirtualDevice()
 
     MidiDeclaredEndpointInfo endpointInfo;
     endpointInfo.HasStaticFunctionBlocks = false;   // this allows us to change them after the fact. The count cannot change, however, per spec.
-    endpointInfo.Name = L"CPP Virtual Device";
+    endpointInfo.Name = L"Virtual Device";
     endpointInfo.ProductInstanceId = L"3263827-8675309-5150";
     endpointInfo.SupportsMidi10Protocol = true;
     endpointInfo.SupportsMidi20Protocol = true;
@@ -65,29 +65,34 @@ bool CreateVirtualDevice()
     // endpoint information structure passed in earlier.
     std::vector<MidiFunctionBlock>blocks;
 
+    // NOTE: If you want the function block names to also work as MIDI 1 port names
+    // then you need to keep the names short. We normally add the device name plus
+    // the FB name with a space in between, and then possibly a differentiator if 
+    // needed. In total, including null terminator, that needs to be 32 characters 
+    // or fewer.
     MidiFunctionBlock block0;
     block0.Number(0);
     block0.IsActive(true);
-    block0.Name(L"This is BiDi Function Block 0");
-    block0.FirstGroup(MidiGroup((uint8_t)0));
-    block0.GroupCount(3);
+    block0.Name(L"BiDi Function Block 0");
+    block0.FirstGroup(MidiGroup(static_cast<uint8_t>(0)));
+    block0.GroupCount(3); 
     block0.Direction(MidiFunctionBlockDirection::Bidirectional); // both an input and an output
     blocks.push_back(block0);
 
     MidiFunctionBlock block1;
     block1.Number(1);
     block1.IsActive(false);
-    block1.Name(L"Inactive MIDI Out Function Block 1");
-    block1.FirstGroup(MidiGroup((uint8_t)3));
-    block1.GroupCount(1);
+    block1.Name(L"Inactive Block 1");
+    block1.FirstGroup(MidiGroup(static_cast<uint8_t>(3)));
+    block1.GroupCount(3); 
     block1.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
     blocks.push_back(block1);
 
     MidiFunctionBlock block2;
     block2.Number(2);
     block2.IsActive(true);
-    block2.Name(L"This is MIDI In Function Block 2 which starts with a long name");
-    block2.FirstGroup(MidiGroup((uint8_t)5));
+    block2.Name(L"This is MIDI In Function Block 2 with a long WinMM-unfriendly name");
+    block2.FirstGroup(MidiGroup(static_cast<uint8_t>(5)));  // this will overlap with block1, which is allowed per-spec
     block2.GroupCount(1);
     block2.Direction(MidiFunctionBlockDirection::BlockOutput);  // a midi message source
     blocks.push_back(block2);
@@ -95,8 +100,8 @@ bool CreateVirtualDevice()
     MidiFunctionBlock block3;
     block3.Number(3);
     block3.IsActive(true);
-    block3.Name(L"MIDI Out Function Block 3");
-    block3.FirstGroup(MidiGroup((uint8_t)11));
+    block3.Name(L"Block 3");
+    block3.FirstGroup(MidiGroup(static_cast<uint8_t>(11)));
     block3.GroupCount(5);                                       // this gets us to index 15, which is max index
     block3.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
     blocks.push_back(block3);

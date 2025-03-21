@@ -30,8 +30,8 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         wchar_t LegacyWinMMName[MAXPNAMELEN]{ 0 };
         wchar_t PinName[MAXPNAMELEN]{ 0 };
         wchar_t FilterPlusPinName[MAXPNAMELEN]{ 0 };
-        wchar_t GroupTerminalBlockName[MAXPNAMELEN]{ 0 };
-        wchar_t FilterPlusGroupTerminalBlockName[MAXPNAMELEN]{ 0 };
+        wchar_t BlockName[MAXPNAMELEN]{ 0 };                // GTB or FB
+        wchar_t FilterPlusBlockName[MAXPNAMELEN]{ 0 };      // Filter + GTB or FB
     };
 
 // max of 32 total inputs/outputs
@@ -124,6 +124,31 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         return cleanedPinName;
     }
 
+    inline std::wstring AddGroupNumberToNameIfNeeded(
+        _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
+        _In_ std::wstring const& filterName,
+        _In_ std::wstring const& generatedName,
+        _In_ uint8_t groupIndex
+
+    )
+    {
+        std::wstring newName{ generatedName };
+
+        if (generatedName == parentDeviceName || generatedName == filterName)
+        {
+            // we fell back to the device name, so add a group number when > 0
+
+            if (groupIndex > 0)
+            {
+                const int nameReservedSpaces = 4; // null terminator, space, and then up to two digits for the group number
+
+                newName = generatedName.substr(0, MAXPNAMELEN - nameReservedSpaces) + std::to_wstring(groupIndex + 1);
+            }
+        }
+
+        return newName;
+    }
+
 
     inline std::wstring GenerateLegacyMidi1PortName(
         _In_ std::wstring const& nameFromRegistry,              
@@ -202,7 +227,8 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
     inline std::wstring GenerateDevicePlusPinNameBasedMidi1PortName(
         _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
         _In_ std::wstring const& filterName,
-        _In_ std::wstring const& pinName
+        _In_ std::wstring const& pinName,
+        _In_ uint8_t groupIndex
     )
     {
         std::wstring generatedName{};
@@ -228,33 +254,33 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             }
         }
 
-        // TODO: do we need to do any port differentiators here? Look at the collection and see
-        // if there are already ports starting with the same name, and if so, increment a counter and append
+        generatedName = AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, generatedName, groupIndex);
 
         return generatedName;
     }
 
 
-    inline std::wstring GenerateFilterPlusGroupTerminalBlockMidi1PortName(
+    inline std::wstring GenerateFilterPlusBlockMidi1PortName(
         _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
         _In_ std::wstring const& filterName,
-        _In_ std::wstring const& groupTerminalBlockName
+        _In_ std::wstring const& blockName,
+        _In_ uint8_t groupIndex
     )
     {
         std::wstring generatedName{};
 
-        auto cleanedGtbName = FullyCleanupKSPinName(groupTerminalBlockName, parentDeviceName, filterName);
+        auto cleanedBlockName = FullyCleanupKSPinName(blockName, parentDeviceName, filterName);
 
-        generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedGtbName));
+        generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedBlockName));
 
         // if the name is too long, try using just the pin name or just the filter name
 
         if (generatedName.length() + 1 > MAXPNAMELEN)
         {
-            if (!cleanedGtbName.empty())
+            if (!cleanedBlockName.empty())
             {
                 // we're over length, so just use the gtb name
-                generatedName = cleanedGtbName.substr(0, MAXPNAMELEN - 1);
+                generatedName = cleanedBlockName.substr(0, MAXPNAMELEN - 1);
             }
             else
             {
@@ -264,8 +290,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             }
         }
 
-        // TODO: do we need to do any port differentiators here? Look at the collection and see
-        // if there are already ports starting with the same name, and if so, increment a counter and append
+        generatedName = AddGroupNumberToNameIfNeeded(parentDeviceName, filterName, generatedName, groupIndex);
 
         return generatedName;
     }
@@ -279,7 +304,8 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         _In_ std::wstring const& pinName,
         _In_ std::wstring const& customPortName,
         _In_ MidiFlow const flowFromUserPerspective,
-        _In_ uint8_t const portIndexWithinThisFilterAndDirection
+        _In_ uint8_t const portIndexWithinThisFilterAndDirection,
+        _In_ uint8_t const groupIndex
     )
     {
         // classic WinMM name. Not great, and sometimes buggy
@@ -295,7 +321,8 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         auto interfacePlusPinWinMMName = GenerateDevicePlusPinNameBasedMidi1PortName(
             parentDeviceName,
             filterName,
-            pinName
+            pinName,
+            groupIndex
         );
         interfacePlusPinWinMMName.copy(entry.FilterPlusPinName, MAXPNAMELEN - 1);
 
@@ -315,13 +342,14 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         }
 
         // GTB Name. We should set this later based on the user preference
-        pinWinMMName.copy(entry.GroupTerminalBlockName, MAXPNAMELEN - 1);
+        pinWinMMName.copy(entry.BlockName, MAXPNAMELEN - 1);
 
-        auto filterPlusGroupTerminalBlockName = GenerateFilterPlusGroupTerminalBlockMidi1PortName(
+        auto filterPlusGroupTerminalBlockName = GenerateFilterPlusBlockMidi1PortName(
             parentDeviceName, 
             filterName, 
-            pinName);
-        filterPlusGroupTerminalBlockName.copy(entry.FilterPlusGroupTerminalBlockName, MAXPNAMELEN - 1);
+            pinName,
+            groupIndex);
+        filterPlusGroupTerminalBlockName.copy(entry.FilterPlusBlockName, MAXPNAMELEN - 1);
     }
 
     //inline std::wstring GenerateGroupTerminalBlockNameFromDeviceInformation(

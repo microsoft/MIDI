@@ -153,6 +153,97 @@ namespace WindowsMidiServicesInternal
     }
 
 
+    inline winrt::Windows::Foundation::IReferenceArray<uint8_t> SafeGetSwdBinaryPropertyFromDeviceInformation(
+        _In_ winrt::hstring propertyStringKey,
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInformation)
+    {
+        if (propertyStringKey.empty())
+        {
+            return nullptr;
+        }
+
+        if (deviceInformation == nullptr || !deviceInformation.Properties().HasKey(propertyStringKey))
+        {
+            return nullptr;
+        }
+
+        // lookup the property. It should provide us with an IInspectable
+        auto prop = deviceInformation.Properties().Lookup(propertyStringKey);
+
+        if (prop != nullptr)
+        {
+            return winrt::unbox_value_or<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop, nullptr);
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+
+    inline bool ReferenceByteArraysAreIdentical(
+        _In_ winrt::Windows::Foundation::IReferenceArray<uint8_t> refA,
+        _In_ winrt::Windows::Foundation::IReferenceArray<uint8_t> refB)
+    {
+        if (refA == nullptr && refB == nullptr)
+        {
+            return true;
+        }
+
+        if ((refA == nullptr && refB != nullptr) ||
+            (refA != nullptr && refB == nullptr))
+        {
+            return false;
+        }
+
+        // nothing is null, so continue processing
+        
+        auto refAData = refA.Value();
+        auto refBData = refB.Value();
+
+        if (refAData.size() != refBData.size())
+        {
+            // different size arrays
+            return false;
+        }
+
+        // at this point, we have same size arrays, so just compare
+        auto cmp = memcmp(refAData.data(), refBData.data(), refAData.size());
+
+        return (bool)(cmp == 0);
+    }
+
+    inline bool ReferenceByteArrayAndByteVectorAreIdentical(
+        _In_ winrt::Windows::Foundation::IReferenceArray<uint8_t> refA,
+        _In_ std::vector<std::byte> vect)
+    {
+        if (refA == nullptr && vect.size() == 0)
+        {
+            return true;
+        }
+
+        if (refA == nullptr && vect.size() != 0)
+        {
+            return false;
+        }
+
+        // nothing is null, so continue processing
+
+        auto refAData = refA.Value();
+
+        if (refAData.size() != vect.size())
+        {
+            // different size arrays
+            return false;
+        }
+
+        // at this point, we have same size data, so just compare. Both are contiguous in memory
+        auto cmp = memcmp(refAData.data(), vect.data(), refAData.size());
+
+        return (bool)(cmp == 0);
+    }
+
+
 }
 
 #endif

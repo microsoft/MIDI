@@ -413,10 +413,10 @@ std::wstring GetDisplayValueFromNamingSelection(Midi1PortNameSelectionProperty n
     case Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM:
         namingSelectionDisplayString = L"Use legacy WinMM-compatible names";
         break;
-    case Midi1PortNameSelectionProperty::PortName_UseGroupTerminalBlocksExactly:
+    case Midi1PortNameSelectionProperty::PortName_UseBlocksExactly:
         namingSelectionDisplayString = L"Use group terminal block names";
         break;
-    case Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName:
+    case Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName:
         namingSelectionDisplayString = L"Use KS filter + group terminal block names";
         break;
     case Midi1PortNameSelectionProperty::PortName_UsePinName:
@@ -813,8 +813,8 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
                         auto customName = std::wstring{ nameEntry.CustomName };
                         auto legacyWinMMName = std::wstring{ nameEntry.LegacyWinMMName };
-                        auto groupTerminalBlockName = std::wstring{ nameEntry.GroupTerminalBlockName };
-                        auto filterPlusGroupTerminalBlockName = std::wstring{ nameEntry.FilterPlusGroupTerminalBlockName };
+                        auto groupTerminalBlockName = std::wstring{ nameEntry.BlockName };
+                        auto filterPlusGroupTerminalBlockName = std::wstring{ nameEntry.FilterPlusBlockName };
                         auto pinName = std::wstring{ nameEntry.PinName };
                         auto filterPlusPinName = std::wstring{ nameEntry.FilterPlusPinName };
 

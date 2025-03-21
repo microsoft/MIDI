@@ -590,7 +590,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
                 // for native MIDI 2 devices, we use filter name + pin (gtb) name
                 // TODO: This needs to be re-done to use user-specified properties from config file
-                auto naming = Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName;
+                auto naming = Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName;
                 interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
                     DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
             }
@@ -688,6 +688,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         if (!MidiPin->CreateUMPOnly)
         {
             // get the group terminal blocks and their names, because that's how the MIDI 2 driver reports the info about attached MIDI 1 devices
+            // for MIDI 2.0 USB devices, we start with the GTBs, but after discovery and protocol negotiation, will update them from function blocks
             auto gtbs = internal::ReadGroupTerminalBlocksFromPropertyData(MidiPin->GroupTerminalBlockData.get(), MidiPin->GroupTerminalBlockDataSize);
 
             for (auto const& gtb : gtbs)
@@ -701,44 +702,64 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                     // TODO: Here's where we should load any custom port name into the table, using the values from config
                     std::wstring customPortName = L"";      // TODO: Get from config
 
-                    if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL)
+                    if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
+                        gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_OUTPUT)              // gtb output is a midi input
                     {
                         // we need to create two entries for bidi
-                        internal::Midi1PortNaming::Midi1PortNameEntry entryInput{ };
-                        internal::Midi1PortNaming::Midi1PortNameEntry entryOutput{ };
+                        internal::Midi1PortNaming::Midi1PortNameEntry nameEntry{ };
 
-                        entryInput.GroupIndex = groupIndex;
-                        entryInput.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;
-
-                        entryOutput.GroupIndex = groupIndex;
-                        entryOutput.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;
+                        nameEntry.GroupIndex = groupIndex;
+                        nameEntry.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;
 
                         // MIDI Input
                         internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
-                            entryInput,
+                            nameEntry,
                             nameFromRegistry,
                             deviceName,                 // parent device name
                             filterName,                 // filter name. For MIDI 2 devices, this ends up the same as the parent device name
                             pinName,                    // we use gtb name here because the driver populates that with the pin name
                             customPortName,
                             MidiFlow::MidiFlowIn,
+                            groupIndex,
                             groupIndex
                         );
 
+                        portNameEntries.push_back(nameEntry);
+
+                        TraceLoggingWrite(
+                            MidiKSTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Added midi input port name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingUInt16(groupIndex, "group index"),
+                            TraceLoggingWideString(gtb.Name.c_str(), "gtb name")
+                        );
+                    }
+
+                    if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
+                        gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT)
+                    {
+                        internal::Midi1PortNaming::Midi1PortNameEntry nameEntry{ };
+
+                        nameEntry.GroupIndex = groupIndex;
+                        nameEntry.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;
+
                         // MIDI Output
                         internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
-                            entryOutput,
+                            nameEntry,
                             nameFromRegistry,
                             deviceName,                 // parent device name
                             filterName,                 // filter name. For MIDI 2 devices, this ends up the same as the parent device name
                             pinName,                    // we use gtb name here because the driver populates that with the pin name for MIDI 1 devices
                             customPortName,
                             MidiFlow::MidiFlowOut,
+                            groupIndex,
                             groupIndex
                         );
 
-                        portNameEntries.push_back(entryInput);
-                        portNameEntries.push_back(entryOutput);
+                        portNameEntries.push_back(nameEntry);
 
                         TraceLoggingWrite(
                             MidiKSTransportTelemetryProvider::Provider(),
@@ -746,38 +767,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                             TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Added bidirectional port name pair", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingUInt16(groupIndex, "group index"),
-                            TraceLoggingWideString(gtb.Name.c_str(), "gtb name")
-                        );
-                    }
-                    else
-                    {
-                        internal::Midi1PortNaming::Midi1PortNameEntry entry{ };
-
-                        entry.GroupIndex = groupIndex;
-                        entry.DataFlowFromUserPerspective = gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT ? MidiFlow::MidiFlowOut : MidiFlow::MidiFlowIn; // always opposite
-
-                        internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
-                            entry,
-                            nameFromRegistry,
-                            deviceName,                 // parent device name
-                            filterName,                 // filter name. For MIDI 2 devices, this ends up the same as the parent device name
-                            pinName,                    // we use gtb name here because the driver populates that with the pin name for MIDI 1 devices
-                            customPortName,
-                            entry.DataFlowFromUserPerspective,    
-                            groupIndex
-                        );
-
-                        portNameEntries.push_back(entry);
-
-                        TraceLoggingWrite(
-                            MidiKSTransportTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Added unidirectional port name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(L"Added midi output port name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                             TraceLoggingUInt16(groupIndex, "group index"),
                             TraceLoggingWideString(gtb.Name.c_str(), "gtb name")
                         );
