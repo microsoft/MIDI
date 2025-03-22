@@ -265,8 +265,10 @@ CMidiEndpointProtocolWorker::Start(
 
         RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
 
+        // after timing out, or receiving everything, we set the Discovery Complete property
         m_inInitialFunctionBlockDiscovery = false;
         RETURN_IF_FAILED(SetDiscoveryCompleteProperty());
+
 
 
         // we just hang out until endProcessing is set.
@@ -1432,7 +1434,7 @@ _Use_decl_annotations_
 MidiFunctionBlockProperty 
 CMidiEndpointProtocolWorker::BuildFunctionBlockPropertyFromInfoNotificationMessage(internal::PackedUmp128& ump)
 {
-    MidiFunctionBlockProperty prop;
+    MidiFunctionBlockProperty prop{ };
 
     prop.IsActive = internal::GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(ump.word0);
     prop.BlockNumber = internal::GetFunctionBlockNumberFromInfoNotificationFirstWord(ump.word0);
@@ -1463,10 +1465,23 @@ CMidiEndpointProtocolWorker::UpdateFunctionBlockProperty(internal::PackedUmp128&
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+        TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt32(functionBlockInfoNotificationMessage.word0, "word 0")
     );
 
     MidiFunctionBlockProperty prop = BuildFunctionBlockPropertyFromInfoNotificationMessage(functionBlockInfoNotificationMessage);
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Built function block property", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt16(prop.BlockNumber, "block number"),
+        TraceLoggingBool(prop.IsActive, "is active")
+    );
 
 
     FILETIME currentTime;
