@@ -102,7 +102,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         std::wstring wordsToRemove[] =
         {
             compareParentName, compareFilterName,
-            L"  ", L"   ", L"    "
+           /* L"  ", L"   ", L"    " */
         };
 
         for (auto const& word : wordsToRemove)
