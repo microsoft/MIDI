@@ -593,6 +593,8 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     DeviceInformation parentDevice
 )
 {
+    UNREFERENCED_PARAMETER(watcher);
+
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -895,8 +897,10 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInformationUpdate device)
+CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher watcher, DeviceInformationUpdate device)
 {
+    UNREFERENCED_PARAMETER(watcher);
+
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -975,16 +979,20 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInfor
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped(DeviceWatcher watcher, winrt::Windows::Foundation::IInspectable)
 {
+    UNREFERENCED_PARAMETER(watcher);
+
     m_EnumerationCompleted.SetEvent();
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher watcher, winrt::Windows::Foundation::IInspectable)
 {
+    UNREFERENCED_PARAMETER(watcher);
+
     m_EnumerationCompleted.SetEvent();
     return S_OK;
 }

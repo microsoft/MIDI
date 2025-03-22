@@ -195,7 +195,7 @@ CMidi2VirtualMidiBidi::SendMidiMessage(
                 TraceLoggingGuid(m_sessionId, "session id")
             );
 
-            RETURN_IF_FAILED(E_POINTER);  // but if the client-side is not connected to a device, something is really wrong.
+            RETURN_IF_FAILED(E_UNEXPECTED);  // but if the client-side is not connected to a device, something is really wrong.
         }
     }
 }
@@ -209,21 +209,22 @@ CMidi2VirtualMidiBidi::Callback(
     LONGLONG context
 )
 {
-    //TraceLoggingWrite(
-    //    MidiVirtualMidiTransportTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_VERBOSE,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-    //    TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-    //    TraceLoggingBool(m_isDeviceSide, "is device side"),
-    //    TraceLoggingUInt32(Size, "bytes"),
-    //    TraceLoggingUInt64(Position, "timestamp"),
-    //    TraceLoggingGuid(m_sessionId, "session id")
-    //);
+    TraceLoggingWrite(
+        MidiVirtualMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingBool(m_isDeviceSide, "is device side"),
+        TraceLoggingUInt32(Size, "bytes"),
+        TraceLoggingUInt64(Position, "timestamp"),
+        TraceLoggingGuid(m_sessionId, "session id")
+    );
 
     // message received from the client
+    RETURN_HR_IF(E_INVALIDARG, Size < sizeof(uint32_t));
 
     if (m_callback != nullptr)
     {
@@ -231,7 +232,7 @@ CMidi2VirtualMidiBidi::Callback(
     }
     else
     {
-        RETURN_IF_FAILED(E_POINTER);
+        RETURN_IF_FAILED(E_UNEXPECTED);
     }
 
     return S_OK;

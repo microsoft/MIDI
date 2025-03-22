@@ -383,7 +383,6 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(
                             TraceLoggingWideString(deviceEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                         );
 
-
                         if (entry.MidiClientBidi != nullptr)
                         {
                             LOG_IF_FAILED(entry.MidiClientBidi->UnlinkAssociatedCallback());
@@ -417,8 +416,6 @@ HRESULT MidiEndpointTable::OnDeviceDisconnected(
                     );
 
                     RETURN_IF_FAILED(E_INVALIDARG);  // fallback error
-
-
                 }
             }
             else

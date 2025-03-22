@@ -2901,7 +2901,7 @@ CMidiDeviceManager::SyncMidi1Ports(
     // necessary.
     RETURN_HR_IF(S_OK, umpMidiPort->UmpOnly);
 
-    std::map<UINT32, PORT_INFO> portInfo[2];
+    std::map<UINT32, PORT_INFO> portInfo[2]{ };
 
     // Retrieve all of the needed ump port properties, for efficiency get
     // them all at once to avoid repeated CreateFromIdAsync calls.

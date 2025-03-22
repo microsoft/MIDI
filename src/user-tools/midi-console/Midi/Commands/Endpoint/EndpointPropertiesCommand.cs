@@ -244,6 +244,8 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksDeclaredCount, epinfo.DeclaredFunctionBlockCount.ToString());
                     table.AddEmptyRow();
 
+                    // show function blocks for native UMP devices
+
                     if (di.GetDeclaredFunctionBlocks().Count > 0)
                     {
                         foreach (var functionBlock in di.GetDeclaredFunctionBlocks())

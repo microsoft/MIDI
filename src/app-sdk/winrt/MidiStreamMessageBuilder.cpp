@@ -406,6 +406,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Messages::implementation
         word0Remaining |= static_cast<uint16_t>(midi10) << 2;
         word0Remaining |= static_cast<uint16_t>(direction);
 
+        // set active flag, which is high bit of function block number
         if (active)
         {
             word0Remaining |= 0x8000;

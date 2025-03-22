@@ -43,7 +43,7 @@ bool CreateVirtualDevice()
 
     MidiDeclaredEndpointInfo endpointInfo;
     endpointInfo.HasStaticFunctionBlocks = false;   // this allows us to change them after the fact. The count cannot change, however, per spec.
-    endpointInfo.Name = L"Virtual Device";
+    endpointInfo.Name = L"MyApp";
     endpointInfo.ProductInstanceId = L"3263827-8675309-5150";
     endpointInfo.SupportsMidi10Protocol = true;
     endpointInfo.SupportsMidi20Protocol = true;

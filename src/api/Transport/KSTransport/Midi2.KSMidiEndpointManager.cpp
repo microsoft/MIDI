@@ -80,7 +80,7 @@ CMidi2KSMidiEndpointManager::Initialize(
 _Use_decl_annotations_
 HRESULT 
 CMidi2KSMidiEndpointManager::OnDeviceAdded(
-    DeviceWatcher watcher, 
+    DeviceWatcher , 
     DeviceInformation device
 )
 {

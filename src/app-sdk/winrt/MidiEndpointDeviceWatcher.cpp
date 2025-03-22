@@ -68,6 +68,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation args)
     {
+        UNREFERENCED_PARAMETER(source);
+
         try
         {
             auto midiEndpointDeviceInformation = winrt::make_self<midi2::implementation::MidiEndpointDeviceInformation>();
@@ -132,6 +134,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate args)
     {
+        UNREFERENCED_PARAMETER(source);
+
         try
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
@@ -269,6 +273,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate args)
     {
+        UNREFERENCED_PARAMETER(source);
+
         try
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
@@ -307,6 +313,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Foundation::IInspectable args)
     {
+        UNREFERENCED_PARAMETER(source);
+
         try
         {
             if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, args);
@@ -330,6 +338,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
         _In_ winrt::Windows::Foundation::IInspectable args)
     {
+        UNREFERENCED_PARAMETER(source);
+
         try
         {
             if (m_stoppedEvent) m_stoppedEvent(*this, args);
