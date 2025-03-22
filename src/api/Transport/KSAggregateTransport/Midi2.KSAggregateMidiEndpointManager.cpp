@@ -188,7 +188,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             flowFromUserPerspective = MidiFlow::MidiFlowOut;
 
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
-            gtb.Name = pin.PortNames.GroupTerminalBlockName;
+            gtb.Name = pin.PortNames.BlockName;
 
             // this is kept just so we can add ordinal differentiators if we need to
             portNamesUserFlowOut.push_back(gtb.Name);
@@ -198,7 +198,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             flowFromUserPerspective = MidiFlow::MidiFlowIn;
 
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
-            gtb.Name = pin.PortNames.GroupTerminalBlockName;
+            gtb.Name = pin.PortNames.BlockName;
 
             // this is kept just so we can add ordinal differentiators if we need to
             portNamesUserFlowIn.push_back(gtb.Name);
@@ -593,6 +593,8 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     DeviceInformation parentDevice
 )
 {
+    UNREFERENCED_PARAMETER(watcher);
+
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -795,7 +797,8 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
                             pinDefinition.PinName,
                             customPortName,
                             pinDefinition.PortNames.DataFlowFromUserPerspective,
-                            pinDefinition.PortIndexWithinThisFilterAndDirection
+                            pinDefinition.PortIndexWithinThisFilterAndDirection,
+                            pinDefinition.GroupIndex
                         );
 
                         endpointDefinition.MidiPins.push_back(pinDefinition);
@@ -894,8 +897,10 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher, DeviceInformationUpdate device)
+CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher watcher, DeviceInformationUpdate device)
 {
+    UNREFERENCED_PARAMETER(watcher);
+
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -974,16 +979,20 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceUpdated(DeviceWatcher, DeviceInfor
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+CMidi2KSAggregateMidiEndpointManager::OnDeviceStopped(DeviceWatcher watcher, winrt::Windows::Foundation::IInspectable)
 {
+    UNREFERENCED_PARAMETER(watcher);
+
     m_EnumerationCompleted.SetEvent();
     return S_OK;
 }
 
 _Use_decl_annotations_
 HRESULT
-CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher, winrt::Windows::Foundation::IInspectable)
+CMidi2KSAggregateMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher watcher, winrt::Windows::Foundation::IInspectable)
 {
+    UNREFERENCED_PARAMETER(watcher);
+
     m_EnumerationCompleted.SetEvent();
     return S_OK;
 }

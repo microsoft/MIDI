@@ -257,6 +257,14 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     interfaceDeviceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_VirtualMidiEndpointAssociator, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_STRING, (ULONG)(sizeof(wchar_t) * (entry.VirtualEndpointAssociationId.length() + 1)), (PVOID)entry.VirtualEndpointAssociationId.c_str() });
 
+
+    // we specify this here, knowing that the device manager will generate the name table once
+    // the function blocks go through
+    Midi1PortNameSelectionProperty naming = Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName;
+    interfaceDeviceProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
+
+
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
 

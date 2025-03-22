@@ -74,11 +74,11 @@ void LoadWinMMDevices()
         }
     }
 
-    std::sort(m_midiInputs.begin(), m_midiInputs.end(),
-        [](MidiInputPort a, MidiInputPort b)
-        {
-            return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
-        });
+    //std::sort(m_midiInputs.begin(), m_midiInputs.end(),
+    //    [](MidiInputPort a, MidiInputPort b)
+    //    {
+    //        return internal::ToLowerWStringCopy(a.Name) < internal::ToLowerWStringCopy(b.Name);
+    //    });
 
 }
 

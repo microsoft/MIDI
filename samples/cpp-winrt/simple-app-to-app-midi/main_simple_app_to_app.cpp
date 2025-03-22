@@ -37,13 +37,13 @@ MidiVirtualDevice m_virtualDevice{ nullptr };
 
 bool CreateVirtualDevice()
 {
-    uint8_t functionBlockCount{ 4 };
+    //uint8_t functionBlockCount{ 4 };
 
     std::cout << "Creating virtual device." << std::endl;
 
     MidiDeclaredEndpointInfo endpointInfo;
     endpointInfo.HasStaticFunctionBlocks = false;   // this allows us to change them after the fact. The count cannot change, however, per spec.
-    endpointInfo.Name = L"CPP Virtual Device";
+    endpointInfo.Name = L"MyApp";
     endpointInfo.ProductInstanceId = L"3263827-8675309-5150";
     endpointInfo.SupportsMidi10Protocol = true;
     endpointInfo.SupportsMidi20Protocol = true;
@@ -60,46 +60,46 @@ bool CreateVirtualDevice()
         L"Samples R Us",
         endpointInfo);
 
-    // create function blocks. The number of function blocks created 
-    // must be the same as the number of function blocks declared in the 
-    // endpoint information structure passed in earlier.
-    std::vector<MidiFunctionBlock>blocks;
-
+    // NOTE: If you want the function block names to also work as MIDI 1 port names
+    // then you need to keep the names short. We normally add the device name plus
+    // the FB name with a space in between, and then possibly a differentiator if 
+    // needed. In total, including null terminator, that needs to be 32 characters 
+    // or fewer.
     MidiFunctionBlock block0;
     block0.Number(0);
     block0.IsActive(true);
-    block0.Name(L"This is BiDi Function Block 0");
-    block0.FirstGroup(MidiGroup((uint8_t)0));
-    block0.GroupCount(3);
+    block0.Name(L"BiDi Function Block");
+    block0.FirstGroup(MidiGroup(static_cast<uint8_t>(0)));
+    block0.GroupCount(3); 
     block0.Direction(MidiFunctionBlockDirection::Bidirectional); // both an input and an output
-    blocks.push_back(block0);
+    creationConfig.FunctionBlocks().Append(block0);
 
     MidiFunctionBlock block1;
     block1.Number(1);
     block1.IsActive(false);
-    block1.Name(L"Inactive MIDI Out Function Block 1");
-    block1.FirstGroup(MidiGroup((uint8_t)3));
-    block1.GroupCount(1);
+    block1.Name(L"Inactive Block 1");
+    block1.FirstGroup(MidiGroup(static_cast<uint8_t>(3)));
+    block1.GroupCount(3); 
     block1.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
-    blocks.push_back(block1);
+    creationConfig.FunctionBlocks().Append(block1);
 
     MidiFunctionBlock block2;
     block2.Number(2);
     block2.IsActive(true);
-    block2.Name(L"This is MIDI In Function Block 2 which starts with a long name");
-    block2.FirstGroup(MidiGroup((uint8_t)5));
+    block2.Name(L"This is MIDI In Function Block 2 with a long WinMM-unfriendly name");
+    block2.FirstGroup(MidiGroup(static_cast<uint8_t>(5)));  // this will overlap with block1, which is allowed per-spec
     block2.GroupCount(1);
     block2.Direction(MidiFunctionBlockDirection::BlockOutput);  // a midi message source
-    blocks.push_back(block2);
+    creationConfig.FunctionBlocks().Append(block2);
 
     MidiFunctionBlock block3;
     block3.Number(3);
     block3.IsActive(true);
-    block3.Name(L"MIDI Out Function Block 3");
-    block3.FirstGroup(MidiGroup((uint8_t)11));
+    block3.Name(L"Block 3");
+    block3.FirstGroup(MidiGroup(static_cast<uint8_t>(11)));
     block3.GroupCount(5);                                       // this gets us to index 15, which is max index
     block3.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
-    blocks.push_back(block3);
+    creationConfig.FunctionBlocks().Append(block3);
 
     // creates the device using the endpoint info provided above
     m_virtualDevice = MidiVirtualDeviceManager::CreateVirtualDevice(creationConfig);
@@ -115,7 +115,6 @@ bool CreateVirtualDevice()
     std::cout
         << "Device-side Connection Info: " << std::endl 
         << " " << winrt::to_string(m_virtualDevice.DeviceEndpointDeviceId()) << std::endl << std::endl;
-
 
     return true;
 }
@@ -237,6 +236,7 @@ int main()
                 std::cout << "- UMP Packet Type:   0x" << std::hex << static_cast<uint32_t>(ump.PacketType()) << std::endl;
                 std::cout << "- Data               " << winrt::to_string(args.GetMessagePacket().as<foundation::IStringable>().ToString()) << std::endl;
                 std::cout << "- Message:           " << winrt::to_string(MidiMessageHelper::GetMessageDisplayNameFromFirstWord(args.PeekFirstWord())) << std::endl;
+                std::cout << std::endl;
             };
 
         // the returned token is used to deregister the event later.
@@ -271,7 +271,6 @@ int main()
         }
 
         std::cout << "Disconnecting UMP Endpoint Connection..." << std::endl;
-
         session.DisconnectEndpointConnection(deviceEndpoint.ConnectionId());
 
         // close the session, detaching all Windows MIDI Services resources and closing all connections

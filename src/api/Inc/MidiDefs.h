@@ -86,8 +86,8 @@ enum Midi1PortNameSelectionProperty : uint32_t
     PortName_UsePinName = 50,                                   // names including the iJack name that customers have asked us for
     PortName_UseFilterPlusPinName = 51,                         // names including the iJack name that customers have asked us for
 
-    PortName_UseGroupTerminalBlocksExactly = 500,               // for MIDI 1 devices named by MIDI 2 driver
-    PortName_UseFilterPlusGroupTerminalBlockName = 501,         // normal for MIDI 2 native devices
+    PortName_UseBlocksExactly = 500,                            // for MIDI 1 devices named by MIDI 2 driver, using Group Terminal Block names
+    PortName_UseFilterPlusBlockName = 501,                      // normal for MIDI 2 native devices using either Function Block or Group Terminal Block names
 };
 
 
@@ -112,11 +112,11 @@ enum Midi1PortNameSelectionProperty : uint32_t
 
 // Default WinMM naming for MIDI 1 device attached to UMP driver
 #define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_REG_VALUE   L"DefaultPortNamingForMidi1DevicesUsingUmpDriver"
-#define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE       ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseGroupTerminalBlocksExactly))
+#define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE       ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseBlocksExactly))
 
 // Default WinMM naming for MIDI 2 device using UMP driver
 #define MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_REG_VALUE          L"DefaultPortNamingForUmpNativeDevices"
-#define MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_VALUE              ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName))
+#define MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_VALUE              ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName))
 
 
 #define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"

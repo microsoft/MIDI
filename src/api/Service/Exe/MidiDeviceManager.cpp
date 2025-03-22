@@ -1133,7 +1133,7 @@ CMidiDeviceManager::ActivateEndpoint
         // track if this port should only have UMP endpoints
         createdMidiPort->UmpOnly = umpOnly;
 
-        SyncMidi1Ports(createdMidiPort);
+        LOG_IF_FAILED(SyncMidi1Ports(createdMidiPort));
 
         // return the created device interface Id. This is needed for anything that will 
         // do a match in the Ids from Windows.Devices.Enumeration
@@ -1366,6 +1366,7 @@ CMidiDeviceManager::ActivateEndpointInternal
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Activating previously created endpoint."),
                 TraceLoggingWideString(parentInstanceId, "parent"),
+                TraceLoggingWideString(midiPort->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
                 TraceLoggingWideString(midiPort->InstanceId.c_str(), "new port"),
                 TraceLoggingWideString(midiPort->Enumerator.c_str(), "new port enumerator"),
                 TraceLoggingBool(midiOne)
@@ -1384,7 +1385,8 @@ CMidiDeviceManager::ActivateEndpointInternal
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Endpoint exists, but it is not in the MidiDeviceManager store. Is something else creating endpoints?", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(parentInstanceId, "parent"),
-                TraceLoggingWideString(midiPort->InstanceId.c_str(), "new port"),
+                TraceLoggingWideString(midiPort->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+                TraceLoggingWideString(midiPort->InstanceId.c_str(), "new port instance id"),
                 TraceLoggingWideString(midiPort->Enumerator.c_str(), "new port enumerator"),
                 TraceLoggingBool(midiOne)
             );
@@ -1568,11 +1570,11 @@ CMidiDeviceManager::UpdateEndpointProperties
                 { PKEY_MIDI_CustomPortNumber, false, 0, 0 },
                 { PKEY_MIDI_CustomEndpointName, false, 0, 0 },
                 { PKEY_MIDI_GroupTerminalBlocks, false, 0, 0 },
-              /*  {PKEY_MIDI_FunctionBlockDeclaredCount, false, 0, 0},
+                { PKEY_MIDI_FunctionBlockDeclaredCount, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlocksAreStatic, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlocksLastUpdateTime, false, 0, 0 },
                 { PKEY_MIDI_FunctionBlock00, true, PKEY_MIDI_FunctionBlock00.pid, PKEY_MIDI_FunctionBlock31.pid },
-                { PKEY_MIDI_FunctionBlockName00, true, PKEY_MIDI_FunctionBlockName00.pid, PKEY_MIDI_FunctionBlockName31.pid }, */
+                { PKEY_MIDI_FunctionBlockName00, true, PKEY_MIDI_FunctionBlockName00.pid, PKEY_MIDI_FunctionBlockName31.pid },
                 { PKEY_MIDI_EndpointDiscoveryProcessComplete, false, 0, 0 },
                 { PKEY_MIDI_Midi1PortNameTable, false, 0, 0 },
                 { PKEY_MIDI_Midi1PortNamingSelection, false, 0, 0 },
@@ -1601,7 +1603,10 @@ CMidiDeviceManager::UpdateEndpointProperties
             if (found)
             {
                 // Resync/refresh all the endpoints associated with this device
-                RETURN_IF_FAILED(SyncMidi1Ports(item->get()));
+                //RETURN_IF_FAILED(SyncMidi1Ports(item->get()));
+
+                // log rather than return because MIDI 1 port sync is more a side effect
+                LOG_IF_FAILED(SyncMidi1Ports(item->get()));
             }
 
             return S_OK;
@@ -1692,7 +1697,11 @@ CMidiDeviceManager::DeactivateEndpoint
         // NOTE: This uses instanceId, not the Device Interface Id
         auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
-            if (cleanId == Port->InstanceId)
+            // for MIDI 1 child ports for a device, the instance id can have a _n added where n is the group number
+            // The transports only know about the UMP endpoint they created, therefore, we need to do a 
+            // "starts with", not an exact match. 
+
+            if (internal::NormalizeDeviceInstanceIdWStringCopy(Port->InstanceId).starts_with(cleanId))
             {
                 return true;
             }
@@ -1703,6 +1712,16 @@ CMidiDeviceManager::DeactivateEndpoint
         // exit if the item was not found. We're done.
         if (item == m_midiPorts.end())
         {
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Found no more matches in list. Breaking out of loop", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(cleanId.c_str(), MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD)
+            );
+
             break;
         }
         else
@@ -2145,13 +2164,17 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
         TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    ULONG declaredFunctionBlockCount {0};
-    auto fbCountProp = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_FunctionBlockDeclaredCount);
-    if (fbCountProp)
+
+    // we don't process any function blocks until initial discovery has completed
+    auto discoveryComplete = internal::SafeGetSwdPropertyFromDeviceInformation<bool>(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete, deviceInfo, false);
+    if (!discoveryComplete)
     {
-        declaredFunctionBlockCount = winrt::unbox_value<uint8_t>(fbCountProp);
+        return E_NOTFOUND;
     }
 
+    // we've completed initial discovery, so any changes after that are fair game
+
+    auto declaredFunctionBlockCount = internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(STRING_PKEY_MIDI_FunctionBlockDeclaredCount, deviceInfo, 0);
     RETURN_HR_IF_EXPECTED(E_NOTFOUND, declaredFunctionBlockCount == 0);
 
     // now process each available function block
@@ -2170,17 +2193,13 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
             continue;
         }
 
-        auto nameProp = deviceInfo.Properties().Lookup(functionBlockNameString.c_str());
-        if (nameProp)
+        functionBlockName = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(functionBlockNameString.c_str(), deviceInfo, L"");
+        if (functionBlockName.empty())
         {
-            functionBlockName = winrt::unbox_value<winrt::hstring>(nameProp).c_str();
+            functionBlockName = deviceInfo.Name();
+        }
+        functionBlockName = functionBlockName.substr(0, MAXPNAMELEN - 1);
 
-            functionBlockName = std::wstring(functionBlockName.c_str()).substr(0, MAXPNAMELEN - 1);
-        }
-        else
-        {
-            functionBlockName = std::wstring(deviceInfo.Name().c_str()).substr(0, MAXPNAMELEN - 1);
-        }
 
         auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop);
         if (refArray == nullptr)
@@ -2190,6 +2209,14 @@ CMidiDeviceManager::GetFunctionBlockPortInfo(
 
         auto data = refArray.Value();
         auto fb = (MidiFunctionBlockProperty*)(data.data());
+
+        //// only create ports for active function blocks
+        //if (!fb->IsActive)
+        //{
+        //    continue;
+        //}
+
+        // TODO: this is going to result in slightly misleading names when a function blocks have overlapping groups. Ignoring for now.
 
         for (UINT i = fb->FirstGroup; i < (UINT)(fb->FirstGroup + fb->NumberOfGroupsSpanned); i++)
         {
@@ -2309,36 +2336,38 @@ CMidiDeviceManager::UseFallbackMidi1PortDefinition(
     );
 
     // If protocol negotation has completed, and we still don't have the required properties,
-    // then we need to push through with creating the fallback midi 1 ports.
-    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete);
-    if (prop)
-    {
-        auto endpointDiscoveryComplete = winrt::unbox_value<bool>(prop);
-        if (endpointDiscoveryComplete)
-        {
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Using fallback port numbers", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
+    // then we need to push through with creating the fallback midi 1 ports. We'll create only
+    // one port in each direction because this is a fallback case that really should happen
+    // only if a device is not bothering to provide function blocks. Creating 16 in each direction
+    // just results in a lot of WinMM port clutter
 
-            for (UINT flow = 0; flow < 2; flow++)
+    // we don't process any function blocks until initial discovery has completed
+    auto discoveryComplete = internal::SafeGetSwdPropertyFromDeviceInformation<bool>(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete, deviceInfo, false);
+    if (discoveryComplete)
+    {
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Discovery has completed. Using fallback WinMM port definitions", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+
+        );
+
+        for (UINT flow = 0; flow < 2; flow++)
+        {
+            for (UINT groupIndex = 0; IS_VALID_GROUP_INDEX(groupIndex); groupIndex++)
             {
-                for (UINT groupIndex = 0; IS_VALID_GROUP_INDEX(groupIndex); groupIndex++)
-                {
-                    portInfo[flow][groupIndex].InUse = true;
-                    portInfo[flow][groupIndex].IsEnabled = true;
-                    portInfo[flow][groupIndex].Flow = (MidiFlow) flow;
-                    portInfo[flow][groupIndex].InterfaceId = umpDeviceInterfaceId;
-                    portInfo[flow][groupIndex].Name = std::wstring(deviceInfo.Name().c_str()).substr(0, MAXPNAMELEN-1);
-                }
+                portInfo[flow][groupIndex].InUse = true;
+                portInfo[flow][groupIndex].IsEnabled = (bool)(groupIndex == 0);     // only enabled for first group
+                portInfo[flow][groupIndex].Flow = (MidiFlow)flow;
+                portInfo[flow][groupIndex].InterfaceId = umpDeviceInterfaceId;
+                portInfo[flow][groupIndex].Name = std::wstring(deviceInfo.Name().c_str()).substr(0, MAXPNAMELEN - 1);
             }
         }
     }
-
     return S_OK;
 }
 
@@ -2385,6 +2414,214 @@ CMidiDeviceManager::GetCustomPortMapping(
 
     return S_OK;
 }
+
+
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
+    LPCWSTR umpDeviceInterfaceId,
+    winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+    PMIDIPORT umpMidiPort
+
+)
+{
+    // this is called after protocol negotiation and discovery have completed, so we can
+    // generate names based on function blocks, not just on group terminal blocks.
+
+    // this is only needed for MIDI 2.0 UMP devices, but among those are not just USB,
+    // but also virtual, loopback, network, etc.
+
+
+    // read all function blocks, and figure out names and flow
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+
+    auto declaredFunctionBlockCount = internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(STRING_PKEY_MIDI_FunctionBlockDeclaredCount, deviceInfo, 0);
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, declaredFunctionBlockCount == 0);
+
+    auto deviceName = deviceInfo.Name();
+    std::vector<internal::Midi1PortNaming::Midi1PortNameEntry> portNameEntries{};
+
+
+    // now process each available function block
+    for (UINT fbi = 0; fbi < declaredFunctionBlockCount && fbi < MIDI_MAX_FUNCTION_BLOCKS; fbi++)
+    {
+        std::wstring functionBlockBaseString = MIDI_STRING_PKEY_GUID;
+        functionBlockBaseString += MIDI_STRING_PKEY_PID_SEPARATOR;
+        std::wstring functionBlockString = functionBlockBaseString + std::to_wstring(MIDI_FUNCTION_BLOCK_PROPERTY_INDEX_START + fbi);
+        std::wstring functionBlockNameString = functionBlockBaseString + std::to_wstring(MIDI_FUNCTION_BLOCK_NAME_PROPERTY_INDEX_START + fbi);
+        std::wstring functionBlockName;
+
+        // This property can be missing if we didn't get a complete list of function blocks from the device
+        auto prop = deviceInfo.Properties().Lookup(functionBlockString.c_str());
+        if (prop == nullptr)
+        {
+            continue;
+        }
+
+        functionBlockName = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(functionBlockNameString.c_str(), deviceInfo, L"");
+        if (functionBlockName.empty())
+        {
+            functionBlockName = deviceInfo.Name();
+        }
+        functionBlockName = functionBlockName.substr(0, MAXPNAMELEN - 1);
+
+
+        auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop);
+        if (refArray == nullptr)
+        {
+            continue;
+        }
+
+        auto data = refArray.Value();
+        auto fb = (MidiFunctionBlockProperty*)(data.data());
+
+        for (uint8_t groupIndex = fb->FirstGroup; groupIndex < fb->FirstGroup + fb->NumberOfGroupsSpanned; groupIndex++)
+        {
+            if (fb->Direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_BIDIRECTIONAL ||
+                fb->Direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_OUTPUT) // message source
+            {
+                internal::Midi1PortNaming::Midi1PortNameEntry nameEntry{};
+
+                nameEntry.GroupIndex = groupIndex;
+                nameEntry.DataFlowFromUserPerspective = MidiFlow::MidiFlowIn;  // always opposite the block
+
+                // MIDI Input
+                internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
+                    nameEntry,
+                    L"",
+                    deviceName.c_str(),                 // parent device name
+                    deviceName.c_str(),                 // filter name. For MIDI 2 devices, this ends up the same as the parent device name
+                    functionBlockName,          // we use FB name here because the driver populates that with the pin name
+                    L"",                        // TODO: Need to get this from configuration
+                    MidiFlow::MidiFlowIn,
+                    groupIndex,
+                    groupIndex
+                );
+
+                portNameEntries.push_back(nameEntry);
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Added midi input port name from function block name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt16(groupIndex, "group index"),
+                    TraceLoggingWideString(functionBlockName.c_str(), "gtb name")
+                );
+            }
+
+            if (fb->Direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_BIDIRECTIONAL ||
+                fb->Direction == MIDI_FUNCTION_BLOCK_DIRECTION_BLOCK_INPUT) // message destination
+            {
+                internal::Midi1PortNaming::Midi1PortNameEntry nameEntry{};
+
+                nameEntry.GroupIndex = groupIndex;
+                nameEntry.DataFlowFromUserPerspective = MidiFlow::MidiFlowOut;  // always opposite the block
+
+                // MIDI Output
+                internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
+                    nameEntry,
+                    L"",
+                    deviceName.c_str(),                 // parent device name
+                    deviceName.c_str(),                 // filter name. For MIDI 2 devices, this ends up the same as the parent device name
+                    functionBlockName,          // we use FB name here because the driver populates that with the pin name
+                    L"",                        // TODO: Need to get this from configuration
+                    MidiFlow::MidiFlowIn,
+                    groupIndex,
+                    groupIndex
+                );
+
+                portNameEntries.push_back(nameEntry);
+
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Added midi input port name from function block name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt16(groupIndex, "group index"),
+                    TraceLoggingWideString(functionBlockName.c_str(), "gtb name")
+                );
+            }
+        }
+    }
+
+    if (portNameEntries.size() > 0)
+    {
+        std::vector<DEVPROPERTY> interfaceDevProperties{ };
+        std::vector<std::byte> nameTablePropertyData{ };
+
+
+        // only update if the table has changed. Just compare the raw data
+        // we don't use the UpdateEndpointProperties method because that 
+        // would cause recursion due to us updating properties that function
+        // uses to trigger a call to SyncMidi1Ports
+
+        // get the original name table info
+
+        auto originalNameTable = internal::SafeGetSwdBinaryPropertyFromDeviceInformation(STRING_PKEY_MIDI_Midi1PortNameTable, deviceInfo);
+
+        if (!internal::ReferenceByteArrayAndByteVectorAreIdentical(originalNameTable, nameTablePropertyData))
+        {
+            if (internal::Midi1PortNaming::WriteMidi1PortNameTableToPropertyDataPointer(portNameEntries, nameTablePropertyData))
+            {
+                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
+                    DEVPROP_TYPE_BINARY, (ULONG)nameTablePropertyData.size(), (PVOID)nameTablePropertyData.data() });
+
+                // data has changed, so write it
+                auto deviceHandle = umpMidiPort->SwDevice.get();
+
+                auto propSetHR = SwDeviceInterfacePropertySet(
+                    deviceHandle,
+                    umpMidiPort->DeviceInterfaceId.get(),
+                    static_cast<ULONG>(interfaceDevProperties.size()),
+                    static_cast<const DEVPROPERTY*>(interfaceDevProperties.data())
+                );
+
+                RETURN_IF_FAILED(propSetHR);
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    MidiSrvTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Failed to write name table data to property", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceInfo.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
+
+                RETURN_IF_FAILED(E_FAIL);
+            }
+        }
+    }
+    else
+    {
+        // didn't generate any FB-based names, so we'll just use what was in the property to begin with
+        // not a failure condition
+    }
+
+    return S_OK;
+}
+
+
+
+
 
 
 _Use_decl_annotations_
@@ -2455,10 +2692,9 @@ CMidiDeviceManager::GetMidi1PortNames(
     );
 
 
-    auto nameTableRefArray = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(
+    auto nameTableRefArray = internal::SafeGetSwdBinaryPropertyFromDeviceInformation(
         STRING_PKEY_MIDI_Midi1PortNameTable,
-        deviceInfo,
-        nullptr);
+        deviceInfo);
 
     if (nameTableRefArray != nullptr)
     {
@@ -2550,13 +2786,13 @@ CMidiDeviceManager::GetMidi1PortNames(
                         named = true;
                         break;
 
-                    case Midi1PortNameSelectionProperty::PortName_UseGroupTerminalBlocksExactly:
-                        selectedName = nameEntry.GroupTerminalBlockName;
+                    case Midi1PortNameSelectionProperty::PortName_UseBlocksExactly:
+                        selectedName = nameEntry.BlockName;
                         named = true;
                         break;
 
-                    case Midi1PortNameSelectionProperty::PortName_UseFilterPlusGroupTerminalBlockName:
-                        selectedName = nameEntry.FilterPlusGroupTerminalBlockName;
+                    case Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName:
+                        selectedName = nameEntry.FilterPlusBlockName;
                         named = true;
                         break;
 
@@ -2636,7 +2872,9 @@ CMidiDeviceManager::GetMidi1PortNames(
     return S_OK;
 }
 
-
+// TODO: If any of the ports in play here are actually in-use by WinMM or WinRT MIDI 1.0
+// we need to leave them alone for now. Otherwise, tearing down and rebuilding a port
+// like that just because a function block came through will end up being a problem.
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::SyncMidi1Ports(
@@ -2649,7 +2887,9 @@ CMidiDeviceManager::SyncMidi1Ports(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(umpMidiPort->AssociatedInterfaceId.c_str(), "associated interface id"),
+        TraceLoggingWideString(umpMidiPort->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
     // we use WinRT in this method, so ensure it is initialized
@@ -2661,7 +2901,7 @@ CMidiDeviceManager::SyncMidi1Ports(
     // necessary.
     RETURN_HR_IF(S_OK, umpMidiPort->UmpOnly);
 
-    std::map<UINT32, PORT_INFO> portInfo[2];
+    std::map<UINT32, PORT_INFO> portInfo[2]{ };
 
     // Retrieve all of the needed ump port properties, for efficiency get
     // them all at once to avoid repeated CreateFromIdAsync calls.
@@ -2680,7 +2920,6 @@ CMidiDeviceManager::SyncMidi1Ports(
     
     additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
     additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
-    //additionalProperties.Append(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
 
     // We have function blocks to retrieve
     // build up the property keys to query for the function blocks
@@ -2699,21 +2938,6 @@ CMidiDeviceManager::SyncMidi1Ports(
         additionalProperties, 
         winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    //// First, let's check to see if we should be creating MIDI 1 ports for this endpoint
-    //// default action, if unspecified, is to create the ports
-    //auto createMidi1PortsProp = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint);
-    //if (createMidi1PortsProp)
-    //{
-    //    auto createPorts = winrt::unbox_value<bool>(createMidi1PortsProp);
-
-    //    if (!createPorts)
-    //    {
-    //        // it's not an error condition to skip creating MIDI 1 ports for an endpoint
-    //        return S_OK;
-    //    }
-    //}
-
-
     // TODO: This should only check for function blocks if the device is a native UMP device
      
     // get the current function block information from the UMP SWD, if present, else fall back to
@@ -2729,6 +2953,15 @@ CMidiDeviceManager::SyncMidi1Ports(
             hrTemp = UseFallbackMidi1PortDefinition(umpMidiPort->DeviceInterfaceId.get(), deviceInfo, portInfo);
             RETURN_IF_FAILED(hrTemp);
         }
+    }
+    else
+    {
+        // we have function blocks, so rebuild the name table using them. We could potentially
+        // optimize this a bit more by only triggering if FB-specific properties have changed
+
+        // update name table, and write it out to the property if it has changed
+        hrTemp = RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(umpMidiPort->DeviceInterfaceId.get(), deviceInfo, umpMidiPort);
+        RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
     }
 
     auto transportId = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::guid>(STRING_PKEY_MIDI_TransportLayer, deviceInfo, GUID_NULL);
@@ -2749,7 +2982,9 @@ CMidiDeviceManager::SyncMidi1Ports(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"About to get custom port mapping", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"About to get custom port mapping", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(umpMidiPort->AssociatedInterfaceId.c_str(), "associated interface id"),
+        TraceLoggingWideString(umpMidiPort->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
 

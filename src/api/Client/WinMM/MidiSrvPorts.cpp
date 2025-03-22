@@ -364,7 +364,7 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
                 caps->wMid = MM_MICROSOFT;
                 caps->wPid = MM_MSFT_GENERIC_MIDIIN;
                 caps->vDriverVersion = 0x0100;
-            
+
                 //wcsncpy_s(caps->szPname, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), MAXPNAMELEN);
                 wcsncpy_s(caps->szPname, MAXPNAMELEN, m_MidiPortInfo[flow][servicePortNum].Name.c_str(), _TRUNCATE);
                 caps->szPname[MAXPNAMELEN - 1] = NULL;

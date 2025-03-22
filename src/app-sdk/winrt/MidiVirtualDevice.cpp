@@ -35,7 +35,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
         {
             m_functionBlocks.Insert(fb.Number(), fb);
         }
-
     }
 
 
@@ -180,7 +179,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     {
         auto functionBlockNotification = msgs::MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
             MidiClock::TimestampConstantSendImmediately(),
-            true,
+            fb.IsActive(),
             fb.Number(),
             fb.UIHint(),
             fb.RepresentsMidi10Connection(),
