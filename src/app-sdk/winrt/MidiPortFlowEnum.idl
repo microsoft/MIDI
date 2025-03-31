@@ -7,16 +7,14 @@
 // ============================================================================
 
 
+import "MidiApiContracts.idl";
 
-#include "pch.h"
-#include "MidiGroup.h"
-#include "MidiGroup.g.cpp"
-
-
-namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
+namespace Microsoft.Windows.Devices.Midi2
 {
-    winrt::hstring MidiGroup::ToString()
+    [contract(MidiEnumerationApiContract, 1)]
+    enum MidiPortFlow
     {
-        return winrt::to_hstring(std::format("{} {}", winrt::to_string(midi2::MidiGroup::LongLabel()), DisplayValue()));
-    }
+        MidiMessageSource = 0,          // MIDI Flow In / Input
+        MidiMessageDestination = 1,     // MIDI Flow Out / Output
+    };
 }

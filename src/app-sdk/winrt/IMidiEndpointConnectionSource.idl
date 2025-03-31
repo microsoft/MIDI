@@ -18,5 +18,14 @@ namespace Microsoft.Windows.Devices.Midi2
     {
         event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceDisconnected;
         event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceReconnected;
+
+        IInspectable Tag;
+
+        Guid ConnectionId{ get; };
+        String ConnectedEndpointDeviceId{ get; };
+
+        Boolean IsAutoReconnectEnabled{ get; };
+
+        Boolean IsOpen{ get; };
     }
 }

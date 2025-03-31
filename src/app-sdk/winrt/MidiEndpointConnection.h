@@ -32,6 +32,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::guid ConnectionId() const noexcept { return m_connectionId; }
         winrt::hstring ConnectedEndpointDeviceId() const noexcept { return m_endpointDeviceId; }
 
+        // is get_weak().get().as the right approach here?
+        midi2::IMidiEndpointConnectionSource GetEndpointConnectionSource() noexcept { return this->get_weak().get().as<IMidiEndpointConnectionSource>(); }
 
         bool LogMessageDataValidationErrorDetails() { return m_logUmpDataErrors; }
         void LogMessageDataValidationErrorDetails(_In_ bool value) { m_logUmpDataErrors = value; }

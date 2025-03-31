@@ -1007,4 +1007,92 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     }
 
 
+
+    _Use_decl_annotations_
+    collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> MidiEndpointDeviceInformation::GetAssociatedMidi1Ports(
+        midi2::MidiPortFlow const portFlow) noexcept
+    {
+        winrt::hstring deviceSelector;
+
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> ports{};
+
+        if (portFlow == midi2::MidiPortFlow::MidiMessageDestination)
+        {
+            deviceSelector = winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector();   // could also use DEVINTERFACE_MIDI_OUTPUT
+        }
+        else
+        {
+            deviceSelector = winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector();    // could also use DEVINTERFACE_MIDI_INPUT
+        }
+
+        // we need some additional properties
+
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+
+        additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
+        additionalProperties.Append(STRING_PKEY_MIDI_PortAssignedGroupIndex);
+        additionalProperties.Append(STRING_PKEY_MIDI_CustomPortNumber);
+        additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+
+        // TODO: Likely need to modify the filter so it only shows online/connected devices. TBD.
+        auto searchResults = enumeration::DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
+
+        if (searchResults != nullptr)
+        {
+            for (auto const& device : searchResults)
+            {
+                auto id = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_AssociatedUMP, device, L"");
+
+                if (internal::NormalizeEndpointInterfaceIdHStringCopy(id) == m_id)
+                {
+                    // this is one of our child ports, so we add to the results
+                    // unfortunately, with GUID-based properties, you cannot include them
+                    // in the search query, so we have to get everything and cycle through
+
+                    auto group = midi2::MidiGroup((uint8_t)internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_PortAssignedGroupIndex, device, 0));
+                    UINT32 portIndex{ 0 };
+
+                    auto prop = device.Properties().Lookup(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+                    if (prop)
+                    {
+                        portIndex = winrt::unbox_value<UINT32>(prop);
+                    }
+                    else
+                    {
+                        prop = device.Properties().Lookup(STRING_PKEY_MIDI_CustomPortNumber);
+                        if (prop)
+                        {
+                            portIndex = winrt::unbox_value<UINT32>(prop);
+                        }
+                    }
+
+                    auto port = winrt::make_self<midi2::implementation::MidiEndpointAssociatedPortDeviceInformation>();
+
+                    port->InternalInitialize(
+                        this->ContainerId(),
+                        this->DeviceInstanceId(),
+                        this->EndpointDeviceId(),
+                        group,
+                        portFlow,
+                        device.Name(),
+                        device.Id(),
+                        portIndex,
+                        device
+                    );
+
+                    ports.Append(*port);
+                }
+            }
+        }
+
+        // TODO: sort the vector on group index before returning
+
+        return ports.GetView();
+    }
+
+
+
+
+
+
 }

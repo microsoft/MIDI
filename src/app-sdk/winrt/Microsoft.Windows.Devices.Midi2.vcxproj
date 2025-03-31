@@ -271,11 +271,24 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h" />
-    <ClInclude Include="MidiNetworkAdvertisedHostAddedEventArgs.h" />
-    <ClInclude Include="MidiNetworkAdvertisedHostRemovedEventArgs.h" />
-    <ClInclude Include="MidiNetworkAdvertisedHostUpdatedEventArgs.h" />
-    <ClInclude Include="MidiNetworkAdvertisedHostWatcher.h" />
+      <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
+          <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h">
+          <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiNetworkAdvertisedHostAddedEventArgs.h">
+          <DependentUpon>MidiNetworkAdvertisedHostAddedEventArgs.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiNetworkAdvertisedHostRemovedEventArgs.h">
+          <DependentUpon>MidiNetworkAdvertisedHostRemovedEventArgs.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiNetworkAdvertisedHostUpdatedEventArgs.h">
+          <DependentUpon>MidiNetworkAdvertisedHostUpdatedEventArgs.idl</DependentUpon>
+      </ClInclude>
+      <ClInclude Include="MidiNetworkAdvertisedHostWatcher.h">
+          <DependentUpon>MidiNetworkAdvertisedHostWatcher.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="endpoint_device_interface_helpers.h" />
     <ClInclude Include="Initialization\MidiAppSdkManifest.h" />
     <ClInclude Include="Initialization\MidiAppSdkRuntimeComponent.h" />
@@ -283,7 +296,9 @@
     <ClInclude Include="Initialization\MidiAppSdkRuntimeTypeResolution.h" />
     <ClInclude Include="Initialization\MidiClientInitializer.h" />
     <ClInclude Include="Initialization\MidiRoDetours.h" />
-    <ClInclude Include="MidiEndpointDevicePropertyHelper.h" />
+      <ClInclude Include="MidiEndpointDevicePropertyHelper.h">
+          <DependentUpon>MidiEndpointDevicePropertyHelper.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiNetworkClientEndpointCreationConfig.h">
       <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
     </ClInclude>
@@ -393,7 +408,9 @@
     <ClInclude Include="MidiUniqueId.h">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiUniversalSystemExclusiveChannel.h" />
+      <ClInclude Include="MidiUniversalSystemExclusiveChannel.h">
+          <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
+      </ClInclude>
     <ClInclude Include="MidiVirtualDevice.h">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClInclude>
@@ -456,17 +473,32 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp" />
-    <ClCompile Include="MidiNetworkAdvertisedHostAddedEventArgs.cpp" />
-    <ClCompile Include="MidiNetworkAdvertisedHostRemovedEventArgs.cpp" />
-    <ClCompile Include="MidiNetworkAdvertisedHostUpdatedEventArgs.cpp" />
-    <ClCompile Include="MidiNetworkAdvertisedHostWatcher.cpp" />
+      <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
+          <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp">
+          <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiNetworkAdvertisedHostAddedEventArgs.cpp">
+          <DependentUpon>MidiNetworkAdvertisedHostAddedEventArgs.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiNetworkAdvertisedHostRemovedEventArgs.cpp">
+          <DependentUpon>MidiNetworkAdvertisedHostRemovedEventArgs.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiNetworkAdvertisedHostUpdatedEventArgs.cpp">
+          <DependentUpon>MidiNetworkAdvertisedHostUpdatedEventArgs.idl</DependentUpon>
+      </ClCompile>
+      <ClCompile Include="MidiNetworkAdvertisedHostWatcher.cpp">
+          <DependentUpon>MidiNetworkAdvertisedHostWatcher.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="Initialization\MidiAppSdkRuntimeComponent.cpp" />
     <ClCompile Include="Initialization\MidiAppSdkRuntimeComponentCatalog.cpp" />
     <ClCompile Include="Initialization\MidiAppSdkRuntimeTypeResolution.cpp" />
     <ClCompile Include="Initialization\MidiClientInitializer.cpp" />
     <ClCompile Include="Initialization\MidiRoDetours.cpp" />
-    <ClCompile Include="MidiEndpointDevicePropertyHelper.cpp" />
+      <ClCompile Include="MidiEndpointDevicePropertyHelper.cpp">
+          <DependentUpon>MidiEndpointDevicePropertyHelper.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiNetworkClientEndpointCreationConfig.cpp">
       <DependentUpon>MidiNetworkClientEndpointCreationConfig.idl</DependentUpon>
     </ClCompile>
@@ -666,7 +698,9 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiUniversalSystemExclusiveChannel.cpp" />
+      <ClCompile Include="MidiUniversalSystemExclusiveChannel.cpp">
+          <DependentUpon>MidiUniversalSystemExclusiveChannel.idl</DependentUpon>
+      </ClCompile>
     <ClCompile Include="MidiVirtualDevice.cpp">
       <DependentUpon>MidiVirtualDevice.idl</DependentUpon>
     </ClCompile>
@@ -728,6 +762,7 @@
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="MidiApiContracts.idl" />
+    <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiDeclaredEndpointInfo.idl" />
@@ -776,6 +811,7 @@
     <Midl Include="MidiNetworkHostEndpointCreationResult.idl" />
     <Midl Include="MidiNetworkHostEndpointRemovalConfig.idl" />
     <Midl Include="MidiNetworkHostEndpointRemovalResult.idl" />
+    <Midl Include="MidiPortFlowEnum.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiSession.idl" />

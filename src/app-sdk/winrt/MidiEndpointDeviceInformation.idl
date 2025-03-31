@@ -24,6 +24,11 @@ import "MidiEndpointUserSuppliedInfo.idl";
 import "MidiEndpointDeviceInformationSortOrderEnum.idl";
 import "MidiEndpointDeviceInformationFiltersEnum.idl";
 
+import "MidiEndpointAssociatedPortDeviceInformation.idl";
+
+import "MidiPortFlowEnum.idl";
+
+
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
@@ -77,7 +82,6 @@ namespace Microsoft.Windows.Devices.Midi2
 
         Windows.Foundation.Collections.IMapView<String, IInspectable> Properties{ get; };
 
-        //Boolean UpdateFromDeviceInformation(Windows.Devices.Enumeration.DeviceInformation deviceInformation);
-        //Boolean UpdateFromDeviceInformationUpdate(Windows.Devices.Enumeration.DeviceInformationUpdate deviceInformationUpdate);
+        IVectorView<MidiEndpointAssociatedPortDeviceInformation> GetAssociatedMidi1Ports(MidiPortFlow portFlow);
     }
 }

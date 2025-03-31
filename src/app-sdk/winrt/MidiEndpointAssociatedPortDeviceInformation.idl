@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiApiContracts.idl";
+import "MidiPortFlowEnum.idl";
+import "MidiGroup.idl";
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    [default_interface]
+    runtimeclass MidiEndpointAssociatedPortDeviceInformation : Windows.Foundation.IStringable
+    {
+        Guid ContainerId{ get; };               // container this exists in. It will be the same as the parent endpoint's. Here for convenience.
+        String ParentDeviceInstanceId{ get; };  // device instance id of the endpoint (which is the id of its parent)
+        String ParentEndpointDeviceId{ get; };  // device id of the owning Windows MIDI Services endpoint
+
+        MidiGroup Group{ get; };                // the single group this port is associated with
+
+        MidiPortFlow PortFlow{ get; };          // source (midi input) or destination (midi output)
+        String PortName{ get; };                // friendly name
+
+        String PortDeviceId{ get; };            // device id in our tree (also used directly in WinRT MIDI 1.0)
+        UInt32 PortIndex{ get; };               // winmm port index
+
+        Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };    // the base WinRT Device Information object for this port
+    }
+}

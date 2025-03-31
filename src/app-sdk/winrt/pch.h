@@ -144,6 +144,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiGroup.h"
 #include "MidiChannel.h"
 #include "MidiUniqueId.h"
+#include "MidiUniversalSystemExclusiveChannel.h"
 
 #include "MidiClock.h"
 
@@ -162,6 +163,8 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiEndpointConnection.h"
 
 #include "MidiMessageReceivedEventArgs.h"
+
+#include "MidiEndpointAssociatedPortDeviceInformation.h"
 
 #include "MidiEndpointDeviceInformation.h"
 #include "MidiEndpointDeviceInformationAddedEventArgs.h"

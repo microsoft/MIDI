@@ -76,6 +76,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }
 
+        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> GetAssociatedMidi1Ports(_In_ midi2::MidiPortFlow const portFlow) noexcept;
+
 
         winrt::hstring ToString();
 

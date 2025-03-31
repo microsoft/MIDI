@@ -16,6 +16,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementati
     {
         MidiMessageTypeEndpointListener() = default;
 
+        midi2::IMidiEndpointConnectionSource GetEndpointConnectionSource() noexcept { return m_endpointConnection == nullptr ? nullptr : m_endpointConnection.as<IMidiEndpointConnectionSource>(); }
+
         winrt::guid PluginId() const noexcept { return m_id; }
 
         winrt::hstring PluginName() const noexcept { return m_name; }
