@@ -57,6 +57,7 @@
 #include <string>
 #include <queue>
 
+#include <mmsystem.h>
 #include "SWDevice.h"
 #include <initguid.h>
 #include "setupapi.h"

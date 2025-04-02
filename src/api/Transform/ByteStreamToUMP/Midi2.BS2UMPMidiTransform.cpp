@@ -71,6 +71,15 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         // to check for valid UMP words after each byte is parsed.
         m_BS2UMP.bytestreamParse(data[i]);
 
+        if (i == (length - 1))
+        {
+            // If this is the last data byte in this buffer, ensure any
+            // partially processed sysex data is put into a UMP, but leave
+            // bs2ump in the sysex processing state because additional sysex
+            // data may still come in.
+            m_BS2UMP.dumpSysex7State(false);
+        }
+
         // retrieve the UMP(s) from the parser
         // and send it on if we have a full message
         while (m_BS2UMP.availableUMP())

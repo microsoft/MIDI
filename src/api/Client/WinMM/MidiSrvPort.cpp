@@ -203,18 +203,22 @@ CMidiPort::Reset()
 
     if (m_Flow == MidiFlowIn)
     {
-        {
-            auto lock = m_BuffersLock.lock();
-            while(!m_InBuffers.empty())
-            {
-                LPMIDIHDR buffer = m_InBuffers.front();
-                m_InBuffers.pop();
-                buffer->dwFlags &= ~MHDR_INQUEUE;
-                buffer->dwFlags |= MHDR_DONE;
-            }
-        }
+        Stop();
 
-        RETURN_IF_FAILED(Stop());
+        auto lock = m_Lock.lock();
+        auto bufferLock = m_BuffersLock.lock();
+
+        // resetting completes all buffers, even those
+        // with no data. Performed while holding the buffer lock
+        // to prevent additional buffers from being added while
+        // completing.
+        while(!m_InBuffers.empty())
+        {
+            LARGE_INTEGER qpc{ 0 };
+            QueryPerformanceCounter(&qpc);
+
+            CompleteLongBuffer(MIM_LONGERROR, qpc.QuadPart);
+        }
     }
 
     return S_OK;
@@ -271,21 +275,26 @@ CMidiPort::AddBuffer(LPMIDIHDR buffer, DWORD_PTR bufferSize)
 HRESULT
 CMidiPort::Start()
 {
-   TraceLoggingWrite(
-       WdmAud2TelemetryProvider::Provider(),
-       MIDI_TRACE_EVENT_INFO,
-       TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-       TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-       TraceLoggingPointer(this, "this"));
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"));
 
-   LARGE_INTEGER qpc{ 0 };
-   QueryPerformanceCounter(&qpc);
+    auto lock = m_Lock.lock();
+    // Do not reset start time if start called
+    // while already started.
+    if (!m_Started)
+    {
+        LARGE_INTEGER qpc{ 0 };
+        QueryPerformanceCounter(&qpc);
 
-   auto lock = m_Lock.lock();
-   m_Started = true;
-   m_StartTime = qpc.QuadPart;
-
-   return S_OK;
+        m_Started = true;
+        m_StartTime = qpc.QuadPart;
+    }
+ 
+    return S_OK;
 }
 
 HRESULT
@@ -321,13 +330,24 @@ CMidiPort::Stop()
         // we're out of the callback, accessing m_IsInSysex is now
         // safe, complete any outstanding long sysex messages with error.
         auto lock = m_Lock.lock();
+        auto bufferLock = m_BuffersLock.lock();
+
+        LPMIDIHDR buffer {nullptr};
         LARGE_INTEGER qpc{ 0 };
         QueryPerformanceCounter(&qpc);
-        if (m_IsInSysex)
+
+        if (!m_InBuffers.empty())
         {
-            RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, qpc.QuadPart));
-            m_IsInSysex = false;
+            buffer = m_InBuffers.front();
+            if (buffer && buffer->dwBytesRecorded > 0)
+            {
+                RETURN_IF_FAILED(CompleteLongBuffer(MIM_LONGERROR, qpc.QuadPart));
+            }
         }
+
+        m_IsInSysex = false;
+        m_IsInRunningStatus = false;
+        m_RunningStatus = 0;
     }
 
     return S_OK;
@@ -372,12 +392,6 @@ CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
 
     return S_OK;
 }
-
-
-
-
-
-
 
 _Use_decl_annotations_
 HRESULT
@@ -473,6 +487,13 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         // we process one byte at a time here
         while (callbackDataRemaining > 0 && started)
         {
+            auto endOfLoop = wil::scope_exit([&]()
+            {
+                // previous iteration complete, update running state
+                auto lock = m_Lock.lock();
+                started = m_Started;
+            });
+
             // Handle all system real-time messages first, no matter
             // where they appear in a stream
             if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(*callbackData))
@@ -672,14 +693,6 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             // move to the next byte of data in the loop
             ++callbackData;
             --callbackDataRemaining;
-
-            // before we continue on to the next buffer, we need to find out if the
-            // port is still running.
-            if (callbackDataRemaining > 0)
-            {
-                auto lock = m_Lock.lock();
-                started = m_Started;
-            }
         }
 
         //// We fell out of the loop. If callback data remaining is 0 and we have some sysex in the buffer, send it
@@ -730,13 +743,25 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
 
         UINT messageSize{ sizeof(UINT32) };
         byte status = midiMessage & 0x000000FF;
-        //byte* messagePointer = (byte*)(&midiMessage);
 
         // if it's a valid status byte, then figure
         // out the actual size of the message. If it's
-        // not a valid status byte, then we just drop it
+        // not a valid status byte, we might be in running status
         if (MIDI_BYTE_IS_STATUS_BYTE(status))
         {
+            // If this message supports running status, we may receive
+            // 1 to 3 byte messages which lack a status byte in the future.
+            if (MIDI_STATUS_SUPPORTS_RUNNING_STATUS(status))
+            {
+                m_IsInRunningStatus = true;
+                m_RunningStatus = status;
+            }
+            else if (MIDI_MESSAGE_TERMINATES_RUNNING_STATUS(status))
+            {
+                m_IsInRunningStatus = false;
+                m_RunningStatus = 0;
+            }
+
             if (MIDI_MESSAGE_IS_ONE_BYTE(status))
             {
                 messageSize = 1;
@@ -754,8 +779,22 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
             // pass a timestamp of 0 to bypass scheduler
             RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, messageSize, 0));
         }
+        else if (m_IsInRunningStatus)
+        {
+            if (MIDI_MESSAGE_IS_TWO_BYTES(m_RunningStatus))
+            {
+                messageSize = 1;
+            }
+            else if (MIDI_MESSAGE_IS_THREE_BYTES(m_RunningStatus))
+            {
+                messageSize = 2;
+            }
+
+            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, messageSize, 0));
+        }
         else
         {
+            // no status byte, and running status isn't possible, this is an error.
             return E_INVALIDARG;
         }
     }
@@ -798,13 +837,14 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         RETURN_HR_IF(E_INVALIDARG, nullptr == buffer);
         RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_INVALFLAG), !(buffer->dwFlags & MHDR_PREPARED));
 
-        // send the message to the transport
-        // pass a timestamp of 0 to bypass scheduler
-        // TODO: based on the buffer length, this message may require chunking into smaller
-        // pieces to ensure it fits into the cross process queue.
-        // 
-        //RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBytesRecorded, 0));
-        RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData, buffer->dwBufferLength, 0));
+        UINT32 bytesSent = 0;
+        do
+        {
+            UINT32 bytesToSend = min(MAXIMUM_LOOPED_BYTESTREAM_DATASIZE, buffer->dwBufferLength - bytesSent);
+            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData + bytesSent, bytesToSend, 0));
+            bytesSent += bytesToSend;
+        }
+        while (bytesSent < buffer->dwBufferLength);
     }
 
     // mark the buffer as completed
