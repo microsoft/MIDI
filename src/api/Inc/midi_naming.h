@@ -130,16 +130,28 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         _In_ std::wstring filterName
     )
     {
-        std::wstring cleanedBlockName{ ::WindowsMidiServicesInternal::TrimmedWStringCopy(blockName) };
+        std::wstring cleanedBlockName{ ::WindowsMidiServicesInternal::TrimmedWStringCopy(RemoveJustKSPinGeneratedSuffix(blockName)) };
 
         // Used by ESI, MOTU, and others. We don't want to mess up other names, so check only
         // for whole word, not substring. We do other removal in the next step
 
-        auto compareBlockName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(cleanedBlockName);
+        auto compareBlockName = ::WindowsMidiServicesInternal::ToUpperTrimmedWStringCopy(cleanedBlockName);
 
         // some pins include the filter or parent device name. We don't want that here because some options re-add it.
-        auto compareParentName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(parentDeviceName);
-        auto compareFilterName = ::WindowsMidiServicesInternal::ToUpperWStringCopy(filterName);
+        auto compareParentName = ::WindowsMidiServicesInternal::ToUpperTrimmedWStringCopy(parentDeviceName);
+        auto compareFilterName = ::WindowsMidiServicesInternal::ToUpperTrimmedWStringCopy(filterName);
+
+        if (compareBlockName == L"MIDI")
+        {
+            cleanedBlockName = L"";
+            compareBlockName = L"";
+        }
+
+        // shortcut additional checks
+        if (cleanedBlockName.empty())
+        {
+            return cleanedBlockName;
+        }
 
         // there are other ways to do this with pattern matching, 
         // but just banging this through for this version
@@ -184,9 +196,16 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
             if (groupIndex > 0)
             {
-                const int nameReservedSpaces = 4; // null terminator, space, and then up to two digits for the group number
+                // check to see if we already have a number at the end of this. If so, don't add another one
 
-                newName = generatedName.substr(0, MAXPNAMELEN - nameReservedSpaces) + std::to_wstring(groupIndex + 1);
+                auto groupNumber = std::to_wstring(groupIndex + 1);
+
+                if (!newName.ends_with(groupNumber))
+                {
+                    const int nameReservedSpaces = 4; // null terminator, space, and then up to two digits for the group number
+
+                    newName = generatedName.substr(0, MAXPNAMELEN - nameReservedSpaces) + L" " + groupNumber;
+                }
             }
         }
 

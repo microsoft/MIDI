@@ -112,7 +112,7 @@ enum Midi1PortNameSelectionProperty : uint32_t
 
 // Default WinMM naming for MIDI 1 device attached to UMP driver
 #define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_REG_VALUE   L"DefaultPortNamingForMidi1DevicesUsingUmpDriver"
-#define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE       ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseBlocksExactly))
+#define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE       ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName))
 
 // Default WinMM naming for MIDI 2 device using UMP driver
 #define MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_REG_VALUE          L"DefaultPortNamingForUmpNativeDevices"
