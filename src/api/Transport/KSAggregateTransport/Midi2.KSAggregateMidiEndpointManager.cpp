@@ -178,27 +178,29 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         pinMapEntry.FilterId = pin.FilterDeviceId;
         pinMapEntry.PinDataFlow = pin.PinDataFlow;
 
-        MidiFlow flowFromUserPerspective;
+        //MidiFlow flowFromUserPerspective;
 
         pinMapEntry.GroupIndex = pin.GroupIndex;
         gtb.FirstGroupIndex = pin.GroupIndex;
 
         if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
         {
-            flowFromUserPerspective = MidiFlow::MidiFlowOut;
+            //flowFromUserPerspective = MidiFlow::MidiFlowOut;
 
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
-            gtb.Name = pin.PortNames.BlockName;
+            //gtb.Name = pin.PortNames.BlockName;
+            gtb.Name = pin.PortNames.FilterPlusBlockName;
 
             // this is kept just so we can add ordinal differentiators if we need to
             portNamesUserFlowOut.push_back(gtb.Name);
         }
         else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)
         {
-            flowFromUserPerspective = MidiFlow::MidiFlowIn;
+            //flowFromUserPerspective = MidiFlow::MidiFlowIn;
 
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
-            gtb.Name = pin.PortNames.BlockName;
+            //gtb.Name = pin.PortNames.BlockName;
+            gtb.Name = pin.PortNames.FilterPlusBlockName;
 
             // this is kept just so we can add ordinal differentiators if we need to
             portNamesUserFlowIn.push_back(gtb.Name);
@@ -693,7 +695,6 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
             {
             //    bool isMidi1Pin{ false };
                 wil::unique_handle hPin;
-
 
                 // TODO
                 std::wstring customPortName{};
