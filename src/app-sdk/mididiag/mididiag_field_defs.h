@@ -102,7 +102,8 @@
 #define MIDIDIAG_FIELD_LABEL_NAME_TABLE_PIN_NAME                         "name_table_pin_name"
 #define MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_PIN_NAME             "name_table_filter_plus_pin_name"
 
-
+#define MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN                               "midi_in_port"
+#define MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT                              "midi_out_port"
 
 
 #define MIDIDIAG_SECTION_LABEL_MIDI1_API_INPUT_ENDPOINTS                 "enum_winrt_midi1_api_input_ports"

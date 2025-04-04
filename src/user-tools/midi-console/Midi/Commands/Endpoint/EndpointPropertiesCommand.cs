@@ -444,7 +444,7 @@ namespace Microsoft.Midi.ConsoleApp
                 // Related MIDI 1.0 ports (WinMM and WinRT MIDI 1.0) -------------------------------------------------------
 
                 table.AddEmptyRow();
-                var midi1SourcePorts = di.GetAssociatedMidi1Ports(MidiPortFlow.MidiMessageSource);
+                var midi1SourcePorts = di.GetAssociatedMidi1Ports(Midi1PortFlow.MidiMessageSource);
                 if (midi1SourcePorts != null && midi1SourcePorts.Count > 0)
                 {
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidi1MessageSourcePorts), "");
@@ -474,7 +474,7 @@ namespace Microsoft.Midi.ConsoleApp
                 }
 
                 table.AddEmptyRow();
-                var midi1DestinationPorts = di.GetAssociatedMidi1Ports(MidiPortFlow.MidiMessageDestination);
+                var midi1DestinationPorts = di.GetAssociatedMidi1Ports(Midi1PortFlow.MidiMessageDestination);
                 if (midi1DestinationPorts != null && midi1DestinationPorts.Count > 0)
                 {
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidi1MessageDestinationPorts), "");
