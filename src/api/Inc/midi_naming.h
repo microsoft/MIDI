@@ -21,6 +21,8 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
 #define MIDI1_PORT_NAME_ENTRY_HEADER_SIZE (sizeof(size_t))
 
+    // this needs to be kept in sync with Midi1PortNameTableEntry in SDK
+
     struct Midi1PortNameEntry
     {
         uint8_t GroupIndex{ 0 };
@@ -394,25 +396,6 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             groupIndex);
         filterPlusBlockName.copy(entry.FilterPlusBlockName, MAXPNAMELEN - 1);
     }
-
-    //inline std::wstring GenerateGroupTerminalBlockNameFromDeviceInformation(
-    //    _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
-    //    _In_ std::wstring const& filterName,
-    //    _In_ std::wstring const& existingBlockName,             // devices using the new driver come with a GTB name already, but we may need to clean it
-    //    _In_ uint8_t const& groupIndex
-    //)
-    //{
-    //    UNREFERENCED_PARAMETER(parentDeviceName);
-    //    UNREFERENCED_PARAMETER(existingBlockName);
-    //    UNREFERENCED_PARAMETER(filterName);
-    //    UNREFERENCED_PARAMETER(groupIndex);
-
-    //    std::wstring generatedName{};
-
-
-
-    //    return generatedName;
-    //}
 
     inline std::vector<Midi1PortNameEntry> ReadMidi1PortNameTableFromPropertyData(
         _In_reads_bytes_(dataSize) uint8_t* tablePointer,
