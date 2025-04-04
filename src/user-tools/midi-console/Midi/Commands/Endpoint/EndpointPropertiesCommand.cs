@@ -39,15 +39,14 @@ namespace Microsoft.Midi.ConsoleApp
 
         // TODO: Tons of strings in here that need to be localized
 
+
+        private string FormatFieldLabel(string label)
+        {
+            return "[grey23]>[/] " + label + "";
+        }
+
         public override int Execute(CommandContext context, Settings settings)
         {
-            //if (!MidiServicesInitializer.EnsureServiceAvailable())
-            //{
-            //    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError("MIDI Service is not available."));
-            //    return (int)MidiConsoleReturnCode.ErrorServiceNotAvailable;
-            //}
-
-
             string endpointId = string.Empty;
 
             if (!string.IsNullOrEmpty(settings.EndpointDeviceId))
@@ -97,17 +96,19 @@ namespace Microsoft.Midi.ConsoleApp
 
 
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertiesTableSectionHeaderIdentification), "");
-                table.AddRow(Strings.PropertiesTablePropertyLabelName, AnsiMarkupFormatter.FormatEndpointName(di.Name));
-                table.AddRow(Strings.PropertiesTablePropertyLabelId, AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.EndpointDeviceId));
-                table.AddRow(Strings.PropertiesTablePropertyLabelPurpose, di.EndpointPurpose.ToString());
+                if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionIdentification), "");
+                table.AddEmptyRow();
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelName), AnsiMarkupFormatter.FormatEndpointName(di.Name));
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelId), AnsiMarkupFormatter.FormatFullEndpointInterfaceId(di.EndpointDeviceId));
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelPurpose), MidiFriendlyNames.DevicePurpose(di.EndpointPurpose));
 
 
-                table.AddRow(Strings.PropertiesTablePropertyLabelSerialNumber, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.SerialNumber));
-                table.AddRow(Strings.PropertiesTablePropertyLabelManufacturer, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.ManufacturerName));
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelSerialNumber), AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.SerialNumber));
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelManufacturer), AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.ManufacturerName));
 
                 if (transportSuppliedInfo.VendorId > 0 || transportSuppliedInfo.ProductId > 0)
                 {
-                    table.AddRow(Strings.PropertiesTablePropertyLabelVidPid, 
+                    table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelVidPid), 
                         AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.VendorId.ToString("X4")
                         + " / " + 
                         AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.ProductId.ToString("X4"))));
@@ -115,25 +116,25 @@ namespace Microsoft.Midi.ConsoleApp
 
                 if (transportSuppliedInfo.Description != string.Empty)
                 {
-                    table.AddRow(Strings.PropertiesTablePropertyLabelTransportSuppliedDescription, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.Description));
+                    table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelTransportSuppliedDescription), AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.Description));
                 }
 
-                table.AddRow(Strings.PropertiesTablePropertyLabelMultiClient, transportSuppliedInfo.SupportsMultiClient.ToString());
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelMultiClient), transportSuppliedInfo.SupportsMultiClient.ToString());
 
 
                 // data format
 
                 if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
-                    table.AddRow(Strings.PropertiesTablePropertyLabelNativeDataFormat, Strings.PropertyValueNativeDataFormatUmp);
+                    table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelNativeDataFormat), Strings.PropertyValueNativeDataFormatUmp);
                 }
                 else if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.Midi1ByteFormat)
                 {
-                    table.AddRow(Strings.PropertiesTablePropertyLabelNativeDataFormat, Strings.PropertyValueNativeDataFormatByteStream);
+                    table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelNativeDataFormat), Strings.PropertyValueNativeDataFormatByteStream);
                 }
                 else
                 {
-                    table.AddRow(Strings.PropertiesTablePropertyLabelNativeDataFormat, Strings.PropertyValueNativeDataFormatUnknown);
+                    table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelNativeDataFormat), Strings.PropertyValueNativeDataFormatUnknown);
                 }
 
 
@@ -143,8 +144,8 @@ namespace Microsoft.Midi.ConsoleApp
                 if (settings.Verbose)
                 {
                     //table.AddRow("Kind", AnsiMarkupFormatter.FormatDeviceKind(di.DeviceInformation.Kind));
-                    table.AddRow(Strings.PropertiesTablePropertyLabelContainerId, AnsiMarkupFormatter.FormatContainerId(di.ContainerId.ToString()));
-                    table.AddRow(Strings.PropertiesTablePropertyLabelDeviceInstanceId, AnsiMarkupFormatter.FormatDeviceInstanceId(di.DeviceInstanceId));
+                    table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelContainerId), AnsiMarkupFormatter.FormatContainerId(di.ContainerId.ToString()));
+                    table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelDeviceInstanceId), AnsiMarkupFormatter.FormatDeviceInstanceId(di.DeviceInstanceId));
                 }
 
                 // we only show protocol negotiation stuff if we're native UMP
@@ -193,10 +194,12 @@ namespace Microsoft.Midi.ConsoleApp
 
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertiesTableSectionHeaderUserData), "");
-                table.AddRow(Strings.PropertiesTablePropertyLabelUserSuppliedName, AnsiMarkupFormatter.FormatEndpointName(userInfo.Name));
-                table.AddRow(Strings.PropertiesTablePropertyLabelDescription, AnsiMarkupFormatter.EscapeString(userInfo.Description));
-                table.AddRow(Strings.PropertiesTablePropertyLabelSmallImagePath, AnsiMarkupFormatter.EscapeString(userInfo.SmallImagePath));
-                table.AddRow(Strings.PropertiesTablePropertyLabelLargeImagePath, AnsiMarkupFormatter.EscapeString(userInfo.LargeImagePath));
+                if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionUserData), "");
+                table.AddEmptyRow();
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelUserSuppliedName), AnsiMarkupFormatter.FormatEndpointName(userInfo.Name));
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelDescription), AnsiMarkupFormatter.EscapeString(userInfo.Description));
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelSmallImagePath), AnsiMarkupFormatter.EscapeString(userInfo.SmallImagePath));
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelLargeImagePath), AnsiMarkupFormatter.EscapeString(userInfo.LargeImagePath));
 
 
 
@@ -204,22 +207,24 @@ namespace Microsoft.Midi.ConsoleApp
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderActiveConfiguration), "");
-                    table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionActiveConfiguration), "");
-                    table.AddRow(Strings.PropertyTablePropertyLabelProtocol, config.Protocol.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredSendJR, config.SendJitterReductionTimestamps.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredReceiveJR, config.ReceiveJitterReductionTimestamps.ToString());
+                    if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionActiveConfiguration), "");
+                    table.AddEmptyRow();
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelProtocol), config.Protocol.ToString());
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelConfiguredSendJR), config.SendJitterReductionTimestamps.ToString());
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelConfiguredReceiveJR), config.ReceiveJitterReductionTimestamps.ToString());
 
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderDeclaredCapabilities), "");
-                    table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionDeclaredCapabilities), "");
-                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredMIDI1Protocol, epinfo.SupportsMidi10Protocol.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelConfiguredMIDI2Protocol, epinfo.SupportsMidi20Protocol.ToString());
+                    if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionDeclaredCapabilities), "");
+                    table.AddEmptyRow();
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelConfiguredMIDI1Protocol), epinfo.SupportsMidi10Protocol.ToString());
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelConfiguredMIDI2Protocol), epinfo.SupportsMidi20Protocol.ToString());
 
                     if (settings.Verbose)
                     {
-                        table.AddRow(Strings.PropertyTablePropertyLabelUMPVersion, epinfo.SpecificationVersionMajor + "." + epinfo.SpecificationVersionMinor);
-                        table.AddRow(Strings.PropertyTablePropertyLabelSupportsSendingJR, epinfo.SupportsSendingJitterReductionTimestamps.ToString());
-                        table.AddRow(Strings.PropertyTablePropertyLabelSupportsReceivingJR, epinfo.SupportsReceivingJitterReductionTimestamps.ToString());
+                        table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelUMPVersion), epinfo.SpecificationVersionMajor + "." + epinfo.SpecificationVersionMinor);
+                        table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelSupportsSendingJR), epinfo.SupportsSendingJitterReductionTimestamps.ToString());
+                        table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelSupportsReceivingJR), epinfo.SupportsReceivingJitterReductionTimestamps.ToString());
                     }
                 }
 
@@ -227,21 +232,22 @@ namespace Microsoft.Midi.ConsoleApp
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderTransportInformation), "");
-                    table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionTransportInformation), "");
-                    table.AddRow(Strings.PropertyTablePropertyLabelTransportSuppliedName, AnsiMarkupFormatter.FormatEndpointName(transportSuppliedInfo.Name));
-                    table.AddRow(Strings.PropertyTablePropertyLabelTransportId, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportId.ToString()));
-                    table.AddRow(Strings.PropertyTablePropertyLabelTransportCode, AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportCode));
+                    if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionTransportInformation), "");
+                    table.AddEmptyRow();
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelTransportSuppliedName), AnsiMarkupFormatter.FormatEndpointName(transportSuppliedInfo.Name));
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelTransportId), AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportId.ToString()));
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelTransportCode), AnsiMarkupFormatter.EscapeString(transportSuppliedInfo.TransportCode));
                 }
 
-                table.AddEmptyRow();
-
+                // Function Blocks --------------------------
                 if (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderFunctionBlocks), "");
-                    table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionFunctionBlocks), "");
-                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksStatic, epinfo.HasStaticFunctionBlocks.ToString());
-                    table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlocksDeclaredCount, epinfo.DeclaredFunctionBlockCount.ToString());
+                    if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionFunctionBlocks), "");
+                    table.AddEmptyRow();
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelFunctionBlocksStatic), epinfo.HasStaticFunctionBlocks.ToString());
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelFunctionBlocksDeclaredCount), epinfo.DeclaredFunctionBlockCount.ToString());
                     table.AddEmptyRow();
 
                     // show function blocks for native UMP devices
@@ -284,16 +290,16 @@ namespace Microsoft.Midi.ConsoleApp
                                     active = string.Empty;
                                 }
 
-                                table.AddRow(
-                                    AnsiMarkupFormatter.FormatBlockNumber(functionBlock.Number) + " " +
+                                table.AddRow(FormatFieldLabel(
+                                    AnsiMarkupFormatter.FormatBlockNumberLabel(functionBlock.Number) + " " +
                                     AnsiMarkupFormatter.FormatBlockName(functionBlock.Name) +
-                                    active,
+                                    active),
                                     functionInformation);
                             }
                             else
                             {
                                 table.AddEmptyRow();
-                                table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlock, AnsiMarkupFormatter.FormatBlockNumber(functionBlock.Number) + " " + AnsiMarkupFormatter.FormatBlockName(functionBlock.Name));
+                                table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlock, AnsiMarkupFormatter.FormatBlockNumberValue(functionBlock.Number) + " " + AnsiMarkupFormatter.FormatBlockName(functionBlock.Name));
                                 table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockActive, functionBlock.IsActive.ToString());
                                 table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockFirstGroupIndex, functionBlock.FirstGroup.Index.ToString());
                                 table.AddRow(Strings.PropertyTablePropertyLabelFunctionBlockGroupCount, functionBlock.GroupCount.ToString());
@@ -341,16 +347,21 @@ namespace Microsoft.Midi.ConsoleApp
                 }
 
 
+                // Group Terminal Blocks --------------------------
                 // Show group terminal blocks only if verbose or if there are no function blocks
 
-                if ((settings.Verbose || di.GetDeclaredEndpointInfo().DeclaredFunctionBlockCount == 0) && di.GetGroupTerminalBlocks().Count > 0)
+                if ((settings.Verbose || (transportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat && di.GetDeclaredEndpointInfo().DeclaredFunctionBlockCount == 0))
+                    && di.GetGroupTerminalBlocks().Count > 0
+                    )
                 {
                     table.AddEmptyRow();
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderGroupTerminalBlocks), "");
-                    
+                    if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionGroupTerminalBlocks), "");
+                    table.AddEmptyRow();
+
                     if (di.GetDeclaredFunctionBlocks().Count > 0)
                     {
-                        table.AddRow(Strings.PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent, "");
+                        table.AddRow(FormatFieldLabel(Strings.PropertyTableSectionNoteGTBFunctionBlocksAlsoPresent), "");
                     }
 
                     foreach (var groupTerminalBlock in di.GetGroupTerminalBlocks())
@@ -377,30 +388,28 @@ namespace Microsoft.Midi.ConsoleApp
 
                             groupInformation += $", [grey]{Strings.CommonStringDirectionSingular}[/] " + MidiFriendlyNames.GroupTerminalBlockDirection(groupTerminalBlock.Direction);
 
-                            table.AddRow(
-                                AnsiMarkupFormatter.FormatBlockNumber(groupTerminalBlock.Number) + " " +
-                                AnsiMarkupFormatter.FormatBlockName(groupTerminalBlock.Name),
+                            table.AddRow(FormatFieldLabel(
+                                AnsiMarkupFormatter.FormatBlockNumberLabel(groupTerminalBlock.Number) + " " +
+                                AnsiMarkupFormatter.FormatBlockName(groupTerminalBlock.Name)),
                                 groupInformation);
                         }
                         else
                         {
-                            table.AddEmptyRow();
-
-                            table.AddRow(Strings.CommonStringGroupTerminalBlockSingular, AnsiMarkupFormatter.FormatBlockNumber(groupTerminalBlock.Number) + " " + AnsiMarkupFormatter.FormatBlockName(groupTerminalBlock.Name));
+                            table.AddRow(FormatFieldLabel(Strings.CommonStringGroupTerminalBlockSingular), AnsiMarkupFormatter.FormatBlockNumberValue(groupTerminalBlock.Number) + " " + AnsiMarkupFormatter.FormatBlockName(groupTerminalBlock.Name));
 
                             if (groupTerminalBlock.GroupCount == 1)
                             {
-                                table.AddRow(Strings.CommonStringGroupSingular, $"{groupTerminalBlock.FirstGroup.DisplayValue} ({Strings.CommonStringIndexSingular} {groupTerminalBlock.FirstGroup.Index})");
+                                table.AddRow(FormatFieldLabel(MidiGroup.LongLabel), $"{groupTerminalBlock.FirstGroup.DisplayValue} ({Strings.CommonStringIndexSingular} {groupTerminalBlock.FirstGroup.Index})");
                             }
                             else
                             {
                                 int stopGroupIndex = groupTerminalBlock.FirstGroup.Index + groupTerminalBlock.GroupCount - 1;
-                                table.AddRow(Strings.CommonStringGroupPlural, $"{groupTerminalBlock.FirstGroup.DisplayValue}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {groupTerminalBlock.FirstGroup.Index}-{stopGroupIndex})");
+                                table.AddRow(FormatFieldLabel(MidiGroup.LongLabelPlural), $"{groupTerminalBlock.FirstGroup.DisplayValue}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {groupTerminalBlock.FirstGroup.Index}-{stopGroupIndex})");
                             }
 
-                            table.AddRow(Strings.PropertyTablePropertyLabelGTBGroupCount, groupTerminalBlock.GroupCount.ToString());
-                            table.AddRow(Strings.CommonStringDirectionSingular, groupTerminalBlock.Direction.ToString());
-                            table.AddRow(Strings.CommonStringProtocolSingular, groupTerminalBlock.Protocol.ToString());
+                            table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelGTBGroupCount), groupTerminalBlock.GroupCount.ToString());
+                            table.AddRow(FormatFieldLabel(Strings.CommonStringDirectionSingular), groupTerminalBlock.Direction.ToString());
+                            table.AddRow(FormatFieldLabel(Strings.CommonStringProtocolSingular), groupTerminalBlock.Protocol.ToString());
 
                             string inputBandwidth = string.Empty;
                             string outputBandwidth = string.Empty;
@@ -426,76 +435,30 @@ namespace Microsoft.Midi.ConsoleApp
                                     $" ({((double)groupTerminalBlock.CalculatedMaxDeviceOutputBandwidthBitsPerSecond / 1000.0).ToString("N2")} {Strings.CommonStringKBPS})";
                             }
 
-                            table.AddRow(Strings.PropertyTablePropertyLabelGTBMaxInputBandwidth, inputBandwidth);
-                            table.AddRow(Strings.PropertyTablePropertyLabelGTBMaxOutputBandwidth, outputBandwidth);
+                            table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelGTBMaxInputBandwidth), inputBandwidth);
+                            table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelGTBMaxOutputBandwidth), outputBandwidth);
+
+                            table.AddEmptyRow();
+
                         }
                     }
                 }
 
-
-                if (settings.Verbose)
-                {
-                    table.AddEmptyRow();
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderAdditionalProperties), "");
-                    //table.AddRow("Requires Note Off Translation", di.NativeDataFormat.ToString());
-                }
 
 
                 // Related MIDI 1.0 ports (WinMM and WinRT MIDI 1.0) -------------------------------------------------------
 
                 table.AddEmptyRow();
-                var midi1SourcePorts = di.GetAssociatedMidi1Ports(Midi1PortFlow.MidiMessageSource);
-                if (midi1SourcePorts != null && midi1SourcePorts.Count > 0)
-                {
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidi1MessageSourcePorts), "");
-                    table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionMidi1MessageSourcePorts), "");
-
-                    foreach (var port in midi1SourcePorts.OrderBy(p => p.Group.Index))
-                    {
-                        string portInformation = string.Empty;
-
-                        portInformation = $"[grey]{MidiGroup.LongLabel}[/] " + " " + port.Group.DisplayValue + 
-                            $" ({ Strings.CommonStringIndexSingular} { port.Group.Index})";
-
-                        if (settings.Verbose)
-                        {
-                            portInformation += "\n" + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(port.PortDeviceId);
-                        }
-
-                        table.AddRow(
-                            AnsiMarkupFormatter.FormatPortIndex(port.PortIndex) + " " +
-                            AnsiMarkupFormatter.FormatPortName(port.PortName),
-                            portInformation);
-                    }
-                }
-                else
-                {
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableNoAssociatedMidi1SourcePorts), "");
-                }
-
+                table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidi1Ports), "");
+                if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionMidi1Ports), "");
                 table.AddEmptyRow();
+
                 var midi1DestinationPorts = di.GetAssociatedMidi1Ports(Midi1PortFlow.MidiMessageDestination);
                 if (midi1DestinationPorts != null && midi1DestinationPorts.Count > 0)
                 {
-                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidi1MessageDestinationPorts), "");
-                    table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionMidi1MessageDestinationPorts), "");
-
                     foreach (var port in midi1DestinationPorts.OrderBy(p => p.Group.Index))
                     {
-                        string portInformation = string.Empty;
-
-                        portInformation = $"[grey]{MidiGroup.LongLabel}[/] " + " " + port.Group.DisplayValue +
-                            $" ({Strings.CommonStringIndexSingular} {port.Group.Index})";
-
-                        if (settings.Verbose)
-                        {
-                            portInformation += "\n" + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(port.PortDeviceId);
-                        }
-
-                        table.AddRow(
-                            AnsiMarkupFormatter.FormatPortIndex(port.PortIndex) + " " +
-                            AnsiMarkupFormatter.FormatPortName(port.PortName),
-                            portInformation);
+                        DisplayMidi1PortInformation(table, port, settings.Verbose);
                     }
                 }
                 else
@@ -503,7 +466,28 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableNoAssociatedMidi1DestinationPorts), "");
                 }
 
+                var midi1SourcePorts = di.GetAssociatedMidi1Ports(Midi1PortFlow.MidiMessageSource);
+                if (midi1SourcePorts != null && midi1SourcePorts.Count > 0)
+                {
+                    foreach (var port in midi1SourcePorts.OrderBy(p => p.Group.Index))
+                    {
+                        DisplayMidi1PortInformation(table, port, settings.Verbose);
+                    }
+                }
+                else
+                {
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableNoAssociatedMidi1SourcePorts), "");
+                }
 
+
+                // Additional Properties -----------------------------------
+
+                //if (settings.Verbose)
+                //{
+                //    table.AddEmptyRow();
+                //    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderAdditionalProperties), "");
+                //    //table.AddRow("Requires Note Off Translation", di.NativeDataFormat.ToString());
+                //}
 
 
 
@@ -513,14 +497,14 @@ namespace Microsoft.Midi.ConsoleApp
 
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderContainer), "");
-                table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionContainer), "");
+                if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionContainer), "");
+                table.AddEmptyRow();
 
                 if (containerInfo != null)
                 {
-
-                    table.AddRow(Strings.PropertyTablePropertyLabelContainerName, AnsiMarkupFormatter.FormatEndpointName(containerInfo.Name));
-                    table.AddRow(Strings.PropertyTablePropertyLabelContainerId, AnsiMarkupFormatter.FormatContainerId(containerInfo.Id));
-                    table.AddRow(Strings.PropertyTablePropertyLabelContainerKind, AnsiMarkupFormatter.FormatDeviceKind(containerInfo.Kind));
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelContainerName), AnsiMarkupFormatter.FormatEndpointName(containerInfo.Name));
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelContainerId), AnsiMarkupFormatter.FormatContainerId(containerInfo.Id));
+                    table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelContainerKind), AnsiMarkupFormatter.FormatDeviceKind(containerInfo.Kind));
 
                     if (settings.Verbose)
                     {
@@ -536,7 +520,8 @@ namespace Microsoft.Midi.ConsoleApp
 
                 table.AddEmptyRow();
                 table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderParentDevice), "");
-                table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionParentDevice), "");
+                if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionParentDevice), "");
+                table.AddEmptyRow();
 
                 if (containerInfo != null)
                 {
@@ -545,9 +530,9 @@ namespace Microsoft.Midi.ConsoleApp
                     if (parentInfo != null)
                     {
 
-                        table.AddRow(Strings.PropertyTablePropertyLabelParentName, AnsiMarkupFormatter.FormatEndpointName(parentInfo.Name));
-                        table.AddRow(Strings.PropertyTablePropertyLabelParentId, AnsiMarkupFormatter.FormatDeviceInstanceId(parentInfo.Id));
-                        table.AddRow(Strings.PropertyTablePropertyLabelParentKind, AnsiMarkupFormatter.FormatDeviceKind(parentInfo.Kind));
+                        table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelParentName), AnsiMarkupFormatter.FormatEndpointName(parentInfo.Name));
+                        table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelParentId), AnsiMarkupFormatter.FormatDeviceInstanceId(parentInfo.Id));
+                        table.AddRow(FormatFieldLabel(Strings.PropertyTablePropertyLabelParentKind), AnsiMarkupFormatter.FormatDeviceKind(parentInfo.Kind));
 
                         if (settings.Verbose)
                         {
@@ -583,6 +568,7 @@ namespace Microsoft.Midi.ConsoleApp
 
                     TableColumn rawColumn1 = new TableColumn(
                         AnsiMarkupFormatter.FormatTableColumnHeading(Resources.Strings.PropertiesTableColumnHeaderProperty));
+                    rawColumn1.Width(50);
 
                     rawPropertyTable.AddColumn(rawColumn1);
 
@@ -605,10 +591,30 @@ namespace Microsoft.Midi.ConsoleApp
         }
 
 
+        private void DisplayMidi1PortInformation(Table table, MidiEndpointAssociatedPortDeviceInformation port, bool verbose)
+        {
+            string portInformation = string.Empty;
 
+            portInformation = $"[grey]{MidiGroup.LongLabel}[/]" + " " + port.Group.DisplayValue +
+                $" ({Strings.CommonStringIndexSingular} {port.Group.Index})";
+
+            portInformation += $", [grey]{Strings.CommonStringDirectionSingular}[/] " + MidiFriendlyNames.Midi1PortDirection(port.PortFlow);
+
+            if (verbose)
+            {
+                portInformation += "\n" + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(port.PortDeviceId);
+            }
+
+            table.AddRow(FormatFieldLabel(
+                AnsiMarkupFormatter.FormatPortIndex(port.PortIndex) + " " +
+                AnsiMarkupFormatter.FormatPortName(port.PortName)),
+                portInformation);
+        }
 
         private void DisplayProperties(Table table, IReadOnlyDictionary<string, object> properties)
         {
+            bool midiHeaderShown = false;
+
             foreach (string key in properties.Keys)
             {
                 object? value;
@@ -620,7 +626,27 @@ namespace Microsoft.Midi.ConsoleApp
 
                     if (MidiEndpointDevicePropertyHelper.IsMidiPropertyKey(key))
                     {
-                        friendlyKey = AnsiMarkupFormatter.FormatFriendlyPropertyKey(MidiEndpointDevicePropertyHelper.GetMidiPropertyNameFromPropertyKey(key));
+                        friendlyKey = MidiEndpointDevicePropertyHelper.GetMidiPropertyNameFromPropertyKey(key);
+
+                        // remove the "STRING_" frm the beginning of the property key, just to make things more compact
+                        // the prefix is needed when actually using properties, but not for display.
+                        string unnecessaryPrefix = "STRING_PKEY_MIDI_";
+                        if (friendlyKey.StartsWith(unnecessaryPrefix))
+                        {
+                            friendlyKey = friendlyKey.Substring(unnecessaryPrefix.Length);
+                        }
+
+                        friendlyKey = AnsiMarkupFormatter.FormatFriendlyPropertyKey(friendlyKey);
+
+                        if (!midiHeaderShown)
+                        {
+                            table.AddEmptyRow();
+                            table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidiProperties), "");
+                            table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionMidiProperties), "");
+                            table.AddEmptyRow();
+
+                            midiHeaderShown = true;
+                        }
                     }
                     else
                     {
@@ -632,23 +658,23 @@ namespace Microsoft.Midi.ConsoleApp
                     {
                         if (key == "System.ItemNameDisplay")
                         {
-                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatEndpointName(value.ToString()!));
+                            table.AddRow(FormatFieldLabel(friendlyKey), AnsiMarkupFormatter.FormatEndpointName(value.ToString()!));
                         }
                         else if (key == "System.Devices.DeviceInstanceId")
                         {
-                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatDeviceInstanceId(value.ToString()!));
+                            table.AddRow(FormatFieldLabel(friendlyKey), AnsiMarkupFormatter.FormatDeviceInstanceId(value.ToString()!));
                         }
                         else if (key == "System.Devices.Parent")
                         {
-                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatDeviceParentId(value.ToString()!));
+                            table.AddRow(FormatFieldLabel(friendlyKey), AnsiMarkupFormatter.FormatDeviceParentId(value.ToString()!));
                         }
                         else if (key == "System.Devices.ContainerId")
                         {
-                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatContainerId(value.ToString()!));
+                            table.AddRow(FormatFieldLabel(friendlyKey), AnsiMarkupFormatter.FormatContainerId(value.ToString()!));
                         }
                         else if (value is DateTimeOffset)
                         {
-                            table.AddRow(friendlyKey, AnsiMarkupFormatter.FormatLongDateTime((DateTimeOffset)value!));
+                            table.AddRow(FormatFieldLabel(friendlyKey), AnsiMarkupFormatter.FormatLongDateTime((DateTimeOffset)value!));
                         }
                         else
                         {
@@ -670,13 +696,13 @@ namespace Microsoft.Midi.ConsoleApp
                                     }
                                 }
 
-                                table.AddRow(friendlyKey, s);
+                                table.AddRow(FormatFieldLabel(friendlyKey), s);
                                 table.AddRow("", $"[cyan]({bytes.Length} bytes)[/]");
 
                             }
                             else
                             {
-                                table.AddRow(friendlyKey, AnsiMarkupFormatter.EscapeString(value.ToString()!));
+                                table.AddRow(FormatFieldLabel(friendlyKey), AnsiMarkupFormatter.EscapeString(value.ToString()!));
                             }
 
                         }
@@ -684,7 +710,7 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                     else
                     {
-                        table.AddRow(friendlyKey, "[grey35]null[/]");
+                        table.AddRow(FormatFieldLabel(friendlyKey), "[grey35]null[/]");
                     }
                 }
             }
