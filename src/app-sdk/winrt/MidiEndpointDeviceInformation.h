@@ -110,7 +110,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> m_midi1SourcePorts{ winrt::single_threaded_vector<midi2::MidiEndpointAssociatedPortDeviceInformation>() };
         collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> m_midi1DestinationPorts{ winrt::single_threaded_vector<midi2::MidiEndpointAssociatedPortDeviceInformation>() };
 
-
         foundation::DateTime GetDateTimeProperty(
             _In_ winrt::hstring key,
             _In_ foundation::DateTime defaultValue) const noexcept;

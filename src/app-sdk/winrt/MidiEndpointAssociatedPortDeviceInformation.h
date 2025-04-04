@@ -28,14 +28,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::hstring ToString();
 
         void InternalInitialize(
-            winrt::guid containerId,
-            winrt::hstring parentDeviceInstanceId,
-            winrt::hstring parentEndpointDeviceId,
-            midi2::MidiGroup group,
-            midi2::Midi1PortFlow portFlow,
-            winrt::hstring portName,
-            winrt::hstring portDeviceId,
-            uint32_t portIndex,
+            winrt::guid const& containerId,
+            winrt::hstring const& parentDeviceInstanceId,
+            winrt::hstring const& parentEndpointDeviceId,
+            midi2::MidiGroup const& group,
+            midi2::Midi1PortFlow const portFlow,
+            winrt::hstring const& portName,
+            winrt::hstring const& portDeviceId,
+            uint32_t const portIndex,
             enumeration::DeviceInformation const& deviceInformation
             );
 
