@@ -8,7 +8,7 @@
 
 
 import "MidiApiContracts.idl";
-import "MidiPortFlowEnum.idl";
+import "Midi1PortFlowEnum.idl";
 import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
@@ -21,13 +21,13 @@ namespace Microsoft.Windows.Devices.Midi2
         String ParentDeviceInstanceId{ get; };  // device instance id of the endpoint (which is the id of its parent)
         String ParentEndpointDeviceId{ get; };  // device id of the owning Windows MIDI Services endpoint
 
-        MidiGroup Group{ get; };                // the single group this port is associated with
+        MidiGroup Group{ get; };                // the single group this MIDI 1.0 port is associated with
 
-        MidiPortFlow PortFlow{ get; };          // source (midi input) or destination (midi output)
-        String PortName{ get; };                // friendly name
+        Midi1PortFlow PortFlow{ get; };          // source (midi input) or destination (midi output)
+        String PortName{ get; };                // friendly name (this is the WinMM port name)
 
         String PortDeviceId{ get; };            // device id in our tree (also used directly in WinRT MIDI 1.0)
-        UInt32 PortIndex{ get; };               // winmm port index
+        UInt32 PortIndex{ get; };               // winmm port index (0..n)
 
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };    // the base WinRT Device Information object for this port
     }

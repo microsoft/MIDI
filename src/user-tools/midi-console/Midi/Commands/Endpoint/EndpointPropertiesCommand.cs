@@ -340,6 +340,7 @@ namespace Microsoft.Midi.ConsoleApp
                     }
                 }
 
+
                 // Show group terminal blocks only if verbose or if there are no function blocks
 
                 if ((settings.Verbose || di.GetDeclaredEndpointInfo().DeclaredFunctionBlockCount == 0) && di.GetGroupTerminalBlocks().Count > 0)
@@ -362,13 +363,13 @@ namespace Microsoft.Midi.ConsoleApp
                             if (groupTerminalBlock.GroupCount == 1)
                             {
                                 groupInformation +=
-                                    $"[grey]{Strings.CommonStringGroupSingular}[/] {groupTerminalBlock.FirstGroup.DisplayValue} ({Strings.CommonStringIndexSingular} {groupTerminalBlock.FirstGroup.Index})";
+                                    $"[grey]{MidiGroup.LongLabel}[/] {groupTerminalBlock.FirstGroup.DisplayValue} ({Strings.CommonStringIndexSingular} {groupTerminalBlock.FirstGroup.Index})";
                             }
                             else
                             {
                                 int stopGroupIndex = groupTerminalBlock.FirstGroup.Index + groupTerminalBlock.GroupCount - 1;
                                 groupInformation +=
-                                    $"[grey]{Strings.CommonStringGroupPlural}[/] {groupTerminalBlock.FirstGroup.DisplayValue}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {groupTerminalBlock.FirstGroup.Index}-{stopGroupIndex})";
+                                    $"[grey]{MidiGroup.LongLabelPlural}[/] {groupTerminalBlock.FirstGroup.DisplayValue}-{stopGroupIndex + 1} ({Strings.CommonStringIndexPlural} {groupTerminalBlock.FirstGroup.Index}-{stopGroupIndex})";
 
                             }
 
@@ -438,6 +439,71 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderAdditionalProperties), "");
                     //table.AddRow("Requires Note Off Translation", di.NativeDataFormat.ToString());
                 }
+
+
+                // Related MIDI 1.0 ports (WinMM and WinRT MIDI 1.0) -------------------------------------------------------
+
+                table.AddEmptyRow();
+                var midi1SourcePorts = di.GetAssociatedMidi1Ports(MidiPortFlow.MidiMessageSource);
+                if (midi1SourcePorts != null && midi1SourcePorts.Count > 0)
+                {
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidi1MessageSourcePorts), "");
+                    table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionMidi1MessageSourcePorts), "");
+
+                    foreach (var port in midi1SourcePorts.OrderBy(p => p.Group.Index))
+                    {
+                        string portInformation = string.Empty;
+
+                        portInformation = $"[grey]{MidiGroup.LongLabel}[/] " + " " + port.Group.DisplayValue + 
+                            $" ({ Strings.CommonStringIndexSingular} { port.Group.Index})";
+
+                        if (settings.Verbose)
+                        {
+                            portInformation += "\n" + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(port.PortDeviceId);
+                        }
+
+                        table.AddRow(
+                            AnsiMarkupFormatter.FormatPortIndex(port.PortIndex) + " " +
+                            AnsiMarkupFormatter.FormatPortName(port.PortName),
+                            portInformation);
+                    }
+                }
+                else
+                {
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableNoAssociatedMidi1SourcePorts), "");
+                }
+
+                table.AddEmptyRow();
+                var midi1DestinationPorts = di.GetAssociatedMidi1Ports(MidiPortFlow.MidiMessageDestination);
+                if (midi1DestinationPorts != null && midi1DestinationPorts.Count > 0)
+                {
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableSectionHeaderMidi1MessageDestinationPorts), "");
+                    table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionMidi1MessageDestinationPorts), "");
+
+                    foreach (var port in midi1DestinationPorts.OrderBy(p => p.Group.Index))
+                    {
+                        string portInformation = string.Empty;
+
+                        portInformation = $"[grey]{MidiGroup.LongLabel}[/] " + " " + port.Group.DisplayValue +
+                            $" ({Strings.CommonStringIndexSingular} {port.Group.Index})";
+
+                        if (settings.Verbose)
+                        {
+                            portInformation += "\n" + AnsiMarkupFormatter.FormatFullEndpointInterfaceId(port.PortDeviceId);
+                        }
+
+                        table.AddRow(
+                            AnsiMarkupFormatter.FormatPortIndex(port.PortIndex) + " " +
+                            AnsiMarkupFormatter.FormatPortName(port.PortName),
+                            portInformation);
+                    }
+                }
+                else
+                {
+                    table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableNoAssociatedMidi1DestinationPorts), "");
+                }
+
+
 
 
 

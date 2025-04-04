@@ -1767,6 +1767,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No associated MIDI 1 destinations (MIDI out ports).
+        /// </summary>
+        internal static string PropertyTableNoAssociatedMidi1DestinationPorts {
+            get {
+                return ResourceManager.GetString("PropertyTableNoAssociatedMidi1DestinationPorts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No associated MIDI 1 sources (MIDI in ports).
+        /// </summary>
+        internal static string PropertyTableNoAssociatedMidi1SourcePorts {
+            get {
+                return ResourceManager.GetString("PropertyTableNoAssociatedMidi1SourcePorts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last Updated.
         /// </summary>
         internal static string PropertyTablePropertyLabelCommonLastUpdated {
@@ -2172,6 +2190,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The associated MIDI 1.0 Output ports. The number to the left of the port name is the current WinMM port index..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionMidi1MessageDestinationPorts {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionMidi1MessageDestinationPorts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The associated MIDI 1.0 Input ports. The number to the left of the port name is the current WinMM port index..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionMidi1MessageSourcePorts {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionMidi1MessageSourcePorts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The device which &quot;owns&quot; this endpoint. In some cases, this is a software device..
         /// </summary>
         internal static string PropertyTableSectionDescriptionParentDevice {
@@ -2240,6 +2276,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertyTableSectionHeaderGroupTerminalBlocks {
             get {
                 return ResourceManager.GetString("PropertyTableSectionHeaderGroupTerminalBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 1 Message Destinations (MIDI out ports).
+        /// </summary>
+        internal static string PropertyTableSectionHeaderMidi1MessageDestinationPorts {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderMidi1MessageDestinationPorts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI 1 Message Sources (MIDI in ports).
+        /// </summary>
+        internal static string PropertyTableSectionHeaderMidi1MessageSourcePorts {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderMidi1MessageSourcePorts", resourceCulture);
             }
         }
         

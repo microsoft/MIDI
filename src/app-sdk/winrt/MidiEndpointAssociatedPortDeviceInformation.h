@@ -13,17 +13,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     struct MidiEndpointAssociatedPortDeviceInformation : MidiEndpointAssociatedPortDeviceInformationT<MidiEndpointAssociatedPortDeviceInformation>
     {
-        MidiEndpointAssociatedPortDeviceInformation() = default;
+        //MidiEndpointAssociatedPortDeviceInformation() = default;
 
-        winrt::guid ContainerId() { return m_containerId; }
-        winrt::hstring ParentDeviceInstanceId() { return m_parentDeviceInstanceId; }
-        winrt::hstring ParentEndpointDeviceId() { return m_parentEndpointDeviceId; }
-        midi2::MidiGroup Group() { return m_group; }
-        midi2::MidiPortFlow PortFlow() { return m_portFlow; }
-        winrt::hstring PortName() { return m_portName; }
-        winrt::hstring PortDeviceId() { return m_portDeviceId; }
-        uint32_t PortIndex() { return m_portIndex; }
-        enumeration::DeviceInformation DeviceInformation() { return m_deviceInformation; }
+        winrt::guid ContainerId() const noexcept { return m_containerId; }
+        winrt::hstring ParentDeviceInstanceId() const noexcept { return m_parentDeviceInstanceId; }
+        winrt::hstring ParentEndpointDeviceId() const noexcept { return m_parentEndpointDeviceId; }
+        midi2::MidiGroup Group() const noexcept { return m_group; }
+        midi2::Midi1PortFlow PortFlow() const noexcept { return m_portFlow; }
+        winrt::hstring PortName() const noexcept { return m_portName; }
+        winrt::hstring PortDeviceId() const noexcept { return m_portDeviceId; }
+        uint32_t PortIndex() const noexcept { return m_portIndex; }
+        enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
         winrt::hstring ToString();
 
@@ -32,7 +32,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             winrt::hstring parentDeviceInstanceId,
             winrt::hstring parentEndpointDeviceId,
             midi2::MidiGroup group,
-            midi2::MidiPortFlow portFlow,
+            midi2::Midi1PortFlow portFlow,
             winrt::hstring portName,
             winrt::hstring portDeviceId,
             uint32_t portIndex,
@@ -43,11 +43,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::guid m_containerId{};
         winrt::hstring m_parentDeviceInstanceId{};
         winrt::hstring m_parentEndpointDeviceId{};
-        midi2::MidiGroup m_group;
-        midi2::MidiPortFlow m_portFlow;
-        winrt::hstring m_portName;
-        winrt::hstring m_portDeviceId;
-        uint32_t m_portIndex;
+        midi2::MidiGroup m_group{ nullptr };
+        midi2::Midi1PortFlow m_portFlow;
+        winrt::hstring m_portName{};
+        winrt::hstring m_portDeviceId{};
+        uint32_t m_portIndex{};
         
         enumeration::DeviceInformation m_deviceInformation{ nullptr };
 

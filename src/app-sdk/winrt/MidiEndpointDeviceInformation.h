@@ -18,6 +18,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static midi2::MidiEndpointDeviceInformation CreateFromEndpointDeviceId(_In_ winrt::hstring const& endpointDeviceId) noexcept;
 
+        static midi2::MidiEndpointDeviceInformation CreateFromMidi1PortDeviceId(_In_ winrt::hstring const& deviceId) noexcept;
+
         static winrt::guid EndpointInterfaceClass() noexcept { return internal::StringToGuid(STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI); }
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll(
@@ -28,6 +30,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ midi2::MidiEndpointDeviceInformationSortOrder const& sortOrder) noexcept;
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll() noexcept;
+
+        static midi2::MidiEndpointDeviceInformation CreateFromMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static winrt::hstring GetEndpointDeviceIdForMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAllForMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static collections::IVectorView<winrt::hstring> FindAllEndpointDeviceIdsForMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+
+
+
+
+
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
@@ -76,8 +89,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }
 
-        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> GetAssociatedMidi1Ports(_In_ midi2::MidiPortFlow const portFlow) noexcept;
+        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> GetAssociatedMidi1Ports(_In_ midi2::Midi1PortFlow const portFlow) const noexcept;
+        midi2::MidiEndpointAssociatedPortDeviceInformation GetAssociatedMidi1PortForGroup(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow) const noexcept;
 
+        collections::IVectorView<midi2::Midi1PortNameTableEntry> GetNameTable() const noexcept;
 
         winrt::hstring ToString();
 
@@ -91,6 +106,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
 
     private:
+        // we keep these here so they can be returned from functions, but we re-query these each time
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> m_midi1SourcePorts{ winrt::single_threaded_vector<midi2::MidiEndpointAssociatedPortDeviceInformation>() };
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> m_midi1DestinationPorts{ winrt::single_threaded_vector<midi2::MidiEndpointAssociatedPortDeviceInformation>() };
 
 
         foundation::DateTime GetDateTimeProperty(

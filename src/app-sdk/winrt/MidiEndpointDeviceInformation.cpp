@@ -1006,24 +1006,136 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         }
     }
 
+    // instance method
+    collections::IVectorView<midi2::Midi1PortNameTableEntry> MidiEndpointDeviceInformation::GetNameTable() const noexcept
+    {
+
+        return nullptr;
+    }
+
+
+
+
+    _Use_decl_annotations_
+    midi2::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromMidi1PortDeviceId(
+        winrt::hstring const& deviceId) noexcept
+    {
+        UNREFERENCED_PARAMETER(deviceId);
+
+        // TODO:
+        // look up the MIDI 1 port
+        // get the associated UMP
+        // create a new MidiEndpointDeviceInformation from that associated UMP id
+
+        return nullptr;
+    }
+
+
+
+    _Use_decl_annotations_
+    midi2::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromMidi1PortIndex(
+        uint32_t const portIndex,
+        midi2::Midi1PortFlow const portFlow) noexcept
+    {
+        UNREFERENCED_PARAMETER(portIndex);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // this will be inefficient until we get named properties
+
+        // TODO:
+        // call GetEndpointDeviceIdForMidi1PortIndex
+        // create a new MidiEndpointDeviceInformation from that id
+
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MidiEndpointDeviceInformation::GetEndpointDeviceIdForMidi1PortIndex(
+        uint32_t const portIndex,
+        midi2::Midi1PortFlow const portFlow) noexcept
+    {
+        UNREFERENCED_PARAMETER(portIndex);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // TODO:
+        // Get all active MIDI 1.0 ports for this flow
+        // Look through each until you find the portIndex that matches
+        // get the associated UMP
+        // return the cleaned-up associated UMP value
+
+        return L"";
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAllForMidi1PortName(
+        winrt::hstring const& portName,
+        midi2::Midi1PortFlow const portFlow) noexcept
+    {
+        UNREFERENCED_PARAMETER(portName);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // TODO:
+        // call FindAllEndpointDeviceIdsForMidi1PortName
+        // instantiate those MidiEndpointDeviceInformation objects
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<winrt::hstring> MidiEndpointDeviceInformation::FindAllEndpointDeviceIdsForMidi1PortName(
+        winrt::hstring const& portName,
+        midi2::Midi1PortFlow const portFlow) noexcept
+    {
+        UNREFERENCED_PARAMETER(portName);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // TODO:
+        // Get all active MIDI 1.0 ports where the friendly name matches
+        // return the associated UMP ids from those
+
+        return nullptr;
+    }
+
+
+    // this is for this endpoint only, not a static method
+    _Use_decl_annotations_
+    midi2::MidiEndpointAssociatedPortDeviceInformation MidiEndpointDeviceInformation::GetAssociatedMidi1PortForGroup(
+        midi2::MidiGroup const& group,
+        midi2::Midi1PortFlow const portFlow) const noexcept
+    {
+        UNREFERENCED_PARAMETER(group);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // TODO:
+        // get the associated MIDI 1 ports for this endpoint
+        // find the one with a matching group and flow
+        // return that one only
+
+        return nullptr;
+    }
 
 
     _Use_decl_annotations_
     collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> MidiEndpointDeviceInformation::GetAssociatedMidi1Ports(
-        midi2::MidiPortFlow const portFlow) noexcept
+        midi2::Midi1PortFlow const portFlow) const noexcept
     {
         winrt::hstring deviceSelector;
 
-        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> ports{};
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>* ports;
 
-        if (portFlow == midi2::MidiPortFlow::MidiMessageDestination)
+        if (portFlow == midi2::Midi1PortFlow::MidiMessageDestination)
         {
+            ports = (collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>*)&m_midi1DestinationPorts;
             deviceSelector = winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector();   // could also use DEVINTERFACE_MIDI_OUTPUT
         }
         else
         {
+            ports = (collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>*)&m_midi1SourcePorts;
             deviceSelector = winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector();    // could also use DEVINTERFACE_MIDI_INPUT
         }
+
+        ports->Clear();
 
         // we need some additional properties
 
@@ -1080,14 +1192,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         device
                     );
 
-                    ports.Append(*port);
+                    ports->Append(*port);
                 }
             }
         }
 
         // TODO: sort the vector on group index before returning
 
-        return ports.GetView();
+        return ports->GetView();
     }
 
 

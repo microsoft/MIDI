@@ -935,4 +935,22 @@ Timestamp</value>
   <data name="SendMessagePressEscapeToCloseConnectionMessage" xml:space="preserve">
     <value>Press escape to close the connection when the endpoint has received all the messages.</value>
   </data>
+  <data name="PropertyTableSectionHeaderMidi1MessageDestinationPorts" xml:space="preserve">
+    <value>MIDI 1 Message Destinations (MIDI out ports)</value>
+  </data>
+  <data name="PropertyTableSectionHeaderMidi1MessageSourcePorts" xml:space="preserve">
+    <value>MIDI 1 Message Sources (MIDI in ports)</value>
+  </data>
+  <data name="PropertyTableNoAssociatedMidi1SourcePorts" xml:space="preserve">
+    <value>No associated MIDI 1 sources (MIDI in ports)</value>
+  </data>
+  <data name="PropertyTableNoAssociatedMidi1DestinationPorts" xml:space="preserve">
+    <value>No associated MIDI 1 destinations (MIDI out ports)</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionMidi1MessageDestinationPorts" xml:space="preserve">
+    <value>The associated MIDI 1.0 Output ports. The number to the left of the port name is the current WinMM port index.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionMidi1MessageSourcePorts" xml:space="preserve">
+    <value>The associated MIDI 1.0 Input ports. The number to the left of the port name is the current WinMM port index.</value>
+  </data>
 </root>

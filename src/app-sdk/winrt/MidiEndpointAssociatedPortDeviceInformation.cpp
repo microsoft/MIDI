@@ -17,7 +17,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::hstring parentDeviceInstanceId,
         winrt::hstring parentEndpointDeviceId,
         midi2::MidiGroup group,
-        midi2::MidiPortFlow portFlow,
+        midi2::Midi1PortFlow portFlow,
         winrt::hstring portName,
         winrt::hstring portDeviceId,
         uint32_t portIndex,
@@ -25,12 +25,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     )
     {
         m_containerId = containerId;
-        m_parentDeviceInstanceId = parentDeviceInstanceId;
-        m_parentEndpointDeviceId = parentEndpointDeviceId;
+        m_parentDeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(parentDeviceInstanceId);
+        m_parentEndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(parentEndpointDeviceId);
         m_group = group;
         m_portFlow = portFlow;
         m_portName = portName;
-        m_portDeviceId = portDeviceId;
+        m_portDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(portDeviceId);
         m_portIndex = portIndex;
         m_deviceInformation = deviceInformation;
     }

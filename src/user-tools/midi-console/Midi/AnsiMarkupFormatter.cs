@@ -155,6 +155,17 @@ namespace Microsoft.Midi.ConsoleApp
         }
 
 
+        public static string FormatPortIndex(uint index)
+        {
+            return "[orange3]" + index.ToString().PadLeft(3) + "[/]";
+        }
+
+        public static string FormatPortName(string name)
+        {
+            return "[steelblue1_1]" + EscapeString(name.Trim()) + "[/]";
+        }
+
+
         public static string FormatBlockNumber(int number)
         {
             return "[orange3]" + number.ToString().PadLeft(2) + "[/]";

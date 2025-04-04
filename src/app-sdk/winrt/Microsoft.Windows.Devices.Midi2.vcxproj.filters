@@ -103,6 +103,9 @@
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -207,6 +210,9 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
       <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceIdHelper.h">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -549,11 +555,17 @@
     <Midl Include="MidiApiContracts.idl">
       <Filter>SDK\API Contracts</Filter>
     </Midl>
-    <Midl Include="MidiPortFlowEnum.idl">
+    <Midl Include="Midi1PortFlowEnum.idl">
       <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
     </Midl>
     <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl">
       <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceIdHelper.idl">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNameTableEntry.idl">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
