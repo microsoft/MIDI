@@ -187,7 +187,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public static string FormatEndpointName(string name)
         {
-            return "[steelblue1_1]" + EscapeString(name.Trim()) + "[/]";
+            return "[steelblue1_1]" + EscapeString(name) + "[/]";
         }
 
 

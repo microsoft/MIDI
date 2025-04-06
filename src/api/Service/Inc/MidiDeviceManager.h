@@ -169,6 +169,8 @@ private:
         _Out_ PMIDIPORT* createdPort
     );
 
+    HRESULT CompactPortNumbers();
+
     HRESULT AssignPortNumber(
         _In_ HSWDEVICE,
         _In_ PWSTR,

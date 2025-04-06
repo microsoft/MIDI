@@ -1743,6 +1743,9 @@ CMidiDeviceManager::DeactivateEndpoint
         }
     } while (TRUE);
 
+    // now that we've removed UMP and WinMM ports, we need to compact the port numbers to keep them contiguous
+    RETURN_IF_FAILED(CompactPortNumbers());
+
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -1883,6 +1886,112 @@ CMidiDeviceManager::Shutdown()
     L"System.Devices.InterfaceClassGuid:=\"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}\""
 
 
+HRESULT
+CMidiDeviceManager::CompactPortNumbers()
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    // we don't want any ports added while we're doing this
+    auto lock = m_midiPortsLock.lock();
+
+    for (auto flow : { MidiFlowOut, MidiFlowIn })
+    {
+        std::map<UINT32, std::wstring> ports;
+
+        // for this version, we only check active devices. We're not trying to preserve or reserve numbers
+        winrt::hstring deviceSelector(flow == MidiFlowOut ? MIDI1_OUTPUT_DEVICES : MIDI1_INPUT_DEVICES);
+        deviceSelector = deviceSelector + L" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+        additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+
+        auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
+
+        UINT32 highestOldPortNumber{ 1 };   // our internal numbers start at 1. For midi inputs, we subtract 1 in WinMM code. For MIDI out, GS becomes 0.
+
+        // get all the current port numbers
+        for (auto const& device : deviceList)
+        {
+            auto servicePortNum = internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_ServiceAssignedPortNumber, device, 0);
+
+            // 0 for this property is not valid. They start at 1 for the prop value
+            if (servicePortNum == 0)
+                continue;
+
+            ports[servicePortNum] = device.Id();
+
+            // find the upper bounds
+            highestOldPortNumber = max(servicePortNum, highestOldPortNumber);
+        }
+
+        // find the gaps and close them
+        // this isn't super efficient. There may be a better approach
+        bool done{ false };
+        UINT32 oldPortNumber{ 1 };
+        UINT32 newPortNumber{ 1 };
+
+        while (!done)
+        {
+            // skip the empty slots. There could be many in a row.
+            while (ports.find(oldPortNumber) == ports.end() && oldPortNumber <= highestOldPortNumber)
+            {
+                oldPortNumber++;
+            }
+
+            // we've found one. See if it needs renumbering.
+            if (oldPortNumber > newPortNumber)
+            {
+                // we need to renumber this port
+
+                // get the midi1 port with this device interface id
+                auto thisPortDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(ports[oldPortNumber]);
+
+                auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
+                    {
+                        if (internal::NormalizeEndpointInterfaceIdWStringCopy(std::wstring{ Port->DeviceInterfaceId.get() }) == thisPortDeviceInterfaceId)
+                        {
+                            return true;
+                        }
+
+                        return false;
+                    });
+
+                if (item != m_midiPorts.end())
+                {
+                    // found the matching midi 1 port, so let's set its port number
+
+                    UINT32 assignedPortNumber = newPortNumber;
+
+                    std::vector<DEVPROPERTY> newProperties{ };
+                    newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                                        DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(assignedPortNumber)) });
+
+                    RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+                        item->get()->SwDevice.get(),
+                        thisPortDeviceInterfaceId.c_str(),
+                        static_cast<ULONG>(newProperties.size()),
+                        (const DEVPROPERTY*)newProperties.data()));
+                }
+            }
+
+            newPortNumber++;
+            oldPortNumber++;
+
+            done = (oldPortNumber > highestOldPortNumber);
+        }
+
+    }
+
+    return S_OK;
+}
+
 
 // TODO: This method should acquire a lock on something to ensure
 // we don't get two calls at the same time, given the same port number
@@ -1894,6 +2003,7 @@ CMidiDeviceManager::AssignPortNumber(
     MidiFlow flow
 )
 {
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -1917,21 +2027,45 @@ CMidiDeviceManager::AssignPortNumber(
 
     auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
 
+    // because we compact the numbers on device removal, the first available port number is the device count including us
+    // however, we need to exclude devices which are handled specially, like the GS Synth, and also any devices which 
+    // are WinRT-only, like BLE MIDI 1.0 devices. Those mess up the count.
+
     // store all the existing port numbers
     for (auto const& device : deviceList)
     {
+        std::wstring id = internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str());
+
+        if (id.find(L".ble10#") != std::wstring::npos)
+        {
+            continue;
+        }
+
+        if (id.find(L"#microsoftgswavetablesynth#") != std::wstring::npos)
+        {
+            continue;
+        }
+
         // ensure we're not looking at ourselves
-        if (thisDeviceInterfaceId != internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str()))
+        if (thisDeviceInterfaceId != id)
         {
             auto servicePortNum = internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_ServiceAssignedPortNumber, device, 0);
+
+            if (servicePortNum == 0) 
+            {
+                continue;
+            }
+
             ports[servicePortNum] = device.Id();
         }
     }
 
-    UINT32 firstAvailablePortNumber{ 0 };
+    UINT32 firstAvailablePortNumber{ 1 };
 
     // now find the first available port number
     for (firstAvailablePortNumber = 1; ports.find(firstAvailablePortNumber) != ports.end(); firstAvailablePortNumber++);
+
+
 
     UINT32 assignedPortNumber = firstAvailablePortNumber;
 

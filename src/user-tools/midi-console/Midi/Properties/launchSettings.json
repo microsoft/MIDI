@@ -42,6 +42,10 @@
     "Endpoint Properties Verbose": {
       "commandName": "Project",
       "commandLineArgs": "endpoint properties --verbose --include-raw"
+    },
+    "Enum Legacy Endpoints": {
+      "commandName": "Project",
+      "commandLineArgs": "enum legacy-endpoints"
     }
   }
 }
