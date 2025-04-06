@@ -760,14 +760,14 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             for (auto const& port : device.GetAssociatedMidi1Ports(midi2::Midi1PortFlow::MidiMessageDestination))
             {
                 // temp
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT, port.PortIndex() + L": " + port.PortName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT, std::to_wstring(port.PortIndex()) + L": " + port.PortName());
             }
 
             // MIDI 1.0 inputs
             for (auto const& port : device.GetAssociatedMidi1Ports(midi2::Midi1PortFlow::MidiMessageSource))
             {
                 // temp
-                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN, port.PortIndex() + L": " + port.PortName());
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN, std::to_wstring(port.PortIndex()) + L": " + port.PortName());
             }
 
 

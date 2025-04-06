@@ -1882,6 +1882,75 @@ CMidiDeviceManager::Shutdown()
 #define MIDI1_INPUT_DEVICES \
     L"System.Devices.InterfaceClassGuid:=\"{504BE32C-CCF6-4D2C-B73F-6F8B3747E22B}\""
 
+
+
+// TODO: This method should acquire a lock on something to ensure
+// we don't get two calls at the same time, given the same port number
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::AssignPortNumber(
+    HSWDEVICE SwDevice,
+    PWSTR deviceInterfaceId,
+    MidiFlow flow
+)
+{
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    auto thisDeviceInterfaceId = internal::NormalizeEndpointInterfaceIdWStringCopy(deviceInterfaceId);
+
+    std::map<UINT32, winrt::hstring> ports;
+
+    // for this version, we only check active devices. We're not trying to preserve or reserve numbers
+    winrt::hstring deviceSelector(flow == MidiFlowOut ? MIDI1_OUTPUT_DEVICES : MIDI1_INPUT_DEVICES);
+    deviceSelector = deviceSelector + L" AND System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True";
+
+    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+    additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+
+    auto deviceList = DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
+
+    // store all the existing port numbers
+    for (auto const& device : deviceList)
+    {
+        // ensure we're not looking at ourselves
+        if (thisDeviceInterfaceId != internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str()))
+        {
+            auto servicePortNum = internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_ServiceAssignedPortNumber, device, 0);
+            ports[servicePortNum] = device.Id();
+        }
+    }
+
+    UINT32 firstAvailablePortNumber{ 0 };
+
+    // now find the first available port number
+    for (firstAvailablePortNumber = 1; ports.find(firstAvailablePortNumber) != ports.end(); firstAvailablePortNumber++);
+
+    UINT32 assignedPortNumber = firstAvailablePortNumber;
+
+    // set the new port number
+    std::vector<DEVPROPERTY> newProperties{};
+    newProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_ServiceAssignedPortNumber, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_UINT32, (ULONG)(sizeof(UINT32)), (PVOID)(&(assignedPortNumber)) });
+    RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+        SwDevice,
+        deviceInterfaceId,
+        1,
+        (const DEVPROPERTY*)newProperties.data()));
+    newProperties.clear();
+
+    return S_OK;
+}
+
+#if false
+// replaced with version that keeps contiguous port numbers
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::AssignPortNumber(
@@ -1927,6 +1996,7 @@ CMidiDeviceManager::AssignPortNumber(
 
         auto processingInterface = internal::NormalizeEndpointInterfaceIdWStringCopy(device.Id().c_str());
 
+
         // all others with a service assigned port number goes into the portInfo structure for processing.
         auto prop = device.Properties().Lookup(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
         if (prop)
@@ -1934,39 +2004,15 @@ CMidiDeviceManager::AssignPortNumber(
             servicePortNum = winrt::unbox_value<UINT32>(prop);
             servicePortNumValid = servicePortNum <= MAX_WINMM_PORT_NUMBER;
 
-            //TraceLoggingWrite(
-            //    MidiSrvTelemetryProvider::Provider(),
-            //    MIDI_TRACE_EVENT_INFO,
-            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Endpoint has service-assigned port number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            //    TraceLoggingUInt32(servicePortNum, "port number"),
-            //    TraceLoggingBool(servicePortNumValid, "port number valid")
-            //);
-
             if (!servicePortNumValid) servicePortNum = 0;
         }
+
 
         prop = device.Properties().Lookup(STRING_PKEY_MIDI_CustomPortNumber);
         if (prop)
         {
             userPortNum = winrt::unbox_value<UINT32>(prop);
             userPortNumValid = userPortNum <= MAX_WINMM_PORT_NUMBER;
-
-            //TraceLoggingWrite(
-            //    MidiSrvTelemetryProvider::Provider(),
-            //    MIDI_TRACE_EVENT_INFO,
-            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            //    TraceLoggingPointer(this, "this"),
-            //    TraceLoggingWideString(L"Endpoint has user-assigned port number", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            //    TraceLoggingWideString(device.Id().c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            //    TraceLoggingUInt32(userPortNum, "port number"),
-            //    TraceLoggingBool(userPortNumValid, "port number valid")
-            //);
-
             if (!userPortNumValid) userPortNum = 0;
         }
 
@@ -1999,7 +2045,7 @@ CMidiDeviceManager::AssignPortNumber(
     }
 
     // if we have a service assigned port number, but that number is already in use
-    // by either and active port, or an inactive port and we're currently active (meaning this port
+    // by either an active port, or an inactive port and we're currently active (meaning this port
     // was requested to relocate), move this port somewhere else.
     bool serviceAssignedPortInUse = (hasServiceAssignedPortNumber &&
                                         portInfo[serviceAssignedPortNumber].InUse && 
@@ -2145,6 +2191,7 @@ CMidiDeviceManager::AssignPortNumber(
 
     return S_OK;
 }
+#endif
 
 _Use_decl_annotations_
 HRESULT

@@ -60,6 +60,8 @@ namespace internal = ::WindowsMidiServicesInternal;
 namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 
 
+#include <mmsyscom.h>   // needed for MAXPNAMELEN
+
 #include "devpkey.h"
 #include <Devpropdef.h>
 #include <MidiDefs.h>
@@ -137,6 +139,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "midi_function_block_prop_util.h"
 #include "endpoint_device_interface_helpers.h"
 #include "enumeration_prop_util.h"
+#include "midi_naming.h"
 
 
 #include "memory_buffer.h"

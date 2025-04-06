@@ -300,7 +300,7 @@ CMidiPorts::GetMidiDeviceCount(MidiFlow flow, UINT32& count)
             // port numbers for testing apps for compatibility. If we go this
             // route, there's a bunch of other code that should be changed or
             // just removed.
-            servicePortNum = ++highestPortNumber;
+           // servicePortNum = ++highestPortNumber;
             // ===============================================================================
 
 
