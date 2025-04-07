@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+import "MidiApiContracts.idl";
+
+
+import "Midi1PortFlowEnum.idl";
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    // this needs to be kept in sync with Midi1PortNameEntry in service
+
+    [contract(MidiEnumerationApiContract, 1)]
+    struct Midi1PortNameTableEntry
+    {
+        UInt8 GroupIndex;               // can't use MidiGroup here unless we're going to make a runtimeclass of this
+        Midi1PortFlow Flow;
+
+        String CustomName;
+        String LegacyWinMMName;
+        String PinName;
+        String FilterPlusPinName;
+        String BlockName;
+        String FilterPlusBlockName;
+    };
+}

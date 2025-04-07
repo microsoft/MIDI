@@ -421,6 +421,60 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Diagnostic Loopback for testing and troubleshooting purposes.
+        /// </summary>
+        internal static string DevicePurposeDiagnosticLoopback {
+            get {
+                return ResourceManager.GetString("DevicePurposeDiagnosticLoopback", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Diagnostic Ping for testing purposes (not for app use).
+        /// </summary>
+        internal static string DevicePurposeDiagnosticPing {
+            get {
+                return ResourceManager.GetString("DevicePurposeDiagnosticPing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to In-box General MIDI synthesizer.
+        /// </summary>
+        internal static string DevicePurposeInBoxGeneralMidiSynth {
+            get {
+                return ResourceManager.GetString("DevicePurposeInBoxGeneralMidiSynth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Normal message endpoint for app use.
+        /// </summary>
+        internal static string DevicePurposeNormalMessageEndpoint {
+            get {
+                return ResourceManager.GetString("DevicePurposeNormalMessageEndpoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown endpoint purpose.
+        /// </summary>
+        internal static string DevicePurposeUnknown {
+            get {
+                return ResourceManager.GetString("DevicePurposeUnknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtual Device (private device-side endpoint not for general app use).
+        /// </summary>
+        internal static string DevicePurposeVirtualDeviceResponder {
+            get {
+                return ResourceManager.GetString("DevicePurposeVirtualDeviceResponder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Source/Destination.
         /// </summary>
         internal static string DirectionMessageBiDi {
@@ -430,7 +484,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Message Destination.
+        ///   Looks up a localized string similar to Message Destination (MIDI Out).
         /// </summary>
         internal static string DirectionMessageDestination {
             get {
@@ -439,7 +493,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Message Source.
+        ///   Looks up a localized string similar to Message Source (MIDI In).
         /// </summary>
         internal static string DirectionMessageSource {
             get {
@@ -1767,6 +1821,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No associated MIDI 1 destinations (MIDI out ports).
+        /// </summary>
+        internal static string PropertyTableNoAssociatedMidi1DestinationPorts {
+            get {
+                return ResourceManager.GetString("PropertyTableNoAssociatedMidi1DestinationPorts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No associated MIDI 1 sources (MIDI in ports).
+        /// </summary>
+        internal static string PropertyTableNoAssociatedMidi1SourcePorts {
+            get {
+                return ResourceManager.GetString("PropertyTableNoAssociatedMidi1SourcePorts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Last Updated.
         /// </summary>
         internal static string PropertyTablePropertyLabelCommonLastUpdated {
@@ -2172,6 +2244,42 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to For USB MIDI 2.0 devices, Group Terminal Blocks are fallback functions for when Function Blocks are not available. For MIDI 1.0 devices, Group Terminal Blocks are 1:1 with MIDI ports (although the names may be different).
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionGroupTerminalBlocks {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionGroupTerminalBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Basic identification information for this endpoint.
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionIdentification {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionIdentification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The associated MIDI 1.0 ports. The number to the left of the port name is the current WinMM port index..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionMidi1Ports {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionMidi1Ports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties added by Windows MIDI Services. The STRING_PKEY_MIDI_ prefix has been omitted for brevity..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionMidiProperties {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionMidiProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The device which &quot;owns&quot; this endpoint. In some cases, this is a software device..
         /// </summary>
         internal static string PropertyTableSectionDescriptionParentDevice {
@@ -2186,6 +2294,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertyTableSectionDescriptionTransportInformation {
             get {
                 return ResourceManager.GetString("PropertyTableSectionDescriptionTransportInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Custom information supplied by the user via the MIDI Settings app and/or configuration files..
+        /// </summary>
+        internal static string PropertyTableSectionDescriptionUserData {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionDescriptionUserData", resourceCulture);
             }
         }
         
@@ -2240,6 +2357,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertyTableSectionHeaderGroupTerminalBlocks {
             get {
                 return ResourceManager.GetString("PropertyTableSectionHeaderGroupTerminalBlocks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associated MIDI 1 Ports.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderMidi1Ports {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderMidi1Ports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MIDI-Specific Properties.
+        /// </summary>
+        internal static string PropertyTableSectionHeaderMidiProperties {
+            get {
+                return ResourceManager.GetString("PropertyTableSectionHeaderMidiProperties", resourceCulture);
             }
         }
         

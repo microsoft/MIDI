@@ -17,6 +17,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     {
         MidiVirtualDevice() = default;
 
+        midi2::IMidiEndpointConnectionSource GetEndpointConnectionSource() noexcept { return m_endpointConnection == nullptr ? nullptr : m_endpointConnection.as<IMidiEndpointConnectionSource>(); }
+
         // plugin Id
         winrt::guid PluginId() const noexcept { return m_id; }
 

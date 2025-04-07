@@ -613,7 +613,7 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
         }
         else
         {
-            OutputError("Unable to enumerate transport plugins from registry.");
+            OutputError("Unable to enumerate transport plugins from registry. You may need to run this tool as Administrator.");
         }
 
     }
@@ -752,6 +752,29 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             {
                 OutputBlankLine();
             }
+
+
+            // Show associated MIDI 1.0 endpoints
+
+            // MIDI 1.0 outputs
+            for (auto const& port : device.GetAssociatedMidi1Ports(midi2::Midi1PortFlow::MidiMessageDestination))
+            {
+                // temp
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT, std::to_wstring(port.PortIndex()) + L": " + port.PortName());
+            }
+
+            // MIDI 1.0 inputs
+            for (auto const& port : device.GetAssociatedMidi1Ports(midi2::Midi1PortFlow::MidiMessageSource))
+            {
+                // temp
+                OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN, std::to_wstring(port.PortIndex()) + L": " + port.PortName());
+            }
+
+
+
+
+
+
 
             // TODO: Get the reg keys that set the global defaults (move this up to the registry section)
 
@@ -1316,6 +1339,8 @@ void OutputProcessAndNativeMachine()
 
 bool DoSectionDevMode(_In_ bool verbose)
 {
+    UNREFERENCED_PARAMETER(verbose);
+
     // dev mode check
 
     OutputSectionHeader(MIDIDIAG_SECTION_DEV_MODE);
@@ -1339,7 +1364,7 @@ bool DoSectionDevMode(_In_ bool verbose)
         OutputBooleanField(MIDIDIAG_FIELD_LABEL_DEV_MODE_ENABLED, L"Key Not Present");
     }
 
-
+    return true;
 }
 
 

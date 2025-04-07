@@ -918,10 +918,10 @@ Timestamp</value>
     <value>Restart the service when complete</value>
   </data>
   <data name="DirectionMessageSource" xml:space="preserve">
-    <value>Message Source</value>
+    <value>Message Source (MIDI In)</value>
   </data>
   <data name="DirectionMessageDestination" xml:space="preserve">
-    <value>Message Destination</value>
+    <value>Message Destination (MIDI Out)</value>
   </data>
   <data name="DirectionMessageBiDi" xml:space="preserve">
     <value>Source/Destination</value>
@@ -934,5 +934,50 @@ Timestamp</value>
   </data>
   <data name="SendMessagePressEscapeToCloseConnectionMessage" xml:space="preserve">
     <value>Press escape to close the connection when the endpoint has received all the messages.</value>
+  </data>
+  <data name="PropertyTableSectionHeaderMidi1Ports" xml:space="preserve">
+    <value>Associated MIDI 1 Ports</value>
+  </data>
+  <data name="PropertyTableNoAssociatedMidi1SourcePorts" xml:space="preserve">
+    <value>No associated MIDI 1 sources (MIDI in ports)</value>
+  </data>
+  <data name="PropertyTableNoAssociatedMidi1DestinationPorts" xml:space="preserve">
+    <value>No associated MIDI 1 destinations (MIDI out ports)</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionMidi1Ports" xml:space="preserve">
+    <value>The associated MIDI 1.0 ports. The number to the left of the port name is the current WinMM port index.</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionGroupTerminalBlocks" xml:space="preserve">
+    <value>For USB MIDI 2.0 devices, Group Terminal Blocks are fallback functions for when Function Blocks are not available. For MIDI 1.0 devices, Group Terminal Blocks are 1:1 with MIDI ports (although the names may be different)</value>
+  </data>
+  <data name="DevicePurposeDiagnosticLoopback" xml:space="preserve">
+    <value>Diagnostic Loopback for testing and troubleshooting purposes</value>
+  </data>
+  <data name="DevicePurposeDiagnosticPing" xml:space="preserve">
+    <value>Diagnostic Ping for testing purposes (not for app use)</value>
+  </data>
+  <data name="DevicePurposeVirtualDeviceResponder" xml:space="preserve">
+    <value>Virtual Device (private device-side endpoint not for general app use)</value>
+  </data>
+  <data name="DevicePurposeInBoxGeneralMidiSynth" xml:space="preserve">
+    <value>In-box General MIDI synthesizer</value>
+  </data>
+  <data name="DevicePurposeNormalMessageEndpoint" xml:space="preserve">
+    <value>Normal message endpoint for app use</value>
+  </data>
+  <data name="DevicePurposeUnknown" xml:space="preserve">
+    <value>Unknown endpoint purpose</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionIdentification" xml:space="preserve">
+    <value>Basic identification information for this endpoint</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionUserData" xml:space="preserve">
+    <value>Custom information supplied by the user via the MIDI Settings app and/or configuration files.</value>
+  </data>
+  <data name="PropertyTableSectionHeaderMidiProperties" xml:space="preserve">
+    <value>MIDI-Specific Properties</value>
+  </data>
+  <data name="PropertyTableSectionDescriptionMidiProperties" xml:space="preserve">
+    <value>Properties added by Windows MIDI Services. The STRING_PKEY_MIDI_ prefix has been omitted for brevity.</value>
   </data>
 </root>

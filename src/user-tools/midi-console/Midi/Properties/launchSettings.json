@@ -14,7 +14,7 @@
     },
     "Endpoint Properties": {
       "commandName": "Project",
-      "commandLineArgs": "endpoint properties --verbose --include-raw"
+      "commandLineArgs": "endpoint properties"
     },
     "No Arguments": {
       "commandName": "Project"
@@ -38,6 +38,14 @@
     "Blast Messages": {
       "commandName": "Project",
       "commandLineArgs": "endpoint send-message 0x20905060 --count 20000 --pause 0"
+    },
+    "Endpoint Properties Verbose": {
+      "commandName": "Project",
+      "commandLineArgs": "endpoint properties --verbose --include-raw"
+    },
+    "Enum Legacy Endpoints": {
+      "commandName": "Project",
+      "commandLineArgs": "enum legacy-endpoints"
     }
   }
 }

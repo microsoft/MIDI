@@ -130,6 +130,42 @@ void LibMidi2Tests::InternalTranslateUmpWordsToMidi1Bytes(
 }
 
 
+// note-on with velocity zero, for MIDI 1.0, should remain note-on with velocity zero
+// this is needed for things like Mackie protocol
+void LibMidi2Tests::TestTranslateFromBytesNoteOnVelocityZero()
+{
+    const uint8_t bytes[] = 
+    {
+        0x95,0x42,0x00 
+    };
+
+    std::vector<uint32_t> expectedWords
+    {
+        0x23954200,
+    };
+
+    InternalTranslateMidi1BytesToUmpWords(3, bytes, _countof(bytes), expectedWords);
+}
+
+// note-on with velocity zero, for MIDI 1.0, should remain note-on with velocity zero
+// this is needed for things like Mackie protocol
+void LibMidi2Tests::TestTranslateToBytesNoteOnVelocityZero()
+{
+    std::vector<uint8_t> bytes
+    {
+        0x95,0x42,0x00
+    };
+
+    std::vector<uint32_t> words
+    {
+        0x23954200,
+    };
+
+    InternalTranslateUmpWordsToMidi1Bytes(words, bytes);
+}
+
+
+
 void LibMidi2Tests::TestTranslateFromBytesWithSysEx7()
 {
     const uint8_t sysexBytes[] = { 

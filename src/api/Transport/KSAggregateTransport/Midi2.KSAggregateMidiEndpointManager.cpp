@@ -178,27 +178,29 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
         pinMapEntry.FilterId = pin.FilterDeviceId;
         pinMapEntry.PinDataFlow = pin.PinDataFlow;
 
-        MidiFlow flowFromUserPerspective;
+        //MidiFlow flowFromUserPerspective;
 
         pinMapEntry.GroupIndex = pin.GroupIndex;
         gtb.FirstGroupIndex = pin.GroupIndex;
 
         if (pin.PinDataFlow == MidiFlow::MidiFlowIn)
         {
-            flowFromUserPerspective = MidiFlow::MidiFlowOut;
+            //flowFromUserPerspective = MidiFlow::MidiFlowOut;
 
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_INPUT;   // from the pin/gtb's perspective
-            gtb.Name = pin.PortNames.BlockName;
+            //gtb.Name = pin.PortNames.BlockName;
+            gtb.Name = pin.PortNames.FilterPlusBlockName;
 
             // this is kept just so we can add ordinal differentiators if we need to
             portNamesUserFlowOut.push_back(gtb.Name);
         }
         else if (pin.PinDataFlow == MidiFlow::MidiFlowOut)
         {
-            flowFromUserPerspective = MidiFlow::MidiFlowIn;
+            //flowFromUserPerspective = MidiFlow::MidiFlowIn;
 
             gtb.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;   // from the pin/gtb's perspective
-            gtb.Name = pin.PortNames.BlockName;
+            //gtb.Name = pin.PortNames.BlockName;
+            gtb.Name = pin.PortNames.FilterPlusBlockName;
 
             // this is kept just so we can add ordinal differentiators if we need to
             portNamesUserFlowIn.push_back(gtb.Name);
@@ -369,8 +371,9 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
     // ==============================================
 
-
-    // We present as a UMP endpoint, so we need to set this property so the service can create the MIDI 1 ports
+    // Despite being a MIDI 1 device, we present as a UMP endpoint, so we need to set 
+    // this property so the service can create the MIDI 1 ports without waiting for 
+    // function blocks/discovery to complete or timeout (which it never will)
     interfaceDevProperties.push_back({ { PKEY_MIDI_EndpointDiscoveryProcessComplete, DEVPROP_STORE_SYSTEM, nullptr },
         DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(devPropTrue), (PVOID)&devPropTrue });
 
@@ -428,12 +431,14 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
             TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        // todo: return new device interface id
+        // TODO: return new device interface id
 
         auto lock = m_availableEndpointDefinitionsLock.lock();
 
         // Add to internal endpoint manager
-        m_availableEndpointDefinitions.insert_or_assign(masterEndpointDefinition.ParentDeviceInstanceId, masterEndpointDefinition);
+        m_availableEndpointDefinitions.insert_or_assign(
+            internal::NormalizeDeviceInstanceIdWStringCopy(masterEndpointDefinition.ParentDeviceInstanceId), 
+            masterEndpointDefinition);
 
         return swdCreationResult; 
     }
@@ -455,25 +460,25 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 }
 
 
-winrt::hstring
-GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
-{
-    auto prop = di.Properties().Lookup(propertyName);
-
-    if (prop == nullptr)
-    {
-        return defaultValue;
-    }
-
-    auto value = winrt::unbox_value<winrt::hstring>(prop);
-
-    if (value.empty())
-    {
-        return defaultValue;
-    }
-
-    return value;
-}
+//winrt::hstring
+//GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
+//{
+//    auto prop = di.Properties().Lookup(propertyName);
+//
+//    if (prop == nullptr)
+//    {
+//        return defaultValue;
+//    }
+//
+//    auto value = winrt::unbox_value<winrt::hstring>(prop);
+//
+//    if (value.empty())
+//    {
+//        return defaultValue;
+//    }
+//
+//    return value;
+//}
 
 HRESULT
 GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName)
@@ -583,7 +588,7 @@ CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiat
 
 
 
-
+#define KS_CATEGORY_AUDIO_GUID L"{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
 
 
 _Use_decl_annotations_
@@ -594,6 +599,14 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 )
 {
     UNREFERENCED_PARAMETER(watcher);
+
+    // HACK: this is super annoying (and embarrassing) to do. There's some race condition 
+    // here that we need to sort through. Maybe queue the device add updates and return 
+    // from this function immediately? That will require a queue worker that processes 
+    // the device adds and whatnot.
+    // Maybe better to use the non-WinRT versions of add/remove notification?
+    Sleep(500);
+
 
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -611,7 +624,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
     KsAggregateEndpointDefinition endpointDefinition{ };
 
-    auto deviceInstanceId = GetStringProperty(parentDevice, L"System.Devices.DeviceInstanceId", L"");
+    auto deviceInstanceId = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceInstanceId", parentDevice, L"");
     RETURN_HR_IF(E_FAIL, deviceInstanceId.empty());
 
 
@@ -625,7 +638,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
 
     // enumerate all KS_CATEGORY_AUDIO filters for this parent media device
     winrt::hstring filterDeviceSelector(
-        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\""\
+        L"System.Devices.InterfaceClassGuid:=\"" + winrt::hstring(KS_CATEGORY_AUDIO_GUID) + "\""\
         L" AND System.Devices.InterfaceEnabled:= System.StructuredQueryType.Boolean#True"\
         L" AND System.Devices.DeviceInstanceId:= \"" + deviceInstanceId + L"\"");
 
@@ -693,7 +706,6 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
             {
             //    bool isMidi1Pin{ false };
                 wil::unique_handle hPin;
-
 
                 // TODO
                 std::wstring customPortName{};
@@ -827,7 +839,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
             // and all the in-box drivers just provide the Generic USB Audio string
             // TODO: Is "Generic USB Audio" a string that is localized? If so, this
             // code will not have the intended effect outside of en-US
-            auto manufacturer = GetStringProperty(parentDevice, L"System.Devices.DeviceManufacturer", L"");
+            auto manufacturer = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.DeviceManufacturer", parentDevice, L"");
             if (!manufacturer.empty() && manufacturer != L"(Generic USB Audio)" && manufacturer != L"Microsoft")
             {
                 endpointDefinition.ManufacturerName = manufacturer;
@@ -920,7 +932,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher watcher, Dev
     auto lock = m_availableEndpointDefinitionsLock.lock();
     do
     {
-        auto item = m_availableEndpointDefinitions.find((std::wstring)device.Id());
+        auto item = m_availableEndpointDefinitions.find(cleanDeviceId);
 
         if (item == m_availableEndpointDefinitions.end())
         {
@@ -934,11 +946,11 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceRemoved(DeviceWatcher watcher, Dev
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Found device to remove", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(device.Id().c_str(), "device id")
+            TraceLoggingWideString(cleanDeviceId.c_str(), "device id")
         );
 
         // notify the device manager using the InstanceId for this midi device
-        LOG_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(device.Id().c_str()));
+        LOG_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(cleanDeviceId.c_str()));
 
         // remove the MIDI_PIN_INFO from the list
         m_availableEndpointDefinitions.erase(item);

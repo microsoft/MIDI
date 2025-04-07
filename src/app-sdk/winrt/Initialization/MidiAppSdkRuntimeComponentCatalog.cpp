@@ -57,8 +57,11 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiUniversalSystemExclusiveChannel", defaultThreading });
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceInformation", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointAssociatedPortDeviceInformation", defaultThreading });
+
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceWatcher", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDevicePropertyHelper", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointDeviceIdHelper", defaultThreading });
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiFunctionBlock", defaultThreading });
 
