@@ -155,10 +155,30 @@ namespace Microsoft.Midi.ConsoleApp
         }
 
 
-        public static string FormatBlockNumber(int number)
+        public static string FormatPortIndex(uint index)
+        {
+            //return "[orange3]" + index.ToString().PadLeft(3) + "[/]";
+
+            // we're optimizing for the normal case of < 100 ports on a system
+            return "[orange3]" + index.ToString().PadLeft(2) + "[/]";
+        }
+
+        public static string FormatPortName(string name)
+        {
+            return "[steelblue1_1]" + EscapeString(name.Trim()) + "[/]";
+        }
+
+
+        public static string FormatBlockNumberLabel(int number)
         {
             return "[orange3]" + number.ToString().PadLeft(2) + "[/]";
         }
+
+        public static string FormatBlockNumberValue(int number)
+        {
+            return "[orange3]" + number.ToString() + "[/]";
+        }
+
 
         public static string FormatBlockName(string name)
         {
@@ -167,7 +187,7 @@ namespace Microsoft.Midi.ConsoleApp
 
         public static string FormatEndpointName(string name)
         {
-            return "[steelblue1_1]" + EscapeString(name.Trim()) + "[/]";
+            return "[steelblue1_1]" + EscapeString(name) + "[/]";
         }
 
 

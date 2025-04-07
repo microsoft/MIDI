@@ -14,6 +14,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     winrt::hstring MidiUniversalSystemExclusiveChannel::ToString()
     {
-        return winrt::to_hstring(std::format("{} {}", winrt::to_string(midi2::MidiUniversalSystemExclusiveChannel::ShortLabel()), DisplayValue()));
+        return winrt::to_hstring(std::format("{} {}", winrt::to_string(midi2::MidiUniversalSystemExclusiveChannel::LongLabel()), DisplayValue()));
     }
 }

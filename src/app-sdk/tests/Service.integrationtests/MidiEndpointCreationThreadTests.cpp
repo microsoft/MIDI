@@ -37,7 +37,7 @@ void MidiEndpointCreationThreadTests::ReceiveThreadWorker(MidiSession session, w
             {
                 allMessagesReceived.SetEvent();
             }
-            
+
         };
 
     auto revoke = connection.MessageReceived(MessageReceivedHandler);
@@ -60,6 +60,8 @@ void MidiEndpointCreationThreadTests::ReceiveThreadWorker(MidiSession session, w
     std::cout << "Receiver: " << countMessagesReceived << " messages received." << std::endl;
 
     m_receiveComplete.SetEvent();
+
+
 }
 
 
@@ -88,9 +90,6 @@ void MidiEndpointCreationThreadTests::SendThreadWorker(MidiSession session, winr
 
 void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
 {
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
-
-
     m_receiveComplete.create();
     m_receiverReady.create();
 
@@ -131,7 +130,6 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
     {
         std::cout << "Session: Message receive complete notification received." << std::endl;
     }
-
 
 }
 

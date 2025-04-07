@@ -29,7 +29,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="mididiag_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

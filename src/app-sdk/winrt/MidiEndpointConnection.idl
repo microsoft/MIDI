@@ -29,19 +29,13 @@ namespace Microsoft.Windows.Devices.Midi2
         static Boolean SendMessageSucceeded(MidiSendMessageResults sendResult);
         static Boolean SendMessageFailed(MidiSendMessageResults sendResult);
 
-        Guid ConnectionId{ get; };
+        // Several properties moved to IMidiEndpointConnectionSource to make it easier to use in event handler
 
-        String ConnectedEndpointDeviceId{ get; };
-
-        IInspectable Tag;
         Boolean LogMessageDataValidationErrorDetails;
 
         IMidiEndpointConnectionSettings Settings{ get; };
 
-        Boolean IsOpen{ get; };
         Boolean Open();
-
-        Boolean IsAutoReconnectEnabled{ get; };
 
         IVectorView<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
         void AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);

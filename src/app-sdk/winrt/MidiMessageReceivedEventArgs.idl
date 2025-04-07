@@ -53,5 +53,6 @@ namespace Microsoft.Windows.Devices.Midi2
         UInt8 FillBuffer(UInt32 byteOffset, Windows.Foundation.IMemoryBuffer buffer);
 
         UInt8 AppendWordsToList(IVector<UInt32> wordList);
+
     }
 }

@@ -100,6 +100,12 @@
     <ClCompile Include="MidiUniversalSystemExclusiveChannel.cpp">
       <Filter>SDK\Core\Common</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
+      <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -201,6 +207,12 @@
     </ClInclude>
     <ClInclude Include="MidiUniversalSystemExclusiveChannel.h">
       <Filter>SDK\Core\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
+      <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceIdHelper.h">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -543,6 +555,18 @@
     <Midl Include="MidiApiContracts.idl">
       <Filter>SDK\API Contracts</Filter>
     </Midl>
+    <Midl Include="Midi1PortFlowEnum.idl">
+      <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl">
+      <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointDeviceIdHelper.idl">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNameTableEntry.idl">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -657,6 +681,9 @@
     </Filter>
     <Filter Include="SDK\API Contracts">
       <UniqueIdentifier>{3657e141-cfc8-4832-bf66-68b366e31504}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Core\Enumeration\Metadata\Windows\Midi1">
+      <UniqueIdentifier>{fee31bbd-64fa-4ca2-9a6e-4ccb45184c1b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

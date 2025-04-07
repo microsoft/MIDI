@@ -10,13 +10,17 @@ set toolsinstallpath="%ProgramFiles%\Windows MIDI Services\Tools"
 set sdkbuildoutput="%midi_repo_root%src\app-sdk\VSFiles\out\Microsoft.Windows.Devices.Midi2\x64\Release"
 set diagbuildoutput="%midi_repo_root%src\app-sdk\VSFiles\out\mididiag\x64\Release"
 
-echo Copying SDK files
+echo Copying SDK files : dll
 copy /Y %sdkbuildoutput%\Microsoft.Windows.Devices.Midi2.dll %sdkinstallpath%
+echo Copying SDK files : pri
 copy /Y %sdkbuildoutput%\Microsoft.Windows.Devices.Midi2.pri %sdkinstallpath%
+echo Copying SDK files : winmd
 copy /Y %sdkbuildoutput%\Microsoft.Windows.Devices.Midi2.winmd %sdkinstallpath%
 
-regsvr32 %sdkinstallpath%\Microsoft.Windows.Devices.Midi2.dll
+echo Registering COM entry point into SDK dll
+regsvr32 /s %sdkinstallpath%\Microsoft.Windows.Devices.Midi2.dll
 
+echo Copying SDK files : mididiag.exe
 copy /Y %diagbuildoutput%\mididiag.exe %toolsinstallpath%
 
 pause

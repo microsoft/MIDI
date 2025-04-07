@@ -47,8 +47,8 @@ typedef struct _MIDIPORT
     MidiFlow Flow{ MidiFlowIn };
     const GUID* InterfaceCategory{ nullptr };
     SWDEVICESTATE SwDeviceState{ CreatePending };         // SWD creation state
-    shared_hswdevice SwDevice;           // Handle to the SWD created for the MIDI port
-    unique_swd_string DeviceInterfaceId; // SWD interface ID for the MIDI port
+    shared_hswdevice SwDevice;                            // Handle to the SWD created for the MIDI port
+    unique_swd_string DeviceInterfaceId;                  // SWD interface ID for the MIDI port
     std::wstring InstanceId;
     std::wstring Enumerator;
     std::wstring ParentInstanceId;
@@ -77,8 +77,8 @@ typedef struct _PORT_INFO
 {
     bool InUse {false};
     bool IsEnabled {false};
-    bool HasCustomPortNumber{false};
-    UINT32 CustomPortNumber {0};
+//    bool HasCustomPortNumber{false};
+//    UINT32 CustomPortNumber {0};
     std::wstring InterfaceId;
     MidiFlow Flow {MidiFlowIn};
     std::wstring Name;
@@ -135,10 +135,6 @@ public:
         _In_ const DEVPROPERTY*
         );
 
-    //STDMETHOD(DeleteAllEndpointInProtocolDiscoveredProperties)(
-    //    _In_ PCWSTR
-    //    );
-
 
     // this is for runtime updates only, not for config file updates
     STDMETHOD(UpdateTransportConfiguration)(
@@ -148,8 +144,6 @@ public:
         );
 
     STDMETHOD(Shutdown)();
-
-    //TODO: Method to update the properties (using SwDevicePropertySet and an array of props) for a device by its Id
 
 private:
 
@@ -168,6 +162,8 @@ private:
         _In_opt_ std::wstring*,
         _Out_ PMIDIPORT* createdPort
     );
+
+    HRESULT CompactPortNumbers();
 
     HRESULT AssignPortNumber(
         _In_ HSWDEVICE,
@@ -193,11 +189,11 @@ private:
         _In_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 
-    HRESULT GetCustomPortMapping(
-        _In_ LPCWSTR umpDeviceInterfaceId,
-        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
-        _In_ std::map<UINT32, PORT_INFO> portInfo[2]
-    );
+    //HRESULT GetCustomPortMapping(
+    //    _In_ LPCWSTR umpDeviceInterfaceId,
+    //    _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+    //    _In_ std::map<UINT32, PORT_INFO> portInfo[2]
+    //);
 
     HRESULT RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
         _In_ LPCWSTR umpDeviceInterfaceId,

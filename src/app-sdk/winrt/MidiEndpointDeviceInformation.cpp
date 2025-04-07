@@ -11,6 +11,7 @@
 #include "MidiEndpointDeviceInformation.h"
 #include "MidiEndpointDeviceInformation.g.cpp"
 
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     winrt::hstring MidiEndpointDeviceInformation::ToString()
@@ -1005,6 +1006,257 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             );
         }
     }
+
+    // instance method
+    collections::IVectorView<midi2::Midi1PortNameTableEntry> MidiEndpointDeviceInformation::GetNameTable() const noexcept
+    {
+        collections::IVector<midi2::Midi1PortNameTableEntry> nameTable{ winrt::single_threaded_vector<midi2::Midi1PortNameTableEntry>() };
+
+        auto nameTableRefArray = GetBinaryProperty(STRING_PKEY_MIDI_Midi1PortNameTable);
+
+        if (nameTableRefArray != nullptr)
+        {
+            auto refData = nameTableRefArray.Value();
+
+            auto nameEntries = internal::Midi1PortNaming::ReadMidi1PortNameTableFromPropertyData(refData.data(), refData.size());
+
+            if (nameEntries.size() > 0)
+            {
+                for (auto const& nameEntry : nameEntries)
+                {
+                    Midi1PortNameTableEntry entry{};
+
+                    entry.GroupIndex = nameEntry.GroupIndex;
+                    entry.CustomName = nameEntry.CustomName;
+                    entry.LegacyWinMMName = nameEntry.LegacyWinMMName;
+                    entry.PinName = nameEntry.PinName;
+                    entry.FilterPlusPinName = nameEntry.FilterPlusPinName;
+                    entry.BlockName = nameEntry.BlockName;
+                    entry.FilterPlusBlockName = nameEntry.FilterPlusBlockName;
+                    
+                    switch (nameEntry.DataFlowFromUserPerspective)
+                    {
+                    case MidiFlow::MidiFlowIn:
+                        entry.Flow = Midi1PortFlow::MidiMessageSource;
+                        break;
+                    case MidiFlow::MidiFlowOut:
+                        entry.Flow = Midi1PortFlow::MidiMessageDestination;
+                        break;
+                    default:
+                        // this should not happen
+                        break;
+                    }
+
+                    nameTable.Append(entry);
+                }
+            }
+
+        }
+
+        return nameTable.GetView();
+    }
+
+
+    _Use_decl_annotations_
+    winrt::hstring MidiEndpointDeviceInformation::GetEndpointDeviceIdForMidi1PortIndex(
+        uint32_t const portIndex,
+        midi2::Midi1PortFlow const portFlow) noexcept
+    {
+        UNREFERENCED_PARAMETER(portIndex);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // TODO:
+        // Get all active MIDI 1.0 ports for this flow
+        // Look through each until you find the portIndex that matches
+        // get the associated UMP
+        // return the cleaned-up associated UMP value
+
+        return L"";
+    }
+
+    _Use_decl_annotations_
+    collections::IVectorView<winrt::hstring> MidiEndpointDeviceInformation::FindAllEndpointDeviceIdsForMidi1PortName(
+        winrt::hstring const& portName,
+        midi2::Midi1PortFlow const portFlow) noexcept
+    {
+        UNREFERENCED_PARAMETER(portName);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // TODO:
+        // Get all active MIDI 1.0 ports where the friendly name matches
+        // return the associated UMP ids from those
+
+        return nullptr;
+    }
+
+
+
+    _Use_decl_annotations_
+    midi2::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromMidi1PortDeviceId(
+        winrt::hstring const& deviceId) noexcept
+    {
+        UNREFERENCED_PARAMETER(deviceId);
+
+        // TODO:
+        // look up the MIDI 1 port
+        // get the associated UMP
+        // create a new MidiEndpointDeviceInformation from that associated UMP id
+
+        return nullptr;
+    }
+
+
+
+    _Use_decl_annotations_
+    midi2::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromMidi1PortIndex(
+        uint32_t const portIndex,
+        midi2::Midi1PortFlow const portFlow) noexcept
+    {
+        UNREFERENCED_PARAMETER(portIndex);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // this will be inefficient until we get named properties
+
+        // TODO:
+        // call GetEndpointDeviceIdForMidi1PortIndex
+        // create a new MidiEndpointDeviceInformation from that id
+
+
+        return nullptr;
+    }
+
+
+    _Use_decl_annotations_
+    collections::IVectorView<midi2::MidiEndpointDeviceInformation> MidiEndpointDeviceInformation::FindAllForMidi1PortName(
+        winrt::hstring const& portName,
+        midi2::Midi1PortFlow const portFlow) noexcept
+    {
+        UNREFERENCED_PARAMETER(portName);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // TODO:
+        // call FindAllEndpointDeviceIdsForMidi1PortName
+        // instantiate those MidiEndpointDeviceInformation objects
+
+        return nullptr;
+    }
+
+
+    // this is for this endpoint only, not a static method
+    _Use_decl_annotations_
+    midi2::MidiEndpointAssociatedPortDeviceInformation MidiEndpointDeviceInformation::GetAssociatedMidi1PortForGroup(
+        midi2::MidiGroup const& group,
+        midi2::Midi1PortFlow const portFlow) const noexcept
+    {
+        UNREFERENCED_PARAMETER(group);
+        UNREFERENCED_PARAMETER(portFlow);
+
+        // TODO:
+        // get the associated MIDI 1 ports for this endpoint
+        // find the one with a matching group and flow
+        // return that one only
+
+        return nullptr;
+    }
+
+
+    _Use_decl_annotations_
+    collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> MidiEndpointDeviceInformation::GetAssociatedMidi1Ports(
+        midi2::Midi1PortFlow const portFlow) const noexcept
+    {
+        winrt::hstring deviceSelector;
+
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>* ports;
+
+        if (portFlow == midi2::Midi1PortFlow::MidiMessageDestination)
+        {
+            ports = (collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>*)&m_midi1DestinationPorts;
+            deviceSelector = winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector();   // could also use DEVINTERFACE_MIDI_OUTPUT
+        }
+        else
+        {
+            ports = (collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>*)&m_midi1SourcePorts;
+            deviceSelector = winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector();    // could also use DEVINTERFACE_MIDI_INPUT
+        }
+
+        ports->Clear();
+
+        // we need some additional properties
+
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+
+        additionalProperties.Append(STRING_PKEY_MIDI_AssociatedUMP);
+        additionalProperties.Append(STRING_PKEY_MIDI_PortAssignedGroupIndex);
+        additionalProperties.Append(STRING_PKEY_MIDI_CustomPortNumber);
+        additionalProperties.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+
+        // TODO: Likely need to modify the filter so it only shows online/connected devices. TBD.
+        auto searchResults = enumeration::DeviceInformation::FindAllAsync(deviceSelector, additionalProperties).get();
+
+        if (searchResults != nullptr)
+        {
+            for (auto const& device : searchResults)
+            {
+                auto id = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_AssociatedUMP, device, L"");
+
+                if (internal::NormalizeEndpointInterfaceIdHStringCopy(id) == m_id)
+                {
+                    // this is one of our child ports, so we add to the results
+                    // unfortunately, with GUID-based properties, you cannot include them
+                    // in the search query, so we have to get everything and cycle through
+
+                    auto group = midi2::MidiGroup((uint8_t)internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_PortAssignedGroupIndex, device, 0));
+                    UINT32 portIndex{ 0 };
+
+                    auto prop = device.Properties().Lookup(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
+                    if (prop)
+                    {
+                        portIndex = winrt::unbox_value<UINT32>(prop);
+                    }
+                    else
+                    {
+                        prop = device.Properties().Lookup(STRING_PKEY_MIDI_CustomPortNumber);
+                        if (prop)
+                        {
+                            portIndex = winrt::unbox_value<UINT32>(prop);
+                        }
+                    }
+
+                    // for MIDI Input (Source) ports, we have to subtract 1 because we number in the service starting at 1
+                    // For midi Output (Destination) ports, we leave the number as-is, because the GS synth occupies number 0
+                    
+                    if (portFlow == Midi1PortFlow::MidiMessageSource)
+                    {
+                        portIndex = portIndex - 1;
+                    }
+
+                    auto port = winrt::make_self<midi2::implementation::MidiEndpointAssociatedPortDeviceInformation>();
+
+                    port->InternalInitialize(
+                        this->ContainerId(),
+                        this->DeviceInstanceId(),
+                        this->EndpointDeviceId(),
+                        group,
+                        portFlow,
+                        device.Name(),
+                        device.Id(),
+                        portIndex,
+                        device
+                    );
+
+                    ports->Append(*port);
+                }
+            }
+        }
+
+        // TODO: sort the vector on group index before returning
+
+        return ports->GetView();
+    }
+
+
+
+
 
 
 }
