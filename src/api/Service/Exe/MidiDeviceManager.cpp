@@ -716,8 +716,17 @@ CMidiDeviceManager::ActivateEndpoint
 
     auto lock = m_midiPortsLock.lock();
 
+    //OutputDebugString(L"Activate: ");
+    //OutputDebugString(((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId);
+    //OutputDebugString(L"\n");
+
+
     const bool alreadyActivated = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
     {
+        //OutputDebugString(L"Activate Checking: ");
+        //OutputDebugString(Port->InstanceId.c_str());
+        //OutputDebugString(L"\n");
+
         // if this instance id already activated, then we cannot activate/create a second time,
         if (((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId == Port->InstanceId)
         {
@@ -729,6 +738,10 @@ CMidiDeviceManager::ActivateEndpoint
 
     if (alreadyActivated)
     {
+        //OutputDebugString(L"Already Activated: ");
+        //OutputDebugString(((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId);
+        //OutputDebugString(L"\n");
+
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
@@ -744,6 +757,10 @@ CMidiDeviceManager::ActivateEndpoint
     }
     else
     {
+        //OutputDebugString(L"NOT Already Activated: ");
+        //OutputDebugString(((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId);
+        //OutputDebugString(L"\n");
+
         std::vector<DEVPROPERTY> allInterfaceProperties{};
 
         if (intPropertyCount > 0 && interfaceDevProperties != nullptr)
@@ -1686,6 +1703,8 @@ CMidiDeviceManager::DeactivateEndpoint
 
     RETURN_HR_IF_NULL(E_INVALIDARG, instanceId);
 
+    bool portsRemoved{ false };
+
     auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(instanceId);
     RETURN_HR_IF(E_INVALIDARG, cleanId == L"");
 
@@ -1697,6 +1716,10 @@ CMidiDeviceManager::DeactivateEndpoint
         // NOTE: This uses instanceId, not the Device Interface Id
         auto item = std::find_if(m_midiPorts.begin(), m_midiPorts.end(), [&](const std::unique_ptr<MIDIPORT>& Port)
         {
+                //OutputDebugString(L"Checking: ");
+                //OutputDebugString(Port->InstanceId.c_str());
+                //OutputDebugString(L"\n");
+
             // for MIDI 1 child ports for a device, the instance id can have a _n added where n is the group number
             // The transports only know about the UMP endpoint they created, therefore, we need to do a 
             // "starts with", not an exact match. 
@@ -1738,14 +1761,23 @@ CMidiDeviceManager::DeactivateEndpoint
                 TraceLoggingWideString(item->get()->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
             );
 
+            //OutputDebugString(L"Erasing: ");
+            //OutputDebugString(item->get()->InstanceId.c_str());
+            //OutputDebugString(L"\n");
+
             // Erasing this item from the list will free the unique_ptr and also trigger a SwDeviceClose on the item->SwDevice,
             // which will deactivate the device, done.
             m_midiPorts.erase(item);
+            portsRemoved = true;
         }
     } while (TRUE);
 
-    // now that we've removed UMP and WinMM ports, we need to compact the port numbers to keep them contiguous
-    RETURN_IF_FAILED(CompactPortNumbers());
+
+    if (portsRemoved)
+    {
+        // now that we've removed UMP and WinMM ports, we need to compact the port numbers to keep them contiguous
+        RETURN_IF_FAILED(CompactPortNumbers());
+    }
 
 
     TraceLoggingWrite(
