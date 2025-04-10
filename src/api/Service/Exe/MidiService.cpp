@@ -463,6 +463,8 @@ VOID SvcUninstall()
 //
 VOID SvcInit()
 {
+    winrt::init_apartment();
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
