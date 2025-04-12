@@ -3110,9 +3110,6 @@ CMidiDeviceManager::SyncMidi1Ports(
         TraceLoggingWideString(umpMidiPort->DeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    // we use WinRT in this method, so ensure it is initialized
-    winrt::init_apartment(winrt::apartment_type::multi_threaded);
-
     HRESULT hrTemp;
 
     // if this port is ump only, then no additional work is

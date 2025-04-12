@@ -47,10 +47,6 @@ CMidi2KSMidiEndpointManager::Initialize(
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
 
-    // calling winrt::init_apartment more than once on the same thread is ok. We need to 
-    // guarantee it is called before we use the watcher.
-    winrt::init_apartment(winrt::apartment_type::multi_threaded);
-
     winrt::hstring deviceSelector(
         L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
         L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");

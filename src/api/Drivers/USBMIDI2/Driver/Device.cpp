@@ -2192,6 +2192,13 @@ Return Value:
                         wordsRemain -= bytesToCopy / sizeof(UINT32);
                     }
 
+                    //Checking available space to prevent buffer overflow
+                    UINT32 availableSpace = sizeof(UMP_Packet_Struct.umpData) - UMP_Packet_Struct.umpHeader.ByteCount;
+                    if (bytesToCopy > availableSpace)
+                    {
+                        bytesToCopy = availableSpace;
+                    }
+
                     // Copy more data from bridging UMP over USB packets
                     RtlCopyMemory(
                         (PVOID)&UMP_Packet_Struct.umpData[UMP_Packet_Struct.umpHeader.ByteCount / sizeof(UINT32)],
