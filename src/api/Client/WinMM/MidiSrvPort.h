@@ -50,6 +50,7 @@ private:
 
     wil::critical_section m_BuffersLock;
     bool m_IsInSysex{false};
+    bool m_IsInRunningStatus {0};
     BYTE m_RunningStatus {0};
     std::queue<LPMIDIHDR> m_InBuffers;
     wil::unique_event m_BuffersAdded{wil::EventOptions::None};

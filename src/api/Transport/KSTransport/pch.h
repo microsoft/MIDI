@@ -50,6 +50,7 @@
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+#include <mmsystem.h>
 #include "SWDevice.h"
 #include <initguid.h>
 #include "Devpkey.h"
