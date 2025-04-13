@@ -3,13 +3,13 @@
   "spdxVersion": "SPDX-2.2",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-x64-windows-0.13-2833a7b0-0991-413d-a00a-34d7978c0ef2",
-  "name": "libmidi2:x64-windows@0.13 a0c8ae057a602eaf8f105b4913640df1f5fc6fa5785d07f83646290e89ab0907",
+  "documentNamespace": "https://spdx.org/spdxdocs/libmidi2-x64-windows-0.15-5100f9bc-c6d2-48a7-a62d-a30f5295a59a",
+  "name": "libmidi2:x64-windows@0.15 80fdb6c91d778dd5cbb02897ec36e17f4f885f19c6e7ab2404614a0a70546c7b",
   "creationInfo": {
     "creators": [
-      "Tool: vcpkg-2024-07-10-d2dfc73769081bdd9b782d08d27794780b7a99b9"
+      "Tool: vcpkg-2025-02-11-bec4296bf5289dc9ce83b4f5095943e44162f9c2"
     ],
-    "created": "2024-10-12T01:26:34Z"
+    "created": "2025-04-13T21:12:04Z"
   },
   "relationships": [
     {
@@ -47,8 +47,8 @@
     {
       "name": "libmidi2",
       "SPDXID": "SPDXRef-port",
-      "versionInfo": "0.13",
-      "downloadLocation": "git+https://github.com/microsoft/vcpkg@ae144ad6fddd3abc7c9d268fb2f046ddb24eecd0",
+      "versionInfo": "0.15",
+      "downloadLocation": "git+https://github.com/microsoft/vcpkg@752cc543ec71dd7cd5bec12f3f677b97b4ac2912",
       "homepage": "https://github.com/midi2-dev/AM_MIDI2.0Lib",
       "licenseConcluded": "MIT",
       "licenseDeclared": "NOASSERTION",
@@ -59,7 +59,7 @@
     {
       "name": "libmidi2:x64-windows",
       "SPDXID": "SPDXRef-binary",
-      "versionInfo": "a0c8ae057a602eaf8f105b4913640df1f5fc6fa5785d07f83646290e89ab0907",
+      "versionInfo": "80fdb6c91d778dd5cbb02897ec36e17f4f885f19c6e7ab2404614a0a70546c7b",
       "downloadLocation": "NONE",
       "licenseConcluded": "MIT",
       "licenseDeclared": "NOASSERTION",
@@ -67,40 +67,40 @@
       "comment": "This is a binary package built by vcpkg."
     },
     {
-      "SPDXID": "SPDXRef-resource-1",
+      "SPDXID": "SPDXRef-resource-0",
       "name": "midi2-dev/AM_MIDI2.0Lib",
-      "downloadLocation": "git+https://github.com/midi2-dev/AM_MIDI2.0Lib@v0.13",
+      "downloadLocation": "git+https://github.com/midi2-dev/AM_MIDI2.0Lib@v0.15",
       "licenseConcluded": "NOASSERTION",
       "licenseDeclared": "NOASSERTION",
       "copyrightText": "NOASSERTION",
       "checksums": [
         {
           "algorithm": "SHA512",
-          "checksumValue": "f7d7449f97a1dcfac36664cfca19818658233ced2c8c8960304d3a64f42f900eed478e33b13f99c6b5ec9eadbc037e2809626b3d63a425785ed78c3e66ee1391"
+          "checksumValue": "d7a30cad1071dcd5b07f9c1aec06f2f53424b076517d47760629766652e75ac46ab75324d4bd14a7601b92e5f0a213264e36c59517f2ba12dcf4d28ba7ebf8b2"
         }
       ]
     }
   ],
   "files": [
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/ae144ad6fddd3abc7c9d268fb2f046ddb24eecd0/portfile.cmake",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/752cc543ec71dd7cd5bec12f3f677b97b4ac2912/portfile.cmake",
       "SPDXID": "SPDXRef-file-0",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "993433a67081ec2d7bee6db5612ec8d1fe349daa08e0698b38e6eb57eea94375"
+          "checksumValue": "0c2de4c0b1da003ae71a78d32d4ec9258c53d3f929ea81ff93cbd5ee3a5cb3b2"
         }
       ],
       "licenseConcluded": "NOASSERTION",
       "copyrightText": "NOASSERTION"
     },
     {
-      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/ae144ad6fddd3abc7c9d268fb2f046ddb24eecd0/vcpkg.json",
+      "fileName": "./C:/Users/peteb/AppData/Local/vcpkg/registries/git-trees/752cc543ec71dd7cd5bec12f3f677b97b4ac2912/vcpkg.json",
       "SPDXID": "SPDXRef-file-1",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "0050bb13f60e219afcd914ea12d10df5e40acbd8d1c86278f74c88d896f4de2e"
+          "checksumValue": "28e69bd363dde33b36c3f2bd91b4bb15998ba5dece2c35d709163ff167124bc2"
         }
       ],
       "licenseConcluded": "NOASSERTION",

@@ -14,15 +14,18 @@ namespace Microsoft.Windows.Devices.Midi2
     static runtimeclass MidiEndpointDeviceIdHelper
     {
         // returns a short version of the midisrv-enumerated id
+        // from:    \\?\swd#midisrv#midiu_ksa_9447707571394916916#{e7cce071-3c03-423f-88d3-f1045d02552b}
+        // to       ksa_9447707571394916916
         static String GetShortIdFromFullId(String fullEndpointDeviceId);
 
         // returns the full id for a midisrv-enumerated shortId
         static String GetFullIdFromShortId(String shortEndpointDeviceId);
 
-        // returns just the trailing GUID from the id
-        static Guid GetInterfaceIdFromFullId(String fullEndpointDeviceId);
-
         // returns true if this is a midisrv-enumerated id, even if not present
         static Boolean IsWindowsMidiServicesDeviceId(String fullEndpointDeviceId);
+
+        // puts the full id in the correct case. Wrapper around the internal function which
+        // does that for all endpoint ids we expose. Useful when doing comparisons.
+        static String NormalizeFullId(String fullEndpointDeviceId);
     }
 }

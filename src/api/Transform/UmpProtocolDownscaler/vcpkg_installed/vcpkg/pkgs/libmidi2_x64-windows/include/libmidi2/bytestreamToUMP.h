@@ -114,6 +114,24 @@ class bytestreamToUMP{
 			}
 			return mess;
 		}
+
+		void dumpSysex7State(bool reset) {
+			if (sysex7State > 0 && sysex7Pos > 0) {
+				//Then dump current bytes
+				umpMess[writeIndex] = ((UMP_SYSEX7 << 4) + defaultGroup + 0L) << 24;
+				umpMess[writeIndex] +=  (sysex7State + 0L) << 20;
+				umpMess[writeIndex] +=  ((sysex7Pos + 0L) << 16);
+				umpMess[writeIndex] += (sysex[0] << 8) + sysex[1];
+				increaseWrite();
+				umpMess[writeIndex] = ((sysex[2] + 0L) << 24) + ((sysex[3] + 0L)<< 16) + (sysex[4] << 8) + sysex[5] + 0L;
+				increaseWrite();
+				M2Utils::clear(sysex, 0, sizeof(sysex));
+				if (sysex7State==1)sysex7State=2;
+			}
+
+			if (reset)sysex7State = 1;
+			sysex7Pos = 0;
+		}
 		
 		void bytestreamParse(uint8_t midi1Byte){
 			if (midi1Byte == TUNEREQUEST
@@ -132,8 +150,7 @@ class bytestreamToUMP{
 				d0 = midi1Byte;
 				d1 = 255;
 				if (midi1Byte == SYSEX_START){
-					sysex7State = 1;
-					sysex7Pos = 0;
+					dumpSysex7State(true);
 				}
                 else if (midi1Byte == SYSEX_STOP){
                     umpMess[writeIndex] = ((UMP_SYSEX7 << 4) + defaultGroup + 0L) << 24;

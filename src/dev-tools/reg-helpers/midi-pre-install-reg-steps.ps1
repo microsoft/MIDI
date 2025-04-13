@@ -115,7 +115,7 @@ $devModePathExists = Test-Path -Path $devModeRegPath
 if ($devModePathExists)
 {
     $regEntry = Get-ItemProperty -Path $devModeRegPath -Name AllowDevelopmentWithoutDevLicense -ErrorAction SilentlyContinue
-    if (regEntry)
+    if ($regEntry)
     {
         $developerMode = $regEntry.AllowDevelopmentWithoutDevLicense
     }

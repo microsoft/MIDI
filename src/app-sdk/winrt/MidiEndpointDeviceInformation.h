@@ -18,7 +18,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static midi2::MidiEndpointDeviceInformation CreateFromEndpointDeviceId(_In_ winrt::hstring const& endpointDeviceId) noexcept;
 
-        static midi2::MidiEndpointDeviceInformation CreateFromMidi1PortDeviceId(_In_ winrt::hstring const& deviceId) noexcept;
+        static midi2::MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortDeviceId(_In_ winrt::hstring const& deviceId) noexcept;
 
         static winrt::guid EndpointInterfaceClass() noexcept { return internal::StringToGuid(STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI); }
 
@@ -31,11 +31,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll() noexcept;
 
-        static midi2::MidiEndpointDeviceInformation CreateFromMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
-        static winrt::hstring GetEndpointDeviceIdForMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static midi2::MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static winrt::hstring FindEndpointDeviceIdForAssociatedMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
 
-        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAllForMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
-        static collections::IVectorView<winrt::hstring> FindAllEndpointDeviceIdsForMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAllForAssociatedMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static collections::IVectorView<winrt::hstring> FindAllEndpointDeviceIdsForAssociatedMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
 
 
 
@@ -89,8 +89,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }
 
-        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> GetAssociatedMidi1Ports(_In_ midi2::Midi1PortFlow const portFlow) const noexcept;
-        midi2::MidiEndpointAssociatedPortDeviceInformation GetAssociatedMidi1PortForGroup(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow) const noexcept;
+        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> FindAllAssociatedMidi1PortsForThisEndpoint(_In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> FindAllAssociatedMidi1PortsForThisEndpoint(_In_ midi2::Midi1PortFlow const portFlow, _In_ bool const useCachedPortInformationIfAvailable) noexcept;
+
+        midi2::MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        midi2::MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow, _In_ bool const useCachedPortInformationIfAvailable) noexcept;
 
         collections::IVectorView<midi2::Midi1PortNameTableEntry> GetNameTable() const noexcept;
 
@@ -106,6 +109,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
 
     private:
+        static winrt::hstring GetMidi1PortDeviceSelector(_In_ midi2::Midi1PortFlow const portFlow);
+
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>* GetMidi1PortCache(_In_ midi2::Midi1PortFlow const portFlow);
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>* FindAndCacheAssociatedMidi1PortInformation(_In_ midi2::Midi1PortFlow const portFlow, _In_ bool const refreshCache) noexcept;
+
         // we keep these here so they can be returned from functions, but we re-query these each time
         collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> m_midi1SourcePorts{ winrt::single_threaded_vector<midi2::MidiEndpointAssociatedPortDeviceInformation>() };
         collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> m_midi1DestinationPorts{ winrt::single_threaded_vector<midi2::MidiEndpointAssociatedPortDeviceInformation>() };
