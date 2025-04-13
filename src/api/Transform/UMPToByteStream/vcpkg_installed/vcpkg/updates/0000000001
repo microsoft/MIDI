@@ -1,8 +1,0 @@
-Package: libmidi2
-Version: 0.11
-Depends: vcpkg-cmake, vcpkg-cmake-config
-Architecture: x64-windows
-Multi-Arch: same
-Abi: 0aa5b88bee47cbb9f976f34b93e0f31f6dda35491cc38a53cd5ba48d0493d0fc
-Description: General purpose Midi 2 library for bytestream conversions and midi-ci
-Status: purge ok not-installed
