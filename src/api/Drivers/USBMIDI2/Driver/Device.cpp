@@ -194,12 +194,24 @@ Return Value:
     devCtx->DeviceWriteBufferIndex = 0;
     devCtx->UsbInMask = 0;
     devCtx->UsbOutMask = 0;
+    devCtx->UsbWriteIOUrbs = 0;
   
     for (int count = 0; count < MAX_NUM_GROUPS_CABLES; count++)
     {
         devCtx->midi1IsInSysex[count] = false;
         devCtx->midi1OutSysex[count].inSysex = false;
     }
+
+    //
+    // Register notification events used by driver
+    // 
+    KeInitializeEvent(&devCtx->UsbWriteEvent, NotificationEvent, FALSE);
+    KeInitializeEvent(&devCtx->UsbReadBufferEvent, NotificationEvent, FALSE);
+ 
+    //
+    // Create governor information for Write Urbs
+    KeInitializeSpinLock(&devCtx->UsbWriteIOUrbsLock);
+    devCtx->UsbWriteIOUrbs = 0;
 
     // 
     // Allow ACX to add any post-requirement it needs on this device.
@@ -2192,13 +2204,6 @@ Return Value:
                         wordsRemain -= bytesToCopy / sizeof(UINT32);
                     }
 
-                    //Checking available space to prevent buffer overflow
-                    UINT32 availableSpace = sizeof(UMP_Packet_Struct.umpData) - UMP_Packet_Struct.umpHeader.ByteCount;
-                    if (bytesToCopy > availableSpace)
-                    {
-                        bytesToCopy = availableSpace;
-                    }
-
                     // Copy more data from bridging UMP over USB packets
                     RtlCopyMemory(
                         (PVOID)&UMP_Packet_Struct.umpData[UMP_Packet_Struct.umpHeader.ByteCount / sizeof(UINT32)],
@@ -2900,8 +2905,9 @@ BOOLEAN USBMIDI2DriverSendToUSB(
 )
 {
     NTSTATUS        status;
-    pDeviceContext;
     WDFMEMORY_OFFSET offset;
+    KIRQL oldLevel;
+    UINT urbCount = 0;
 
     // define the offset
     offset.BufferLength = Length;
@@ -2924,7 +2930,16 @@ BOOLEAN USBMIDI2DriverSendToUSB(
         usbRequest,
         (deleteRequest) ? USBMIDI2DriverEvtRequestWriteCompletionRoutineDelete
         : USBMIDI2DriverEvtRequestWriteCompletionRoutine,
-        pipe);
+        pDeviceContext);
+
+    // 
+    // Make sure to count the send
+    // 
+    KeAcquireSpinLock(&pDeviceContext->UsbWriteIOUrbsLock, &oldLevel);
+    pDeviceContext->UsbWriteIOUrbs++;
+    urbCount = pDeviceContext->UsbWriteIOUrbs;
+    KeClearEvent(&pDeviceContext->UsbWriteEvent);
+    KeReleaseSpinLock(&pDeviceContext->UsbWriteIOUrbsLock, oldLevel);
 
     //
     // Send the request asynchronously.
@@ -2933,6 +2948,11 @@ BOOLEAN USBMIDI2DriverSendToUSB(
         //
         // Framework couldn't send the request for some reason.
         //
+        KeAcquireSpinLock(&pDeviceContext->UsbWriteIOUrbsLock, &oldLevel);
+        pDeviceContext->UsbWriteIOUrbs--;
+        urbCount = pDeviceContext->UsbWriteIOUrbs;
+        KeReleaseSpinLock(&pDeviceContext->UsbWriteIOUrbsLock, oldLevel);
+
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "WdfRequestSend failed\n");
         status = WdfRequestGetStatus(usbRequest);
         goto SendToUSBExit;
@@ -2941,6 +2961,26 @@ BOOLEAN USBMIDI2DriverSendToUSB(
 SendToUSBExit:
     TraceEvents(TRACE_LEVEL_VERBOSE, TRACE_DEVICE, "<-- USBUMPExpEvtIoWrite\n");
 
+    if (urbCount >= USB_WRITE_MAX_URBS)
+    {
+        TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC!: Holding for completion of writes");
+        while (urbCount >= USB_WRITE_MAX_URBS)
+        {
+            status = KeWaitForSingleObject(&pDeviceContext->UsbWriteEvent,
+                Executive,
+                KernelMode,
+                FALSE,
+                NULL);
+            if (status != STATUS_SUCCESS)
+            {
+                // Any other reason, just let continue
+                break;
+            }
+            // Update urbCount to determine if need to continue to wait
+            urbCount = pDeviceContext->UsbWriteIOUrbs;
+            KeClearEvent(&pDeviceContext->UsbWriteEvent);
+        }
+    }
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "%!FUNC! write to USB error with status: %!STATUS!", status);
@@ -2991,9 +3031,9 @@ Return Value:
     NTSTATUS    status;
     size_t      bytesWritten = 0;
     PWDF_USB_REQUEST_COMPLETION_PARAMS usbCompletionParams;
-
+    KIRQL oldLevel;
+    PDEVICE_CONTEXT pDeviceContext = (PDEVICE_CONTEXT)(Context);
     UNREFERENCED_PARAMETER(Target);
-    UNREFERENCED_PARAMETER(Context);
 
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Entry");
 
@@ -3019,6 +3059,11 @@ Return Value:
     //WdfRequestCompleteWithInformation(Request, status, bytesWritten);
     WdfObjectDelete(Request);
 
+    KeAcquireSpinLock(&pDeviceContext->UsbWriteIOUrbsLock, &oldLevel);
+    pDeviceContext->UsbWriteIOUrbs--;
+    KeReleaseSpinLock(&pDeviceContext->UsbWriteIOUrbsLock, oldLevel);
+    KeSetEvent(&pDeviceContext->UsbWriteEvent, KSPRIORITY_LOW, FALSE);
+    
     TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC! Exit");
 
     return;
@@ -3057,10 +3102,10 @@ Return Value:
     NTSTATUS    status;
     size_t      bytesWritten = 0;
     PWDF_USB_REQUEST_COMPLETION_PARAMS usbCompletionParams;
+    PDEVICE_CONTEXT         pDeviceContext = (PDEVICE_CONTEXT)&Context;
+    KIRQL oldLevel;
 
     UNREFERENCED_PARAMETER(Target);
-    UNREFERENCED_PARAMETER(Context);
-
 
     status = CompletionParams->IoStatus.Status;
 
@@ -3082,6 +3127,10 @@ Return Value:
     }
 
     WdfRequestCompleteWithInformation(Request, status, bytesWritten);
+
+    KeAcquireSpinLock(&pDeviceContext->UsbWriteIOUrbsLock, &oldLevel);
+    pDeviceContext->UsbWriteIOUrbs--;
+    KeReleaseSpinLock(&pDeviceContext->UsbWriteIOUrbsLock, oldLevel);
 
     return;
 }
