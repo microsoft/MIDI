@@ -22,7 +22,7 @@ namespace Microsoft.Windows.Devices.Midi2
         static String GetFullIdFromShortId(String shortEndpointDeviceId);
 
         // returns true if this is a midisrv-enumerated id, even if not present
-        static Boolean IsWindowsMidiServicesDeviceId(String fullEndpointDeviceId);
+        static Boolean IsWindowsMidiServicesEndpointDeviceId(String fullEndpointDeviceId);
 
         // puts the full id in the correct case. Wrapper around the internal function which
         // does that for all endpoint ids we expose. Useful when doing comparisons.

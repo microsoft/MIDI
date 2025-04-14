@@ -66,6 +66,7 @@ namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 #include "MidiFunctionBlockMessageBuilderTests.h"
 #include "MidiMessageBuilderTests.h"
 #include "MidiStreamMessageBuilderTests.h"
+#include "MidiEndpointIdHelperTests.h"
 
 
 

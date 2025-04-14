@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         midi2::Midi1PortFlow const portFlow,
         winrt::hstring const& portName,
         winrt::hstring const& portDeviceId,
-        uint32_t const portIndex,
+        uint32_t const portNumber,
         enumeration::DeviceInformation const& deviceInformation
     )
     {
@@ -31,7 +31,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         m_portFlow = portFlow;
         m_portName = portName;
         m_portDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(portDeviceId);
-        m_portIndex = portIndex;
+        m_portNumber = portNumber;
         m_deviceInformation = deviceInformation;
     }
 

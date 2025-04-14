@@ -9,6 +9,25 @@
 
 #include "stdafx.h"
 
+bool MidiFunctionBlockMessageBuilderTests::ClassSetup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassSetup" << std::endl;
+
+    winrt::init_apartment();
+
+    return m_initializer.InitializeSdkRuntime();
+}
+
+bool MidiFunctionBlockMessageBuilderTests::ClassCleanup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassCleanup" << std::endl;
+
+    m_initializer.ShutdownSdkRuntime();
+
+    winrt::uninit_apartment();
+
+    return true;
+}
 
 void MidiFunctionBlockMessageBuilderTests::TestBuildFunctionBlockNameNotificationLong()
 {

@@ -9,6 +9,26 @@
 
 #include "stdafx.h"
 
+bool MidiGroupTests::ClassSetup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassSetup" << std::endl;
+
+    winrt::init_apartment();
+
+    return m_initializer.InitializeSdkRuntime();
+}
+
+bool MidiGroupTests::ClassCleanup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassCleanup" << std::endl;
+
+    m_initializer.ShutdownSdkRuntime();
+
+    winrt::uninit_apartment();
+
+    return true;
+}
+
 
 void MidiGroupTests::TestBasics()
 {
@@ -42,7 +62,7 @@ void MidiGroupTests::TestConstructor()
     MidiGroup g1(static_cast<uint8_t>(1));
     MidiGroup g15(static_cast<uint8_t>(15));
 
-    VERIFY_ARE_EQUAL(g0.Index(), 0x0);
-    VERIFY_ARE_EQUAL(g1.Index(), 0x1);
-    VERIFY_ARE_EQUAL(g15.Index(), 0x15);
+    VERIFY_ARE_EQUAL(g0.Index(), 0);
+    VERIFY_ARE_EQUAL(g1.Index(), 1);
+    VERIFY_ARE_EQUAL(g15.Index(), 15);
 }

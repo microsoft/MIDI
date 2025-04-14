@@ -20,7 +20,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     winrt::hstring MidiEndpointDeviceIdHelper::GetShortIdFromFullId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
         // we use the std::wstring version for the substr and find functions which winrt::hstring lacks
-        auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(fullEndpointDeviceId.c_str());
+        auto cleanId = internal::NormalizeEndpointInterfaceIdWStringCopy(fullEndpointDeviceId.c_str());
 
         if (cleanId.starts_with(MIDISRV_UMP_ENDPOINT_SWD_PREFIX))
         {
@@ -29,7 +29,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         else
         {
             // not our id
-            return fullEndpointDeviceId;
+            return L"";
         }
 
         if (cleanId.ends_with(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX))
@@ -39,7 +39,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         else
         {
             // not our id
-            return fullEndpointDeviceId;
+            return L"";
         }
 
         return cleanId.c_str();     // will auto-convert to winrt::hstring
@@ -52,13 +52,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         // that what is supplied is a real short endpoint device id. If it isn't, the only problem
         // they'll have is any lookups on the id will return nothing.
 
-        return MIDISRV_UMP_ENDPOINT_SWD_PREFIX + shortEndpointDeviceId + MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX;
+        return internal::NormalizeEndpointInterfaceIdHStringCopy(MIDISRV_UMP_ENDPOINT_SWD_PREFIX + shortEndpointDeviceId + MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX);
     }
 
     _Use_decl_annotations_
-    bool MidiEndpointDeviceIdHelper::IsWindowsMidiServicesDeviceId(winrt::hstring const& fullEndpointDeviceId) noexcept
+    bool MidiEndpointDeviceIdHelper::IsWindowsMidiServicesEndpointDeviceId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
-        auto cleanId = internal::NormalizeDeviceInstanceIdWStringCopy(fullEndpointDeviceId.c_str());
+        auto cleanId = internal::NormalizeEndpointInterfaceIdHStringCopy(fullEndpointDeviceId.c_str());
 
         return cleanId.starts_with(MIDISRV_UMP_ENDPOINT_SWD_PREFIX) && cleanId.ends_with(MIDISRV_UMP_ENDPOINT_SWD_INTERFACE_SUFFIX);
     }
@@ -67,7 +67,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     winrt::hstring MidiEndpointDeviceIdHelper::NormalizeFullId(winrt::hstring const& fullEndpointDeviceId) noexcept
     {
-        return internal::NormalizeDeviceInstanceIdHStringCopy(fullEndpointDeviceId);
+        return internal::NormalizeEndpointInterfaceIdHStringCopy(fullEndpointDeviceId);
     }
 
 }

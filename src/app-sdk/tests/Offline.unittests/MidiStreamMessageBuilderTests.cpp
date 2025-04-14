@@ -9,6 +9,27 @@
 
 #include "stdafx.h"
 
+bool MidiStreamMessageBuilderTests::ClassSetup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassSetup" << std::endl;
+
+    winrt::init_apartment();
+
+    return m_initializer.InitializeSdkRuntime();
+}
+
+bool MidiStreamMessageBuilderTests::ClassCleanup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassCleanup" << std::endl;
+
+    m_initializer.ShutdownSdkRuntime();
+
+    winrt::uninit_apartment();
+
+    return true;
+}
+
+
 void MidiStreamMessageBuilderTests::TestBuildEndpointNameNotificationLong()
 {
     winrt::hstring name = L"This is an endpoint name that is longer than the supported 98 characters for an endpoint name in MIDI 2";

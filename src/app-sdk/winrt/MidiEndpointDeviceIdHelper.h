@@ -17,7 +17,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static winrt::hstring GetShortIdFromFullId(_In_ winrt::hstring const& fullEndpointDeviceId) noexcept;
         static winrt::hstring GetFullIdFromShortId(_In_ winrt::hstring const& shortEndpointDeviceId) noexcept;
-        static bool IsWindowsMidiServicesDeviceId(_In_ winrt::hstring const& fullEndpointDeviceId) noexcept;
+        static bool IsWindowsMidiServicesEndpointDeviceId(_In_ winrt::hstring const& fullEndpointDeviceId) noexcept;
 
         static winrt::hstring NormalizeFullId(_In_ winrt::hstring const& fullEndpointDeviceId) noexcept;
     };

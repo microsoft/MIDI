@@ -31,8 +31,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll() noexcept;
 
-        static midi2::MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
-        static winrt::hstring FindEndpointDeviceIdForAssociatedMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static midi2::MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortNumber(_In_ uint32_t const portNumber, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static winrt::hstring FindEndpointDeviceIdForAssociatedMidi1PortNumber(_In_ uint32_t const portNumber, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAllForAssociatedMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
         static collections::IVectorView<winrt::hstring> FindAllEndpointDeviceIdsForAssociatedMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
