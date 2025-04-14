@@ -62,17 +62,25 @@ When a device is first enumerated by the MIDI Service, if it is a UMP-native dev
 | `GetTransportSuppliedInfo()` | Returns a `MidiEndpointTransportSuppliedInfo` with the currently stored transport-supplied information |
 | `GetParentDeviceInformation()` | Finds and then retrieves the parent `DeviceInformation` type with appropriate properties. |
 | `GetContainerInformation()` | Gets the device container information and returns its `DeviceInformation` with appropriate properties |
+| `FindAllAssociatedMidi1PortsForThisEndpoint` | Finds all the MIDI 1.0 API ports for this device in the specified direction, and returns those as a read-only list of `MidiEndpointAssociatedPortDeviceInformation` objects. Unless using the internal cache, this can be an expensive call time-wise because of how it must iterate through MIDI 1 endpoints in the system. By default, this will refresh the internal cache. If calling multiple times in a row when it is unlikely that devices have been added or removed, use the cache for the lookups to save time by specifying `true` for `useCachedPortInformationIfAvailable`. If the cache has not yet been filled, it will be filled before it is used.|
+| `FindAssociatedMidi1PortForGroupForThisEndpoint` | Finds the MIDI 1.0 API port for this device and MIDI Group in the specified direction and returns that as a `MidiEndpointAssociatedPortDeviceInformation` object, or nullptr if not found. Unless using the internal cache, this can be an expensive call time-wise because of how it must iterate through MIDI 1 endpoints in the system. By default, this will refresh the internal cache. If calling multiple times in a row when it is unlikely that devices have been added or removed, use the cache for the lookups to save time by specifying `true` for `useCachedPortInformationIfAvailable`. If the cache has not yet been filled, it will be filled before it is used.|
 
 ## Static Functions
 
 | Static Function | Description |
 | --------------- | ----------- |
 | `CreateFromId(id)` | Creates a new `MidiEndpointDeviceInformation` object from the specified id |
+| `CreateFromAssociatedMidi1PortDeviceId` | Finds the Windows MIDI Services UMP Endpoint associated with the given WinRT MIDI 1.0-compatible device id. This call takes two steps: it must first get the port DeviceInformation object, then check a property on it which points to the parent UMP Endpoint, and then create a `MidiEndpointDeviceInformation` object based on that id. |
+| `CreateFromAssociatedMidi1PortNumber` | Returns the parent Windows MIDI Services UMP Endpoint for the given WinMM port number. This is a more expensive call to make because it must loop through all MIDI 1.0 ports for the specified direction and find the one with the matching WinMM port number. |
 | `FindAll()` | Searches for all endpoint devices and returns a list in the default sort order |
 | `FindAll(sortOrder)` | Searches for all endpoint devices and returns a list in the specified sort order |
 | `FindAll(sortOrder, endpointFilter)` | Searches for all endpoint devices which match the filter, and returns a list in the specified sort order. |
 | `DeviceMatchesFilter(deviceInformation, endpointFilter)` | A helper function to compare a device against the filter. |
 | `GetAdditionalPropertiesList()` | This returns the list of properties which must be requested during enumeration. Typically not needed for applications, as the watcher calls this function |
+| `FindAllForAssociatedMidi1PortName` | Returns the parent UMP Endpoints for a given MIDI 1 port name. Names are not guaranteed to be unique, but in most cases, this will return a single parent endpoint. |
+| `FindAllEndpointDeviceIdsForAssociatedMidi1PortName` | Returns all the Endpoint Device Ids for the parent UMP Endpoints associated with MIDI 1 ports with the specified name. In most cases, this will be a single parent UMP endpoint, but port names are not guaranteed to be unique. |
+| `FindEndpointDeviceIdForAssociatedMidi1PortNUmber` | Returns the Endpoint Device Id for the parent UMP Endpoints associated with MIDI 1 ports with the specified WinMM number. This is a costly lookup as we must loop through MIDI 1.0 ports for the specified direction and inspect a property for each one until we find a match. |
+
 
 ## IDL
 
