@@ -9,6 +9,27 @@
 
 #include "stdafx.h"
 
+bool MidiUniqueIdTests::ClassSetup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassSetup" << std::endl;
+
+    winrt::init_apartment();
+
+    return m_initializer.InitializeSdkRuntime();
+}
+
+bool MidiUniqueIdTests::ClassCleanup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassCleanup" << std::endl;
+
+    m_initializer.ShutdownSdkRuntime();
+
+    winrt::uninit_apartment();
+
+    return true;
+}
+
+
 #define MIDI_MUID_BROADCAST         (uint32_t)0x0FFFFFFF
 
 #define MIDI_MUID_RESERVED_START    (uint32_t)0x0FFFFF00

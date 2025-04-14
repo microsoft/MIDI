@@ -27,7 +27,7 @@ namespace Microsoft.Windows.Devices.Midi2
         String PortName{ get; };                // friendly name (this is the WinMM port name)
 
         String PortDeviceId{ get; };            // device id in our tree (also used directly in WinRT MIDI 1.0)
-        UInt32 PortIndex{ get; };               // winmm port index (0..n)
+        UInt32 PortNumber{ get; };               // winmm port number (0..n)
 
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };    // the base WinRT Device Information object for this port
     }

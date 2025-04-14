@@ -606,7 +606,7 @@ namespace Microsoft.Midi.ConsoleApp
             }
 
             table.AddRow(FormatFieldLabel(
-                AnsiMarkupFormatter.FormatPortIndex(port.PortIndex) + " " +
+                AnsiMarkupFormatter.FormatPortIndex(port.PortNumber) + " " +
                 AnsiMarkupFormatter.FormatPortName(port.PortName)),
                 portInformation);
         }

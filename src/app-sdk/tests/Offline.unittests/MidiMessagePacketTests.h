@@ -29,8 +29,8 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"MidiSrv.exe")
     END_TEST_CLASS()
 
-        //TEST_CLASS_SETUP(ClassSetup);
-        //TEST_CLASS_CLEANUP(ClassCleanup);
+    TEST_CLASS_SETUP(ClassSetup);
+    TEST_CLASS_CLEANUP(ClassCleanup);
 
         //TEST_METHOD_SETUP(TestSetup);
         //TEST_METHOD_CLEANUP(TestCleanup);
@@ -43,6 +43,7 @@ public:
 
 
 private:
+    init::MidiDesktopAppSdkInitializer m_initializer{};
 
 
 };

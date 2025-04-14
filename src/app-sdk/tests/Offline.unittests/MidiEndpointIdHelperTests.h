@@ -9,32 +9,29 @@
 
 #pragma once
 
-
-class MidiUniqueIdTests
-    : public WEX::TestClass<MidiUniqueIdTests>
+class MidiEndpointIdHelperTests
+    : public WEX::TestClass<MidiEndpointIdHelperTests>
 {
 public:
 
-    BEGIN_TEST_CLASS(MidiUniqueIdTests)
+    BEGIN_TEST_CLASS(MidiEndpointIdHelperTests)
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
-        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.CapabilityInquiry.dll")
+        TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Microsoft.Windows.Devices.Midi2.dll")
     END_TEST_CLASS()
 
     TEST_CLASS_SETUP(ClassSetup);
     TEST_CLASS_CLEANUP(ClassCleanup);
 
-        //TEST_METHOD_SETUP(TestSetup);
-        //TEST_METHOD_CLEANUP(TestCleanup);
+    //TEST_METHOD_SETUP(TestSetup);
+    //TEST_METHOD_CLEANUP(TestCleanup);
 
-    TEST_METHOD(TestCreateEmptyId);
-    TEST_METHOD(TestCreateRandomId);
-    TEST_METHOD(TestCreateBroadcastId);
-    TEST_METHOD(TestCreateFrom28BitNumber);
-    TEST_METHOD(TestCreateFromBytes);
+    TEST_METHOD(TestCreateShortIdFromFullId);
+    TEST_METHOD(TestCreateFullIdFromShortId);
+    TEST_METHOD(TestIsWindowsMidiServicesId);
+    TEST_METHOD(TestNormalizeId);
+
 
 private:
     init::MidiDesktopAppSdkInitializer m_initializer{};
 
-
 };
-

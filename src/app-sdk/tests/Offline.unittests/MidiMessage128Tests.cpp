@@ -9,6 +9,27 @@
 
 #include "stdafx.h"
 
+bool MidiMessage128Tests::ClassSetup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassSetup" << std::endl;
+
+    winrt::init_apartment();
+
+    return m_initializer.InitializeSdkRuntime();
+}
+
+bool MidiMessage128Tests::ClassCleanup()
+{
+    std::cout << "MidiEndpointIdHelperTests::ClassCleanup" << std::endl;
+
+    m_initializer.ShutdownSdkRuntime();
+
+    winrt::uninit_apartment();
+
+    return true;
+}
+
+
 void MidiMessage128Tests::TestCreateEmpty()
 {
     MidiMessage128 ump;

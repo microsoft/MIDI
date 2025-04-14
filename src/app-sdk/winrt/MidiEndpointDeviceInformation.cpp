@@ -1058,8 +1058,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     // static method
     _Use_decl_annotations_
-    winrt::hstring MidiEndpointDeviceInformation::FindEndpointDeviceIdForAssociatedMidi1PortIndex(
-        uint32_t const portIndex,
+    winrt::hstring MidiEndpointDeviceInformation::FindEndpointDeviceIdForAssociatedMidi1PortNumber(
+        uint32_t const portNumber,
         midi2::Midi1PortFlow const portFlow) noexcept
     {
         // Get all active MIDI 1.0 ports for this flow
@@ -1069,14 +1069,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         auto deviceSelector = GetMidi1PortDeviceSelector(portFlow);
 
         // our internal midi input port Ids are +1 from what we use in WinMM.
-        uint32_t cleanPortIndex{ portIndex };
+        uint32_t cleanPortNumber{ portNumber };
         if (portFlow == midi2::Midi1PortFlow::MidiMessageSource)
         {
-            cleanPortIndex = portIndex + 1;
+            cleanPortNumber = portNumber + 1;
         }
         else
         {
-            if (portIndex == 0)
+            if (portNumber == 0)
             {
                 // we don't return information about the GS synth, which is MIDI Output 0
                 return L"";
@@ -1097,7 +1097,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 auto portIndexPropertyValue = internal::SafeGetSwdPropertyFromDeviceInformation<UINT32>(STRING_PKEY_MIDI_ServiceAssignedPortNumber, result, 0);
 
                 // we start our own numbering with 1 internally, so 0 means invalid. But we checked for that above
-                if (portIndexPropertyValue == cleanPortIndex)
+                if (portIndexPropertyValue == cleanPortNumber)
                 {
                     auto associatedUmpPropertyValue = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(STRING_PKEY_MIDI_AssociatedUMP, result, L"");
 
@@ -1175,11 +1175,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     // static method
     _Use_decl_annotations_
-    midi2::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromAssociatedMidi1PortIndex(
-        uint32_t const portIndex,
+    midi2::MidiEndpointDeviceInformation MidiEndpointDeviceInformation::CreateFromAssociatedMidi1PortNumber(
+        uint32_t const portNumber,
         midi2::Midi1PortFlow const portFlow) noexcept
     {
-        auto umpEndpointId = FindEndpointDeviceIdForAssociatedMidi1PortIndex(portIndex, portFlow);
+        auto umpEndpointId = FindEndpointDeviceIdForAssociatedMidi1PortNumber(portNumber, portFlow);
 
         if (!umpEndpointId.empty())
         {

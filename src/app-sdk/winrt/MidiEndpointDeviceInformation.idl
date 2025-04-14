@@ -44,8 +44,8 @@ namespace Microsoft.Windows.Devices.Midi2
 
         
         static MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortDeviceId(String deviceId);
-        static MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortIndex(UInt32 portIndex, Midi1PortFlow portFlow);
-        static String FindEndpointDeviceIdForAssociatedMidi1PortIndex(UInt32 portIndex, Midi1PortFlow portFlow);
+        static MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortNumber(UInt32 portNumber, Midi1PortFlow portFlow);
+        static String FindEndpointDeviceIdForAssociatedMidi1PortNumber(UInt32 portNumber, Midi1PortFlow portFlow);
 
         static IVectorView<MidiEndpointDeviceInformation> FindAllForAssociatedMidi1PortName(String portName, Midi1PortFlow portFlow);
         static IVectorView<String> FindAllEndpointDeviceIdsForAssociatedMidi1PortName(String portName, Midi1PortFlow portFlow);
