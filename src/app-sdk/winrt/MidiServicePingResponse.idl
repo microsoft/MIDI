@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.Diagnostics
 {
     [contract(MidiDiagnosticsApiContract, 1)]
+    [version(1)]
     struct MidiServicePingResponse
     {
         UInt32 SourceId;

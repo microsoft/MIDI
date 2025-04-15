@@ -19,6 +19,7 @@ import "MidiGroup.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
+    [version(1)]
     [default_interface]
     runtimeclass MidiFunctionBlock : Windows.Foundation.IStringable
     {

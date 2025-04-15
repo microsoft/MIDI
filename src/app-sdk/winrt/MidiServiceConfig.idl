@@ -17,6 +17,7 @@ import "MidiServiceConfigResponse.idl";
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
     [contract(MidiServiceConfigApiContract, 1)]
+    [version(1)]
     static runtimeclass MidiServiceConfig
     {
         static MidiServiceConfigResponse UpdateTransportPluginConfig(

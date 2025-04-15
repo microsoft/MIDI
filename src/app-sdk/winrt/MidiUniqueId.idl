@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.CapabilityInquiry
 {
     [contract(MidiCapabilityInquiryApiContract,1)]
+    [version(1)]
     [default_interface]
     runtimeclass MidiUniqueId : Windows.Foundation.IStringable
     {

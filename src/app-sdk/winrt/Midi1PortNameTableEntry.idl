@@ -17,6 +17,7 @@ namespace Microsoft.Windows.Devices.Midi2
     // this needs to be kept in sync with Midi1PortNameEntry in service
 
     [contract(MidiEnumerationApiContract, 1)]
+    [version(1)]
     struct Midi1PortNameTableEntry
     {
         UInt8 GroupIndex;               // can't use MidiGroup here unless we're going to make a runtimeclass of this

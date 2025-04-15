@@ -12,6 +12,7 @@ import "MidiApiContracts.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
 {
+    [version(1)]
     enum MidiSystemExclusiveDataReaderFormat
     {
         InferFromData,

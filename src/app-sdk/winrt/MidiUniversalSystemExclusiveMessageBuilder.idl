@@ -27,6 +27,7 @@ import "MidiDeclaredDeviceIdentity.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [experimental]
+    [version(1)]
     static runtimeclass MidiUniversalSystemExclusiveMessageBuilder
     {
 

@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract, 1)]
+    [version(1)]
     struct MidiMessageStruct
     {
         UInt32 Word0;

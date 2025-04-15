@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
+    [version(1)]
     [flags]
     enum MidiSendMessageResults
     {

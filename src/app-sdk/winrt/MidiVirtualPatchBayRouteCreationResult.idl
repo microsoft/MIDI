@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
+    [version(1)]
     struct MidiVirtualPatchBayRouteCreationResult
     {
         Boolean Success;

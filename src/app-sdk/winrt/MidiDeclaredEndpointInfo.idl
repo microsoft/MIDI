@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
+    [version(1)]
     struct MidiDeclaredEndpointInfo
     {
         String Name;

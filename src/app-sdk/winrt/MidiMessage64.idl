@@ -16,6 +16,7 @@ import "MidiMessageStruct.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract, 1)]
+    [version(1)]
     [default_interface]
     unsealed runtimeclass MidiMessage64 : IMidiUniversalPacket,
                                           Windows.Foundation.IStringable

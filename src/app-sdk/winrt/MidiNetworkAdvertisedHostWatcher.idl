@@ -16,6 +16,7 @@ import "MidiNetworkAdvertisedHostUpdatedEventArgs.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
+    [version(1)]
     [default_interface]
     runtimeclass MidiNetworkAdvertisedHostWatcher
     {

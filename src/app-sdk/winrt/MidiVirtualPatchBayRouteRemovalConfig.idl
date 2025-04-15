@@ -17,6 +17,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
+    [version(1)]
     [default_interface]
     runtimeclass MidiVirtualPatchBayRouteRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {

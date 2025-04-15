@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
+    [version(1)]
     static runtimeclass MidiEndpointDeviceIdHelper
     {
         // returns a short version of the midisrv-enumerated id

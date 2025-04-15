@@ -25,6 +25,7 @@ import "Midi2ChannelVoiceMessageStatusEnum.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
+    [version(1)]
     static runtimeclass MidiMessageBuilder
     {
         static Microsoft.Windows.Devices.Midi2.MidiMessage32 BuildUtilityMessage(

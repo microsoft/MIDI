@@ -24,6 +24,7 @@ import "MidiFunctionBlock.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
     [contract(MidiEndpointsVirtualApiContract, 1)]
+    [version(1)]
     [default_interface]
     runtimeclass MidiVirtualDeviceCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {

@@ -17,6 +17,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [default_interface]
+    [version(1)]
     [experimental]
     runtimeclass MidiNetworkClientEndpointCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {

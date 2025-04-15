@@ -13,6 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
+    [version(1)]
     enum Midi1ChannelVoiceMessageStatus
     {
         NoteOff =           0x8,
