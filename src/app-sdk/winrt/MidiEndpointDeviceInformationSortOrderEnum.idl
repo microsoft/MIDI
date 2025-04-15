@@ -21,14 +21,12 @@ namespace Microsoft.Windows.Devices.Midi2
         EndpointDeviceId =                          2,
         DeviceInstanceId =                          3,
 
-
         ContainerThenName =                         11,
         ContainerThenEndpointDeviceId =             12,
         ContainerThenDeviceInstanceId =             13,
 
-        TransportMnemonicThenName =                 21,
-        TransportMnemonicThenEndpointDeviceId =     22,
-        TransportMnemonicThenDeviceInstanceId =     23,
-
+        TransportCodeThenName =                     21,
+        TransportCodeThenEndpointDeviceId =         22,
+        TransportCodeThenDeviceInstanceId =         23,
     };
 }
