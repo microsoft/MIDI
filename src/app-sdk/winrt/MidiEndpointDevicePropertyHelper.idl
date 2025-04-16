@@ -12,7 +12,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [version(1)]
+    [static_name("IMidiEndpointDevicePropertyHelperStatics", 8087b303-0519-31d1-c0de-ee0000030000)]
     static runtimeclass MidiEndpointDevicePropertyHelper
     {
         static String GetMidiPropertyNameFromPropertyKey(Guid fmtid, UInt32 pid);

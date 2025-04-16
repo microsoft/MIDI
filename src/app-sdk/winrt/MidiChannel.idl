@@ -9,13 +9,11 @@
 
 import "MidiApiContracts.idl";
 
-
-
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
-    [version(1)]
-    [default_interface]
+    [interface_name("IMidiChannel", 8087b303-0519-31d1-c0de-dd0000005000)]
+    [static_name("IMidiChannelStatics", 8087b303-0519-31d1-c0de-ee0000005000)]
     runtimeclass MidiChannel : Windows.Foundation.IStringable
     {
         MidiChannel();

@@ -13,7 +13,6 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.Reporting
 {
     [contract(MidiReportingApiContract, 1)]
-    [version(1)]
     struct MidiServiceSessionConnectionInfo
     {
         String EndpointDeviceId;

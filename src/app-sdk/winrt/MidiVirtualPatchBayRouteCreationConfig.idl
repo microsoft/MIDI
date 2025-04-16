@@ -8,7 +8,6 @@
 
 import "MidiApiContracts.idl";
 
-
 import "IMidiServiceTransportPluginConfig.idl";
 
 import "MidiVirtualPatchBayRouteDefinition.idl";
@@ -16,8 +15,7 @@ import "MidiVirtualPatchBayRouteDefinition.idl";
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
-    [version(1)]
-    [default_interface]
+    [interface_name("IMidiVirtualPatchBayRouteCreationConfig")]
     runtimeclass MidiVirtualPatchBayRouteCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiVirtualPatchBayRouteCreationConfig();

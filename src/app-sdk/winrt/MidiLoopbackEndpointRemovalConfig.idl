@@ -18,8 +18,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    [version(1)]
-    [default_interface]
+    [interface_name("IMidiLoopbackEndpointRemovalConfig", 8087b303-0519-31d1-c0de-dd00000d0000)]
     runtimeclass MidiLoopbackEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiLoopbackEndpointRemovalConfig(Guid associationId);

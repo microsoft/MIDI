@@ -8,13 +8,12 @@
 
 import "MidiApiContracts.idl";
 
-
 import "MidiMessage64.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
 {
     [experimental]
-    [version(1)]
+    [static_name("IMidiSystemExclusiveMessageHelperStatics")]
     static runtimeclass MidiSystemExclusiveMessageHelper
     {
         // System Exclusive 7 handling

@@ -17,8 +17,7 @@ import "MidiLoopbackEndpointDefinition.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    [version(1)]
-    [default_interface]
+    [interface_name("IMidiLoopbackEndpointCreationConfig", 8087b303-0519-31d1-c0de-dd00000b0000)]
     runtimeclass MidiLoopbackEndpointCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiLoopbackEndpointCreationConfig();

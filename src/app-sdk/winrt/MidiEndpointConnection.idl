@@ -19,8 +19,8 @@ import "IMidiEndpointConnectionSource.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [version(1)]
-    [default_interface]
+    [interface_name("IMidiEndpointConnection", 8087b303-0519-31d1-c0de-dd0000080000)]
+    [static_name("IMidiEndpointConnectionStatics", 8087b303-0519-31d1-c0de-ee0000080000)]
     runtimeclass MidiEndpointConnection : IMidiMessageReceivedEventSource,
                                           IMidiEndpointConnectionSource,
                                           Windows.Foundation.IStringable

@@ -15,8 +15,7 @@ import "MidiVirtualPatchBayDestinationDefinition.idl";
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
-    [version(1)]
-    [default_interface]
+    [interface_name("IMidiVirtualPatchBayRouteDefinition")]
     runtimeclass MidiVirtualPatchBayRouteDefinition
     {
         MidiVirtualPatchBayRouteDefinition();

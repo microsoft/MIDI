@@ -8,14 +8,13 @@
 
 import "MidiApiContracts.idl";
 
-
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    [version(1)]
     struct MidiNetworkHostEndpointCreationResult
     {
         Boolean foo;
 
     };
 }
+

@@ -13,7 +13,6 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
-    [version(1)]
     enum Midi2ChannelVoiceMessageStatus
     {
         RegisteredPerNoteController =   0x0,

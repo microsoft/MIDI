@@ -24,7 +24,7 @@ import "MidiChannel.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
-    [version(1)]
+    [static_name("IMidiMessageHelperStatics", 8087b303-0519-31d1-c0de-ee0000800000)]
     static runtimeclass MidiMessageHelper
     {
         static Boolean ValidateMessage32MessageType(UInt32 word0);

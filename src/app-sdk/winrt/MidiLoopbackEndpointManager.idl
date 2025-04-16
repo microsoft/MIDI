@@ -19,7 +19,7 @@ import "MidiEndpointDeviceInformation.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    [version(1)]
+    [static_name("IMidiLoopbackEndpointManagerStatics", 8087b303-0519-31d1-c0de-ee00000c0000)]
     static runtimeclass MidiLoopbackEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };
