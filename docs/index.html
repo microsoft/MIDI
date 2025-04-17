@@ -1,0 +1,21 @@
+---
+layout: default
+---
+ 
+    {% include header.html %}
+    {% if site.animated_header == "true" %}
+      {% include animated_header.html %}
+      {% else %}
+      {% include slider.html %}
+    {% endif %}
+    {% include header_bottom_area.html %}   
+    {% include topics_area.html %}
+    {% include faq_area.html %}
+    {% include timeline_area.html %}
+    {% include blog_and_items.html %}
+    {% include team_area.html %}
+    {% include testimonials.html %}
+    {% include call_to_action.html %}
+    {% include support_area.html %}
+    {% include footer_top_area.html %}
+    {% include footer.html %}

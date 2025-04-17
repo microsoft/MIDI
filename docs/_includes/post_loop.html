@@ -1,0 +1,41 @@
+<div class="single-post">
+   {% if page.post_image %}
+   <div class="single-img">
+      <img src="{{page.post_image | relative_url }}" alt="{{page.title}}"/>
+   </div>
+   {% endif %}
+   <div class="single-content">
+      {{page.content}}
+   </div>
+   <div class="single-tags-share">
+      {% if page.tags.size > 0 %}
+      <ul class="single-tags list-inline float-left">
+         <strong>Tag:</strong> {% for tag in page.tags %}
+         <li class="list-inline-item"> <a class="text-capitalize" href="/tag/{{ tag }}">{{ tag }}</a>{% if forloop.last == false %} {% endif %}</li>
+         {% endfor %}
+      </ul>
+      {% endif %}
+      <div class="social-share-btns">
+         {% include social_share.html %}
+      </div>
+   </div>
+   <nav class="page-pagination mb-5">
+      <ul class="pagination d-flex justify-content-between themeix-highlight">
+         {% if page.previous.url %}
+         <li class="page-item themeix-highlight">
+            <a class="page-link next-btn" href="{{page.previous.url | relative_url }}"><i class="fa fa-angle-double-left"></i> Previous Post</a>
+         </li>
+         {% endif %}
+         {% if page.next.url %}
+         <li class="page-item themeix-highlight">
+            <a class="page-link prev-btn" href="{{page.next.url | relative_url }}">Next Post<i class="fa fa-angle-double-right"></i></a>
+         </li>
+         {% endif %}
+      </ul>
+   </nav>
+</div>
+{% if page.comment %}
+<div class="post-comment">
+   {% include disqus_comment.html %}
+</div>
+{% endif %}

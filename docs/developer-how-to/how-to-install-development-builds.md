@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: doc
 title: How to Install Development Builds
 parent: Developer How-to
 has_children: false

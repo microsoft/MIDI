@@ -1,0 +1,18 @@
+- title: Knowledge Base
+  icon: /assets/images/service-icon2.png
+  description: psum is simply dummy text of the pritypesetting industry Lorem Ipsum has been the industry’s standard
+  button_label: Learn More
+  url: /pages/explore-topics/
+  
+- title: Question Answer
+  icon: /assets/images/service-icon.png
+  description:  It has survived not only five centuries, but also the leap into electronic typesetting, remaining.
+  button_label: Read FAQ
+  url: /pages/faq/
+  
+- title: Documentation
+  icon: /assets/images/service-icon3.png
+  description:  It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages.
+  button_label: Read Docs
+  url: /docs/left-sidebar-example
+  

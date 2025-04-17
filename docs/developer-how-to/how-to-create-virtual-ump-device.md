@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: doc
 title: Create Virtual Devices
 parent: Developer How-to
 has_children: false

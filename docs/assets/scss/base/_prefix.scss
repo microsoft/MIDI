@@ -1,0 +1,57 @@
+
+/**
+* ============================
+*  2.0 Prefix
+* ============================
+*/
+  
+@mixin transform($property) {
+    -moz-transform: $property;
+      -o-transform: $property;
+     -ms-transform: $property;
+ -webkit-transform: $property;
+       transform: $property;
+}
+@mixin transition($property) {
+    -webkit-transition: $property;
+        -ms-transform: $property;
+        -o-transition: $property;
+            transition: $property;
+}
+@mixin background-clip($property) {
+    -webkit-background-clip: $property;
+        -ms-background-clip: $property;
+        -o-background-clip: $property;
+        background-clip: $property;
+}
+@mixin linear-gradient($direction, $color-stops) {
+    background: nth(nth($color-stops, 1), 1);
+    background: -webkit-linear-gradient(legacy-direction($direction), $color-stops);
+    background: -moz-linear-gradient(legacy-direction($direction), $color-stops);
+    background: -ms-linear-gradient(legacy-direction($direction), $color-stops);
+    background: -o-linear-gradient(legacy-direction($direction), $color-stops);
+    background: linear-gradient($direction, $color-stops);
+}
+@mixin text-fill-color($property) {
+    -webkit-text-fill-color: $property;
+        -ms-text-fill-color: $property;
+        -o-text-fill-color: $property;
+        text-fill-color: $property;
+}
+@mixin placeholder {
+    ::-webkit-input-placeholder {@content}
+    :-moz-placeholder           {@content}
+    ::-o-placeholder          {@content}
+    :-ms-input-placeholder      {@content}  
+}
+@mixin animation($property) {
+    -moz-transform: $property;
+      -o-transform: $property;
+     -ms-transform: $property;
+ -webkit-transform: $property;
+       transform: $property;
+}
+@mixin background-opacity($color, $opacity) {
+    background: $color; /* The Fallback */
+    background: rgba($color, $opacity);
+}

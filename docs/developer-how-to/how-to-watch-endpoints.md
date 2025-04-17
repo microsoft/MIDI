@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: doc
 title: Enumerate UMP Endpoints (with add/remove/change detection)
 parent: Developer How-to
 has_children: false

@@ -1,0 +1,171 @@
+/**
+* ============================
+*  4.0 Base Sass
+* ============================
+*/
+body {
+	margin:0;
+    font-family: $font-family-default;
+    font-size: $font-size-default;
+	line-height:$line-height-default;
+	font-weight:$font-weight-default;
+    color: $font-color-default;
+    background-size: cover !important;
+    
+    overflow-x: hidden;
+}
+ul,ol{
+    padding:0;
+    padding-left:20px;
+    ul p, ol p{
+        margin:0;
+    }
+
+}
+img{
+    max-width:100%;
+}
+.btn,a{
+    box-shadow: none !important;
+    outline:none;
+    text-decoration: none;
+    list-style:none;
+
+}
+.form-control{
+    height: auto;
+}
+a{
+    color:$link-color;
+    @include transition(1s  cubic-bezier(0.075, 0.82, 0.165, 1));
+    text-decoration: none !important;
+    &:hover{
+        color: $hover-color;
+    }
+}
+ul li,ol li{
+    line-height: 36px;
+}
+button:hover,
+button:active,
+button:focus,
+a.btn:active,
+a.btn:focus,
+a.btn:hover {
+  -webkit-box-shadow: none !important;
+          box-shadow: none !important;
+  outline:none; 
+}
+.input-group
+.form-control:active,
+.input-group .form-control:focus,
+.input-group .form-control:hover {
+    z-index: 2;
+}
+.input-group-btn:not(:first-child)>.btn-group:active,
+.input-group-btn:not(:first-child)>.btn-group:focus,
+.input-group-btn:not(:first-child)>.btn-group:hover,
+.input-group-btn:not(:first-child)>.btn:active,
+.input-group-btn:not(:first-child)>.btn:focus,
+.input-group-btn:not(:first-child)>.btn:hover {
+    z-index: 1;
+}
+.form-control:focus{
+    box-shadow: none;
+    outline: none;
+}
+  select.form-control:not([size]):not([multiple]){
+      height:100%;
+  }
+  figure{
+      padding-left: $margin-small;
+      figcaption{
+          margin-top: 10px;
+      }
+      @include mobile{
+          padding: 5px;
+      }
+  }
+  iframe{
+      border:0;
+      width: 100%;
+  }
+  $width: 15px;
+  $height: 15px;
+  
+  $bounce_height: 30px;
+  .loading-main{
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 9999;
+    background-color: #226CBC;
+  }
+  .pre-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+  }
+  
+  .pre-loader .text {
+    color: #ffffff;
+    display: inline-block;
+    margin-left: 5px;
+  }
+  
+  .pre-loader .bounceball {
+    position: relative;
+    display: inline-block;
+    height: 37px;
+    width: $width;
+    &:before {
+      position: absolute;
+      content: '';
+      display: block;
+      top: 0;
+      width: $width;
+      height: $height;
+      border-radius: 50%;
+      background-color: #fff;
+      transform-origin: 50%;
+      animation: bounce 500ms alternate infinite ease;
+    }
+  }
+  @keyframes bounce {
+    0% {
+      top: $bounce_height;
+      height: 5px;
+      border-radius: 60px 60px 20px 20px;
+      transform: scaleX(2);
+    }
+    35% {
+      height: $height;
+      border-radius: 50%;
+      transform: scaleX(1);
+    }
+    100% {
+      top: 0;
+    }
+  }
+
+.home-top{
+    width:40px;
+    height:40px;
+    background-color: $bg-color2;
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+    font-size: 20px;
+    color: $font-color4;
+    text-align: center;
+    padding: 4px 5px;
+    &:hover{
+        color:$font-color4;
+    }
+}

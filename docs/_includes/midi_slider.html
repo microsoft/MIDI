@@ -1,0 +1,30 @@
+<!-- Start Slider  Area -->
+<section class="slider-area bg-cover1">
+    <div class="slider-wrapper full-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-9">
+                     <div class="slider-carousel owl-carousel">
+                       {% assign data =  site.data.midi_releases | where: "type", "stable" %}
+                         {% for release in data %}
+                           <div class="slider-content wow fadeIn" data-wow-duration="3s">
+                             <h1 class="heading-1">{{release.title}}</h1>
+                             <h4 class="heading-4">{{release.version}}</h4>
+                             <h4 class="heading-4">{{release.description}}</h4>
+                             <p>
+                                <a href="{{release.link_x64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_x64}}</a>
+                                &nbsp;
+                                <a href="{{release.link_arm64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_arm64}}</a>
+                             </p>
+                           </div>
+                        {% endfor %}
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Slider Area -->
+
+
+ 

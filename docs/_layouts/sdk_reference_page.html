@@ -1,0 +1,126 @@
+---
+layout: default
+---
+
+{% include header.html %}
+{% include sdk_reference_header.html %}
+<section class="layout-area bg-color1 content tutorial">
+  <div class="layout-wrapper section-spacing bminus-30">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          {% include sdk_reference_breadcrumb.html %}
+        </div>
+      </div>
+      <div class="row">
+        {% include sdk_reference_left_nav.html %}
+
+        <div class="col-md-8">
+          <div class="tutorial-content mx-auto">
+            <div class="sdk-common-properties">
+                {% if page.type == "enum" %}		
+                    {% assign idl_file_name = page.title | append: "Enum" %}
+                {% else %}
+                    {% assign idl_file_name = page.title %}
+                {% endif %}
+                {% assign idl_file_name = idl_file_name | append: ".idl" %}
+                {% assign idl_url = site.sdk_idl_root_url | append: idl_file_name %}
+
+                <table>
+                    <tr>
+                        <th>Full Name</th>
+                        <td><code>{{page.namespace}}.{{page.title}}</code></td>
+                    </tr>
+
+                    {% if page.type == "enum" %}
+                    {%   assign page_type = "WinRT Enumeration (a 32-bit unsigned or signed integer)" %}
+                    {% elsif page.type == "interface" %}
+                    {%   assign page_type = "WinRT Explicit Interface" %}
+                    {% elsif page.type == "runtimeclass" %}
+                    {%   assign page_type = "WinRT Runtime Class" %}
+                    {% elsif page.type == "struct" %}
+                    {%   assign page_type = "WinRT Struct" %}
+                    {% else %}
+                    {%   assign page_type = page.type | capitalize %}
+                    {% endif %}
+
+                    <tr>
+                        <th>Type</th>
+                        <td>{{page_type}}</td>
+                    </tr>
+
+                    {% if page.implements != nil and page.implements != empty %}
+                        {% assign interfaces = page.implements | split: "," %}
+
+                        <tr>
+                            <th>Implements</th>
+                            <td>
+                                {% for iface in interfaces %}
+                                    {% assign iface_name = iface | strip %}
+                                    {% if iface_name contains "Windows.Foundation" %}
+                                    {%   assign iface_url = "https://learn.microsoft.com/uwp/api/" | append: iface_name %}
+                                    {%   assign iface_short_name = iface_name | remove: "Windows.Foundation." %}
+                                    {% elsif iface_name contains "Microsoft.Windows.Devices.Midi2" %}
+                                    {%   assign root_folder = "/sdk-reference/" %}
+                                    {%   assign sub_folder = iface_name | remove: "Microsoft.Windows.Devices.Midi2." | replace: ".", "/" %}
+                                    {%   assign iface_url = root_folder | append: sub_folder | append: "/" | relative_url %}
+                                    {%   assign iface_short_name = iface_name | split: "." | last %}
+                                    {% else %}
+                                    {%   assign iface_short_name = iface_name %}
+                                    {% endif %}
+
+                                    {% if iface_url != empty %}
+                                        <a href="{{iface_url}}">{{iface_short_name}}</a>&nbsp;
+                                    {% else %}
+                                        <span>{{iface_short_name}}</span>&nbsp;
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                    <tr>
+                        <th>IDL</th>
+                        <td><a href="{{idl_url}}">{{idl_file_name}}</a></td>
+                    </tr>
+                    <tr>
+                        <th>Library</th>
+                        <td>{{page.library}}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="sdk-content">		
+              {{content}}
+            </div>
+
+            <div class="tags">
+
+                <i>TODO: Tags. This needs to link outside of SDK reference, so entire docs site.</i>
+
+            </div>
+
+            <div class="view-page-source">
+                <a href="https://github.com/Microsoft/MIDI/blob/main/docs/{{page.path}}">View Page Source on Github</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+{% include support_area.html %}
+{% include footer.html %}
+
+<script>
+  var headings = document.querySelectorAll("h2[id]");
+  for (var i = 0; i < headings.length; i++) {
+    var anchorLink = document.createElement("a");
+    anchorLink.innerText = "#";
+    anchorLink.href = "#" + headings[i].id;
+    anchorLink.classList.add("header-link");
+
+    headings[i].appendChild(anchorLink);
+  }
+</script>

@@ -1,0 +1,24 @@
+<!-- Start Headline Area -->
+<div class="headline-area bg-color1">
+    <div class="headline-wrapper ">
+        <div class="container">
+            <div class="row">
+                {% for service in site.data.services %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="headline-box wow fadeInUp" data-wow-duration="1s" style="visibility:visible; animation-duration:1s; animation-name:fadeInUp;">
+                            <div class="headline-logo">
+                                <a href="{{service.url | relative_url}}"><img src="{{service.icon | relative_url}}" alt="{{service.title}}"></a>
+                            </div>
+                            <div class="headline-content">
+                                <h4 class="heading-4"><a href="{{service.url | relative_url}}">{{service.title}}</a></h4>
+                                <p> {{service.description}}</p>
+                                <a href="{{service.url | relative_url}}" class="btn btn-style3">{{service.button_label}}</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Headline Area -->

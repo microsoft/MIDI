@@ -1,0 +1,33 @@
+---
+layout: page
+title: Testimonials
+add_to_menu: true
+description: "Meta description for about page"
+keywords: "responsive,jekyll,minimal template"
+---
+
+<!-- Start Testimonial  Area -->
+<section class="testimonial-area bg-color1">
+   <div class="testimonial-wrapper inner-spacing">
+      <div class="container">
+         <div class="row">
+            {% for testimonial in site.data.testimonials %}
+            <div class="col-md-6">
+               <div class="testimonial-item wow fadeIn" data-wow-duration="1s">
+                  <div class="testimonial-author"><img src="{{testimonial.image_url | relative_url}}" alt="{{testimonial.name}}"></div>
+                  <div class="testimonial-content">
+                     <p>{{testimonial.desc}}</p>
+                      <input type="text" class="rating rating5" readonly value="{{testimonial.rating}}"/>
+                      <h4 class="testimonial-name heading-4"><a href="{{testimonial.url}}">{{testimonial.name}}</a></h4>
+                      <h6 class="testimonial-subname heading-6">{{testimonial.designation}}</h6>
+                  </div>
+               </div>
+            </div>
+            {% endfor %}
+         </div>
+      </div>
+   </div>
+</section>
+<!-- End Form Area -->
+
+                

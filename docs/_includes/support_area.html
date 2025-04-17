@@ -1,0 +1,28 @@
+<!-- Start Looking For  Area -->
+<section class="looking-for-area bg-color3">
+    <div class="looking-for-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="section-title text-center">
+            <h2 class="heading-2">Didn't find what you were looking for?</h2>
+            <p>Lacus vestibulum sed arcu non odio euismod lacinia at quis risus sed vulputate odio ut enim blandit</p>
+            </div>
+            <div class="row">
+                {% for support in site.data.supports %}
+                    <div class="col-md-6">
+                        <article class="looking-for-service wow {{support.animation}}" data-wow-duration="1s">
+                            <header class="looking-for-logo">
+                                <a href="{{support.url}}"><img src="{{support.icon | relative_url }}" alt="{{support.name}}"></a>
+                            </header>
+                            <footer class="looking-for-content">
+                                <h4 class="heading-4"><a href="{{support.url}}">{{support.name}}</a></h4>
+                                <p> {{support.description}}</p>
+                                <a href="{{support.url}}" class="btn-style3 btn mt-3">{{support.button_label}}</a>
+                            </footer>
+                        </article>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Looking For Area -->

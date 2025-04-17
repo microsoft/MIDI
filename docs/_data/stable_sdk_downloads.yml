@@ -1,0 +1,13 @@
+- title: Windows MIDI Services SDK and Tools x64
+  icon: /assets/images/service-icon2.png
+  description: x64 (Intel/AMD) desktop runtime and tools.
+  button_label: Install x64
+  url: /pages/explore-topics/
+  
+- title: Windows MIDI Services SDK and Tools Arm64
+  icon: /assets/images/service-icon.png
+  description:  Arm64 (Qualcomm Snapdragon) desktop runtime and tools
+  button_label: Install Arm64
+  url: /pages/faq/
+  
+  

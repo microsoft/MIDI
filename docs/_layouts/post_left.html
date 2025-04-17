@@ -1,0 +1,38 @@
+---
+layout: default
+---
+{% include header.html %}
+   <!-- Start Page Title Area -->
+   <section class="page-title-area bg-cover1">
+      <div class="page-title-wrapper section-spacing">
+         <div class="page-title text-center white-text">
+            <h2 class="heading-2">{{page.title}}</h2>
+            <ul class="page-title-meta list-inline">
+             {% if page.author%}
+               <li class="list-inline-item"><img src="{{ '/assets/images/slider-author.png' | relative_url }}" alt="{{page.author}}"><a href="{{page.author_url}}">{{page.author}}</a></li>
+              {% endif %}
+              {% if page.date %}
+               <li class="list-inline-item"><img src="{{ '/assets/images/slider-date.png' | relative_url }}" alt="{{page.date}}">{{page.date | date_to_long_string}}</li>
+              {% endif %}
+            </ul>
+         </div>
+      </div>
+   </section>
+   <!-- End Page Title Area -->
+   <!-- Start Blog  Area -->
+   <section class="blog-area bg-color1">
+      <div class="blog-wrapper section-spacing bminus-30">
+         <div class="container">
+            <div class="row">
+               <div class="col-md-5 col-lg-4">
+                 {% include sidebar.html %}
+               </div>
+               <div class="col-md-7 col-lg-8">
+                  {% include post_loop.html %}
+               </div>
+            </div>
+         </div>
+      </div>
+   </section>
+   <!-- End Blog Area -->
+{% include footer.html %}

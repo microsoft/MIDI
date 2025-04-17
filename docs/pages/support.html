@@ -1,0 +1,41 @@
+---
+layout: page
+title: Support Center
+description: "Meta description for Support page"
+keywords: "responsive,jekyll,minimal template"
+---
+
+<!-- Start Feature  Area -->
+<div class="feature-area bg-color1">
+        <div class="feature-wrapper section-spacing pb-0">
+            <div class="container">
+                <div class="row">
+                    {% for feature_box in site.data.feature_boxes %}
+                        <div class="col-md-6 col-lg-4">
+                            <article class="feature-box bg-color3">
+                                <header class="feature-logo wow bounceIn" data-wow-duration="1s">
+                                    <div class="feature-icon"><img src="{{feature_box.icon | relative_url}}" alt="{{feature_box.name}}"></div>							
+                                </header>
+                                <footer class="feature-content">
+                                    <h5 class="heading-5"><a href="{{feature_box.url | relative_url}}">{{feature_box.name}}</a></h5>
+                                    <p> {{feature_box.description}} </p>
+                                    <div class="mt-3"><a href="{{feature_box.url | relative_url}}"><strong>{{feature_box.button_label}}</strong></a></div>
+                                    
+                                </footer>
+                            </article>
+                        </div>
+                   {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- End Feature Area -->
+<!-- Start FAQ Area -->
+<div class="revert-color">
+    {% include faq_area.html %}
+</div>	
+<!-- End FAQ Area -->	
+
+    {% include call_to_action.html %}
+    {% include support_area.html %}
+    {% include footer_top_area.html %}

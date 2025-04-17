@@ -1,0 +1,25 @@
+<!-- Start Headline Area -->
+<div class="headline-area bg-color1">
+    <div class="headline-wrapper ">
+        <div class="container">
+            <div class="row">
+
+                {% assign data =  site.data.midi_releases | where: "type", "preview" %}
+                {% for release in data %}
+                    <div class="col-md-5 col-lg-5">
+                        <div class="headline-box wow fadeInUp" data-wow-duration="1s" style="visibility:visible; animation-duration:1s; animation-name:fadeInUp;">
+                            <div class="headline-content">
+                                <h4 class="heading-4">{{release.title}}</h4>
+                                <p> {{release.version}}</p>
+                                <p> {{release.description}}</p>
+                                <a href="{{release.link_x64}}" class="btn btn-style3">{{release.label_x64}}</a>
+                                <a href="{{release.link_arm64}}" class="btn btn-style3">{{release.label_arm64}}</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Headline Area -->

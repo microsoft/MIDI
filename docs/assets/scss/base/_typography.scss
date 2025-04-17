@@ -1,0 +1,74 @@
+/**
+* ============================
+*  5.0 Typography
+* ============================
+*/
+
+@include placeholder {
+  font-family: $font-family-default;
+    font-size:$font-size-default;
+    line-height:$line-height-default;
+    color: $placeholder-color;
+    font-weight:$font-weight-default;
+}
+h1, h2, h3 {
+  color: $font-color2;
+  font-weight:$font-weight-semi;
+}
+h4, h5, h6 {
+  color: $font-color2;
+  font-weight:$font-weight-medi;
+}
+h1 a, h2 a, h3 a, h4 a, h5 a, h6 a{
+   color: $font-color2;
+}
+h1, h2, h3, h4, h5, h6{
+    a{
+      &:hover{
+        color: $hover-color;
+      }
+    }
+}
+.heading-1 { 
+  font-size:$font-size-h1;
+  @include tablet{
+     font-size:$font-size-h1 - 10px;
+     line-height:$font-size-h1 - 6px;
+  }
+  line-height: floor(($font-size-h1 + 10));
+}
+.heading-2 { 
+  font-size:$font-size-h2; 
+  @include tablet{
+    font-size:$font-size-h2 - 6px;
+    line-height:$font-size-h2 - 4px;
+ }
+  line-height: floor(($font-size-h2 + 10));
+}
+.heading-3 {
+  font-size: $font-size-h3; 
+  @include tablet{
+    font-size:$font-size-h3 - 4px;
+    line-height:$font-size-h3;
+ }
+  line-height: floor(($font-size-h3 + 6));
+}
+.heading-4 {
+   font-size:$font-size-h4;
+   @include tablet{
+    font-size:$font-size-h4 - 4px;
+    line-height:$font-size-h4 ;
+ }
+   line-height: floor(($font-size-h4 + 6));
+ }
+.heading-5 {
+   font-size: $font-size-h5;
+   @include tablet{
+    font-size:$font-size-h5 - 2px;
+ }
+   line-height: floor(($font-size-h5 + 6));
+ }
+.heading-6 {
+   font-size:$font-size-h6;
+   line-height: floor(($font-size-h6 + 4));
+ }

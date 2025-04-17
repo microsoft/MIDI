@@ -1,0 +1,17 @@
+<nav class="layout-breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ "/" | relative_url }}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{{ "/sdk-reference/" | relative_url }}">Microsoft.Windows.Devices.Midi2</a></li>
+
+        {% if page.namespace != "Microsoft.Windows.Devices.Midi2" %}
+            {% assign ns_url = "/sdk/" %}
+            {% assign remaining_ns = page.namespace | remove: "Microsoft.Windows.Devices.Midi2." | split: "." %}
+            {% for sub_ns in remaining_ns %}           
+                {% assign ns_url = ns_url | append: sub_ns | append: "/" %}
+                <li class="breadcrumb-item"><a href="{{ ns_url | relative_url }}">{{sub_ns}}</a></li>
+            {% endfor %}
+        {% endif %}
+
+        <li class="breadcrumb-item active" aria-current="page">{{page.title}}</li>
+    </ol>
+</nav>

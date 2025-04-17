@@ -1,0 +1,19 @@
+- name: Company Name1
+  image: /assets/images/company-logo4.png
+  url: #
+  
+- name: Company Name2
+  image: /assets/images/company-logo3.png
+  url: #
+
+- name: Company Name3
+  image: /assets/images/company-logo2.png
+  url: #  
+
+- name: Company Name4
+  image: /assets/images/company-logo3.png
+  url: #  
+
+- name: Company Name5
+  image: /assets/images/company-logo5.png
+  url: #  

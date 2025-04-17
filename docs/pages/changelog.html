@@ -1,0 +1,31 @@
+---
+layout: page
+title: Changelog
+add_to_menu: true
+description: "Meta description for about page"
+keywords: "responsive,jekyll,minimal template"
+---
+
+<!-- Start Changelog  Area -->
+<section class="changelog-area bg-color1">
+   <div class="changelog-wrapper inner-spacing">
+      <div class="container">
+         <div class="row">
+            {% for change_log in site.data.changelog %}
+            <div class="col-md-6 col-lg-4">
+               <div class="changelog-service wow fadeIn" data-wow-duration="3s">
+                  <div class="changelog-tile">
+                     <h5 class="heading-5">{{change_log.product_name}}</h5>
+                     <p><i class="changelog-date"></i> Updated :  {{change_log.updated_date}}</p>
+                  </div>
+                  <ul class="changelog-list list-inline">
+                     {{change_log.changelog}}
+                  </ul>
+               </div>
+            </div>
+            {% endfor %}
+         </div>
+      </div>
+   </div>
+</section>
+<!-- End Changelog Area -->

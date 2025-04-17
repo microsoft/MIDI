@@ -1,0 +1,22 @@
+<!-- Start Slider  Area -->
+<section class="slider-area bg-cover1">
+   <div id="particles-js"></div>
+   <div class="slider-wrapper section-spacing">
+      <div class="container">
+         <div class="row">
+            <div class="col-md-9 col-lg-8">
+            <div class="slider-carousel owl-carousel">
+              {% assign data =  site.sliders %}
+                {% for slider in data %}
+                  <div class="slider-content wow fadeIn" data-wow-duration="3s">
+                    <h1 class="heading-1">{{slider.title}}</h1>
+                    <p><a href="{{slider.button_link}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Explore Topics</a></p>
+                  </div>
+                 {% endfor %}
+            </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</section>
+<!-- End Slider Area -->

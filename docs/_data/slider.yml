@@ -1,0 +1,6 @@
+- title: "<span>Get the latest</span> Windows MIDI Services runtime and tools"
+  description: Download and install the MIDI 2.0 runtime for MIDI 2.0 applications, MIDI Settings app for creating loopback endpoints and renaming MIDI 1.0 ports, MIDI Console, management tools, PowerShell 7 cmdlets for MIDI, and more.
+  button1_label: "Download Customer Preview 3 x64"
+  button1_link: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64"
+  button2_label: "Download Customer Preview 3 Arm64"
+  button2_link: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64"

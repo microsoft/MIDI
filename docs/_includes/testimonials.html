@@ -1,0 +1,32 @@
+<!-- Start Testimonial  Area -->
+<section class="testimonial-area bg-color3">
+    <div class="testimonial-wrapper  section-spacing">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="heading-2">Client Feedback</h2>
+                <p>Vulputate odio ut enim blandit volutpat maecenas volutpat blandit </p>
+            </div>
+            <div class="testimonial-slider owl-carousel">
+                {% for testimonial in site.data.testimonials %}
+                <div class="item">
+                    <div class="testimonial-item">
+                        <div class="testimonial-author"><img src="{{testimonial.image_url}}" alt="{{testimonial.name}}"></div>
+                        <div class="testimonial-content">
+                            <p>{{testimonial.desc}}</p>
+                           
+                          
+                          	<div class="ef-rating ef-rating_small ef-rating_{{testimonial.rating}}">
+				<div class="ef-rating__value"></div>
+		</div>
+                          
+                            <h4 class="testimonial-name heading-4"><a href="{{testimonial.url}}">{{testimonial.name}}</a></h4>
+                            <h6 class="testimonial-subname heading-6">{{testimonial.designation}}</h6>
+                        </div>
+                    </div>
+                </div>
+               {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Testimonial Area -->

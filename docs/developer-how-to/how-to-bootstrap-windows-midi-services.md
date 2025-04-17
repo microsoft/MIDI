@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: doc
 title: Bootstrap Windows MIDI Services
 parent: Developer How-to
 has_children: false

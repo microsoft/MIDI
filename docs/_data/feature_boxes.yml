@@ -1,0 +1,18 @@
+- name: Knowledge Base
+  icon: /assets/images/feature-icon.png
+  description: Pellentesque tempus consectetuer vehicula arcu, neque in mi duis felis vel tincidunt
+  button_label: Learn More
+  url: /docs/left-sidebar-example/
+  
+- name: Account
+  icon: /assets/images/feature-icon2.png
+  description: Pellentesque tempus consectetuer vehicula arcu, neque in mi duis felis vel tincidunt
+  button_label: Create Account
+  url: /pages/register/
+  
+- name: General Help
+  icon: /assets/images/feature-icon3.png
+  description: Pellentesque tempus consectetuer vehicula arcu, neque in mi duis felis vel tincidunt
+  button_label: Contact Us
+  url: /pages/contact/
+  

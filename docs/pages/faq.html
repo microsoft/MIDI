@@ -1,0 +1,54 @@
+---
+layout: page
+title: FAQ
+add_to_menu: true
+description: "Meta description for about page"
+keywords: "responsive,jekyll,minimal template"
+---
+
+<!-- Start Testimonial  Area -->
+<section class="page-area bg-color1">
+   <div class="page-wrapper section-spacing">
+      <div class="container">
+         <div class="row">
+            <div class="col-md-12">
+               <div class="page-content-box">
+                  <p>Flementum nisi quis eleifend quam adipiscing vitae proin sagittis nisl rhoncus mattis rhoncus urna neque viverra justo nec ultrices dui sapien eget mi proin sed libero enim sed faucibus turpis in eu mi bibendum neque egestas congue quisque egestas diam in arcu cursus euismod quis viverra nibh cras pulvinar mattis</p>
+
+                  {% assign x = 0 %}
+                  {% assign y = 0 %}
+                  {% for faq in site.data.faq_page %}
+                      {% assign y = y | plus:1 %}
+                     <h4 class="heading-4 pt-3">{{faq.title}}</h4>
+                     <div class="accordion faq-accordion mb-3" id="faqaccordion{{y}}">
+                        {% for questions in faq.subfaq %}
+                           {% assign x = x | plus:1 %} 
+                           <div class="card">
+                              <div class="card-header" id="headingOne{{x}}">
+                                 <h5 class="mb-0">
+                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne{{x}}" aria-expanded="true">
+                                    Q: {{questions.question}}
+                                    </button>
+                                 </h5>
+                              </div>
+                              <div id="collapseOne{{x}}" class="collapse {% if x == 1 %}show{% endif %}" aria-labelledby="headingOne{{x}}" data-parent="#faqaccordion{{y}}">
+                                 <div class="card-body">
+                                    <b>Answer:</b> {{questions.answer}}
+                                 </div>
+                              </div>
+                           </div>
+                        {% endfor %}
+                     </div>
+                  {% endfor %}
+                  
+
+                  <p>
+                     In massa tempor nec feugiat nisl pretium fusce. Amet porttitor eget dolor morbi non arcu. Non blandit massa enim nec dui nunc mattis enim ut. Facilisis leo vel fringilla est. Diam vulputate ut pharetra sit amet aliquam id. Diam maecenas ultricies mi eget mauris pharetra et ultrices. Sagittis purus sit amet volutpat consequat mauris nunc congue. Ultrices tincidunt arcu non sodales neque. Tristique magna sit amet purus gravida. Eget lorem dolor sed viverra ipsum. Nulla malesuada pellentesque elit eget gravida cum sociis natoque. Commodo quis imperdiet massa tincidunt nunc pulvinar sapien. Ac tortor vitae purus faucibus ornare suspendisse. Etiam sit amet nisl purus in mollis nunc sed id.
+                  </p>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</section>
+<!-- End Form Area -->

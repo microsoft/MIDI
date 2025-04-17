@@ -1,76 +1,136 @@
-#site settings
+####################################################
+#
+# Welcome to Doxy Jekyll Template
+#
+# Product Link : https://themeix.com/product/doxy-documentation-website-jekyll-template/
+# Version : v4.3.0
+#
+####################################################
 
-title: Windows MIDI Services
-description: User and developer documentation for the Windows MIDI Services project
-baseurl: "/docs"
+# Site settings
+title: "Windows MIDI Services Documentation"
+email: "midi@microsoft.com"
+description: "Microsoft Windows MIDI Services API, SDK, and tools"
+keywords: "midi, midi2, music, musicians, audio, Windows, Microsoft"
+baseurl: "/" # the subpath of your site, e.g. /blog
+url: "https://jekyll-doxy.netlify.app/"
+cover_image: "https://themeix.com/wp-content/uploads/dooxy-responsive-html-template-preview.png" # Image will Display in Social Media When share the website
+
+## Theme Options
+animated_header: "false"  #true 
 twitter_username: pete_brown
-github_username: psychlist1972
+github_username:  psychlist1972
 
-#theme
-#remote_theme: pages-themes/slate@v0.2.0
-theme: just-the-docs
+# MIDI site-specific
+sdk_idl_root_url: "https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/"
 
-
-exclude:
- # from https://github.com/jekyll/jekyll/blob/master/lib/site_template/_config.yml:
-   - .sass-cache/
-   - .jekyll-cache/
-   - gemfiles/
-   - Gemfile
-   - Gemfile.lock
-   - node_modules/
-   - vendor/bundle/
-   - vendor/cache/
-   - vendor/gems/
-   - vendor/ruby/
-
-
-# Enable or disable the site search
-# Supports true (default) or false
-search_enabled: true
-search:
-  # Split pages into sections that can be searched individually
-  # Supports 1 - 6, default: 2
-  heading_level: 2
-  # Maximum amount of previews per search result
-  # Default: 3
-  previews: 2
-  # Maximum amount of words to display before a matched word in the preview
-  # Default: 5
-  preview_words_before: 3
-  # Maximum amount of words to display after a matched word in the preview
-  # Default: 10
-  preview_words_after: 3
-  # Set the search token separator
-  # Default: /[\s\-/]+/
-  # Example: enable support for hyphenated search words
-  tokenizer_separator: /[\s/]+/
-  # Display the relative url in search results
-  # Supports true (default) or false
-  rel_url: true
-  # Enable or disable the search button that appears in the bottom right corner of every page
-  # Supports true or false (default)
-  button: false
-
-
-# For copy button on code
-enable_copy_code_button: true
-
-# Enable or disable heading anchors
-heading_anchors: true
-
-# Back to top link
-back_to_top: true
-back_to_top_text: "Back to top"
-
-
-#plugins
-
+# Build settings
+markdown: kramdown
+theme: minima
 plugins:
-- jekyll-remote-theme
-- jekyll-default-layout
+  - jekyll-feed
+  - jekyll-paginate-v2
+  - jekyll-archives
+  - jekyll-seo-tag  
 
-kramdown:
-  syntax_highlighter_opts:
-    block:
-      line_numbers: false
+collections:
+  team_members:
+    output: true
+    permalink: /team_members/:path/
+  testimonials:
+    output: true
+    permalink: /testimonials/:path/
+  docs:
+    output: true
+    permalink: /docs/:title/
+
+
+############################################################
+# Site configuration for the Jekyll Pagination Gem
+# The values here represent the defaults if nothing is set
+pagination:
+  
+  # Site-wide kill switch, disabled here it doesn't run at all 
+  enabled: true
+
+  # Set to 'true' to enable pagination debugging. This can be enabled in the site config or only for individual pagination pages
+  debug: false
+
+  # The default document collection to paginate if nothing is specified ('posts' is default)
+  collection: 'posts'
+
+  # How many objects per paginated page, used to be `paginate` (default: 0, means all)
+  per_page: 2
+
+  # The permalink structure for the paginated pages (this can be any level deep)
+  permalink: '/page/:num/' # Pages are index.html inside this folder (default)
+  #permalink: '/page/:num.html' # Pages are simple html files 
+  #permalink: '/page/:num' # Pages are html files, linked jekyll extensionless permalink style.
+
+  # Optional the title format for the paginated pages (supports :title for original page title, :num for pagination page number, :max for total number of pages)
+  title: ':title - page :num'
+
+  # Limit how many pagenated pages to create (default: 0, means all)
+  limit: 0
+  
+  # Optional, defines the field that the posts should be sorted on (omit to default to 'date')
+  sort_field: 'date'
+
+  # Optional, sorts the posts in reverse order (omit to default decending or sort_reverse: true)
+  sort_reverse: true
+
+  # Optional, the default category to use, omit or just leave this as 'posts' to get a backwards-compatible behavior (all posts)
+  category: 'posts'
+
+  # Optional, the default tag to use, omit to disable
+  tag: ''
+
+  # Optional, the default locale to use, omit to disable (depends on a field 'locale' to be specified in the posts, 
+  # in reality this can be any value, suggested are the Microsoft locale-codes (e.g. en_US, en_GB) or simply the ISO-639 language code )
+  locale: '' 
+
+ # Optional,omit or set both before and after to zero to disable. 
+ # Controls how the pagination trail for the paginated pages look like. 
+  trail: 
+    before: 2
+    after: 2
+
+  # Optional, the default file extension for generated pages (e.g html, json, xml).
+  # Internally this is set to html by default
+  extension: html
+
+  # Optional, the default name of the index file for generated pages (e.g. 'index.html')
+  # Without file extension
+  indexpage: 'index'
+
+############################################################
+
+  
+autopages:
+  enabled: true
+  collections:
+    layouts: 
+      - 'tag_page.html'
+    title: ' :coll' # :coll is replaced by the collection name
+    permalink: '/:coll/'
+  
+  tags:
+    layouts: 
+      - 'tag_page.html'
+    title: ':tag' # :tag is replaced by the tag name
+    permalink: '/tag/:tag'  
+      
+
+# Tag Options
+tag_page_layout: tag_page
+tag_page_dir: tag
+permalink: /:title/ 
+
+ 
+   
+    
+feed:
+  collections:
+    posts:
+      path: "/index.xml"
+        

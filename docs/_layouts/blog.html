@@ -1,0 +1,47 @@
+---
+layout: default
+---
+  {% include header.html %}
+  {% include page_header.html %}
+  
+      <div class="blog-area bg-color1">
+         <div class="blog-wrapper section-spacing">
+            <div class="container">
+               <div class="row">
+                  <div class="col-md-7 col-lg-8 mx-auto"> 
+                   {% for post in paginator.posts %}
+                     <article class="blog-post blog-spacing wow fadeIn" data-wow-duration="1s">
+                     	{% if post.post_image %}
+                        <div class="blog-img">
+                           <a href="{{post.url}}"><img src="{{post.post_image}}" alt="{{post.title}}"/></a>    
+                        </div>
+                        {% endif %}
+                        <div class="blog-content">
+                           <h3 class="heading-3"><a href="{{post.url}}">{{post.title}}</a></h3>
+                           <div class="post-excerpt">
+                              {{post.content | truncatewords:30}}
+                           </div>
+                        </div>
+                        <ul class="blog-meta list-inline">
+                           {% if post.author %}
+                           <li class="list-inline-item"><img src="{{ '/assets/images/blog-author.png' | relative_url }}" alt="{{post.title}}">
+                           	<a href="{{post.author_url}}">{{post.author}}</a></li>
+                           {% endif %}
+                           {% if post.date %}
+                           <li class="list-inline-item"><img src="{{ '/assets/images/blog-date.png' | relative_url }}" alt="{{post.title}}">{{post.date | date_to_long_string}}</li>
+                           {% endif %}
+                        </ul>
+                     </article>
+                      {% endfor %}
+ {% include pagination.html %}
+                  </div>
+				     <div class="col-md-5 col-lg-4">
+               {% include sidebar.html %}
+            </div>
+                
+               </div>
+            </div>
+         </div>
+      </div>
+ 
+{% include footer.html %}
