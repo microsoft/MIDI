@@ -1,0 +1,29 @@
+- title: "MIDI 2.0 Runtime"
+  image:
+  description: 
+  details_url: "/sdk-overview/"
+
+- title: "MIDI Settings app"
+  image:
+  description: 
+  details_url: "/tools/settings/"
+
+- title: "MIDI Console app"
+  image:
+  description: 
+  details_url: "/tools/console/"
+
+- title: "MIDI 1 Monitor"
+  image:
+  description: 
+  details_url: "/tools/midi1monitor/"
+
+- title: "PowerShell Cmdlets"
+  image:
+  description: 
+  details_url: 
+
+- title: "Other Diagnostics Tools"
+  image:
+  description: 
+  details_url: 

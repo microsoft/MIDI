@@ -1,0 +1,30 @@
+<!-- Start SDK Left Nav Area -->
+    <div class="col-md-4">
+        <div class="sidebar-area sidebar-left">
+            <h4 class="sub-title heading-5">SDK Types</h4>
+            <div class="sdk-left-nav-tree">
+                <div class="recent-widget sidebar-widget">
+                    {% assign sdk_page_groups = site.pages | where: "layout", "sdk_reference_page" | group_by: "namespace" %}
+                    {% assign sdk_page_groups_sorted = sdk_page_groups | sort: "name" %}
+                    {% for ns in sdk_page_groups_sorted %}
+                      <div class="sdk-left-nav-item">
+                          <h6>{{ns.name}}</h6>
+                      </div>
+                      
+                      {% assign ns_pages_sorted = ns.items | sort: "title" %}
+
+                      {% for ns_page in ns_pages_sorted %}
+                        <div class="sdk-left-nav-item">
+                            {% if page.title == ns_page.title  %}
+                                <span>{{ns_page.title}}</span>
+                            {% else %}
+                                <a class="current" href="{{ns_page.url | relative_url}}">{{ns_page.title}}</a>
+                            {% endif %}
+                        </div>
+                      {% endfor %}
+                    {% endfor %}
+                  </div>
+            </div>
+        </div>           
+    </div>
+<!-- End SDK Left Nav Area -->
