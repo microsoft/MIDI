@@ -7,8 +7,16 @@
                     {% assign sdk_page_groups = site.pages | where: "layout", "sdk_reference_page" | group_by: "namespace" %}
                     {% assign sdk_page_groups_sorted = sdk_page_groups | sort: "name" %}
                     {% for ns in sdk_page_groups_sorted %}
+
+                    {% assign ns_name_size = ns.name | size %}
+                    {% if ns_name_size > 45 %}
+                        {% assign display_ns = ns.name | replace: ".Windows.", "..." %}
+                    {% else %}
+                        {% assign display_ns = ns.name %}
+                    {% endif %}
+
                       <div class="sdk-left-nav-item">
-                          <h6>{{ns.name}}</h6>
+                          <h6>{{display_ns}}</h6>
                       </div>
                       
                       {% assign ns_pages_sorted = ns.items | sort: "title" %}

@@ -1,13 +1,13 @@
 - name: Check the Issues List
   icon: /assets/images/looking-logo2.png
-  description: Check the known issues list, or file a new issue
+  description: Check the known issues list, or file a new issue on our GitHub repo. All source is available here.
   button_label: Github Issues
   url: https://aka.ms/midirepoissues
   animation: fadeInRight
 
 - name: Ask the Community
   icon: /assets/images/looking-logo2.png
-  description: Chat with developers and other users on our Windows MIDI Services Discord server
+  description: Chat with developers and other users by joining our Windows MIDI Services Discord server.
   button_label: Join the Discord Community
   url: https://aka.ms/mididiscord
   animation: fadeInRight

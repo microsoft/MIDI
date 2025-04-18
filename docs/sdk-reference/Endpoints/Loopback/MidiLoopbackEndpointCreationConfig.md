@@ -7,7 +7,7 @@ type: runtimeclass
 description: Config sent to the service to create a loopback endpoint pair
 ---
 
-The configuration sent to the service when an application wants to create a loopback endpoint pair
+This is the configuration sent to the service when an application wants to create a loopback endpoint pair.
 
 ## Properties
 
@@ -22,4 +22,4 @@ The configuration sent to the service when an application wants to create a loop
 | Name | Description |
 | -------- | ----------- |
 | `MidiLoopbackEndpointCreationConfig` | Create an empty config |
-| `MidiLoopbackEndpointCreationConfig(associationId, endpointDefinitionA, endpointDefinitionB)` | Create a configuration with the specified associationId and endpoint definitions |
+| `MidiLoopbackEndpointCreationConfig (associationId, endpointDefinitionA, endpointDefinitionB)` | Create a configuration with the specified associationId and endpoint definitions |

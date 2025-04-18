@@ -4,7 +4,7 @@ title: MidiMessageTypeEndpointListener
 namespace: Microsoft.Windows.Devices.Midi2.ClientPlugins
 library: Microsoft.Windows.Devices.Midi2.dll
 type: runtimeclass
-implements: IMidiEndpointMessageProcessingPlugin, IMidiMessageReceivedEventSource
+implements: Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
 description: Provides a way to filter incoming messages by message type
 ---
 

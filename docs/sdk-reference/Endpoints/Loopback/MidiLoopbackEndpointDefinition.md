@@ -7,7 +7,7 @@ type: struct
 description: The information supplied when creating a loopback endpoint pair
 ---
 
-## Struct Properties
+## Fields
 
 | Property | Description |
 |---|---|

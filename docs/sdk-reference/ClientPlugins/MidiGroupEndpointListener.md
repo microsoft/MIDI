@@ -4,7 +4,7 @@ title: MidiGroupEndpointListener
 namespace: Microsoft.Windows.Devices.Midi2.ClientPlugins
 library: Microsoft.Windows.Devices.Midi2.dll
 type: runtimeclass
-implements: IMidiEndpointMessageProcessingPlugin, IMidiMessageReceivedEventSource
+implements: Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
 description: Provides a way to filter incoming messages by group without opening separate connections
 ---
 
@@ -37,8 +37,8 @@ In addition to the properties and methods in `IMidiEndpointMessageProcessingPlug
 // event on the connection.
 
 midi2::MidiGroupEndpointListener groupsListener;
-groupsListener.IncludedGroups().Append(midi2::MidiGroup(5));
-groupsListener.IncludedGroups().Append(midi2::MidiGroup(6));
+groupsListener.IncludedGroups().Append(midi2::MidiGroup(static_cast<uint8_t>(5)));
+groupsListener.IncludedGroups().Append(midi2::MidiGroup(static_cast<uint8_t>(6)));
 
 // set this if you don't want the main message received event on the
 // connection to fire for any messages this plugin handles.

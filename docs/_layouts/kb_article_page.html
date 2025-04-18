@@ -1,0 +1,48 @@
+---
+layout: default
+---
+
+{% include header.html %}
+{% include kb_header.html %}
+<section class="layout-area bg-color1 content tutorial">
+  <div class="layout-wrapper section-spacing bminus-30">
+    <div class="container">
+      <div class="row">
+        {% include sdk_reference_left_nav.html %}
+        <div class="col-md-8">
+          <div class="tutorial-content mx-auto">
+ 
+            <div class="kb-article-content">		
+              {{content}}
+            </div>
+
+            <div class="tags">
+                <i>TODO: Tags. This needs to link outside of this section, so to entire docs site.</i>
+            </div>
+
+            <div class="view-page-source">
+                <a href="https://github.com/Microsoft/MIDI/blob/main/docs/{{page.path}}">View Page Source on Github</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+{% include support_area.html %}
+{% include footer.html %}
+
+<script>
+  var headings = document.querySelectorAll("h2[id]");
+  for (var i = 0; i < headings.length; i++) {
+    var anchorLink = document.createElement("a");
+    anchorLink.innerText = "#";
+    anchorLink.href = "#" + headings[i].id;
+    anchorLink.classList.add("header-link");
+
+    headings[i].appendChild(anchorLink);
+  }
+</script>

@@ -28,8 +28,12 @@ layout: default
 
                 <table>
                     <tr>
-                        <th>Full Name</th>
-                        <td><code>{{page.namespace}}.{{page.title}}</code></td>
+                        <th>Namespace</th>
+                        <td><code>{{page.namespace}}</code></td>
+                    </tr>
+                    <tr>
+                        <th>Type Name</th>
+                        <td><code>{{page.title}}</code></td>
                     </tr>
 
                     {% if page.type == "enum" %}
@@ -88,6 +92,13 @@ layout: default
                     </tr>
                 </table>
             </div>
+            
+            {% if page.status == "preview" %}
+            <div class="sdk-preview-banner">
+                <span>This is a preview SDK feature and subject to change or removal. Shipping applications shall not use this SDK feature. There is no compatibility guaranteed.</span>
+            </div>
+            {% endif %}
+
             <div class="sdk-content">		
               {{content}}
             </div>

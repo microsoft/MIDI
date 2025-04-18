@@ -27,9 +27,9 @@ The `MidiVirtualDeviceCreationConfig` class specifies, in an easy to use format,
 
 | Name | Description |
 | --------------- | ----------- |
-| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo)` | Create a virtual device with the specified information|
-| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity)` | Create a virtual device with the specified information |
-| `MidiVirtualDeviceCreationConfig(name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity, userSuppliedInfo)` | Create a virtual device with the specified information |
+| `MidiVirtualDeviceCreationConfig (name, description, manufacturer, declaredEndpointInfo)` | Create a virtual device with the specified information|
+| `MidiVirtualDeviceCreationConfig (name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity)` | Create a virtual device with the specified information |
+| `MidiVirtualDeviceCreationConfig (name, description, manufacturer, declaredEndpointInfo, declaredDeviceIdentity, userSuppliedInfo)` | Create a virtual device with the specified information |
 
 ## Examples
 

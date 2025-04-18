@@ -7,6 +7,7 @@
         </div>
     </div>
 </div>
+
 <!-- Start Header Area -->
 <header class="header-area">
     <div class="header-navigation">
@@ -48,10 +49,10 @@
 					</li>
 				{% endfor %}
 			 	 <li>
-              <a class="nav-search" data-toggle="modal" data-target="#modal"><img src="{{ '/assets/images/search-logo.png' | relative_url }}" alt="nav search"></a>
-                                </li>
-			 </ul>
-                     </nav>
+                    <a class="nav-search" data-toggle="modal" data-target="#modal"><img src="{{ '/assets/images/search-logo.png' | relative_url }}" alt="nav search"></a>
+                 </li>
+			    </ul>
+                </nav>
 	
                 </div>
                 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -63,6 +64,7 @@
 							  <span aria-hidden="true">&times;</span>
 							</button>
 						  </div>
+
                             <div class="modal-body">
                                 <form class="modal-search-form" action="#">
                                     <div class="input-group">
@@ -73,7 +75,9 @@
                                     </div>
                                 </form>
                             </div>
+
                             <ul id="results-container"></ul>
+                            
                         </div>
                     </div>
                 </div>

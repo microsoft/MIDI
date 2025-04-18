@@ -13,13 +13,13 @@ The MidiDiagnostics class contains a number of static functions which enable wor
 
 | Static Property | Description |
 | --------------- | ----------- |
-| `DiagnosticsLoopbackAEndpointDeviceId` | Returns the endpoint Id for the diagnostic loopback used for development and support purposes. |
-| `DiagnosticsLoopbackBEndpointDeviceId` | Returns the endpoint Id for the diagnostic loopback used for development and support purposes. |
+| `DiagnosticsLoopbackAEndpointDeviceId` | Returns the endpoint device Id for the diagnostic loopback used for development and support purposes. |
+| `DiagnosticsLoopbackBEndpointDeviceId` | Returns the endpoint device Id for the diagnostic loopback used for development and support purposes. |
 
 ### Service Health
 
-| `PingService(UInt8)` | Send the specified count of ping messages to the ping endpoint and report on the status and time. Return if the responses are not received in an internally calculated timeout period. |
-| `PingService(UInt8, UInt32)` | Send the specified count of ping messages to the ping endpoint and report on the status and time. Return if responses are not received in the specified timeout period (milliseconds). |
+| `PingService (UInt8)` | Send the specified count of ping messages to the ping endpoint and report on the status and time. Return if the responses are not received in an internally calculated timeout period. |
+| `PingService (UInt8, UInt32)` | Send the specified count of ping messages to the ping endpoint and report on the status and time. Return if responses are not received in the specified timeout period (milliseconds). |
 
 Pinging the Windows service uses the same mechanism as sending any UMP message. The actual message sent is a prioprietary message. (At the time this was created, there was no standard MIDI 2.0 UMP ping message). The message itself is sent to the diagnostics endpoint in the service, which is implemented like any other transport. Therefore, the speed of the pings here and the success of the ping process is a reasonable indicator of service, cross-process queue, and client API health.
 

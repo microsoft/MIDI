@@ -30,7 +30,7 @@ This is the class that a virtual device application uses as its interface to the
 
 | Event | Description |
 | --------------- | ----------- |
-| `StreamConfigRequestReceived(device, args)` | Raised when this device receives a Stream Configuration Request UMP message. |
+| `StreamConfigRequestReceived (device, args)` | Raised when this device receives a Stream Configuration Request UMP message. The virtual device application should respond per the UMP MIDI 2.0 protocol negotiation specification. |
 
 ## Examples
 

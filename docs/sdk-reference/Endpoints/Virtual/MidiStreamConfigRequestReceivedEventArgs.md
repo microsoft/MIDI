@@ -7,7 +7,16 @@ type: runtimeclass
 description: Arguments supplied when a client of this endpoint has requested stream configuration
 ---
 
-(in development)
+When a MIDI Virtual Device receives a request message for stream configuration, the message is parsed and then raised as discrete properties in an event. The virtual device should then respond to the request per the UMP Protocol Negotiation specifications.
+
+## Properties
+
+| Property | Description |
+| --- | --- |
+| `Timestamp` | Incoming message timestamp |
+| `PreferredMidiProtocol` | The `MidiProtocol` being requested by the client |
+| `RequestEndpointTransmitJitterReductionTimestamps` | Jitter reduction timestamps are not supported |
+| `RequestEndpointReceiveJitterReductionTimestamps` | Jitter reduction timestamps are not supported |
 
 ## Examples
 

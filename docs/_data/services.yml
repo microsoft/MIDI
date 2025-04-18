@@ -1,18 +1,18 @@
-- title: Knowledge Base
+- title: Overview
   icon: /assets/images/service-icon2.png
-  description: psum is simply dummy text of the pritypesetting industry Lorem Ipsum has been the industry’s standard
+  description: Overview of Windows MIDI Services features and tools
   button_label: Learn More
-  url: /pages/explore-topics/
+  url: /overview/
   
-- title: Question Answer
+- title: Get Latest
   icon: /assets/images/service-icon.png
-  description:  It has survived not only five centuries, but also the leap into electronic typesetting, remaining.
-  button_label: Read FAQ
-  url: /pages/faq/
+  description:  Windows MIDI Services tools and runtime available for download.
+  button_label: Get Latest
+  url: /get-latest/
   
-- title: Documentation
+- title: Developer Docs
   icon: /assets/images/service-icon3.png
-  description:  It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages.
+  description:  Developer app SDK reference and how-to documentation
   button_label: Read Docs
-  url: /docs/left-sidebar-example
+  url: /sdk-overview/
   

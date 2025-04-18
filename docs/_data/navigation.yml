@@ -20,14 +20,18 @@
   - text: Automate MIDI with PowerShell
     url: /
 - text: Tools
-  url: /
+  url: /tools/
   submenu:
   - text: MIDI Console
-    url: /
+    url: /tools/console/
   - text: MIDI Settings app
-    url: /
+    url: /tools/settings/
+  - text: PowerShell cmdlets
+    url: /tools/powershell/
+  - text: MIDI 1 Monitor
+    url: /tools/midi1monitor/
   - text: MIDI Diagnostics
-    url: tools/mididiag/midi-diag
+    url: tools/other-tools/midi-diag
 - text: Additional Information
   url: /
   submenu:

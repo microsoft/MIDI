@@ -19,4 +19,4 @@ The configuration passed to the service when an application wants to remove a lo
 
 | Name | Description |
 | -------- | ----------- |
-| `MidiLoopbackEndpointRemovalConfig(associationId)` | Construct a removal config with the specified association id |
+| `MidiLoopbackEndpointRemovalConfig (associationId)` | Construct a removal config with the specified association id |

@@ -8,15 +8,15 @@ implements: Windows.Foundation.IStringable
 description: A MIDI 2.0 MUID
 ---
 
-The `MidiUniqueId` class is used to provide formatting and data validation for MIDI-CI MUID (MIDI Unique Id) types used in Function Blocks and MIDI CI transactions.
+The `MidiUniqueId` class is used to provide formatting and data validation for MIDI-CI MUID (MIDI Capability Inquiry Unique Id) types used in Function Blocks and MIDI CI transactions.
 
 In the specification, Byte1 is the LSB and Byte4 is the MSB. We follow that convention here.
 
 ## Constructors
 
 | `MidiUniqueId()` | Constructs an empty `MidiUniqueId` |
-| `MidiUniqueId(UInt32)` | Constructs the `MidiUniqueId` from the given 28 bit integer |
-| `MidiUniqueId(UInt8, UInt8, UInt8, UInt8)` | Constructs a `MidiUniqueId` with the specified seven-bit bytes |
+| `MidiUniqueId (UInt32)` | Constructs the `MidiUniqueId` from the given 28 bit integer |
+| `MidiUniqueId (UInt8, UInt8, UInt8, UInt8)` | Constructs a `MidiUniqueId` with the specified seven-bit bytes |
 
 ## Properties
 

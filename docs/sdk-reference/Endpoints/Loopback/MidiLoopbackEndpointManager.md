@@ -18,8 +18,8 @@ description: The primary class used to create or remove loopback endpoints
 
 | Function | Description |
 | -------- | ----------- |
-| `CreateTransientLoopbackEndpoints(MidiLoopbackEndpointCreationConfig)` | Create a pair of loopback endpoints which will live until removed through the API or the service is restarted. |
-| `RemoveTemporaryLoopbackEndpoints(MidiLoopbackEndpointDeletionConfig)` | Remove a pair of temporary loopback endpoints when provided their association Id Guid. |
+| `CreateTransientLoopbackEndpoints (MidiLoopbackEndpointCreationConfig)` | Create a pair of loopback endpoints which will live until removed through the API or the service is restarted. |
+| `RemoveTemporaryLoopbackEndpoints (MidiLoopbackEndpointDeletionConfig)` | Remove a pair of temporary loopback endpoints when provided their association Id Guid. |
 
 Applications creating endpoints for app-to-app MIDI should generally use the Virtual Device support built into the API. However, applications may need to create lightweight loopback endpoints without the protocol negotiation, MIDI 2.0 discovery process, and lifetime management provided by the Virtual Device support. For those scenarios, we have a simple loopback endpoint type.
 

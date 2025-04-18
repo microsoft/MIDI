@@ -6,7 +6,7 @@
   
 - title: Windows MIDI Services SDK and Tools Arm64
   icon: /assets/images/service-icon.png
-  description:  Arm64 (Qualcomm Snapdragon) desktop runtime and tools
+  description:  Arm64 (Qualcomm Snapdragon etc.) desktop runtime and tools
   button_label: Install Arm64
   url: /pages/faq/
   
