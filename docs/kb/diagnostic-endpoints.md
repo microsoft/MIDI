@@ -1,9 +1,8 @@
 ---
-layout: page
-title: Diagnostics Endpoints
-parent: Transport Types
-grandparent: Windows Midi Services
-has_children: false
+layout: kb
+title: About the Diagnostics Endpoints Transport
+audience: developers
+description: Information about the diagnostics transport
 ---
 
 # MIDI Diagnostic Endpoints

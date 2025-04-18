@@ -1,12 +1,9 @@
 ---
-layout: page
-title: Kernel Streaming Aggregate
-parent: Transport Types
-grandparent: Windows MIDI Services
-has_children: false
+layout: kb
+title: About the Kernel Streaming Aggregate Transport
+audience: everyone
+description: All about the Kernel Streaming Aggregate transport, which is the service code which talks to existing MIDI 1.0 drivers, whether vendor-supplied or in-box.
 ---
-
-# Kernel Streaming
 
 | Property | Value |
 | -------- | ----- |

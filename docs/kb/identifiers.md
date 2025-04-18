@@ -1,12 +1,12 @@
 ---
-layout: page
-title: Endpoint Identifiers
-parent: For Developers
+layout: kb
+title: What are the Valid Persistent Endpoint Identifiers?
+audience: developers
+description: In old APIs like WinMM, the port name was the only identifier available. There are many more options now. This document provides guidance on what you can and cannot use.
 ---
 
-# MIDI Endpoint Identifiers
-
-> **IMPORTANT NOTE**: While in development, the actual identifiers may change. Once we release officially to production Windows, the identifiers will be consistent as described below.
+> <h4>IMPORTANT NOTE</h4>
+> While in development, the actual identifiers may change. Once we release officially to production Windows, the identifiers will be consistent as described below.
 
 In the WinMM API today, the port name is often used as a unique identifier, stored in files, and otherwise used in comparisons when checking to see if the required MIDI devices are connected to the PC. They were never intended to be used this way, but because the Port numbers would change based upon, among other things, the order in which devices are plugged in, there were no other reasonable options.
 
@@ -14,7 +14,7 @@ We attempted to make the port numbers more "sticky" by keeping them static acros
 
 For Windows MIDI Services, we provide additional information that a developer can use to identify an Endpoint. This information is all returned as properties of the `MidiEndpointDeviceInformation` class. The information below explains what properties can be relied upon and when/how.
 
-> Endpoint names in Windows MIDI Services are neither unique identifiers nor guaranteed to be static. They should not be used to identify an Endpoint. In addition to new algorithms for naming, the customer can rename the endpoints at will, and shall not be constrained or limited in providing names meaningful to them. **For Windows MIDI Services, the customer is always in control of their setup.**
+> **Endpoint names** in Windows MIDI Services are neither unique identifiers nor guaranteed to be static. They should not be used to identify an Endpoint. In addition to new algorithms for naming, the customer can rename the endpoints at will, and shall not be constrained or limited in providing names meaningful to them. **For Windows MIDI Services, the customer is always in control of their setup.**
 
 ## What Identifier should I use to find a device?
 

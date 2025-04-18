@@ -24,6 +24,6 @@ This class represents an open Windows MIDI Services session.
 
 The Windows MIDI Services Console app uses the `MidiServiceSessionInfo` `MidiServiceSessionConnectionInfo` and the `MidiReporting` class to display active sessions.
 
-![Console midi enum sessions](./console-enum-sessions.png)
+![Console midi enum sessions](/assets/images/console-enum-sessions.png)
 
 In this case, you can see three open sessions. The process name and process id are on the left. The session name is in the text on the right, after the word "Session", and the start time is the date and time in green. Finally, the list of connections for each session is underneath the session information.

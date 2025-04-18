@@ -1,10 +1,9 @@
 ---
-layout: page
-title: API Backwards Compatibility
-parent: For Developers
+layout: kb
+title: Application Backwards Compatibility
+audience: everyone
+description: Explains the API backwards compatibility for Windows MIDI Services.
 ---
-
-# API Backwards Compatibility
 
 **Our intention is for developers to begin adopting Windows MIDI Services in place of the older WinMM, WinRT, and (deprecated) DirectMusic APIs in their applications.** All new MIDI features, transports, and more will be implemented in Windows MIDI Services and the new API. A select number of features, slightly more than their current baseline, will be available to WinMM and WinRT APIs through our backwards-compatibility shims and abstractions, but this is simply to ensure existing applications continue to function on systems using Windows MIDI Services. **Please note that we are not providing backwards compatibility to support DirectMusic MIDI APIs.**
 
@@ -34,7 +33,7 @@ Here's the current short-term plan for when the API redirection is in-box. Each 
 | Multi-Client MIDI (more than one app can use a MIDI endpoint) | ✅ | ✅ | ✅ |
 | MIDI Timestamps (incoming) | ✅ | No | No |
 | MIDI Timestamps (outgoing, scheduled) | ✅ | No | No |
-| Device connect/disconnect notifications | ✅ | No (as today) | ✅ |
+| Device connect/disconnect notifications | ✅ | No | ✅ |
 | **MIDI 2.0 Features** | | | |
 | High resolution UMP messages | ✅ | No | No |
 | Send/Receive with MIDI 1.0 USB devices | ✅ | ✅ | ✅ |
@@ -50,12 +49,11 @@ Here's the current short-term plan for when the API redirection is in-box. Each 
 | Send/Receive with Network MIDI 2.0 | After Initial Release | ✅ | ✅ |
 | **Application Types** | | | |
 | 64-bit Win32 (Desktop) App | ✅ | ✅ | ✅ |
-| 64-bit UWP App | ❓ | No | ✅ |
-| 64-bit Windows App SDK App | ✅ | No | ✅ |
+| 64-bit UWP or Packaged App | ❓ | No | ✅ |
 | 32-bit desktop app | No | ✅ | ❓ |
 
 Arm64 and x86-64 ("x64" or "amd64") are both equally supported by the 64 bit APIs. There is no support for 32-bit operating systems.
 
 ✅ Feature is supported
 ❓We are investigating
-* Messages are translated between MIDI 1.0 protocol / data format and MIDI 2.0 protocol / UMP format
+\* Messages are translated between MIDI 1.0 protocol / data format and MIDI 2.0 protocol / UMP format

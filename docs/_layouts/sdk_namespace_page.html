@@ -17,7 +17,7 @@ layout: default
         <div class="col-md-8">
           <div class="tutorial-content mx-auto">
             <div class="sdk-content">		
-                <h2>{{page.namespace}}</h2>
+                <code>{{page.namespace}}</code>
             </div>
   
             <div class="sdk-content">		
@@ -25,8 +25,9 @@ layout: default
             </div>
 
             <h3>Types in this namespace</h3>
+            <p>Click or tap the type name to view more details.</p>
 
-            <div>
+            <div class="sdk-content">
                 {% assign sdk_pages = site.pages | where: "layout", "sdk_reference_page" | where: "namespace", page.namespace | sort: "title" %}
 
                 <div>
@@ -49,7 +50,9 @@ layout: default
 
 
             <div class="tags">
+                <!--
                 <i>TODO: Tags. This needs to link outside of SDK reference, so entire docs site.</i>
+                -->
             </div>
 
             <div class="view-page-source">

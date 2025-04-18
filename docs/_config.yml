@@ -13,13 +13,18 @@ email: "midi@microsoft.com"
 description: "Microsoft Windows MIDI Services API, SDK, and tools"
 keywords: "midi, midi2, music, musicians, audio, Windows, Microsoft"
 baseurl: "/" # the subpath of your site, e.g. /blog
-url: "https://jekyll-doxy.netlify.app/"
-cover_image: "https://themeix.com/wp-content/uploads/dooxy-responsive-html-template-preview.png" # Image will Display in Social Media When share the website
+url: 
+cover_image:  # Image will Display in Social Media When share the website
 
 ## Theme Options
 animated_header: "false"  #true 
 twitter_username: pete_brown
 github_username:  psychlist1972
+
+twitter: https://twitter.com/pete_brown
+github: https://github.com/psychlist1972
+
+
 
 # MIDI site-specific
 sdk_idl_root_url: "https://github.com/microsoft/MIDI/blob/main/src/app-sdk/winrt/"
@@ -35,10 +40,10 @@ plugins:
 
 collections:
   team_members:
-    output: true
+    output: false
     permalink: /team_members/:path/
   testimonials:
-    output: true
+    output: false
     permalink: /testimonials/:path/
   docs:
     output: true
@@ -51,7 +56,7 @@ collections:
 pagination:
   
   # Site-wide kill switch, disabled here it doesn't run at all 
-  enabled: true
+  enabled: false
 
   # Set to 'true' to enable pagination debugging. This can be enabled in the site config or only for individual pagination pages
   debug: false

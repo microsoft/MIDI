@@ -1,9 +1,8 @@
 ---
-layout: page
-title: Kernel Streaming
-parent: Transport Types
-grandparent: Windows MIDI Services
-has_children: false
+layout: kb
+title: About the Kernel Streaming Transport
+audience: everyone
+description: All about the Kernel Streaming transport, which is the service code which talks to the new USB MIDI 2.0 UMP driver.
 ---
 
 # Kernel Streaming
@@ -15,9 +14,9 @@ has_children: false
 
 ## Overview
 
-Kernel Streaming is the mechanism through which MIDI 1.0 and MIDI 2.0 devices using the new UMP-based class driver are enumerated and communicated with.
+Kernel Streaming is the mechanism through which MIDI 1.0 and MIDI 2.0 devices using the new UMP-based ACX class driver are enumerated and communicated with.
 
-In addition, any third-party UMP drivers will also route through this service.
+In addition, any third-party UMP ACX drivers will also route through this service.
 
 ## Compatibility
 

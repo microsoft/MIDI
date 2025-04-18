@@ -1,8 +1,8 @@
 ---
-layout: doc
-title: Create Loopback Endpoint Pairs
-parent: Developer How-to
-has_children: false
+layout: kb
+title: How to Create Loopback Endpoint Pairs from Code
+audience: developers
+description: How to create loopback endpoint pairs from code
 ---
 
 # How to create simple Loopback Endpoint Pairs at runtime

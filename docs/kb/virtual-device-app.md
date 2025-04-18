@@ -1,12 +1,9 @@
 ---
-layout: page
-title: Virtual Device App
-parent: Transport Types
-grandparent: Windows MIDI Services
-has_children: false
+layout: kb
+title: About the Virtual Device App Transport
+audience: everyone
+description: All about the Virtual Device app (app-to-app MIDI) transport
 ---
-
-# Virtual Device App
 
 | Property | Value |
 | -------- | ----- |

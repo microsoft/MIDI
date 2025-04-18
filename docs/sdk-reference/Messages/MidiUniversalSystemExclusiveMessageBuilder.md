@@ -5,15 +5,21 @@ namespace: Microsoft.Windows.Devices.Midi2.Messages
 library: Microsoft.Windows.Devices.Midi2.dll
 type: runtimeclass
 description: Helper class to construct and parse MIDI 2.0 stream messages
+status: preview
 ---
 
-TODO
+Build common universal system exclusive messages
 
+As of Customer Preview 3, these functions are not yet implemented.
 
 ## Static Functions
 
-(TODO: This section is not complete)
-
 | Function | Description |
 | --------------- | ----------- |
+| `BuildIdentityRequest` | |
+| `BuildIdentityRequestReply` | |
+| `BuildWait` | |
+| `BuildCancel` | |
+| `BuildNAK` | |
+| `BuildACK` | |
 

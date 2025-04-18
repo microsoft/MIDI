@@ -1,23 +1,21 @@
 ---
-layout: page
+layout: kb
 title: MIDI 2.0 Implementation Details
-parent: For Developers
-has_children: false
+audience: everyone
+description: Details about our MIDI 2.0 implementation in Windows MIDI Services
 ---
-
-# Implementation Details
 
 Specifications can be funny. As much as the MIDI Association, and all of us in it, try to be very specific and crisp on wording, there's often room for interpretation. Most of these we work out among the various OS companies under the umbrella of the MIDI Association. But there are others were an approach may just not make sense on one OS or the other. Here are the ones that are Windows-specific, that you should be aware of as a developer.
 
-Of course, the full source code for Windows MIDI Services, including the USB MIDI 2.0 driver, is available in our repo, so you can review it at any time to better understand how a feature or function works.
+Of course, the full source code for Windows MIDI Services, including the USB MIDI 2.0 driver, is available in our GitHub repo, linked at the bottom of every page, so you can review it at any time to better understand how a feature or function works.
 
 ## Discovery and Protocol Negotiation
 
-Windows MIDI Services supports only the UMP-based Endpoint Discovery and Protocol Negotiation. We do not implement the deprecated MIDI-CI equivalents.
+Windows MIDI Services supports only the UMP-based Endpoint Discovery and Protocol Negotiation. We do not implement the deprecated MIDI-CI equivalents. We also do not wrap or automatically perform MIDI 1.0 SysEx-based discovery.
 
 ## JR Timestamps
 
-The hardware manufacturers, AMEI, and the MIDI Association agreed that JR Timestamp handling in the operating systems is not needed at this time (and may not be needed for many years). As a result, we do not have JR Timestamp handling built in.
+The hardware manufacturers, AMEI, and the MIDI Association agreed that JR Timestamp handling in the operating systems is not needed at this time (and may not be needed for many years). As a result, we do not have JR Timestamp handling built in. Please do not request or supply JR Timestamps.
 
 When (if) it is needed, we will implement JR clock generation, incoming JR timestamp generation, and outgoing JR timestamp/clock message creation in the service itself. Client applications should not send JR timestamps now or in the future.
 
@@ -25,7 +23,7 @@ When (if) it is needed, we will implement JR clock generation, incoming JR times
 
 Internally in Windows MIDI Services, all messages are UMP messages, whether they come from a MIDI 1.0 byte data format device, a UMP-native device or API, or a MIDI 1.0 classic API. This requires Windows to perform message data format translation in some cases.
 
-Translation happens as described in [the translation page](../data-translation.md)
+Translation happens as described in [the translation page](data-translation.md)
 
 ## UMP Endpoint Names for native MIDI 2.0 UMP format devices
 
@@ -35,7 +33,7 @@ Although we make all the names available through the Enumeration API, we have an
 2. The name supplied through in-protocol Endpoint Name Notification messages
 3. The name supplied by the transport plugin in the service. This is typically pulled from a device name supplied by the driver, or other transport-specific sources such as network advertising in the case of Network MIDI 2.0.
 
-When we create MIDI 1.0-compatible ports for these endpoints, we use the group numbers and the endpoint name. We are limited to 32 characters for WinMM ports.
+When we create MIDI 1.0-compatible ports for MIDI 2.0 endpoints, we use the group numbers and the endpoint name. However, we also have built-in naming algorithms that are different for native MIDI 1.0 devices, including both WinMM-compatible naming, and more modern naming which also uses the iJack/Pin values. We are limited to 32 characters for WinMM ports.
 
 ## UMP Endpoint Names for MIDI 1.0 byte stream format devices
 
@@ -48,6 +46,8 @@ The precedence for naming is the same as with MIDI 2.0 devices, with the excepti
 
 1. Any user-supplied endpoint name
 3. The name supplied by the transport plugin in the service.
+
+How MIDI 1.0 names are picked is set, by endpoint and globally, using the MIDI Settings app. In that, you can override naming algorithms or even provide custom names.
 
 ## iSerialNumber Really Helps
 

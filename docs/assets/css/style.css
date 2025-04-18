@@ -3135,3 +3135,79 @@ div#modal {
     font-size: 12px;
     color:#777777;
 }
+
+
+
+/**
+* ============================
+*  KB List Area
+* ============================
+*/
+.kb-service {
+    box-shadow: 0 0 20px 5px rgba(33, 107, 188, 0.03);
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(0, 1, 1, 0.01);
+    display: table;
+    transition: all 0.5s ease 0s;
+    width: 100%;
+}
+
+.kb-service .kb-content {
+    float: right;
+    width: calc(100% - 45px);
+    padding-left: 20px;
+}
+
+.kb-service .kb-content p {
+    margin: 0;
+}
+
+@media (max-width: 575px) {
+    .kb-service .kb-content {
+      width: 100%;
+      padding: 0;
+    }
+}
+  
+.kb-accordion {
+    margin-top: 15px;
+}
+
+.kb-accordion .card {
+    border: 0;
+}
+
+.kb-accordion .card .card-header {
+    background-color: #0D65B0;
+}
+
+.kb-accordion .card .card-header button[type=button] {
+    color: #ffffff;
+}
+
+.kb-article-audience-pill {
+    display:block;
+    padding-left:10px;
+    padding-right:10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    float:right;
+    border-radius: 4px;
+    line-height:12px;
+}
+
+.kb-article-audience-pill-developer {
+    background:#333;
+    color:white;
+}
+
+.kb-article-audience-pill-everyone {
+    background:#3399f0;
+    color:white;
+}
+
+.kb-article-audience-pill span {
+    font-size: 10px;
+    text-wrap: none;
+}

@@ -34,15 +34,27 @@ The two static functions are factory-pattern methods for creating a new session.
 | `DisconnectEndpointConnection(endpointConnectionId)` | Cleanly disconnect an endpoint connection and remove it from the connection map |
 | `UpdateName(newName)` | Update the name of this session locally and in the MIDI Service |
 
-> Note: If you manually close a MidiEndpointConnection using `IClosable` (or `IDisposable`), it will not be removed from the MidiSession's collection of endpoints. Instead, use the `DisconnectEndpointConnection` method of the session to keep both in sync. For that reason, we do not recommend that you wrap the `CreateEndpointConnection` calls in a using statement.
+> <h4>Note</h4>
+> If you manually close a MidiEndpointConnection using `IClosable` (or `IDisposable`), it will not be removed from the MidiSession's collection of endpoints. Instead, use the `DisconnectEndpointConnection` method of the session to keep both in sync. For that reason, we do not recommend that you wrap the `CreateEndpointConnection` calls in a using statement.
 
-### Sample
+### Samples
 
+C#
 ```cs
 using (var session = MidiSession.CreateSession("API Sample Session"))
 {
     ...
 }
-
 ```
 
+C++
+```cpp
+// remember to initialize the WinRT apartment and also initialize the SDK 
+// runtime first. See samples for example code 
+
+auto session = MidiSession::CreateSession("API Sample Session");
+
+...
+
+session.Close();
+```

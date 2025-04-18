@@ -1,13 +1,9 @@
 ---
-layout: doc
-title: Bootstrap Windows MIDI Services
-parent: Developer How-to
-has_children: false
+layout: kb
+title: How-to Bootstrap Windows MIDI Services
+audience: developers
+description: How to bootstrap and start up the Windows MIDI Services SDK and the MIDI Service
 ---
-
-# How to bootstrap the SDK and Start the Service
-
-TODO: This document is a work-in-progress.
 
 The SDK is a central installation with a bootstrapper COM component. The COM component handles all WinRT activation for Windows MIDI Services without requiring the MIDI types to be included in any type of manifest (for desktop apps). Applications do not deploy anything except their own compiled code.
 
@@ -16,7 +12,7 @@ Individual applications do not deploy the SDK with their binaries. The C# projec
 ## Examples
 
 ```cpp
-// MTA by default
+// MTA by default but you can use STA if you need to. MTA is preferred for callback performance.
 winrt::init_apartment();
 
 // this is the initializer in the bootstrapper hpp file

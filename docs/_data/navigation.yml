@@ -4,21 +4,6 @@
   url: /
 - text: Get Latest Runtime and Tools
   url: /get-latest/
-- text: How to
-  url: /
-  submenu:
-  - text: Create a loopback Endpoint
-    url: /
-  - text: Rename a MIDI 1.0 Port
-    url: /
-  - text: Rename a UMP or MIDI 2.0 Endpoint
-    url: /
-  - text: Monitor incoming MIDI messages using the console
-    url: /
-  - text: Send a MIDI message using the console
-    url: /
-  - text: Automate MIDI with PowerShell
-    url: /
 - text: Tools
   url: /tools/
   submenu:
@@ -32,25 +17,7 @@
     url: /tools/midi1monitor/
   - text: MIDI Diagnostics
     url: tools/other-tools/midi-diag
-- text: Additional Information
-  url: /
-  submenu:
-  - text: MIDI 2.0 Concepts
-    url: /
-  - text: Using with WinRT MIDI 1.0
-    url: /
-  - text: Using with WinMM MIDI 1.0
-    url: /
-- text: Developer Docs
-  url: /
-  submenu:
-  - text: Get Started
-    url: /
-  - text: SDK reference
-    url: /sdk/
-  - text: How to
-    url: /developer-how-to/developer-how-to
-  - text: Best Practices
-    url: /
-  - text: Contracts vs Implementation Details
-    url: /
+- text: Knowledge and Tutorials
+  url: /kb/
+- text: App SDK Reference
+  url: /sdk-overview/

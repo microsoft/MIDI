@@ -9,7 +9,7 @@ description: MIDI 2.0 channel voice message status values
 
 Status to use for MIDI 2.0 Channel Voice messages. These are message type 4 messages.
 
-## Values
+## Properties
 
 | Property | Value | Description |
 | -------- | ------- | ------ |

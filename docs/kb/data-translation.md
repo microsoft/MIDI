@@ -1,10 +1,9 @@
 ---
-layout: page
-title: Data Translation
-has_children: false
+layout: kb
+title: Understanding Data Translation for MIDI Messages
+description: A description of when and where data is translated between MIDI 1.0 data format and MIDI 2.0 UMP, as well as between MIDI 1.0 and MIDI 2.0 protocols.
+audience: everyone
 ---
-
-# Data Translation
 
 In general, Windows MIDI Services translates MIDI messages only when it absolutely has to (primarily to support MIDI 1.0 devices or MIDI 1.0 APIs). This translation happens in different places, depending upon the driver in use.
 

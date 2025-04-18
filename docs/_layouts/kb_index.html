@@ -1,0 +1,85 @@
+---
+layout: default
+---
+
+{% include header.html %}
+{% include kb_header.html %}
+
+<section class="layout-area bg-color3 content tutorial">
+    <div class="layout-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="tutorial-content mx-auto">
+                        <div class="kb-article-content">		
+                        {{content}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="layout-area bg-color3 content tutorial">
+    <div class="kb-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="heading-2">Available articles</h2>
+                <p>Here's a full list of the knowledge-base articles and tutorials available on this site.</p>
+            </div>
+
+            {% assign kb_pages = site.pages | where: "layout", "kb" | sort: "title" %}
+            {% for kb in kb_pages %}
+
+            <div class="row">
+                <div class="col-md-12">
+                    <article class="kb-service bg-color1">
+                        <header>                           
+                            {% if kb.audience != empty and kb.audience != nil %}
+                                {% if kb.audience == "developers" %}
+                                <div class="kb-article-audience-pill kb-article-audience-pill-developer">
+                                    <span>Developer / Technical Article</span>
+                                </div>
+                                {% elsif kb.audience == "everyone" %}
+                                <div class="kb-article-audience-pill kb-article-audience-pill-everyone">
+                                    <span>Everyone</span>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+
+                            <a href="{{kb.url | relative_url}}"><h4 class="heading-4">{{kb.title}}</h4></a>
+
+                        </header>
+                        <footer class="kb-list-content">
+                            <p>{{kb.description}} </p>
+
+                        </footer>
+                    </article>
+                </div>
+            </div>
+
+            {% endfor %}
+
+        </div>
+    </div>
+</section>
+
+<div class="view-page-source">
+    <a href="https://github.com/Microsoft/MIDI/blob/main/docs/{{page.path}}">View Page Source on Github</a>
+</div>
+
+{% include support_area.html %}
+{% include footer.html %}
+
+<script>
+  var headings = document.querySelectorAll("h2[id]");
+  for (var i = 0; i < headings.length; i++) {
+    var anchorLink = document.createElement("a");
+    anchorLink.innerText = "#";
+    anchorLink.href = "#" + headings[i].id;
+    anchorLink.classList.add("header-link");
+
+    headings[i].appendChild(anchorLink);
+  }
+</script>

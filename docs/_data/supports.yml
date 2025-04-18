@@ -1,5 +1,5 @@
 - name: Check the Issues List
-  icon: /assets/images/looking-logo2.png
+  icon: /assets/images/popular-1.png
   description: Check the known issues list, or file a new issue on our GitHub repo. All source is available here.
   button_label: Github Issues
   url: https://aka.ms/midirepoissues

@@ -1,12 +1,9 @@
 ---
-layout: page
-title: Virtual Loopback
-parent: Transport Types
-grandparent: Windows MIDI Services
-has_children: false
+layout: kb
+title: About the Loopback Transport
+audience: everyone
+description: All about the loopback (app-to-app MIDI) transport
 ---
-
-# Virtual Loopback
 
 | Property | Value |
 | -------- | ----- |

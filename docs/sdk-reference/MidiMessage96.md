@@ -23,4 +23,4 @@ Includes all functions and properties in `IMidiUniversalPacket`, as well as:
 | Function | Description |
 | -------- | ----------- |
 | `MidiMessage96()` | Default constructor |
-| `MidiMessage96(timestamp, word0, word1, word2)` | Construct a new message with a timestamp and all 32 bit MIDI words |
+| `MidiMessage96 (timestamp, word0, word1, word2)` | Construct a new message with a timestamp and all 32 bit MIDI words |

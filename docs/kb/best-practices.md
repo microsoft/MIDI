@@ -1,11 +1,9 @@
 ---
-layout: page
-title: Best Practices
-parent: For Developers
-has_children: false
+layout: kb
+title: Best Practices and Performance Optimizations
+audience: developers
+description: Best practices for developers using the Windows MIDI Services SDK
 ---
-
-# Best Practices and Performance Optimizations
 
 Here's a list of some best practices and performance optimizations for MIDI API-consuming applications.
 
@@ -19,9 +17,9 @@ For maximum compatibility across languages, and for safety, WinRT doesn't allow 
 
 For those reasons, and to maximize ease of use across a number of languages and use-cases, we have multiple ways to send and receive messages.
 
-You will want to do your own performance testing from your application and scenarios, but in general, the send/receives with the least overhead are those which send/receive individual 32 bit words, a single 128 bit structure, or the IMemoryBuffer. The word and struct methods do pass copies of data, but the amount of data, for most time critical messages, is still 64 bits or less (MIDI 1.0 channel voice messages are 32 bits, MIDI 2.0 channel voice messages are 64 bits).
+You will want to do your own performance testing from your application and scenarios, but in general, the send/receives with the least overhead are those which send/receive individual 32 bit words, a single 128 bit structure, or the `IMemoryBuffer`. The word and struct methods do pass copies of data, but the amount of data, for most time critical messages, is still 64 bits or less (MIDI 1.0 channel voice messages are 32 bits, MIDI 2.0 channel voice messages are 64 bits).
 
-The IMemoryBuffer approach is a more advanced way to transfer data to and from the API. This wraps a buffer of data which you can reuse between calls, including send/receive, as long as you manage and avoid any potential overlaps. Internally, the COM types used to access this ensures that only pointers are passed into the API. There's a bit more ceremony to using this approach, so we recommend investing time there only if it better fits your app's programming model. In addition, because IMemoryBuffer deals with bytes and not 32 bit words, you need to ensure you are correctly copying the data in, following the endianness rules for our internal MIDI 2.0 data representation.
+The `IMemoryBuffer` approach is a more advanced way to transfer data to and from the API. This wraps a buffer of data which you can reuse between calls, including send/receive, as long as you manage and avoid any potential overlaps. Internally, the COM types used to access this ensures that only pointers are passed into the API. There's a bit more ceremony to using this approach, so we recommend investing time there only if it better fits your app's programming model. In addition, because IMemoryBuffer deals with bytes and not 32 bit words, you need to ensure you are correctly copying the data in, following the endianness rules for our internal MIDI 2.0 data representation.
 
 The most flexible, but least performant approach, is to use the `IMidiMessage` interface and the methods which return strongly typed messages. These do involve additional type allocations either on the part of the caller or in the API code.
 
@@ -31,11 +29,11 @@ In the underlying implementation, copying of data is unavoidable in places. Here
 
 When sending messages
 
-1. The individual WinRT projection for your language may enforce a copy or translation of the data going into the API. This varies. Arrays, in particular, vary here.
-2. The API copies the data (typically a `memcpy`), regardless of how it is provided, into the cross-process queue for that client endpoint connection. This is shared cross-process memory on Windows. It's also a circular queue, so we can't hold onto pointers for long, which is why 4 below operates how it does.
+1. The individual WinRT projection for your language may enforce a copy or translation of the data going into the SDK. This varies. Arrays, in particular, vary here.
+2. The SDK and API copy the data (typically a `memcpy`), regardless of how it is provided, into the cross-process queue for that client endpoint connection. This is shared cross-process memory on Windows. It's also a circular queue, so we can't hold onto pointers for long, which is why 4 below operates how it does.
 3. On the service side, the pointers into the buffer are provided to the client connection and the plugins in that chain. No copying here.
-4. There will be copies of the data created if there are any processing plugins which must significantly manipulate the data (each plugin decides how it deals with the data), or if you schedule the message to be sent in the future (see 2 above). 
-5. Finally, the messages may be copied when being supplied to the transport. In the case of USB, we make a call into a kernel driver, so have another cross process queue for that which requires we copy data into it to supply it to the driver. In the case of networking, we have to copy the data into the network buffers and transmit. In app-to-app / virtual MIDI, and also the built-in loopback endpoints, we typically just send the same message pointers through the entire process and do not copy any data in the transport.
+4. There will be copies of the data created if there are any processing plugins which must significantly manipulate the data (each plugin decides how it deals with the data), or if you schedule the message to be sent in the future (see 2 above). Translation performs copies to/from byte format, for example.
+5. Finally, the messages may be copied when being supplied to the transport. In the case of USB MIDI 2.0, we make a call into a kernel driver, so have another cross process queue for that which requires we copy data into it to supply it to the driver. For USB MIDI 1.0, we make an Ioctl call, so there is no additional queue, however the Ioctl is slower than the queue processing. In the case of networking, we have to copy the data into the network buffers and transmit. In app-to-app / virtual MIDI, and also the built-in loopback endpoints, we typically just send the same message pointers through the entire process and do not copy any data in the transport.
 
 This code is all quite efficient, and the amount of data in a single message is small, so these happen quite quickly. Nevertheless, we're always looking at places where we can further optimize, but still retain the flexibility provided by having a Windows Service which processes the messages.
 
@@ -51,7 +49,7 @@ MIDI devices come and go based on connecting/disconnecting USB cables, or new ne
 
 There's no API or service reason to require a customer to reboot or reload/restart a MIDI DAW or other application to see newly added endpoints when using Windows MIDI Services.
 
-For more information, see the [How to Watch Endpoints](../developer-how-to/how-to-watch-endpoints.html) page.
+For more information, see the [How to Watch Endpoints](developer-how-to/how-to-watch-endpoints.html) page.
 
 ### Don't include diagnostics endpoints for most apps
 

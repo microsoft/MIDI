@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: Messages
+title: App SDK Message Helpers and Utilities
 namespace: Microsoft.Windows.Devices.Midi2.Messages
 library: Microsoft.Windows.Devices.Midi2.dll
 description: Namespace with MIDI message helper, builder, and converter classes

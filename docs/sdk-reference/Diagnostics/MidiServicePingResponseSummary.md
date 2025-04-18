@@ -7,7 +7,7 @@ type: runtimeclass
 description: Overall response from pinging the MIDI Service
 ---
 
-This class represents a summary of the ping attempts against the Windows service.
+This class represents a summary of the ping attempts against the Windows service. This is not normally used by applications.
 
 ## Properties
 

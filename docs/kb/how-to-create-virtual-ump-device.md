@@ -1,8 +1,8 @@
 ---
-layout: doc
-title: Create Virtual Devices
-parent: Developer How-to
-has_children: false
+layout: kb
+title: How to Create Virtual Devices from Code
+audience: developers
+description: How to create a virtual UMP device (app-to-app MIDI) from code
 ---
 
 # How to Create Virtual Devices at Runtime

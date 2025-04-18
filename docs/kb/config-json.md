@@ -1,13 +1,14 @@
 ---
-layout: page
-title: Config JSON for Transports
-parent: Transport Types
-grandparent: Windows MIDI Services
+layout: kb
+title: About the Config JSON File for Transport Configuration
+audience: everyone
+description: General information about the MIDI configuration file format.
 ---
 
-# JSON Config File
-
 It's best to use the Settings application and the transport / processing plugins for Settings to manipulate the file. However, if you edit it by hand, here are some notes.
+
+> <h4>Important NOTE</h4>
+> The json in the configuration file is an implementation detail, and so may change in the future. We always recommend using our tools to make any changes.
 
 ## The File location is Restricted
 
@@ -72,7 +73,8 @@ Here's an example of a bare-bones file, with sections for three different transp
 
 ### Endpoint Properties
 
-> NOTE: This section is in flux, as we're changing how devices are identified, and how properties are set.
+> <h4>NOTE: </h4>
+> This section is in flux, as we're changing how devices are identified, and how properties are set.
 
 Here's how the KS (USB using the new UMP driver) transport works as an example as it has the most complex lookup mechanisms to attempt to identify devices, even when they are moved from USB port to port.
 

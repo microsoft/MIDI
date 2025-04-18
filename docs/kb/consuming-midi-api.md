@@ -1,11 +1,11 @@
 ---
-layout: page
-title: Consuming the MIDI SDK
-parent: For Developers
-has_children: false
+layout: kb
+title: Consuming the MIDI SDK from Various Languages and Tools
+audience: developers
+description: Developer-focused information on using the Windows MIDI Services SDK from various languages and products.
 ---
 
-# Consuming the Windows MIDI Services SDK
+(TODO: This page requires updating)
 
 The Windows MIDI Services SDK is built using C++/WinRT. WinRT, a requirement for modern APIs/SDKs on Windows, enables desktop applications regardless of language to be able to use APIs, SDKs, etc. that we create. The older tools, C++/CX, are arguably simpler to implement in, but because they include proprietary extensions to C++, we decided to go with standards-based C++/WinRT instead.
 

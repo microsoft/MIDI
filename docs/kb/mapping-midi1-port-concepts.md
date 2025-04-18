@@ -1,10 +1,9 @@
 ---
-layout: page
-title: Mapping MIDI 1.0 Ports
-has_children: false
+layout: kb
+title: Understanding How we Map MIDI 1.0 Ports to UMP Endpoints
+audience: everyone
+description: This document explains how MIDI 1.0 ports relate to MIDI 2.0 UMP endpoints
 ---
-
-# Mapping MIDI 1.0 Ports to UMP Endpoints
 
 The big conceptual change between MIDI 1.0 and MIDI 2.0 / UMP (Universal MIDI Packet) endpoints is that the concept of a "Port" is no longer used.
 
@@ -35,13 +34,13 @@ At the same time, we create virtual Group Terminal Blocks for that device. The n
 
 ### Message listeners for MIDI 1.0 port-like access
 
-If your application is set up to deal more with single ports, we have an affordance in the SDK: the Message Listener. Anyone can build a message listener, but we supply ones to listen to one or more groups specifically for this use-case. This enables us to scale better by keeping only one connection to the endpoint, but filtering the messages on the client.
+If your application is set up to deal more with single ports, we have an affordance in the SDK: the Message Listener. Anyone can build a message listener, but we supply ones to listen to one or more groups specifically for this use-case. This enables us to scale better by keeping only one connection to the endpoint, but filtering the messages on the client, providing "port-like" functionality.
 
 Sending messages are still accomplished by communicating directly with the endpoint object, with an appropriate Group index in the message itself.
 
 ## How to present this to your users
 
-In MIDI 2.0 and UMP, the addressible entities are the Endpoint, the Group, and the Channel. That information should always be made available in some way to your user.
+In MIDI 2.0 and UMP, the addressible entities are the `Endpoint`, the `Group`, and the `Channel`. That information should always be made available in some way to your user.
 
 MIDI 2.0 devices typically support Function Blocks, which are named entities which can span one or more groups, and which can be moved at runtime, by design. Whenever possible, Function Blocks are preferred over Group Terminal Blocks.
 

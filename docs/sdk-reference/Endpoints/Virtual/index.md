@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: Virtual
+title: App SDK Support for app-to-app Virtual Devices
 namespace: Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 library: Microsoft.Windows.Devices.Midi2
 description: Namespace for virtual / app-to-app MIDI management

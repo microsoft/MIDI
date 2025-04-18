@@ -1,0 +1,38 @@
+---
+layout: default
+---
+
+{% include header.html %}
+{% include midi_slider.html %}
+{% include header_bottom_area.html %}   
+
+<section class="layout-area bg-color1 content tutorial">
+    <div class="layout-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <div class="tutorial-content mx-auto">
+                        <div class="doc-content">		
+                            {{content}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% include support_area.html %}
+{% include footer.html %}
+
+<script>
+  var headings = document.querySelectorAll("h2[id]");
+  for (var i = 0; i < headings.length; i++) {
+    var anchorLink = document.createElement("a");
+    anchorLink.innerText = "#";
+    anchorLink.href = "#" + headings[i].id;
+    anchorLink.classList.add("header-link");
+
+    headings[i].appendChild(anchorLink);
+  }
+</script>

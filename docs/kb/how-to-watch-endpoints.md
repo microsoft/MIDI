@@ -1,11 +1,9 @@
 ---
-layout: doc
-title: Enumerate UMP Endpoints (with add/remove/change detection)
-parent: Developer How-to
-has_children: false
+layout: kb
+title: How to Enumerate UMP Endpoints with Add/Remove/Change Notification
+audience: developers
+description: Follow the instructions here to get add/update/remove notifications in Windows when endpoints change
 ---
-
-# Enumerate UMP Endpoints (with add/remove/change detection)
 
 In WinRT, a device watcher is a type class which raises events when specific devices are added, removed, or have had property changes. The concept of a device watcher is central to working with all types of devices in Windows. The Windows SDK ships with a general `Windows::Devices::Enumeration::DeviceWatcher` class which can be used for any type of device query.
 

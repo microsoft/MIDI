@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: Endpoints
+title: App SDK Endpoint Management Overview
 namespace: Microsoft.Windows.Devices.Midi2.Endpoints
 library: Microsoft.Windows.Devices.Midi2.dll
 description: Root namespace for endpoint-specific SDK functions and types

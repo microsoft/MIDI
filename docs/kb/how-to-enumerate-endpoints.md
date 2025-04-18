@@ -1,8 +1,8 @@
 ---
-layout: doc
-title: Enumerate UMP Endpoints
-parent: Developer How-to
-has_children: false
+layout: kb
+title: How to Enumerate UMP Endpoints
+audience: developers
+description: How to list the Windows MIDI Services endpoints in your application.
 ---
 
 # How to Enumerate UMP Endpoints

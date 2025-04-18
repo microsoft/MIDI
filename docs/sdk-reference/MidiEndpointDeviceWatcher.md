@@ -17,8 +17,8 @@ Create a `MidiEndpointDeviceWatcher` on a background thread, and use the interna
 
 | Function | Description |
 | --------------- | ----------- |
-| `Status` | The current status. See the `Windows.Devices.Enumeration.DeviceWatcherStatus` enumeration |
-| `EnumeratedEndpointDevices` | The list of enumerated devices. Provided here for convenience so applications do not need to keep their own list of MIDI devices.  |
+| `Status` | The current status of the watcher itself. See the `Windows.Devices.Enumeration.DeviceWatcherStatus` enumeration |
+| `EnumeratedEndpointDevices` | The list of enumerated devices. Provided here for convenience so applications do not need to keep their own list of MIDI devices. The key into this map is the full MIDI Endpoint Device Id.  |
 
 ## Functions
 
@@ -27,23 +27,22 @@ Create a `MidiEndpointDeviceWatcher` on a background thread, and use the interna
 | `Start()` | Begin device enumeration. Wire up event handlers before calling this function.  |
 | `Stop()` | Stop device enumeration. |
 
-
 ## Static Functions
 
 | Static Function | Description |
 | --------------- | ----------- |
-| `Create(endpointFilter)` | Create a watcher which will enumerate devices based on the provided filter |
-| `Create()` | Create a watcher which will enumerate devices based on the default filter, appropriate for most apps |
+| `Create (endpointFilter)` | Create a watcher which will enumerate devices based on the provided filter |
+| `Create ()` | Create a watcher which will enumerate devices based on the default filter, appropriate for most apps |
 
 ## Events
 
 | Event | Description |
 | --------------- | ----------- |
-| `Added(source, deviceInformationAddedEventArgs)` | A new endpoint has been added.  |
-| `Removed(source, deviceInformationRemovedEventArgs)` | An endpoint has been removed. |
-| `Updated(source deviceInformationUpdatedEventArgs)` | Properties of an endpoint have been updated. This is much more common than it was with the older MIDI 1.0 APIs due to both in-protocol endpoint information, and user configuration. |
-| `EnumerationCompleted(source)` | Raised when the initial device enumeration has been completed. Devices may still be added or removed after this event, but use this to decide when you have enough information to display an initial list. |
-| `Stopped(source)` | Enumeration has been stopped. |
+| `Added (source, deviceInformationAddedEventArgs)` | A new endpoint has been added.  |
+| `Removed (source, deviceInformationRemovedEventArgs)` | An endpoint has been removed. |
+| `Updated (source deviceInformationUpdatedEventArgs)` | Properties of an endpoint have been updated. This is much more common than it was with the older MIDI 1.0 APIs due to both in-protocol endpoint information, and user configuration. |
+| `EnumerationCompleted (source)` | Raised when the initial device enumeration has been completed. Devices may still be added or removed after this event, but use this to decide when you have enough information to display an initial list. |
+| `Stopped (source)` | Enumeration has been stopped. |
 
 ## Endpoint connectivity detection
 
@@ -53,13 +52,11 @@ Whether and when an event fires depends upon the underlying transport. In the ca
 
 ### USB
 
-When the USB stack disconnects a device, we see it as a device disconnect. This can happen when the USB device is physically disconnected, when it is powered down, or when the PC is put into suspend and disconnects all USB devices. When the PC wakes from suspend, and the USB stack notifies us that the device is reconnected, it reappears and you can then reconnect to it. 
+When the USB stack disconnects a device, we see it as a device removal event. This can happen when the USB device is physically disconnected, when it is powered down, or when the PC is put into suspend and disconnects all USB devices. When the PC wakes from suspend, and the USB stack notifies us that the device is reconnected, it reappears and you can then reconnect to it. 
 
 ### Bluetooth MIDI
 
-The Blueooth MIDI stack has more of a delay, depending upon how often the device is checked for connectivity. It may be a few seconds before a powered-down BLE MIDI device triggers a disconnect/remove event. 
-
-Other network MIDI transports are likely to work in a similar way.
+The Blueooth MIDI stack has more of a delay, depending upon how often the device is checked for connectivity. It may be a few seconds before a powered-down BLE MIDI device triggers a `Remove` event. 
 
 ### Virtual Device (app to app) MIDI
 
@@ -67,7 +64,11 @@ In the case of the virtual device MIDI feature, when the hosting application clo
 
 ### Loopback (app to app) MIDI
 
-Loopback endpoints (other than the two diagnostic loopbacks built-in for testing/development) are controlled through either the API or the configuration file. Those created through the configuration file never go away, so there is no removed event fired. Those created through the API can be created/removed through the API at any time, and so will have the appropriate events fire off.
+Loopback endpoints (other than the two diagnostic loopbacks built-in for testing/development) are controlled through either the API or the configuration file. Those created through the configuration file never go away, so there is no `Removed` event fired. Those created through the API can be created/removed through the API at any time, and so will have the appropriate events fire off.
+
+### Network MIDI 2.0
+
+When the connection is lost or explicitly closed, the endpoint device will be removed and the `Removed` event will fire.
 
 ## What happens when an endpoint is disconnected
 

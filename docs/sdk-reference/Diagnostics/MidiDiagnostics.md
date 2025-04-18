@@ -7,7 +7,7 @@ type: runtimeclass
 description: Utility class for testing Windows MIDI Services
 ---
 
-The MidiDiagnostics class contains a number of static functions which enable working with the service outside of a specific session. 
+The MidiDiagnostics class contains a number of static functions which enable working with the service outside of a specific session. These are not normally used by applications.
 
 ## Static Methods
 

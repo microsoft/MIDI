@@ -6,7 +6,7 @@ library: Microsoft.Windows.Devices.Midi2.dll
 type: runtimeclass
 description: Response from a single ping message
 ---
-This class represents a single ping message response. This is used to assess health and performance of the Windows service.
+This class represents a single ping message response. This is used to assess health and performance of the Windows service. This is not normally used by applications.
 
 ## Properties
 

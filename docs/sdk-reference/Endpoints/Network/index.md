@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: Network
+title: App SDK Support for Network MIDI 2.0 Endpoints
 namespace: Microsoft.Windows.Devices.Midi2.Endpoints.Network
 library: Microsoft.Windows.Devices.Midi2
 status: preview
