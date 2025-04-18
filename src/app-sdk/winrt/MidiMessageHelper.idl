@@ -72,6 +72,6 @@ namespace Microsoft.Windows.Devices.Midi2.Messages
 
 
         static IVector<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> GetPacketListFromWordList(UInt64 timestamp, IIterable<UInt32> words);
-        static IVector<UInt32> GetWordListFromPacketList(IIterable<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> words);
+        static IVector<UInt32> GetWordListFromPacketList(IIterable<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> packets);
     };
 }
