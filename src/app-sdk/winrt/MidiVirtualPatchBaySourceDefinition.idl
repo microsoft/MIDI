@@ -15,7 +15,7 @@ import "MidiMessageTypeEnum.idl";
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
-    [interface_name("IMidiVirtualPatchBaySourceDefinition")]
+    [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBaySourceDefinition")]
     runtimeclass MidiVirtualPatchBaySourceDefinition
     {
         MidiVirtualPatchBaySourceDefinition();

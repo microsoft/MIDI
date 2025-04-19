@@ -239,26 +239,26 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         }
     }
 
-    _Use_decl_annotations_
-    svc::MidiServiceConfigResponse MidiServiceConfig::UpdateProcessingPluginConfig(
-        svc::IMidiServiceMessageProcessingPluginConfig const& configurationUpdate) noexcept
-    {
-        UNREFERENCED_PARAMETER(configurationUpdate);
-        // initializes to a failed value
-        //auto response = winrt::make_self<implementation::MidiServiceConfigurationResponse>();
+    //_Use_decl_annotations_
+    //svc::MidiServiceConfigResponse MidiServiceConfig::UpdateProcessingPluginConfig(
+    //    svc::IMidiServiceMessageProcessingPluginConfig const& configurationUpdate) noexcept
+    //{
+    //    UNREFERENCED_PARAMETER(configurationUpdate);
+    //    // initializes to a failed value
+    //    //auto response = winrt::make_self<implementation::MidiServiceConfigurationResponse>();
 
-        svc::MidiServiceConfigResponse response;
-        response.Status = svc::MidiServiceConfigResponseStatus::ErrorNotImplemented;
-
-
-        // TODO: Implement this in service and API
+    //    svc::MidiServiceConfigResponse response;
+    //    response.Status = svc::MidiServiceConfigResponseStatus::ErrorNotImplemented;
 
 
+    //    // TODO: Implement this in service and API
 
 
 
-        return response;
-    }
+
+
+    //    return response;
+    //}
 
 
 }

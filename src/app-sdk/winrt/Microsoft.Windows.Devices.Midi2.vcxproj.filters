@@ -345,9 +345,6 @@
     <Midl Include="MidiSystemTimerSettings.idl">
       <Filter>SDK\Core\Common</Filter>
     </Midl>
-    <Midl Include="IMidiServiceMessageProcessingPluginConfig.idl">
-      <Filter>SDK\ServiceConfig</Filter>
-    </Midl>
     <Midl Include="IMidiServiceTransportPluginConfig.idl">
       <Filter>SDK\ServiceConfig</Filter>
     </Midl>
@@ -404,9 +401,6 @@
     </Midl>
     <Midl Include="MidiFunctionBlockDiscoveryRequestsEnum.idl">
       <Filter>SDK\Core\Messages</Filter>
-    </Midl>
-    <Midl Include="MidiStreamConfigRequestedSettings.idl">
-      <Filter>SDK\Endpoints\VirtualDevice</Filter>
     </Midl>
     <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl">
       <Filter>SDK\Endpoints\VirtualDevice</Filter>
@@ -475,9 +469,6 @@
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
     <Midl Include="MidiReporting.idl">
-      <Filter>SDK\Utilities\Reporting</Filter>
-    </Midl>
-    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl">
       <Filter>SDK\Utilities\Reporting</Filter>
     </Midl>
     <Midl Include="MidiServiceSessionConnectionInfo.idl">

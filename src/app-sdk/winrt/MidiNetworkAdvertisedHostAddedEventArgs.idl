@@ -13,7 +13,7 @@ import "MidiNetworkAdvertisedHost.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    [interface_name("IMidiNetworkAdvertisedHostAddedEventArgs")]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkAdvertisedHostAddedEventArgs")]
     runtimeclass MidiNetworkAdvertisedHostAddedEventArgs
     {
         MidiNetworkAdvertisedHost AddedHost{ get; };

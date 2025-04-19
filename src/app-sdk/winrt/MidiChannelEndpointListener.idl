@@ -17,7 +17,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.ClientPlugins
 {
     [contract(MidiClientPluginsApiContract, 1)]
-    [interface_name("IMidiChannelEndpointListener", 8087b303-0519-31d1-c0de-dd0000002000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.ClientPlugins.IMidiChannelEndpointListener", 8087b303-0519-31d1-c0de-dd0000002000)]
     runtimeclass MidiChannelEndpointListener : Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin,
                                                Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
     {

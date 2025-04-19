@@ -14,8 +14,8 @@ namespace Microsoft.Windows.Devices.Midi2.CapabilityInquiry
 {
     [contract(MidiCapabilityInquiryApiContract,1)]
     [version(1)]
-    [interface_name("IMidiUniqueId", 8087b303-0519-31d1-c0de-dd0000001000)]
-    [static_name("IMidiUniqueIdStatics", 8087b303-0519-31d1-c0de-ee0000001000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueId", 8087b303-0519-31d1-c0de-dd0000001000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.CapabilityInquiry.IMidiUniqueIdStatics", 8087b303-0519-31d1-c0de-ee0000001000)]
     runtimeclass MidiUniqueId : Windows.Foundation.IStringable
     {
         MidiUniqueId();

@@ -13,7 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [interface_name("IMidiEndpointDeviceInformationUpdatedEventArgs", 8087b303-0519-31d1-c0de-dd000000d000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceInformationUpdatedEventArgs", 8087b303-0519-31d1-c0de-dd000000d000)]
     runtimeclass MidiEndpointDeviceInformationUpdatedEventArgs
     {
         String EndpointDeviceId {get; };

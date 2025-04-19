@@ -14,7 +14,7 @@ import "MidiNetworkAuthenticationTypeEnum.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    [interface_name("IMidiNetworkHostEndpointCreationConfig")]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkHostEndpointCreationConfig")]
     runtimeclass MidiNetworkHostEndpointCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkHostEndpointCreationConfig();

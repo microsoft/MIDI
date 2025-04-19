@@ -14,7 +14,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
 
-    [interface_name("IMidiNetworkClientEndpointRemovalConfig")]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientEndpointRemovalConfig")]
     runtimeclass MidiNetworkClientEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkClientEndpointRemovalConfig();
