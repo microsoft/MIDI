@@ -7,4 +7,4 @@ title: Windows MIDI Services App SDK Overview
 
 This overview page is a work-in-progress
 
-The namespaces and types are [documented here](sdk-reference/).
+The namespaces and types are [documented here](/sdk-reference/).
