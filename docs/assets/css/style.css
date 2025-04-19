@@ -2994,41 +2994,41 @@ div#modal {
 * ============================
 */
 
-.sdk-content{
+.tech-content{
     margin-top: 20px;
 }
 
-.sdk-content table{
+.tech-content table{
     width: 100%;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 3px 10px rgba(0,0,0,0.08);
     border-radius: 4px;
 }
 
-.sdk-content th {
+.tech-content th {
     font-size: 14px;
 }
 
-.sdk-content td {
+.tech-content td {
     font-size: 14px;
 }
 
-.sdk-content h2 {
+.tech-content h2 {
     font-size: 18px;
 }
 
-.sdk-content h3 {
+.tech-content h3 {
     font-size: 16px;
 }
 
-.sdk-content h4 {
+.tech-content h4 {
     font-size: 14px;
 }
 
-.sdk-content pre {
+.tech-content pre {
     line-height:20px;
 }
 
-.sdk-content code {
+.tech-content code {
     font-size: 14px;
     font-family: Cascadia Code NF, Cascadia Code, Consolas;
     font-weight:normal;
@@ -3037,7 +3037,7 @@ div#modal {
     inline-size: min-content;    
 }
 
-.sdk-content blockquote {
+.tech-content blockquote {
     width: 90%;
     background-color:#dedede23;
     border-left:#0D65B0;
@@ -3053,15 +3053,24 @@ div#modal {
     padding-right:0px;
 }
 
-.sdk-content blockquote h1 {
+.tech-content blockquote h1 {
     font-size: 14px;
     font-weight: bold;
 }
 
-.sdk-content blockquote a {
+.tech-content blockquote a {
     font-size: 14px;
     color:#0D65B0;
 }
+
+.tech-content img {
+    margin-top:20px;
+    margin-bottom:20px;
+    margin-left:0px;
+    margin-right:0px;
+    width:100%;
+}
+
 
 /* -----------------------  */
 

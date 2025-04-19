@@ -13,10 +13,16 @@
     url: /tools/settings/
   - text: PowerShell cmdlets
     url: /tools/powershell/
+  - text: MIDI Diagnostics
+    url: tools/mididiag/
   - text: MIDI 1 Monitor
     url: /tools/midi1monitor/
-  - text: MIDI Diagnostics
-    url: tools/other-tools/midi-diag
+  - text: MIDI 1 Enumerator
+    url: /tools/midi1enum/
+  - text: MIDI Kernel Streaming Info
+    url: tools/other-tools/midiksinfo/
+  - text: MIDI mDNS Info
+    url: tools/other-tools/midimdnsinfo/
 - text: Knowledge and Tutorials
   url: /kb/
 - text: App SDK Reference

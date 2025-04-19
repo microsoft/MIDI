@@ -1,6 +1,8 @@
 ---
-layout: doc
-title: MIDI Kernel Streaming Endpoint Info
+layout: tools_page
+title: MIDI Kernel Streaming Report
+tool: midiksinfo
+description: All about the midiksinfo tool - a reporting tool for troubleshooting device visibility and naming
 ---
 
-todo
+Documentation on `midiksinfo.exe` coming soon

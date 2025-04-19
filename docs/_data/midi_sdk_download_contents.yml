@@ -26,4 +26,4 @@
 - title: "Other Diagnostics Tools"
   image:
   description: The installer also includes other diagnostics tools like mididiag, midiksinfo, and midimdnsinfo.
-  details_url: "/tools/other-tools/"
+  details_url: "/tools/"

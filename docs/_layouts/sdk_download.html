@@ -9,119 +9,88 @@ layout: default
   <div class="layout-wrapper section-spacing bminus-30">
     <div class="container">
       <div class="row">
-	  {% if page.custom_links != nil %}
-
-        <div class="col-md-3">
-          <div class="custom-links">
-            <h5>In this article</h5>         
-			  <ul class="nav navbar-nav" id="nav">
-			{% for link in page.custom_links %}
-					{% assign active = nil %}
-
-					{% for sublink in link.submenu %}
-						{% if page.url contains sublink.url %}
-							{% assign active = 'active' %}
-						{% endif %}
-					{% endfor %}
-
-					{% if page.url contains link.url %}
-						{% assign active = 'active' %}
-					{% endif %}
-
-					<li class="subitem">
-						<a href="{{ link.url | relative_url }}">{{ link.text }}  
-						
-						</a>{% if link.submenu %}<a class="pb-0 pt-0" href="#nav"><i class="fa fa-angle-right"></i></a> {% endif %}
-
-						{% if link.submenu %}						
-							 <ul class="sub-dropdown">
-								{% for sublink in link.submenu %}
-									<li {% if page.url contains sublink.url %}class="active"{% endif %}>
-										<a href="{{ sublink.url | relative_url }}">{{ sublink.text }}</a>
-									</li>
-								{% endfor %}
-							</ul>
-						{% endif %}
-					</li>
-				{% endfor %}
-			</ul>			
-          </div>
-        </div>
-		{% endif %}
-		
-		
-		{% assign col = "6" %}
-		
-		{% if page.toc != true %}		
-		{% assign col1 = "3" %}		
-		{% endif %}
-		
-		{% if page.custom_links == nil %}
-		{% assign col2 = "3" %} 		
-		{% endif %}	
-		
-		
-        <!-- Start SDK Contents  Area -->
-        <section class="faq-area bg-color3">
-            <div class="faq-wrapper section-spacing bminus-30">
-                <div class="container">
-                    <div class="section-title">
-                        <h2 class="heading-2">MIDI Runtime and Tools Download Contents</h2>
-                        <p>When you install the Windows MIDI Services runtime and tools, you will get these features and tools.</p>
-                    </div>
-                    <div class="row">
-                        {% for feature in site.data.midi_sdk_download_contents %}
-                            <div class="col-md-6">
-                                <article class="faq-service bg-color1">
-                                    <header class="faq-logo wow bounceIn" data-wow-duration="1s">
-                                        <div class="logo-image"> <img src="{{feature.image | relative_url }}" alt="{{feature.title}}" /></div>
-                                    </header>
-                                    <footer class="faq-content">
-                                        <h4 class="heading-4">{{feature.title}}</h4>
-                                        <p>{{feature.description}} </p>
-                                        <a href="{{feature.details_url}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Learn More</a>
-                                    </footer>
-                                </article>
-                            </div>
-                        {% endfor %}
-                        
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- End SDK Contents Area -->
-
-        <div class="col-md-{{ col | plus: col1 | plus: col2 }}">
-          <div class="tutorial-content mx-auto">
-            <div class="doc-content">		
-              {{content}}
-            </div>
-          </div>
-        </div>
-
-
-        <!-- Start other downloads Area -->
-        <div class="col-md-12 col-lg-12 bg-color3">
-            <h2>Other Available Downloads</h2>
-            <div class="row">
-                {% assign data = site.data.midi_releases | where: "type", "preview" %}
-                {% for release in data %}
-                    <article class="col-md-5 col-lg-5 bg-color1">
-                        <h4 class="heading-4">{{release.title}}</h4>
-                        <p> {{release.version}}</p>
-                        <p> {{release.description}}</p>
-                        <a href="{{release.link_x64}}" class="btn btn-style3">{{release.label_x64}}</a>
-                        <a href="{{release.link_arm64}}" class="btn btn-style3">{{release.label_arm64}}</a>
-                    </article>
-                {% endfor %}
-            </div>
-        </div>
-        <!-- End other downloads Area -->
       </div>
     </div>
   </div>
-  </div>
 </section>
+
+
+<!-- Start SDK Contents  Area -->
+<section class="faq-area bg-color3">
+    <div class="faq-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="heading-2">MIDI Runtime and Tools Download Contents</h2>
+                <p>When you install the Windows MIDI Services runtime and tools, you will get these features and tools.</p>
+            </div>
+            <div class="row">
+                {% for feature in site.data.midi_sdk_download_contents %}
+                    <div class="col-md-6">
+                        <article class="faq-service bg-color1">
+                            <header class="faq-content">
+                                <h4 class="heading-4">{{feature.title}}</h4>
+                                <!--<div class="logo-image"> <img src="{{feature.image | relative_url }}" alt="{{feature.title}}" /></div> -->
+                            </header>
+                            <footer class="faq-content">
+                                <p>{{feature.description}}</p>
+                                <br/>
+                                <a href="{{feature.details_url}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Learn More</a>
+                            </footer>
+                        </article>
+                    </div>
+                {% endfor %}
+                
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End SDK Contents Area -->
+
+<section class="layout-area bg-color1 content tutorial">
+    <div class="section-spacing bminus-30">
+        <div class="container">
+            <div class="col-md-12 col-bg-12">
+                <div class="tutorial-content mx-auto">
+                    <div class="doc-content">		
+                    {{content}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Start other downloads Area -->
+<section class="looking-for-area bg-color3">
+    <div class="looking-for-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="col-md-12 col-lg-12">
+                <div class="section-title text-center">
+                    <h2 class="heading-2">Other Available Downloads</h2>
+                </div>
+                <div class="row">
+                    {% assign data = site.data.midi_releases | where: "type", "preview" %}
+                    {% for release in data %}
+                    <div class="col-md-6">
+                        <article class="looking-for-service">
+                            <footer>
+                                <h4 class="heading-4">{{release.title}}</h4>
+                                <p> {{release.version}}</p>
+                                <p> {{release.description}}</p>
+                                <a href="{{release.link_x64}}" class="btn btn-style3">{{release.label_x64}}</a>
+                                <a href="{{release.link_arm64}}" class="btn btn-style3">{{release.label_arm64}}</a>
+                            </footer>
+                        </article>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End other downloads Area -->
+
 
 {% include support_area.html %}
 {% include footer.html %}

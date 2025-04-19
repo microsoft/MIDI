@@ -1,10 +1,9 @@
 ---
-layout: page
-title: Help and Troubleshooting
-parent: MIDI Console
+layout: tools_page
+title: Console Help and Troubleshooting
+tool: console
+description: How to get help in the Windows MIDI Services Console
 ---
-
-# Windows MIDI Services Console Help
 
 Add the option `--help` or its short version `-h` to any command to get information and examples for that command.
 
@@ -17,7 +16,7 @@ midi enumerate endpoints --help
 
 The `--help` option will always provide the most up-to-date list of commands and options supported by the MIDI Services Console.
 
-![MIDI Services Console Help](help.png)
+![MIDI Services Console Help](/assets/images/console-help.png)
 
 ## Check the MIDI Service Health
 

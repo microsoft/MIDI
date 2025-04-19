@@ -16,18 +16,18 @@ layout: default
         {% include sdk_reference_left_nav.html %}
         <div class="col-md-8">
           <div class="tutorial-content mx-auto">
-            <div class="sdk-content">		
+            <div class="tech-content">		
                 <code>{{page.namespace}}</code>
             </div>
   
-            <div class="sdk-content">		
+            <div class="tech-content">		
               {{content}}
             </div>
 
             <h3>Types in this namespace</h3>
             <p>Click or tap the type name to view more details.</p>
 
-            <div class="sdk-content">
+            <div class="tech-content">
                 {% assign sdk_pages = site.pages | where: "layout", "sdk_reference_page" | where: "namespace", page.namespace | sort: "title" %}
 
                 <div>

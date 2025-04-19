@@ -1,16 +1,15 @@
 ---
-layout: page
-title: Endpoints and Messages
-parent: MIDI Console
+layout: tools_page
+title: Endpoints and Messages in the MIDI Console
+tool: console
+description: How to use the MIDI Console to work with UMP endpoints and messages
 ---
-
-# Single-Endpoint Commands
 
 There are a number of commands, including those for monitoring and sending messages, which operate on a single endpoint.
 
 In most any command which takes an Endpoint Device Id as a parameter, that parameter is optional. If you leave it out, and the command operates on a single endpoint, you will be prompted with a menu of available endpoints to work with.
 
-![midi endpoint prompt](midi-endpoint-prompt.png)
+![midi endpoint prompt](/assets/images/console-midi-endpoint-prompt.png)
 
 If you want to script the commands without requiring any user interaction, provide the endpoint device ID as the first parameter after the `endpoint` command. For example:
 
@@ -18,7 +17,7 @@ If you want to script the commands without requiring any user interaction, provi
 midi endpoint \\?\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_B#{e7cce071-3c03-423f-88d3-f1045d02552b} properties --verbose
 ```
 
-![midi endpoint help](midi-endpoint-help.png)
+![midi endpoint help](/assets/images/console-midi-endpoint-help.png)
 
 ## Get Detailed Endpoint Properties
 
@@ -56,7 +55,7 @@ Verbose mode:
 midi endpoint monitor --verbose
 ```
 
-![midi endpoint monitor verbose](midi-endpoint-monitor-verbose.png)
+![midi endpoint monitor verbose](/assets/images/console-midi-endpoint-monitor-verbose.png)
 
 ### Saving messages to a file
 
@@ -208,7 +207,7 @@ The parameters are all described when you type `midi endpoint play-notes --help`
 
 This is not meant to be a sequencer with the kind of timing accuracy you would have in a DAW, but is instead a simple way to play notes on an endpoint.
 
-![Play Notes](midi-endpoint-play-notes.png)
+![Play Notes](/assets/images/console-midi-endpoint-play-notes.png)
 
 ## Sending Endpoint Metadata Requests
 
