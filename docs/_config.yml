@@ -13,7 +13,7 @@ email: "midi@microsoft.com"
 description: "Microsoft Windows MIDI Services API, SDK, and tools"
 keywords: "midi, midi2, music, musicians, audio, Windows, Microsoft"
 baseurl: "/midi" # the subpath of your site, e.g. /blog
-url: https://microsoft.github.io/MIDI
+url: https://microsoft.github.io/
 cover_image:  # Image will Display in Social Media When share the website
 repository: microsoft/midi
 
