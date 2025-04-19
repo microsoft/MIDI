@@ -5,19 +5,17 @@ audience: developers
 description: How to create a virtual UMP device (app-to-app MIDI) from code
 ---
 
-# How to Create Virtual Devices at Runtime
-
 If you develop an application which should appear as a new MIDI device to other applications on Windows, you want to create a Virtual UMP Device. Your app may be a controller app, a sound generator/synthesizer, or a bridge to accessibility or other controllers. Anything a hardware MIDI device can do is open to you here.
 
 ## How Virtual Devices work
 
 A virtual device enables an application to appear as a UMP Endpoint to other applications.
 
-[More information on how Virtual Devices work may be found here](../endpoints/virtual-device-app.html).
+[More information on how Virtual Devices work may be found here](virtual-device-app).
 
 ## Steps to Create a Virtual Device
 
-1. [Check for and bootstrap Windows MIDI Services](./how-to-check-for-windows-midi-services.html)
+1. [Check for and bootstrap Windows MIDI Services](how-to-bootstrap-windows-midi-services)
 2. Create a MIDI session
 3. Define the Virtual MIDI Device, its function blocks, and other properties
 4. Create the Device and get the `EndpointDeviceId` for the device-side application endpoint
@@ -31,7 +29,7 @@ On the service-side, the Virtual Device works like any other native UMP MIDI 2.0
 
 ## Code
 
-We'll assume you've already performed the [Windows MIDI Services bootstrapping steps](./how-to-check-for-windows-midi-services.html).
+We'll assume you've already performed the [Windows MIDI Services bootstrapping steps]how-to-bootstrap-windows-midi-services).
 
 The first step is to define the virtual device by creating the different metadata declarations and then assemble them together using the `MidiVirtualDeviceCreationConfig` type. 
 

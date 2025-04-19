@@ -10,7 +10,7 @@ The `midi service` command provides information about the status of the MIDI Ser
 ```
 midi service --help
 ```
-![MIDI Service Command](/assets/images/console-midi-service.png)
+![MIDI Service Command]({{ site.baseurl }}/assets/images/console-midi-service.png)
 
 
 ## Check to see if the MIDI Service is running
@@ -21,7 +21,7 @@ If you want to see if the MIDI Service is running, you can check via the console
 midi service status
 ```
 
-![MIDI Service Status Command](/assets/images/console-midi-service-status.png)
+![MIDI Service Status Command]({{ site.baseurl }}/assets/images/console-midi-service-status.png)
 
 ## Perform a ping test of the MIDI Service
 
@@ -31,7 +31,7 @@ Another diagnostic feature is the ping test. This calls the app SDK functions to
 midi service ping --verbose
 ```
 
-![MIDI Service Status Command](/assets/images/console-midi-service-ping-verbose.png)
+![MIDI Service Status Command]({{ site.baseurl }}/assets/images/console-midi-service-ping-verbose.png)
 
 ## Start and stop the MIDI Service
 
@@ -67,6 +67,6 @@ This must be run from an Administrator command prompt.
 midi service set-auto-start
 ```
 
-![MIDI Service Set-Auto-Start Command](/assets/images/console-midi-service-auto-start.png)
+![MIDI Service Set-Auto-Start Command]({{ site.baseurl }}/assets/images/console-midi-service-auto-start.png)
 
 That changes the service startup from "Manual (Trigger Start)" to "Automatic". You can also do the same thing using the Services applet, or other command-line approaches (PowerShell, etc.). This is in the MIDI console for convenience.

@@ -9,7 +9,7 @@ description: All about the midi1monitor tool
 
 This app is designed primarily for simple use-cases.
 
-![midi1monitor](/assets/images/midi1monitor.png)
+![midi1monitor]({{ site.baseurl }}/assets/images/midi1monitor.png)
 
 The raw MIDI 1.0 byte data is shown on the left in hexidecimal. The interpretation of that data is shown to the right of the raw data. Numbers in the interpretation are in decimal format.
 

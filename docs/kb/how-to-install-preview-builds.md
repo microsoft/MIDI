@@ -25,7 +25,7 @@ If Developer Mode is turned on in settings, the service skips the check for sign
 
 Settings > System > For developers > Developer Mode
 
-![Developer Mode](.\settings-developer-mode.png)
+![Developer Mode]({{ site.baseurl }}/assets/images/settings-developer-mode.png)
 
 # Easiest Way: Let the installer handle the rest
 
