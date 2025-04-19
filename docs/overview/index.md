@@ -31,6 +31,8 @@ In the future, we have plans for BLE MIDI 1.0, Network MIDI 2.0 (demonstrated at
 
 If Developer Mode is not turned on in Windows Settings, all service plugins must be signed with a valid certificate by an authority that is recognized on the PC.
 
+![Transports listed in the MIDI Console]({{"/assets/images/console-enum-transports.png" | relative_url}})
+
 ### Service Plugins: Transforms
 
 Another type of service plugin is the Message Transform. These plugins take in a message, do something with it, and optionally pass it along to the next step. 
@@ -49,6 +51,9 @@ The new driver supports both MIDI 2.0 devices as well as MIDI 1.0 devices. By de
 
 Some devices, due to how their USB descriptors are set up, will automatically move to the new UMP driver. This is not a large percentage of devices, but includes ones like the Korg nanoKey and family, and the Conductive Labs MRCC.
 
+> <h4>Thank You!</h4>
+> The open source USB MIDI 2.0 driver has been generously donated by [AMEI](https://www.amei.or.jp/), the **Association of Musical Electronics Industry**, and developed by [AmeNote :tm:](https://www.AmeNote.com/) in partnership with Microsoft. Please see the file headers for any additional copyright notices. A huge thank you to AMEI and its member companies for making this happen: AlphaTheta Corporation, INTERNET Co., Ltd., Kawai Musical Instruments Manufacturing Co., Ltd., CRYPTON FUTURE MEDIA, INC., CRIMSON TECHNOLOGY, Inc., KORG INC., Educational Corporation Shobi Gakuen, SyncPower Corporation, ZOOM CORPORATION, SUZUKI MUSICAL INST.MFG.CO.,LTD., TEAC CORPORATION, Yamaha Corporation, Yamaha Music Entertainment Holdings, Inc., Roland Corporation, Analog Devices, K.K.
+
 ### Vendor drivers are usually not needed
 
 If your USB MIDI device is class-compliant (that is, it will work with devices like the iPad with no driver required) then you probably do not need to install a driver on Windows. We encourage you to use the in-box drivers whenever possible to reduce the complexity of your setup.
@@ -60,6 +65,10 @@ Devices which are not class-compliant will still need their own drivers. We supp
 In short, to ensure that everything plays together nicely, we have replumbed the existing WinMM MIDI 1.0 and WinRT MIDI 1.0 APIs to talk to the new MIDI Service instead of talking directly to device drivers. This ensures apps using those APIs do not lock ports and instead participate in multi-client use, and also that they can use ports created from new MIDI 2.0 endpoints.
 
 Please see the [knowledge base]({{"/kb/" | relative_url}}) for more information about backwards compatibility. 
+
+## Tools
+
+Windows MIDI Services also comes with a number of tools, like MIDI Settings and the MIDI Console to enable you to customize and manage your MIDI devices. More information can be found in the [tools pages]({{"/tools/" | relative_url}}).
 
 ## SDK Reference for Software Developers
 
