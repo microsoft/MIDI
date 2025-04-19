@@ -16,7 +16,7 @@ midi enumerate endpoints --help
 
 The `--help` option will always provide the most up-to-date list of commands and options supported by the MIDI Services Console.
 
-![MIDI Services Console Help](/assets/images/console-help.png)
+![MIDI Services Console Help]({{ site.baseurl }}/assets/images/console-help.png)
 
 ## Check the MIDI Service Health
 

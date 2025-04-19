@@ -15,5 +15,5 @@ This command makes it easy to see which transports are currently enabled in Wind
 midi enumerate transport-plugins
 ```
 
-![Enumerate Transport Plugins](/assets/images/console-enum-transports.png)
+![Enumerate Transport Plugins]({{ site.baseurl }}/assets/images/console-enum-transports.png)
 

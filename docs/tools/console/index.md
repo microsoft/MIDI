@@ -16,7 +16,7 @@ The Windows MIDI Services console is delivered as part of the SDK Runtime and To
 
 MIDI Console commands are words with no symbol prefix. For example `endpoint` or `send-message-file`. Options are prefixed with two dashes if you use the full word, or a single dash if you use the single-letter abbreviation. For example `--help` or `-h`. There is no statement completion built in to the console, but there are some supported abbreviations for commands. These are not yet fully documented but are present in the Program.cs in the console source code.
 
-![MIDI endpoint properties](/assets/images/console-midi-endpoint-properties.png)
+![MIDI endpoint properties]({{ site.baseurl }}/assets/images/console-midi-endpoint-properties.png)
 
 ## "Ports" vs "Endpoints"
 

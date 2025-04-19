@@ -11,4 +11,4 @@ If you want to see the MIDI clock we're using for timestamps and message schedul
 midi time
 midi clock
 ```
-![MIDI Clock Command](/assets/images/console-midi-clock.png)
+![MIDI Clock Command]({{ site.baseurl }}/assets/images/console-midi-clock.png)

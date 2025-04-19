@@ -18,7 +18,7 @@ Another approach is to allow applications to create and publish an endpoint whic
 
 In addition, MIDI 2.0 has additional requirements for endpoints. They need to be able to participate in the MIDI Endpoint Discovery process, and respond with appropriate endpoint capabilities, function blocks, and preferred settings. The Virtual Device App makes that configuration simple for application developers and musicians without having to handle individual discovery and protocol negotiation messages.
 
-![Virtual Device](virtual-device.png)
+![Virtual Device]({{ site.baseurl }}/assets/images/virtual-device.png)
 
 ### Lifetime
 
@@ -45,4 +45,4 @@ The best experience for Windows MIDI Services will be with applications using th
 
 Virtual Devices cannot be specified in the configuration file. Instead, applications must create them through code.
 
-For developer information on how to set up a Virtual Device, see the [developer how-to](../developer-how-to/how-to-create-virtual-ump-device.html).
+For developer information on how to set up a Virtual Device, see the [developer how-to](how-to-create-virtual-ump-device).

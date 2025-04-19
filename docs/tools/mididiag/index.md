@@ -24,9 +24,9 @@ From this report, the viewer can identify
 - The list of all Windows MIDI Services endpoints, and their mapped MIDI 1.0 ports, their group terminal blocks, their name tables, and more
 - The results of a ping test
 
-![mididiag](/assets/images/mididiag-output-1.png)
+![mididiag]({{ site.baseurl }}/assets/images/mididiag-output-1.png)
 ...
-![mididiag](/assets/images/mididiag-output-2.png)
+![mididiag]({{ site.baseurl }}/assets/images/mididiag-output-2.png)
 
 
 Typically, when asked to provide the output, you will type something like this:

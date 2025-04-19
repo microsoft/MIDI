@@ -5,8 +5,6 @@ audience: developers
 description: How to create loopback endpoint pairs from code
 ---
 
-# How to create simple Loopback Endpoint Pairs at runtime
-
 We'll assume here you've already initialized Windows MIDI Services and created a session.
 
 First, you define the two sides of the loopback. Because UMP endpoints are bidirectional, the loopback works from either direction: Messages set out on A arrive in on B, and those sent out on B arrive in on A.

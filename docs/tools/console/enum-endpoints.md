@@ -21,7 +21,7 @@ All of the above statements will return a list of all the user-focused UMP endpo
 
 > **Note:** There are loopback endpoints A and B that are always available and are built into the service. They are crosswired to each other so that any message sent to A is received on B, and vice versa. They cannot be removed or disabled. Because these are more for support, testing, and developer scenarios, they are not returned from enumeration calls by default. Instead, you would supply the `--include-loopback` option for the enumeration commands.
 
-![MIDI enum endpoints](/assets/images/console-midi-enum-endpoints.png)
+![MIDI enum endpoints]({{ site.baseurl }}/assets/images/console-midi-enum-endpoints.png)
 
 ## Enumerate Classic Byte-format (MIDI 1.0) Endpoints
 
