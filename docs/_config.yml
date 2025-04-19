@@ -15,6 +15,7 @@ keywords: "midi, midi2, music, musicians, audio, Windows, Microsoft"
 baseurl: "/" # the subpath of your site, e.g. /blog
 url: 
 cover_image:  # Image will Display in Social Media When share the website
+repository: microsoft/midi
 
 ## Theme Options
 animated_header: "false"  #true 
