@@ -12,7 +12,7 @@ title: "Windows MIDI Services Documentation"
 email: "midi@microsoft.com"
 description: "Microsoft Windows MIDI Services API, SDK, and tools"
 keywords: "midi, midi2, music, musicians, audio, Windows, Microsoft"
-baseurl: "/" # the subpath of your site, e.g. /blog
+baseurl: "/MIDI" # the subpath of your site, e.g. /blog
 url: 
 cover_image:  # Image will Display in Social Media When share the website
 repository: microsoft/midi
