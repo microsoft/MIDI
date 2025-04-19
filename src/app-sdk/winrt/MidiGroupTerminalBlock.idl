@@ -20,7 +20,8 @@ import "MidiGroup.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [default_interface]
+    [interface_name("IMidiGroupTerminalBlock", 8087b303-0519-31d1-c0de-dd0000010000)]
+    [static_name("IMidiGroupTerminalBlockStatics", 8087b303-0519-31d1-c0de-ee0000010000)]
     runtimeclass MidiGroupTerminalBlock : Windows.Foundation.IStringable
     {
         static String ShortLabel{ get; };

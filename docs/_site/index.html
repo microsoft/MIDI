@@ -1,1 +1,481 @@
-<!DOCTYPE html> <html lang="en-US"> <head> <meta charset="UTF-8"> <meta http-equiv="X-UA-Compatible" content="IE=Edge"> <link rel="stylesheet" href="/docs/assets/css/just-the-docs-default.css"> <link rel="stylesheet" href="/docs/assets/css/just-the-docs-head-nav.css" id="jtd-head-nav-stylesheet"> <style id="jtd-nav-activation"> .site-nav > ul.nav-list:first-child > li:not(:nth-child(1)) > a, .site-nav > ul.nav-list:first-child > li > ul > li > a, .site-nav > ul.nav-list:first-child > li > ul > li > ul > li > a { background-image: none; } .site-nav > ul.nav-list:not(:first-child) a, .site-nav li.external a { background-image: none; } .site-nav > ul.nav-list:first-child > li:nth-child(1) > a { font-weight: 600; text-decoration: none; }.site-nav > ul.nav-list:first-child > li:nth-child(1) > button svg { transform: rotate(-90deg); }.site-nav > ul.nav-list:first-child > li.nav-list-item:nth-child(1) > ul.nav-list { display: block; } </style> <script src="/docs/assets/js/vendor/lunr.min.js"></script> <script src="/docs/assets/js/just-the-docs.js"></script> <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Begin Jekyll SEO tag v2.8.0 --> <title>Windows Midi Services | Windows MIDI Services</title> <meta name="generator" content="Jekyll v4.3.3" /> <meta property="og:title" content="Windows Midi Services" /> <meta property="og:locale" content="en_US" /> <meta name="description" content="User and developer documentation for the Windows MIDI Services project" /> <meta property="og:description" content="User and developer documentation for the Windows MIDI Services project" /> <link rel="canonical" href="http://localhost:4000/docs/" /> <meta property="og:url" content="http://localhost:4000/docs/" /> <meta property="og:site_name" content="Windows MIDI Services" /> <meta property="og:type" content="website" /> <meta name="twitter:card" content="summary" /> <meta property="twitter:title" content="Windows Midi Services" /> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"WebSite","description":"User and developer documentation for the Windows MIDI Services project","headline":"Windows Midi Services","name":"Windows MIDI Services","url":"http://localhost:4000/docs/"}</script> <!-- End Jekyll SEO tag --> </head> <body> <a class="skip-to-main" href="#main-content">Skip to main content</a> <svg xmlns="http://www.w3.org/2000/svg" class="d-none"> <symbol id="svg-link" viewBox="0 0 24 24"> <title>Link</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"> <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path> </svg> </symbol> <symbol id="svg-menu" viewBox="0 0 24 24"> <title>Menu</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-menu"> <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line> </svg> </symbol> <symbol id="svg-arrow-right" viewBox="0 0 24 24"> <title>Expand</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right"> <polyline points="9 18 15 12 9 6"></polyline> </svg> </symbol> <!-- Feather. MIT License: https://github.com/feathericons/feather/blob/master/LICENSE --> <symbol id="svg-external-link" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-external-link"> <title id="svg-external-link-title">(external link)</title> <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line> </symbol> <symbol id="svg-doc" viewBox="0 0 24 24"> <title>Document</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file"> <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline> </svg> </symbol> <symbol id="svg-search" viewBox="0 0 24 24"> <title>Search</title> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-search"> <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line> </svg> </symbol> <!-- Bootstrap Icons. MIT License: https://github.com/twbs/icons/blob/main/LICENSE.md --> <symbol id="svg-copy" viewBox="0 0 16 16"> <title>Copy</title> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16"> <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/> <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/> </svg> </symbol> <symbol id="svg-copied" viewBox="0 0 16 16"> <title>Copied</title> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard-check-fill" viewBox="0 0 16 16"> <path d="M6.5 0A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3Zm3 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3Z"/> <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1A2.5 2.5 0 0 1 9.5 5h-3A2.5 2.5 0 0 1 4 2.5v-1Zm6.854 7.354-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 10.793l2.646-2.647a.5.5 0 0 1 .708.708Z"/> </svg> </symbol> </svg> <div class="side-bar"> <div class="site-header" role="banner"> <a href="/docs/" class="site-title lh-tight"> Windows MIDI Services </a> <button id="menu-button" class="site-button btn-reset" aria-label="Toggle menu" aria-pressed="false"> <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><use xlink:href="#svg-menu"></use></svg> </button> </div> <nav aria-label="Main" id="site-nav" class="site-nav"> <ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Windows Midi Services category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/" class="nav-list-link">Windows Midi Services</a><ul class="nav-list"><li class="nav-list-item"><a href="/docs/api-back-compat.html" class="nav-list-link">API Backwards Compatibility</a></li><li class="nav-list-item"><a href="/docs/developer-docs/best-practices.html" class="nav-list-link">Best Practices</a></li><li class="nav-list-item"><a href="/docs/config-json.html" class="nav-list-link">Config JSON</a></li><li class="nav-list-item"><a href="/docs/developer-docs/consuming-midi-api.html" class="nav-list-link">Consuming the MIDI API</a></li><li class="nav-list-item"><a href="/docs/developer-docs/diagnostic-endpoints.html" class="nav-list-link">Diagnostics Endpoints</a></li><li class="nav-list-item"><a href="/docs/developer-docs/endpoint-ids.html" class="nav-list-link">Endpoint Device Ids</a></li><li class="nav-list-item"><a href="/docs/midi-console.html" class="nav-list-link">MIDI Console</a></li><li class="nav-list-item"><a href="/docs/developer-docs/faq-programming-languages.html" class="nav-list-link">Programming Languages FAQ</a></li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Windows.Devices.Midi2 API category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/README.html" class="nav-list-link">Windows.Devices.Midi2 API</a><ul class="nav-list"><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Client Plugins category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/processing-plugins/README.html" class="nav-list-link">Client Plugins</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/processing-plugins/IMidiEndpointMessageProcessingPlugin.html" class="nav-list-link">IMidiEndpointMessageProcessingPlugin</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/processing-plugins/MidiChannelEndpointListener.html" class="nav-list-link">MidiChannelEndpointListener</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/processing-plugins/MidiGroupEndpointListener.html" class="nav-list-link">MidiGroupEndpointListener</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/processing-plugins/MidiMessageTypeEndpointListener.html" class="nav-list-link">MidiMessageTypeEndpointListener</a> </li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Connections category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/connections/README.html" class="nav-list-link">Connections</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/connections/IMidiEndpointConnectionSettings.html" class="nav-list-link">IMidiEndpointConnectionSettings</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/connections/MidiEndpointConnection.html" class="nav-list-link">MidiEndpointConnection</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/connections/MidiMessageReceivedEventArgs.html" class="nav-list-link">MidiMessageReceivedEventArgs</a> </li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Endpoint Enumeration category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/enumeration/README.html" class="nav-list-link">Endpoint Enumeration</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/enumeration/MidiEndpointDeviceInformation.html" class="nav-list-link">MidiEndpointDeviceInformation</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/enumeration/MidiEndpointDeviceInformationUpdateEventArgs.html" class="nav-list-link">MidiEndpointDeviceInformationUpdateEventArgs</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/enumeration/MidiEndpointDeviceWatcher.html" class="nav-list-link">MidiEndpointDeviceWatcher</a> </li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Message Utilities category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/message-utilities/README.html" class="nav-list-link">Message Utilities</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/message-utilities/MidiMessageBuilder.html" class="nav-list-link">MidiMessageBuilder</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/message-utilities/MidiMessageConverter.html" class="nav-list-link">MidiMessageConverter</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/message-utilities/MidiMessageTranslator.html" class="nav-list-link">MidiMessageTranslator</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/message-utilities/MidiMessageUtility.html" class="nav-list-link">MidiMessageUtility</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/message-utilities/MidiStreamMessageBuilder.html" class="nav-list-link">MidiStreamMessageBuilder</a> </li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Messages category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/messages/README.html" class="nav-list-link">Messages</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/messages/IMidiUniversalPacket.html" class="nav-list-link">IMidiUniversalPacket</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/messages/MidiMessage128.html" class="nav-list-link">MidiMessage128</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/messages/MidiMessage32.html" class="nav-list-link">MidiMessage32</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/messages/MidiMessage64.html" class="nav-list-link">MidiMessage64</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/messages/MidiMessage96.html" class="nav-list-link">MidiMessage96</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/messages/MidiMessageStruct.html" class="nav-list-link">MidiMessageStruct</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/messages/MidiMessageTypeEnum.html" class="nav-list-link">MidiMessageType</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/messages/MidiPacketTypeEnum.html" class="nav-list-link">MidiPacketType</a> </li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Metadata category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/metadata/README.html" class="nav-list-link">Metadata</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/metadata/MidiFunctionBlock.html" class="nav-list-link">MidiFunctionBlock</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/metadata/MidiGroupTerminalBlock.html" class="nav-list-link">MidiGroupTerminalBlock</a> </li></ul></li><li class="nav-list-item"><a href="/docs/developer-docs/Windows.Devices.Midi2/clock/MidiClock.html" class="nav-list-link">MidiClock</a></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Service category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/service/README.html" class="nav-list-link">Service</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/service/MidiService.html" class="nav-list-link">MidiService</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/service/MidiServiceMessageProcessingPluginInformation.html" class="nav-list-link">MidiServiceMessageProcessingPluginInformation</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/service/MidiServicePingResponse.html" class="nav-list-link">MidiServicePingResponse</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/service/MidiServicePingResponseSummary.html" class="nav-list-link">MidiServicePingResponseSummary</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/service/MidiServiceTransportPluginInformation.html" class="nav-list-link">MidiServiceTransportPluginInformation</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/service/MidiSessionConnectionInformation.html" class="nav-list-link">MidiSessionConnectionInformation</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/service/MidiSessionInformation.html" class="nav-list-link">MidiSessionInformation</a> </li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Session category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/session/README.html" class="nav-list-link">Session</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/session/MidiSession.html" class="nav-list-link">MidiSession</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/session/MidiSessionSettings.html" class="nav-list-link">MidiSessionSettings</a> </li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Simple Types category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/simple-types/README.html" class="nav-list-link">Simple Types</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/simple-types/MidiChannel.html" class="nav-list-link">MidiChannel</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/simple-types/MidiGroup.html" class="nav-list-link">MidiGroup</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/simple-types/MidiUniqueId.html" class="nav-list-link">MidiUniqueId</a> </li></ul></li><li class="nav-list-item"><button class="nav-list-expander btn-reset" aria-label="toggle items in Virtual Devices category" aria-pressed="false"> <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg> </button><a href="/docs/developer-docs/Windows.Devices.Midi2/virtual-device/README.html" class="nav-list-link">Virtual Devices</a><ul class="nav-list"><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/virtual-device/MidiStreamConfigurationRequestReceivedEventArgs.html" class="nav-list-link">MidiStreamConfigurationRequestReceivedEventArgs</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/virtual-device/MidiVirtualEndpointDevice.html" class="nav-list-link">MidiVirtualEndpointDevice</a> </li><li class="nav-list-item"> <a href="/docs/developer-docs/Windows.Devices.Midi2/virtual-device/MidiVirtualEndpointDeviceDefinition.html" class="nav-list-link">MidiVirtualEndpointDeviceDefinition</a> </li></ul></li></ul></li></ul> </nav> <footer class="site-footer"> This site uses <a href="https://github.com/just-the-docs/just-the-docs">Just the Docs</a>, a documentation theme for Jekyll. </footer> </div> <div class="main" id="top"> <div id="main-header" class="main-header"> <div class="search" role="search"> <div class="search-input-wrap"> <input type="text" id="search-input" class="search-input" tabindex="0" placeholder="Search Windows MIDI Services" aria-label="Search Windows MIDI Services" autocomplete="off"> <label for="search-input" class="search-label"><svg viewBox="0 0 24 24" class="search-icon"><use xlink:href="#svg-search"></use></svg></label> </div> <div id="search-results" class="search-results"></div> </div> </div> <div class="main-content-wrap"> <div id="main-content" class="main-content"> <main> <h1 id="windows-midi-services"> <a href="#windows-midi-services" class="anchor-heading" aria-labelledby="windows-midi-services"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Windows MIDI Services </h1> <blockquote> <p><a href="https://aka.ms/midirepo">Source repo and developer releases on GitHub</a></p> </blockquote> <blockquote> <p><a href="https://aka.ms/mididiscord">Discord Server for discussion about this project</a></p> </blockquote> <h2 id="key-features"> <a href="#key-features" class="anchor-heading" aria-labelledby="key-features"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Key Features </h2> <ul> <li><strong>Multi-client by default</strong>. Unless an endpoint is configured to not allow shared connections, or there is some issue around multi-client in a third-party driver, any endpoint (including MIDI 1.0 devices) can be used by multiple applications at the same time. So far, in our testing, we haven’t found any USB devices or drivers which cannot be multi-client.</li> <li><strong>Faster</strong>. In our testing, we’ve found that the new infrastructure is much faster at sending and receiving messages compared to the older API, even with plugins configured in the service. There are no built-in speed caps or throttling in Windows MIDI Services, even for older USB MIDI 1.0 devices. The driver is not limited USB full-speed, and supports USB 3.x speeds.</li> <li><strong>Lower Jitter</strong>. Along with higher speed comes lower jitter. This will vary by transport type (USB vs Network vs Virtual), and the device Windows is talking to, but the jitter is in the low microsecond range even without any compensation.</li> <li><strong>More Deterministic</strong>. Speaking of latency compensation, the new API enables timestamp-based message scheduling for outbound messages, and also will soon support Jitter Reduction timestamps for MIDI 2.0 devices which can use them.</li> <li><strong>Extensible</strong>. The service has been designed to be extensible by Microsoft and third-parties. New types of transports can be added at any time, including during prototyping of a new transport specification. (We’re working on Network MIDI 2.0, Bluetooth MIDI 1.0 and considering RTP, all using this model.) Similarly, message processing plugins can also be developed by Microsoft or third-parties and used for production and/or prototyping. <strong>No kernel driver experience required in most cases.</strong></li> <li><strong>Includes app-to-App and Virtual MIDI</strong>. Windows MIDI Services includes virtual / app-to-app MIDI 2.0 to enable lightning fast communication between apps on the PC. We’re also investigating flexible routing between any MIDI endpoints as a future feature.</li> <li><strong>Better tools</strong>. We supply the <code class="language-plaintext highlighter-rouge">midi.exe</code> Windows MIDI Services Console for developers and power users, or anyone comfortable with the command line. You can use it to monitor endpoints, send and receive messages, send/capture SysEx data and much more. We’ll deliver the MIDI Settings GUI app after our initial release. That app enables renaming devices, configuring your MIDI setup, testing, and more.</li> <li><strong>UMP-Centric</strong>. The new API fully embraces MIDI 2.0 and the Universal MIDI Packet format and handles all required translation in the service and driver. This makes the app model simple while ensuring all your existing devices continue to work.</li> <li><strong>Open Source</strong>. The source code is open and available to everyone under a permissive license. Not sure how something works? Want to create a transport but aren’t sure how we did it? Want to investigate a bug or contribute a feature? The code is there for you to explore.</li> </ul> <p>Note: Additionally MIDI CI functionality, which does not technically require OS support, will be coming after version 1.0. We intend to add helpers for profiles, property exchange, MUID tracking, and more. In the meantime, applications can send and receive MIDI CI messages without anything in their way, using custom code or third-party libraries. MIDI CI is just MIDI 1.0-compatible SysEx.</p> <h2 id="developer-samples"> <a href="#developer-samples" class="anchor-heading" aria-labelledby="developer-samples"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Developer Samples </h2> <ul> <li><a href="https://github.com/microsoft/MIDI/tree/main/samples">Developer Samples in the repo</a></li> </ul> <h2 id="additional-resources"> <a href="#additional-resources" class="anchor-heading" aria-labelledby="additional-resources"><svg viewBox="0 0 16 16" aria-hidden="true"><use xlink:href="#svg-link"></use></svg></a> Additional Resources </h2> <p>These are the updated MIDI 2.0 specifications which apply to this project today.</p> <ul> <li><a href="https://midi.org/specifications">MIDI 2.0 UMP Specifications</a></li> </ul> <hr> <h2 class="text-delta">Table of contents</h2> <ul> <li> <a href="/docs/api-back-compat.html">API Backwards Compatibility</a> </li> <li> <a href="/docs/developer-docs/best-practices.html">Best Practices</a> </li> <li> <a href="/docs/config-json.html">Config JSON</a> </li> <li> <a href="/docs/developer-docs/consuming-midi-api.html">Consuming the MIDI API</a> </li> <li> <a href="/docs/developer-docs/diagnostic-endpoints.html">Diagnostics Endpoints</a> </li> <li> <a href="/docs/developer-docs/endpoint-ids.html">Endpoint Device Ids</a> </li> <li> <a href="/docs/midi-console.html">MIDI Console</a> </li> <li> <a href="/docs/developer-docs/faq-programming-languages.html">Programming Languages FAQ</a> </li> </ul> </main> </div> </div> <div class="search-overlay"></div> </div> </body> </html>
+
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <!-- meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name='description' content='Microsoft Windows MIDI Services API, SDK, and tools'>
+    <meta name="keywords" content="midi, midi2, music, musicians, audio, Windows, Microsoft">
+	<!-- Facebook Open Graph -->	
+	<meta content="Windows MIDI Services Documentation" property="og:site_name">
+	<meta property="og:locale" content="en_US" />
+	<meta content="About Windows MIDI Services" property="og:title">
+	<meta content="article" property="og:type">
+	<meta content="Microsoft Windows MIDI Services API, SDK, and tools" property="og:description">
+	<meta content="http://localhost:4000/" property="og:url">	
+	<meta content="" property="og:image">
+	
+	
+		
+	<!-- Twitter cards -->
+	<meta name="twitter:site"    content="@pete_brown">
+	<meta name="twitter:creator" content="@">
+	<meta name="twitter:title"   content="About Windows MIDI Services">	
+	<meta name="twitter:description" content="Microsoft Windows MIDI Services API, SDK, and tools">
+	<meta name="twitter:card"  content="summary"><meta name="twitter:image" content="">
+    <!-- Site Title -->
+    <title> About Windows MIDI Services  - Windows MIDI Services</title>
+    <!--  Add Favicon -->
+	
+    <link rel="shortcut icon" href="/assets/images/favicon.png" type="image/x-icon"/>
+    <link rel="icon" href="/assets/images/favicon.png" type="image/x-icon"/>
+    <!-- Add CSS File -->
+    <link rel="stylesheet" href="/assets/css/app.min.css "/>
+    <link rel="stylesheet" href="/assets/css/style.css "/>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600" rel="stylesheet">
+	
+</head>
+
+<body>
+   <!-- Loading -->
+<div class="loading-main">
+    <div class="pre-loader">
+        <div class="loading">
+            <div class="bounceball"></div>
+            <div class="text">NOW LOADING</div>
+        </div>
+    </div>
+</div>
+
+<!-- Start Header Area -->
+<header class="header-area">
+    <div class="header-navigation">
+        <div class="container">
+            <div class="navigation-box">
+                <div class="navigation-left">
+                    <a class="header-logo" href="/"><img src="/assets/images/Microsoft-logo_rgb_wht.png" alt="header logo"></a>
+                </div>
+               
+					
+      <div class="navigation-right">
+                     <nav class="navigation-navbar">
+                        <ul id="navigation-menu" class="slimmenu">
+				
+					
+
+					
+
+					
+
+					<li class="active">
+						<a href="/">Home</a>
+
+						
+					</li>
+				
+					
+
+					
+
+					
+
+					<li class="">
+						<a href="/get-latest/">Get Latest Runtime and Tools</a>
+
+						
+					</li>
+				
+					
+
+					
+
+					
+
+					<li class=" themeix-dropdown has-children">
+						<a href="/tools/">Tools</a>
+
+												
+							<ul class="themeix-dropdown-item" role="menu">
+								
+									<li >
+										<a href="/tools/console/">MIDI Console</a>
+									</li>
+								
+									<li >
+										<a href="/tools/settings/">MIDI Settings app</a>
+									</li>
+								
+									<li >
+										<a href="/tools/powershell/">PowerShell cmdlets</a>
+									</li>
+								
+									<li >
+										<a href="/tools/mididiag/">MIDI Diagnostics</a>
+									</li>
+								
+									<li >
+										<a href="/tools/midi1monitor/">MIDI 1 Monitor</a>
+									</li>
+								
+									<li >
+										<a href="/tools/midi1enum/">MIDI 1 Enumerator</a>
+									</li>
+								
+									<li >
+										<a href="/tools/other-tools/midiksinfo/">MIDI Kernel Streaming Info</a>
+									</li>
+								
+									<li >
+										<a href="/tools/other-tools/midimdnsinfo/">MIDI mDNS Info</a>
+									</li>
+								
+							</ul>
+						
+					</li>
+				
+					
+
+					
+
+					
+
+					<li class="">
+						<a href="/kb/">Knowledge and Tutorials</a>
+
+						
+					</li>
+				
+					
+
+					
+
+					
+
+					<li class="">
+						<a href="/sdk-overview/">App SDK Reference</a>
+
+						
+					</li>
+				
+			 	 <li>
+                    <a class="nav-search" data-toggle="modal" data-target="#modal"><img src="/assets/images/search-logo.png" alt="nav search"></a>
+                 </li>
+			    </ul>
+                </nav>
+	
+                </div>
+                <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+                        <div class="modal-content">
+						 <div class="modal-header">
+							<h5 class="modal-title" id="exampleModalScrollableTitle">Search Docs</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							  <span aria-hidden="true">&times;</span>
+							</button>
+						  </div>
+
+                            <div class="modal-body">
+                                <form class="modal-search-form" action="#">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="search-input" placeholder="Search Somthing" required="">
+                                        <span class="input-group-btn">
+                                   <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+                                     </span>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <ul id="results-container"></ul>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<!-- End Header Area -->
+
+<!-- Start Slider  Area -->
+<section class="slider-area bg-cover1">
+    <div class="slider-wrapper full-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-9">
+                     <div class="slider-carousel owl-carousel">
+                       
+                         
+                           <div class="slider-content wow fadeIn" data-wow-duration="3s">
+                             <h1 class="heading-1"><span>Get the latest</span> Windows MIDI Services runtime and tools</h1>
+                             <h4 class="heading-4">1.0 Customer Preview 3</h4>
+                             <h4 class="heading-4">Download and install the MIDI 2.0 runtime for MIDI 2.0 applications, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI, MIDI Console, and more, all in one package.</h4>
+                             <p>
+                                <a href="https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Download Latest x64</a>
+                                &nbsp;
+                                <a href="https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Download Latest Arm64</a>
+                             </p>
+                           </div>
+                        
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Slider Area -->
+
+
+<!-- Start Headline Area -->
+<div class="headline-area bg-color1">
+    <div class="headline-wrapper ">
+        <div class="container">
+            <div class="row">
+                
+                    <div class="col-md-6 col-lg-4">
+                        <div class="headline-box wow fadeInUp" data-wow-duration="1s" style="visibility:visible; animation-duration:1s; animation-name:fadeInUp;">
+                            <div class="headline-logo">
+                                <a href="/overview/"><img src="/assets/images/service-icon2.png" alt="Overview"></a>
+                            </div>
+                            <div class="headline-content">
+                                <h4 class="heading-4"><a href="/overview/">Overview</a></h4>
+                                <p> Overview of Windows MIDI Services features and tools</p>
+                                <a href="/overview/" class="btn btn-style3">Learn More</a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="col-md-6 col-lg-4">
+                        <div class="headline-box wow fadeInUp" data-wow-duration="1s" style="visibility:visible; animation-duration:1s; animation-name:fadeInUp;">
+                            <div class="headline-logo">
+                                <a href="/get-latest/"><img src="/assets/images/service-icon.png" alt="Get Latest"></a>
+                            </div>
+                            <div class="headline-content">
+                                <h4 class="heading-4"><a href="/get-latest/">Get Latest</a></h4>
+                                <p> Windows MIDI Services tools and runtime available for download.</p>
+                                <a href="/get-latest/" class="btn btn-style3">Get Latest</a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="col-md-6 col-lg-4">
+                        <div class="headline-box wow fadeInUp" data-wow-duration="1s" style="visibility:visible; animation-duration:1s; animation-name:fadeInUp;">
+                            <div class="headline-logo">
+                                <a href="/sdk-overview/"><img src="/assets/images/service-icon3.png" alt="Developer Docs"></a>
+                            </div>
+                            <div class="headline-content">
+                                <h4 class="heading-4"><a href="/sdk-overview/">Developer Docs</a></h4>
+                                <p> Developer app SDK reference and how-to documentation</p>
+                                <a href="/sdk-overview/" class="btn btn-style3">Read Docs</a>
+                            </div>
+                        </div>
+                    </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Headline Area -->   
+
+<section class="layout-area bg-color1 content tutorial">
+    <div class="layout-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <div class="tutorial-content mx-auto">
+                        <div class="doc-content">		
+                            <h1 id="about-windows-midi-services">About Windows MIDI Services</h1>
+
+<p>Windows MIDI Services is the new MIDI API, Service, and SDK in Microsoft Windows. It’s delivered in two parts:</p>
+
+<ul>
+  <li>In-box MIDI Service and plugins, the new MIDI 2.0 kernel driver, plus backwards-compatibility support for WinMM and WinRT MIDI 1.0 APIs. You get this when you install Windows.</li>
+  <li>An out-of-band shipped SDK Runtime and Tools package. You need to download and install this yourself.</li>
+</ul>
+
+<p>We ship the runtime and tools out-of-band to enable us to move quickly and continue providing new features and capabilities for customers and apps.</p>
+
+<h2 id="benefits-for-everyone">Benefits for everyone</h2>
+
+<ul>
+  <li><strong>No need for third-party USB drivers in most cases</strong>. Most USB MIDI 1.0 devices are class-compliant and will work without third-party drivers. This means no wrestling with their position in the registry, or worrying about compatibility. Don’t install third-party drivers unless absolutely necessary, and you’ll have a better MIDI experience on Windows.</li>
+  <li><strong>Supports your Existing Apps</strong>. The existing WinMM and WinRT MIDI 1.0 APIs have been repointed to the new Windows Service. This provides a subset of the new features, including multi-client so your apps will continue to work as today, but will be even better.</li>
+  <li><strong>Multi-client by default</strong>. Any endpoint (including MIDI 1.0 devices) can be used by multiple applications at the same time. That means you can use a librarian or controller app at the same time your DAW has a connection open.</li>
+  <li><strong>Supports your Existing Devices</strong>. Windows MIDI Services supports the MIDI 1.0 devices you own today, including those with vendor-supplied kernel streaming drivers, as well as class-compliant MIDI 1.0 and MIDI 2.0 devices. The experience will be better/faster if they use the new class driver, but we recognize that is not always possible or desirable with some existing devices.</li>
+  <li><strong>Faster</strong>. In our testing, we’ve found that the new infrastructure is much faster at sending and receiving messages compared to the older API, even with plugins configured in the service. There are no built-in speed caps or throttling in Windows MIDI Services, even for older USB MIDI 1.0 devices. The new MIDI 2.0 driver is not limited USB full-speed, and supports USB 3.x speeds.</li>
+  <li><strong>Lower Jitter</strong>. Along with higher speed comes lower jitter. This will vary by transport type (USB vs Network vs Virtual), and the device Windows is talking to, but the jitter is in the low microsecond range even without any compensation.</li>
+  <li><strong>More Deterministic</strong>. Speaking of latency compensation, the new API enables timestamp-based message scheduling for outbound messages for any apps using the new API. In addition, incoming messages are tagged with a timestamp when received by the service.</li>
+  <li><strong>App-to-App and Virtual Device MIDI</strong>. Windows MIDI Services includes built-in virtual / app-to-app MIDI 2.0 to enable lightning fast communication between apps on the PC.</li>
+  <li><strong>Better tools</strong>. We supply the <code class="language-plaintext highlighter-rouge">midi.exe</code> Windows MIDI Services Console for developers and power users, or anyone comfortable with the command line. You can use it to monitor endpoints, send and receive messages, send/capture SysEx data and much more. We also include the MIDI Settings GUI app for renaming devices, configuring your MIDI setup, testing, and more.</li>
+  <li><strong>Built-in Scripting</strong> Built-in support for scripting MIDI using PowerShell. Want to automate synchronization between mixers? Want to set up a script to initialize all your devices for a show? All this can be done via the PowerShell Cmdlets.</li>
+</ul>
+
+<h2 id="developer-benefits">Developer Benefits</h2>
+
+<ul>
+  <li><strong>UMP-Centric</strong>. The new SDK fully embraces MIDI 2.0 and the Universal MIDI Packet format and handles all required translation in the service and driver. This makes the app model simple while ensuring all your existing devices continue to work. Messages to and from any endpoint, whether it is MIDI 1.0 or MIDI 2.0 data format, are transparently translated in the service, and presented as UMP through the SDK.</li>
+  <li><strong>Extensive Endpoint Metadata</strong> We’ve built upon <code class="language-plaintext highlighter-rouge">Windows.Devices.Enumeration</code> with our own MIDI-specific device class, which provides much more information about a device. Not only do we have user-provided metadata (name, description, images, settings), but also more device-provided information. This is also where you have access to MIDI 2.0 device features like Function Blocks, Group Terminal Blocks, Device Identity, and much more. See <a href="/sdk-reference/MidiEndpointDeviceInformation/">MidiEndpointDeviceInformation</a> for details.</li>
+  <li><strong>Device Connect/Disconnect Notification</strong> No restarting your apps to detect the presence of a new device. Whenever an endpoint is created, updated, or removed, the app receives an event with all the required details. Additionally, apps can opt-in to automatic reconnect to any device they are communicating with, should it become disconnected during a session. See <a href="/sdk-reference/MidiEndpointDeviceWatcher/">MidiEndpointDeviceWatcher</a> for details.</li>
+  <li><strong>Extensible</strong>. The service has been designed to be extensible by Microsoft and third-parties. New types of transports can be added at any time, including during prototyping of a new transport specification. (We’re working on Network MIDI 2.0, Bluetooth MIDI 1.0 and considering RTP, all using this model.) <strong>No kernel driver experience required in most cases.</strong></li>
+  <li><strong>Open Source</strong>. The source code is open and available to everyone under a permissive license. Not sure how something works? Want to create a transport but aren’t sure how we did it? Want to investigate a bug or contribute a feature? The code is there for you to explore.</li>
+</ul>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Start Looking For  Area -->
+<section class="looking-for-area bg-color3">
+    <div class="looking-for-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="col-md-12 col-lg-12">
+                <div class="section-title text-center">
+                    <h2 class="heading-2">Didn't find what you were looking for?</h2>
+                    <p>Windows MIDI Services is an open source project with all source available on GitHub. We have a great community on Discord as well. Between GitHub and Discord, you should find the information you are looking for.</p>
+                </div>
+                <div class="row">
+                    
+                        <div class="col-md-6">
+                            <article class="looking-for-service wow fadeInRight" data-wow-duration="1s">
+                                <header class="looking-for-logo">
+                                    <a href="https://aka.ms/midirepoissues"><img src="/assets/images/popular-1.png" alt="Check the Issues List"></a>
+                                </header>
+                                <footer class="looking-for-content">
+                                    <h4 class="heading-4"><a href="https://aka.ms/midirepoissues">Check the Issues List</a></h4>
+                                    <p> Check the known issues list, or file a new issue on our GitHub repo. All source is available here.</p>
+                                    <a href="https://aka.ms/midirepoissues" class="btn-style3 btn mt-3">Github Issues</a>
+                                </footer>
+                            </article>
+                        </div>
+                    
+                        <div class="col-md-6">
+                            <article class="looking-for-service wow fadeInRight" data-wow-duration="1s">
+                                <header class="looking-for-logo">
+                                    <a href="https://aka.ms/mididiscord"><img src="/assets/images/looking-logo2.png" alt="Ask the Community"></a>
+                                </header>
+                                <footer class="looking-for-content">
+                                    <h4 class="heading-4"><a href="https://aka.ms/mididiscord">Ask the Community</a></h4>
+                                    <p> Chat with developers and other users by joining our Windows MIDI Services Discord server.</p>
+                                    <a href="https://aka.ms/mididiscord" class="btn-style3 btn mt-3">Join the Discord Community</a>
+                                </footer>
+                            </article>
+                        </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Looking For Area -->
+<!-- Start Footer Area -->
+<footer class="footer-area bg-color3">
+    <div class="footer-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <div class="footer-widget wow fadeIn" data-wow-duration="1s">
+                        <h5 class="footer-title heading-5">About Windows MIDI Services</h5>
+                        <p>Windows MIDI Services is an open source project, created by Microsoft, to update MIDI 1.0 and add MIDI 2.0 support to Windows.</p>
+
+                        <li><a href="https://microsoft.com/privacy">Privacy</a></li>
+
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <div class="footer-widget wow fadeIn" data-wow-duration="3s">
+                        <h5 class="footer-title heading-5">Information</h5>
+                        <ul class="footer-category list-inline">
+                            <li><a href="/sdk-overview/">SDK Overview</a></li>
+                            <li><a href="/kb/">Knowledge Base</a></li>
+                            <li><a href="https://midi.org/specs" target="_blank">MIDI Specifications</a></li>
+                        </ul>
+                    </div>
+                </div>                
+                <div class="col-md-6 col-lg-2">
+                    <div class="footer-widget wow fadeIn" data-wow-duration="3s">
+                        <h5 class="footer-title heading-5">Get Help</h5>
+                        <ul class="footer-category list-inline">
+                            <li><a href="https://aka.ms/mididiscord" target="_blank">Discord</a></li>
+                            <li><a href="https://aka.ms/midirepo" target="_blank">GitHub Repo</a></li>
+                            <li><a href="https://aka.ms/midirepoissues" target="_blank">Known Issues</a></li>
+
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <div class="footer-widget wow fadeIn" data-wow-duration="2s">
+                        <h5 class="footer-title heading-5">Older APIs</h5>
+                        <ul class="footer-category list-inline">
+                            <li><a href="https://learn.microsoft.com/uwp/api/windows.devices.midi" target="_blank">WinRT MIDI 1.0</a></li>
+                            <li><a href="https://learn.microsoft.com/windows/win32/api/mmeapi/" target="_blank">WinMM MIDI 1.0</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-2">
+                    <div class="footer-widget wow fadeIn" data-wow-duration="4s">
+                        <h5 class="footer-title heading-5">Follow Us</h5>
+                        <ul class="footer-socials list-inline">
+                            
+
+                            
+                                <li class="list-inline-item"><a href="https://twitter.com/pete_brown"><i class="fa fa-twitter"></i></a></li>
+                            
+
+                            
+
+                            
+
+                            
+
+                            
+
+                            
+
+                            
+                                <li class="list-inline-item"><a href="https://github.com/psychlist1972"><i class="fa fa-github"></i></a></li>
+                            
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="#" class="home-top"><i class="fa fa-angle-down" aria-hidden="true"></i></a>
+</footer>
+<!-- End Footer Area -->
+
+<script>
+  var headings = document.querySelectorAll("h2[id]");
+  for (var i = 0; i < headings.length; i++) {
+    var anchorLink = document.createElement("a");
+    anchorLink.innerText = "#";
+    anchorLink.href = "#" + headings[i].id;
+    anchorLink.classList.add("header-link");
+
+    headings[i].appendChild(anchorLink);
+  }
+</script>
+    <!-- Add Javascript File -->
+   <script src="/assets/js/build.min.js"></script>
+   		<script>
+			$(function() {
+				$('a[href*=\\#]').not(".no-smooth").on('click', function(event){
+					var el = $(this.hash);
+					if (el.length > 0) {
+						// event.preventDefault();
+						$('html,body').animate({scrollTop:$(this.hash).offset().top - 100}, 500);
+					}
+				});
+
+				});
+
+
+		</script>
+</body>      
+</html>

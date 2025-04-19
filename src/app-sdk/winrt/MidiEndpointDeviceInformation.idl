@@ -33,7 +33,8 @@ import "Midi1PortNameTableEntry.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [default_interface]
+    [interface_name("IMidiEndpointDeviceInformation", 8087b303-0519-31d1-c0de-dd000000a000)]
+    [static_name("IMidiEndpointDeviceInformationStatics", 8087b303-0519-31d1-c0de-ee000000a000)]
     runtimeclass MidiEndpointDeviceInformation : Windows.Foundation.IStringable
     {
         static MidiEndpointDeviceInformation CreateFromEndpointDeviceId(String endpointDeviceId);

@@ -24,7 +24,5 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
         ErrorProcessingResponseJson =   605,
 
         ErrorNotImplemented =           2600,
-
-        //ErrorOther =                9999,
     };
 }

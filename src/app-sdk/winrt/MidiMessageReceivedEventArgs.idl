@@ -26,7 +26,7 @@ import "MidiMessageStruct.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [default_interface]
+    [interface_name("IMidiMessageReceivedEventArgs", 8087b303-0519-31d1-c0de-dd0000090000)]
     runtimeclass MidiMessageReceivedEventArgs
     {
         UInt64 Timestamp{ get; };

@@ -20,7 +20,8 @@ import "MidiEndpointDeviceInformationAddedEventArgs.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [default_interface]
+    [interface_name("IMidiEndpointDeviceWatcher", 8087b303-0519-31d1-c0de-dd000000e000)]
+    [static_name("IMidiEndpointDeviceWatcherStatics", 8087b303-0519-31d1-c0de-ee000000e000)]
     runtimeclass MidiEndpointDeviceWatcher
     {
         static MidiEndpointDeviceWatcher Create();

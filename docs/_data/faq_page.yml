@@ -1,0 +1,36 @@
+- title: General Questions
+  id: faqaccordion1
+  subfaq:
+  - question: Fames ac turpis egestas integer eget aliquet?
+    answer: It works using the Bootstrap 4 collapse component with cards to make a vertical accordion that expands and collapses as questions are toggled.
+    
+  - question: Tortor dignissim convallis aenean et?
+    answer: Bootstrap is the most popular CSS framework in the world. The latest version released in 2018 is Bootstrap 4. Bootstrap can be used to quickly build responsive websites.
+    
+  - question: Egestas diam in arcu cursus euismod quis viverra nibh cras?
+    answer: The answer to the question can go here.
+
+    
+- title: Billing Questions
+  subfaq:
+  - question:  Rutrum tellus pellentesque eu tincidunt tortor aliquam nulla facilisi cras fermentum?
+    answer: Sit amet risus nullam eget felis eget nunc lobortis mattis aliquam faucibus purus in massa tempor nec feugiat nisl pretium fusce id velit ut tortor pretium viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare suspendisse sed nisi lacus sed viverra tellus in hac habitasse platea dictumst vestibulum rhoncus est pellentesque elit ullamcorper dignissim
+    
+  - question:  Bootstrap is the most popular CSS framework in the world. The latest version released in 2018 is Bootstrap 4. Bootstrap can be used to quickly build responsive websites.
+    
+  - question: Denim eu turpis egestas pretium aenean pharetra?
+    answer: The answer to the question can go here.
+
+    
+- title: Support Question
+  subfaq:
+  - question: aliquam etiam erat velit scelerisque in dictum non consectetur a erat nam at lectus urna?
+    answer: It works using the Bootstrap 4 collapse component with cards to make a vertical accordion that expands and collapses as questions are toggled.
+    
+  - question: Tortor dignissim convallis aenean et?
+    answer: Bootstrap is the most popular CSS framework in the world. The latest version released in 2018 is Bootstrap 4. Bootstrap can be used to quickly build responsive websites.
+    
+  - question: Egestas diam in arcu cursus euismod quis viverra nibh cras?
+    answer: The answer to the question can go here.
+
+    

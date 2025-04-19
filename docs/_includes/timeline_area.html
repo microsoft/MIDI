@@ -1,0 +1,26 @@
+<!-- Start Timeline Area -->
+<div class="timeline-area bg-color1">
+    <div class="timeline-wrapper section-spacing ">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="heading-2">Future Roadmap</h2>
+                <p>Vulputate odio ut enim blandit volutpat maecenas volutpat blandit </p>
+            </div>
+
+            <div class="timeline">
+                <ul>
+                    {% for roadmap in site.data.future_roadmap %}
+                        <li>
+                            <div class="timeline-content">
+                                <h4 class="heading-4">{{roadmap.name}}</h4>
+                                <p class="timeline-time">{{roadmap.date}}</p>
+                                <p class="timeline-desc">{{roadmap.description}}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Timeline Area -->

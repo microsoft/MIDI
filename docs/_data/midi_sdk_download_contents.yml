@@ -1,0 +1,29 @@
+- title: "MIDI 2.0 Runtime"
+  image:
+  description: This is the code applications need to be able to use new MIDI features.
+  details_url: "/sdk-overview/"
+
+- title: "MIDI Settings app"
+  image:
+  description: This app is what you'll use to configure MIDI, create loopbacks, set up features, and more
+  details_url: "/tools/settings/"
+
+- title: "MIDI Console app"
+  image:
+  description: This is a power-user command-line tool to send / receive messages, monitor inputs, list devices, and more
+  details_url: "/tools/console/"
+
+- title: "MIDI 1 Monitor"
+  image:
+  description: A simple command-line tool for monitoring incoming MIDI data using WinMM MIDI 1.0
+  details_url: "/tools/midi1monitor/"
+
+- title: "PowerShell Cmdlets"
+  image:
+  description: If you want to script MIDI using PowerShell 7+, we have your back!
+  details_url: "/tools/powershell/"
+
+- title: "Other Diagnostics Tools"
+  image:
+  description: The installer also includes other diagnostics tools like mididiag, midiksinfo, and midimdnsinfo.
+  details_url: "/tools/"

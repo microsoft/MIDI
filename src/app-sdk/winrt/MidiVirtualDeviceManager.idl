@@ -16,6 +16,7 @@ import "MidiVirtualDevice.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
     [contract(MidiEndpointsVirtualApiContract, 1)]
+    [static_name("IMidiVirtualDeviceManagerStatics", 8087b303-0519-31d1-c0de-ee0000200000)]
     static runtimeclass MidiVirtualDeviceManager
     {
         static Boolean IsTransportAvailable{ get; };

@@ -1,0 +1,28 @@
+<!-- Start Faq  Area -->
+<section class="faq-area bg-color3">
+    <div class="faq-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="heading-2">Frequently Asked Questions</h2>
+                <p>Lacus vestibulum sed arcu non odio euismod lacinia at quis risus sed vulputate odio ut enim blandit </p>
+            </div>
+            <div class="row">
+                {% for faq in site.data.faqs %}
+                    <div class="col-md-6">
+                        <article class="faq-service bg-color1">
+                            <header class="faq-logo wow bounceIn" data-wow-duration="1s">
+                                <div class="logo-image"> <img src="{{faq.icon | relative_url }}" alt="{{faq.title}}" /></div>
+                            </header>
+                            <footer class="faq-content">
+                                <h4 class="heading-4">{{faq.title}}</h4>
+                                <p>{{faq.subtitle}} </p>
+                            </footer>
+                        </article>
+                    </div>
+                {% endfor %}
+                
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Faq Area -->

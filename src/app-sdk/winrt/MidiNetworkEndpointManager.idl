@@ -8,7 +8,6 @@
 
 import "MidiApiContracts.idl";
 
-
 import "MidiNetworkHostEndpointCreationResult.idl";
 import "MidiNetworkHostEndpointCreationConfig.idl";
 
@@ -26,6 +25,7 @@ import "MidiNetworkAdvertisedHost.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
+    [static_name("IMidiNetworkEndpointManagerStatics")]
     static runtimeclass MidiNetworkEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };

@@ -8,7 +8,6 @@
 
 import "MidiApiContracts.idl";
 
-
 import "MidiNetworkAdvertisedHostAddedEventArgs.idl";
 import "MidiNetworkAdvertisedHostRemovedEventArgs.idl";
 import "MidiNetworkAdvertisedHostUpdatedEventArgs.idl";
@@ -16,7 +15,7 @@ import "MidiNetworkAdvertisedHostUpdatedEventArgs.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    [default_interface]
+    [interface_name("IMidiNetworkAdvertisedHostWatcher")]
     runtimeclass MidiNetworkAdvertisedHostWatcher
     {
         static MidiNetworkAdvertisedHostWatcher Create();
@@ -36,3 +35,4 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, IInspectable> Stopped;
     }
 }
+

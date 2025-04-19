@@ -1,0 +1,29 @@
+#Please use the main menu items under the "text"
+
+- text: Home
+  url: /
+- text: Get Latest Runtime and Tools
+  url: /get-latest/
+- text: Tools
+  url: /tools/
+  submenu:
+  - text: MIDI Console
+    url: /tools/console/
+  - text: MIDI Settings app
+    url: /tools/settings/
+  - text: PowerShell cmdlets
+    url: /tools/powershell/
+  - text: MIDI Diagnostics
+    url: tools/mididiag/
+  - text: MIDI 1 Monitor
+    url: /tools/midi1monitor/
+  - text: MIDI 1 Enumerator
+    url: /tools/midi1enum/
+  - text: MIDI Kernel Streaming Info
+    url: tools/other-tools/midiksinfo/
+  - text: MIDI mDNS Info
+    url: tools/other-tools/midimdnsinfo/
+- text: Knowledge and Tutorials
+  url: /kb/
+- text: App SDK Reference
+  url: /sdk-overview/

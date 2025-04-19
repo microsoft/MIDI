@@ -15,7 +15,7 @@ import "MidiServiceSessionConnectionInfo.idl";
 namespace Microsoft.Windows.Devices.Midi2.Reporting
 {
     [contract(MidiReportingApiContract, 1)]
-    [default_interface]
+    [interface_name("IMidiServiceSessionInfo", 8087b303-0519-31d1-c0de-dd0000c00000)]
     runtimeclass MidiServiceSessionInfo
     {
         Guid SessionId{ get; };

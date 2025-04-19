@@ -6,18 +6,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
 import "MidiApiContracts.idl";
-
 
 import "IMidiServiceTransportPluginConfig.idl";
 
-
-
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
-    [default_interface]
     [experimental]
+    [interface_name("IMidiNetworkClientEndpointCreationConfig")]
     runtimeclass MidiNetworkClientEndpointCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkClientEndpointCreationConfig();
@@ -25,3 +21,4 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 
     }
 }
+

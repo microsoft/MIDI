@@ -459,7 +459,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 });
             break;
 
-        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenName:
+        case MidiEndpointDeviceInformationSortOrder::TransportCodeThenName:
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {
@@ -470,7 +470,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 });
             break;
 
-        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenEndpointDeviceId:
+        case MidiEndpointDeviceInformationSortOrder::TransportCodeThenEndpointDeviceId:
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {
@@ -481,7 +481,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 });
             break;
 
-        case MidiEndpointDeviceInformationSortOrder::TransportMnemonicThenDeviceInstanceId:
+        case MidiEndpointDeviceInformationSortOrder::TransportCodeThenDeviceInstanceId:
             std::sort(begin(midiDevices), end(midiDevices),
                 [](_In_ const auto& device1, _In_ const auto& device2)
                 {

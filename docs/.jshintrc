@@ -1,0 +1,10 @@
+{
+  "undef": true,
+  "unused": true,
+  "browser": true,
+  "devel": true,
+  "multistr": true,
+  "globals": {
+    "$": false
+   }
+}

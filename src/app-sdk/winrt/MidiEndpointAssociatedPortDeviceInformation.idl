@@ -14,7 +14,7 @@ import "MidiGroup.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [default_interface]
+    [interface_name("IMidiEndpointAssociatedPortDeviceInformation", 8087b303-0519-31d1-c0de-dd0000020000)]
     runtimeclass MidiEndpointAssociatedPortDeviceInformation : Windows.Foundation.IStringable
     {
         Guid ContainerId{ get; };               // container this exists in. It will be the same as the parent endpoint's. Here for convenience.

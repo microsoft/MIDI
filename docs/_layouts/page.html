@@ -1,5 +1,12 @@
 ---
 layout: default
 ---
-
-{{ content }}
+  {% include header.html %}
+  {% include page_header.html %}
+  
+  {% if content %}
+   {{content}}
+  {% else %}
+  <h3>The Page Is Empty </h3>
+  {% endif %}
+{% include footer.html %}
