@@ -45,25 +45,25 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         _In_ std::wstring const& pinName
     )
     {
-        std::wstring cleanedPinName{ pinName };
+        std::wstring cleanedPinName{ internal::TrimmedWStringCopy(pinName) };
 
-        std::wstring wordsToRemove[] =
+        std::wstring suffixesToRemove[] =
         {
             // In every case I've seen, these are added by our USB and KS stack, not by the device
+            // Originally this went only to 16, but there are vendor driver devices with 32 total ports
+            // that can be configured to be any combo of inputs and outputs, which is weird, and
+            // potentially breaks our MIDI 2 implementation
             L"[0]", L"[1]", L"[2]", L"[3]", L"[4]", L"[5]", L"[6]", L"[7]", L"[8]", 
             L"[9]", L"[10]", L"[11]", L"[12]", L"[13]", L"[14]", L"[15]", L"[16]",
+            L"[17]", L"[18]", L"[19]", L"[20]", L"[21]", L"[22]", L"[23]", L"[24]",
+            L"[25]", L"[26]", L"[27]", L"[28]", L"[29]", L"[30]", L"[31]", L"[32]",
         };
 
-        for (auto const& word : wordsToRemove)
+        for (auto const& word : suffixesToRemove)
         {
-            if (pinName.length() >= word.length())
+            if (cleanedPinName.ends_with(word))
             {
-                auto idx = cleanedPinName.find(word);
-
-                if (idx != std::wstring::npos)
-                {
-                    cleanedPinName = cleanedPinName.erase(idx, word.length());
-                }
+                cleanedPinName = cleanedPinName.substr(0, cleanedPinName.length() - word.length());
             }
         }
 
@@ -180,6 +180,35 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
     }
 
 
+    inline bool StringEndsWithNumber(_In_ std::wstring s, _In_ uint16_t numberToFind)
+    {
+        // TODO: Check to see if there's a number at the end of the string (take the last numeric values) and compare *whole* value
+
+        // Need to ensure "YAMAHA DX-MULTI 12" returns true only for 12, not for 2, 
+        // for example. That's why wstring.ends_with is insufficient
+        // also needs to support padded numbers "Port 02" should match the value "2"
+
+        auto lastIndex = s.find_last_not_of(L"0123456789");
+
+        if (lastIndex != std::wstring::npos)
+        {
+            if (lastIndex + 1 <= s.length())
+            {
+                auto trailingNumber = s.substr(lastIndex + 1);
+
+                int i = _wtoi(trailingNumber.c_str());
+
+                // step 3: compare to the provided number
+                if (i == numberToFind)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 
     inline std::wstring AddGroupNumberToNameIfNeeded(
         _In_ std::wstring const& parentDeviceName,              // the name of the actual connected device from which the UMP interface is generated
@@ -199,11 +228,11 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             {
                 // check to see if we already have a number at the end of this. If so, don't add another one
 
-                auto groupNumber = std::to_wstring(groupIndex + 1);
-
-                if (!newName.ends_with(groupNumber))
+                if (!StringEndsWithNumber(newName, groupIndex + 1))
                 {
-                    const int nameReservedSpaces = 4; // null terminator, space, and then up to two digits for the group number
+                    auto groupNumber = std::to_wstring(groupIndex + 1);
+
+                    const int nameReservedSpaces = groupNumber.length() + 2; // null terminator, space, and then up to two digits for the group number
 
                     newName = generatedName.substr(0, MAXPNAMELEN - nameReservedSpaces) + L" " + groupNumber;
                 }
@@ -250,12 +279,12 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
             {
                 auto formatted = std::format("MIDIIN{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
-                return std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN-1);
+                return internal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN-1));
             }
             else if (flowFromUserPerspective == MidiFlow::MidiFlowOut)
             {
                 auto formatted = std::format("MIDIOUT{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
-                return std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1);
+                return internal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1));
             }
             else
             {
