@@ -91,6 +91,16 @@ CMidi2NetworkMidiBidi::SendMidiMessage(
     LONGLONG position
 )
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(size, "Byte count")
+    );
+
     UNREFERENCED_PARAMETER(position);
 
     RETURN_HR_IF_NULL(E_INVALIDARG, message);
@@ -113,6 +123,16 @@ CMidi2NetworkMidiBidi::Callback(
     LONGLONG context
 )
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(size, "Byte count")
+    );
+
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_callback);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 

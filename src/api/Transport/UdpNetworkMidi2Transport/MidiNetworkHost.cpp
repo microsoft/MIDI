@@ -312,6 +312,3 @@ MidiNetworkHost::Shutdown()
     return S_OK;
 }
 
-
-
-
