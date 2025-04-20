@@ -25,7 +25,7 @@ import "MidiNetworkAdvertisedHost.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    [static_name("IMidiNetworkEndpointManagerStatics")]
+    [static_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkEndpointManagerStatics")]
     static runtimeclass MidiNetworkEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };

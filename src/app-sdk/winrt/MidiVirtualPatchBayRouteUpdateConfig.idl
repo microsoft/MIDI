@@ -18,7 +18,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay
 {
     [experimental]
-    [interface_name("IMidiVirtualPatchBayRouteUpdateConfig")]
+    [interface_name("Microsoft.Windows.Devices.Midi2.VirtualPatchBay.IMidiVirtualPatchBayRouteUpdateConfig")]
     runtimeclass MidiVirtualPatchBayRouteUpdateConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiVirtualPatchBayRouteUpdateConfig();

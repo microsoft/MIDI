@@ -13,7 +13,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    [interface_name("IMidiNetworkHostEndpointRemovalConfig")]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkHostEndpointRemovalConfig")]
     runtimeclass MidiNetworkHostEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkHostEndpointRemovalConfig();

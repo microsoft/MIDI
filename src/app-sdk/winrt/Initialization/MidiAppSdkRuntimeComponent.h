@@ -37,6 +37,6 @@ struct MidiAppSdkRuntimeComponent
         }
     }
 
-    HRESULT LoadModule();
+    HRESULT LoadModuleIfNeeded();
     HRESULT GetActivationFactory(_In_ HSTRING className, _In_ REFIID  iid, _Out_ void** factory);
 };

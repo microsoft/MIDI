@@ -174,15 +174,15 @@ _Use_decl_annotations_
 bool 
 MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace) const
 {
-    TraceLoggingWrite(
-        Midi2SdkTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
-    );
+    //TraceLoggingWrite(
+    //    Midi2SdkTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
+    //);
 
     if (typeOrNamespace != NULL)
     {
@@ -200,10 +200,31 @@ MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace) 
                 MIDI_SDK_ROOT_NAMESPACE, MIDI_SDK_ROOT_NAMESPACE_LENGTH,
                 false) == CSTR_EQUAL)
             {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Type is in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(typeOrNamespaceBuffer, "type or namespace")
+                );
+
                 return true;
             }
         }
     }
+
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Type is NOT in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
+    );
+
 
     return false;
 }
@@ -247,6 +268,8 @@ MidiAppSdkRuntimeComponentCatalog::GetActivationFactory(
     void** factory
 ) const
 {
+    auto raw_class_name = WindowsGetStringRawBuffer(activatableClassId, nullptr);
+
     TraceLoggingWrite(
         Midi2SdkTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -254,11 +277,9 @@ MidiAppSdkRuntimeComponentCatalog::GetActivationFactory(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, nullptr), "class id")
+        TraceLoggingWideString(raw_class_name, "class id")
     );
 
-
-    auto raw_class_name = WindowsGetStringRawBuffer(activatableClassId, nullptr);
     auto component_iter = m_types.find(raw_class_name);
     if (component_iter != m_types.end())
     {

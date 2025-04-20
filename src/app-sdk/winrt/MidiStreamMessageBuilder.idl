@@ -22,7 +22,7 @@ import "MidiFunctionBlockUIHintEnum.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
-    [static_name("IMidiStreamMessageBuilderStatics", 8087b303-0519-31d1-c0de-ee0000900000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiStreamMessageBuilderStatics", 8087b303-0519-31d1-c0de-ee0000900000)]
     static runtimeclass MidiStreamMessageBuilder
     {
         static Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket BuildEndpointDiscoveryMessage(

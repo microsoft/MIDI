@@ -110,15 +110,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
     }
 
 
-    foundation::Collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> MidiReporting::GetInstalledMessageProcessingPlugins()
-    {
+    //foundation::Collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> MidiReporting::GetInstalledMessageProcessingPlugins()
+    //{
 
-        // TODO: Need to implement GetInstalledMessageProcessingPlugins. For now, return an empty collection instead of throwing
+    //    // TODO: Need to implement GetInstalledMessageProcessingPlugins. For now, return an empty collection instead of throwing
 
-        // This can be read from the registry, but the additional metadata requires calling into the objects themselves
+    //    // This can be read from the registry, but the additional metadata requires calling into the objects themselves
 
-        return winrt::single_threaded_vector<rept::MidiServiceMessageProcessingPluginInfo>();
-    }
+    //    return winrt::single_threaded_vector<rept::MidiServiceMessageProcessingPluginInfo>();
+    //}
 
 
     foundation::Collections::IVector<rept::MidiServiceSessionInfo> MidiReporting::GetActiveSessions()

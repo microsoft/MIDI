@@ -15,7 +15,7 @@ import "MidiServicePingResponse.idl";
 namespace Microsoft.Windows.Devices.Midi2.Diagnostics
 {
     [contract(MidiDiagnosticsApiContract, 1)]
-    [interface_name("IMidiServicePingResponseSummary", 8087b303-0519-31d1-c0de-dd0000500000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Diagnostics.IMidiServicePingResponseSummary", 8087b303-0519-31d1-c0de-dd0000500000)]
     runtimeclass MidiServicePingResponseSummary
     {
         Boolean Success { get; };

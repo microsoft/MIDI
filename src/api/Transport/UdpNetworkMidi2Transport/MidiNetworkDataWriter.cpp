@@ -488,7 +488,6 @@ MidiNetworkDataWriter::WriteCommandUmpMessages(
 
 
     auto lock = m_dataWriterLock.lock();
-
     RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_UmpData, static_cast<byte>(words.size()), sequenceNumber.Value()));
 
     // we make the assumption that the calling code has already validated that the words

@@ -274,9 +274,9 @@
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClInclude>
-      <ClInclude Include="MidiEndpointDeviceIdHelper.h">
-          <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
-      </ClInclude>
+    <ClInclude Include="MidiEndpointDeviceIdHelper.h">
+      <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h">
       <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClInclude>
@@ -479,9 +479,9 @@
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClCompile>
-      <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
-          <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
-      </ClCompile>
+    <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
+      <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp">
       <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClCompile>
@@ -833,7 +833,6 @@
     <Midl Include="MidiSystemTimerSettings.idl" />
     <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiReporting.idl" />
-    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiServiceSessionConnectionInfo.idl" />
@@ -844,7 +843,6 @@
     <Midl Include="MidiLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiLoopbackEndpointCreationResult.idl" />
     <Midl Include="MidiLoopbackEndpointCreationConfig.idl" />
-    <Midl Include="MidiStreamConfigRequestedSettings.idl" />
     <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl" />
     <Midl Include="MidiUniqueId.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
@@ -861,7 +859,6 @@
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
     <Midl Include="MidiMessageHelper.idl" />
-    <Midl Include="IMidiServiceMessageProcessingPluginConfig.idl" />
     <Midl Include="MidiServiceConfigResponse.idl" />
     <Midl Include="IMidiServiceTransportPluginConfig.idl" />
     <Midl Include="MidiServiceConfigResponseStatusEnum.idl" />

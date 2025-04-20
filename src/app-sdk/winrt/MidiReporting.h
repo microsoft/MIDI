@@ -17,7 +17,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
         //MidiReporting() = default;
 
         static collections::IVector<rept::MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
-        static collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
+        //static collections::IVector<rept::MidiServiceMessageProcessingPluginInfo> GetInstalledMessageProcessingPlugins();
         static collections::IVector<rept::MidiServiceSessionInfo> GetActiveSessions();
     };
 }
