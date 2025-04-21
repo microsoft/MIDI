@@ -232,7 +232,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
                 {
                     auto groupNumber = std::to_wstring(groupIndex + 1);
 
-                    const int nameReservedSpaces = groupNumber.length() + 2; // null terminator, space, and then up to two digits for the group number
+                    auto nameReservedSpaces = groupNumber.length() + 2; // null terminator, space, and then up to two digits for the group number
 
                     newName = generatedName.substr(0, MAXPNAMELEN - nameReservedSpaces) + L" " + groupNumber;
                 }
