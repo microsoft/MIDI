@@ -39,24 +39,22 @@
     <Fragment>
         <!-- Believe it or not, the DotNetCoreSearch barfs if you send ARM64 instead of arm64 -->
 
-        <?if $(var.Platform) = ARM64 ?>
         <!-- Apps use .NET Core 8 -->
         <netfx:DotNetCoreSearch
-            Id="SearchForDotNet8"
+            Id="SearchForDotNet8_arm64"
             RuntimeType="desktop"
             Platform="arm64"
             MajorVersion="8"
-            Variable="DotNetDesktopRuntimeVersion"
+            Variable="DotNetDesktopRuntimeVersion_arm64"
                 />
-        <?else?>
+
         <netfx:DotNetCoreSearch
-            Id="SearchForDotNet8"
+            Id="SearchForDotNet8_x64"
             RuntimeType="desktop"
             Platform="x64"
             MajorVersion="8"
-            Variable="DotNetDesktopRuntimeVersion"
+            Variable="DotNetDesktopRuntimeVersion_x64"
                 />
-        <?endif?>
 
 
         <PackageGroup Id="Prerequisites">
@@ -73,16 +71,42 @@
                 InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
                 />
 
-            <ExePackage
-                Vital="true"
-                Permanent="true"
-                DisplayName="Microsoft .NET 8 Desktop Runtime"
-                SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\windowsdesktop-runtime-8.0.12-win-$(var.Platform).exe"
-                Compressed="yes"
-                DetectCondition="DotNetDesktopRuntimeVersion &gt;= v8.0.12"
-                InstallArguments="/install /passive /norestart /log midi_dotnet8_install_log.txt"
-                UninstallArguments="/uninstall /passive /norestart /quiet"
-                />
+            <!-- arm64 install requires both the .NET 8 Arm64 and x64 versions -->
+            <?if $(var.Platform) = ARM64 ?>
+                <ExePackage
+                    Vital="true"
+                    Permanent="true"
+                    DisplayName="Microsoft .NET 8 Desktop Runtime"
+                    SourceFile="$(DependenciesSourceRootFolder)\arm64\windowsdesktop-runtime-8.0.15-win-arm64.exe"
+                    Compressed="yes"
+                    DetectCondition="DotNetDesktopRuntimeVersion_arm64 &gt;= v8.0.15"
+                    InstallArguments="/install /passive /norestart /log midi_dotnet8_arm64_install_log.txt"
+                    UninstallArguments="/uninstall /passive /norestart /quiet"
+                        />
+
+                <ExePackage
+                    Vital="true"
+                    Permanent="true"
+                    DisplayName="Microsoft .NET 8 Desktop Runtime"
+                    SourceFile="$(DependenciesSourceRootFolder)\x64\windowsdesktop-runtime-8.0.15-win-x64.exe"
+                    Compressed="yes"
+                    DetectCondition="DotNetDesktopRuntimeVersion_x64 &gt;= v8.0.15"
+                    InstallArguments="/install /passive /norestart /log midi_dotnet8_x64_install_log.txt"
+                    UninstallArguments="/uninstall /passive /norestart /quiet"
+                    />
+            <?else?>
+                <ExePackage
+                    Vital="true"
+                    Permanent="true"
+                    DisplayName="Microsoft .NET 8 Desktop Runtime"
+                    SourceFile="$(DependenciesSourceRootFolder)\x64\windowsdesktop-runtime-8.0.15-win-x64.exe"
+                    Compressed="yes"
+                    DetectCondition="DotNetDesktopRuntimeVersion_x64 &gt;= v8.0.15"
+                    InstallArguments="/install /passive /norestart /log midi_dotnet8_x64_install_log.txt"
+                    UninstallArguments="/uninstall /passive /norestart /quiet"
+                        />
+            <?endif?>
+
 
             <ExePackage
                 Vital="true"
