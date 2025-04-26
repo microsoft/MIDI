@@ -106,6 +106,9 @@
     <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
       <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
     </ClCompile>
+    <ClCompile Include="MidiClientInitializerFactory.cpp">
+      <Filter>Initializer\Init</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -213,6 +216,15 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointDeviceIdHelper.h">
       <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
+    </ClInclude>
+    <ClInclude Include="ComSingleton.h">
+      <Filter>Initializer\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiClientInitializerSingleton.h">
+      <Filter>Initializer\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiClientInitializerFactory.h">
+      <Filter>Initializer\Init</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

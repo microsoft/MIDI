@@ -211,8 +211,8 @@ int main()
             std::cout << "  - " << int(functionBlock.Number()) << " : " << winrt::to_string(functionBlock.Name()) << std::endl;
         }
         
-
         // Group Terminal Blocks
+
         auto groupTerminalBlocks = endpoint.GetGroupTerminalBlocks();
         std::cout << std::endl << "Group Terminal Blocks" << std::endl;
         std::cout << "- Block Count:     " << groupTerminalBlocks.Size() << std::endl;
@@ -222,13 +222,8 @@ int main()
             std::cout << "  - " << int(groupTerminalBlock.Number()) << " : " << winrt::to_string(groupTerminalBlock.Name()) << std::endl;
         }
 
-
-
         std::cout << "--------------------------------------------------------------------------" << std::endl << std::endl;
-
-
     }
-
 
     // clean up the SDK WinRT redirection
     if (initializer != nullptr)

@@ -9,11 +9,7 @@
 
 #include "pch.h"
 
-
-// init code goes in dllmain
-
-std::unique_ptr<MidiClientInitializer> g_clientInitializer{ nullptr };
-
+#include "MidiClientInitializer.h"
 
 
 HRESULT
@@ -46,12 +42,12 @@ MidiClientInitializer::Initialize(
             }
 
             RemoveWinRTActivationHooks();
+            m_initialized = false;
         });
 
 
     // SDK initialization
     g_runtimeComponentCatalog = std::make_shared<MidiAppSdkRuntimeComponentCatalog>();
-
     if (g_runtimeComponentCatalog == nullptr)
     {
         TraceLoggingWrite(
@@ -81,6 +77,7 @@ MidiClientInitializer::Initialize(
         RETURN_IF_FAILED(E_FAIL);
     }
 
+
     try
     {
         auto hr = InstallWinRTActivationHooks();
@@ -98,6 +95,13 @@ MidiClientInitializer::Initialize(
             );
             RETURN_IF_FAILED(hr);
         }
+
+        m_initialized = true;
+
+        // success, so remove all the unwinding code
+        cleanupOnError.release();
+
+        return S_OK;
     }
     catch (...)
     {
@@ -115,11 +119,6 @@ MidiClientInitializer::Initialize(
         RETURN_IF_FAILED(E_FAIL);
     }
 
-    // success, so remove all the unwinding code
-    cleanupOnError.release();
-    m_initialized = true;
-
-    return S_OK;
 }
 
 
@@ -289,18 +288,19 @@ MidiClientInitializer::EnsureServiceAvailable() noexcept
 
     RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
 
+
     // midisrv client initialization. Doesn't actually connect to service here
     RETURN_IF_FAILED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&m_serviceTransport)));
-
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_serviceTransport);
 
     wil::com_ptr_nothrow<IMidiSessionTracker> sessionTracker;
     RETURN_IF_FAILED(m_serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker));
     RETURN_HR_IF_NULL(E_POINTER, sessionTracker);
 
-    sessionTracker->Initialize();
+    RETURN_IF_FAILED(sessionTracker->Initialize());
     bool connected = sessionTracker->VerifyConnectivity();
-    sessionTracker->Shutdown();
+    RETURN_IF_FAILED(sessionTracker->Shutdown());
+
     sessionTracker.reset();
 
     if (connected)
@@ -339,6 +339,13 @@ MidiClientInitializer::Shutdown() noexcept
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    // there are still references being held. Don't shut down detours
+    if (m_cRef > 0)
+    {
+        return S_OK;
+    }
+
+
     auto lock = m_initializeLock.lock();
 
     if (m_initialized)
@@ -346,9 +353,18 @@ MidiClientInitializer::Shutdown() noexcept
         // Remove activation hooks
         RemoveWinRTActivationHooks();
 
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Setting transport to null", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         if (m_serviceTransport)
         {
-            m_serviceTransport = nullptr;
+            m_serviceTransport.reset();
         }
 
         if (g_runtimeComponentCatalog != nullptr)
@@ -357,29 +373,80 @@ MidiClientInitializer::Shutdown() noexcept
             g_runtimeComponentCatalog.reset();
         }
 
-        // this just feels strange
-        g_clientInitializer.reset();
-
         m_initialized = false;
+
+        // this just feels strange
+        g_midiClientInitializer.Reset();
     }
+
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Done", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
 
 
+MidiClientInitializer::MidiClientInitializer()
+{
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    Initialize();
+}
+
+
 MidiClientInitializer::~MidiClientInitializer()
 {
-    //Shutdown();
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    Shutdown();
 }
 
 
 ULONG __stdcall MidiClientInitializer::AddRef() noexcept
 {
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     return InterlockedIncrement(&m_cRef);
 }
 
 ULONG __stdcall MidiClientInitializer::Release() noexcept
 {
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     if (InterlockedDecrement(&m_cRef) == 0)
     {
         //delete this;
@@ -392,9 +459,18 @@ ULONG __stdcall MidiClientInitializer::Release() noexcept
 
 HRESULT __stdcall MidiClientInitializer::QueryInterface(const IID& iid, void** ppv) noexcept
 {
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     if (iid == IID_IUnknown)
     {
-        *ppv = static_cast<IMidiClientInitializer*>(this);
+        *ppv = static_cast<IUnknown*>(this);
     }
     else if (iid == __uuidof(IMidiClientInitializer))
     {
@@ -406,7 +482,8 @@ HRESULT __stdcall MidiClientInitializer::QueryInterface(const IID& iid, void** p
         return E_NOINTERFACE;
     }
 
-    reinterpret_cast<IUnknown*>(*ppv)->AddRef();
+    AddRef();
+    //reinterpret_cast<IUnknown*>(*ppv)->AddRef();
 
     return S_OK;
 }

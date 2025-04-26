@@ -122,7 +122,9 @@ void MidiAppSdkInitializationTests::TestMultipleInitialization()
 {
     // first init
     {
-        MidiDesktopAppSdkInitializer initializer;
+        std::cout << "Validating first init" << std::endl;
+
+        MidiDesktopAppSdkInitializer initializer{};
 
         VERIFY_IS_TRUE(initializer.InitializeSdkRuntime());
         VERIFY_IS_TRUE(initializer.EnsureServiceAvailable());
@@ -137,11 +139,14 @@ void MidiAppSdkInitializationTests::TestMultipleInitialization()
     }
 
     // we shouldn't be able to resolve this here
+    std::cout << "Validating that detours have been shut down" << std::endl;
     VERIFY_FAILED(CheckClassActivation(L"Microsoft.Windows.Devices.Midi2.MidiGroup"));
 
     // second init
     {
-        MidiDesktopAppSdkInitializer initializer;
+        std::cout << "Validating second init" << std::endl;
+
+        MidiDesktopAppSdkInitializer initializer{};
 
         VERIFY_IS_TRUE(initializer.InitializeSdkRuntime());
         VERIFY_IS_TRUE(initializer.EnsureServiceAvailable());
@@ -157,11 +162,13 @@ void MidiAppSdkInitializationTests::TestMultipleInitialization()
     }
 
     // we shouldn't be able to resolve this here
+    std::cout << "Validating that detours have been shut down" << std::endl;
     VERIFY_FAILED(CheckClassActivation(L"Microsoft.Windows.Devices.Midi2.MidiGroup"));
 
     // nested init
     {
-        MidiDesktopAppSdkInitializer initializer;
+        std::cout << "Validating third init" << std::endl;
+        MidiDesktopAppSdkInitializer initializer{};
 
         VERIFY_IS_TRUE(initializer.InitializeSdkRuntime());
         VERIFY_IS_TRUE(initializer.EnsureServiceAvailable());
@@ -173,7 +180,8 @@ void MidiAppSdkInitializationTests::TestMultipleInitialization()
         //std::cout << "Ref count before shutdown: " << initializer.TESTGetCurrentRefCount() << std::endl;
 
         {
-            MidiDesktopAppSdkInitializer initializer2;
+            std::cout << "Validating nested init 3.1" << std::endl;
+            MidiDesktopAppSdkInitializer initializer2{};
 
             VERIFY_IS_TRUE(initializer2.InitializeSdkRuntime());
             VERIFY_IS_TRUE(initializer2.EnsureServiceAvailable());
@@ -187,7 +195,8 @@ void MidiAppSdkInitializationTests::TestMultipleInitialization()
             //std::cout << "Ref count before shutdown: " << initializer2.TESTGetCurrentRefCount() << std::endl;
 
             {
-                MidiDesktopAppSdkInitializer initializer3;
+                std::cout << "Validating nested init 3.1.1" << std::endl;
+                MidiDesktopAppSdkInitializer initializer3{};
 
                 VERIFY_IS_TRUE(initializer3.InitializeSdkRuntime());
                 VERIFY_IS_TRUE(initializer3.EnsureServiceAvailable());
@@ -198,7 +207,8 @@ void MidiAppSdkInitializationTests::TestMultipleInitialization()
             }
 
             {
-                MidiDesktopAppSdkInitializer initializer3;
+                std::cout << "Validating nested init 3.1.2" << std::endl;
+                MidiDesktopAppSdkInitializer initializer3{};
 
                 VERIFY_IS_TRUE(initializer3.InitializeSdkRuntime());
                 VERIFY_IS_TRUE(initializer3.EnsureServiceAvailable());
@@ -209,7 +219,8 @@ void MidiAppSdkInitializationTests::TestMultipleInitialization()
             }
 
             {
-                MidiDesktopAppSdkInitializer initializer3;
+                std::cout << "Validating nested init 3.1.3" << std::endl;
+                MidiDesktopAppSdkInitializer initializer3{};
 
                 VERIFY_IS_TRUE(initializer3.InitializeSdkRuntime());
                 VERIFY_IS_TRUE(initializer3.EnsureServiceAvailable());

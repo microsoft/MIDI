@@ -130,7 +130,9 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                     // try to make an SDK call. If we can't resolve the types
                     // correctly, it'll throw.
 
-                    MidiAppSDKPlatform buildPlatform = MidiAppSDKPlatform.x64;
+                    // build platform is an output param. We just default it here
+                    MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
+
                     UInt32 versionMajor = 0;
                     UInt32 versionMinor = 0;
                     UInt32 versionRevision = 0;
@@ -141,7 +143,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                     string versionFullString = string.Empty;
 
                     _initializer.GetInstalledWindowsMidiServicesSdkVersion(
-                        ref buildPlatform,
+                        ref platform,
                         ref versionMajor,
                         ref versionMinor,
                         ref versionRevision,
@@ -170,8 +172,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             UInt32 minRequiredVersionMinor,
             UInt32 minRequiredVersionRevision)
         {
-            // TODO
-
+            // build platform is an output param. We just default it here
             MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
 
             string buildSource = string.Empty;

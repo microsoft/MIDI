@@ -106,29 +106,12 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             }
         }
 
-        // This was used in unit tests for checking refcounting
-        // Feel free to remove it in your own use
-        //ULONG TESTGetCurrentRefCount()
-        //{
-        //    if (!m_initializer)
-        //    {
-        //        return 0;
-        //    }
-
-        //    ULONG count = m_initializer->AddRef();
-
-        //    if (count > 1)
-        //    {
-        //        m_initializer->Release();
-        //    }
-
-        //    return count - 1;
-        //}
 
         // IMPORTANT caller note: this is assuming that the caller has made the appropriate
         // winrt::init_apartment() (C++/WinRT) or Windows::Foundation::Initialize 
-        // call before calling this function. Do not call CoInitializeEx because
-        // we're also using WinRT and the other two approaches are more appropriate
+        // call on this calling thread before calling this function. Do not call 
+        // CoInitializeEx because we're also using WinRT and the other two approaches 
+        // do the additional initialization we require.
         bool InitializeSdkRuntime()
         {
             // check if already initialized
@@ -164,6 +147,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 // Note that this approach is consistent with the Windows App SDK Approach 
                 // recently adopted in Windows, except we don't pop up UI here, and instead
                 // prefer to leave that up to the app to do in its own consistent way.
+                m_initializer = nullptr;
                 return false;
             }
         }
@@ -171,7 +155,8 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         // If you know your application requires a minimum version of the SDK, because maybe you use features
         // added later, or you know there was an important bug fix, you can use this function, after initialization
         // to check for a minimum required version. Use the provided URL to download the latest runtime.
-        // You will need to shutdown the SDK before replacing it.
+        // You will need to shutdown the SDK before the customer can replace it.
+        // The SDK version you compile against is the NuGet package major/minor (and optionally) revision.
         bool CheckForMinimumRequiredSdkVersion(
             DWORD minRequiredVersionMajor, 
             DWORD minRequiredVersionMinor, 
@@ -224,7 +209,6 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 // initializer referenced, it will clean up the hooks.
 
                 m_initializer->Release();   // if using wil::com_ptr_nothrow, winrt::com_ptr, or equivalent, you can remove this
-
                 m_initializer = nullptr;
             }
         }
@@ -236,9 +220,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             // in case it wasn't called earlier
             ShutdownSdkRuntime();
         }
-
     };
-
 }
 
 #endif
