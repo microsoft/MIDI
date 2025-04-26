@@ -138,6 +138,7 @@ MidiAppSdkRuntimeComponentCatalog::Initialize()
     m_sdkMetadataFullFilename = m_sdkDirectory + L"\\" + std::wstring{ MIDI_SDK_METADATA_NAME };
     m_sdkImplementationFullFilename = m_sdkDirectory + L"\\" + std::wstring{ MIDI_SDK_IMPL_DLL_NAME };
 
+    m_types.clear();
 
     auto types = GetMidiAppSdkManifestTypes();
 

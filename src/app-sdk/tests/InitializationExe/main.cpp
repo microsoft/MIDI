@@ -14,8 +14,8 @@
 #include "color.hpp"
 
 // TEMP
-#define VERIFY_IS_TRUE(c) c
-#define VERIFY_IS_FALSE(c) c
+#define VERIFY_IS_TRUE(c)   assert(c)
+#define VERIFY_IS_FALSE(c)  assert(!(c))
 
 
 int __cdecl main()

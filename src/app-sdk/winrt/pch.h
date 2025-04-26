@@ -36,10 +36,13 @@
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.ApplicationModel.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Devices.Midi.h>
+
 
 #include <winrt/Windows.Data.Json.h>
 namespace json = ::winrt::Windows::Data::Json;
@@ -49,7 +52,7 @@ namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 namespace streams = ::winrt::Windows::Storage::Streams;
 
-
+namespace coreapp = ::winrt::Windows::ApplicationModel::Core;
 
 // pre-declare namespaces
 
@@ -239,4 +242,8 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "Initialization/MidiAppSdkRuntimeTypeResolution.h"
 #include "Initialization/MidiRoDetours.h"
 
+#include <shared_mutex>
+#include "ComSingleton.h"
 #include "Initialization/MidiClientInitializer.h"
+#include "MidiClientInitializerSingleton.h"
+#include "MidiClientInitializerFactory.h"

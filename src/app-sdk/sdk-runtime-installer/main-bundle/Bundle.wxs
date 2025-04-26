@@ -39,15 +39,19 @@
     <Fragment>
         <!-- Believe it or not, the DotNetCoreSearch barfs if you send ARM64 instead of arm64 -->
 
-        <!-- Apps use .NET Core 8 -->
-        <netfx:DotNetCoreSearch
-            Id="SearchForDotNet8_arm64"
-            RuntimeType="desktop"
-            Platform="arm64"
-            MajorVersion="8"
-            Variable="DotNetDesktopRuntimeVersion_arm64"
-                />
+        <?if $(var.Platform) = ARM64 ?>
+            <!-- Apps use .NET Core 8 -->
+            <netfx:DotNetCoreSearch
+                Id="SearchForDotNet8_arm64"
+                RuntimeType="desktop"
+                Platform="arm64"
+                MajorVersion="8"
+                Variable="DotNetDesktopRuntimeVersion_arm64"
+                    />
+        <?endif?>
 
+
+        <!-- We always search for x64 version because it's used on all platforms right now -->
         <netfx:DotNetCoreSearch
             Id="SearchForDotNet8_x64"
             RuntimeType="desktop"

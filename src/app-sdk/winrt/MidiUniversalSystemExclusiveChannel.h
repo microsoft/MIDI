@@ -18,7 +18,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         static winrt::hstring LongLabel() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_SYSEX_CHANNEL_FULL); }
         static winrt::hstring LongLabelPlural() { return internal::ResourceGetHString(IDS_MIDI_COMMON_LABEL_SYSEX_CHANNEL_FULL_PLURAL); }
 
-        static midi2::MidiUniversalSystemExclusiveChannel DisregardChannel() { return MidiUniversalSystemExclusiveChannel(127); }
+        static midi2::MidiUniversalSystemExclusiveChannel DisregardChannel() { return midi2::MidiUniversalSystemExclusiveChannel(127); }
 
         MidiUniversalSystemExclusiveChannel() noexcept { Index(0); }
         MidiUniversalSystemExclusiveChannel(_In_ uint8_t index) noexcept { Index(index); }

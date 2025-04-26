@@ -21,14 +21,31 @@ BOOL WINAPI DllMain(HINSTANCE hmodule, DWORD reason, LPVOID /*lpvReserved*/)
 
     if (reason == DLL_PROCESS_ATTACH)
     {
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(nullptr, "this"),
+            TraceLoggingWideString(L"Process Attach", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
         wil::SetResultTelemetryFallback(Midi2SdkTelemetryProvider::FallbackTelemetryCallback);
 
-        DisableThreadLibraryCalls(hmodule);
+        DisableThreadLibraryCalls(hmodule);      
     }
 
     if (reason == DLL_PROCESS_DETACH)
     {
-        g_clientInitializer = nullptr;
+        TraceLoggingWrite(
+            Midi2SdkTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(nullptr, "this"),
+            TraceLoggingWideString(L"Process Detach", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
     }
 
     TraceLoggingWrite(
@@ -47,14 +64,28 @@ _Use_decl_annotations_
 STDAPI
 DllCanUnloadNow()
 {
-    // TODO: See if the initializer has any references. If not, then forward to the WinRT function
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
-    if (g_clientInitializer == nullptr) return true;
-    if (g_clientInitializer->CanUnloadNow()) return true;
+    //if ((g_midiClientInitializer != nullptr && g_midiClientInitializer->CanUnloadNow()) ||
+    //    g_midiClientInitializer == nullptr)
+    //{
+    //    
+    //}
 
-    // this is assuming applications are keeping the initializer around like they're supposed to.
     return WINRT_CanUnloadNow();
+
+    //return S_FALSE;
 }
+
+
+
 
 _Use_decl_annotations_
 STDAPI
@@ -76,6 +107,8 @@ DllGetClassObject(GUID const& clsid, GUID const& iid, void** result)
 
         if (clsid == __uuidof(MidiClientInitializer))
         {
+            // use COM static store per https://devblogs.microsoft.com/oldnewthing/20210208-00/?p=104812
+
             return winrt::make<MidiClientInitializerFactory>()->QueryInterface(iid, result);
         }
 
@@ -218,6 +251,16 @@ DllInstall(
     BOOL install,
     LPCWSTR)
 {
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(nullptr, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingBool(install, "Install")
+    );
+
     HRESULT hr = E_FAIL;
 
     if (install)

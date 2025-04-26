@@ -174,7 +174,7 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\Release;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\Release;$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
@@ -258,19 +258,13 @@
       </Command>
     </PostBuildEvent>
     <ResourceCompile>
-      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Yes</ShowProgress>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <ResourceCompile>
-      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">Yes</ShowProgress>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <ResourceCompile>
-      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Yes</ShowProgress>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ComSingleton.h" />
+    <ClInclude Include="MidiClientInitializerFactory.h" />
+    <ClInclude Include="MidiClientInitializerSingleton.h" />
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClInclude>
@@ -476,6 +470,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiClientInitializerFactory.cpp" />
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClCompile>

@@ -537,6 +537,7 @@ void RemoveWinRTActivationHooks()
         g_detourActive = false;
     }
 
+
     TraceLoggingWrite(
         Midi2SdkTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,

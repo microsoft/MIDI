@@ -15,90 +15,46 @@
 
 extern HMODULE g_sdkRuntimeImplementationModuleHandle;
 
-HRESULT 
-MidiAppSdkRuntimeComponent::LoadModuleIfNeeded()
-{
-    TraceLoggingWrite(
-        Midi2SdkTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(module_name.c_str(), "module_name"),
-        TraceLoggingPointer(handle, "module handle")
-    );
-
-    if (handle == nullptr)
-    {
-        // we're already loaded. This will not work if we break the SDK out into multiple DLLs.
-        // or if this function is called for non-SDK types
-        handle = g_sdkRuntimeImplementationModuleHandle;
-
-        // just in case
-        if (handle == nullptr)
-        {
-            handle = LoadLibraryExW(module_name.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
-        }
-
-        // if we're still null, something is wrong
-        if (handle == nullptr)
-        {
-            auto hr = HRESULT_FROM_WIN32(GetLastError());
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"LoadLibraryExW failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                TraceLoggingWideString(module_name.c_str(), "module_name")
-            );
-
-            return hr;
-        }
-
-        // TODO: we could further optimize this because all the SDK types will have the same proc address for this
-        this->get_activation_factory = (activation_factory_type)GetProcAddress(handle, "DllGetActivationFactory");
-
-        if (this->get_activation_factory == nullptr)
-        {
-            auto hr = HRESULT_FROM_WIN32(GetLastError());
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"GetProcAddress(DllGetActivationFactory) failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
-                TraceLoggingWideString(module_name.c_str(), "module_name"),
-                TraceLoggingPointer(handle, "module handle")
-            );
-
-            return hr;
-        }
-    }
-    else
-    {
-        TraceLoggingWrite(
-            Midi2SdkTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Module already loaded", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(module_name.c_str(), "module_name"),
-            TraceLoggingPointer(handle, "module handle")
-        );
-
-    }
-
-    return (handle != nullptr && this->get_activation_factory != nullptr) ? S_OK : E_FAIL;
-}
+//HRESULT 
+//MidiAppSdkRuntimeComponent::LoadModuleIfNeeded()
+//{
+//    TraceLoggingWrite(
+//        Midi2SdkTelemetryProvider::Provider(),
+//        MIDI_TRACE_EVENT_INFO,
+//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+//        TraceLoggingPointer(this, "this"),
+//        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+//        TraceLoggingWideString(module_name.c_str(), "module_name")
+//    );
+//
+//    return S_OK;
+//
+//    //// TODO: we could further optimize this because all the SDK types will have the same proc address for this
+//    ////this->get_activation_factory = (activation_factory_type)GetProcAddress(g_sdkRuntimeImplementationModuleHandle, "DllGetActivationFactory");
+//
+//
+//
+//    //if (this->get_activation_factory == nullptr)
+//    //{
+//    //    auto hr = HRESULT_FROM_WIN32(GetLastError());
+//
+//    //    TraceLoggingWrite(
+//    //        Midi2SdkTelemetryProvider::Provider(),
+//    //        MIDI_TRACE_EVENT_INFO,
+//    //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+//    //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+//    //        TraceLoggingPointer(this, "this"),
+//    //        TraceLoggingWideString(L"GetProcAddress(DllGetActivationFactory) failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+//    //        TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD),
+//    //        TraceLoggingWideString(module_name.c_str(), "module_name")
+//    //    );
+//
+//    //    return hr;
+//    //}
+//
+//    //return (this->get_activation_factory != nullptr) ? S_OK : E_FAIL;
+//}
 
 
 _Use_decl_annotations_
@@ -118,10 +74,13 @@ MidiAppSdkRuntimeComponent::GetActivationFactory(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    RETURN_IF_FAILED(LoadModuleIfNeeded());
+ //   RETURN_IF_FAILED(LoadModuleIfNeeded());
 
     IActivationFactory* ifactory = nullptr;
-    HRESULT hr = this->get_activation_factory(className, &ifactory);
+    //HRESULT hr = this->get_activation_factory(className, &ifactory);
+
+    HRESULT hr = WINRT_GetActivationFactory(className, (void**)(&ifactory));
+
 
     // optimize for IActivationFactory?
     if (SUCCEEDED(hr))
