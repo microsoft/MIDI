@@ -677,11 +677,85 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
 
 
 
+// this is a single-threaded test, so we're only going to send, not receive
+void MidiEndpointConnectionTests::TestSendMultipleMessagePacketsSTA()
+{
+    auto initializer = InitWinRTAndSDK_STA();
+
+    LOG_OUTPUT(L"TestSendMultipleMessagePacketsSTA **********************************************************************");
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    auto session = MidiSession::Create(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoint");
+
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+
+    // open connection
+    VERIFY_IS_TRUE(connSend.Open());
+
+    // send messages
+    std::cout << "Creating messages" << std::endl;
+
+    std::vector<IMidiUniversalPacket> packetList;
+
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000000));
+
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000001));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000002));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000003));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000004));
+
+
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000005));
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000006));
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000007));
+
+    auto result = connSend.SendMultipleMessagesPacketList(packetList);
+
+    if (!MidiEndpointConnection::SendMessageSucceeded(result))
+        std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+    std::cout << "Waiting for response" << std::endl;
+
+    std::cout << "Disconnecting endpoint" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+
+    std::cout << "Endpoint disconnected" << std::endl;
+
+    session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    packetList.clear();
+    connSend = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
+}
+
+
+
+
+
+
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
 {
     auto initializer = InitWinRTAndSDK_MTA();
 
-    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessageWordsList **********************************************************************");
+    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessagePackets **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
