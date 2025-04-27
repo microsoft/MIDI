@@ -112,6 +112,11 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         // call on this calling thread before calling this function. Do not call 
         // CoInitializeEx because we're also using WinRT and the other two approaches 
         // do the additional initialization we require.
+        //
+        // In the future, we may add either an overload to this or internally handle
+        // version differences so that we can have side-by-side major revisions of the 
+        // SDK, if needed. We're leaving that out for now, and will ensure backwards
+        // compatibility.
         bool InitializeSdkRuntime()
         {
             // check if already initialized

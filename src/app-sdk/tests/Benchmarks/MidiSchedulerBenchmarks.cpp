@@ -14,6 +14,8 @@
 _Use_decl_annotations_
 void MidiSchedulerBenchmarks::BenchmarkSendReceiveScheduledMessages(_In_ uint32_t messageCount)
 {
+    winrt::init_apartment();
+
     LOG_OUTPUT(L"API Scheduling benchmark **********************************************************************");
 
     uint32_t numMessagesToSend = messageCount;
@@ -210,6 +212,9 @@ void MidiSchedulerBenchmarks::BenchmarkSendReceiveScheduledMessages(_In_ uint32_
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+
+    winrt::uninit_apartment();
 
 }
 

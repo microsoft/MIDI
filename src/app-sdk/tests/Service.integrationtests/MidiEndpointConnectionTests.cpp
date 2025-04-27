@@ -12,9 +12,10 @@
 
 void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnCode()
 {
-    LOG_OUTPUT(L"TestSendMessageInvalidConnectionFailureReturnCode **********************************************************************");
+    auto initializer = InitWinRTAndSDK_MTA();
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
+    LOG_OUTPUT(L"TestSendMessageInvalidConnectionFailureReturnCode **********************************************************************");
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -37,14 +38,21 @@ void MidiEndpointConnectionTests::TestSendMessageInvalidConnectionFailureReturnC
     session.DisconnectEndpointConnection(connSend.ConnectionId());
 
     session.Close();
+
+    // if you want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 
 void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
 {
-    LOG_OUTPUT(L"TestSendMessageValidationFailureReturnCode **********************************************************************");
+    auto initializer = InitWinRTAndSDK_MTA();
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    LOG_OUTPUT(L"TestSendMessageValidationFailureReturnCode **********************************************************************");
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -67,6 +75,13 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
     session.DisconnectEndpointConnection(connSend.ConnectionId());
 
     session.Close();
+
+    // if you want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 //void MidiEndpointConnectionTests::TestSendMessageSuccessScheduledReturnCode()
@@ -124,6 +139,9 @@ void MidiEndpointConnectionTests::TestSendMessageValidationFailureReturnCode()
 
 void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
+
     LOG_OUTPUT(L"TestCreateBiDiLoopbackA **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -148,10 +166,21 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackA()
 
     session.DisconnectEndpointConnection(conn1.ConnectionId());
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    conn1 = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
+
 }
 
 void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
+
     LOG_OUTPUT(L"TestCreateBiDiLoopbackB **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -174,10 +203,19 @@ void MidiEndpointConnectionTests::TestCreateBiDiLoopbackB()
 
     session.DisconnectEndpointConnection(conn1.ConnectionId());
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    conn1 = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestSendAndReceiveUmpStruct **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -257,11 +295,22 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmpStruct()
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 
 void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestSendAndReceiveUmp32 **********************************************************************");
 
  //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -356,17 +405,25 @@ void MidiEndpointConnectionTests::TestSendAndReceiveUmp32()
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    sentUmp = nullptr;
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionTests::TestSendAndReceiveWords()
 {
-    LOG_OUTPUT(L"TestSendAndReceiveWords **********************************************************************");
+    auto initializer = InitWinRTAndSDK_MTA();
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    LOG_OUTPUT(L"TestSendAndReceiveWords **********************************************************************");
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
-
 
   //  uint64_t setupStartTimestamp = MidiClock::GetMidiTimestamp();
 
@@ -410,8 +467,6 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
     // open connection
     VERIFY_IS_TRUE(connSend.Open());
     VERIFY_IS_TRUE(connReceive.Open());
-
-
 
     // send messages
 
@@ -485,10 +540,21 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWords()
     std::cout << "Endpoints disconnected" << std::endl;
 
     session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestSendAndReceiveMultipleMessageWordsList **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -598,13 +664,98 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessageWordsList()
     std::cout << "Endpoints disconnected" << std::endl;
 
     session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
+
+
+
+// this is a single-threaded test, so we're only going to send, not receive
+void MidiEndpointConnectionTests::TestSendMultipleMessagePacketsSTA()
+{
+    auto initializer = InitWinRTAndSDK_STA();
+
+    LOG_OUTPUT(L"TestSendMultipleMessagePacketsSTA **********************************************************************");
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    auto session = MidiSession::Create(L"Test Session Name");
+
+    VERIFY_IS_TRUE(session.IsOpen());
+    VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
+
+    LOG_OUTPUT(L"Connecting to BiDi loopback Endpoint");
+
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+
+    // open connection
+    VERIFY_IS_TRUE(connSend.Open());
+
+    // send messages
+    std::cout << "Creating messages" << std::endl;
+
+    std::vector<IMidiUniversalPacket> packetList;
+
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000000));
+
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000001));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000002));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000003));
+    packetList.push_back(MidiMessage64(MidiClock::TimestampConstantSendImmediately(), 0x40000000, 0x00000004));
+
+
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000005));
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000006));
+    packetList.push_back(MidiMessage32(MidiClock::TimestampConstantSendImmediately(), 0x20000007));
+
+    auto result = connSend.SendMultipleMessagesPacketList(packetList);
+
+    if (!MidiEndpointConnection::SendMessageSucceeded(result))
+        std::cout << "Send result: 0x" << std::hex << (uint32_t)result << std::endl;
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
+
+    std::cout << "Waiting for response" << std::endl;
+
+    std::cout << "Disconnecting endpoint" << std::endl;
+
+    // cleanup endpoint. Technically not required as session will do it
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+
+    std::cout << "Endpoint disconnected" << std::endl;
+
+    session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    packetList.clear();
+    connSend = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
+}
+
+
+
 
 
 
 void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
 {
-    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessageWordsList **********************************************************************");
+    auto initializer = InitWinRTAndSDK_MTA();
+
+    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessagePackets **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
@@ -719,6 +870,16 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
     std::cout << "Endpoints disconnected" << std::endl;
 
     session.Close();
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    packetList.clear();
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 
@@ -727,6 +888,8 @@ void MidiEndpointConnectionTests::TestSendAndReceiveMultipleMessagePackets()
 
 void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestSendWordArrayBoundsError **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -758,11 +921,22 @@ void MidiEndpointConnectionTests::TestSendWordArrayBoundsError()
     session.DisconnectEndpointConnection(connSend.ConnectionId());
 
     session.Close();
+
+
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 
 void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestSendAndReceiveWordArray **********************************************************************");
 
  //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -838,8 +1012,15 @@ void MidiEndpointConnectionTests::TestSendAndReceiveWordArray()
     // cleanup endpoint. Technically not required as session will do it
     session.DisconnectEndpointConnection(connSend.ConnectionId());
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
-
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 

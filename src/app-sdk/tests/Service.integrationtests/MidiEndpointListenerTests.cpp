@@ -12,6 +12,8 @@
 
 void MidiEndpointListenerTests::TestMessageTypeListener()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestMessageTypeListener **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -115,11 +117,22 @@ void MidiEndpointListenerTests::TestMessageTypeListener()
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    endpointListener = nullptr;
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 
 void MidiEndpointListenerTests::TestGroupListener()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestGroupListener **********************************************************************");
 
  //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -235,10 +248,21 @@ void MidiEndpointListenerTests::TestGroupListener()
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    endpointListener = nullptr;
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointListenerTests::TestGroupAndChannelListener()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestGroupAndChannelListener **********************************************************************");
 
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
@@ -361,5 +385,14 @@ void MidiEndpointListenerTests::TestGroupAndChannelListener()
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    endpointListener = nullptr;
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 

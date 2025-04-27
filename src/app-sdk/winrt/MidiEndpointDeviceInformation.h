@@ -44,9 +44,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
 
-        //static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
-        //    _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
-
         static bool DeviceMatchesFilter(
             _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
             _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
@@ -68,8 +65,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         foundation::DateTime DeclaredFunctionBlocksLastUpdateTime() const noexcept { return GetDateTimeProperty(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime, foundation::DateTime{}); }
 
         winrt::hstring Name() const noexcept;
-
-//        winrt::hstring TransportSuppliedName() const noexcept { return m_transportSuppliedEndpointName; }  // todo: may need to update this later
 
         midi2::MidiEndpointDevicePurpose EndpointPurpose() const noexcept;
 
@@ -122,104 +117,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring key,
             _In_ foundation::DateTime defaultValue) const noexcept;
 
-
-        //template<typename T>
-        //inline T GetProperty(
-        //    winrt::hstring key,
-        //    T defaultValue
-        //) const noexcept
-        //{
-        //    if (!m_properties.HasKey(key)) return defaultValue;
-        //    if (m_properties.Lookup(key) == nullptr) return defaultValue;
-
-        //    std::optional<T> opt = m_properties.Lookup(key).try_as<T>();
-
-        //    if (opt == std::nullopt)
-        //    {
-        //        return defaultValue;
-        //    }
-        //    else
-        //    {
-        //        return opt.value();
-        //    }
-        //}
-
-        //template<typename T>
-        //T GetProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ T defaultValue) const noexcept;
-
-        //winrt::hstring GetStringProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ winrt::hstring defaultValue) const noexcept;
-
-        //winrt::guid GetGuidProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ winrt::guid defaultValue) const noexcept;
-
-        //winrt::hstring GetGuidPropertyAsString(
-        //    _In_ winrt::hstring key,
-        //    _In_ winrt::hstring defaultValue) const noexcept;
-
-        //uint8_t GetByteProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ uint8_t defaultValue) const noexcept;
-
-        //uint64_t GetUInt64Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ uint64_t defaultValue) const noexcept;
-
-        //uint32_t GetUInt32Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ uint32_t defaultValue) const noexcept;
-
-        //uint16_t GetUInt16Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ uint16_t defaultValue) const noexcept;
-
-
-        //int64_t GetInt64Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ int64_t defaultValue) const noexcept;
-
-        //int32_t GetInt32Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ int32_t defaultValue) const noexcept;
-
-        //int16_t GetInt16Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ int16_t defaultValue) const noexcept;
-
-
-        //bool GetBoolProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ bool defaultValue) const noexcept;
-
         foundation::IReferenceArray<uint8_t> GetBinaryProperty(
             _In_ winrt::hstring key) const noexcept;
 
-
         winrt::hstring m_id{};
-
 
         collections::IMap<winrt::hstring, foundation::IInspectable> m_properties 
             { winrt::multi_threaded_map<winrt::hstring, foundation::IInspectable>() };
 
         // these don't change, so fine to keep them as a class var
         collections::IVector<midi2::MidiGroupTerminalBlock> m_groupTerminalBlocks
-            { winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
+            { winrt::multi_threaded_vector<midi2::MidiGroupTerminalBlock>() };
 
-
-        //MidiDeviceIdentityProperty m_deviceIdentity;
-
-        //void ReadDeviceIdentity();
-        //void ReadFunctionBlocks();
         void ReadGroupTerminalBlocks();
-
-
-        //void AddOrUpdateFunctionBlock(_In_ foundation::IReferenceArray<uint8_t> refArray);
-
-
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation

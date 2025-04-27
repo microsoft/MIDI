@@ -13,7 +13,7 @@
 _Use_decl_annotations_
 void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceInformationFilters filter, uint32_t numEndpointsExpected)
 {
- //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto initializer = InitWinRTAndSDK_MTA();
 
 
     wil::unique_event_nothrow enumerationCompleted;
@@ -72,7 +72,11 @@ void MidiEndpointDeviceWatcherTests::TestWatcherEnumeration(MidiEndpointDeviceIn
     watcher.EnumerationCompleted(enumerationCompletedEventRevokeToken);
     watcher.Added(addedEventRevokeToken);
 
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    watcher = nullptr;
 
+    ShutdownSDKAndWinRT(initializer);
 }
 
 

@@ -1,4 +1,12 @@
 
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
 #include "stdafx.h"
 
 
@@ -90,6 +98,8 @@ void MidiEndpointCreationThreadTests::SendThreadWorker(MidiSession session, winr
 
 void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     m_receiveComplete.create();
     m_receiverReady.create();
 
@@ -131,6 +141,11 @@ void MidiEndpointCreationThreadTests::TestCreateNewSessionMultithreaded()
         std::cout << "Session: Message receive complete notification received." << std::endl;
     }
 
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 

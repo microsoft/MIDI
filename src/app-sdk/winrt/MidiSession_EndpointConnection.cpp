@@ -152,6 +152,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
                 auto conn = m_connections.Lookup(endpointConnectionId);
                 auto connSelf = winrt::get_self<implementation::MidiEndpointConnection>(conn);
+
                 connSelf->InternalClose();
 
                 m_connections.Remove(endpointConnectionId);

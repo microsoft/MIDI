@@ -50,6 +50,8 @@ using namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig;
 #include "winmidi/init/Microsoft.Windows.Devices.Midi2.Initialization.hpp"
 namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 
+#include "..\SdkTestCommon.h"
+
 #include "MidiEndpointConnectionBufferTests.h"
 #include "MidiEndpointConnectionTests.h"
 #include "MidiEndpointCreationThreadTests.h"

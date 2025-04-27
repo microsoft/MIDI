@@ -515,7 +515,7 @@ class Build : NukeBuild
                         Path.Combine(solutionDir, @"tests\Benchmarks"),
                         Path.Combine(solutionDir, @"tests\Offline.unittests"),
                         Path.Combine(solutionDir, @"tests\SdkInitialization.unittests"),
-                        Path.Combine(solutionDir, @"tests\Service.unittests"),
+                        Path.Combine(solutionDir, @"tests\Service.integrationtests"),
                         /* Path.Combine(solutionDir, "midi1monitor"), */
                         /* Path.Combine(solutionDir, "midiksinfo"), */
                     };

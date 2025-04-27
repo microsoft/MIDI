@@ -12,7 +12,7 @@ Individual applications do not deploy the SDK with their binaries. The C# projec
 ## Examples
 
 ```cpp
-// MTA by default but you can use STA if you need to. MTA is preferred for callback performance.
+// MTA by default but you can use STA if you must. MTA is preferred for callback performance.
 winrt::init_apartment();
 
 // this is the initializer in the bootstrapper hpp file
@@ -65,3 +65,5 @@ using (var initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesk
 
 }
 ```
+
+More complete examples may be found on the [GitHub repo samples section](https://aka.ms/midisamples).

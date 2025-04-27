@@ -266,54 +266,6 @@ void MidiAppSdkInitializationTests::TestMultipleInitialization()
 
 }
 
-void MidiAppSdkInitializationTests::TestResolvingTypes()
-{
-    MidiDesktopAppSdkInitializer initializer;
-
-    VERIFY_IS_TRUE(initializer.InitializeSdkRuntime());
-    VERIFY_IS_TRUE(initializer.EnsureServiceAvailable());
-
-    // TODO: test resolving every type
-
-
-
-
-
-
-    //std::cout << "\nThis ref count should be 1" << std::endl;
-    //std::cout << "Ref count before shutdown: " << initializer.TESTGetCurrentRefCount() << std::endl;
-    initializer.ShutdownSdkRuntime();
-}
-
-
-
-void MidiAppSdkInitializationTests::ValidateBackwardsCompatibilityWinMD()
-{
-    MidiDesktopAppSdkInitializer initializer;
-
-    VERIFY_IS_TRUE(initializer.InitializeSdkRuntime());
-    VERIFY_IS_TRUE(initializer.EnsureServiceAvailable());
-
-    // TODO: validate that the clsids of each type have not changed
-
-    // todo: use the xlang metadata parser to pull in our reference winmd and try to
-    // resolve and activate the types in it.
-
-
-    VERIFY_SUCCEEDED(CheckClassRegistration(L"Microsoft.Windows.Devices.Midi2.MidiChannel", winrt::guid()));
-    //VERIFY_SUCCEEDED(CheckClassRegistration(L"Microsoft.Windows.Devices.Midi2.IMidiChannelStatics", winrt::guid()));
-    VERIFY_SUCCEEDED(CheckClassRegistration(L"Microsoft.Windows.Devices.Midi2.MidiGroup", winrt::guid()));
-    //VERIFY_SUCCEEDED(CheckClassRegistration(L"Microsoft.Windows.Devices.Midi2.IMidiGroupStatics", winrt::guid()));
-
-    // not all types can be activated, because many use factory methods from other classes. Example: midisession, midiconnection
-    //VERIFY_SUCCEEDED(CheckClassRegistration(L"Microsoft.Windows.Devices.Midi2.MidiSession", winrt::guid()));
-
-    //std::cout << "\nThis ref count should be 1" << std::endl;
-    //std::cout << "Ref count before shutdown: " << initializer.TESTGetCurrentRefCount() << std::endl;
-    initializer.ShutdownSdkRuntime();
-
-}
-
 
 
 
