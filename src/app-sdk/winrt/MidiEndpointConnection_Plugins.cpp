@@ -89,6 +89,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             }
         }
+
+        m_messageProcessingPlugins.Clear();
     }
 
 

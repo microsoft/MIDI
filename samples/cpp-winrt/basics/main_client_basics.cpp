@@ -204,10 +204,21 @@ int main()
     // You can also disconnect individual Endpoint Connections when you are done with them, as we did above
     session.Close();
 
+    // ensure we release all the WinRT and COM objects before uninitializing COM
+    // otherwise, you can crash when closing down the apartment. You could just put them all in 
+    // a sub-scope which closes before the uninit_apartment call, or you can set them to nullptr.
+    sendEndpoint = nullptr;
+    receiveEndpoint = nullptr;
+    session = nullptr;
+
     // clean up the SDK WinRT redirection
+    std::cout << "Cleaning up SDK..." << std::endl;
     if (initializer != nullptr)
     {
         initializer->ShutdownSdkRuntime();
         initializer.reset();
     }
+
+    std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;
+    winrt::uninit_apartment();
 }

@@ -53,9 +53,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Module.cpp">
-      <Filter>Support</Filter>
-    </ClCompile>
     <ClCompile Include="MidiEndpointConnectionBufferTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -91,8 +88,5 @@
     <ResourceCompile Include="Midi2ClientTests.rc">
       <Filter>Support</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Manifest Include="te.exe.manifest" />
   </ItemGroup>
 </Project>

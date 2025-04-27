@@ -29,9 +29,37 @@ It is safe to use `RoInitialize` instead of `CoInitialize` or `CoInitializeEx` o
 
 ## Shutdown
 
-When shutting down the thread or app, you may call `RoUninitialize` or `winrt::uninit_apartment` to clean up the apartment, after you have voided all references to WinRT and COM objects. However, this call is typically not needed. 
+When shutting down the thread or app, you may call `RoUninitialize` or `winrt::uninit_apartment` to clean up the apartment, after you have voided all references to WinRT and COM objects. However, this call is typically not needed if the application is shutting down. 
 
 The rules here have not really changed from those in COM, so follow the practices you [have found to work with COM shutdown in the past](https://devblogs.microsoft.com/oldnewthing/20120105-00/?p=8683).
+
+> <h2>Important note<h2> 
+> You MUST release all WinRT and COM references on the thread before calling the `uninit_apartment` or `RoUninitialize`. If you do not, you will get one or more unhandled errors on the call as the order of destructors and COM destruction are not sequenced properly. You can do this via having all your allocations in a different (and no longer valid) scope, or by setting each WinRT or COM reference to `nullptr`. The C++ samples and the SDK Service Integration tests show both approaches.
+
+```cpp
+    // ensure we release all the WinRT and COM objects before uninitializing COM
+    // otherwise, you can crash when closing down the apartment. You could just put them all in 
+    // a sub-scope which closes before the uninit_apartment call, or you can set them to nullptr.
+    groupListener0 = nullptr;
+    groupListenerAllOthers = nullptr;
+    sendEndpoint = nullptr;
+    receiveEndpoint = nullptr;
+    session = nullptr;
+    someVector.clear();
+
+    // clean up the SDK WinRT redirection
+    std::cout << "Cleaning up SDK..." << std::endl;
+    if (initializer != nullptr)
+    {
+        initializer->ShutdownSdkRuntime();
+        initializer.reset();
+    }
+
+    std::cout << "Cleaning up WinRT / COM apartment..." << std::endl;
+    winrt::uninit_apartment();
+```
+
+If you leave out the uninitialize call, WinRT/COM will shut down as it normally does.
 
 ## A note on UI threads
 

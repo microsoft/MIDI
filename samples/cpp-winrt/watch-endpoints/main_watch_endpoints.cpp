@@ -170,6 +170,12 @@ int main()
     if (revokeOnWatcherDeviceAdded) watcher.Added(revokeOnWatcherDeviceAdded);
 
 
+    // ensure we release all the WinRT and COM objects before uninitializing COM
+    // otherwise, you can crash when closing down the apartment. You could just put them all in 
+    // a sub-scope which closes before the uninit_apartment call, or you can set them to nullptr.
+    watcher = nullptr;
+
+
     // clean up the SDK WinRT redirection
     if (initializer != nullptr)
     {

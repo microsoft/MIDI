@@ -28,6 +28,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ClientPlugins::implementati
     void MidiChannelEndpointListener::Cleanup()
     {
  //       m_endpointConnection = nullptr;
+        m_messageReceivedEvent.clear();
     }
 
     _Use_decl_annotations_

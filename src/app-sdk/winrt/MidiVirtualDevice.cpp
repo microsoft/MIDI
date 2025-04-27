@@ -171,12 +171,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
     void MidiVirtualDevice::Cleanup() noexcept
     {
-        // nothing to do here
+        m_streamConfigurationRequestReceivedEvent.clear();
     }
 
     _Use_decl_annotations_
     bool MidiVirtualDevice::SendFunctionBlockInfoNotificationMessage(midi2::MidiFunctionBlock const& fb) noexcept
     {
+        if (m_endpointConnection == nullptr || !m_endpointConnection.IsOpen())
+        {
+            return false;
+        }
+
         auto functionBlockNotification = msgs::MidiStreamMessageBuilder::BuildFunctionBlockInfoNotificationMessage(
             MidiClock::TimestampConstantSendImmediately(),
             fb.IsActive(),
@@ -212,6 +217,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     _Use_decl_annotations_
     bool MidiVirtualDevice::SendFunctionBlockNameNotificationMessages(midi2::MidiFunctionBlock const& fb) noexcept
     {
+        if (m_endpointConnection == nullptr || !m_endpointConnection.IsOpen())
+        {
+            return false;
+        }
+
         if (fb.Name().empty()) return false;
 
         auto nameMessages = msgs::MidiStreamMessageBuilder::BuildFunctionBlockNameNotificationMessages(
@@ -242,9 +252,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
     _Use_decl_annotations_
     bool MidiVirtualDevice::SendEndpointNameNotificationMessages(winrt::hstring const& name) noexcept
     {
-        if (name.empty()) return false;
+        if (m_endpointConnection == nullptr || !m_endpointConnection.IsOpen())
+        {
+            return false;
+        }
 
-        if (m_endpointConnection == nullptr) return false;
+        if (name.empty()) return false;
 
         auto nameMessages = msgs::MidiStreamMessageBuilder::BuildEndpointNameNotificationMessages(
             MidiClock::TimestampConstantSendImmediately(),

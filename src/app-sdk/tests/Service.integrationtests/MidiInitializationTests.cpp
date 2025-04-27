@@ -11,7 +11,10 @@
 
 void MidiInitializationTests::TestEnsureServiceAvailable()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
     LOG_OUTPUT(L"TestEnsureServiceAvailable **********************************************************************");
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+
+    ShutdownSDKAndWinRT(initializer);
 }

@@ -13,6 +13,8 @@
 
 void MidiBenchmarks::BenchmarkSendReceiveWordArray()
 {
+    winrt::init_apartment();
+
     LOG_OUTPUT(L"API Words benchmark **********************************************************************");
 
     uint32_t numMessagesToSend = 1000;
@@ -257,12 +259,17 @@ void MidiBenchmarks::BenchmarkSendReceiveWordArray()
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+    winrt::uninit_apartment();
+
 }
 
 
 
 void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
 {
+    winrt::init_apartment();
+
     LOG_OUTPUT(L"API UMP benchmark **********************************************************************");
 
     uint32_t numMessagesToSend = 1000;
@@ -517,5 +524,7 @@ void MidiBenchmarks::BenchmarkSendReceiveUmpRuntimeClass()
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+    winrt::uninit_apartment();
 }
 

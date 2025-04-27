@@ -46,7 +46,6 @@ namespace Microsoft.Midi.Settings.ViewModels
             TransferBytesRead = 0;
             TransferTotalBytesInFile = 0;
 
-            SelectedFile = null;
             SelectedFileName = null;
         }
 
@@ -65,16 +64,17 @@ namespace Microsoft.Midi.Settings.ViewModels
                 return;
             }
 
-            if (SelectedFile == null)
+            if (SelectedFileName == null || SelectedFileName == string.Empty)
             {
                 // TODO: Set error display
                 return;
             }
 
+            var selectedFile = await StorageFile.GetFileFromPathAsync(SelectedFileName);
 
             TransferInProgress = true;
 
-            var stream = await SelectedFile.OpenStreamForReadAsync();
+            var stream = await selectedFile.OpenStreamForReadAsync();
 
             if (stream == null)
             {
@@ -82,60 +82,59 @@ namespace Microsoft.Midi.Settings.ViewModels
                 return;
             }
 
-            var props = await SelectedFile.GetBasicPropertiesAsync();
+            var props = await selectedFile.GetBasicPropertiesAsync();
 
             if (props != null)
             {
                 TransferTotalBytesInFile = (double)(props.Size);
             }
 
-            var session = MidiSession.Create("SysEx Sender");
 
-            if (session == null)
+            await Task.Run(async () =>
             {
-                // TODO: Set error display
-                return;
-            }
+                var session = MidiSession.Create("SysEx Sender");
 
-            var connection = session.CreateEndpointConnection(SelectedEndpointDevice.EndpointDeviceId);
+                if (session == null)
+                {
+                    // TODO: Set error display
+                    return;
+                }
 
-            if (connection == null)
-            {
-                // TODO: Set error display
-                return;
-            }
+                var connection = session.CreateEndpointConnection(SelectedEndpointDevice.EndpointDeviceId);
 
-            if (connection.Open())
-            {
-                var op = MidiSystemExclusiveSender.SendDataAsync(
-                    connection,
-                    stream.AsInputStream(),
-                    MidiSystemExclusiveDataReaderFormat.Binary,
-                    MidiSystemExclusiveDataFormat.ByteFormatSystemExclusive7,
-                    _delayBetweenMessagesMilliseconds,
-                    true,
-                    SelectedGroup.Group);
+                if (connection == null)
+                {
+                    // TODO: Set error display
+                    return;
+                }
 
-                op.Progress = new AsyncOperationProgressHandler<bool, MidiSystemExclusiveSendProgress>(
-                    (info, progress) =>
-                    {
-                        DispatcherQueue.TryEnqueue(() =>
+                if (connection.Open())
+                {
+                    var op = MidiSystemExclusiveSender.SendDataAsync(
+                        connection,
+                        stream.AsInputStream(),
+                        MidiSystemExclusiveDataReaderFormat.Binary,
+                        MidiSystemExclusiveDataFormat.ByteFormatSystemExclusive7,
+                        _delayBetweenMessagesMilliseconds,
+                        true,
+                        SelectedGroup.Group);
+
+                    op.Progress = new AsyncOperationProgressHandler<bool, MidiSystemExclusiveSendProgress>(
+                        (info, progress) =>
                         {
-                            TransferBytesRead = (double)(progress.BytesRead);
-                            TransferMessagesSent = progress.MessagesSent;
+                            DispatcherQueue.TryEnqueue(() =>
+                            {
+                                TransferBytesRead = (double)(progress.BytesRead);
+                                TransferMessagesSent = progress.MessagesSent;
+                            });
                         });
-                    });
 
-                await op;
-            }
-
+                    await op;
+                }
+            });
 
 
         }
-
-        [ObservableProperty]
-        StorageFile? selectedFile;
-
 
         [ObservableProperty]
         string? selectedFileName;

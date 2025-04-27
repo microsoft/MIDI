@@ -31,6 +31,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midi1enum", "midi1enum\midi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "midifixreg", "midifixreg\midifixreg.vcxproj", "{3C2238C8-1087-40B5-9912-8BDBB6122183}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		tests\SdkTestCommon.h = tests\SdkTestCommon.h
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -252,6 +257,7 @@ Global
 		{26E8B9E3-1C56-4BCB-A635-676F5525EA65} = {900D72D2-91F0-4E6C-B694-192FD48393D2}
 		{3D35884E-2D93-436B-B6D5-E0570465CE18} = {C8B31D71-0226-4D2D-AC78-53D5C84F472F}
 		{3C2238C8-1087-40B5-9912-8BDBB6122183} = {C8B31D71-0226-4D2D-AC78-53D5C84F472F}
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {900D72D2-91F0-4E6C-B694-192FD48393D2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AE1DF8B9-9FAB-4E20-8AC6-FF316882222F}
