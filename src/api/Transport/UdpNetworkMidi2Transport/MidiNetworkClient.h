@@ -32,7 +32,10 @@ struct MidiNetworkClientDefinition
 
     winrt::hstring MatchId{};
 
-
+    // these are direct connections. HostName or IP are required, plus the port
+    winrt::hstring MatchDirectHostName{};
+    winrt::hstring MatchDirectIPAddress{};
+    winrt::hstring MatchDirectPort{};
 };
 
 
@@ -42,8 +45,7 @@ class MidiNetworkClient
 public:
     // will need some different versions of Initialize for the different ways of connecting
     HRESULT Initialize(
-        _In_ MidiNetworkClientDefinition& clientDefinition, 
-        _In_ enumeration::DeviceInformation advertisedHost
+        _In_ MidiNetworkClientDefinition& clientDefinition
     );
 
     HRESULT Start(

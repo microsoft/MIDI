@@ -162,8 +162,9 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 //    "transportSettings" :
 //    {
 //        "maxForwardErrorCorrectionCommandPackets": 2,
-//            "maxRetransmitBufferCommandPackets" : 50,
-//            "outboundPingInterval" : 2000
+//        "maxRetransmitBufferCommandPackets": 50,
+//        "outboundPingInterval": 2000.
+//        "directConnectionScanInterval": 20000
 //    },
 //    "create":
 //    {
@@ -172,14 +173,14 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 //            "{090ad480-3cf8-4228-b58f-469f773e4b61}":
 //            {
 //                "name": "Windows MIDI Services Host",
-//                    "serviceInstanceName" : "windows",
-//                    "productInstanceId" : "3263827-5150Net2Preview",
-//                    "networkProtocol" : "udp",
-//                    "port" : "auto",
-//                    "enabled" : true,
-//                    "advertise" : true,
-//                    "authentication" : "none",
-//                    "connectionPolicyIpv4" : "allowAny"
+//                "serviceInstanceName": "windows",
+//                "productInstanceId": "3263827-5150Net2Preview",
+//                "networkProtocol": "udp",
+//                "port": "auto",
+//                "enabled": true,
+//                "advertise": true,
+//                "authentication": "none",
+//                "connectionPolicyIpv4": "allowAny"
 //            }
 //        },
 //        "clients":
@@ -187,10 +188,30 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 //            "{25d5789f-c84d-4310-91ea-bdc1680f35d5}":
 //            {
 //                "_comment": "kissbox",
-//                    "networkProtocol" : "udp",
-//                    "match" :
+//                "networkProtocol" : "udp",
+//                "match" :
 //                {
 //                    "id": "DnsSd#kb7C5D0A_1._midi2._udp.local#0"
+//                }
+//            },
+//            "{ba0f1174-b343-4b32-84e4-01e368d08545}":
+//            {
+//                "_comment": "direct ip example",
+//                "networkProtocol" : "udp",
+//                "match" :
+//                {
+//                    "directIPAddress": "192.168.1.243",
+//                    "directPort": "39820"
+//                }
+//            },
+//            "{fd0bf1d0-4ac6-4d57-b0e8-7bb29b029f4f}":
+//            {
+//                "_comment": "direct host name example",
+//                "networkProtocol" : "udp",
+//                "match" :
+//                {
+//                    "directHostName": "BomeBox.local",
+//                    "directPort": "51492"
 //                }
 //            }
 //        }
@@ -502,14 +523,15 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
                     if (matchSection)
                     {
-                        // TODO: Match on IP/Port, etc.
                         // for the moment, we only match on the actual device id, so must be mdns-advertised
-
                         definition->MatchId = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID_KEY, L""));
 
+                        // direct connection properties
+                        definition->MatchDirectHostName = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_KEY, L""));
+                        definition->MatchDirectIPAddress = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_IP_ADDRESS_KEY, L""));
+                        definition->MatchDirectPort = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT_KEY, L""));
 
-
-
+                        // TODO: Validate port range, etc. and return an error if invalid
 
 
                         TransportState::Current().AddPendingClientDefinition(definition);

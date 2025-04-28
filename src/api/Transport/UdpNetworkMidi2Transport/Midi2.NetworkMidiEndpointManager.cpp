@@ -63,6 +63,7 @@ CMidi2NetworkMidiEndpointManager::Initialize(
     return S_OK;
 }
 
+
 HRESULT
 CMidi2NetworkMidiEndpointManager::StartRemoteHostWatcher()
 {
@@ -115,7 +116,6 @@ CMidi2NetworkMidiEndpointManager::StartRemoteHostWatcher()
     // start the watcher
     m_deviceWatcher.Start();
 
-
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -148,7 +148,8 @@ CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatche
     m_foundAdvertisedHosts.insert_or_assign(args.Id(), args);
 
     // signal the background thread to check the collection?
-    m_backgroundEndpointCreatorThreadWakeup.SetEvent();
+    //m_backgroundEndpointCreatorThreadWakeup.SetEvent();
+    WakeupBackgroundEndpointCreatorThread();
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -280,6 +281,54 @@ CMidi2NetworkMidiEndpointManager::StartBackgroundEndpointCreator()
 
 _Use_decl_annotations_
 HRESULT
+CMidi2NetworkMidiEndpointManager::StartNewClient(
+    std::shared_ptr<MidiNetworkClientDefinition> clientDefinition, 
+    winrt::hstring const& hostNameOrIPAddress, 
+    uint16_t const hostPort)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(hostNameOrIPAddress.c_str(), "host name or ip"),
+        TraceLoggingUInt16(hostPort, "host port")
+        );
+
+    // TODO: Need a lock in here to make sure two passes of the creation
+    // loop aren't both trying to create the same client
+
+
+    auto client = std::make_shared<MidiNetworkClient>();
+    RETURN_IF_NULL_ALLOC(client);
+
+    auto initHr = client->Initialize(*clientDefinition);
+    RETURN_IF_FAILED(initHr);
+
+    // != 0 for the hostPort is hacky, but for MIDI, we shouldn't expect ports < 1024 anyway
+    if (!hostNameOrIPAddress.empty() && hostPort != 0)
+    {
+        HostName hostName(hostNameOrIPAddress);
+        winrt::hstring portNameString = winrt::to_hstring(hostPort);
+
+        auto startHr = client->Start(hostName, portNameString);
+        RETURN_IF_FAILED(startHr);
+
+        // Add the client and mark as created so we don't try to process it again
+        TransportState::Current().AddClient(client);
+        clientDefinition->Created = true;
+
+        return S_OK;
+    }
+
+    return E_FAIL;
+}
+
+
+_Use_decl_annotations_
+HRESULT
 CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToken)
 {
     TraceLoggingWrite(
@@ -296,11 +345,9 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
     // but right now, the service is doing way too much immediately. Having
     // devices connect immediately just adds to the contention. This needs
     // to be removed before this is production-ready
-    Sleep(5000);
+//    Sleep(3000);
 
     winrt::init_apartment();
-
-    //auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
     // this is set up to run through one time before waiting for the wakeup
     // this way we can process anything added before the EndpointManager has been
@@ -357,7 +404,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
             }
         }
 
-        // TODO: run through client definition entries. These aren't actual clients
+        // Run through client definition entries. These aren't actual clients
         // but are instead just parameters needed to create connections to hosts when
         // they come online.
 
@@ -373,48 +420,26 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                 continue;
             }
 
-            // any requiring a match, see if we have a match in our deviceinformation collection
-            // - any that are IP/port direct, try to connect, but don't keep trying the same ones if they fail
-
-            // check for id first, as this is fastest
-            // TODO: right now, this is case-sensitive. It needs clean-up.
-            if (auto advertised = m_foundAdvertisedHosts.find(clientDefinition->MatchId); advertised != m_foundAdvertisedHosts.end())
+            // --- connect via mDNS entry
+            if (!clientDefinition->MatchId.empty())
             {
-                TraceLoggingWrite(
-                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Processing mdns entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(advertised->second.Id().c_str(), "id")
-                );
-
-                auto client = std::make_shared<MidiNetworkClient>();
-                LOG_IF_NULL_ALLOC(client);
-
-                auto initHr = client->Initialize(*clientDefinition, advertised->second);
-                LOG_IF_FAILED(initHr);
-
-                if (SUCCEEDED(initHr))
+                // TODO: right now, this is case-sensitive. It needs clean-up.
+                if (auto advertised = m_foundAdvertisedHosts.find(clientDefinition->MatchId); advertised != m_foundAdvertisedHosts.end())
                 {
-                    TransportState::Current().AddClient(client);
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Processing mdns entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(advertised->second.Id().c_str(), "id")
+                    );
 
-                    // todo: get the hostname and port, and then start the client
-
-                    //deviceId = advertised.Id();
-                    //deviceName = advertised.Name();
-
-                    //host.HostName = internal::GetDeviceInfoProperty<winrt::hstring>(entry.Properties(), L"System.Devices.Dnssd.HostName", L"");
-                    //host.FullName = internal::GetDeviceInfoProperty<winrt::hstring>(entry.Properties(), L"System.Devices.Dnssd.FullName", L"");
-                    //host.ServiceInstanceName = internal::GetDeviceInfoProperty<winrt::hstring>(entry.Properties(), L"System.Devices.Dnssd.InstanceName", L"");
-                    //host.Port = internal::GetDeviceInfoProperty<uint16_t>(entry.Properties(), L"System.Devices.Dnssd.PortNumber", 0);
-
-                    winrt::hstring hostNameString{};
+                    winrt::hstring hostNameOrIPAddress{};
                     uint16_t port{ 0 };
 
                     const winrt::hstring hostNamePropertyKey = L"System.Devices.Dnssd.HostName";
-                    //const winrt::hstring hostNamePropertyKey = L"System.Devices.Dnssd.FullName";
                     const winrt::hstring hostPortPropertyKey = L"System.Devices.Dnssd.PortNumber";
                     const winrt::hstring ipAddressPropertyKey = L"System.Devices.IpAddress";
 
@@ -428,21 +453,22 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                         // we only take the top one right now. We should take the others as well
                         if (array.size() > 0)
                         {
-                            hostNameString = array.at(0);
+                            hostNameOrIPAddress = array.at(0);
                         }
                     }
-                    // next we get the host name, but this relies on DNS being set up properly,
+                    // next we get the host name if necessary, but this relies on DNS being set up properly,
                     // which is often not the case on a network with just some devices and a laptop
-                    else if (advertised->second.Properties().HasKey(hostNamePropertyKey))
+                    else if (hostNameOrIPAddress.empty() && advertised->second.Properties().HasKey(hostNamePropertyKey))
                     {
                         auto prop = advertised->second.Properties().Lookup(hostNamePropertyKey);
 
                         if (prop)
                         {
-                            hostNameString = winrt::unbox_value<winrt::hstring>(prop);
+                            hostNameOrIPAddress = winrt::unbox_value<winrt::hstring>(prop);
                         }
                     }
 
+                    // we always need the port
                     if (advertised->second.Properties().HasKey(hostPortPropertyKey))
                     {
                         auto prop = advertised->second.Properties().Lookup(hostPortPropertyKey);
@@ -453,72 +479,77 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                         }
                     }
 
-                    // the == 0 is hacky, but for midi, anything under 1024 is likely bogus
-                    if (!hostNameString.empty() && port != 0)
-                    {
-
-                        HostName hostName(hostNameString);
-                        winrt::hstring portNameString = winrt::to_hstring(port);
-
-                        auto startHr = client->Start(hostName, portNameString);
-
-                        LOG_IF_FAILED(startHr);
-
-                        if (SUCCEEDED(startHr))
-                        {
-                            // Mark as created so we don't try to process it again
-                            clientDefinition->Created = true;
-                        }
-                        else
-                        {
-                            TraceLoggingWrite(
-                                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_ERROR,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Failed to start client", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingWideString(advertised->second.Id().c_str(), "id"),
-                                TraceLoggingWideString(hostNameString.c_str(), "hostname string"),
-                                TraceLoggingWideString(hostName.ToString().c_str(), "created hostname"),
-                                TraceLoggingWideString(portNameString.c_str(), "port")
-                            );
-                        }
-                    }
-                    else
-                    {
-                        TraceLoggingWrite(
-                            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_ERROR,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Unable to resolve remote device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingWideString(advertised->second.Id().c_str(), "id")
-                        );
-                    }
-
+                    LOG_IF_FAILED(StartNewClient(clientDefinition, hostNameOrIPAddress, port));
                 }
-                else
+            }
+
+            // --- connect via direct host information / ip
+            else if (!clientDefinition->MatchDirectPort.empty())
+            {
+                // TODO: Check to make sure we've waited at least the minimum probe interval before checking these
+
+                uint16_t port{ 0 };
+                wchar_t* end;
+                auto bigport = wcstoul(clientDefinition->MatchDirectPort.c_str(), &end, 10);
+
+                // If port number is 0 or > int16.max then error out
+                if (bigport == 0 || bigport > UINT16_MAX)
+                {
+                    LOG_IF_FAILED(E_INVALIDARG);
+                    // TODO: report the error
+                    continue;
+                }
+
+                port = static_cast<uint16_t>(bigport);
+
+
+                // we have the required port number, so let's check for either host name or IP address
+                
+                winrt::hstring hostNameOrIPAddress{ };
+
+                // by IP address
+                if (!clientDefinition->MatchDirectIPAddress.empty())
                 {
                     TraceLoggingWrite(
                         MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_ERROR,
+                        MIDI_TRACE_EVENT_INFO,
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Failed to initialize client", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(advertised->second.Id().c_str(), "id")
+                        TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(clientDefinition->MatchDirectIPAddress.c_str(), "remote IP address"),
+                        TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
                     );
 
+                    hostNameOrIPAddress = clientDefinition->MatchDirectIPAddress;
+
+                }
+                // by host name
+                else if (!clientDefinition->MatchDirectHostName.empty())
+                {
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(clientDefinition->MatchDirectHostName.c_str(), "remote host name"),
+                        TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
+                    );
+
+                    hostNameOrIPAddress = clientDefinition->MatchDirectHostName;
                 }
 
-            }
+                // TODO: Check to see if the client is actually online
 
+                LOG_IF_FAILED(StartNewClient(clientDefinition, hostNameOrIPAddress, port));
+            }
         }
 
-        // TODO: wait for notification of new hosts online or new entries added via config
-        m_backgroundEndpointCreatorThreadWakeup.wait(10000);
+        // wait for notification of new hosts online or new entries added via config
+        // the most time we wait is the DirectConnectionScanInterval
+        m_backgroundEndpointCreatorThreadWakeup.wait(TransportState::Current().TransportSettings.DirectConnectionScanInterval);
     }
 
     TraceLoggingWrite(
@@ -684,22 +715,12 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     RETURN_HR_IF_MSG(E_INVALIDARG, endpointName.empty(), "Empty endpoint name");
     RETURN_HR_IF_MSG(E_INVALIDARG, remoteEndpointProductInstanceId.empty(), "Empty product instance id");
 
-
-
-
-    UNREFERENCED_PARAMETER(hostName);
-    UNREFERENCED_PARAMETER(networkPort);
-
-
-
     std::wstring transportCode(TRANSPORT_CODE);
 
     //DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
     //   DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
 //    std::wstring endpointDescription = definition->EndpointDescription;
-
-    std::vector<DEVPROPERTY> interfaceDeviceProperties{};
 
     // no user or in-protocol data in this case
     std::wstring friendlyName = internal::CalculateEndpointDevicePrimaryName(endpointName, L"", L"");
@@ -766,7 +787,19 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     );
 
 
-    // TODO: Add custom properties for the network information
+    // Add custom properties for the network information
+
+    std::vector<DEVPROPERTY> interfaceDevProperties;
+
+    auto hostNameString = hostName.ToString();
+
+    interfaceDevProperties.push_back({ {PKEY_MIDI_NetworkMidiLastRemoteHostName, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, static_cast<ULONG>((hostNameString.size() + 1) * sizeof(WCHAR)), (PVOID)(hostNameString.c_str()) });
+
+    interfaceDevProperties.push_back({ {PKEY_MIDI_NetworkMidiLastRemotePort, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, static_cast<ULONG>((networkPort.size() + 1) * sizeof(WCHAR)), (PVOID)(networkPort.c_str()) });
+
+
 
     std::wstring endpointDescription{ L"Network MIDI 2.0 endpoint "};
 
@@ -805,9 +838,9 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
         umpOnly,                                                // UMP-only. When set to false, WinMM MIDI 1.0 ports are created
         MidiFlow::MidiFlowBidirectional,                        // MIDI Flow
         &commonProperties,
-        (ULONG)0, //interfaceDeviceProperties.size(),
+        (ULONG)interfaceDevProperties.size(),
         (ULONG)0,
-        nullptr, //interfaceDeviceProperties.data(),
+        interfaceDevProperties.data(),
         nullptr,
         &createInfo,
         &newDeviceInterfaceId));

@@ -67,6 +67,11 @@ private:
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
+    HRESULT StartNewClient(
+        _In_ std::shared_ptr<MidiNetworkClientDefinition> clientDefinition, 
+        _In_ winrt::hstring const& hostNameOrIPAddress, 
+        _In_ uint16_t const hostPort);
+
 
     std::jthread m_backgroundEndpointCreatorThread;
     //std::stop_token m_backgroundEndpointCreatorThreadStopToken;
