@@ -24,6 +24,7 @@ public:
 
     STDMETHOD(CreateNewEndpoint(
         _In_ MidiNetworkConnectionRole thisServiceRole,
+        _In_ std::wstring const& configIdentifier,
         _In_ std::wstring const& endpointName,
         _In_ std::wstring const& remoteEndpointProductInstanceId,
         _In_ winrt::Windows::Networking::HostName const& hostName,

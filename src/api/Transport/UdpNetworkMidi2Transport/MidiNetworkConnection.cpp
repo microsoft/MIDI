@@ -23,6 +23,7 @@ _Use_decl_annotations_
 HRESULT 
 MidiNetworkConnection::Initialize(
     MidiNetworkConnectionRole const role,
+    winrt::hstring configIdentifier,
     winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
     winrt::Windows::Networking::HostName const& hostName,
     winrt::hstring const& port,
@@ -41,6 +42,8 @@ MidiNetworkConnection::Initialize(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+    m_configIdentifier = configIdentifier;
 
     m_sessionActive = false;
 
@@ -525,6 +528,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
 
             hr = TransportState::Current().GetEndpointManager()->CreateNewEndpoint(
                 MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+                m_configIdentifier.c_str(),
                 remoteHostUmpEndpointName,
                 remoteHostProductInstanceId,
                 m_remoteHostName,
@@ -675,6 +679,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
             //UNREFERENCED_PARAMETER(clientUmpEndpointName);
             hr = TransportState::Current().GetEndpointManager()->CreateNewEndpoint(
                 MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+                m_configIdentifier.c_str(),
                 clientUmpEndpointName,
                 clientProductInstanceId,
                 m_remoteHostName,
