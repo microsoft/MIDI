@@ -666,6 +666,11 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_MidiOutLatencyTicksUserOverride, 802);     // DE
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_VirtualMidiEndpointAssociator, 900);     // DEVPROP_TYPE_STRING
 
 
+#define STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"910"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiLastRemoteHostName, 910);     // DEVPROP_TYPE_STRING
+
+#define STRING_PKEY_MIDI_NetworkMidiLastRemotePort MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"911"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiLastRemotePort, 911);        // DEVPROP_TYPE_STRING
 
 
 // MIDI 1.0 Port Naming Properties  ==========================================================

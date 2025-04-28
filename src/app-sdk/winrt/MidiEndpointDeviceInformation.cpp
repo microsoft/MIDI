@@ -243,7 +243,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         additionalProperties.Append(STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride);
 
 
+        // transport-specific
+
         additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
+
+        additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName);
+        additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemotePort);
+
+
+
 
         // WinMM / Naming properties ==========================================================
   //      additionalProperties.Append(STRING_PKEY_MIDI_UseLegacyMidi1PortNamingScheme);

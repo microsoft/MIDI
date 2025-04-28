@@ -64,8 +64,30 @@ The current configuration format looks like this (subject to change):
                 {
                     "id": "DnsSd#kb7C5D0A_1._midi2._udp.local#0"    # SWD is, for the moment, the only match value here. Use midimdnsinfo.exe to find values
                 }
-            }
-        }
+            },
+            "{ba0f1174-b343-4b32-84e4-01e368d08545}":
+            {
+                "_comment": "direct ip example",
+                "name": "BomeBox via IP",
+                "networkProtocol" : "udp",
+                "match" :
+                {
+                    "directIPAddress": "192.168.1.243",             # IP address of the remote host
+                    "directPort": "39820"                           # port number of the remote host
+                }
+            },
+            "{fd0bf1d0-4ac6-4d57-b0e8-7bb29b029f4f}":
+            {
+                "_comment": "direct host name example",
+                "name": "BomeBox DIN via HostName",
+                "networkProtocol" : "udp",
+                "match" :
+                {
+                    "directHostName": "BomeBox.local",              # Host Name of the remote host (must be something that this PC can resolve)
+                    "directPort": "51492"                           # port number of the remote host
+                }
+            }            
+        }        
     }
 },
 ```
