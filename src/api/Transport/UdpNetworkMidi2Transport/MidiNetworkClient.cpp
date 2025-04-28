@@ -24,6 +24,9 @@ MidiNetworkClient::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    m_configIdentifier = clientDefinition.EntryIdentifier;
+
+
     m_createUmpEndpointsOnly = !clientDefinition.CreateMidi1Ports;
 
     m_thisEndpointName = clientDefinition.LocalEndpointName;
@@ -201,6 +204,7 @@ MidiNetworkClient::Start(
 
     RETURN_IF_FAILED(conn->Initialize(
         MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+        m_configIdentifier,
         m_socket,
         remoteHostName,
         remotePort,

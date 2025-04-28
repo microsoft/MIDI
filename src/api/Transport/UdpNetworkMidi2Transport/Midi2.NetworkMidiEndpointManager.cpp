@@ -691,6 +691,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     MidiNetworkConnectionRole thisServiceRole,
+    std::wstring const& configIdentifier,
     std::wstring const& endpointName,
     std::wstring const& remoteEndpointProductInstanceId,
     winrt::Windows::Networking::HostName const& hostName,
@@ -799,6 +800,8 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     interfaceDevProperties.push_back({ {PKEY_MIDI_NetworkMidiLastRemotePort, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_STRING, static_cast<ULONG>((networkPort.size() + 1) * sizeof(WCHAR)), (PVOID)(networkPort.c_str()) });
 
+    interfaceDevProperties.push_back({ {PKEY_MIDI_TransportEndpointConfigId, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_STRING, static_cast<ULONG>((configIdentifier.size() + 1) * sizeof(WCHAR)), (PVOID)(configIdentifier.c_str()) });
 
 
     std::wstring endpointDescription{ L"Network MIDI 2.0 endpoint "};

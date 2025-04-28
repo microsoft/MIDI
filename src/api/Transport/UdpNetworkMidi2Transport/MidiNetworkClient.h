@@ -56,6 +56,8 @@ public:
     HRESULT Shutdown();
 
 private:
+    winrt::hstring m_configIdentifier{};
+
     bool m_createUmpEndpointsOnly{ true };
 
     std::shared_ptr<MidiNetworkConnection> m_networkConnection{ nullptr };

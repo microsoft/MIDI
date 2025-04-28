@@ -245,6 +245,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // transport-specific
 
+        additionalProperties.Append(STRING_PKEY_MIDI_TransportEndpointConfigId);
+       
         additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator);
 
         additionalProperties.Append(STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName);
