@@ -16,15 +16,15 @@
 #include "Midi2MidiSrvTransport.h"
 
 _Use_decl_annotations_
-void * midl_user_allocate(size_t size)
+void __RPC_FAR* __RPC_API midl_user_allocate(size_t size)
 {
     return (void*)new (std::nothrow) BYTE[size];
 }
 
 _Use_decl_annotations_
-void midl_user_free(void* p)
+void __RPC_USER midl_user_free(void __RPC_FAR* p)
 {
-    delete[](BYTE*)p;
+    delete[] (BYTE*)p;
 }
 
 // using the protocol and endpoint, retrieve the midisrv
