@@ -73,24 +73,24 @@ namespace WindowsMidiServicesInternal
         RETURN_LAST_ERROR_IF(!fileHandle);
 
         // retrieve the size required for the hash
-        RETURN_LAST_ERROR_IF_FALSE(CryptCATAdminCalcHashFromFileHandle(fileHandle.get(), &hashSize, nullptr, 0));
+        RETURN_LAST_ERROR_IF(!CryptCATAdminCalcHashFromFileHandle(fileHandle.get(), &hashSize, nullptr, 0));
 
         // allocate storage for the hash
         fileHash.reset(new(std::nothrow) BYTE[hashSize]);
         RETURN_IF_NULL_ALLOC(fileHash);
 
         // retrieve the file hash
-        RETURN_LAST_ERROR_IF_FALSE(CryptCATAdminCalcHashFromFileHandle(fileHandle.get(), &hashSize, fileHash.get(), 0));
+        RETURN_LAST_ERROR_IF(!CryptCATAdminCalcHashFromFileHandle(fileHandle.get(), &hashSize, fileHash.get(), 0));
 
         // identify the first possible catalog from the hash
-        RETURN_LAST_ERROR_IF_FALSE(CryptCATAdminAcquireContext(&catAdmin, nullptr, 0));
+        RETURN_LAST_ERROR_IF(!CryptCATAdminAcquireContext(&catAdmin, nullptr, 0));
         catalogHandle = CryptCATAdminEnumCatalogFromHash(
                         catAdmin.get(),
                         fileHash.get(),
                         hashSize,
                         0,
                         &prevCat);
-        RETURN_IF_HANDLE_INVALID(catalogHandle);
+        RETURN_LAST_ERROR_IF(INVALID_HANDLE_VALUE == catalogHandle);
 
         verInfo.cbStruct = sizeof(DRIVER_VER_INFO);
         winTrustData.cbStruct = sizeof(WINTRUST_DATA);
