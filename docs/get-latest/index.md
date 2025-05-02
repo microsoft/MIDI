@@ -3,8 +3,6 @@ title: Get Windows MIDI Services SDK Runtime and Tools
 layout: sdk_download
 ---
 
-**Not sure if you have an Intel/AMD x64 processor or an Arm64 processor?** From your Start menu, choose the Settings app. Then click on System, and scroll down to About. Under "Device specifications" you will see "System type". That will say something like "64-bit operating system, x64-based processor" or "64-bit operating system, Arm64-based processor" or similar. That tells you which version to download.
-
 ## System Requirements
 
 > NOTE: During development, the only supported version of Windows is **Windows 11 Insider Canary** releases.
