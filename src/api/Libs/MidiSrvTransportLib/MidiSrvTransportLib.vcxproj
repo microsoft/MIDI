@@ -184,7 +184,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\x64\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -216,7 +216,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\x64\$(Configuration)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)VSFiles\intermediate\midisrv\$(Platform)\$(Configuration)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>

@@ -29,6 +29,8 @@
 
 #include <iostream>
 
+#include <mmsystem.h>
+
 #include <wstring_util.h>
 
 #include "WindowsMidiServices.h"

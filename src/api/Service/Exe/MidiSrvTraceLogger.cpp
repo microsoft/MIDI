@@ -23,7 +23,8 @@ void CMidiSrvTraceLogger::LogMidi2CreateClient(
         TraceLoggingGuid(api, "CallingComponent"),
         TraceLoggingUInt8((static_cast<UINT8>(flow)), "Flow"),
         TraceLoggingUInt8((static_cast<UINT8>(format)), "DataFormat"),
-        TraceLoggingValue(clientProcessId, "ClientProcessId")
+        TraceLoggingValue(clientProcessId, "ClientProcessId"),
+        TelemetryPrivacyDataTag(PDT_ProductAndServiceUsage)
         );
 }
 
@@ -35,5 +36,6 @@ void CMidiSrvTraceLogger::LogMidi2DestroyClient(HRESULT hr)
         "Midi2DestroyClient",
         TraceLoggingKeyword(MICROSOFT_KEYWORD_MEASURES),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingHResult(hr, "HResult"));
+        TraceLoggingHResult(hr, "HResult"),
+        TelemetryPrivacyDataTag(PDT_ProductAndServiceUsage));
 }
