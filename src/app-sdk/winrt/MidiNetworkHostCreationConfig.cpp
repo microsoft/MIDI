@@ -6,15 +6,16 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiApiContracts.idl";
+#include "pch.h"
+#include "MidiNetworkHostCreationConfig.h"
+#include "Endpoints.Network.MidiNetworkHostCreationConfig.g.cpp"
 
-namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
+namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    [experimental]
-    struct MidiNetworkHostEndpointRemovalResult
+
+    winrt::hstring MidiNetworkHostCreationConfig::GetConfigJson()
     {
-        Boolean foo;
-
-    };
+		// TEMP
+		return L"";
+    }
 }
-

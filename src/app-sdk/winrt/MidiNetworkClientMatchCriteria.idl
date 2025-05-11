@@ -19,11 +19,13 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 		MidiNetworkClientMatchCriteria();
 
 		// Windows mDNS-discovered host's id (full id from DeviceInformation.Id() )
-		String DeviceId{ get; set; };
+		String DeviceId;
 
-		// For IP or string-based connection
-		Windows.Devices.Networking.HostName HostName{ get; set; };
+		// For IP or string-based connection 
+		Windows.Devices.Networking.HostName HostName; // todo: if host name can't be resolved, does this still work? Need to use a string instead?
 		UInt16 Port;
+
+
 
 	}
 }

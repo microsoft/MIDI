@@ -11,13 +11,13 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiNetworkClientEndpointCreationResult
+    struct MidiNetworkHostEndpointCreationResult
     {
-        Guid ClientId;
+        Guid HostId;
 
 		Boolean Success;
 
-		// we won't have the endpoint device id yet, so cannot return it here
+		// we won't have any endpoint device ids yet, so cannot return them here
 
 
     };

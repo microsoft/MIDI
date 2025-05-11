@@ -7,13 +7,16 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiNetworkHostEndpointCreationConfig.h"
-#include "Endpoints.Network.MidiNetworkHostEndpointCreationConfig.g.cpp"
+#include "MidiNetworkHostRemovalConfig.h"
+#include "Endpoints.Network.MidiNetworkHostRemovalConfig.g.cpp"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-
-    winrt::hstring MidiNetworkHostEndpointCreationConfig::GetConfigJson()
+    winrt::guid MidiNetworkHostRemovalConfig::TransportId()
+    {
+        throw hresult_not_implemented();
+    }
+    hstring MidiNetworkHostRemovalConfig::GetConfigJson()
     {
         throw hresult_not_implemented();
     }

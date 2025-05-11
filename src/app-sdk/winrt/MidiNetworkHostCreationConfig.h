@@ -7,36 +7,36 @@
 // ============================================================================
 
 #pragma once
-#include "Endpoints.Network.MidiNetworkHostEndpointCreationConfig.g.h"
+#include "Endpoints.Network.MidiNetworkHostCreationConfig.g.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    struct MidiNetworkHostEndpointCreationConfig : MidiNetworkHostEndpointCreationConfigT<MidiNetworkHostEndpointCreationConfig>
+    struct MidiNetworkHostEndpointCreationConfig : MidiNetworkHostCreationConfigT<MidiNetworkHostCreationConfig>
     {
-        MidiNetworkHostEndpointCreationConfig() = default;
+        MidiNetworkHostCreationConfig() = default;
 
-        winrt::guid Identifier() { return m_identifier; }
+        winrt::guid Identifier() const noexcept { return m_identifier; }
         void Identifier(_In_ winrt::guid const& value) { m_identifier = value; }
 
-        winrt::hstring Name() { return m_name; }
+        winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ winrt::hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
 
-        winrt::hstring HostInstanceName() { return m_hostInstanceName; }
+        winrt::hstring HostInstanceName() const noexcept { return m_hostInstanceName; }
         void HostInstanceName(_In_ winrt::hstring const& value) { m_hostInstanceName = internal::TrimmedHStringCopy(value); }
 
-        winrt::hstring ProductInstanceId() { return m_productInstanceId; }
+        winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
         void ProductInstanceId(_In_ winrt::hstring const& value) { m_productInstanceId = internal::TrimmedHStringCopy(value); }
 
-        bool UmpOnly() { return m_umpOnly; }
+        bool UmpOnly() const noexcept { return m_umpOnly; }
         void UmpOnly(_In_ bool const value) { m_umpOnly = value; }
 
-        bool UseAutomaticPortAllocation() { return m_useAutomaticPortAllocation; }
+        bool UseAutomaticPortAllocation() const noexcept { return m_useAutomaticPortAllocation; }
         void UseAutomaticPortAllocation(_In_ bool const value) { m_useAutomaticPortAllocation = value; }
 
-        winrt::hstring ManuallyAssignedPort() { return m_manuallyAssignedPort; }
+        winrt::hstring ManuallyAssignedPort() const noexcept { return m_manuallyAssignedPort; }
         void ManuallyAssignedPort(_In_ winrt::hstring const& value) { m_manuallyAssignedPort = internal::TrimmedHStringCopy(value); }
 
-        bool Advertise() { return m_advertise; }
+        bool Advertise() const noexcept { return m_advertise; }
         void Advertise(_In_ bool const value) { m_advertise = value; }
 
         collections::IVector<winrt::hstring> AllowedClientConnectionList() { return m_allowedClientConnectionList; }
@@ -44,8 +44,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         network::MidiNetworkAuthenticationType AuthenticationType() { return m_authenticationType; }
         void AuthenticationType(_In_ network::MidiNetworkAuthenticationType const& value) { m_authenticationType = value; }
 
-        winrt::guid TransportId() { return m_transportId; }
-        winrt::hstring GetConfigJson();
+        winrt::guid TransportId() const noexcept { return m_transportId; }
+        winrt::hstring GetConfigJson() const noexcept;
 
     private:
         winrt::guid m_identifier{};
@@ -68,7 +68,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation
 {
-    struct MidiNetworkHostEndpointCreationConfig : MidiNetworkHostEndpointCreationConfigT<MidiNetworkHostEndpointCreationConfig, implementation::MidiNetworkHostEndpointCreationConfig>
+    struct MidiNetworkHostCreationConfig : MidiNetworkHostCreationConfigT<MidiNetworkHostCreationConfig, implementation::MidiNetworkHostCreationConfig>
     {
     };
 }

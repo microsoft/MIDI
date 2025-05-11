@@ -101,7 +101,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
 
 
-
+	// this method takes way too long. This needs to be changed to pull from the cache in the 
+	// service via the json methods.
 
     collections::IVector<midi2::Endpoints::Network::MidiNetworkAdvertisedHost> MidiNetworkEndpointManager::GetAdvertisedHosts()
     {

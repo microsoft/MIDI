@@ -510,16 +510,16 @@
     <Midl Include="MidiNetworkClientEndpointRemovalResult.idl">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostEndpointCreationConfig.idl">
+    <Midl Include="MidiNetworkHostCreationConfig.idl">
       <Filter>SDK\Endpoints\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostEndpointCreationResult.idl">
+    <Midl Include="MidiNetworkHostCreationResult.idl">
       <Filter>SDK\Endpoints\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostEndpointRemovalConfig.idl">
+    <Midl Include="MidiNetworkHostRemovalConfig.idl">
       <Filter>SDK\Endpoints\Network\Host</Filter>
     </Midl>
-    <Midl Include="MidiNetworkHostEndpointRemovalResult.idl">
+    <Midl Include="MidiNetworkHostRemovalResult.idl">
       <Filter>SDK\Endpoints\Network\Host</Filter>
     </Midl>
     <Midl Include="MidiNetworkAuthenticationTypeEnum.idl">
@@ -567,7 +567,7 @@
     <Midl Include="Midi1PortNameTableEntry.idl">
       <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
     </Midl>
-    <Midl Include="MidiNetworkClientMatchCrtieria.idl">
+    <Midl Include="MidiNetworkClientMatchCriteria.idl">
       <Filter>SDK\Endpoints\Network</Filter>
     </Midl>
   </ItemGroup>
