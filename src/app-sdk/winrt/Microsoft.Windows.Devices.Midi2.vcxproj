@@ -808,6 +808,7 @@
     <Midl Include="MidiNetworkClientEndpointCreationResult.idl" />
     <Midl Include="MidiNetworkClientEndpointRemovalConfig.idl" />
     <Midl Include="MidiNetworkClientEndpointRemovalResult.idl" />
+    <Midl Include="MidiNetworkClientMatchCrtieria.idl" />
     <Midl Include="MidiNetworkEndpointManager.idl" />
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
     <Midl Include="MidiNetworkHostEndpointCreationConfig.idl" />

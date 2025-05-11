@@ -7,7 +7,7 @@
 // ============================================================================
 
 import "MidiApiContracts.idl";
-
+import "MidiNetworkClientMatchCriteria.idl";
 import "IMidiServiceTransportPluginConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
@@ -18,6 +18,14 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     {
         MidiNetworkClientEndpointCreationConfig();
 
+		Guid ClientId{ get; set; };	// GUID we use in the config file and for subsequent edits/deletes
+		Boolean CreateMidi1Ports{ get; set; }; // todo: this will also need a table of port names
+		Boolean AutoReconnect{ get; set; };	// true if we reconnect after any disconnects. Otherwise, we connect only once.
+
+		// sets the criteria we look for when creating the endpoint. mDNS is generally preferred.
+		MidiNetworkClientMatchCriteria MatchCriteria{ get; set; };
+
+		// TODO: authentication information
 
     }
 }

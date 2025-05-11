@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
+{
+	[experimental]
+	[interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientMatchCriteria")]
+	runtimeclass MidiNetworkClientMatchCriteria
+	{
+		MidiNetworkClientMatchCriteria();
+
+		// Windows mDNS-discovered host's id (full id from DeviceInformation.Id() )
+		String DeviceId{ get; set; };
+
+		// For IP or string-based connection
+		Windows.Devices.Networking.HostName HostName{ get; set; };
+		UInt16 Port;
+
+	}
+}
+
