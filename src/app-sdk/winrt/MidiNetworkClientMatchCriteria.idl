@@ -22,7 +22,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 		String DeviceId;
 
 		// For IP or string-based connection 
-		Windows.Devices.Networking.HostName HostName; // todo: if host name can't be resolved, does this still work? Need to use a string instead?
+		Windows.Networking.HostName HostName; // todo: if host name can't be resolved, does this still work? Need to use a string instead?
 		UInt16 Port;
 
 

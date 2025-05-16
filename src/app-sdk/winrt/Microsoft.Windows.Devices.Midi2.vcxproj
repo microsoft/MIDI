@@ -263,6 +263,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
+    <ClInclude Include="MidiNetworkClientMatchCriteria.h" />
     <ClInclude Include="MidiClientInitializerFactory.h" />
     <ClInclude Include="MidiClientInitializerSingleton.h" />
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
@@ -460,6 +461,7 @@
       <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="midi_network_defs.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="enumeration_prop_util.h" />
     <ClInclude Include="resource.h" />
@@ -470,6 +472,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiNetworkClientMatchCriteria.cpp" />
     <ClCompile Include="MidiClientInitializerFactory.cpp" />
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>

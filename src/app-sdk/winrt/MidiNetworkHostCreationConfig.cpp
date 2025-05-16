@@ -13,7 +13,7 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
 
-    winrt::hstring MidiNetworkHostCreationConfig::GetConfigJson()
+    winrt::hstring MidiNetworkHostCreationConfig::GetConfigJson() const noexcept
     {
 		// TEMP
 		return L"";

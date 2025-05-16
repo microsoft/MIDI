@@ -8,11 +8,11 @@
 
 import "MidiApiContracts.idl";
 
-import "MidiNetworkHostEndpointCreationResult.idl";
-import "MidiNetworkHostEndpointCreationConfig.idl";
+import "MidiNetworkHostCreationResult.idl";
+import "MidiNetworkHostCreationConfig.idl";
 
-import "MidiNetworkHostEndpointRemovalResult.idl";
-import "MidiNetworkHostEndpointRemovalConfig.idl";
+import "MidiNetworkHostRemovalResult.idl";
+import "MidiNetworkHostRemovalConfig.idl";
 
 import "MidiNetworkClientEndpointCreationResult.idl";
 import "MidiNetworkClientEndpointCreationConfig.idl";
@@ -31,11 +31,11 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         static Boolean IsTransportAvailable{ get; };
         static Guid TransportId{ get; };
 
-        static MidiNetworkHostEndpointCreationResult CreateNetworkHost(
-            MidiNetworkHostEndpointCreationConfig creationConfig);
+        static MidiNetworkHostCreationResult CreateNetworkHost(
+            MidiNetworkHostCreationConfig creationConfig);
 
-        static MidiNetworkHostEndpointRemovalResult RemoveNetworkHost(
-            MidiNetworkHostEndpointRemovalConfig removalConfig);
+        static MidiNetworkHostRemovalResult RemoveNetworkHost(
+            MidiNetworkHostRemovalConfig removalConfig);
 
 
         static MidiNetworkClientEndpointCreationResult CreateNetworkClient(

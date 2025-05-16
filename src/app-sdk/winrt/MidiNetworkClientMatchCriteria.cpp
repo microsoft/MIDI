@@ -7,15 +7,10 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiNetworkClientEndpointCreationConfig.h"
-#include "Endpoints.Network.MidiNetworkClientEndpointCreationConfig.g.cpp"
+#include "MidiNetworkClientMatchCriteria.h"
+#include "Endpoints.Network.MidiNetworkClientMatchCriteria.g.cpp"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
 
-    winrt::hstring MidiNetworkClientEndpointCreationConfig::GetConfigJson() const noexcept
-    {
-        // TEMP
-        return L"";
-    }
 }

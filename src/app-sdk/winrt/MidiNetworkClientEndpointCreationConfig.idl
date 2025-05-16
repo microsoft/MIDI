@@ -18,12 +18,12 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     {
         MidiNetworkClientEndpointCreationConfig();
 
-		Guid ClientId;				// GUID we use in the config file and for subsequent edits/deletes
-		Boolean CreateMidi1Ports;	// todo: this will also need a table of port names
+		String Id;				// GUID or other string we use in the config file and for subsequent edits/deletes
+		Boolean UmpOnly;	        // todo: this will also need a table of port names
 		Boolean AutoReconnect;		// true if we reconnect after any disconnects. Otherwise, we connect only once.
 
 		// sets the criteria we look for when creating the endpoint. mDNS is generally preferred.
-		MidiNetworkClientMatchCriteria MatchCriteria{ get; set; };
+		MidiNetworkClientMatchCriteria MatchCriteria;
 
 		// TODO: authentication information from vault
 

@@ -197,8 +197,10 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiVirtualDeviceCreationConfig.h"
 #include "MidiVirtualDeviceManager.h"
 
-#include "MidiNetworkHostEndpointCreationConfig.h"
-#include "MidiNetworkHostEndpointRemovalConfig.h"
+#include "midi_network_defs.h"
+#include "MidiNetworkClientMatchCriteria.h"
+#include "MidiNetworkHostCreationConfig.h"
+#include "MidiNetworkHostRemovalConfig.h"
 #include "MidiNetworkClientEndpointCreationConfig.h"
 #include "MidiNetworkClientEndpointRemovalConfig.h"
 #include "MidiNetworkEndpointManager.h"

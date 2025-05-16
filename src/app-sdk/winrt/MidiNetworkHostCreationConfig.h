@@ -11,12 +11,15 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    struct MidiNetworkHostEndpointCreationConfig : MidiNetworkHostCreationConfigT<MidiNetworkHostCreationConfig>
+    struct MidiNetworkHostCreationConfig : MidiNetworkHostCreationConfigT<MidiNetworkHostCreationConfig>
     {
         MidiNetworkHostCreationConfig() = default;
 
-        winrt::guid Identifier() const noexcept { return m_identifier; }
-        void Identifier(_In_ winrt::guid const& value) { m_identifier = value; }
+        winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
+        winrt::hstring GetConfigJson() const noexcept;
+
+        winrt::hstring Id() const noexcept { return m_id; }
+        void Id(_In_ winrt::hstring const& value) { m_id = value; }
 
         winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ winrt::hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
@@ -39,16 +42,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         bool Advertise() const noexcept { return m_advertise; }
         void Advertise(_In_ bool const value) { m_advertise = value; }
 
-        collections::IVector<winrt::hstring> AllowedClientConnectionList() { return m_allowedClientConnectionList; }
+        collections::IVector<winrt::Windows::Networking::HostName> AllowedClientConnectionList() { return m_allowedClientConnectionList; }
 
         network::MidiNetworkAuthenticationType AuthenticationType() { return m_authenticationType; }
         void AuthenticationType(_In_ network::MidiNetworkAuthenticationType const& value) { m_authenticationType = value; }
 
-        winrt::guid TransportId() const noexcept { return m_transportId; }
-        winrt::hstring GetConfigJson() const noexcept;
 
     private:
-        winrt::guid m_identifier{};
+        winrt::hstring m_id{};
         winrt::hstring m_name;
         winrt::hstring m_hostInstanceName;
         winrt::hstring m_productInstanceId;
@@ -59,10 +60,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
         network::MidiNetworkAuthenticationType m_authenticationType{ network::MidiNetworkAuthenticationType::NoAuthentication };
 
-        winrt::guid m_transportId{};
-
-        collections::IVector<winrt::hstring> m_allowedClientConnectionList{
-            winrt::multi_threaded_vector<winrt::hstring>() };
+        collections::IVector<winrt::Windows::Networking::HostName> m_allowedClientConnectionList{
+            winrt::multi_threaded_vector<winrt::Windows::Networking::HostName>() };
 
     };
 }

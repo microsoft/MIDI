@@ -94,7 +94,7 @@
                                Margin="13"/>
                     
                     <TextBox Header="Host Name" 
-                             Text="{x:Bind ViewModel.NewHostPort, Mode=TwoWay}"
+                             Text="{x:Bind ViewModel.NewHostName, Mode=TwoWay}"
                              MaxLength="32"
                              Margin="13"/>
 

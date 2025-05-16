@@ -43,12 +43,6 @@
     <ClCompile Include="MidiUniqueId.cpp">
       <Filter>SDK\CapabilityInquiry</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostEndpointRemovalConfig.cpp">
-      <Filter>SDK\Endpoints\Network\Host</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiNetworkHostEndpointCreationConfig.cpp">
-      <Filter>SDK\Endpoints\Network\Host</Filter>
-    </ClCompile>
     <ClCompile Include="MidiNetworkClientEndpointCreationConfig.cpp">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </ClCompile>
@@ -106,6 +100,9 @@
     <ClCompile Include="MidiClientInitializerFactory.cpp">
       <Filter>Initializer\Init</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkClientMatchCriteria.cpp">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -151,12 +148,6 @@
     </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
       <Filter>SDK\CapabilityInquiry</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkHostEndpointRemovalConfig.h">
-      <Filter>SDK\Endpoints\Network\Host</Filter>
-    </ClInclude>
-    <ClInclude Include="MidiNetworkHostEndpointCreationConfig.h">
-      <Filter>SDK\Endpoints\Network\Host</Filter>
     </ClInclude>
     <ClInclude Include="MidiNetworkClientEndpointCreationConfig.h">
       <Filter>SDK\Endpoints\Network\Client</Filter>
@@ -222,6 +213,12 @@
     </ClInclude>
     <ClInclude Include="MidiClientInitializerFactory.h">
       <Filter>Initializer\Init</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClientMatchCriteria.h">
+      <Filter>SDK\Endpoints\Network\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_network_defs.h">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -568,7 +565,7 @@
       <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientMatchCriteria.idl">
-      <Filter>SDK\Endpoints\Network</Filter>
+      <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -688,5 +685,8 @@
     <Filter Include="SDK\Core\Enumeration\Metadata\Windows\Midi1">
       <UniqueIdentifier>{fee31bbd-64fa-4ca2-9a6e-4ccb45184c1b}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
   </ItemGroup>
 </Project>

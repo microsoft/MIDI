@@ -19,7 +19,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     {
         MidiNetworkHostCreationConfig();
 
-        Guid Identifier;
+        String Id;
 
         String Name;
         String HostInstanceName;
@@ -35,7 +35,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         // todo: network adapter/interface
 
         // todo: connection rules
-        IVector<Windows.Devices.Networking.HostName> AllowedClientConnectionList{ get; };
+        IVector<Windows.Networking.HostName> AllowedClientConnectionList{ get; };
 
 
 

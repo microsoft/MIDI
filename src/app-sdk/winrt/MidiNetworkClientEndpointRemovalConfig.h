@@ -15,8 +15,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     {
         MidiNetworkClientEndpointRemovalConfig() = default;
 
-        winrt::guid TransportId();
-        hstring GetConfigJson();
+        winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
+        winrt::hstring GetConfigJson() const noexcept;
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation

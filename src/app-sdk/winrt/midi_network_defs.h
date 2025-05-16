@@ -6,16 +6,10 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-#include "pch.h"
-#include "MidiNetworkClientEndpointCreationConfig.h"
-#include "Endpoints.Network.MidiNetworkClientEndpointCreationConfig.g.cpp"
 
-namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
-{
+#pragma once
 
-    winrt::hstring MidiNetworkClientEndpointCreationConfig::GetConfigJson() const noexcept
-    {
-        // TEMP
-        return L"";
-    }
-}
+
+
+#define MIDI_NETWORK_TRANSPORT_ID L"{c95dcd1f-cde3-4c2d-913c-528cb8a4cbe6}"
+
