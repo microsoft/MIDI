@@ -213,6 +213,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         enumeration::DeviceWatcher source,
         enumeration::DeviceInformation args)
     {
+        // TEMP
+        UNREFERENCED_PARAMETER(source);
+        UNREFERENCED_PARAMETER(args);
 
     }
 
@@ -221,6 +224,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         enumeration::DeviceWatcher source,
         enumeration::DeviceInformationUpdate args)
     {
+        // TEMP
+        UNREFERENCED_PARAMETER(source);
+        UNREFERENCED_PARAMETER(args);
 
     }
 
@@ -233,7 +239,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
         try
         {
-            auto newArgs = winrt::make_self<network::MidiNetworkAdvertisedHostRemovedEventArgs>();
+            auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostRemovedEventArgs>();
 
             newArgs->InternalInitialize(args.Id(), args);
 

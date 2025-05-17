@@ -26,7 +26,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         winrt::hstring const& id, 
         enumeration::DeviceInformationUpdate const& args) noexcept
     {
+        m_id = id;
 
+        UNREFERENCED_PARAMETER(args);
     }
 
 }
