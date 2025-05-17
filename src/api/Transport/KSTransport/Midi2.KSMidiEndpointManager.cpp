@@ -476,14 +476,14 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         midiPin->InstanceId = MIDI_KS_INSTANCE_ID_PREFIX;
 
-        if (midiPin->SerialNumber.empty())
-        {
+        //if (midiPin->SerialNumber.empty())
+        //{
             midiPin->InstanceId += hash;
-        }
-        else
-        {
-            midiPin->InstanceId += midiPin->SerialNumber;
-        }
+        //}
+        //else
+        //{
+        //    midiPin->InstanceId += midiPin->SerialNumber;
+        //}
 
         midiPin->InstanceId += L"_OUTPIN.";
         midiPin->InstanceId += std::to_wstring(midiPin->PinId);
