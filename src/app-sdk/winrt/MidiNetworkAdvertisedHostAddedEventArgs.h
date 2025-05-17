@@ -16,5 +16,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         MidiNetworkAdvertisedHostAddedEventArgs() = default;
 
         midi2::Endpoints::Network::MidiNetworkAdvertisedHost AddedHost();
+
+        void InternalInitialize(_In_ winrt::hstring const& id, _In_ enumeration::DeviceInformation const& args) noexcept;
     };
 }

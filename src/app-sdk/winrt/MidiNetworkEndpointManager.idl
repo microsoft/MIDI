@@ -44,10 +44,15 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         static MidiNetworkClientEndpointRemovalResult RemoveNetworkClient(
             MidiNetworkClientEndpointRemovalConfig removalConfig);
 
+
         // list the hosts currently visible to this PC
         static Windows.Foundation.Collections.IVector<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
+
         static String MidiNetworkUdpDnsServiceType{ get; };
         static String MidiNetworkUdpDnsSdQueryString{ get; };
+        static String MidiNetworkUdpDnsDomain { get; };
+        static Windows.Devices.Enumeration.DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind{ get; };
 
+        static IVector<String> MidiNetworkUdpDnsSdQueryAdditionalProperties { get; };
     }
 }

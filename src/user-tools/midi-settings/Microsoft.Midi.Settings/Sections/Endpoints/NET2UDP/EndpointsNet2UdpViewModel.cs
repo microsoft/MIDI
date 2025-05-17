@@ -5,6 +5,7 @@ using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Dispatching;
+using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -31,33 +32,74 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
         [ObservableProperty]
-        public string newHostName;
+        public string? newHostName;
 
         [ObservableProperty]
-        public string newHostUniqueId;
+        public string? newHostUniqueId;
 
         [ObservableProperty]
-        public string newHostPort;
+        public string? newHostPort;
 
         [ObservableProperty]
-        public string newHostServiceId;
+        public string? newHostServiceId;
 
         [ObservableProperty]
-        public bool newHostIsPersistent;
+        public bool newHostAdvertise = true;
 
         [ObservableProperty]
-        public bool newNetworkHostSettingsAreValid;
+        public bool newHostUmpOnly = false;
+
+        [ObservableProperty]
+        public bool newHostIsPersistent = true;
+
+        [ObservableProperty]
+        public bool newNetworkHostSettingsAreValid = false;
 
         [ObservableProperty]
         public string validationErrorMessage;
 
-
-        public EndpointsNet2UdpViewModel(INavigationService navigationService) : base("NET2UDP", navigationService)
+        private void CreateNewNetworkHost()
         {
+            var config = new MidiNetworkHostCreationConfig();
+
+            config.Advertise = NewHostAdvertise;
+            config.AuthenticationType = MidiNetworkAuthenticationType.NoAuthentication; // TEMP
+            config.ProductInstanceId = NewHostUniqueId;
+            //config.HostInstanceName = 
+            config.Name = NewHostName;
+            config.Id = new Guid().ToString();
+            config.UmpOnly = NewHostUmpOnly;
+            config.UseAutomaticPortAllocation = string.IsNullOrEmpty(NewHostPort) || NewHostPort.Trim() == string.Empty;
 
 
+            var result = MidiNetworkEndpointManager.CreateNetworkHost(config);
 
+            if (result.Success)
+            {
+                // TODO: Tell the UI to display success
+            }
+            else
+            {
+                // TODO: Tell the UI to display failure
+            }
 
+        }
+
+        public EndpointsNet2UdpViewModel(INavigationService navigationService, IMidiConfigFileService midiConfigFileService) : base("NET2UDP", navigationService)
+        {
+            m_midiConfigFileService = midiConfigFileService;
+
+            CreateNetworkHostCommand = new RelayCommand(
+                () =>
+                {
+                    if (!NewNetworkHostSettingsAreValid)
+                    {
+                        return;
+                    }
+
+                    CreateNewNetworkHost();
+
+                });
         }
 
     }
