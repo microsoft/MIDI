@@ -8,7 +8,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         MidiNetworkAdvertisedHostWatcher() = default;
         ~MidiNetworkAdvertisedHostWatcher();
 
-        static network::MidiNetworkAdvertisedHostWatcher Create();
+        static network::MidiNetworkAdvertisedHostWatcher Create() noexcept;
 
         void Start();
         void Stop();
@@ -37,7 +37,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
     private:
         void InternalInitialize(
-            _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher const& baseWatcher);
+            _In_ enumeration::DeviceWatcher const& baseWatcher);
 
 
         // internal event handlers
@@ -70,11 +70,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         winrt::event<foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, foundation::IInspectable>> m_stoppedEvent;
 
 
-        winrt::event_token m_deviceAddedEventRevokeToken;
-        winrt::event_token m_deviceUpdatedEventRevokeToken;
-        winrt::event_token m_deviceRemovedEventRevokeToken;
-        winrt::event_token m_enumerationCompletedEventRevokeToken;
-        winrt::event_token m_stoppedEventRevokeToken;
+        winrt::event_token m_deviceAddedEventRevokeToken{ };
+        winrt::event_token m_deviceUpdatedEventRevokeToken{ };
+        winrt::event_token m_deviceRemovedEventRevokeToken{ };
+        winrt::event_token m_enumerationCompletedEventRevokeToken{ };
+        winrt::event_token m_stoppedEventRevokeToken{ };
 
         collections::IMap<winrt::hstring, network::MidiNetworkAdvertisedHost> m_enumeratedHosts =
             winrt::multi_threaded_map<winrt::hstring, network::MidiNetworkAdvertisedHost>();

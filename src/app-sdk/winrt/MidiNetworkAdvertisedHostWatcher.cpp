@@ -18,7 +18,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         {
             m_enumeratedHosts.Clear();
 
-            if (m_watcher)
+            if (m_watcher != nullptr)
             {
                 // unwire events
 
@@ -62,7 +62,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     }
 
 
-    network::MidiNetworkAdvertisedHostWatcher MidiNetworkAdvertisedHostWatcher::Create()
+    network::MidiNetworkAdvertisedHostWatcher MidiNetworkAdvertisedHostWatcher::Create() noexcept
     {
         try
         {
@@ -71,7 +71,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
             auto baseWatcher = enumeration::DeviceInformation::CreateWatcher(
                 network::MidiNetworkEndpointManager::MidiNetworkUdpDnsSdQueryString(),
                 network::MidiNetworkEndpointManager::MidiNetworkUdpDnsSdQueryAdditionalProperties(),
-                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface);
+                network::MidiNetworkEndpointManager::MidiNetworkUdpDnsSdDeviceInformationKind());
 
             watcher->InternalInitialize(baseWatcher);
 
@@ -129,80 +129,73 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     winrt::event_token MidiNetworkAdvertisedHostWatcher::Added(
         foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, network::MidiNetworkAdvertisedHostAddedEventArgs> const& handler)
     {
-        UNREFERENCED_PARAMETER(handler);
-
-        throw hresult_not_implemented();
+        return m_deviceAddedEvent.add(handler);
     }
 
     _Use_decl_annotations_
     void MidiNetworkAdvertisedHostWatcher::Added(winrt::event_token const& token) noexcept
     {
-        UNREFERENCED_PARAMETER(token);
-
+        m_deviceAddedEvent.remove(token);
     }
+
 
     _Use_decl_annotations_
     winrt::event_token MidiNetworkAdvertisedHostWatcher::Removed(
         foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, network::MidiNetworkAdvertisedHostRemovedEventArgs> const& handler)
     {
-        UNREFERENCED_PARAMETER(handler);
-
-        throw hresult_not_implemented();
+        return m_deviceRemovedEvent.add(handler);
     }
 
     _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::Removed(winrt::event_token const& token) noexcept
+    void MidiNetworkAdvertisedHostWatcher::Removed(
+        winrt::event_token const& token) noexcept
     {
-        UNREFERENCED_PARAMETER(token);
-
+        m_deviceRemovedEvent.remove(token);
     }
+
 
     _Use_decl_annotations_
     winrt::event_token MidiNetworkAdvertisedHostWatcher::Updated(
         foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, network::MidiNetworkAdvertisedHostUpdatedEventArgs> const& handler)
     {
-        UNREFERENCED_PARAMETER(handler);
-
-        throw hresult_not_implemented();
+        return m_deviceUpdatedEvent.add(handler);
     }
 
     _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::Updated(winrt::event_token const& token) noexcept
+    void MidiNetworkAdvertisedHostWatcher::Updated(
+        winrt::event_token const& token) noexcept
     {
-        UNREFERENCED_PARAMETER(token);
-
+        m_deviceUpdatedEvent.remove(token);
     }
+
 
     _Use_decl_annotations_
     winrt::event_token MidiNetworkAdvertisedHostWatcher::EnumerationCompleted(
         foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, foundation::IInspectable> const& handler)
     {
-        UNREFERENCED_PARAMETER(handler);
-
-        throw hresult_not_implemented();
+        return m_enumerationCompletedEvent.add(handler);
     }
 
     _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::EnumerationCompleted(winrt::event_token const& token) noexcept
+    void MidiNetworkAdvertisedHostWatcher::EnumerationCompleted(
+        winrt::event_token const& token) noexcept
     {
-        UNREFERENCED_PARAMETER(token);
-
+        m_enumerationCompletedEvent.remove(token);
     }
+
 
     _Use_decl_annotations_
     winrt::event_token MidiNetworkAdvertisedHostWatcher::Stopped(
         foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, foundation::IInspectable> const& handler)
     {
-        UNREFERENCED_PARAMETER(handler);
-
-        throw hresult_not_implemented();
+        return m_stoppedEvent.add(handler);
     }
 
     _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::Stopped(winrt::event_token const& token) noexcept
+    void MidiNetworkAdvertisedHostWatcher::Stopped(
+        winrt::event_token const& token) noexcept
     {
-        UNREFERENCED_PARAMETER(token);
-
+        m_stoppedEvent.remove(token);
     }
 
 
@@ -210,33 +203,102 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
     _Use_decl_annotations_
     void MidiNetworkAdvertisedHostWatcher::OnDeviceAdded(
-        enumeration::DeviceWatcher source,
+        enumeration::DeviceWatcher /*source*/,
         enumeration::DeviceInformation args)
     {
-        // TEMP
-        UNREFERENCED_PARAMETER(source);
-        UNREFERENCED_PARAMETER(args);
+        try
+        {
+            auto host = winrt::make_self<network::implementation::MidiNetworkAdvertisedHost>();
+
+            host->InternalUpdateFromDeviceInformation(args);
+
+            // add to our map
+
+            auto mapKey = host->DeviceId();
+
+            if (!m_enumeratedHosts.HasKey(mapKey))
+            {
+                m_enumeratedHosts.Insert(mapKey, *host);
+
+                if (m_deviceAddedEvent)
+                {
+                    auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostAddedEventArgs>();
+                    newArgs->InternalInitialize(*host);
+
+                    m_deviceAddedEvent(*this, *newArgs);
+                }
+            }
+            else
+            {
+                // duplicate key. This should never happen, but just in case ...
+
+                LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Duplicate endpoint device id. This is unexpected", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+            }
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception in Added event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
 
     }
 
     _Use_decl_annotations_
     void MidiNetworkAdvertisedHostWatcher::OnDeviceUpdated(
-        enumeration::DeviceWatcher source,
+        enumeration::DeviceWatcher /*source*/,
         enumeration::DeviceInformationUpdate args)
     {
-        // TEMP
-        UNREFERENCED_PARAMETER(source);
-        UNREFERENCED_PARAMETER(args);
+        try
+        {
+            auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostUpdatedEventArgs>();
 
+            newArgs->InternalInitialize(args.Id(), args);
+
+            // TODO: Update entry in collection with the updated properties in args
+
+            if (m_deviceUpdatedEvent)
+            {
+                m_deviceUpdatedEvent(*this, *newArgs);
+            }
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"exception in Updated event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
     }
 
     _Use_decl_annotations_
     void MidiNetworkAdvertisedHostWatcher::OnDeviceRemoved(
-        enumeration::DeviceWatcher source,
+        enumeration::DeviceWatcher /*source*/,
         enumeration::DeviceInformationUpdate args)
     {
-        UNREFERENCED_PARAMETER(source);
-
         try
         {
             auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostRemovedEventArgs>();
@@ -246,11 +308,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
             if (m_enumeratedHosts.HasKey(args.Id()))
             {
                 m_enumeratedHosts.Remove(args.Id());
+            }
 
-                if (m_deviceRemovedEvent)
-                {
-                    m_deviceRemovedEvent(*this, *newArgs);
-                }
+            if (m_deviceRemovedEvent)
+            {
+                m_deviceRemovedEvent(*this, *newArgs);
             }
         }
         catch (...)
@@ -265,17 +327,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
                 TraceLoggingWideString(L"exception in Removed event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
-
         }
     }
 
     _Use_decl_annotations_
     void MidiNetworkAdvertisedHostWatcher::OnEnumerationCompleted(
-        enumeration::DeviceWatcher source,
+        enumeration::DeviceWatcher /*source*/,
         foundation::IInspectable args)
     {
-        UNREFERENCED_PARAMETER(source);
-
         try
         {
             if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, args);
@@ -297,11 +356,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
     _Use_decl_annotations_
     void MidiNetworkAdvertisedHostWatcher::OnStopped(
-        enumeration::DeviceWatcher source,
+        enumeration::DeviceWatcher /*source*/,
         foundation::IInspectable args)
     {
-        UNREFERENCED_PARAMETER(source);
-
         try
         {
             if (m_stoppedEvent) m_stoppedEvent(*this, args);

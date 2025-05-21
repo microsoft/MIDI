@@ -13,6 +13,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
+    [contract(MidiEndpointsNetworkApiContract, 1)]
     [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientEndpointCreationConfig")]
     runtimeclass MidiNetworkClientEndpointCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {

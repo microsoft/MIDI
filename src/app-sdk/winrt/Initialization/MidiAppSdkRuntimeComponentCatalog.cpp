@@ -91,14 +91,30 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfig", defaultThreading });
 
+    // Loopback MIDI
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointCreationConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointManager", defaultThreading });
 
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointManager", defaultThreading });
+
+    // App-to-app MIDI (Virtual Device)
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceCreationConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceManager", defaultThreading });
 
-    // todo: add network
+    // Network MIDI 2.0
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkEndpointManager", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkHostCreationConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkHostRemovalConfig", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientEndpointCreationConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientEndpointRemovalConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientMatchCriteria", defaultThreading });
+
+
+
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveSender", defaultThreading });
@@ -257,6 +273,8 @@ MidiAppSdkRuntimeComponentCatalog::GetThreadingModel(
         return S_OK;
     }
 
+    auto errorMessage = std::wstring{ L"MIDI Component Catalog REGDB_E_CLASSNOTREG: " } + std::wstring{ raw_class_name } + L"\n\r";
+    OutputDebugString(errorMessage.c_str());
     return REGDB_E_CLASSNOTREG;
 }
 

@@ -12,20 +12,12 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    network::MidiNetworkAdvertisedHost MidiNetworkAdvertisedHostAddedEventArgs::AddedHost()
-    {
-        throw hresult_not_implemented();
-    }
-
 
     _Use_decl_annotations_
     void MidiNetworkAdvertisedHostAddedEventArgs::InternalInitialize(
-        winrt::hstring const& id, 
-        enumeration::DeviceInformation const& args) noexcept
+        network::MidiNetworkAdvertisedHost const& host) noexcept
     {
-        m_id = id;
-
-        UNREFERENCED_PARAMETER(args);
+        m_host = host;
     }
 
 }

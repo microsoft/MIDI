@@ -103,6 +103,9 @@
     <ClCompile Include="MidiNetworkClientMatchCriteria.cpp">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </ClCompile>
+    <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -218,6 +221,9 @@
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </ClInclude>
     <ClInclude Include="midi_network_defs.h">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkAdvertisedHost.h">
       <Filter>SDK\Endpoints\Network\Watcher</Filter>
     </ClInclude>
   </ItemGroup>
@@ -525,9 +531,6 @@
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl">
       <Filter>SDK\Endpoints\Network</Filter>
     </Midl>
-    <Midl Include="MidiNetworkAdvertisedHost.idl">
-      <Filter>SDK\Endpoints\Network</Filter>
-    </Midl>
     <Midl Include="MidiEndpointDevicePropertyHelper.idl">
       <Filter>SDK\Core\Enumeration\Metadata\Windows</Filter>
     </Midl>
@@ -566,6 +569,9 @@
     </Midl>
     <Midl Include="MidiNetworkClientMatchCriteria.idl">
       <Filter>SDK\Endpoints\Network\Client</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHost.idl">
+      <Filter>SDK\Endpoints\Network\Watcher</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

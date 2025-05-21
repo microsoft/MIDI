@@ -263,6 +263,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
+    <ClInclude Include="MidiNetworkAdvertisedHost.h" />
     <ClInclude Include="MidiNetworkClientMatchCriteria.h" />
     <ClInclude Include="MidiClientInitializerFactory.h" />
     <ClInclude Include="MidiClientInitializerSingleton.h" />
@@ -472,6 +473,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiNetworkAdvertisedHost.cpp" />
     <ClCompile Include="MidiNetworkClientMatchCriteria.cpp" />
     <ClCompile Include="MidiClientInitializerFactory.cpp" />
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">

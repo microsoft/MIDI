@@ -134,7 +134,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
         (p) = NULL; \
     }
 
-#include <WindowsMidiServicesVersion.h>
+#include <WindowsMidiServicesSdkRuntimeVersion.h>
 
 #include "resource.h"
 
@@ -204,6 +204,9 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiNetworkClientEndpointCreationConfig.h"
 #include "MidiNetworkClientEndpointRemovalConfig.h"
 #include "MidiNetworkEndpointManager.h"
+
+#include "MidiNetworkAdvertisedHost.h"
+
 
 #include "MidiNetworkAdvertisedHostAddedEventArgs.h"
 #include "MidiNetworkAdvertisedHostUpdatedEventArgs.h"

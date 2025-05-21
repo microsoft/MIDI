@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
+    [contract(MidiEndpointsNetworkApiContract, 1)]
     [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkAdvertisedHostRemovedEventArgs")]
     runtimeclass MidiNetworkAdvertisedHostRemovedEventArgs
     {

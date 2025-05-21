@@ -258,8 +258,8 @@ app.Configure(config =>
 // app title
 AnsiConsole.WriteLine();
 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppTitle(Strings.AppTitle));
-AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation($"{Microsoft.Windows.Devices.Midi2.Common.MidiBuildInformation.Name} ({Microsoft.Windows.Devices.Midi2.Common.MidiBuildInformation.Source})"));
-AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft.Windows.Devices.Midi2.Common.MidiBuildInformation.BuildFullVersion));
+AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation($"{Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.Name} ({Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.Source})"));
+AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft.Windows.Devices.Midi2.Common.MidiNuGetBuildInformation.BuildFullVersion));
 AnsiConsole.WriteLine();
 
 

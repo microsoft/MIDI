@@ -25,6 +25,7 @@ import "MidiNetworkAdvertisedHost.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
+    [contract(MidiEndpointsNetworkApiContract, 1)]
     [static_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkEndpointManagerStatics")]
     static runtimeclass MidiNetworkEndpointManager
     {
@@ -46,7 +47,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 
 
         // list the hosts currently visible to this PC
-        static Windows.Foundation.Collections.IVector<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
+        static Windows.Foundation.Collections.IVectorView<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
 
         static String MidiNetworkUdpDnsServiceType{ get; };
         static String MidiNetworkUdpDnsSdQueryString{ get; };
