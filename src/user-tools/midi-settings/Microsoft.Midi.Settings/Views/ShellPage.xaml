@@ -201,7 +201,7 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItem x:Name="SectionNET2UDP" Visibility="Collapsed" x:Uid="Shell_EndpointsNet2Udp" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsNet2UdpViewModel">
+                <NavigationViewItem x:Name="SectionNET2UDP" Visibility="Collapsed" x:Uid="Shell_EndpointsNet2Udp" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xee77;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>

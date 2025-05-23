@@ -69,6 +69,7 @@
   <ItemGroup>
     <None Remove="Controls\MidiEndpointAndGroupPickerControl.xaml" />
     <None Remove="Controls\MidiEndpointDeviceListItemControl.xaml" />
+    <None Remove="Sections\Endpoints\NET2UDP\NetworkMidi2SetupPage.xaml" />
     <None Remove="Sections\First Run Experience\FirstRunExperiencePage.xaml" />
     <None Remove="Styles\DefaultFont.xaml" />
     <None Remove="Styles\MessageTemplates.xaml" />
@@ -172,6 +173,9 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Sections\Endpoints\NET2UDP\NetworkMidi2SetupPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Sections\First Run Experience\FirstRunExperiencePage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

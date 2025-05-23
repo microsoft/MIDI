@@ -9,12 +9,12 @@ namespace Microsoft.Windows.Devices.Midi2.Common
 	{
 		public const string Source = "GitHub Preview";
 		public const string Name = "Customer Preview 3";
-		public const string BuildFullVersion = "1.0.3-preview-12.250521-1624";
+		public const string BuildFullVersion = "1.0.3-preview-12.250522-2052";
 		public const uint VersionMajor = 1;
 		public const uint VersionMinor = 0;
 		public const uint VersionRevision = 3;
-		public const uint VersionDateNumber = 250521;
-		public const uint VersionTimeNumber = 1624;
+		public const uint VersionDateNumber = 250522;
+		public const uint VersionTimeNumber = 2052;
 	}
 }
 

@@ -63,7 +63,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             var config = new MidiNetworkHostCreationConfig();
 
             config.Advertise = NewHostAdvertise;
-            config.AuthenticationType = MidiNetworkAuthenticationType.NoAuthentication; // TEMP
+            config.AuthenticationType = MidiNetworkAuthenticationType.NoAuthentication; // TEMP: set this up with actual configured auth
             config.ProductInstanceId = NewHostUniqueId;
             //config.HostInstanceName = 
             config.Name = NewHostName;

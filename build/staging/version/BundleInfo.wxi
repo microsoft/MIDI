@@ -1,4 +1,4 @@
 <Include>
   <?define SetupVersionName="Customer Preview 3 Arm64" ?>
-  <?define SetupVersionNumber="1.0.3-preview-12.250521-1624" ?>
+  <?define SetupVersionNumber="1.0.3-preview-12.250522-2052" ?>
 </Include>
