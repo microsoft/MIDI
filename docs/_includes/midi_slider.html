@@ -1,3 +1,29 @@
+<!-- architecture detection -->
+
+<script defer>
+navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
+ .then(ua => 
+ {
+    document.getElementById("download_this_pc_x64").hidden = true;
+    document.getElementById("download_this_pc_arm64").hidden = true;
+
+    if (navigator.userAgentData.platform === "Windows") 
+    {
+        if (ua.bitness === '64') 
+        {
+            if (ua.architecture === 'arm') 
+            {
+                document.getElementById("download_this_pc_arm64").hidden = false;
+            }
+            else
+            {
+                document.getElementById("download_this_pc_x64").hidden = false;
+            }
+        }
+    }
+ });
+ </script>
+
 <!-- Start Slider  Area -->
 <section class="slider-area bg-cover1">
     <div class="slider-wrapper full-padding">
@@ -12,9 +38,15 @@
                              <h4 class="heading-4">{{release.version}}</h4>
                              <h4 class="heading-4">{{release.description}}</h4>
                              <p>
-                                <a href="{{release.link_x64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_x64}}</a>
+                                <!-- Download for this PC  -->
+                                <a id="download_this_pc_x64" hidden="true" href="{{release.link_x64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_x64}} for this PC</a>
+                                <a id= "download_this_pc_arm64" hidden="true" href="{{release.link_arm64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_arm64}} for this PC</a>
+                             </p>
+                             <p>
+                                <!-- All downloads. Simple links -->
+                                <a id="download_x64" href="{{release.link_x64}}" class="btn">{{release.label_x64}}</a>
                                 &nbsp;
-                                <a href="{{release.link_arm64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_arm64}}</a>
+                                <a id= "download_arm64" href="{{release.link_arm64}}" class="btn">{{release.label_arm64}}</a>
                              </p>
                            </div>
                         {% endfor %}
