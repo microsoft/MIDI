@@ -1,7 +1,7 @@
 <!-- architecture detection -->
 
 <script type="text/javascript">
-window.onload = function()
+function showRecommendedDownload()
 {
     // this doesn't work on firefox, so FF users won't get a recommended download, just both downloads
     navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
@@ -49,7 +49,7 @@ window.onload = function()
                      <div class="slider-carousel owl-carousel">
                        {% assign data =  site.data.midi_releases | where: "featured", true %}
                          {% for release in data %}
-                           <div class="slider-content wow fadeIn" data-wow-duration="3s">
+                           <div class="slider-content wow fadeIn" data-wow-duration="3s" onload="showRecommendedDownload()">
                              <h1 class="heading-1">{{release.title}}</h1>
                              <h4 class="heading-4">{{release.version}}</h4>
                              <h4 class="heading-4">{{release.description}}</h4>
