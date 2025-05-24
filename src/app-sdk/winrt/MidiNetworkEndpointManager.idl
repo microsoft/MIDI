@@ -8,11 +8,11 @@
 
 import "MidiApiContracts.idl";
 
-import "MidiNetworkHostEndpointCreationResult.idl";
-import "MidiNetworkHostEndpointCreationConfig.idl";
+import "MidiNetworkHostCreationResult.idl";
+import "MidiNetworkHostCreationConfig.idl";
 
-import "MidiNetworkHostEndpointRemovalResult.idl";
-import "MidiNetworkHostEndpointRemovalConfig.idl";
+import "MidiNetworkHostRemovalResult.idl";
+import "MidiNetworkHostRemovalConfig.idl";
 
 import "MidiNetworkClientEndpointCreationResult.idl";
 import "MidiNetworkClientEndpointCreationConfig.idl";
@@ -25,17 +25,18 @@ import "MidiNetworkAdvertisedHost.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
+    [contract(MidiEndpointsNetworkApiContract, 1)]
     [static_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkEndpointManagerStatics")]
     static runtimeclass MidiNetworkEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };
         static Guid TransportId{ get; };
 
-        static MidiNetworkHostEndpointCreationResult CreateNetworkHost(
-            MidiNetworkHostEndpointCreationConfig creationConfig);
+        static MidiNetworkHostCreationResult CreateNetworkHost(
+            MidiNetworkHostCreationConfig creationConfig);
 
-        static MidiNetworkHostEndpointRemovalResult RemoveNetworkHost(
-            MidiNetworkHostEndpointRemovalConfig removalConfig);
+        static MidiNetworkHostRemovalResult RemoveNetworkHost(
+            MidiNetworkHostRemovalConfig removalConfig);
 
 
         static MidiNetworkClientEndpointCreationResult CreateNetworkClient(
@@ -44,10 +45,15 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         static MidiNetworkClientEndpointRemovalResult RemoveNetworkClient(
             MidiNetworkClientEndpointRemovalConfig removalConfig);
 
+
         // list the hosts currently visible to this PC
-        static Windows.Foundation.Collections.IVector<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
+        static Windows.Foundation.Collections.IVectorView<MidiNetworkAdvertisedHost> GetAdvertisedHosts();
+
         static String MidiNetworkUdpDnsServiceType{ get; };
         static String MidiNetworkUdpDnsSdQueryString{ get; };
+        static String MidiNetworkUdpDnsDomain { get; };
+        static Windows.Devices.Enumeration.DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind{ get; };
 
+        static IVector<String> MidiNetworkUdpDnsSdQueryAdditionalProperties { get; };
     }
 }

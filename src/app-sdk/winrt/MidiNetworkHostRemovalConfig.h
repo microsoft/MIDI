@@ -7,21 +7,22 @@
 // ============================================================================
 
 #pragma once
-#include "Endpoints.Network.MidiNetworkHostEndpointRemovalConfig.g.h"
+#include "Endpoints.Network.MidiNetworkHostRemovalConfig.g.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    struct MidiNetworkHostEndpointRemovalConfig : MidiNetworkHostEndpointRemovalConfigT<MidiNetworkHostEndpointRemovalConfig>
+    struct MidiNetworkHostRemovalConfig : MidiNetworkHostRemovalConfigT<MidiNetworkHostRemovalConfig>
     {
-        MidiNetworkHostEndpointRemovalConfig() = default;
+        MidiNetworkHostRemovalConfig() = default;
 
-        winrt::guid TransportId();
-        hstring GetConfigJson();
+        winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
+        
+        winrt::hstring GetConfigJson() const noexcept;
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation
 {
-    struct MidiNetworkHostEndpointRemovalConfig : MidiNetworkHostEndpointRemovalConfigT<MidiNetworkHostEndpointRemovalConfig, implementation::MidiNetworkHostEndpointRemovalConfig>
+    struct MidiNetworkHostRemovalConfig : MidiNetworkHostRemovalConfigT<MidiNetworkHostRemovalConfig, implementation::MidiNetworkHostRemovalConfig>
     {
     };
 }

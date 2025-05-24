@@ -60,7 +60,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         private static Guid clsid = new Guid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3");
         private static Guid iid = typeof(IMidiClientInitializer).GUID;
 
-        private IMidiClientInitializer _initializer;
+        private IMidiClientInitializer? _initializer;
 
         private MidiDesktopAppSdkInitializer(IMidiClientInitializer initializer)
         {
@@ -104,9 +104,11 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
         public bool EnsureServiceAvailable()
         {
+            if (_initializer == null) return false;
+
             try
             {
-                _initializer.EnsureServiceAvailable();
+                _initializer!.EnsureServiceAvailable();
 
                 return true;
             }
@@ -119,49 +121,44 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
         public bool InitializeSdkRuntime()
         {
-            if (_initializer == null)
+            if (_initializer == null) return false;
+
+            try
             {
-                return false;
+                // try to make an SDK call. If we can't resolve the types
+                // correctly, it'll throw.
+
+                // build platform is an output param. We just default it here
+                MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
+
+                UInt32 versionMajor = 0;
+                UInt32 versionMinor = 0;
+                UInt32 versionRevision = 0;
+                UInt32 versionDateNumber = 0;
+                UInt32 versionTimeNumber = 0;
+                string buildSource = string.Empty;
+                string versionName = string.Empty;
+                string versionFullString = string.Empty;
+
+                _initializer.GetInstalledWindowsMidiServicesSdkVersion(
+                    ref platform,
+                    ref versionMajor,
+                    ref versionMinor,
+                    ref versionRevision,
+                    ref versionDateNumber,
+                    ref versionTimeNumber,
+                    ref buildSource,
+                    ref versionName,
+                    ref versionFullString
+                    );
+
+                if (versionFullString != string.Empty)
+                {
+                    return true;
+                }
             }
-            else
+            catch (Exception)
             {
-                try
-                {
-                    // try to make an SDK call. If we can't resolve the types
-                    // correctly, it'll throw.
-
-                    // build platform is an output param. We just default it here
-                    MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
-
-                    UInt32 versionMajor = 0;
-                    UInt32 versionMinor = 0;
-                    UInt32 versionRevision = 0;
-                    UInt32 versionDateNumber = 0;
-                    UInt32 versionTimeNumber = 0;
-                    string buildSource = string.Empty;
-                    string versionName = string.Empty;
-                    string versionFullString = string.Empty;
-
-                    _initializer.GetInstalledWindowsMidiServicesSdkVersion(
-                        ref platform,
-                        ref versionMajor,
-                        ref versionMinor,
-                        ref versionRevision,
-                        ref versionDateNumber,
-                        ref versionTimeNumber,
-                        ref buildSource,
-                        ref versionName,
-                        ref versionFullString
-                        );
-
-                    if (versionFullString != string.Empty)
-                    {
-                        return true;
-                    }
-                }
-                catch (Exception)
-                {
-                }
             }
 
             return false;
@@ -188,7 +185,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             try
             {
                 // for C#, all parameters must be supplied
-                _initializer.GetInstalledWindowsMidiServicesSdkVersion(
+                _initializer!.GetInstalledWindowsMidiServicesSdkVersion(
                     ref platform,
                     ref versionMajor,
                     ref versionMinor,
@@ -228,7 +225,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
             try
             { 
-                _initializer.GetInstalledWindowsMidiServicesSdkVersion(
+                _initializer!.GetInstalledWindowsMidiServicesSdkVersion(
                     ref platform,
                     ref versionMajor,
                     ref versionMinor,

@@ -263,6 +263,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
+    <ClInclude Include="MidiNetworkAdvertisedHost.h" />
+    <ClInclude Include="MidiNetworkClientMatchCriteria.h" />
     <ClInclude Include="MidiClientInitializerFactory.h" />
     <ClInclude Include="MidiClientInitializerSingleton.h" />
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
@@ -305,11 +307,11 @@
     <ClInclude Include="MidiNetworkEndpointManager.h">
       <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkHostEndpointCreationConfig.h">
-      <DependentUpon>MidiNetworkHostEndpointCreationConfig.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkHostCreationConfig.h">
+      <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkHostEndpointRemovalConfig.h">
-      <DependentUpon>MidiNetworkHostEndpointRemovalConfig.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkHostRemovalConfig.h">
+      <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="libmidi2\include\bytestreamToUMP.h" />
     <ClInclude Include="libmidi2\include\mcoded7.h" />
@@ -460,6 +462,7 @@
       <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="midi_network_defs.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="enumeration_prop_util.h" />
     <ClInclude Include="resource.h" />
@@ -470,6 +473,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiNetworkAdvertisedHost.cpp" />
+    <ClCompile Include="MidiNetworkClientMatchCriteria.cpp" />
     <ClCompile Include="MidiClientInitializerFactory.cpp" />
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
@@ -509,11 +514,11 @@
     <ClCompile Include="MidiNetworkEndpointManager.cpp">
       <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostEndpointCreationConfig.cpp">
-      <DependentUpon>MidiNetworkHostEndpointCreationConfig.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkHostCreationConfig.cpp">
+      <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostEndpointRemovalConfig.cpp">
-      <DependentUpon>MidiNetworkHostEndpointRemovalConfig.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
+      <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="libmidi2\src\bytestreamToUMP.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
@@ -808,12 +813,13 @@
     <Midl Include="MidiNetworkClientEndpointCreationResult.idl" />
     <Midl Include="MidiNetworkClientEndpointRemovalConfig.idl" />
     <Midl Include="MidiNetworkClientEndpointRemovalResult.idl" />
+    <Midl Include="MidiNetworkClientMatchCriteria.idl" />
     <Midl Include="MidiNetworkEndpointManager.idl" />
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
-    <Midl Include="MidiNetworkHostEndpointCreationConfig.idl" />
-    <Midl Include="MidiNetworkHostEndpointCreationResult.idl" />
-    <Midl Include="MidiNetworkHostEndpointRemovalConfig.idl" />
-    <Midl Include="MidiNetworkHostEndpointRemovalResult.idl" />
+    <Midl Include="MidiNetworkHostCreationConfig.idl" />
+    <Midl Include="MidiNetworkHostCreationResult.idl" />
+    <Midl Include="MidiNetworkHostRemovalConfig.idl" />
+    <Midl Include="MidiNetworkHostRemovalResult.idl" />
     <Midl Include="Midi1PortFlowEnum.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />

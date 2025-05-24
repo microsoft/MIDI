@@ -19,7 +19,9 @@ public class PageService : IPageService
         Configure<EndpointsKSViewModel, EndpointsKSPage>();
         Configure<EndpointsKsaViewModel, EndpointsKsaPage>();
         Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
+
         Configure<EndpointsNet2UdpViewModel, EndpointsNet2UdpPage>();
+        Configure<NetworkMidi2SetupViewModel, NetworkMidi2SetupPage>();
 
         Configure<EndpointsDiagViewModel, EndpointsDiagPage>();
 

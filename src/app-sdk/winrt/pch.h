@@ -134,7 +134,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
         (p) = NULL; \
     }
 
-#include <WindowsMidiServicesVersion.h>
+#include <WindowsMidiServicesSdkRuntimeVersion.h>
 
 #include "resource.h"
 
@@ -197,12 +197,21 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiVirtualDeviceCreationConfig.h"
 #include "MidiVirtualDeviceManager.h"
 
-#include "MidiNetworkHostEndpointCreationConfig.h"
-#include "MidiNetworkHostEndpointRemovalConfig.h"
+#include "midi_network_defs.h"
+#include "MidiNetworkClientMatchCriteria.h"
+#include "MidiNetworkHostCreationConfig.h"
+#include "MidiNetworkHostRemovalConfig.h"
 #include "MidiNetworkClientEndpointCreationConfig.h"
 #include "MidiNetworkClientEndpointRemovalConfig.h"
 #include "MidiNetworkEndpointManager.h"
 
+#include "MidiNetworkAdvertisedHost.h"
+
+
+#include "MidiNetworkAdvertisedHostAddedEventArgs.h"
+#include "MidiNetworkAdvertisedHostUpdatedEventArgs.h"
+#include "MidiNetworkAdvertisedHostRemovedEventArgs.h"
+#include "MidiNetworkAdvertisedHostWatcher.h"
 
 
 

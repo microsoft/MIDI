@@ -152,78 +152,33 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
     {
         if (versionMajor != nullptr)
         {
-            std::wstring versionMajorTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_MAJOR };
-
-            if (!versionMajorTempString.empty())
-            {
-                *versionMajor = static_cast<DWORD>(std::stol(versionMajorTempString));
-            }
-            else
-            {
-                *versionMajor = 0;
-            }
+            *versionMajor = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR);
         }
 
         if (versionMinor != nullptr)
         {
-            std::wstring versionMinorTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_MINOR };
-
-            if (!versionMinorTempString.empty())
-            {
-                *versionMinor = static_cast<DWORD>(std::stol(versionMinorTempString));
-            }
-            else
-            {
-                *versionMinor = 0;
-            }
+            *versionMinor = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR);
         }
 
         if (versionRevision != nullptr)
         {
-            std::wstring versionRevisionTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_REVISION };
-
-            if (!versionRevisionTempString.empty())
-            {
-                *versionRevision = static_cast<DWORD>(std::stol(versionRevisionTempString));
-            }
-            else
-            {
-                *versionRevision = 0;
-            }
+            *versionRevision = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_REVISION);
         }
 
         if (versionDateNumber != nullptr)
         {
-            std::wstring versionDateNumberTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_DATE_NUMBER };
-
-            if (!versionDateNumberTempString.empty())
-            {
-                *versionDateNumber = static_cast<DWORD>(std::stol(versionDateNumberTempString));
-            }
-            else
-            {
-                *versionDateNumber = 0;
-            }
+            *versionDateNumber = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_DATE_NUMBER);
         }
 
         if (versionTimeNumber != nullptr)
         {
-            std::wstring versionTimeNumberTempString{ WINDOWS_MIDI_SERVICES_BUILD_VERSION_TIME_NUMBER };
-
-            if (!versionTimeNumberTempString.empty())
-            {
-                *versionTimeNumber = static_cast<DWORD>(std::stol(versionTimeNumberTempString));
-            }
-            else
-            {
-                *versionTimeNumber = 0;
-            }
+            *versionTimeNumber = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_TIME_NUMBER);
         }
 
         if (buildSource != nullptr)
         {
             wil::unique_cotaskmem_string tempString;
-            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_BUILD_SOURCE);
+            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_SOURCE);
             RETURN_IF_NULL_ALLOC(tempString.get());
             *buildSource = static_cast<LPWSTR>(tempString.release());
         }
@@ -231,7 +186,7 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
         if (versionName != nullptr)
         {
             wil::unique_cotaskmem_string tempString;
-            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME);
+            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_NAME);
             RETURN_IF_NULL_ALLOC(tempString.get());
             *versionName = static_cast<LPWSTR>(tempString.release());
         }
@@ -239,7 +194,7 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
         if (versionFullString != nullptr)
         {
             wil::unique_cotaskmem_string tempString;
-            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_BUILD_VERSION_FULL);
+            tempString = wil::make_cotaskmem_string_nothrow(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FULL);
             RETURN_IF_NULL_ALLOC(tempString.get());
             *versionFullString = static_cast<LPWSTR>(tempString.release());
         }

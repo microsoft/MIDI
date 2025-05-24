@@ -17,5 +17,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
         winrt::hstring HostId();
         enumeration::DeviceInformationUpdate DeviceInformationUpdate();
+
+
+        void InternalInitialize(_In_ winrt::hstring const& id, _In_ enumeration::DeviceInformationUpdate const& args) noexcept;
+
+    private:
+        winrt::hstring m_id{ };
     };
 }

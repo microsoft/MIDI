@@ -15,8 +15,28 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     {
         MidiNetworkClientEndpointCreationConfig() = default;
 
-        winrt::guid TransportId();
-        hstring GetConfigJson();
+        winrt::guid TransportId() const noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
+        winrt::hstring GetConfigJson() const noexcept;
+
+        winrt::hstring Id() const noexcept { return m_id; }
+        void Id(_In_ winrt::hstring const& value) { m_id = value; }
+
+        bool UmpOnly() const noexcept { return m_umpOnly; }
+        void UmpOnly(_In_ bool const value) noexcept { m_umpOnly = value; }
+
+        bool AutoReconnect() const noexcept{ return m_autoReconnect; }
+        void AutoReconnect(_In_ bool const value) noexcept { m_autoReconnect = value; }
+
+        midi2::Endpoints::Network::MidiNetworkClientMatchCriteria MatchCriteria() const noexcept { return m_matchCriteria; }
+        void MatchCriteria(_In_ network::MidiNetworkClientMatchCriteria const& value) noexcept { m_matchCriteria = value; }
+
+    private:
+        winrt::hstring m_id{};
+        bool m_umpOnly{ false };
+        bool m_autoReconnect{ true };
+
+        network::MidiNetworkClientMatchCriteria m_matchCriteria{};
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation

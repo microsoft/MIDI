@@ -38,12 +38,9 @@ int __cdecl main()
     std::cout << dye::aqua(" Copyright 2025- Microsoft Corporation.") << std::endl;
     std::cout << dye::aqua(" Information, license, and source available at https://aka.ms/midi") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
-    std::cout << dye::aqua(" Enumerating MIDI mDNS advertisements currently visible to this PC, on the local network. This") << std::endl;
-    std::cout << dye::aqua(" may take a minute or two.") << std::endl;
+    std::cout << dye::aqua(" Watching for new MIDI mDNS advertisements visible to this PC, on the local network. Press") << std::endl;
+    std::cout << dye::aqua(" escape to exit.") << std::endl;
     std::cout << std::endl;
-    std::cout << dye::light_red(" If you do not see a device you expect to see, check that its IP address is on your subnet and") << std::endl;
-    std::cout << dye::light_red(" that your firewall is not blocking mDNS broadcasts on this subnet.") << std::endl;
-    //std::cout << dye::aqua(" Press any key to stop ...") << std::endl;
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << std::endl;
 
@@ -133,7 +130,7 @@ int __cdecl main()
                         std::cout << " " << std::setw(20) << dye::green(typesText);
 
                     }
-                    
+
                     std::cout << dye::grey(" Adapter: ");
 
                     std::wcout
@@ -155,41 +152,70 @@ int __cdecl main()
     auto subnet = winrt::Windows::Networking::Connectivity::NetworkInformation::GetConnectionProfiles();
 
 
+    // create the watcher and start spitting out info
 
-    auto entries = midinet::MidiNetworkEndpointManager::GetAdvertisedHosts();
+    auto watcher = midinet::MidiNetworkAdvertisedHostWatcher::Create();
 
-    if (entries.Size() > 0)
-    {
-        for (auto const& entry : entries)
+    auto addedEventToken = watcher.Added([](auto const&, midinet::MidiNetworkAdvertisedHostAddedEventArgs const& args)
         {
-            std::cout << dye::grey("Id:                   ") << dye::yellow(winrt::to_string(entry.DeviceId)) << std::endl;
-            std::cout << dye::grey("Name:                 ") << dye::yellow(winrt::to_string(entry.DeviceName)) << std::endl;
+            auto entry = args.AddedHost();
 
-          //  std::wcout<< L"Protocol Id:  " << internal::GuidToString(protocolId) << std::endl;
+            std::cout << dye::grey("Id:                   ") << dye::yellow(winrt::to_string(entry.DeviceId())) << std::endl;
+            std::cout << dye::grey("Name:                 ") << dye::yellow(winrt::to_string(entry.DeviceName())) << std::endl;
 
-            std::cout << dye::grey("FullName:             ") << dye::aqua(winrt::to_string(entry.FullName)) << std::endl;
-            std::cout << dye::grey("InstanceName:         ") << dye::aqua(winrt::to_string(entry.ServiceInstanceName)) << std::endl;
-            std::cout << dye::grey("ServiceType:          ") << dye::aqua(winrt::to_string(entry.ServiceType)) << std::endl;
-            std::cout << dye::grey("Domain:               ") << dye::aqua(winrt::to_string(entry.Domain)) << std::endl;
-            std::cout << dye::grey("HostName:             ") << dye::aqua(winrt::to_string(entry.HostName)) << std::endl;
+            //  std::wcout<< L"Protocol Id:  " << internal::GuidToString(protocolId) << std::endl;
 
-            // todo: IP Addresses
-            std::cout << dye::grey("IP Address:           ") << dye::purple(winrt::to_string(entry.IPAddress)) << std::endl;
-            std::cout << dye::grey("PortNumber:           ") << dye::purple(entry.Port) << std::endl;
+            std::cout << dye::grey("FullName:             ") << dye::aqua(winrt::to_string(entry.FullName())) << std::endl;
+            std::cout << dye::grey("InstanceName:         ") << dye::aqua(winrt::to_string(entry.ServiceInstanceName())) << std::endl;
+            std::cout << dye::grey("ServiceType:          ") << dye::aqua(winrt::to_string(entry.ServiceType())) << std::endl;
+            std::cout << dye::grey("Domain:               ") << dye::aqua(winrt::to_string(entry.Domain())) << std::endl;
+            std::cout << dye::grey("HostName:             ") << dye::aqua(winrt::to_string(entry.HostName())) << std::endl;
 
-            std::cout << dye::grey("UMP Endpoint Name:    ") << dye::light_aqua(winrt::to_string(entry.UmpEndpointName)) << std::endl;
-            std::cout << dye::grey("Product Instance Id:  ") << dye::light_aqua(winrt::to_string(entry.ProductInstanceId)) << std::endl;
+            for (auto const& address : entry.IPAddresses())
+            {
+                std::cout << dye::grey("IP Address:           ") << dye::purple(winrt::to_string(address)) << std::endl;
+            }
+
+            if (entry.Port() != 0)
+            {
+                std::cout << dye::grey("Port:                 ") << dye::purple(entry.Port()) << std::endl;
+            }
+            else
+            {
+                std::cout << dye::grey("Port:                 ") << dye::red("Invalid port (0)") << std::endl;
+            }
+
+            std::cout << dye::grey("UMP Endpoint Name:    ") << dye::light_aqua(winrt::to_string(entry.UmpEndpointName())) << std::endl;
+            std::cout << dye::grey("Product Instance Id:  ") << dye::light_aqua(winrt::to_string(entry.ProductInstanceId())) << std::endl;
 
             std::cout << dye::grey(std::string(LINE_LENGTH, '-')) << std::endl;
+
+        });
+
+    auto enumerationCompleteToken = watcher.EnumerationCompleted([](auto const&, foundation::IInspectable const&)
+        {
+            std::cout << std::endl << dye::aqua("Initial enumeration complete.") << std::endl;
+        });
+
+
+    std::cout << std::endl << dye::aqua("Searching for Network MIDI 2.0 Hosts. Press escape to cancel.") << std::endl << std::endl;
+    watcher.Start();
+
+    // wait for escape
+    while (true)
+    {
+        auto ch = getch();
+
+        if (ch == KEY_ESCAPE)
+        {
+            std::cout << std::endl << "Closing..." << std::endl;
+            break;
         }
     }
-    else
-    {
-        std::cout << dye::light_red("No MIDI 2.0 network host MDNS advertisements found.");
-    }
 
-    std::cout << std::endl;
-
+    watcher.Stop();
+    watcher.Added(addedEventToken);
+    watcher.EnumerationCompleted(enumerationCompleteToken);
 
     return 0;
 }

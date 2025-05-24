@@ -6,15 +6,10 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiApiContracts.idl";
 
-namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
-{
-    [experimental]
-    struct MidiNetworkHostEndpointCreationResult
-    {
-        Boolean foo;
+#pragma once
 
-    };
-}
+
+
+#define MIDI_NETWORK_TRANSPORT_ID L"{c95dcd1f-cde3-4c2d-913c-528cb8a4cbe6}"
 

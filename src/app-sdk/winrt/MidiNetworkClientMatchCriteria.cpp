@@ -7,17 +7,10 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiNetworkHostEndpointRemovalConfig.h"
-#include "Endpoints.Network.MidiNetworkHostEndpointRemovalConfig.g.cpp"
+#include "MidiNetworkClientMatchCriteria.h"
+#include "Endpoints.Network.MidiNetworkClientMatchCriteria.g.cpp"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    winrt::guid MidiNetworkHostEndpointRemovalConfig::TransportId()
-    {
-        throw hresult_not_implemented();
-    }
-    hstring MidiNetworkHostEndpointRemovalConfig::GetConfigJson()
-    {
-        throw hresult_not_implemented();
-    }
+
 }

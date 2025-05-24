@@ -86,6 +86,8 @@ namespace Microsoft.Midi.Settings.Views
 
         private async void CreateNewLoopbackPair_Click(object sender, RoutedEventArgs e)
         {
+            Dialog_CreateLoopbackEndpoints.Resources["ContentDialogMaxHeight"] = Math.Max(800.0, this.ActualHeight);
+
             var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
         }
 

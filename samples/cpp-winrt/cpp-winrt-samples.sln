@@ -17,6 +17,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "simple-app-to-app-cpp", "si
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "endpoint-listeners-cpp", "endpoint-listeners\endpoint-listeners-cpp.vcxproj", "{9BA306AF-810C-4CBD-AA19-AC1954C38FE4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "full-init-cpp", "full-init\full-init-cpp.vcxproj", "{253D170C-C9ED-401C-93EE-96588853F1CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -141,6 +143,22 @@ Global
 		{9BA306AF-810C-4CBD-AA19-AC1954C38FE4}.Release|x64.Build.0 = Release|x64
 		{9BA306AF-810C-4CBD-AA19-AC1954C38FE4}.Release|x86.ActiveCfg = Release|x64
 		{9BA306AF-810C-4CBD-AA19-AC1954C38FE4}.Release|x86.Build.0 = Release|x64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Debug|ARM64.Build.0 = Debug|ARM64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Debug|x64.ActiveCfg = Debug|x64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Debug|x64.Build.0 = Debug|x64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Debug|x86.ActiveCfg = Debug|x64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Debug|x86.Build.0 = Debug|x64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|ARM64.ActiveCfg = Release|ARM64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|ARM64.Build.0 = Release|ARM64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|x64.ActiveCfg = Release|x64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|x64.Build.0 = Release|x64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|x86.ActiveCfg = Release|x64
+		{253D170C-C9ED-401C-93EE-96588853F1CF}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

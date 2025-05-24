@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Contracts.Services
 {
-    interface IMidiTransportInfoService
+    public interface IMidiTransportInfoService
     {
         MidiServiceTransportPluginInfo GetTransportForCode(string transportCode);
 

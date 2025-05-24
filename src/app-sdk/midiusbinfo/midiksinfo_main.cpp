@@ -433,12 +433,12 @@ int __cdecl main()
 
     std::cout
         << " "
-        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_BUILD_VERSION_NAME))
+        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME))
         << dye::grey(" (")
-        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_BUILD_SOURCE))
+        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE))
         << dye::grey(")")
         << " -- "
-        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_BUILD_VERSION_FULL))
+        << dye::aqua(winrt::to_string(WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL))
         << std::endl;
 
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;

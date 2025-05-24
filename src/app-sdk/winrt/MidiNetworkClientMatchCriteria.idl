@@ -12,12 +12,22 @@ import "IMidiServiceTransportPluginConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
-    [experimental]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkHostEndpointRemovalConfig")]
-    runtimeclass MidiNetworkHostEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
-    {
-        MidiNetworkHostEndpointRemovalConfig();
+	[experimental]
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkClientMatchCriteria")]
+	runtimeclass MidiNetworkClientMatchCriteria
+	{
+		MidiNetworkClientMatchCriteria();
+
+		// Windows mDNS-discovered host's id (full id from DeviceInformation.Id() )
+		String DeviceId;
+
+		// For IP or string-based connection 
+		Windows.Networking.HostName HostName; // todo: if host name can't be resolved, does this still work? Need to use a string instead?
+		UInt16 Port;
 
 
-    }
+
+	}
 }
+

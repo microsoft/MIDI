@@ -66,7 +66,15 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         STDMETHOD(EnsureServiceAvailable)() = 0;
     };
 
+    // this is the COM entry point into the SDK runtime. It's here just to get the UUID using __uuidof
     struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitializerUuid
+    {
+    };
+
+    // we use this to test service connectivity. It's here just to get the UUID using __uuidof
+    // The MidiSrvTransport is installed with the MIDI Service, not the SDK, so its presence
+    // tells us the service has been installed on this PC
+    struct __declspec(uuid("2BA15E4E-5417-4A66-85B8-2B2260EFBC84")) MidiSrvTransportUuid : ::IUnknown
     {
     };
 
@@ -83,11 +91,58 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
 
     public:
         // this URL will not be changed, but the underlying location it redirects to
-        // will change regularly. The aka will always point to a page where the latest SDK
-        // runtime can be installed.
+        // may change. The aka will always point to a page where the latest SDK runtime 
+        // can be installed, so please use this as the download link for your customers
         const std::wstring LatestMidiAppSdkDownloadUrl{ L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller" };
 
-        // guid for the initializer
+        // If you want to check to see that you are on a supported operating system, this
+        // is the appropriate clal to make. This is more feature-focused as opposed to 
+        // checking for a specific Windows version. We simply try to create the main
+        // transport to communicate with the MIDI Service. If it works, the service is
+        // installed and registered. If not, then the service is not present/registered
+
+        // You need to initialize COM or WinRT before calling this method. Example:
+        // winrt::init_apartment() or CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+        bool IsServiceInstalled()
+        {
+            // if you use a ref-counting pointer from wil, winrt, ATL, etc. feel
+            // free to use it here and remove the Release() call below.
+            IUnknown* servicePointer{ nullptr };
+
+            auto hr = CoCreateInstance(
+                __uuidof(MidiSrvTransportUuid),
+                NULL,
+                CLSCTX_INPROC_SERVER,
+                IID_PPV_ARGS(&servicePointer)
+            );
+
+            if (SUCCEEDED(hr))
+            {
+                // this shouldn't happen, but we should guard anyway
+                if (servicePointer == nullptr) return false;
+
+                // Windows MIDI Services appears to be installed. Because this
+                // succeeded, we need to release the COM reference. To avoid this kind
+                // of logic, use a wil::com_ptr_nothrow, a winrt::com_ptr, or an ATL CComPtr
+                servicePointer->Release();
+                servicePointer = nullptr;
+                return true;
+            }
+            else if (hr == REGDB_E_CLASSNOTREG)
+            {
+                // Class not registered. Windows MIDI Services does NOT appear to be installed
+                // no need to release here because CoCreateInstance failed
+                servicePointer = nullptr;
+                return false;
+            }
+            else
+            {
+                // Other error. Unexpected.
+                // no need to release here because CoCreateInstance failed
+                servicePointer = nullptr;
+                return false;
+            }
+        }
 
         // this must be called only *after* initializing the SDK Runtime
         bool EnsureServiceAvailable()

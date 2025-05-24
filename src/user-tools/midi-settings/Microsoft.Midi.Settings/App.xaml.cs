@@ -128,6 +128,9 @@ public partial class App : Application
                         services.AddTransient<EndpointsNet2UdpPage>();
                         services.AddTransient<EndpointsNet2UdpViewModel>();
 
+                        services.AddTransient<NetworkMidi2SetupPage>();
+                        services.AddTransient<NetworkMidi2SetupViewModel>();
+
                         services.AddTransient<EndpointsLoopPage>();
                         services.AddTransient<EndpointsLoopViewModel>();
 

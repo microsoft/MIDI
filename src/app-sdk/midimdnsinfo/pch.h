@@ -20,7 +20,11 @@
 #include <iostream>
 #include <chrono>
 #include <format>
+#include <conio.h>
+#include <stdio.h>
 
+#define KEY_ESCAPE 0x1B
+#define KEY_SPACE  0x20
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
