@@ -3,6 +3,8 @@
 <script type="text/javascript">
 window.onload = function()
 {
+    document.getElementById("testOut").innerText = "TEST";
+
     // this doesn't work on firefox, so FF users won't get a recommended download, just both downloads
     navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
     .then(ua => 
@@ -33,6 +35,7 @@ window.onload = function()
 
 <!-- Start Slider  Area -->
 <section class="slider-area bg-cover1">
+    <p id="testOut"></p>
     <div class="slider-wrapper full-padding">
         <div class="container">
             <div class="row">
