@@ -3,18 +3,22 @@
 <script type="text/javascript">
 window.onload = function()
 {
-    document.getElementById("testOut").innerText = "TEST";
-
     // this doesn't work on firefox, so FF users won't get a recommended download, just both downloads
     navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
     .then(ua => 
     {
         if (navigator.userAgentData.platform === "Windows") 
         {
+            document.getElementById("testOut").innerText = "Windows";
+
             if (ua.bitness === '64') 
             {
+                document.getElementById("testOut").innerText += " 64 bit";
+
                 if (ua.architecture === 'arm') 
                 {
+                    document.getElementById("testOut").innerText += " Arm";
+
                     document.getElementById("download_this_pc_x64").style.display = 'none';
 
                     document.getElementById("download_this_pc_arm64").innerText += " for this PC";
@@ -22,6 +26,8 @@ window.onload = function()
                 }
                 else if (ua.architecture === 'x86')
                 {
+                    document.getElementById("testOut").innerText += " x86";
+
                     document.getElementById("download_this_pc_arm64").style.display = 'none';
 
                     document.getElementById("download_this_pc_x64").innerText += " for this PC";
