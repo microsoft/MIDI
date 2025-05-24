@@ -13,50 +13,57 @@ function enableArchitectureSpecificDownloads()
         const download_this_pc_x64 = document.getElementById("download_this_pc_x64");
         const download_this_pc_arm64 = document.getElementById("download_this_pc_arm64");
 
-        if (!download_this_pc_arm64 && !download_this_pc_x64)
+        if (download_this_pc_arm64 || download_this_pc_x64)
         {
-            document.getElementById("testOut").innerText += " (could not find elements)";
-        }
-
-        if (navigator.userAgentData.platform === "Windows") 
-        {
-            //document.getElementById("testOut").innerText = "Windows";
-
-            if (ua.bitness === '64') 
+            if (navigator.userAgentData.platform === "Windows") 
             {
-                //document.getElementById("testOut").innerText += " 64 bit";
+                //document.getElementById("testOut").innerText = "Windows";
 
-                if (ua.architecture === 'arm') 
+                if (ua.bitness === '64') 
                 {
-                    //document.getElementById("testOut").innerText += " Arm";
+                    //document.getElementById("testOut").innerText += " 64 bit";
 
-                    download_this_pc_x64.style.display = 'none';
-                    download_this_pc_arm64.innerText += " (recommended for this PC)";
+                    if (ua.architecture === 'arm') 
+                    {
+                        document.getElementById("testOut").innerText += " Arm";
 
-                    document.getElementById("download_arm64").innerText += " (recommended for this PC)";
+                        download_this_pc_x64.style.display = 'none';
+                        download_this_pc_arm64.innerText += " (recommended for this PC)";
+
+                        document.getElementById("download_arm64").innerText += " (recommended for this PC)";
+                    }
+                    else if (ua.architecture === 'x86')
+                    {
+                        document.getElementById("testOut").innerText += " x86";
+
+                        download_this_pc_arm64.style.display = 'none';
+                        download_this_pc_x64.innerText += " (recommended for this PC)";
+
+                        document.getElementById("download_x64").innerText += " (recommended for this PC)";
+                    }
+                    else
+                    {
+                        document.getElementById("testOut").innerText += " Unknown: " + ua.architecture;
+                    }
                 }
-                else if (ua.architecture === 'x86')
+                else
                 {
-                    //document.getElementById("testOut").innerText += " x86";
-
+                    // Not 64 bit
+                    download_this_pc_x64.style.display = 'none';  
                     download_this_pc_arm64.style.display = 'none';
-                    download_this_pc_x64.innerText += " (recommended for this PC)";
-
-                    document.getElementById("download_x64").innerText += " (recommended for this PC)";
                 }
             }
             else
             {
-                // Not 64 bit
+                // not Windows
                 download_this_pc_x64.style.display = 'none';  
                 download_this_pc_arm64.style.display = 'none';
             }
         }
         else
         {
-            // not Windows
-            download_this_pc_x64.style.display = 'none';  
-            download_this_pc_arm64.style.display = 'none';
+            // could not find elements
+            document.getElementById("testOut").innerText += " (could not find elements)";
         }
     });
 }
