@@ -21,13 +21,19 @@
                              </p>
                              <p>
                                 <!-- All downloads. Simple links -->
+                                <span style="color:white">All downloads: </span>
                                 <a id="download_x64" style="color:white" href="{{release.link_x64}}">{{release.label_x64}}</a>
                                 &nbsp;|&nbsp;
                                 <a id="download_arm64" style="color:white" href="{{release.link_arm64}}">{{release.label_arm64}}</a>
                              </p>
                            </div>
                         {% endfor %}
-                     </div>
+                    </div>
+
+                    <script type="text/javascript">
+                    enableArchitectureSpecficLinks();
+                    </script>
+
                 </div>
             </div>
         </div>
@@ -39,7 +45,7 @@
 <!-- architecture detection -->
 
 <script type="text/javascript">
-window.onload = function()
+function enableArchitectureSpecficLinks()
 {
     // this doesn't work on firefox, so FF users won't get a recommended download, just both downloads
     navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
