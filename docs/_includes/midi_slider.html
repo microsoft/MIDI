@@ -1,25 +1,29 @@
 <!-- architecture detection -->
 
 <script type="text/javascript">
-function detectSdkRuntimeArchitecture()
+window.onload = function()
 {
+    // this doesn't work on firefox, so FF users won't get a recommended download, just both downloads
     navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
     .then(ua => 
     {
-        document.getElementById("download_this_pc_x64").style.display = 'none';
-        document.getElementById("download_this_pc_arm64").style.display = 'none';
-
         if (navigator.userAgentData.platform === "Windows") 
         {
             if (ua.bitness === '64') 
             {
                 if (ua.architecture === 'arm') 
                 {
-                    document.getElementById("download_this_pc_arm64").style.display = '';
+                    document.getElementById("download_this_pc_x64").style.display = 'none';
+
+                    document.getElementById("download_this_pc_arm64").innerText += " for this PC";
+                    document.getElementById("download_arm64").innerText += " (recommended for this PC)";
                 }
-                else
+                else if (ua.architecture === 'x86')
                 {
-                    document.getElementById("download_this_pc_x64").style.display = '';
+                    document.getElementById("download_this_pc_arm64").style.display = 'none';
+
+                    document.getElementById("download_this_pc_x64").innerText += " for this PC";
+                    document.getElementById("download_x64").innerText += " (recommended for this PC)";
                 }
             }
         }
@@ -33,7 +37,7 @@ function detectSdkRuntimeArchitecture()
         <div class="container">
             <div class="row">
                 <div class="col-lg-9">
-                     <div class="slider-carousel owl-carousel" onload="detectSdkRuntimeArchitecture()">
+                     <div class="slider-carousel owl-carousel">
                        {% assign data =  site.data.midi_releases | where: "featured", true %}
                          {% for release in data %}
                            <div class="slider-content wow fadeIn" data-wow-duration="3s">
@@ -42,14 +46,14 @@ function detectSdkRuntimeArchitecture()
                              <h4 class="heading-4">{{release.description}}</h4>
                              <p>
                                 <!-- Download for this PC  -->
-                                <a id="download_this_pc_x64" href="{{release.link_x64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_x64}} for this PC</a>
-                                <a id= "download_this_pc_arm64" href="{{release.link_arm64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_arm64}} for this PC</a>
+                                <a id="download_this_pc_x64" href="{{release.link_x64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_x64}}</a>
+                                <a id="download_this_pc_arm64" href="{{release.link_arm64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_arm64}}</a>
                              </p>
                              <p>
                                 <!-- All downloads. Simple links -->
-                                <a id="download_x64" href="{{release.link_x64}}">{{release.label_x64}}</a>
-                                &nbsp;
-                                <a id= "download_arm64" href="{{release.link_arm64}}">{{release.label_arm64}}</a>
+                                <a id="download_x64" style="color:white" href="{{release.link_x64}}">{{release.label_x64}}</a>
+                                &nbsp;|&nbsp;
+                                <a id="download_arm64" style="color:white" href="{{release.link_arm64}}">{{release.label_arm64}}</a>
                              </p>
                            </div>
                         {% endfor %}
