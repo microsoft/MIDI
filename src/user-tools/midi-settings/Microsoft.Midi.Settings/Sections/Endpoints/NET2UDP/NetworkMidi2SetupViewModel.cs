@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
 using Microsoft.UI.Dispatching;
+using Microsoft.Midi.Settings.Contracts.Services;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
@@ -35,9 +36,22 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public DispatcherQueue? DispatcherQueue { get; set; }
 
+        [ObservableProperty]
+        public string transportDescription;
 
-        public NetworkMidi2SetupViewModel()
+
+        public NetworkMidi2SetupViewModel(IMidiTransportInfoService service)
         {
+            if (service != null)
+            {
+                transportDescription = service.GetTransportForCode("NET2UDP").Description;
+            }
+            else
+            {
+                transportDescription = string.Empty;
+            }
+
+            
             _watcher = MidiNetworkAdvertisedHostWatcher.Create();
 
             _watcher.Added += (s, e) =>
