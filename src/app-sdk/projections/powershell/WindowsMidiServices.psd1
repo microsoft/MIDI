@@ -66,7 +66,13 @@ PowerShellVersion = '7.4'
 FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @("Start-Midi", "Stop-Midi", "Start-MidiSession", "Stop-MidiSession", "Get-MidiSessionList", "Get-MidiEndpointDeviceInfo", "Get-MidiEndpointDeviceInfoList", "Get-MidiEndpointGroups", "Open-MidiEndpointConnection", "Close-MidiEndpointConnection", "Send-MidiMessage", "Get-MidiMessageInfo")
+CmdletsToExport = @(
+    "Start-Midi", "Stop-Midi", 
+    "Get-MidiSessionList", "Get-MidiEndpointDeviceInfo", "Get-MidiEndpointDeviceInfoList", "Get-MidiEndpointGroups", 
+    "Start-MidiSession", "Stop-MidiSession", 
+    "Open-MidiEndpointConnection", "Close-MidiEndpointConnection", 
+    "Send-MidiMessage", 
+    "Get-MidiMessageInfo")
 
 # Variables to export from this module
 VariablesToExport = '*'
