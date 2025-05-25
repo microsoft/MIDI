@@ -4,8 +4,6 @@
 <script>
 function enableArchitectureSpecificDownloads()
 {
-    //document.getElementById("testOut").innerText = "enableArchitectureSpecificDownloads called";
-
     // this doesn't work on firefox, so FF users won't get a recommended download, just both downloads
     navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
     .then(ua => 
@@ -15,13 +13,18 @@ function enableArchitectureSpecificDownloads()
 
         if ((elem_download_this_pc_arm64 != null) && (elem_download_this_pc_x64 != null))
         {
-            elem_download_this_pc_x64.innerText = "Download x64";
-            elem_download_this_pc_arm64.innerText = "Download arm64";
+            console.log("enableArchitectureSpecificDownloads: Elements are not null");
+        //    elem_download_this_pc_x64.innerText = "Download x64";
+        //    elem_download_this_pc_arm64.innerText = "Download arm64";
 
             if (navigator.userAgentData.platform === "Windows") 
             {
+                console.log("enableArchitectureSpecificDownloads: Platform is Windows");
+
                 if (ua.bitness === '64') 
                 {
+                    console.log("enableArchitectureSpecificDownloads: Bitness is 64");
+
                     if (ua.architecture === 'arm') 
                     {
                         console.log("enableArchitectureSpecificDownloads: Arm64 architecture");
@@ -30,6 +33,8 @@ function enableArchitectureSpecificDownloads()
                         elem_download_this_pc_arm64.innerText += " (recommended for this PC)";
 
                         document.getElementById("download_arm64").innerText += " (recommended for this PC)";
+
+                        console.log("enableArchitectureSpecificDownloads: Finished manipulations for Arm");
                     }
                     else if (ua.architecture === 'x86')
                     {
@@ -39,10 +44,12 @@ function enableArchitectureSpecificDownloads()
                         elem_download_this_pc_x64.innerText += " (recommended for this PC)";
 
                         document.getElementById("download_x64").innerText += " (recommended for this PC)";
+
+                        console.log("enableArchitectureSpecificDownloads: Finished manipulations for x64");
                     }
                     else
                     {
-                        //document.getElementById("testOut").innerText += ", Unknown: " + ua.architecture;
+                        console.error("enableArchitectureSpecificDownloads: Unknown architecture");
                     }
                 }
                 else
@@ -66,7 +73,7 @@ function enableArchitectureSpecificDownloads()
         else
         {
             // could not find elements
-            console.log("enableArchitectureSpecificDownloads: Unable to find elements");
+            console.error("enableArchitectureSpecificDownloads: Unable to find elements");
         }
     });
 }
