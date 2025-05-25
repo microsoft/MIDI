@@ -31,11 +31,6 @@
                            </div>
                         {% endfor %}
                     </div>
-
-                    <script type="text/javascript">
-                    //enableArchitectureSpecificDownloads();
-                    </script>
-
                 </div>
             </div>
         </div>
@@ -47,8 +42,8 @@
 <!-- architecture detection -->
 
 <script>
-window.onload = function()
-//function enableArchitectureSpecificDownloads()
+//window.onload = function()
+function enableArchitectureSpecificDownloads()
 {
     //document.getElementById("testOut").innerText = "enableArchitectureSpecificDownloads called";
 
@@ -123,3 +118,9 @@ window.onload = function()
 }
 </script>
 
+
+
+
+<script type="text/javascript">
+    window.onload = enableArchitectureSpecificDownloads();
+</script>
