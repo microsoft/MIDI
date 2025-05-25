@@ -4,16 +4,16 @@
 <script type="text/javascript">
 function enableArchitectureSpecificDownloads()
 {
-    document.getElementById("testOut").innerText = "enableArchitectureSpecificDownloads called";
+    //document.getElementById("testOut").innerText = "enableArchitectureSpecificDownloads called";
 
     // this doesn't work on firefox, so FF users won't get a recommended download, just both downloads
     navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
     .then(ua => 
     {
-        const download_this_pc_x64 = document.getElementById("download_this_pc_x64");
-        const download_this_pc_arm64 = document.getElementById("download_this_pc_arm64");
+        const elem_download_this_pc_x64 = document.getElementById("download_this_pc_x64");
+        const elem_download_this_pc_arm64 = document.getElementById("download_this_pc_arm64");
 
-        if (download_this_pc_arm64 || download_this_pc_x64)
+        if (elem_download_this_pc_arm64 || elem_download_this_pc_x64)
         {
             if (navigator.userAgentData.platform === "Windows") 
             {
@@ -25,49 +25,49 @@ function enableArchitectureSpecificDownloads()
 
                     if (ua.architecture === 'arm') 
                     {
-                        document.getElementById("testOut").innerText += ", arch: Arm";
+                        //document.getElementById("testOut").innerText += ", arch: Arm";
 
-                        download_this_pc_x64.style.display = 'none';
-                        download_this_pc_arm64.innerText += " (recommended for this PC)";
+                        elem_download_this_pc_x64.style.visibility = 'collapse';
+                        elem_download_this_pc_arm64.innerText += " (recommended for this PC)";
 
                         document.getElementById("download_arm64").innerText += " (recommended for this PC)";
                     }
                     else if (ua.architecture === 'x86')
                     {
-                        document.getElementById("testOut").innerText += ", arch: x86";
+                        //document.getElementById("testOut").innerText += ", arch: x86";
 
-                        download_this_pc_arm64.style.display = 'none';
-                        download_this_pc_x64.innerText += " (recommended for this PC)";
+                        elem_download_this_pc_arm64.style.visibility = 'collapse';
+                        elem_download_this_pc_x64.innerText += " (recommended for this PC)";
 
                         document.getElementById("download_x64").innerText += " (recommended for this PC)";
                     }
                     else
                     {
-                        document.getElementById("testOut").innerText += " Unknown: " + ua.architecture;
+                        //document.getElementById("testOut").innerText += ", Unknown: " + ua.architecture;
                     }
                 }
                 else
                 {
-                    document.getElementById("testOut").innerText += ", (not 64 bit)";
+                    //document.getElementById("testOut").innerText += ", (not 64 bit)";
 
                     // Not 64 bit
-                    download_this_pc_x64.style.display = 'none';  
-                    download_this_pc_arm64.style.display = 'none';
+                    elem_download_this_pc_x64.style.visibility = 'collapse'; 
+                    elem_download_this_pc_arm64.style.visibility = 'collapse';
                 }
             }
             else
             {
-                document.getElementById("testOut").innerText += ", (not Windows)";
+                //document.getElementById("testOut").innerText += ", (not Windows)";
 
                 // not Windows
-                download_this_pc_x64.style.display = 'none';  
-                download_this_pc_arm64.style.display = 'none';
+                elem_download_this_pc_x64.style.visibility = 'collapse';  
+                elem_download_this_pc_arm64.style.visibility = 'collapse';
             }
         }
         else
         {
             // could not find elements
-            document.getElementById("testOut").innerText += " (could not find elements)";
+        //    document.getElementById("testOut").innerText += " (could not find elements)";
         }
     });
 }
