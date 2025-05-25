@@ -11,7 +11,10 @@
 
 #include "pch.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4244)
 #include "color.hpp"
+#pragma warning(pop)
 
 #define LINE_LENGTH 79
 
@@ -258,12 +261,14 @@ int ChangeDeviceFromMidi1ToMidi2(_In_ std::wstring deviceInstanceId)
 
 int ChangeDeviceFromMidi2ToMidi1(_In_ std::wstring deviceInstanceId)
 {
+    UNREFERENCED_PARAMETER(deviceInstanceId);
 
     return CMD_RETURN_SUCCESS;
 }
 
 int ChangeDeviceToDefault(_In_ std::wstring deviceInstanceId)
 {
+    UNREFERENCED_PARAMETER(deviceInstanceId);
 
     return CMD_RETURN_SUCCESS;
 }
@@ -287,6 +292,11 @@ int __cdecl wmain(_In_ int argc, _In_ wchar_t* argv[])
 
     uint16_t portNumber{ 0 };
     bool portNumberProvided{ false };
+
+    // TEMP
+    UNREFERENCED_PARAMETER(portNumber);
+    UNREFERENCED_PARAMETER(portNumberProvided);
+
 
     if (argc == 3)
     {

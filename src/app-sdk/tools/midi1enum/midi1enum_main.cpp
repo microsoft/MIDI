@@ -11,8 +11,10 @@
 
 #include "pch.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4244)
 #include "color.hpp"
-
+#pragma warning(pop)
 
 bool m_showActiveSense{ false };
 bool m_showClock{ false };
@@ -154,7 +156,7 @@ void DisplayAllWinMMOutputs()
 #define RETURN_INVALID_PORT_NUMBER 1
 #define RETURN_UNABLE_TO_OPEN_PORT 2
 
-int __cdecl main(int argc, char* argv[])
+int __cdecl main(int /*argc*/, char* /*argv[]*/)
 {
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;

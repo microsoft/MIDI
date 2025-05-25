@@ -11,7 +11,10 @@
 
 #include "pch.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4244)
 #include "color.hpp"
+#pragma warning(pop)
 
 
 bool m_showActiveSense{ false };
@@ -48,7 +51,7 @@ void WriteLabel(std::string label)
 #define RETURN_INSUFFICIENT_PERMISSIONS return 1
 #define RETURN_USER_ABORTED             return 2
 
-int __cdecl main(int argc, char* argv[])
+int __cdecl main(int /*argc*/, char* /*argv[]*/)
 {
     std::cout << dye::grey(std::string(LINE_LENGTH, '=')) << std::endl;
     std::cout << dye::aqua(" This tool is part of the Windows MIDI Services SDK and tools") << std::endl;
@@ -90,7 +93,7 @@ int __cdecl main(int argc, char* argv[])
     // prompt for positive confirmation to continue
 
     std::wstring drivers32HklmKey = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
-    std::wstring controlSetMediaRootHklmKey = L"SYSTEM\\ControlSet001\\Control\Class\\{4d36e96c-e325-11ce-bfc1-08002be10318}";
+    std::wstring controlSetMediaRootHklmKey = L"SYSTEM\\ControlSet001\\Control\\Class\\{4d36e96c-e325-11ce-bfc1-08002be10318}";
 
 
     // look for wdmaud2.drv in the midi list (including "midi0"). If not found, then check the root to see if there

@@ -11,7 +11,10 @@
 
 #include "pch.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4244)
 #include "color.hpp"
+#pragma warning(pop)
 
 void OutputFieldSeparator()
 {
@@ -185,7 +188,7 @@ bool OutputFileVersion(_In_ std::string const& fieldName, _In_ std::wstring cons
         std::vector<byte> buffer;
         buffer.resize(bufferSize);
 
-        if (GetFileVersionInfo(fileName.c_str(), handle, bufferSize, buffer.data()))
+        if (GetFileVersionInfo(fileName.c_str(), 0, bufferSize, buffer.data()))
         {
             LPBYTE verInfoBuffer{ nullptr };
             UINT verInfoBufferSize{ 0 };
@@ -1271,7 +1274,8 @@ std::wstring GetProcessorArchitectureString(WORD const arch)
 #define ENV_PROCESSOR_REVISION_WIDE      L"PROCESSOR_REVISION"
 
 
-
+#pragma warning(push)
+#pragma warning(disable: 4996)
 void OutputProcessorEnvVariables()
 {
     OutputStringField(ENV_PROCESSOR_ARCHITECTURE, std::wstring{ _wgetenv(ENV_PROCESSOR_ARCHITECTURE_WIDE)});
@@ -1279,7 +1283,7 @@ void OutputProcessorEnvVariables()
     OutputStringField(ENV_PROCESSOR_LEVEL, std::wstring{ _wgetenv(ENV_PROCESSOR_LEVEL_WIDE) });
     OutputStringField(ENV_PROCESSOR_REVISION, std::wstring{ _wgetenv(ENV_PROCESSOR_REVISION_WIDE) });
 }
-
+#pragma warning(pop)
 
 void OutputSystemInfo(_In_ SYSTEM_INFO const& sysinfo)
 {

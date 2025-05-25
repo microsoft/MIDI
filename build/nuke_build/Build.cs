@@ -528,7 +528,7 @@ class Build : NukeBuild
                 }
 
                 // sample manifest
-                FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+           //     FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "ExampleMidiApp.exe.manifest", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
 
                 // bootstrap files
                 FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
@@ -557,9 +557,9 @@ class Build : NukeBuild
 
                 string[] toolsDirectoriesNeedingSdkPackageUpdates =
                     {
-                        Path.Combine(solutionDir, "mididiag"),
-                        Path.Combine(solutionDir, "midiusbinfo"),
-                        Path.Combine(solutionDir, "midimdnsinfo"),
+                        Path.Combine(solutionDir, @"tools\mididiag"),
+                        Path.Combine(solutionDir, @"tools\midiusbinfo"),
+                        Path.Combine(solutionDir, @"tools\midimdnsinfo"),
                         //Path.Combine(solutionDir, "midimdnswatcher"),
                         Path.Combine(solutionDir, @"tests\InitializationExe"),
                         Path.Combine(solutionDir, @"tests\Benchmarks"),

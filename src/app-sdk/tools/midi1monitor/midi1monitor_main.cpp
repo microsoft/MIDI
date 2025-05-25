@@ -11,8 +11,10 @@
 
 #include "pch.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4244)
 #include "color.hpp"
-
+#pragma warning(pop)
 
 bool m_showActiveSense{ false };
 bool m_showClock{ false };
@@ -478,7 +480,7 @@ int __cdecl main(int argc, char* argv[])
 
     while (true)
     {
-        auto ch = getch();
+        auto ch = _getch();
 
         if (ch == KEY_ESCAPE)
         {

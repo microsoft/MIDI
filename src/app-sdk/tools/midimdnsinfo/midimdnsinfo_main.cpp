@@ -11,7 +11,10 @@
 
 #include "pch.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4244)
 #include "color.hpp"
+#pragma warning(pop)
 
 void WriteBrightLabel(std::string label)
 {
@@ -204,7 +207,7 @@ int __cdecl main()
     // wait for escape
     while (true)
     {
-        auto ch = getch();
+        auto ch = _getch();
 
         if (ch == KEY_ESCAPE)
         {
