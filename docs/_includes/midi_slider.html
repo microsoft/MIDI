@@ -25,7 +25,7 @@ function enableArchitectureSpecificDownloads()
 
                     if (ua.architecture === 'arm') 
                     {
-                        document.getElementById("testOut").innerText += " Arm";
+                        document.getElementById("testOut").innerText += ", arch: Arm";
 
                         download_this_pc_x64.style.display = 'none';
                         download_this_pc_arm64.innerText += " (recommended for this PC)";
@@ -34,7 +34,7 @@ function enableArchitectureSpecificDownloads()
                     }
                     else if (ua.architecture === 'x86')
                     {
-                        document.getElementById("testOut").innerText += " x86";
+                        document.getElementById("testOut").innerText += ", arch: x86";
 
                         download_this_pc_arm64.style.display = 'none';
                         download_this_pc_x64.innerText += " (recommended for this PC)";
@@ -48,6 +48,8 @@ function enableArchitectureSpecificDownloads()
                 }
                 else
                 {
+                    document.getElementById("testOut").innerText += ", (not 64 bit)";
+
                     // Not 64 bit
                     download_this_pc_x64.style.display = 'none';  
                     download_this_pc_arm64.style.display = 'none';
@@ -55,6 +57,8 @@ function enableArchitectureSpecificDownloads()
             }
             else
             {
+                document.getElementById("testOut").innerText += ", (not Windows)";
+
                 // not Windows
                 download_this_pc_x64.style.display = 'none';  
                 download_this_pc_arm64.style.display = 'none';
