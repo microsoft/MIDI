@@ -1,4 +1,38 @@
 <!-- Start Slider  Area -->
+<section class="slider-area bg-cover1">
+    <!--<p id="testOut"></p>-->
+    <div class="slider-wrapper full-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-9">
+                     <div class="slider-carousel owl-carousel">
+                       {% assign data =  site.data.midi_releases | where: "featured", true %}
+                            <!-- TODO: This must only process one release. Can't have two+ in this -->
+                         {% for release in data %}
+                           <div class="slider-content wow fadeIn" data-wow-duration="3s">
+                             <h1 class="heading-1">{{release.title}}</h1>
+                             <h4 class="heading-4">{{release.version}}</h4>
+                             <h4 class="heading-4">{{release.description}}</h4>
+                             <p>
+                                <!-- Download for this PC  -->
+                                <a id="download_this_pc_x64" href="{{release.link_x64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_x64}}</a>
+                                <a id="download_this_pc_arm64" href="{{release.link_arm64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_arm64}}</a>
+                             </p>
+                             <p>
+                                <!-- All downloads. Simple links -->
+                                <span>All downloads: </span>
+                                <a id="download_x64" style="color:white" href="{{release.link_x64}}">{{release.label_x64}}</a>
+                                &nbsp;|&nbsp;
+                                <a id="download_arm64" style="color:white" href="{{release.link_arm64}}">{{release.label_arm64}}</a>
+                             </p>
+                           </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <!-- architecture detection -->
 <script>
@@ -88,40 +122,6 @@ else
 }
 </script>
 
-<section class="slider-area bg-cover1">
-    <!--<p id="testOut"></p>-->
-    <div class="slider-wrapper full-padding">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-9">
-                     <div class="slider-carousel owl-carousel">
-                       {% assign data =  site.data.midi_releases | where: "featured", true %}
-                            <!-- TODO: This must only process one release. Can't have two+ in this -->
-                         {% for release in data %}
-                           <div class="slider-content wow fadeIn" data-wow-duration="3s">
-                             <h1 class="heading-1">{{release.title}}</h1>
-                             <h4 class="heading-4">{{release.version}}</h4>
-                             <h4 class="heading-4">{{release.description}}</h4>
-                             <p>
-                                <!-- Download for this PC  -->
-                                <a id="download_this_pc_x64" href="{{release.link_x64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_x64}}</a>
-                                <a id="download_this_pc_arm64" href="{{release.link_arm64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_arm64}}</a>
-                             </p>
-                             <p>
-                                <!-- All downloads. Simple links -->
-                                <span>All downloads: </span>
-                                <a id="download_x64" style="color:white" href="{{release.link_x64}}">{{release.label_x64}}</a>
-                                &nbsp;|&nbsp;
-                                <a id="download_arm64" style="color:white" href="{{release.link_arm64}}">{{release.label_arm64}}</a>
-                             </p>
-                           </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 <!-- End Slider Area -->
 
 
