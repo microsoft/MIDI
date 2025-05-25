@@ -17,6 +17,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.Foundation.Metadata;
 using WinRT;
 using WinRT.Interop;
 
@@ -33,7 +34,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
     [GeneratedComInterface(Options = ComInterfaceOptions.ComObjectWrapper, StringMarshalling = StringMarshalling.Utf16)]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    [Guid("8087b303-d551-bce2-1ead-a2500d50c580")]
+    [System.Runtime.InteropServices.Guid("8087b303-d551-bce2-1ead-a2500d50c580")]
     internal partial interface IMidiClientInitializer
     {
         void GetInstalledWindowsMidiServicesSdkVersion(
@@ -49,6 +50,17 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         );
 
         void EnsureServiceAvailable();
+            
+        void GetLatestAvailableDownloadableSdkVersion(
+            ref UInt32 versionMajor,
+            ref UInt32 versionMinor,
+            ref UInt32 versionRevision,
+            ref UInt32 versionDateNumber,
+            ref UInt32 versionTimeNumber,
+            ref string buildSource,
+            ref string versionName,
+            ref string versionFullString,
+            ref string releaseDescription);
     }
 
     public class MidiDesktopAppSdkInitializer : IDisposable
@@ -273,6 +285,67 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                 return "Not available";
             }
         }
+
+
+        public bool IsNewerVersionAvailableForDownload()
+        {
+            string onlineBuildSource = string.Empty;
+            string onlineVersionName = string.Empty;
+            string onlineVersionFullString = string.Empty;
+            string onlineReleaseDescription = string.Empty;
+
+            uint onlineVersionMajor = 0;
+            uint onlineVersionMinor = 0;
+            uint onlineVersionRevision = 0;
+            uint onlineVersionDayNumber = 0;
+            uint onlineVersionTimeNumber = 0;
+
+            uint installedVersionMajor = 0;
+            uint installedVersionMinor = 0;
+            uint installedVersionRevision = 0;
+            uint installedVersionDayNumber = 0;
+            uint installedVersionTimeNumber = 0;
+            string installedBuildSource = string.Empty;
+            string installedVersionName = string.Empty;
+            string installedVersionFullString = string.Empty;
+
+
+            _initializer!.GetLatestAvailableDownloadableSdkVersion(
+                ref onlineVersionMajor,
+                ref onlineVersionMinor,
+                ref onlineVersionRevision,
+                ref onlineVersionDayNumber,
+                ref onlineVersionTimeNumber,
+                ref onlineBuildSource,
+                ref onlineVersionName,
+                ref onlineVersionFullString,
+                ref onlineReleaseDescription
+                );
+
+
+            MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
+
+            _initializer!.GetInstalledWindowsMidiServicesSdkVersion(
+                ref platform,
+                ref installedVersionMajor,
+                ref installedVersionMinor,
+                ref installedVersionRevision,
+                ref installedVersionDayNumber,
+                ref installedVersionTimeNumber,
+                ref installedBuildSource,
+                ref installedVersionName,
+                ref installedVersionFullString
+                );
+
+            if (installedVersionMajor > onlineVersionMajor) return false;
+            if (installedVersionMinor > onlineVersionMinor) return false;
+            if (installedVersionRevision > onlineVersionRevision) return false;
+            if (installedVersionDayNumber > onlineVersionDayNumber) return false;
+            if (installedVersionTimeNumber > onlineVersionTimeNumber) return false;
+
+            return true;
+        }
+
 
         public void ShutdownSdkRuntime()
         {

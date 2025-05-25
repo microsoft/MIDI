@@ -6,5 +6,6 @@
     "versionMinor": 0,
     "versionRevision": 3,
     "versionDateNumber": 250524,
-    "versionTimeNumber": 1404
+    "versionTimeNumber": 1404,
+    "releaseDescription": "Added support for Network MIDI 2.0 configuration"
 }

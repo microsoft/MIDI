@@ -168,6 +168,8 @@ class Build : NukeBuild
 
             _thisReleaseFolder = $"{ReleaseRootFolder / VersionName} ({DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")})";
 
+            // create the release folder
+            Directory.CreateDirectory(ThisReleaseFolder.ToString());
         });
 
 
@@ -185,6 +187,27 @@ class Build : NukeBuild
 
             string buildVersionDateNumber = BuildDateNumber;
             string buildVersionTimeNumber = BuildTimeNumber;
+
+            // json version for published SDK releases. This needs to be manually copied to /docs/version/sdk_version.json
+            // if this ends up being a published release
+
+            var SdkVersionJsonFile = ThisReleaseFolder / "sdk_version.json";
+
+            using (StreamWriter writer = System.IO.File.CreateText(SdkVersionJsonFile))
+            {
+                writer.WriteLine("{");
+                writer.WriteLine($"    \"source\": \"{buildSource}\",");
+                writer.WriteLine($"    \"name\": \"{versionName}\",");
+                writer.WriteLine($"    \"versionFull\": \"{versionString}\",");
+                writer.WriteLine($"    \"versionMajor\": {buildVersionMajor},");
+                writer.WriteLine($"    \"versionMinor\": {buildVersionMajor},");
+                writer.WriteLine($"    \"versionRevision\": {buildVersionRevision},");
+                writer.WriteLine($"    \"versionDateNumber\": {buildVersionDateNumber},");
+                writer.WriteLine($"    \"versionTimeNumber\": {buildVersionTimeNumber},");
+                writer.WriteLine($"    \"releaseDescription\": \"Replace this text with a summary of this SDK update\"");
+                writer.WriteLine("}");
+            }
+
 
             // create .h file for SDK and related tools
 
