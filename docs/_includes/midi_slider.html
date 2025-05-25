@@ -63,10 +63,10 @@ function enableArchitectureSpecificDownloads()
                     {
                         console.log("enableArchitectureSpecificDownloads: Arm64 architecture");
 
-                        elem_download_this_pc_x64.style.visibility = 'collapse';
-                        elem_download_this_pc_arm64.innerText += " (recommended for this PC)";
+                        elem_download_this_pc_x64.remove();
+                        elem_download_this_pc_arm64.innerText += " (Recommended for this PC)";
 
-                        document.getElementById("download_arm64").innerText += " (recommended for this PC)";
+                        //document.getElementById("download_arm64").innerText += " (recommended for this PC)";
 
                         console.log("enableArchitectureSpecificDownloads: Finished manipulations for Arm");
                     }
@@ -74,10 +74,10 @@ function enableArchitectureSpecificDownloads()
                     {
                         console.log("enableArchitectureSpecificDownloads: x86-64 architecture");
 
-                        elem_download_this_pc_arm64.style.visibility = 'collapse';
-                        elem_download_this_pc_x64.innerText += " (recommended for this PC)";
+                        elem_download_this_pc_arm64.remove();
+                        elem_download_this_pc_x64.innerText += " (Recommended for this PC)";
 
-                        document.getElementById("download_x64").innerText += " (recommended for this PC)";
+                        //document.getElementById("download_x64").innerText += " (recommended for this PC)";
 
                         console.log("enableArchitectureSpecificDownloads: Finished manipulations for x64");
                     }
@@ -112,14 +112,8 @@ function enableArchitectureSpecificDownloads()
     });
 }
 
-if (document.readyState === "loading")
-{
-    document.addEventListener("DOMContentLoaded", enableArchitectureSpecificDownloads);
-}
-else
-{
-    enableArchitectureSpecificDownloads();
-}
+window.onload = enableArchitectureSpecificDownloads();
+
 </script>
 
 <!-- End Slider Area -->
