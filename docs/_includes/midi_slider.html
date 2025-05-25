@@ -18,7 +18,7 @@
                                 <a id="download_this_pc_x64" href="{{release.link_x64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_x64}}</a>
                                 <a id="download_this_pc_arm64" href="{{release.link_arm64}}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">{{release.label_arm64}}</a>
                              </p>
-                             <p>
+                             <p id="download_all_slider_links" style="display: none">
                                 <!-- All downloads. Simple links -->
                                 <span>All downloads: </span>
                                 <a id="download_x64" style="color:white" href="{{release.link_x64}}">{{release.label_x64}}</a>
@@ -45,11 +45,11 @@ function enableArchitectureSpecificDownloads()
         var elem_download_this_pc_x64 = document.getElementById("download_this_pc_x64");
         var elem_download_this_pc_arm64 = document.getElementById("download_this_pc_arm64");
 
+        var elem_download_all_slider_links = document.getElementById("download_all_slider_links");
+
         if ((elem_download_this_pc_arm64 != null) && (elem_download_this_pc_x64 != null))
         {
             console.log("enableArchitectureSpecificDownloads: Elements are not null");
-        //    elem_download_this_pc_x64.innerText = "Download x64";
-        //    elem_download_this_pc_arm64.innerText = "Download arm64";
 
             if (navigator.userAgentData.platform === "Windows") 
             {
@@ -66,6 +66,7 @@ function enableArchitectureSpecificDownloads()
                         elem_download_this_pc_x64.remove();
                         elem_download_this_pc_arm64.innerText += " (Recommended for this PC)";
 
+                        elem_download_all_slider_links.style.display = "block";
                         //document.getElementById("download_arm64").innerText += " (recommended for this PC)";
 
                         console.log("enableArchitectureSpecificDownloads: Finished manipulations for Arm");
@@ -77,6 +78,7 @@ function enableArchitectureSpecificDownloads()
                         elem_download_this_pc_arm64.remove();
                         elem_download_this_pc_x64.innerText += " (Recommended for this PC)";
 
+                        elem_download_all_slider_links.style.display = "block";
                         //document.getElementById("download_x64").innerText += " (recommended for this PC)";
 
                         console.log("enableArchitectureSpecificDownloads: Finished manipulations for x64");
