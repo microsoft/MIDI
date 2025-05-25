@@ -25,3 +25,6 @@ Before running, you will need to have installed the Windows MIDI Services App SD
 
 * [Install PowerShell](https://aka.ms/powershell-release?tag=stable)
 
+## Documentation
+
+* [Documentation available here.](https://microsoft.github.io/MIDI/tools/powershell/)
