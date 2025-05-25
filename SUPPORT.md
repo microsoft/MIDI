@@ -8,4 +8,4 @@ For help and questions about using this project, please see the Discord server m
 
 ## Microsoft Support Policy  
 
-Support for this project is limited to the resources listed above.
+While in development, support for this project is limited to the resources listed above.
