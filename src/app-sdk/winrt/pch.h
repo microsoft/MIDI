@@ -42,6 +42,7 @@
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Devices.Midi.h>
+#include <winrt/Windows.Web.Http.h>
 
 
 #include <winrt/Windows.Data.Json.h>
