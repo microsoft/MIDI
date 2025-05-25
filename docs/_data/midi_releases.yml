@@ -2,10 +2,10 @@
   featured: true
   type: "stable"
   version: "1.0 Customer Preview 2"
-  description: Download and install the MIDI 2.0 runtime for MIDI 2.0 applications, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI, MIDI Console, and more, all in one package.
-  label_x64: "Download Latest x64"
+  description: Get everything you need for a great MIDI experience. Download and install the MIDI 2.0 runtime for MIDI 2.0 applications, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI, MIDI Console, and more, all in one package.
+  label_x64: "Download Latest x64 Installer"
   link_x64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64"
-  label_arm64: "Download Latest Arm64"
+  label_arm64: "Download Latest Arm64 Installer"
   link_arm64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64"
 
 - title: "Preview MIDI Service for Developers"
@@ -13,9 +13,9 @@
   type: "preview"
   version: "1.0 Customer Preview 2"
   description: Service and In-Box Service Plugins
-  label_x64: "Download x64"
+  label_x64: "Download x64 Installer"
   link_x64: "https://aka.ms/midireleases"
-  label_arm64: "Download Arm64"
+  label_arm64: "Download Arm64 Installer"
   link_arm64: "https://aka.ms/midireleases"
 
 
@@ -24,7 +24,7 @@
   type: "preview"
   version: "1.0 Customer Preview 2"
   description: Try the new Network MIDI 2.0 preview
-  label_x64: "Download x64"
+  label_x64: "Download x64 Installer"
   link_x64: "https://aka.ms/midireleases"
-  label_arm64: "Download Arm64"
+  label_arm64: "Download Arm64 Installer"
   link_arm64: "https://aka.ms/midireleases"
