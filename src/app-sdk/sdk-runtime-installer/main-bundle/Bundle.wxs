@@ -36,6 +36,8 @@
     </Bundle>
 
     
+    <!-- TODO: If this is an x64 build, then it should not install on Arm64. The Arm64X version is for that. -->
+    
     <Fragment>
         <!-- Believe it or not, the DotNetCoreSearch barfs if you send ARM64 instead of arm64 -->
 
