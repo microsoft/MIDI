@@ -1,4 +1,16 @@
 <!-- Start Slider  Area -->
+
+<script>
+if (document.readyState === "loading")
+{
+    document.addEventListener("DOMContentLoaded", enableArchitectureSpecificDownloads);
+}
+else
+{
+    enableArchitectureSpecificDownloads();
+}
+</script>
+
 <section class="slider-area bg-cover1">
     <!--<p id="testOut"></p>-->
     <div class="slider-wrapper full-padding">
@@ -37,8 +49,6 @@
 
 
 <!-- architecture detection -->
-
-
 <script>
 function enableArchitectureSpecificDownloads()
 {
@@ -48,26 +58,21 @@ function enableArchitectureSpecificDownloads()
     navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
     .then(ua => 
     {
-        const elem_download_this_pc_x64 = document.getElementById("download_this_pc_x64");
-        const elem_download_this_pc_arm64 = document.getElementById("download_this_pc_arm64");
+        var elem_download_this_pc_x64 = document.getElementById("download_this_pc_x64");
+        var elem_download_this_pc_arm64 = document.getElementById("download_this_pc_arm64");
 
         if ((elem_download_this_pc_arm64 != null) && (elem_download_this_pc_x64 != null))
         {
             elem_download_this_pc_x64.innerText = "Download x64";
             elem_download_this_pc_arm64.innerText = "Download arm64";
 
-
             if (navigator.userAgentData.platform === "Windows") 
             {
-                //document.getElementById("testOut").innerText = "Windows";
-
                 if (ua.bitness === '64') 
                 {
-                    //document.getElementById("testOut").innerText += " 64 bit";
-
                     if (ua.architecture === 'arm') 
                     {
-                        //document.getElementById("testOut").innerText += ", arch: Arm";
+                        console.log("enableArchitectureSpecificDownloads: Arm64 architecture");
 
                         elem_download_this_pc_x64.style.visibility = 'collapse';
                         elem_download_this_pc_arm64.innerText += " (recommended for this PC)";
@@ -76,7 +81,7 @@ function enableArchitectureSpecificDownloads()
                     }
                     else if (ua.architecture === 'x86')
                     {
-                        //document.getElementById("testOut").innerText += ", arch: x86";
+                        console.log("enableArchitectureSpecificDownloads: x86-64 architecture");
 
                         elem_download_this_pc_arm64.style.visibility = 'collapse';
                         elem_download_this_pc_x64.innerText += " (recommended for this PC)";
@@ -90,7 +95,7 @@ function enableArchitectureSpecificDownloads()
                 }
                 else
                 {
-                    //document.getElementById("testOut").innerText += ", (not 64 bit)";
+                    console.log("enableArchitectureSpecificDownloads: not 64 bit");
 
                     // Not 64 bit
                     elem_download_this_pc_x64.style.visibility = 'collapse'; 
@@ -99,7 +104,7 @@ function enableArchitectureSpecificDownloads()
             }
             else
             {
-                //document.getElementById("testOut").innerText += ", (not Windows)";
+                console.log("enableArchitectureSpecificDownloads: not Windows");
 
                 // not Windows
                 elem_download_this_pc_x64.style.visibility = 'collapse';  
@@ -109,21 +114,10 @@ function enableArchitectureSpecificDownloads()
         else
         {
             // could not find elements
-        //    document.getElementById("testOut").innerText += " (could not find elements)";
+            console.log("enableArchitectureSpecificDownloads: Unable to find elements");
         }
     });
 }
 </script>
 
 
-
-<script>
-if (document.readyState === "loading")
-{
-    document.addEventListener("DOMContentLoaded", enableArchitectureSpecificDownloads);
-}
-else
-{
-    enableArchitectureSpecificDownloads();
-}
-</script>
