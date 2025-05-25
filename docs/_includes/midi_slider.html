@@ -38,10 +38,9 @@
 
 <!-- architecture detection -->
 
+
 <script>
-//window.onload = function()
-document.addEventListener("DOMContentLoaded", function(e)
-//function enableArchitectureSpecificDownloads()
+function enableArchitectureSpecificDownloads()
 {
     //document.getElementById("testOut").innerText = "enableArchitectureSpecificDownloads called";
 
@@ -113,6 +112,18 @@ document.addEventListener("DOMContentLoaded", function(e)
         //    document.getElementById("testOut").innerText += " (could not find elements)";
         }
     });
-});
+}
 </script>
 
+
+
+<script>
+if (document.readyState === "loading")
+{
+    document.addEventListener("DOMContentLoaded", enableArchitectureSpecificDownloads);
+}
+else
+{
+    enableArchitectureSpecificDownloads();
+}
+</script>
