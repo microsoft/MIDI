@@ -47,10 +47,11 @@ namespace WindowsMidiServices
                 return;
             }
 
+            // do this here to make sure the event handler is wired up before we open
+            var conn = new MidiEndpointConnection(backingConnection);
+
             if (backingConnection.Open())
             {
-                var conn = new MidiEndpointConnection(backingConnection);
-
                 WriteObject(conn);
             }
             else

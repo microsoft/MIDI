@@ -16,6 +16,7 @@ Note that there are older versions of PowerShell, typically pre-installed with W
 | [Enum Sessions](enum-sessions.ps1) | Lists all active sessions |
 | [Send Messages](send-messages.ps1) | Demonstrates sending MIDI messages to an endpoint |
 | [Full Test](test-midi.ps1) | Shows a large number of the PowerShell scripting features |
+| [Monitor Messages](monitor-messages.ps1) | Shows how to receive incoming MIDI messages |
 
 We recommend you load the entire solution in Visual Studio, as that is how the NuGet package configuration is set up. Change the sample you run by setting that project as startup.
 

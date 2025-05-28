@@ -14,7 +14,7 @@ namespace WindowsMidiServices
         internal Microsoft.Windows.Devices.Midi2.MidiEndpointConnection? BackingConnection { get; set; }
 
 
-        public event EventHandler<Microsoft.Windows.Devices.Midi2.MidiMessageReceivedEventArgs>? MessageReceived;
+        public event EventHandler<MessageReceivedEventArgs>? MessageReceived;
 
 
 
@@ -31,7 +31,12 @@ namespace WindowsMidiServices
         {
             if (MessageReceived != null)
             {
-                MessageReceived(this, args);
+                List<UInt32> words = [];
+                args.AppendWordsToList(words);
+
+                var newArgs = new MessageReceivedEventArgs(args.Timestamp, words.ToArray());
+
+                MessageReceived(this, newArgs);
             }
         }
 
