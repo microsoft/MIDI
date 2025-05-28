@@ -52,19 +52,22 @@ else
         
                 if ($connection -ne $null)
                 {
+                    # put your message handling code inside this script block
+                    # We simply use the Get-MidiMessageInfo cmdlet to display the message details
                     $eventHandlerAction = {
                         #Write-Host "Message Received"
                         #Write-Host $EventArgs.Timestamp
                         Get-MidiMessageInfo $EventArgs.Words
                     }
 
+                    # wire up the event handler and start the background job. These events are on a different thread.
                     $job = Register-ObjectEvent -SourceIdentifier "OnMessageReceivedHandler" -InputObject $connection -EventName "MessageReceived" -Action $eventHandlerAction
 
                     # just spin until a key is pressed
                     do
                     {
+                        # get the output from our background job
                         Receive-Job -Job $job
-                        #Start-Sleep -Milliseconds 250
                     } until ([System.Console]::KeyAvailable)
 
                     # we don't do anything with the key here, but you could
@@ -73,6 +76,7 @@ else
                     Write-Host
                     Write-Host "Key pressed. Shutting down ... "
 
+                    # clean up the event handler and background job
                     Unregister-Event -SourceIdentifier "OnMessageReceivedHandler"
                     Stop-Job $job
                     Remove-Job $job
@@ -83,6 +87,9 @@ else
                 {
                     Write-Host "Unable to connect to endpoint." -ForegroundColor Red
                 }
+
+                # be sure to close the session when done with it
+                Stop-MidiSession $session
             }
             else
             {
@@ -100,10 +107,8 @@ else
     }
 }
 
-
-
 # Cleanly shut down the SDK, stop WinRT activation redirection, etc.
 #Write-Host "Shutting down the SDK"
 Stop-Midi
 
-
+Write-Host "Finished."
