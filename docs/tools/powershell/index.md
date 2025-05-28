@@ -11,7 +11,7 @@ These cmdlets require a minimum of PowerShell 7.4. [We recommend using the lates
 
 The cmdlets also rely on the .NET runtime, which is installed with the SDK Runtime and Tools installer. Currently, we use the latest version of .NET 8 desktop runtime, but that will change in the future when .NET 10 is available.
 
-> The version of PowerShell which ships with Windows is currently the older Windows PowerShell. These cmdlets support the new cross-platform version of PowerShell. Please see the link above for how to install the latest 7.x version of PowerShell
+> The version of PowerShell which usually ships with Windows is currently the older Windows PowerShell. These cmdlets support the new cross-platform version of PowerShell. Please see the link above for how to install the latest 7.x version of PowerShell
 
 <h2>What/Who are these for?</h2>
 
@@ -159,9 +159,37 @@ foreach ($message in $messages)
 }
 ```
 
-<h3>(Receiving Messages)</h3>
+<h3>Receiving Messages</h3>
 
-The PowerShell cmdlets do not currently have support for receiving incoming messages. This is being worked on.
+To receive MIDI messages, use PowerShell's `Register-ObjectEvent` and background job support to handle the incoming messages. The `monitor-messages` sample includes the code for this.
+
+The event handler args themselves are simplified from what direct WinRT clients receive. In this case, the data is supplied as a Timestamp field and an array of MIDI words as the `Words` field
+
+```pwsh
+$eventHandlerAction = {
+    #Write-Host "Message Received"
+    #Write-Host $EventArgs.Timestamp
+    Get-MidiMessageInfo $EventArgs.Words
+}
+
+$job = Register-ObjectEvent -SourceIdentifier "OnMessageReceivedHandler" -InputObject $connection -EventName "MessageReceived" -Action $eventHandlerAction
+
+# just spin until a key is pressed
+do
+{
+    Receive-Job -Job $job
+} until ([System.Console]::KeyAvailable)
+
+# we don't do anything with the key here, but you could
+$keyPressed = [System.Console]::ReadKey($true)
+
+Write-Host
+Write-Host "Key pressed. Shutting down ... "
+
+Unregister-Event -SourceIdentifier "OnMessageReceivedHandler"
+Stop-Job $job
+Remove-Job $job
+```
 
 <h2>MIDI Utility cmdlets</h2>
 
