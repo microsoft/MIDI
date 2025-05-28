@@ -149,6 +149,11 @@ typedef struct _DEVICE_CONTEXT {
     WDFREQUEST                  DeviceUSBWriteRequest;
 
     //
+    // Following fields to help with diagnostics on buffer management
+    // 
+    UINT                        NumberBuffersProcessed;
+
+    //
     // Streaming Engine
     //
     //

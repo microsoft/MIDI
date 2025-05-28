@@ -2958,9 +2958,9 @@ BOOLEAN USBMIDI2DriverSendToUSB(
         goto SendToUSBExit;
     }
 
-SendToUSBExit:
-    TraceEvents(TRACE_LEVEL_VERBOSE, TRACE_DEVICE, "<-- USBUMPExpEvtIoWrite\n");
-
+    // Make sure we have not exceeded number of URBS to have in write queue.
+    // This prevents the continual allocation of memory due to USB backlog which can cause driver to temporarly
+    // allocate MBs of data.
     if (urbCount >= USB_WRITE_MAX_URBS)
     {
         TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DRIVER, "%!FUNC!: Holding for completion of writes");
@@ -2981,6 +2981,10 @@ SendToUSBExit:
             KeClearEvent(&pDeviceContext->UsbWriteEvent);
         }
     }
+
+SendToUSBExit:
+    TraceEvents(TRACE_LEVEL_VERBOSE, TRACE_DEVICE, "<-- USBUMPExpEvtIoWrite\n");
+
     if (!NT_SUCCESS(status)) {
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
             "%!FUNC! write to USB error with status: %!STATUS!", status);
