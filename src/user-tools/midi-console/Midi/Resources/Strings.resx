@@ -126,17 +126,14 @@
   <data name="AppTitle" xml:space="preserve">
     <value>Microsoft Windows MIDI Services Console</value>
   </data>
-  <data name="CommandDiagnosticsReportDescription" xml:space="preserve">
-    <value>Generate a report, typically for a support request, or for use when filing a bug</value>
-  </data>
   <data name="CommandEndpointDescription" xml:space="preserve">
     <value>Perform operations on a single endpoint, including reporting details, sending messages, monitoring, and more. If you leave out the Instance Id, you will be prompted to select from a list.</value>
   </data>
   <data name="CommandEndpointPropertiesDescription" xml:space="preserve">
-    <value>List out all properties for a given endpoint</value>
+    <value>List out system-captured metadata properties for the specified endpoint</value>
   </data>
   <data name="CommandEndpointRequestDescription" xml:space="preserve">
-    <value>Request certain MIDI 2.0 in-protocol data from an endpoint. Use a separate console or application to view the responses.</value>
+    <value>Send requests for specified MIDI 2.0 in-protocol data from an endpoint. Use a separate console or application to view the responses.</value>
   </data>
   <data name="CommandEndpointRequestEndpointMetadataDescription" xml:space="preserve">
     <value>Send an endpoint discovery message to the endpoint. You can monitor incoming messages in another window, or watch property changes</value>
@@ -169,7 +166,7 @@
     <value>Sends a text file of UMP MIDI words to the specified endpoint. See arguments and options for format and delimiters.</value>
   </data>
   <data name="CommandServiceDescription" xml:space="preserve">
-    <value>Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc.</value>
+    <value>Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc. Service management commands must be run from an Administrator console.</value>
   </data>
   <data name="CommandServicePingDescription" xml:space="preserve">
     <value>Ping the MIDI Windows Service</value>
@@ -424,7 +421,7 @@
     <value>Number of times to send this message</value>
   </data>
   <data name="ParameterSendMessageDelayBetweenMessages" xml:space="preserve">
-    <value>Delay, in milliseconds, between messages. This is an approximate delay. Specify 0 for no delay.</value>
+    <value>Pause (delay), in milliseconds, between messages to time messages and/or allow slower devices to process incoming data without buffer overruns. This is an approximate delay and is dependent on the system thread timers. Specify 0 for no delay.</value>
   </data>
   <data name="ParameterSendMessageEndpointDirectionDescription" xml:space="preserve">
     <value>The direction of the endpoint referenced by the Id. If this doesn't match the endpoint type, the connection will fail.</value>
@@ -451,7 +448,7 @@
     <value>Data format for the individual words. Valid values include:</value>
   </data>
   <data name="ParameterSendMessageWords" xml:space="preserve">
-    <value>32-bit MIDI words, typically in hexadecimal 0x00000000 format. Big-endian, same as the MIDI protocol wire format. Use the parameter name in front of each word sent.</value>
+    <value>32-bit MIDI words, typically in hexadecimal 0x00000000 format, same as the MIDI protocol wire format. Use the parameter name in front of each word sent.</value>
   </data>
   <data name="ParameterServicePingCount" xml:space="preserve">
     <value>Number of times to ping the MIDI Windows Service</value>
@@ -822,7 +819,7 @@ Timestamp</value>
     <value>Press escape to stop watching for endpoint changes.</value>
   </data>
   <data name="CommandSendSysExFileDescription" xml:space="preserve">
-    <value>Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint.</value>
+    <value>(Experimental Feature) Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint.</value>
   </data>
   <data name="ErrorMidiServiceNotAvailable" xml:space="preserve">
     <value>The MIDI Service is not available.</value>
@@ -979,5 +976,11 @@ Timestamp</value>
   </data>
   <data name="PropertyTableSectionDescriptionMidiProperties" xml:space="preserve">
     <value>Properties added by Windows MIDI Services. The STRING_PKEY_MIDI_ prefix has been omitted for brevity.</value>
+  </data>
+  <data name="ParameterSendSysExFileVerbose" xml:space="preserve">
+    <value>Report detailed output when sending the file</value>
+  </data>
+  <data name="ParameterSendSysExFileReplaceGroup" xml:space="preserve">
+    <value>For outgoing UMP format messages, replace the group index with this new value. If missing, the group indexes in the file will be used.</value>
   </data>
 </root>
