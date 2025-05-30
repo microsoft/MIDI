@@ -120,7 +120,7 @@ int main()
     }
 
 
-
+    // Do awesome stuff with MIDI here
 
 
 

@@ -88,15 +88,6 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generate a report, typically for a support request, or for use when filing a bug.
-        /// </summary>
-        internal static string CommandDiagnosticsReportDescription {
-            get {
-                return ResourceManager.GetString("CommandDiagnosticsReportDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Perform operations on a single endpoint, including reporting details, sending messages, monitoring, and more. If you leave out the Instance Id, you will be prompted to select from a list..
         /// </summary>
         internal static string CommandEndpointDescription {
@@ -106,7 +97,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List out all properties for a given endpoint.
+        ///   Looks up a localized string similar to List out system-captured metadata properties for the specified endpoint.
         /// </summary>
         internal static string CommandEndpointPropertiesDescription {
             get {
@@ -115,7 +106,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Request certain MIDI 2.0 in-protocol data from an endpoint. Use a separate console or application to view the responses..
+        ///   Looks up a localized string similar to Send requests for specified MIDI 2.0 in-protocol data from an endpoint. Use a separate console or application to view the responses..
         /// </summary>
         internal static string CommandEndpointRequestDescription {
             get {
@@ -241,7 +232,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint..
+        ///   Looks up a localized string similar to (Experimental Feature) Send a file of MIDI 1.0 or MIDI 2.0 SysEx messages (7 or 8 bit, binary or text) to a compatible endpoint..
         /// </summary>
         internal static string CommandSendSysExFileDescription {
             get {
@@ -250,7 +241,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc..
+        ///   Looks up a localized string similar to Perform operations on the service, such as checking to see if it is running, pinging the standard ping loopback, etc. Service management commands must be run from an Administrator console..
         /// </summary>
         internal static string CommandServiceDescription {
             get {
@@ -1330,7 +1321,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Delay, in milliseconds, between messages. This is an approximate delay. Specify 0 for no delay..
+        ///   Looks up a localized string similar to Pause (delay), in milliseconds, between messages to time messages and/or allow slower devices to process incoming data without buffer overruns. This is an approximate delay and is dependent on the system thread timers. Specify 0 for no delay..
         /// </summary>
         internal static string ParameterSendMessageDelayBetweenMessages {
             get {
@@ -1420,11 +1411,29 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 32-bit MIDI words, typically in hexadecimal 0x00000000 format. Big-endian, same as the MIDI protocol wire format. Use the parameter name in front of each word sent..
+        ///   Looks up a localized string similar to 32-bit MIDI words, typically in hexadecimal 0x00000000 format, same as the MIDI protocol wire format. Use the parameter name in front of each word sent..
         /// </summary>
         internal static string ParameterSendMessageWords {
             get {
                 return ResourceManager.GetString("ParameterSendMessageWords", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For outgoing UMP format messages, replace the group index with this new value. If missing, the group indexes in the file will be used..
+        /// </summary>
+        internal static string ParameterSendSysExFileReplaceGroup {
+            get {
+                return ResourceManager.GetString("ParameterSendSysExFileReplaceGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Report detailed output when sending the file.
+        /// </summary>
+        internal static string ParameterSendSysExFileVerbose {
+            get {
+                return ResourceManager.GetString("ParameterSendSysExFileVerbose", resourceCulture);
             }
         }
         

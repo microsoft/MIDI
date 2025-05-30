@@ -41,6 +41,18 @@ struct __declspec(uuid("8087b303-d551-bce2-1ead-a2500d50c580")) IMidiClientIniti
 
     // demand-starts the service if present
     STDMETHOD(EnsureServiceAvailable)() = 0;
+
+    STDMETHOD(GetLatestAvailableDownloadableSdkVersion)(
+        _Out_ DWORD* versionMajor,
+        _Out_ DWORD* versionMinor,
+        _Out_ DWORD* versionRevision,
+        _Out_opt_ DWORD* versionDateNumber,
+        _Out_opt_ DWORD* versionTimeNumber,
+        _Out_opt_ LPWSTR* buildSource,
+        _Out_opt_ LPWSTR* versionName,
+        _Out_opt_ LPWSTR* versionFullString,
+        _Out_opt_ LPWSTR* releaseDescription
+        ) = 0;
 };
 
 #define MIDI_CLIENT_INITIALIZER_CLASS_NAME      L"MidiClientInitializer"
@@ -73,6 +85,18 @@ struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitia
 
     STDMETHOD(EnsureServiceAvailable)() noexcept override;
 
+    STDMETHOD(GetLatestAvailableDownloadableSdkVersion)(
+        _Out_ DWORD* versionMajor,
+        _Out_ DWORD* versionMinor,
+        _Out_ DWORD* versionRevision,
+        _Out_opt_ DWORD* versionDateNumber,
+        _Out_opt_ DWORD* versionTimeNumber,
+        _Out_opt_ LPWSTR* buildSource,
+        _Out_opt_ LPWSTR* versionName,
+        _Out_opt_ LPWSTR* versionFullString,
+        _Out_opt_ LPWSTR* releaseDescription
+        ) noexcept override;
+
     ULONG __stdcall AddRef() noexcept override;
     ULONG __stdcall Release() noexcept override;
     HRESULT __stdcall QueryInterface(const IID& iid, void** ppv) noexcept override;
@@ -87,5 +111,17 @@ private:
     wil::critical_section m_initializeLock{};
 
     wil::com_ptr_nothrow<IMidiTransport> m_serviceTransport{ nullptr };
+
+
+    DWORD m_onlineVersionMajor{};
+    DWORD m_onlineVersionMinor{};
+    DWORD m_onlineVersionRevision{};
+    DWORD m_onlineVersionDateNumber{};
+    DWORD m_onlineVersionTimeNumber{};
+    winrt::hstring m_onlineBuildSource{};
+    winrt::hstring m_onlineVersionName{};
+    winrt::hstring m_onlineVersionFullString{};
+    winrt::hstring m_onlineReleaseDescription{};
+
 };
 

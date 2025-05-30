@@ -11,7 +11,10 @@
 
 #include "pch.h"
 
+#pragma warning(push)
+#pragma warning(disable: 4244)
 #include "color.hpp"
+#pragma warning(pop)
 
 // TEMP
 #define VERIFY_IS_TRUE(c)   assert(c)

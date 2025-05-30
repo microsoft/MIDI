@@ -46,6 +46,10 @@
     "Enum Legacy Endpoints": {
       "commandName": "Project",
       "commandLineArgs": "enum legacy-endpoints"
+    },
+    "Send SysEx Help": {
+      "commandName": "Project",
+      "commandLineArgs": "endpoint send-sysex-file --help"
     }
   }
 }
