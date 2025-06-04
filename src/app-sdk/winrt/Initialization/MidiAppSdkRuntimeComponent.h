@@ -25,18 +25,14 @@ struct MidiAppSdkRuntimeComponent
 {
     std::wstring module_name{ };
     //std::wstring xmlns{ };
-    HMODULE handle{ nullptr };
-    activation_factory_type get_activation_factory{};
+   // activation_factory_type get_activation_factory{};
     ABI::Windows::Foundation::ThreadingType threading_model{ ABI::Windows::Foundation::ThreadingType::ThreadingType_BOTH };
 
     ~MidiAppSdkRuntimeComponent()
     {
-        if (handle)
-        {
-            FreeLibrary(handle);
-        }
+    //    get_activation_factory = nullptr;
     }
 
-    HRESULT LoadModule();
+ //   HRESULT LoadModuleIfNeeded();
     HRESULT GetActivationFactory(_In_ HSTRING className, _In_ REFIID  iid, _Out_ void** factory);
 };

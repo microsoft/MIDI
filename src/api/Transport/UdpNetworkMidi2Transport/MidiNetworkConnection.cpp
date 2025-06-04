@@ -23,6 +23,7 @@ _Use_decl_annotations_
 HRESULT 
 MidiNetworkConnection::Initialize(
     MidiNetworkConnectionRole const role,
+    winrt::hstring configIdentifier,
     winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
     winrt::Windows::Networking::HostName const& hostName,
     winrt::hstring const& port,
@@ -41,6 +42,8 @@ MidiNetworkConnection::Initialize(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
+
+    m_configIdentifier = configIdentifier;
 
     m_sessionActive = false;
 
@@ -190,9 +193,19 @@ MidiNetworkConnection::StartOutboundMidiMessageProcessingThread()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    m_newMessagesInQueueEvent.ResetEvent();
 
-    m_outboundProcessingThread = std::jthread (std::bind_front(& MidiNetworkConnection::OutboundProcessingThreadWorker, this));
+    m_outboundProcessingThread = std::jthread (std::bind_front(&MidiNetworkConnection::OutboundProcessingThreadWorker, this));
     m_outboundProcessingThread.detach();
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
@@ -515,6 +528,7 @@ MidiNetworkConnection::HandleIncomingInvitationReplyAccepted(
 
             hr = TransportState::Current().GetEndpointManager()->CreateNewEndpoint(
                 MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+                m_configIdentifier.c_str(),
                 remoteHostUmpEndpointName,
                 remoteHostProductInstanceId,
                 m_remoteHostName,
@@ -665,6 +679,7 @@ MidiNetworkConnection::HandleIncomingInvitation(
             //UNREFERENCED_PARAMETER(clientUmpEndpointName);
             hr = TransportState::Current().GetEndpointManager()->CreateNewEndpoint(
                 MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+                m_configIdentifier.c_str(),
                 clientUmpEndpointName,
                 clientProductInstanceId,
                 m_remoteHostName,
@@ -1279,12 +1294,19 @@ _Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
 {
-    while (!stopToken.stop_requested() && m_sessionActive)
-    {
-        // wait for the minimum transmit interval, or a signal that we have new outbound UMPs
-        m_newMessagesInQueueEvent.ResetEvent();
-        m_newMessagesInQueueEvent.wait(m_outgoingUmpEmptyPacketIntervalMilliseconds);
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingBoolean(m_sessionActive, "Session active")
+    );
 
+    // loop until we're told not to
+    while (!stopToken.stop_requested()/* && m_sessionActive */)
+    {
         // if no new outbound MIDI messages, and it has been longer than the
         // amount of time we currently have set for min midi message interval,
         // call function to send midi messages with an empty vector
@@ -1295,7 +1317,13 @@ MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
         // https://www.nextptr.com/tutorial/ta1588653702/stdjthread-and-cooperative-cancellation-with-stop-token
         // https://en.cppreference.com/w/cpp/thread/condition_variable_any
 
+        // wait for the minimum transmit interval, or a signal that we have new outbound UMPs
+        if (!m_newMessagesInQueueEvent.is_signaled())
+        {
+            m_newMessagesInQueueEvent.wait(m_outgoingUmpEmptyPacketIntervalMilliseconds);
+        }
 
+        // we only send messages if there's an active session
         if (!stopToken.stop_requested() && m_sessionActive)
         {
             if (m_outgoingUmpMessages.empty())
@@ -1309,10 +1337,48 @@ MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
                 m_outgoingUmpEmptyPacketIntervalMilliseconds = m_outgoingUmpEmptyPacketStartingIntervalMilliseconds;
             }
 
-            // TODO: Consider creating a END_SESSION_IF_FAILED macro
-            LOG_IF_FAILED(SendQueuedMidiMessagesToNetwork());   // this locks the queue, sends empty messages if needed, and clears the queue
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            auto hr = SendQueuedMidiMessagesToNetwork();
+
+            if (FAILED(hr))
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Send failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+                );
+
+                // TODO: Consider creating a END_SESSION_IF_FAILED macro
+
+                LOG_IF_FAILED(hr);   // this locks the queue, sends empty messages if needed, and clears the queue
+            }
         }
+
+        // we're done processing, so reset the event for the next round
+        m_newMessagesInQueueEvent.ResetEvent();
     }
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingBoolean(m_sessionActive, "Session active")
+    );
 
     return S_OK;
 }
@@ -1320,7 +1386,6 @@ MidiNetworkConnection::OutboundProcessingThreadWorker(std::stop_token stopToken)
 
 
 
-_Use_decl_annotations_
 HRESULT
 MidiNetworkConnection::SendQueuedMidiMessagesToNetwork()
 {
@@ -1385,6 +1450,16 @@ HRESULT
 MidiNetworkConnection::QueueMidiMessagesToSendToNetwork(
     std::vector<uint32_t> const& words)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(words.size()), "Word count")
+    );
+
     if (!m_sessionActive)
     {
         return S_OK;
@@ -1399,6 +1474,15 @@ MidiNetworkConnection::QueueMidiMessagesToSendToNetwork(
     // wakeup sender thread
     m_newMessagesInQueueEvent.SetEvent();
 
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
     return S_OK;
 }
 
@@ -1410,6 +1494,16 @@ MidiNetworkConnection::QueueMidiMessagesToSendToNetwork(
     PVOID const bytes,
     UINT const byteCount)
 {
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(byteCount, "Byte count")
+    );
+
     RETURN_HR_IF_NULL(E_INVALIDARG, bytes);
     RETURN_HR_IF(E_INVALIDARG, byteCount < sizeof(uint32_t));
 

@@ -22,7 +22,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         midi2::Midi1PortFlow PortFlow() const noexcept { return m_portFlow; }
         winrt::hstring PortName() const noexcept { return m_portName; }
         winrt::hstring PortDeviceId() const noexcept { return m_portDeviceId; }
-        uint32_t PortIndex() const noexcept { return m_portIndex; }
+        uint32_t PortNumber() const noexcept { return m_portNumber; }
         enumeration::DeviceInformation DeviceInformation() const noexcept { return m_deviceInformation; }
 
         winrt::hstring ToString();
@@ -35,7 +35,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             midi2::Midi1PortFlow const portFlow,
             winrt::hstring const& portName,
             winrt::hstring const& portDeviceId,
-            uint32_t const portIndex,
+            uint32_t const portNumber,
             enumeration::DeviceInformation const& deviceInformation
             );
 
@@ -47,7 +47,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         midi2::Midi1PortFlow m_portFlow;
         winrt::hstring m_portName{};
         winrt::hstring m_portDeviceId{};
-        uint32_t m_portIndex{};
+        uint32_t m_portNumber{};
         
         enumeration::DeviceInformation m_deviceInformation{ nullptr };
 

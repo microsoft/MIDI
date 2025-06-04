@@ -220,8 +220,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks));
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_MidiOutCustomLatencyTicks));
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride));
-
+        
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_TransportEndpointConfigId));
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_VirtualMidiEndpointAssociator));
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName));
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_NetworkMidiLastRemotePort));
 
         //AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_UseLegacyMidi1PortNamingScheme));
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint));

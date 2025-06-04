@@ -1,0 +1,64 @@
+---
+layout: default
+---
+
+{% include header.html %}
+{% include tools_header.html %}
+
+<section class="layout-area bg-color1 content tutorial">
+    <div class="layout-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <div class="tech-content">
+                        {{content}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TODO: Need to change out these styles for specific ones that don't reuse kb styles -->
+
+{% assign related_pages = site.pages | where: "layout", "tools_page" | sort: "tool" %}
+{% if related_pages.size > 0 %}
+<section class="layout-area bg-color3 content tutorial">
+    <div class="kb-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 col-lg-12">
+                    <h2>Tools Pages</h2>
+                        {% for related_page in related_pages %}
+                            {% if related_page.url != page.url %}                
+                            <article class="kb-service bg-color1">
+                                <span style="float:right; color:gray">{{related_page.tool}}</span>
+                                <header>
+                                    <a href="{{related_page.url | relative_url}}"><h4 class="heading-4">{{related_page.title}}</h4></a>
+                                </header>
+                                <footer>{{related_page.description}}</footer>
+                            </article>
+                            {% endif %}
+                        {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+{% include support_area.html %}
+{% include footer.html %}
+
+<script>
+  var headings = document.querySelectorAll("h2[id]");
+  for (var i = 0; i < headings.length; i++) {
+    var anchorLink = document.createElement("a");
+    anchorLink.innerText = "#";
+    anchorLink.href = "#" + headings[i].id;
+    anchorLink.classList.add("header-link");
+
+    headings[i].appendChild(anchorLink);
+  }
+</script>

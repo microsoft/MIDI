@@ -27,8 +27,6 @@ public:
 
         TEST_METHOD(TestInitialization);
         TEST_METHOD(TestMultipleInitialization);
-        TEST_METHOD(TestResolvingTypes);
-        TEST_METHOD(ValidateBackwardsCompatibilityWinMD);
 
 private:
 

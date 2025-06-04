@@ -1,0 +1,28 @@
+<nav class="layout-breadcrumb">
+    <ol class="breadcrumb">
+        {% assign sdk_overview_root = "/sdk-overview/" %}
+        {% assign sdk_url_root = "/sdk-reference/" %}
+
+        <li class="breadcrumb-item"><a href="{{ sdk_overview_root | relative_url }}">App SDK</a></li>
+        <li class="breadcrumb-item"><a href="{{ sdk_url_root | relative_url }}">Microsoft.Windows.Devices.Midi2</a></li>
+
+        {% if page.namespace != "Microsoft.Windows.Devices.Midi2" %}
+            {% assign ns_url = sdk_url_root %}
+            {% assign remaining_ns = page.namespace | remove: "Microsoft.Windows.Devices.Midi2." | split: "." %}
+
+            {% for sub_ns in remaining_ns %}           
+                {% assign ns_url = ns_url | append: sub_ns | append: "/" %}
+                {% if forloop.last == true and page.layout == "sdk_namespace_page" %}
+                    <li class="breadcrumb-item active" aria-current="page">{{sub_ns}}</li>
+                {% else %}
+                    <li class="breadcrumb-item"><a href="{{ ns_url | relative_url }}">{{sub_ns}}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{page.title}}</li>
+                {% endif %}
+            {% endfor %}
+
+        {% elsif page.layout != "sdk_namespace_page" %}
+            <li class="breadcrumb-item active" aria-current="page">{{page.title}}</li>
+        {% endif %}
+
+    </ol>
+</nav>

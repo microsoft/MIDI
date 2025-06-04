@@ -138,11 +138,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
         //transportCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
 
+        IMidiCallback* obj;
+        this->QueryInterface(__uuidof(IMidiCallback), (void**)&obj);
+
         auto result = m_endpointTransport->Initialize(
             (LPCWSTR)(ConnectedEndpointDeviceId().c_str()),
             &transportCreationParams,
             &mmcssTaskId,
-            (IMidiCallback*)(this),
+            obj,
             0,
             m_sessionId
         );
@@ -355,7 +358,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     MidiEndpointConnection::~MidiEndpointConnection()
     {
-        InternalClose();
+     //   InternalClose();
+
+        // don't release COM pointers here
+        //if (m_serviceTransport)
+        //{
+        //    m_serviceTransport = nullptr;
+        //}
+
+        m_messageReceivedEvent.clear();
+        m_endpointDeviceDisconnectedEvent.clear();
+        m_endpointDeviceReconnectedEvent.clear();
     }
 
     _Use_decl_annotations_
@@ -374,8 +387,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         if (m_endpointTransport != nullptr)
         {
-            // todo: some error / hresult handling here
-
+            // Shutdown should also release any callback references
             auto hr = m_endpointTransport->Shutdown();
             m_endpointTransport == nullptr;
 

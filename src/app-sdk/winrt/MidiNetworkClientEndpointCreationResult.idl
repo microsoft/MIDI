@@ -6,16 +6,20 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
 import "MidiApiContracts.idl";
-
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
     struct MidiNetworkClientEndpointCreationResult
     {
-        Boolean foo;
+        Guid ClientId;
+
+		Boolean Success;
+
+		// we won't have the endpoint device id yet, so cannot return it here
+
 
     };
 }
+

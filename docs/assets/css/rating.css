@@ -1,0 +1,18 @@
+/*************************************
+*** ┌┈┈┈┈┈┈┈┈┈┈┈┈┈┐ ***
+*** ┊  Powered By ChuKeer.com  ┊ ***
+*** ┊  Last Modify 2012-12-01  ┊ ***
+*** └┈┈┈┈┈┈┈┈┈┈┈┈┈┘ ***
+*** ┌┈┈┈┈┈┈┈┈┈┈┈┈┈┐ ***
+*** ┊Version:jquery.rating.1.0 ┊ ***
+*** └┈┈┈┈┈┈┈┈┈┈┈┈┈┘ ***
+*** ┌┈┈┈┈┈┈┈┈┈┈┈┈┈┐ ***
+*** ┊mahongtao_2000@hotmail.com┊ ***
+*** └┈┈┈┈┈┈┈┈┈┈┈┈┈┘ ***
+*************************************/
+.rating { height: 20px; padding:0px;}
+.rating li { list-style: none; float: left; width: 20px; height: 20px; padding:0px; margin:0px;}
+.rating li a { display: block; width: 20px; height: 20px; padding:0px; margin:0px; overflow: hidden; text-indent: -100px; background-image: url(../images/rating.png); background-repeat: no-repeat; text-decoration:none; }
+.rating li a:hover { background-color: transparent; text-decoration: none; }
+.rating li .hover { background-position: 0px -20px; }
+.rating li .full { background-position: 0px -40px; }

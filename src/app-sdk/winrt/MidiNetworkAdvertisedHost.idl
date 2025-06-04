@@ -8,31 +8,30 @@
 
 import "MidiApiContracts.idl";
 
-
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    struct MidiNetworkAdvertisedHost
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkAdvertisedHost")]
+    runtimeclass MidiNetworkAdvertisedHost
     {
         // from Windows props
-        String DeviceId;
-        String DeviceName;
+        String DeviceId {get; };
+        String DeviceName{ get; };
          
         // from SRV record 
-        String FullName;
-        String ServiceInstanceName;
-        String ServiceType;
-        String HostName;
-        UInt16 Port;
-        String Domain;
+        String FullName{ get; };
+        String ServiceInstanceName{ get; };
+        String ServiceType{ get; };
+        String HostName{ get; };
+        UInt16 Port{ get; };
+        String Domain{ get; };
 
         // from TXT record
-        String UmpEndpointName;
-        String ProductInstanceId;
+        String UmpEndpointName{ get; };
+        String ProductInstanceId{ get; };
 
-        // TODO: A/AAAA IP records
-
-        String IPAddress;
-
+        IVectorView<String> IPAddresses{ get; };
     };
 }
+

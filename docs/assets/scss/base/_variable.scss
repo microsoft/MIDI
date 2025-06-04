@@ -1,0 +1,52 @@
+/**
+* ============================
+*  1.0 Variable
+* ============================
+*/
+ 
+/* Color */
+$font-color-default: #404040;
+$font-color2: #000000;
+$font-color3: #0D65B0;
+$font-color4: #ffffff;
+$link-color:#404040;
+$hover-color:#0D65B0; 
+$placeholder-color:#777777;
+$bg-color-default:#ffffff;
+$bg-color2:#0D65B0;
+$bg-color3:#f2f6fb;
+$button-bg : #ffffff;
+$button-bg2 : #0D65B0;
+/* Typography */
+$font-family-default: 'Poppins', sans-serif;
+$font-size-default:     16px ;
+$font-size-thin:     12px ;
+$line-height-default:     30px ;
+$line-height-thin:     22px ;
+$font-weight-default:         400 ;
+$font-weight-thin:         300 ;
+$font-weight-medi:         500 ;
+$font-weight-semi:         600 ;
+$font-weight-bold:         700 ;
+$font-size-h1:       floor(($font-size-default * 2.9)) ; 
+$font-size-h2:       floor(($font-size-default * 2.5)) ; 
+$font-size-h3:      ceil(($font-size-default * 1.82)) ; 
+$font-size-h4:      ceil(($font-size-default * 1.3)) ; 
+$font-size-h5:      ceil(($font-size-default * 1.2)) ; 
+$font-size-h6:      ceil(($font-size-default * 1.00)) ; 
+/* Border */
+$border-color2:  rgba(33, 108, 188, 0.1);
+$border-color: rgba(0, 1, 1, 0.01)  ;
+$border-solid: 1px solid ;
+$border-radius:    4px ;
+$border-radius-round:    50px ;
+/* Componet */
+$overlay-color:  rgba(33, 108, 188, 0.4);
+$padding-default: 60px;
+$padding-small: 30px;
+$padding-large: 100px;
+$margin-small: 15px;
+$margin-default: 30px;
+$margin-large: 60px;
+$box-shadow-default: 0 0 20px 5px rgba(33, 107, 188, 0.01);
+$box-shadow: 0 0 20px 5px rgba(33, 107, 188, 0.03);

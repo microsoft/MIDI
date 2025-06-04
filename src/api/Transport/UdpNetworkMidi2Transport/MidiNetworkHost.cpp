@@ -34,6 +34,8 @@ MidiNetworkHost::Initialize(
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.empty());
     RETURN_HR_IF(E_INVALIDARG, hostDefinition.ProductInstanceId.size() > MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
 
+    m_configIdentifier = hostDefinition.EntryIdentifier;
+
     m_started = false;
 
     m_createUmpEndpointsOnly = !hostDefinition.CreateMidi1Ports;
@@ -94,6 +96,7 @@ MidiNetworkHost::CreateNetworkConnection(HostName const& remoteHostName, winrt::
     {
         RETURN_IF_FAILED(conn->Initialize(
             MidiNetworkConnectionRole::ConnectionWindowsIsHost,
+            m_configIdentifier,
             m_socket,
             remoteHostName,
             remotePort,
@@ -311,7 +314,4 @@ MidiNetworkHost::Shutdown()
 
     return S_OK;
 }
-
-
-
 

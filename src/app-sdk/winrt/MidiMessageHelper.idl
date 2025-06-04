@@ -24,6 +24,7 @@ import "MidiChannel.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageHelperStatics", 8087b303-0519-31d1-c0de-ee0000800000)]
     static runtimeclass MidiMessageHelper
     {
         static Boolean ValidateMessage32MessageType(UInt32 word0);
@@ -71,6 +72,6 @@ namespace Microsoft.Windows.Devices.Midi2.Messages
 
 
         static IVector<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> GetPacketListFromWordList(UInt64 timestamp, IIterable<UInt32> words);
-        static IVector<UInt32> GetWordListFromPacketList(IIterable<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> words);
+        static IVector<UInt32> GetWordListFromPacketList(IIterable<Microsoft.Windows.Devices.Midi2.IMidiUniversalPacket> messages);
     };
 }

@@ -429,7 +429,7 @@ RoResolveNamespaceDetour(
     }
 
     // otherwise, set to the SDK install information, not the process information below
-    auto sdkPath = g_runtimeComponentCatalog->GetSdkDirectory();
+    //auto sdkPath = g_runtimeComponentCatalog->GetSdkDirectory();
 
     //PCWSTR sdkFilePath = sdkPath.c_str();
     //auto pathReference = Microsoft::WRL::Wrappers::HStringReference(sdkFilePath);
@@ -536,6 +536,7 @@ void RemoveWinRTActivationHooks()
 
         g_detourActive = false;
     }
+
 
     TraceLoggingWrite(
         Midi2SdkTelemetryProvider::Provider(),

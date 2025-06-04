@@ -6,12 +6,11 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
 import "MidiApiContracts.idl";
-
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
 {
+    [experimental]
     enum MidiSystemExclusiveDataFormat
     {
         InferFromData,

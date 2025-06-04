@@ -47,7 +47,8 @@ public:
 
     TEST_METHOD(TestSendAndReceiveMultipleMessageWordsList);
     TEST_METHOD(TestSendAndReceiveMultipleMessagePackets);
-    
+    TEST_METHOD(TestSendMultipleMessagePacketsSTA);
+
     
 
     //TEST_METHOD(TestSendMessageSuccessImmediateReturnCode);

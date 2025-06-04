@@ -12,8 +12,7 @@
 _Use_decl_annotations_
 HRESULT 
 MidiNetworkClient::Initialize(
-    MidiNetworkClientDefinition& clientDefinition, 
-    enumeration::DeviceInformation advertisedHost
+    MidiNetworkClientDefinition& clientDefinition
 )
 {
     TraceLoggingWrite(
@@ -25,7 +24,8 @@ MidiNetworkClient::Initialize(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    UNREFERENCED_PARAMETER(advertisedHost);
+    m_configIdentifier = clientDefinition.EntryIdentifier;
+
 
     m_createUmpEndpointsOnly = !clientDefinition.CreateMidi1Ports;
 
@@ -204,6 +204,7 @@ MidiNetworkClient::Start(
 
     RETURN_IF_FAILED(conn->Initialize(
         MidiNetworkConnectionRole::ConnectionWindowsIsClient,
+        m_configIdentifier,
         m_socket,
         remoteHostName,
         remotePort,

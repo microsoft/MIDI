@@ -17,6 +17,7 @@ import "MidiServiceSessionInfo.idl";
 namespace Microsoft.Windows.Devices.Midi2.Reporting
 {
     [contract(MidiReportingApiContract, 1)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Reporting.IMidiReportingStatics", 8087b303-0519-31d1-c0de-ee0000b00000)]
     static runtimeclass MidiReporting
     {
         static IVector<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();

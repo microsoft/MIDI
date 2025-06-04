@@ -8,7 +8,7 @@
 
     <ItemDefinitionGroup>
         <ClCompile>
-            <!-- Add the bootstrapper header location and access to the midi2 subdirectory -->
+            <!-- Add the bootstrapper and nuget version header location and access to the midi2 subdirectory -->
             <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\..\build\native\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
         </ClCompile>
     </ItemDefinitionGroup>

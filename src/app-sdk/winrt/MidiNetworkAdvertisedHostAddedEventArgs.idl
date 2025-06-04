@@ -8,15 +8,17 @@
 
 import "MidiApiContracts.idl";
 
-
 import "MidiNetworkAdvertisedHost.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
-    [default_interface]
+    [contract(MidiEndpointsNetworkApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkAdvertisedHostAddedEventArgs")]
     runtimeclass MidiNetworkAdvertisedHostAddedEventArgs
     {
         MidiNetworkAdvertisedHost AddedHost{ get; };
     }
 }
+
+

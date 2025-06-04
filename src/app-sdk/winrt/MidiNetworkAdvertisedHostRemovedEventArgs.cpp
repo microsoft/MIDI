@@ -20,4 +20,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     {
         throw hresult_not_implemented();
     }
+
+    _Use_decl_annotations_
+    void MidiNetworkAdvertisedHostRemovedEventArgs::InternalInitialize(
+        winrt::hstring const& id, 
+        enumeration::DeviceInformationUpdate const& args) noexcept
+    {
+        m_id = id;
+
+        UNREFERENCED_PARAMETER(args);
+    }
+
 }

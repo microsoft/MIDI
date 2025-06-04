@@ -1,0 +1,39 @@
+---
+layout: page
+title: Explore Topics
+description: "Meta description for Support page"
+keywords: "responsive,jekyll,minimal template"
+---
+<div class="topics-area bg-color1">
+         <div class="topics-wrapper section-spacing bminus-30">
+            <div class="container">
+               <div class="row">
+			{% assign my_doc_tags =  site.docs | map: 'tags' | join: ','  | split: ',' | uniq %}
+            {% for tag in my_doc_tags %}
+				<div class="col-md-6 col-lg-4">
+					<article class="topics-service bg-color3 wow fadeIn" data-wow-duration="3s">
+						<header class="topics-title">
+							<h4 class="heading-4 text-capitalize">{{ tag }} </h4>
+						</header>
+						<ul class="topics-list list-inline">
+                     {% for doc_post in site.docs %}
+                     {% if doc_post.tags contains tag %}
+                     <li><a href="{{ doc_post.url  | relative_url }}">{{ doc_post.title }} </a></li>
+                     {% endif %}
+                     {% endfor %}
+                  </ul>
+					</article>
+				</div>
+				{% endfor %}			  
+               </div>
+            </div>
+         </div>
+      </div>
+</section>
+<!-- End Topics Area -->
+
+
+
+{% include call_to_action.html %}
+{% include support_area.html %}
+{% include footer_top_area.html %}

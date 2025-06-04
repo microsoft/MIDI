@@ -15,6 +15,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     {
         MidiNetworkAdvertisedHostAddedEventArgs() = default;
 
-        midi2::Endpoints::Network::MidiNetworkAdvertisedHost AddedHost();
+        network::MidiNetworkAdvertisedHost AddedHost() const noexcept { return m_host; }
+
+        void InternalInitialize(_In_ network::MidiNetworkAdvertisedHost const& host) noexcept;
+
+    private:
+        network::MidiNetworkAdvertisedHost m_host{ nullptr };
     };
 }

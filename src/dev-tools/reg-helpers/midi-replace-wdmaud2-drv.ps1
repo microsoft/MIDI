@@ -1,4 +1,4 @@
-# Modified by Pete Brown from 
+# Modified by Pete Brown from:
 # Developed for PowerShell v4.0
 # ** Required Admin privileges **
 # Links:
@@ -36,31 +36,31 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
     $wdmaud2SystemPath = $env:systemroot + "\System32\wdmaud2.drv"
     $wdmaud2SystemBakPath = $env:systemroot + "\System32\wdmaud2.bak"
 
-    if (!Test-Path -Path wdmaud2SourcePath)
+    if (!Test-Path -Path $wdmaud2SourcePath)
     {
         Write-Host "Expected to find the new wdmaud2.drv in this directory, but it was missing. Cannot proceed." -ForegroundColor Red
         Exit
     }
 
-    if (Test-Path -Path wdmaud2SystemPath)
+    if (Test-Path -Path $wdmaud2SystemPath)
     {
         Write-Host "Taking ownership of wdmaud2.drv..." -ForegroundColor DarkCyan
-        cmd.exe /c "takeown /F " + $wdmaud2Path
-        cmd.exe /c "icacls " + $wdmaud2Path + " /grant administrators:F"
+        takeown /F $wdmaud2SystemPath
+        icacls $wdmaud2SystemPath /grant administrators:F
 
         Write-Host "Removing any previous backup file..." -ForegroundColor DarkCyan
 
-        if (Test-Path -Path wdmaud2SystemBakPath)
+        if (Test-Path -Path $wdmaud2SystemBakPath)
         {
-            cmd.exe /c "del /F /Q " + $wdmaud2SystemBakPath
+            del /F /Q $wdmaud2SystemBakPath
         }
 
         Write-Host "Renaming existing wdmaud2.drv to wdmaud2.drv.bak..." -ForegroundColor DarkCyan
-        cmd.exe /c "rename " + $wdmaud2SystemPath + " " + $wdmaud2SystemBakPath
+        Move-Item $wdmaud2SystemPath $wdmaud2SystemBakPath
 
         # now copy wdmaud2.drv into System32
         Write-Host "Copying over the new wdmaud2.drv..." -ForegroundColor DarkCyan
-        cmd.exe /c "xcopy /-I " + $wdmaud2SourcePath + " " + $wdmaud2SystemPath
+        xcopy /-I $wdmaud2SourcePath $wdmaud2SystemPath
 
         Write-Host
         Write-Host "WinMM backwards compatibility support will be in place after you reboot." -ForegroundColor Yellow
@@ -68,9 +68,8 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
     else
     {
         # no existing wdmaud2.drv That shouldn't happen
-        Write-Host "No existing wdmaud2.drv found in System32. Is this a Canary Windows Insider release? WinMM will not use Windows MIDI Services." -ForegroundColor Red
+        Write-Host "No existing wdmaud2.drv found in System32. WinMM will not be able to use Windows MIDI Services." -ForegroundColor Red
     }
-
 }
 else
 {

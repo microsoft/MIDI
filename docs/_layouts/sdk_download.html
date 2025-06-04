@@ -1,0 +1,130 @@
+---
+layout: default
+---
+
+{% include header.html %}
+{% include midi_slider.html %}
+
+<section class="layout-area bg-color1 content tutorial">
+  <div class="layout-wrapper section-spacing bminus-30">
+    <div class="container">
+      <div class="row">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="layout-area bg-color1 content tutorial">
+    <div class="section-spacing bminus-30">
+        <div class="container">
+            <div class="col-md-12 col-bg-12">
+                <div class="tutorial-content mx-auto">
+                    <h2>Windows MIDI Services is the new and greatly improved MIDI stack for Windows, supporting both MIDI 1.0 and MIDI 2.0.</h2>
+                    <p>
+                        Windows MIDI Services brings MIDI 2.0, multi-client (multiple apps using the same device) MIDI 1.0, app-to-app MIDI, faster USB transports, built-in loopback MIDI, and much more. The Runtime and tools enable applications to use this new API, and for you to be able to configure, customize, and troubleshoot your MIDI setup.
+                    </p>
+                </div>
+
+                <div class="tutorial-content mx-auto">
+                    <h4>Not sure if you have an Intel/AMD x64 processor or an Arm64 processor?</h4>
+                    <p>
+                        From your Start menu, choose the Windows Settings app (icon looks like a gear). Then click on System, and scroll down to About. Under "Device specifications” you will see “System type”. That will say something like “64-bit operating system, x64-based processor" or "64-bit operating system, Arm64-based processor" or similar. That tells you which version to download.
+                    </p>                       
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Start SDK Contents  Area -->
+<section class="faq-area bg-color3">
+    <div class="faq-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="heading-2">MIDI Runtime and Tools Download Contents</h2>
+                <p>When you install the Windows MIDI Services runtime and tools, you will get these features and tools.</p>
+            </div>
+            <div class="row">
+                {% for feature in site.data.midi_sdk_download_contents %}
+                    <div class="col-md-6">
+                        <article class="faq-service bg-color1">
+                            <header class="faq-content">
+                                <h4 class="heading-4">{{feature.title}}</h4>
+                                <!--<div class="logo-image"> <img src="{{feature.image | relative_url }}" alt="{{feature.title}}" /></div> -->
+                            </header>
+                            <footer class="faq-content">
+                                <p>{{feature.description}}</p>
+                                <br/>
+                                <a href="{{feature.details_url | relative_url }}" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Learn More</a>
+                            </footer>
+                        </article>
+                    </div>
+                {% endfor %}
+                
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End SDK Contents Area -->
+
+<section class="layout-area bg-color1 content tutorial">
+    <div class="section-spacing bminus-30">
+        <div class="container">
+            <div class="col-md-12 col-bg-12">
+                <div class="tutorial-content mx-auto">
+                    <div class="doc-content">		
+                    {{content}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Start other downloads Area -->
+<section class="looking-for-area bg-color3">
+    <div class="looking-for-wrapper section-spacing bminus-30">
+        <div class="container">
+            <div class="col-md-12 col-lg-12">
+                <div class="section-title text-center">
+                    <h2 class="heading-2">Other Available Downloads</h2>
+                </div>
+                <div class="row">
+                    {% assign data = site.data.midi_releases | where: "type", "preview" %}
+                    {% for release in data %}
+                    <div class="col-md-6">
+                        <article class="looking-for-service">
+                            <footer>
+                                <h4 class="heading-4">{{release.title}}</h4>
+                                <p> {{release.version}}</p>
+                                <p> {{release.description}}</p>
+                                <a href="{{release.link_x64}}" class="btn btn-style3">{{release.label_x64}}</a>
+                                <a href="{{release.link_arm64}}" class="btn btn-style3">{{release.label_arm64}}</a>
+                            </footer>
+                        </article>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End other downloads Area -->
+
+
+{% include support_area.html %}
+{% include footer.html %}
+
+<script>
+  var headings = document.querySelectorAll("h2[id]");
+  for (var i = 0; i < headings.length; i++) {
+    var anchorLink = document.createElement("a");
+    anchorLink.innerText = "#";
+    anchorLink.href = "#" + headings[i].id;
+    anchorLink.classList.add("header-link");
+
+    headings[i].appendChild(anchorLink);
+  }
+</script>

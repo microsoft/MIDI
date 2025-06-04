@@ -10,7 +10,6 @@
 #include "stdafx.h"
 
 
-
 struct __declspec(uuid("5b0d3235-4dba-4d44-865e-8f1d0e4fd04d")) __declspec(novtable) IMemoryBufferByteAccess : ::IUnknown
 {
     virtual HRESULT __stdcall GetBuffer(uint8_t** value, uint32_t* capacity) = 0;
@@ -19,9 +18,9 @@ struct __declspec(uuid("5b0d3235-4dba-4d44-865e-8f1d0e4fd04d")) __declspec(novta
 
 void MidiEndpointConnectionBufferTests::TestSendBuffer()
 {
-    LOG_OUTPUT(L"TestSendBuffer **********************************************************************");
+    auto initializer = InitWinRTAndSDK_MTA();
 
- //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    LOG_OUTPUT(L"TestSendBuffer **********************************************************************");
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -31,15 +30,12 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
     auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
-
-
     VERIFY_IS_TRUE(connSend.Open());
 
     const size_t bufferSizeInBytes = sizeof(uint32_t) * 100;
 
     winrt::Windows::Foundation::MemoryBuffer sendBuffer(bufferSizeInBytes);
     auto ref = sendBuffer.CreateReference();
-
     auto interop = ref.as<IMemoryBufferByteAccess>();
 
     uint8_t* value{};
@@ -62,19 +58,27 @@ void MidiEndpointConnectionBufferTests::TestSendBuffer()
     auto result = connSend.SendSingleMessageBuffer(MidiClock::TimestampConstantSendImmediately(), byteOffset, numBytes, sendBuffer);
 
     VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(result));
-    //VERIFY_IS_TRUE((result & MidiSendMessageResult::DataIndexOutOfRange) == MidiSendMessageResult::DataIndexOutOfRange);
 
     session.DisconnectEndpointConnection(connSend.ConnectionId());
-
     session.Close();
+
+    // if you want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    interop = nullptr;
+    ref = nullptr;
+    sendBuffer = nullptr;
+    connSend = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
+
     LOG_OUTPUT(L"TestSendAndReceiveBuffer **********************************************************************");
-
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
-
 
     wil::unique_event_nothrow allMessagesReceived;
     allMessagesReceived.create();
@@ -123,7 +127,6 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
     // set up the send buffer --------------------------------------------
 
     auto ref = sendBuffer.CreateReference();
-
     auto interop = ref.as<IMemoryBufferByteAccess>();
 
     uint8_t* sendBufferBytePointer{};
@@ -141,7 +144,6 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
 
     *sendBufferWordPointer = word0;
     *(sendBufferWordPointer + 1) = word1;
-
 
 
     auto MessageReceivedHandler = [&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
@@ -190,13 +192,28 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveBuffer()
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    interop = nullptr;
+    ref = nullptr;
+    receiveInterop = nullptr;
+    receiveRef = nullptr;
+    sendBuffer = nullptr;
+    receiveBuffer = nullptr;
+
+    connReceive = nullptr;
+    connSend = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 {
-    LOG_OUTPUT(L"TestSendBufferBoundsError **********************************************************************");
+    auto initializer = InitWinRTAndSDK_MTA();
 
- //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    LOG_OUTPUT(L"TestSendBufferBoundsError **********************************************************************");
 
     auto session = MidiSession::Create(L"Test Session Name");
 
@@ -206,8 +223,6 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
     auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
 
     VERIFY_IS_NOT_NULL(connSend);
-
-
     VERIFY_IS_TRUE(connSend.Open());
 
     const size_t bufferSizeInBytes = sizeof(uint32_t) * 100;
@@ -242,13 +257,19 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
     VERIFY_IS_TRUE((result & MidiSendMessageResults::DataIndexOutOfRange) == MidiSendMessageResults::DataIndexOutOfRange);
 
     session.DisconnectEndpointConnection(connSend.ConnectionId());
-
     session.Close();
 
 
+    // if you want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    interop = nullptr;
+    ref = nullptr;
+    sendBuffer = nullptr;
+    connSend = nullptr;
+    session = nullptr;
 
-
-
+    ShutdownSDKAndWinRT(initializer);
+    
 }
 
 
@@ -258,9 +279,9 @@ void MidiEndpointConnectionBufferTests::TestSendBufferBoundsError()
 
 void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer()
 {
-    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessagesBuffer **********************************************************************");
+    auto initializer = InitWinRTAndSDK_MTA();
 
-//    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    LOG_OUTPUT(L"TestSendAndReceiveMultipleMessagesBuffer **********************************************************************");
 
 
     wil::unique_event_nothrow allMessagesReceived;
@@ -412,4 +433,16 @@ void MidiEndpointConnectionBufferTests::TestSendAndReceiveMultipleMessagesBuffer
     session.DisconnectEndpointConnection(connReceive.ConnectionId());
 
     session.Close();
+
+
+    // if you want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    interop = nullptr;
+    ref = nullptr;
+    sendBuffer = nullptr;
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }

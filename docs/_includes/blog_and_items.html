@@ -1,0 +1,48 @@
+<!-- Start Pupolar Article  Area -->
+<section class="pupolar-article-area bg-color3">
+    <div class="pupolar-article-wrapper  section-spacing bminus-30">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="heading-2"> Blog & Items</h2>
+                <p>Vulputate odio ut enim blandit volutpat maecenas volutpat blandit </p>
+            </div>
+            <div class="row">
+                <div class="col-md-6 col-lg-8">
+                    <article class="pupolar-article  bg-color1  wow fadeIn" data-wow-duration="3s">
+                        <header class="popular-article-top">
+                            <div class="popular-top-logo">
+                                <div class="popular-logo-icon"><img src="{{ '/assets/images/popular-2.png' | relative_url }}" alt="service icon"></div>
+                            </div>
+                            <div class="popular-top-title">
+                                <h5 class="heading-5">Recent Blogs</h5>
+                            </div>
+                        </header>
+                        <ul class="popular-article-list list-inline">
+                          {% for blog in site.posts limit:5 %}
+                            <li><a href="{{blog.url | relative_url}}">{{blog.title}}</a></li>
+                          {% endfor %}
+                        </ul>
+                    </article>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <article class="pupolar-item bg-color1 wow fadeIn" data-wow-duration="3s">
+                        <header class="popular-item-top">
+                            <div class="popular-top-logo">
+                                <div class="popular-logo-icon"><img src="{{ '/assets/images/popular-3.png' | relative_url }}" alt="service icon"></div>
+                            </div>
+                            <div class="popular-top-title">
+                                <h5 class="heading-5">Treding Items</a></h5>
+                            </div>
+                        </header>
+                        <ul class="popular-item-list list-inline">
+                            {% for trending_item in site.data.trending_items %}
+                                <li><a href="{{trending_item.url}}">{{trending_item.title}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Pupolar Article Area -->

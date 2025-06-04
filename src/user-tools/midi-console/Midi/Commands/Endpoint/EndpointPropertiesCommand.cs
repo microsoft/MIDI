@@ -453,7 +453,7 @@ namespace Microsoft.Midi.ConsoleApp
                 if (settings.Verbose) table.AddRow(AnsiMarkupFormatter.FormatPropertySectionDescription(Strings.PropertyTableSectionDescriptionMidi1Ports), "");
                 table.AddEmptyRow();
 
-                var midi1DestinationPorts = di.GetAssociatedMidi1Ports(Midi1PortFlow.MidiMessageDestination);
+                var midi1DestinationPorts = di.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
                 if (midi1DestinationPorts != null && midi1DestinationPorts.Count > 0)
                 {
                     foreach (var port in midi1DestinationPorts.OrderBy(p => p.Group.Index))
@@ -466,7 +466,7 @@ namespace Microsoft.Midi.ConsoleApp
                     table.AddRow(AnsiMarkupFormatter.FormatTableColumnHeading(Strings.PropertyTableNoAssociatedMidi1DestinationPorts), "");
                 }
 
-                var midi1SourcePorts = di.GetAssociatedMidi1Ports(Midi1PortFlow.MidiMessageSource);
+                var midi1SourcePorts = di.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageSource);
                 if (midi1SourcePorts != null && midi1SourcePorts.Count > 0)
                 {
                     foreach (var port in midi1SourcePorts.OrderBy(p => p.Group.Index))
@@ -606,7 +606,7 @@ namespace Microsoft.Midi.ConsoleApp
             }
 
             table.AddRow(FormatFieldLabel(
-                AnsiMarkupFormatter.FormatPortIndex(port.PortIndex) + " " +
+                AnsiMarkupFormatter.FormatPortIndex(port.PortNumber) + " " +
                 AnsiMarkupFormatter.FormatPortName(port.PortName)),
                 portInformation);
         }

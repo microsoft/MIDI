@@ -1,0 +1,31 @@
+<ul class="single-share list-inline float-right">
+    <li class="list-inline-item">Share:</li>
+    <li class="list-inline-item">
+    	<a  href="https://www.facebook.com/sharer/sharer.php?u={{ site.url }}{{ page.url | relative_url}}"
+            onclick="window.open(this.href, 'pop-up', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;"
+            title="Share on Facebook" >
+            <i class="fa fa-facebook-f"></i>
+        </a>
+    </li>
+    <li class="list-inline-item">
+       <a  href="https://twitter.com/intent/tweet?text={{ page.title }}&url={{ site.url }}{{ page.url | relative_url}}"
+            onclick="window.open(this.href, 'pop-up', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;"
+            title="Share on Twitter" >
+            <i class="fa fa-twitter"></i>
+        </a>
+    </li>
+    <li class="list-inline-item">
+      <a  href="https://plus.google.com/share?url={{ site.url }}{{ page.url | relative_url}}"
+            onclick="window.open(this.href, 'pop-up', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;"
+            title="Share on Google+" >
+            <i class="fa fa-google-plus"></i>
+        </a>
+    </li>
+    <li class="list-inline-item">
+        <a  href="http://www.tumblr.com/share/link?url={{ site.url }}{{ page.url | relative_url}}"
+            onclick="window.open(this.href, 'pop-up', 'left=20,top=20,width=900,height=500,toolbar=1,resizable=0'); return false;"
+            title="Share on Tumblr" >
+            <i class="fa fa-tumblr share-button"></i>
+        </a>
+    </li>
+</ul>

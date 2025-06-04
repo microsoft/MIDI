@@ -43,6 +43,9 @@
     <ClCompile Include="MidiMessagePacketTests.cpp">
       <Filter>Source\Messages</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointIdHelperTests.cpp">
+      <Filter>Source\Helpers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiChannelTests.h">
@@ -83,6 +86,9 @@
     </ClInclude>
     <ClInclude Include="MidiMessagePacketTests.h">
       <Filter>Headers\Messages</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointIdHelperTests.h">
+      <Filter>Headers\Helpers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

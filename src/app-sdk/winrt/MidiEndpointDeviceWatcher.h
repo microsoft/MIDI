@@ -84,24 +84,24 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // internal event handlers. We filter and then forward
         void OnDeviceAdded(
-            _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source, 
-            _In_ winrt::Windows::Devices::Enumeration::DeviceInformation args);
+            _In_ enumeration::DeviceWatcher source, 
+            _In_ enumeration::DeviceInformation args);
 
         void OnDeviceUpdated(
-            _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
-            _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate args);
+            _In_ enumeration::DeviceWatcher source,
+            _In_ enumeration::DeviceInformationUpdate args);
 
         void OnDeviceRemoved(
-            _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
-            _In_ winrt::Windows::Devices::Enumeration::DeviceInformationUpdate args);
+            _In_ enumeration::DeviceWatcher source,
+            _In_ enumeration::DeviceInformationUpdate args);
 
         void OnEnumerationCompleted(
-            _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
-            _In_ winrt::Windows::Foundation::IInspectable args);
+            _In_ enumeration::DeviceWatcher source,
+            _In_ foundation::IInspectable args);
 
         void OnStopped(
-            _In_ winrt::Windows::Devices::Enumeration::DeviceWatcher source,
-            _In_ winrt::Windows::Foundation::IInspectable args);
+            _In_ enumeration::DeviceWatcher source,
+            _In_ foundation::IInspectable args);
 
 
         midi2::MidiEndpointDeviceInformationFilters m_endpointFilter{ MidiEndpointDeviceInformationFilters::AllStandardEndpoints };
@@ -111,8 +111,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationUpdatedEventArgs>> m_deviceUpdatedEvent;
         winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, midi2::MidiEndpointDeviceInformationRemovedEventArgs>> m_deviceRemovedEvent;
 
-        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Foundation::IInspectable>> m_enumerationCompletedEvent;
-        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, winrt::Windows::Foundation::IInspectable>> m_stoppedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, foundation::IInspectable>> m_enumerationCompletedEvent;
+        winrt::event<foundation::TypedEventHandler<midi2::MidiEndpointDeviceWatcher, foundation::IInspectable>> m_stoppedEvent;
 
 
         winrt::event_token m_deviceAddedEventRevokeToken;
@@ -124,7 +124,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         collections::IMap<winrt::hstring, midi2::MidiEndpointDeviceInformation> m_enumeratedEndpointDevices = 
             winrt::multi_threaded_map<winrt::hstring, midi2::MidiEndpointDeviceInformation>();
 
-        winrt::Windows::Devices::Enumeration::DeviceWatcher m_watcher{ nullptr };
+        enumeration::DeviceWatcher m_watcher{ nullptr };
 
     };
 }

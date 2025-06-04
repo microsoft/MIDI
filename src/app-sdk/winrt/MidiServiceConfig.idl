@@ -17,13 +17,14 @@ import "MidiServiceConfigResponse.idl";
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
     [contract(MidiServiceConfigApiContract, 1)]
+    [static_name("Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigStatics", 8087b303-0519-31d1-c0de-ee0000300000)]
     static runtimeclass MidiServiceConfig
     {
         static MidiServiceConfigResponse UpdateTransportPluginConfig(
             IMidiServiceTransportPluginConfig configUpdate);
 
-        static MidiServiceConfigResponse UpdateProcessingPluginConfig(
-            IMidiServiceMessageProcessingPluginConfig configUpdate);
+        //static MidiServiceConfigResponse UpdateProcessingPluginConfig(
+        //    IMidiServiceMessageProcessingPluginConfig configUpdate);
     }
 }
 

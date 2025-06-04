@@ -174,7 +174,7 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\Release;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\Release;$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
@@ -258,23 +258,21 @@
       </Command>
     </PostBuildEvent>
     <ResourceCompile>
-      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">Yes</ShowProgress>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <ResourceCompile>
-      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">Yes</ShowProgress>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <ResourceCompile>
-      <ShowProgress Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Yes</ShowProgress>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)..\..\build\staging\version\</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ComSingleton.h" />
+    <ClInclude Include="MidiNetworkAdvertisedHost.h" />
+    <ClInclude Include="MidiNetworkClientMatchCriteria.h" />
+    <ClInclude Include="MidiClientInitializerFactory.h" />
+    <ClInclude Include="MidiClientInitializerSingleton.h" />
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiEndpointDeviceIdHelper.h" />
+    <ClInclude Include="MidiEndpointDeviceIdHelper.h">
+      <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h">
       <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClInclude>
@@ -309,11 +307,11 @@
     <ClInclude Include="MidiNetworkEndpointManager.h">
       <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkHostEndpointCreationConfig.h">
-      <DependentUpon>MidiNetworkHostEndpointCreationConfig.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkHostCreationConfig.h">
+      <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkHostEndpointRemovalConfig.h">
-      <DependentUpon>MidiNetworkHostEndpointRemovalConfig.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkHostRemovalConfig.h">
+      <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="libmidi2\include\bytestreamToUMP.h" />
     <ClInclude Include="libmidi2\include\mcoded7.h" />
@@ -464,6 +462,7 @@
       <DependentUpon>MidiVirtualPatchBaySourceDefinition.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="midi_function_block_prop_util.h" />
+    <ClInclude Include="midi_network_defs.h" />
     <ClInclude Include="midi_stream_message_defs.h" />
     <ClInclude Include="enumeration_prop_util.h" />
     <ClInclude Include="resource.h" />
@@ -474,10 +473,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiNetworkAdvertisedHost.cpp" />
+    <ClCompile Include="MidiNetworkClientMatchCriteria.cpp" />
+    <ClCompile Include="MidiClientInitializerFactory.cpp" />
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiEndpointDeviceIdHelper.cpp" />
+    <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
+      <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp">
       <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClCompile>
@@ -510,11 +514,11 @@
     <ClCompile Include="MidiNetworkEndpointManager.cpp">
       <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostEndpointCreationConfig.cpp">
-      <DependentUpon>MidiNetworkHostEndpointCreationConfig.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkHostCreationConfig.cpp">
+      <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkHostEndpointRemovalConfig.cpp">
-      <DependentUpon>MidiNetworkHostEndpointRemovalConfig.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
+      <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="libmidi2\src\bytestreamToUMP.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">NotUsing</PrecompiledHeader>
@@ -809,12 +813,13 @@
     <Midl Include="MidiNetworkClientEndpointCreationResult.idl" />
     <Midl Include="MidiNetworkClientEndpointRemovalConfig.idl" />
     <Midl Include="MidiNetworkClientEndpointRemovalResult.idl" />
+    <Midl Include="MidiNetworkClientMatchCriteria.idl" />
     <Midl Include="MidiNetworkEndpointManager.idl" />
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
-    <Midl Include="MidiNetworkHostEndpointCreationConfig.idl" />
-    <Midl Include="MidiNetworkHostEndpointCreationResult.idl" />
-    <Midl Include="MidiNetworkHostEndpointRemovalConfig.idl" />
-    <Midl Include="MidiNetworkHostEndpointRemovalResult.idl" />
+    <Midl Include="MidiNetworkHostCreationConfig.idl" />
+    <Midl Include="MidiNetworkHostCreationResult.idl" />
+    <Midl Include="MidiNetworkHostRemovalConfig.idl" />
+    <Midl Include="MidiNetworkHostRemovalResult.idl" />
     <Midl Include="Midi1PortFlowEnum.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
@@ -829,7 +834,6 @@
     <Midl Include="MidiSystemTimerSettings.idl" />
     <Midl Include="MidiDiagnostics.idl" />
     <Midl Include="MidiReporting.idl" />
-    <Midl Include="MidiServiceMessageProcessingPluginInfo.idl" />
     <Midl Include="MidiServicePingResponse.idl" />
     <Midl Include="MidiServicePingResponseSummary.idl" />
     <Midl Include="MidiServiceSessionConnectionInfo.idl" />
@@ -840,7 +844,6 @@
     <Midl Include="MidiLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiLoopbackEndpointCreationResult.idl" />
     <Midl Include="MidiLoopbackEndpointCreationConfig.idl" />
-    <Midl Include="MidiStreamConfigRequestedSettings.idl" />
     <Midl Include="MidiStreamConfigRequestReceivedEventArgs.idl" />
     <Midl Include="MidiUniqueId.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
@@ -857,7 +860,6 @@
     <Midl Include="MidiStreamMessageBuilder.idl" />
     <Midl Include="MidiSystemExclusive8StatusEnum.idl" />
     <Midl Include="MidiMessageHelper.idl" />
-    <Midl Include="IMidiServiceMessageProcessingPluginConfig.idl" />
     <Midl Include="MidiServiceConfigResponse.idl" />
     <Midl Include="IMidiServiceTransportPluginConfig.idl" />
     <Midl Include="MidiServiceConfigResponseStatusEnum.idl" />

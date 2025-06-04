@@ -63,6 +63,99 @@
 
         </ScrollViewer>
 
+
+
+        <ContentDialog x:Name="Dialog_CreateNetworkHost"
+                       PrimaryButtonText="OK" 
+                       IsPrimaryButtonEnabled="{x:Bind ViewModel.NewNetworkHostSettingsAreValid, Mode=OneWay}"
+                       CloseButtonText="Cancel"
+                       PrimaryButtonCommand="{x:Bind ViewModel.CreateNetworkHostCommand}"
+                       >
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">800</x:Double>
+                <x:Double x:Key="ContentDialogMaxHeight">800</x:Double>
+            </ContentDialog.Resources>
+
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Orientation="Vertical" >
+                    <TextBlock Text="Advertise this PC as a Network MIDI 2.0 Host" 
+                           Style="{StaticResource DialogHeaderTextBlockStyle}"
+                           Margin="13, 9, 13, 13"/>
+
+                    <TextBlock TextWrapping="WrapWholeWords" 
+                               Text="It's typical to have a single host per PC. However, you may create multiple hosts to, for example, simultaneously support different connection settings. A network host allows remote client devices to discover this PC."
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
+                    
+                    
+                    <TextBlock TextWrapping="WrapWholeWords" 
+                               Text="This is how other devices on the network will see this host advertised. This is also the name returned if a remote endpoint performs network discovery. The default is this PC's name followed by a set or random characters."
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
+                    
+                    <TextBox Header="Host Name" 
+                             Text="{x:Bind ViewModel.NewHostName, Mode=TwoWay}"
+                             MaxLength="32"
+                             Margin="13"/>
+
+
+                    <TextBlock TextWrapping="WrapWholeWords" 
+                               Text="All MIDI endpoints require a unique identifer. This can be any alpha-numeric text, no spaces or special characters, up to 32 characters long, that is unique within the endpoints for this transport. This is the value returned from discovery and also advertised over mDNS. A default value has been created for you."
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
+
+                    <TextBox Header="Host Unique Identifier" 
+                             Text="{x:Bind ViewModel.NewHostUniqueId, Mode=TwoWay}"
+                             MaxLength="32"
+                             Margin="13"/>
+
+                    <TextBlock TextWrapping="WrapWholeWords" 
+                               Text="If this host should listen on a specific port that is not in use by any other service or protocol, please list it here. Otherwise, Windows MIDI Services will pick an available port."
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
+
+                    <TextBox Header="Port Number (or blank)" 
+                             Text="{x:Bind ViewModel.NewHostPort, Mode=TwoWay}"
+                             MaxLength="5"
+                             Margin="13"/>
+
+                    <TextBlock TextWrapping="WrapWholeWords" 
+                               Text="The service id as it will appear in mDNS. Do not include the protocol information. This will have '._midi2._udp.local' appended to it"
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
+
+                    <TextBox Header="Host Service Id" 
+                             Text="{x:Bind ViewModel.NewHostServiceId, Mode=TwoWay}"
+                             MaxLength="32"
+                             Margin="13"/>
+
+
+
+                    <ToggleSwitch Margin="13"
+                              IsEnabled="{x:Bind ViewModel.IsConfigFileActive, Mode=OneWay}"
+                              IsOn="{x:Bind ViewModel.NewHostIsPersistent, Mode=TwoWay}"
+                              Header="Retain this network host across service restarts/reboots. If this control is disabled, please create a configuration file using the options on the home page." 
+                              />
+
+
+                    <TextBlock Text="{x:Bind ViewModel.ValidationErrorMessage, Mode=OneWay}"
+                           Margin="13"
+                           Style="{StaticResource ValidationErrorTextBlockStyle}"
+                           Visibility="{x:Bind ViewModel.NewNetworkHostSettingsAreValid, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}" />
+
+
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+
+
+
+
+
+
+
+
+
     </Grid>
 
 </Page>

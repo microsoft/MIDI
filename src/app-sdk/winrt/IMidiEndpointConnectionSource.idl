@@ -13,7 +13,7 @@ import "MidiApiContracts.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [uuid("44385cdd-b64c-4195-8faa-8a61fc952a23"), version(1.0)]
+    [uuid("8087b303-0519-31d1-c0de-ff0000000030"), version(1.0)]
     interface IMidiEndpointConnectionSource
     {
         event Windows.Foundation.TypedEventHandler<IMidiEndpointConnectionSource, IInspectable> EndpointDeviceDisconnected;

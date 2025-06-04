@@ -1,0 +1,61 @@
+---
+layout: default
+pagination:
+  enabled: true
+---
+
+{% include header.html %}
+<!-- Start Page Title Area -->
+<section class="page-title-area bg-cover1"
+   >
+   <div class="page-title-wrapper section-spacing">
+      <div class="page-title text-center white-text">
+         <h1 class="heading-1">
+            {{ page.title | capitalize }}
+         </h1>
+      </div>
+   </div>
+</section>
+<!-- End Page Title Area -->
+<!-- Start Blog  Area -->
+<div class="blog-area bg-color1">
+   <div class="blog-wrapper section-spacing">
+      <div class="container">
+         <div class="row">
+            <div class="col-md-7 col-lg-8">
+               {% for post in paginator.posts %}
+               <article class="blog-post blog-spacing wow fadeIn" data-wow-duration="1s">
+                  {% if post.post_image %}
+                  <div class="blog-img">
+                     <a href="{{post.url | relative_url}}"><img src="{{post.post_image | relative_url}}" alt="{{post.title}}"/></a>    
+                  </div>
+                  {% endif %}
+                  <div class="blog-content">
+                     <h3 class="heading-3"><a href="{{post.url | relative_url}}">{{post.title}}</a></h3>
+                     <div class="post-excerpt">
+                        {{post.content | truncatewords:30}}
+                     </div>
+                  </div>
+                  <ul class="blog-meta list-inline">
+                     {% if post.author %}
+                     <li class="list-inline-item"><img src="{{ '/assets/images/blog-author.png' | relative_url }}" alt="{{post.title}}">
+                        <a href="{{post.author_url | relative_url}}">{{post.author}}</a>
+                     </li>
+                     {% endif %}
+                     {% if post.date %}
+                     <li class="list-inline-item"><img src="{{ '/assets/images/blog-date.png' | relative_url }}" alt="{{post.title}}">{{post.date | date_to_long_string}}</li>
+                     {% endif %}
+                  </ul>
+               </article>
+               {% endfor %}
+               {% include pagination.html %}
+            </div>
+            <div class="col-md-5 col-lg-4">
+               {% include sidebar.html %}
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+<!-- End Blog Area -->
+{% include footer.html %}

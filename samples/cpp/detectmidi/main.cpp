@@ -23,6 +23,11 @@ int __cdecl main(int argc, char* argv[])
 {
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
+    // if you don't want to use wil:: https://github.com/microsoft/wil/wiki then
+    // use your own preferred non-throwing COM pointer approach here. If you are
+    // using this from code that has already initialized WinRT, you can use
+    // winrt::com_ptr. Or from ATL, you can use CComPtr. Just be aware of any
+    // behaviorial differences, such as throwing an exception on error
     wil::com_ptr_nothrow<IUnknown> servicePointer;
 
     auto hr = CoCreateInstance(

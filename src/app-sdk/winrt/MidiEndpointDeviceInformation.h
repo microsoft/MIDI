@@ -18,7 +18,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static midi2::MidiEndpointDeviceInformation CreateFromEndpointDeviceId(_In_ winrt::hstring const& endpointDeviceId) noexcept;
 
-        static midi2::MidiEndpointDeviceInformation CreateFromMidi1PortDeviceId(_In_ winrt::hstring const& deviceId) noexcept;
+        static midi2::MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortDeviceId(_In_ winrt::hstring const& deviceId) noexcept;
 
         static winrt::guid EndpointInterfaceClass() noexcept { return internal::StringToGuid(STRING_DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI); }
 
@@ -31,11 +31,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAll() noexcept;
 
-        static midi2::MidiEndpointDeviceInformation CreateFromMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
-        static winrt::hstring GetEndpointDeviceIdForMidi1PortIndex(_In_ uint32_t const portIndex, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static midi2::MidiEndpointDeviceInformation CreateFromAssociatedMidi1PortNumber(_In_ uint32_t const portNumber, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static winrt::hstring FindEndpointDeviceIdForAssociatedMidi1PortNumber(_In_ uint32_t const portNumber, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
 
-        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAllForMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
-        static collections::IVectorView<winrt::hstring> FindAllEndpointDeviceIdsForMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static collections::IVectorView<midi2::MidiEndpointDeviceInformation> FindAllForAssociatedMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        static collections::IVectorView<winrt::hstring> FindAllEndpointDeviceIdsForAssociatedMidi1PortName(_In_ winrt::hstring const& portName, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
 
 
 
@@ -43,9 +43,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
 
         static collections::IVectorView<winrt::hstring> GetAdditionalPropertiesList() noexcept;
-
-        //static winrt::Windows::Devices::Enumeration::DeviceWatcher CreateWatcher(
-        //    _In_ midi2::MidiEndpointDeviceInformationFilters const& endpointFilters) noexcept;
 
         static bool DeviceMatchesFilter(
             _In_ midi2::MidiEndpointDeviceInformation const& deviceInformation,
@@ -69,8 +66,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         winrt::hstring Name() const noexcept;
 
-//        winrt::hstring TransportSuppliedName() const noexcept { return m_transportSuppliedEndpointName; }  // todo: may need to update this later
-
         midi2::MidiEndpointDevicePurpose EndpointPurpose() const noexcept;
 
 
@@ -89,8 +84,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         collections::IMapView<winrt::hstring, IInspectable> Properties() { return m_properties.GetView(); }
 
-        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> GetAssociatedMidi1Ports(_In_ midi2::Midi1PortFlow const portFlow) const noexcept;
-        midi2::MidiEndpointAssociatedPortDeviceInformation GetAssociatedMidi1PortForGroup(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow) const noexcept;
+        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> FindAllAssociatedMidi1PortsForThisEndpoint(_In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        collections::IVectorView<midi2::MidiEndpointAssociatedPortDeviceInformation> FindAllAssociatedMidi1PortsForThisEndpoint(_In_ midi2::Midi1PortFlow const portFlow, _In_ bool const useCachedPortInformationIfAvailable) noexcept;
+
+        midi2::MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
+        midi2::MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow, _In_ bool const useCachedPortInformationIfAvailable) noexcept;
 
         collections::IVectorView<midi2::Midi1PortNameTableEntry> GetNameTable() const noexcept;
 
@@ -106,6 +104,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& info) noexcept;
 
     private:
+        static winrt::hstring GetMidi1PortDeviceSelector(_In_ midi2::Midi1PortFlow const portFlow);
+
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>* GetMidi1PortCache(_In_ midi2::Midi1PortFlow const portFlow);
+        collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation>* FindAndCacheAssociatedMidi1PortInformation(_In_ midi2::Midi1PortFlow const portFlow, _In_ bool const refreshCache) noexcept;
+
         // we keep these here so they can be returned from functions, but we re-query these each time
         collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> m_midi1SourcePorts{ winrt::single_threaded_vector<midi2::MidiEndpointAssociatedPortDeviceInformation>() };
         collections::IVector<midi2::MidiEndpointAssociatedPortDeviceInformation> m_midi1DestinationPorts{ winrt::single_threaded_vector<midi2::MidiEndpointAssociatedPortDeviceInformation>() };
@@ -114,104 +117,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             _In_ winrt::hstring key,
             _In_ foundation::DateTime defaultValue) const noexcept;
 
-
-        //template<typename T>
-        //inline T GetProperty(
-        //    winrt::hstring key,
-        //    T defaultValue
-        //) const noexcept
-        //{
-        //    if (!m_properties.HasKey(key)) return defaultValue;
-        //    if (m_properties.Lookup(key) == nullptr) return defaultValue;
-
-        //    std::optional<T> opt = m_properties.Lookup(key).try_as<T>();
-
-        //    if (opt == std::nullopt)
-        //    {
-        //        return defaultValue;
-        //    }
-        //    else
-        //    {
-        //        return opt.value();
-        //    }
-        //}
-
-        //template<typename T>
-        //T GetProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ T defaultValue) const noexcept;
-
-        //winrt::hstring GetStringProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ winrt::hstring defaultValue) const noexcept;
-
-        //winrt::guid GetGuidProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ winrt::guid defaultValue) const noexcept;
-
-        //winrt::hstring GetGuidPropertyAsString(
-        //    _In_ winrt::hstring key,
-        //    _In_ winrt::hstring defaultValue) const noexcept;
-
-        //uint8_t GetByteProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ uint8_t defaultValue) const noexcept;
-
-        //uint64_t GetUInt64Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ uint64_t defaultValue) const noexcept;
-
-        //uint32_t GetUInt32Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ uint32_t defaultValue) const noexcept;
-
-        //uint16_t GetUInt16Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ uint16_t defaultValue) const noexcept;
-
-
-        //int64_t GetInt64Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ int64_t defaultValue) const noexcept;
-
-        //int32_t GetInt32Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ int32_t defaultValue) const noexcept;
-
-        //int16_t GetInt16Property(
-        //    _In_ winrt::hstring key,
-        //    _In_ int16_t defaultValue) const noexcept;
-
-
-        //bool GetBoolProperty(
-        //    _In_ winrt::hstring key,
-        //    _In_ bool defaultValue) const noexcept;
-
         foundation::IReferenceArray<uint8_t> GetBinaryProperty(
             _In_ winrt::hstring key) const noexcept;
 
-
         winrt::hstring m_id{};
-
 
         collections::IMap<winrt::hstring, foundation::IInspectable> m_properties 
             { winrt::multi_threaded_map<winrt::hstring, foundation::IInspectable>() };
 
         // these don't change, so fine to keep them as a class var
         collections::IVector<midi2::MidiGroupTerminalBlock> m_groupTerminalBlocks
-            { winrt::single_threaded_vector<midi2::MidiGroupTerminalBlock>() };
+            { winrt::multi_threaded_vector<midi2::MidiGroupTerminalBlock>() };
 
-
-        //MidiDeviceIdentityProperty m_deviceIdentity;
-
-        //void ReadDeviceIdentity();
-        //void ReadFunctionBlocks();
         void ReadGroupTerminalBlocks();
-
-
-        //void AddOrUpdateFunctionBlock(_In_ foundation::IReferenceArray<uint8_t> refArray);
-
-
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::factory_implementation

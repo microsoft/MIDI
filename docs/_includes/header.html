@@ -1,0 +1,88 @@
+<!-- Loading -->
+<div class="loading-main">
+    <div class="pre-loader">
+        <div class="loading">
+            <div class="bounceball"></div>
+            <div class="text">NOW LOADING</div>
+        </div>
+    </div>
+</div>
+
+<!-- Start Header Area -->
+<header class="header-area">
+    <div class="header-navigation">
+        <div class="container">
+            <div class="navigation-box">
+                <div class="navigation-left">
+                    <a class="header-logo" href="{{ "/" | relative_url }}"><img src="{{ '/assets/images/Microsoft-logo_rgb_wht.png' | relative_url }}" alt="header logo"></a>
+                </div>
+               
+					
+      <div class="navigation-right">
+                     <nav class="navigation-navbar">
+                        <ul id="navigation-menu" class="slimmenu">
+				{% for link in site.data.navigation %}
+					{% assign active = nil %}
+
+					{% for sublink in link.submenu %}
+						{% if page.url contains sublink.url %}
+							{% assign active = 'active' %}
+						{% endif %}
+					{% endfor %}
+
+					{% if page.url contains link.url %}
+						{% assign active = 'active' %}
+					{% endif %}
+
+					<li class="{{ active }}{% if link.submenu %} themeix-dropdown has-children{% endif %}">
+						<a href="{{ link.url | relative_url }}">{{ link.text }}</a>
+
+						{% if link.submenu %}						
+							<ul class="themeix-dropdown-item" role="menu">
+								{% for sublink in link.submenu %}
+									<li {% if page.url contains sublink.url %}class="active"{% endif %}>
+										<a href="{{ sublink.url | relative_url }}">{{ sublink.text }}</a>
+									</li>
+								{% endfor %}
+							</ul>
+						{% endif %}
+					</li>
+				{% endfor %}
+			 	 <li>
+                    <a class="nav-search" data-toggle="modal" data-target="#modal"><img src="{{ '/assets/images/search-logo.png' | relative_url }}" alt="nav search"></a>
+                 </li>
+			    </ul>
+                </nav>
+	
+                </div>
+                <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+                        <div class="modal-content">
+						 <div class="modal-header">
+							<h5 class="modal-title" id="exampleModalScrollableTitle">Search Docs</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							  <span aria-hidden="true">&times;</span>
+							</button>
+						  </div>
+
+                            <div class="modal-body">
+                                <form class="modal-search-form" action="#">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="search-input" placeholder="Search Somthing" required="">
+                                        <span class="input-group-btn">
+                                   <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
+                                     </span>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <ul id="results-container"></ul>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<!-- End Header Area -->

@@ -21,6 +21,7 @@ import "MidiMessage32.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageConverterStatics", 8087b303-0519-31d1-c0de-ee0000700000)]
     static runtimeclass MidiMessageConverter
     {
         static Microsoft.Windows.Devices.Midi2.MidiMessage32 ConvertMidi1Message(

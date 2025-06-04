@@ -85,6 +85,8 @@ public:
     bool HasStarted() { return m_started; }
 
 private:
+    winrt::hstring m_configIdentifier{};
+
     bool m_started{ false };
     bool m_createUmpEndpointsOnly{ true };
 

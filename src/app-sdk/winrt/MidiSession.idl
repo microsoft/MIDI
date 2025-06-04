@@ -16,7 +16,8 @@ import "IMidiEndpointConnectionSettings.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [default_interface]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiSession", 8087b303-0519-31d1-c0de-dd00000a0000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiSessionStatics", 8087b303-0519-31d1-c0de-ee00000a0000)]
     runtimeclass MidiSession : Windows.Foundation.IClosable, Windows.Foundation.IStringable
     {
         Guid SessionId { get; };

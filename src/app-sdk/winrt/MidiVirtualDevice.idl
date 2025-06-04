@@ -17,7 +17,7 @@ import "MidiStreamConfigRequestReceivedEventArgs.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
     [contract(MidiEndpointsVirtualApiContract, 1)]
-    [default_interface]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.IMidiVirtualDevice", 8087b303-0519-31d1-c0de-dd00000f0000)]
     runtimeclass MidiVirtualDevice : Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin
     {
         String DeviceEndpointDeviceId{ get; };

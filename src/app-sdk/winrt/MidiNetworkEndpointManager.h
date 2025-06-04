@@ -6,7 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
 #pragma once
 #include "Endpoints.Network.MidiNetworkEndpointManager.g.h"
 
@@ -18,25 +17,25 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
         // TODO: may want to move the enumeration functions to another class
 
-        static winrt::hstring MidiNetworkUdpDnsServiceType();
-        static winrt::hstring MidiNetworkUdpDnsDomain();
-        static winrt::hstring MidiNetworkUdpDnsSdQueryString();
-        static enumeration::DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind();
+        static winrt::hstring MidiNetworkUdpDnsServiceType() noexcept;
+        static winrt::hstring MidiNetworkUdpDnsDomain() noexcept;
+        static winrt::hstring MidiNetworkUdpDnsSdQueryString() noexcept;
+        static enumeration::DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind() noexcept;
 
-        static collections::IVector<winrt::hstring> MidiNetworkUdpDnsSdQueryAdditionalProperties();
+        static collections::IVector<winrt::hstring> MidiNetworkUdpDnsSdQueryAdditionalProperties() noexcept;
 
-        static bool IsTransportAvailable();
+        static bool IsTransportAvailable() noexcept;
         
-        static const winrt::guid TransportId() noexcept { return internal::StringToGuid(L"{c95dcd1f-cde3-4c2d-913c-528cb8a4cbe6}"); }
+        static const winrt::guid TransportId() noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
 
 
-        static midi2::Endpoints::Network::MidiNetworkHostEndpointCreationResult CreateNetworkHost(midi2::Endpoints::Network::MidiNetworkHostEndpointCreationConfig const& creationConfig);
-        static midi2::Endpoints::Network::MidiNetworkHostEndpointRemovalResult RemoveNetworkHost(midi2::Endpoints::Network::MidiNetworkHostEndpointRemovalConfig const& removalConfig);
-        static midi2::Endpoints::Network::MidiNetworkClientEndpointCreationResult CreateNetworkClient(midi2::Endpoints::Network::MidiNetworkClientEndpointCreationConfig const& creationConfig);
-        static midi2::Endpoints::Network::MidiNetworkClientEndpointRemovalResult RemoveNetworkClient(midi2::Endpoints::Network::MidiNetworkClientEndpointRemovalConfig const& removalConfig);
+        static network::MidiNetworkHostCreationResult CreateNetworkHost(_In_ network::MidiNetworkHostCreationConfig const& creationConfig);
+        static network::MidiNetworkHostRemovalResult RemoveNetworkHost(_In_ network::MidiNetworkHostRemovalConfig const& removalConfig);
 
-        static collections::IVector<midi2::Endpoints::Network::MidiNetworkAdvertisedHost> GetAdvertisedHosts();
+        static network::MidiNetworkClientEndpointCreationResult CreateNetworkClient(_In_ network::MidiNetworkClientEndpointCreationConfig const& creationConfig);
+        static network::MidiNetworkClientEndpointRemovalResult RemoveNetworkClient(_In_ network::MidiNetworkClientEndpointRemovalConfig const& removalConfig);
 
+        static collections::IVectorView<network::MidiNetworkAdvertisedHost> GetAdvertisedHosts() noexcept;
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation

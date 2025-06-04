@@ -1,0 +1,208 @@
+/**
+* ============================
+*  6.0 Component
+* ============================
+*/
+/*Bg Color*/
+.bg-color1{
+    background-color:$bg-color-default;
+}
+.bg-color2{
+    background-color:$bg-color2;
+}
+.bg-color3{
+    background-color:$bg-color3;
+}
+/*Spacing*/
+%section-spacing{
+    padding-top:$padding-large;
+    padding-bottom:$padding-large;
+    @include desktop{
+        padding-top:$padding-large - 30px;
+        padding-bottom:$padding-large - 30px;
+    }
+    @include tablet{
+        padding-top:$padding-large - 40px;
+        padding-bottom:$padding-large - 40px;
+    }
+}
+%inner-spacing{
+    padding-top:$padding-default;
+    padding-bottom:$padding-default;
+    @include tablet{
+        padding-top:$padding-default - 20px;
+        padding-bottom:$padding-default - 20px;
+    }
+}
+%bminus-30{
+    padding-bottom:$padding-large - 30px;
+    @include desktop{
+        padding-bottom:$padding-large - 50px;
+    }
+    @include tablet{
+        padding-bottom:$padding-large - 70px;
+    }
+}
+%tminus-30{
+    padding-top:$padding-large - 30px;
+    @include desktop{
+        padding-top:$padding-large - 50px;
+    }
+    @include tablet{
+        padding-top:$padding-large - 70px;
+    }
+}
+
+.section-spacing{
+    @extend  %section-spacing;
+}
+.inner-spacing{
+    @extend %inner-spacing;
+}
+.bminus-30{
+    @extend  %bminus-30;
+}
+.tminus-30{
+    @extend  %tminus-30;
+}
+/*Overlay Color*/
+.bg-transparent{
+    background: transparent;
+}
+
+.bg-cover1{
+    background:url(../images/bg-pattern.svg) 50% no-repeat,linear-gradient(60deg,$hover-color,lighten($hover-color, 20%));
+	
+}
+.bg-cover2{
+     background:url(../images/bg-pattern2.svg) 50% no-repeat,linear-gradient(0deg,$hover-color,darken($hover-color, 20%));
+
+	 
+}
+
+%overlay-color{
+    @include background-opacity($bg-color2, .9);
+    position: absolute;
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;
+    z-index: 2;
+}
+%overlay-color2{
+    background: -moz-linear-gradient(top, rgba(12,98,175,0.9) 0%, rgba(162,64,140,0.9) 100%); /* FF3.6-15 */
+background: -webkit-linear-gradient(top, rgba(12,98,175,0.9) 0%,rgba(162,64,140,0.9) 100%); /* Chrome10-25,Safari5.1-6 */
+background: linear-gradient(to bottom, rgba(12,98,175,0.9) 0%,rgba(162,64,140,0.9) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e60c62af', endColorstr='#e6a2408c',GradientType=0 ); /* IE6-9 */
+    position: absolute;
+    left:0;
+    right:0;
+    top:0;
+    bottom:0;
+    z-index: 2;
+}
+.overlay-color{
+    @extend %overlay-color;
+}
+.overlay-color2{
+    @extend %overlay-color2;
+}
+/*All Section*/
+[class*="area"]{
+    position: relative;
+    background-size: cover;
+    background-position: center;
+}
+
+/*Button Style*/
+
+  %button1{
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    padding: 15px 30px;
+    font-weight: $font-weight-semi;
+    color: $font-color2;
+    border-radius: $border-radius;
+    background-color:$button-bg;
+    border: $border-solid $button-bg;
+    overflow: hidden;
+    &:hover, &:focus, &:active {
+      color: $font-color3;
+      background-color:$button-bg;
+    border: $border-solid $button-bg2;
+    }
+  }
+
+  %button2 {
+    display: inline-block;
+    vertical-align: middle;
+    -webkit-transform: perspective(1px) translateZ(0);
+    Transform: perspective (1px) translates (0);
+    position: relative;
+    padding: 15px 30px;
+    color: $font-color4;
+    border-radius: $border-radius;
+    background-color:$button-bg2;
+    -webkit-transition-property: color;
+    transition-property: color;
+    -webkit-transition-duration: 0.3s;
+    transition-duration: 0.3s;
+    font-weight: $font-weight-semi;
+    border: $border-solid $border-color;
+    overflow: hidden;
+    &:before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: $button-bg;
+      -webkit-transform: scaleY(0);
+      transform: scaleY(0);
+      -webkit-transform-origin: 50% 100%;
+      transform-origin: 50% 100%;
+      -webkit-transition-property: transform;
+      transition-property: transform;
+      -webkit-transition-duration: 0.3s;
+      transition-duration: 0.3s;
+      -webkit-transition-timing-function: ease-out;
+      transition-timing-function: ease-out;
+    }
+    &:hover, &:focus, &:active {
+      color: $font-color3;
+      border: $border-solid $border-color;
+    }
+    &:hover:before, &:focus:before, &:active:before {
+      -webkit-transform: scaleY(1);
+      transform: scaleY(1);
+    }
+  }
+%button3{
+    display: inline-block;  
+    vertical-align: middle;
+    position: relative;
+    padding: 12px 30px;
+    font-weight: $font-weight-semi;
+    color: $font-color4;
+    border-radius: $border-radius-round;
+    background-color:$button-bg2;
+    border: $border-solid $button-bg;
+    overflow: hidden;
+    &:hover, &:focus, &:active {
+      color: $font-color3!important;
+      background-color:$button-bg;
+    border: $border-solid $button-bg2;
+    }
+  }
+.btn-style1{
+    @extend %button1;
+}
+.btn-style2{
+    @extend %button2;
+}
+.btn-style3{
+    @extend %button3;
+}

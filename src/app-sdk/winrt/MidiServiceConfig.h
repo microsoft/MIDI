@@ -19,8 +19,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         static svc::MidiServiceConfigResponse UpdateTransportPluginConfig(
             _In_ svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept;
 
-        static svc::MidiServiceConfigResponse UpdateProcessingPluginConfig(
-            _In_ svc::IMidiServiceMessageProcessingPluginConfig const& configUpdate) noexcept;
+        //static svc::MidiServiceConfigResponse UpdateProcessingPluginConfig(
+        //    _In_ svc::IMidiServiceMessageProcessingPluginConfig const& configUpdate) noexcept;
 
     private:
 

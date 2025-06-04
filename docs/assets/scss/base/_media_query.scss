@@ -1,0 +1,27 @@
+/**
+* ============================
+*  3.0 Media Query
+* ============================
+*/
+
+$mobile-device: 575px;
+$tablet-device: 768px;
+$desktop-device: 991px;
+
+@mixin desktop {
+  @media (min-width: #{$tablet-device}) and (max-width: #{$desktop-device}) {
+    @content;
+  } 
+}  
+ 
+@mixin tablet {
+  @media (max-width: #{$tablet-device}) {
+    @content;
+  }
+}
+
+@mixin mobile {
+  @media (max-width: #{$mobile-device}) {
+    @content;
+  }
+}

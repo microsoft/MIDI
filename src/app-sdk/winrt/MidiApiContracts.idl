@@ -44,11 +44,11 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints
         apicontract MidiEndpointsVirtualApiContract { };
     }
 
-    //namespace Network
-    //{
-    //    [contractversion(1)]
-    //    apicontract MidiEndpointsNetworkApiContract { };
-    //}
+    namespace Network
+    {
+        [contractversion(1)]
+        apicontract MidiEndpointsNetworkApiContract { };
+    }
 
 }
 

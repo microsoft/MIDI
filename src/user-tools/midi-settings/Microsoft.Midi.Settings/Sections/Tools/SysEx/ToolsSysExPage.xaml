@@ -103,7 +103,7 @@
                             <TextBlock Grid.Column="1" 
                                        Grid.Row="0"
                                        Margin="5"
-                                       Text="{x:Bind ViewModel.SelectedFile.Name, Mode=OneWay}" 
+                                       Text="{x:Bind ViewModel.SelectedFileName, Mode=OneWay}" 
                                        Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
 

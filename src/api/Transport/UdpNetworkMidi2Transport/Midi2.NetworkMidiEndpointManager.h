@@ -24,6 +24,7 @@ public:
 
     STDMETHOD(CreateNewEndpoint(
         _In_ MidiNetworkConnectionRole thisServiceRole,
+        _In_ std::wstring const& configIdentifier,
         _In_ std::wstring const& endpointName,
         _In_ std::wstring const& remoteEndpointProductInstanceId,
         _In_ winrt::Windows::Networking::HostName const& hostName,
@@ -66,6 +67,11 @@ private:
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
+
+    HRESULT StartNewClient(
+        _In_ std::shared_ptr<MidiNetworkClientDefinition> clientDefinition, 
+        _In_ winrt::hstring const& hostNameOrIPAddress, 
+        _In_ uint16_t const hostPort);
 
 
     std::jthread m_backgroundEndpointCreatorThread;

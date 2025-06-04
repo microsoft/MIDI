@@ -91,14 +91,30 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfig", defaultThreading });
 
+    // Loopback MIDI
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointCreationConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointManager", defaultThreading });
 
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointRemovalConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointManager", defaultThreading });
+
+    // App-to-app MIDI (Virtual Device)
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceCreationConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceManager", defaultThreading });
 
-    // todo: add network
+    // Network MIDI 2.0
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkEndpointManager", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkHostCreationConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkHostRemovalConfig", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientEndpointCreationConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientEndpointRemovalConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientMatchCriteria", defaultThreading });
+
+
+
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveSender", defaultThreading });
@@ -138,6 +154,7 @@ MidiAppSdkRuntimeComponentCatalog::Initialize()
     m_sdkMetadataFullFilename = m_sdkDirectory + L"\\" + std::wstring{ MIDI_SDK_METADATA_NAME };
     m_sdkImplementationFullFilename = m_sdkDirectory + L"\\" + std::wstring{ MIDI_SDK_IMPL_DLL_NAME };
 
+    m_types.clear();
 
     auto types = GetMidiAppSdkManifestTypes();
 
@@ -174,15 +191,15 @@ _Use_decl_annotations_
 bool 
 MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace) const
 {
-    TraceLoggingWrite(
-        Midi2SdkTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
-    );
+    //TraceLoggingWrite(
+    //    Midi2SdkTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_INFO,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
+    //);
 
     if (typeOrNamespace != NULL)
     {
@@ -200,10 +217,31 @@ MidiAppSdkRuntimeComponentCatalog::TypeIsInScope(HSTRING const typeOrNamespace) 
                 MIDI_SDK_ROOT_NAMESPACE, MIDI_SDK_ROOT_NAMESPACE_LENGTH,
                 false) == CSTR_EQUAL)
             {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Type is in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(typeOrNamespaceBuffer, "type or namespace")
+                );
+
                 return true;
             }
         }
     }
+
+    TraceLoggingWrite(
+        Midi2SdkTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Type is NOT in scope", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(WindowsGetStringRawBuffer(typeOrNamespace, NULL), "type or namespace")
+    );
+
 
     return false;
 }
@@ -235,6 +273,8 @@ MidiAppSdkRuntimeComponentCatalog::GetThreadingModel(
         return S_OK;
     }
 
+    auto errorMessage = std::wstring{ L"MIDI Component Catalog REGDB_E_CLASSNOTREG: " } + std::wstring{ raw_class_name } + L"\n\r";
+    OutputDebugString(errorMessage.c_str());
     return REGDB_E_CLASSNOTREG;
 }
 
@@ -247,6 +287,8 @@ MidiAppSdkRuntimeComponentCatalog::GetActivationFactory(
     void** factory
 ) const
 {
+    auto raw_class_name = WindowsGetStringRawBuffer(activatableClassId, nullptr);
+
     TraceLoggingWrite(
         Midi2SdkTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -254,11 +296,9 @@ MidiAppSdkRuntimeComponentCatalog::GetActivationFactory(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(WindowsGetStringRawBuffer(activatableClassId, nullptr), "class id")
+        TraceLoggingWideString(raw_class_name, "class id")
     );
 
-
-    auto raw_class_name = WindowsGetStringRawBuffer(activatableClassId, nullptr);
     auto component_iter = m_types.find(raw_class_name);
     if (component_iter != m_types.end())
     {

@@ -12,12 +12,9 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    winrt::guid MidiNetworkClientEndpointRemovalConfig::TransportId()
+
+    winrt::hstring MidiNetworkClientEndpointRemovalConfig::GetConfigJson() const noexcept
     {
-        throw hresult_not_implemented();
-    }
-    hstring MidiNetworkClientEndpointRemovalConfig::GetConfigJson()
-    {
-        throw hresult_not_implemented();
+        return L"";
     }
 }

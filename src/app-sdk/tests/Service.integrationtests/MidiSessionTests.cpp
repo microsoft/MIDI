@@ -11,7 +11,7 @@
 
 void MidiSessionTests::TestCreateNewSession()
 {
- //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto initializer = InitWinRTAndSDK_MTA();
 
     winrt::hstring sessionName = L"Test Session Name";
 
@@ -20,17 +20,21 @@ void MidiSessionTests::TestCreateNewSession()
     VERIFY_IS_NOT_NULL(session);
 
     VERIFY_IS_TRUE(session.IsOpen());
-
     VERIFY_ARE_EQUAL(session.Name(),sessionName);
-
     VERIFY_ARE_EQUAL(session.Connections().Size(), (uint32_t)0);
 
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    session = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
 }
 
 void MidiSessionTests::TestSessionList()
 {
- //   VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
+    auto initializer = InitWinRTAndSDK_MTA();
 
     winrt::hstring session1Name = L"Session 1 Name";
     winrt::hstring session2Name = L"Session 2 Name";
@@ -61,11 +65,22 @@ void MidiSessionTests::TestSessionList()
 
     session1.Close();
     session2.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    session1 = nullptr;
+    session2 = nullptr;
+    sessionList = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
+
 }
 
 
 void MidiSessionTests::TestUpdateSessionName()
 {
+    auto initializer = InitWinRTAndSDK_MTA();
+
 //    VERIFY_IS_TRUE(MidiServicesInitializer::EnsureServiceAvailable());
 
     winrt::hstring oldSessionName = L"Test Session Name";
@@ -100,4 +115,12 @@ void MidiSessionTests::TestUpdateSessionName()
     VERIFY_IS_TRUE(found);
 
     session.Close();
+
+    // if you really want to call uninit_apartment, you must release all your COM and WinRT references first
+    // these don't go out of scope here and self-destruct, so we set them to nullptr
+    session = nullptr;
+    sessionList = nullptr;
+
+    ShutdownSDKAndWinRT(initializer);
+
 }

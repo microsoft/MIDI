@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<Platform>x64</Platform>
-	<Platforms>AnyCPU;x64;ARM64</Platforms>
+	<Platforms>x64;ARM64</Platforms>
   </PropertyGroup>
 
 	<PropertyGroup>
@@ -33,16 +33,52 @@
 		<AssemblyName>Microsoft.Windows.Devices.Midi2.NetProjection</AssemblyName>
 		<PackageOutputPath>$(SolutionDir)vsfiles\PublishedNuGet\</PackageOutputPath>
 		<SupportedOSPlatformVersion>10.0.20348.00</SupportedOSPlatformVersion>
-		<BaseOutputPath>$(SolutionDir)vsfiles\NetProjections\</BaseOutputPath>
+		<BaseOutputPath>$(SolutionDir)vsfiles\out\$(AssemblyName)\</BaseOutputPath>
         <WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion>
+
+        <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
+        <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+        <Deterministic>true</Deterministic>
     </PropertyGroup>
 
     <PropertyGroup>
         <!-- Workaround for MSB3271 error on processor architecture mismatch -->
         <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     </PropertyGroup>
-    
-  <ItemGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_x64</DefineConstants>
+        <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+        <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_x64</DefineConstants>
+        <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+        <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_ARM64</DefineConstants>
+        <PlatformTarget>ARM64</PlatformTarget>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+        <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_ARM64</DefineConstants>
+        <PlatformTarget>ARM64</PlatformTarget>
+    </PropertyGroup>
+
+    <!-- EC doesn't exist for C#, but the solution uses it for native code -->
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
+        <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_ARM64</DefineConstants>
+        <PlatformTarget>ARM64</PlatformTarget>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
+        <DefineConstants>$(DefineConstants);COMPILE_ARCHITECTURE_ARM64</DefineConstants>
+        <PlatformTarget>ARM64</PlatformTarget>
+    </PropertyGroup>
+    <ItemGroup>
+      <Compile Include="..\..\..\..\build\staging\version\WindowsMidiServicesVersion.cs" Link="WindowsMidiServicesVersion.cs" />
+    </ItemGroup>
+
+
+    <ItemGroup>
     <None Include="nuget\README.md" />
   </ItemGroup>
 
@@ -54,5 +90,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\winrt\Microsoft.Windows.Devices.Midi2.vcxproj" />
   </ItemGroup>
+
 
 </Project>

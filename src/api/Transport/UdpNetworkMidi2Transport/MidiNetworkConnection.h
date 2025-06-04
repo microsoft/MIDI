@@ -30,6 +30,7 @@ class MidiNetworkConnection
 public:
     HRESULT Initialize(
         _In_ MidiNetworkConnectionRole const role,
+        _In_ winrt::hstring configIdentifier,
         _In_ winrt::Windows::Networking::Sockets::DatagramSocket const& socket,
         _In_ winrt::Windows::Networking::HostName const& remoteHostName,
         _In_ winrt::hstring const& remotePort,
@@ -75,6 +76,8 @@ private:
 
     HRESULT RequestMissingPackets();
 
+    winrt::hstring m_configIdentifier{};
+        
     wil::slim_event_manual_reset m_newMessagesInQueueEvent;
     wil::critical_section m_outgoingUmpMessageQueueLock;
     std::vector<uint32_t> m_outgoingUmpMessages{};

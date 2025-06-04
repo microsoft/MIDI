@@ -13,6 +13,7 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 
 | Sample | Description |
 | -------| ----------- |
+| [Full Init](full-init/) | Shows complete end-to-end of detecting Windows MIDI Services, downloading missing bits, and initializing the SDK. |
 | [App SDK Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages|
 | [Enumerate Endpoints](static-enum-endpoints/) | Demonstrates enumerating endpoints, getting group terminal and function blocks, and other properties|
 | [Loopback Endpoints](loopback-endpoints/) | Demonstrates how to create simple loopback endpoints at runtime.|
