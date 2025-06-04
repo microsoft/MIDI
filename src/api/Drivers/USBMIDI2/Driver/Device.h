@@ -50,6 +50,11 @@ Environment:
 #include "Common.h"
 #include "StreamEngine.h"
 
+// Used to regulate the IO buffering of driver through to service
+#define USB_WRITE_MAX_URBS      5
+#define USB_READ_MAX_BUFFERS    128 * 4 * 8 // 128 32bit UMP / USB MIDI 1
+                                            // messages * 4 sets * 8 standard double buffer size
+
 // Used for handling exchange of SYSEX between USB MIDI 1.0 and UMP
 #define UMPTOBS_BUFFER 12
 #define SYSEX_START 0xF0
@@ -104,6 +109,12 @@ typedef struct _DEVICE_CONTEXT {
     ULONG                       UsbDeviceTraits;
     UINT16                      UsbOutMask;         // Primarily for legacy support, mask for CableIDs supported
     UINT16                      UsbInMask;          // Primarily for legacy support, mask for CableIDs supported
+    HANDLE                      WriteEvent;
+    HANDLE                      ReadEvent;
+    KEVENT                      UsbWriteEvent;      // Used to indicate that a USB Out Write packet has been completed
+    UINT                        UsbWriteIOUrbs;
+    KSPIN_LOCK                  UsbWriteIOUrbsLock;
+    KEVENT                      UsbReadBufferEvent; // Used to indicate that data has been pulled from Read Buffer
 
     // Buffers and information for USB MIDI 1.0 and UMP translations
     bool                        midi1IsInSysex[MAX_NUM_GROUPS_CABLES];
@@ -136,6 +147,11 @@ typedef struct _DEVICE_CONTEXT {
     PUCHAR                      DeviceWriteBuffer;
     size_t                      DeviceWriteBufferIndex;
     WDFREQUEST                  DeviceUSBWriteRequest;
+
+    //
+    // Following fields to help with diagnostics on buffer management
+    // 
+    UINT                        NumberBuffersProcessed;
 
     //
     // Streaming Engine
