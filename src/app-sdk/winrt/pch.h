@@ -257,3 +257,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "Initialization/MidiClientInitializer.h"
 #include "MidiClientInitializerSingleton.h"
 #include "MidiClientInitializerFactory.h"
+
+#include "MidiRuntimeRelease.h"
+#include "MidiRuntimeUpdateUtility.h"
+

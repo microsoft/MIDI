@@ -228,9 +228,11 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
 
 }
 
+#if false
 _Use_decl_annotations_
 HRESULT
 MidiClientInitializer::GetLatestAvailableDownloadableSdkVersion(
+    bool includePreview,
     DWORD* versionMajor,
     DWORD* versionMinor,
     DWORD* versionRevision,
@@ -247,6 +249,7 @@ MidiClientInitializer::GetLatestAvailableDownloadableSdkVersion(
     //{
     //    "source": "GitHub Preview",
     //    "name" : "Customer Preview 3",
+    //    "type" : "stableRelease",
     //    "versionFull" : "1.0.3-preview-12.250524-1404",
     //    "versionMajor" : 1,
     //    "versionMinor" : 0,
@@ -338,6 +341,7 @@ MidiClientInitializer::GetLatestAvailableDownloadableSdkVersion(
 
     return S_OK;
 }
+#endif
 
 
 HRESULT

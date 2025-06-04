@@ -470,6 +470,8 @@
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiRuntimeRelease.h" />
+    <ClInclude Include="MidiRuntimeUpdateUtility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -762,6 +764,8 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="MidiRuntimeRelease.cpp" />
+    <ClCompile Include="MidiRuntimeUpdateUtility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiEndpointConnectionSource.idl" />
@@ -822,6 +826,9 @@
     <Midl Include="MidiNetworkHostRemovalResult.idl" />
     <Midl Include="Midi1PortFlowEnum.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
+    <Midl Include="MidiRuntimeRelease.idl" />
+    <Midl Include="MidiRuntimeUpdateReleaseTypeEnum.idl" />
+    <Midl Include="MidiRuntimeUpdateUtility.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />

@@ -1,11 +1,22 @@
 {
-    "source": "GitHub Preview",
-    "name": "Customer Preview 3",
-    "versionFull": "1.0.3-preview-12.250524-1404",
-    "versionMajor": 1,
-    "versionMinor": 0,
-    "versionRevision": 3,
-    "versionDateNumber": 250524,
-    "versionTimeNumber": 1404,
-    "releaseDescription": "Added support for Network MIDI 2.0 configuration"
+    "releases":
+    [
+        {
+            "type" : "preview",
+            "source": "GitHub Preview",
+            "name": "Customer Preview 3",
+            "description": "Added support for Network MIDI 2.0 configuration as well as version checking",
+
+            "versionFull": "1.0.3-preview-12.250524-1404",
+            "versionMajor": 1,
+            "versionMinor": 0,
+            "versionRevision": 3,
+            "versionDateNumber": 250524,
+            "versionTimeNumber": 1404,
+
+            "releasePageUri" : "",
+            "directDownloadUriX64" : "",
+            "directDownloadUriArm64" : ""
+        }
+    ]
 }

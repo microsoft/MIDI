@@ -37,6 +37,7 @@ class Build : NukeBuild
     //string VersionName => "Developer Preview 9";
     string VersionName => "Customer Preview 3";
     string NuGetVersionName => "preview-12";
+    string BuildType => "Stable";        // Stable or Preview
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
 
@@ -196,15 +197,25 @@ class Build : NukeBuild
             using (StreamWriter writer = System.IO.File.CreateText(SdkVersionJsonFile))
             {
                 writer.WriteLine("{");
-                writer.WriteLine($"    \"source\": \"{buildSource}\",");
-                writer.WriteLine($"    \"name\": \"{versionName}\",");
-                writer.WriteLine($"    \"versionFull\": \"{versionString}\",");
-                writer.WriteLine($"    \"versionMajor\": {buildVersionMajor},");
-                writer.WriteLine($"    \"versionMinor\": {buildVersionMajor},");
-                writer.WriteLine($"    \"versionRevision\": {buildVersionRevision},");
-                writer.WriteLine($"    \"versionDateNumber\": {buildVersionDateNumber},");
-                writer.WriteLine($"    \"versionTimeNumber\": {buildVersionTimeNumber},");
-                writer.WriteLine($"    \"releaseDescription\": \"Replace this text with a summary of this SDK update\"");
+                writer.WriteLine("    \"releases\":");
+                writer.WriteLine("    [");
+                writer.WriteLine("        {");
+                writer.WriteLine($"            \"type\": \"{BuildType.ToLower()}\",");
+                writer.WriteLine($"            \"source\": \"{buildSource}\",");
+                writer.WriteLine($"            \"name\": \"{versionName}\",");
+                writer.WriteLine($"            \"description\": \"\",");
+                writer.WriteLine($"            \"versionFull\": \"{versionString}\",");
+                writer.WriteLine($"            \"versionMajor\": {buildVersionMajor},");
+                writer.WriteLine($"            \"versionMinor\": {buildVersionMajor},");
+                writer.WriteLine($"            \"versionRevision\": {buildVersionRevision},");
+                writer.WriteLine($"            \"versionDateNumber\": {buildVersionDateNumber},");
+                writer.WriteLine($"            \"versionTimeNumber\": {buildVersionTimeNumber},");
+                writer.WriteLine($"            \"releaseDescription\": \"Replace this text with a summary of this SDK update\"");
+                writer.WriteLine($"            \"releasePageUri\": \"\"");
+                writer.WriteLine($"            \"directDownloadUriX64\": \"\"");
+                writer.WriteLine($"            \"directDownloadUriArm64\": \"\"");
+                writer.WriteLine("        }");
+                writer.WriteLine("    ]");
                 writer.WriteLine("}");
             }
 
@@ -468,7 +479,7 @@ class Build : NukeBuild
 
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
 
-        string rid = "net8.0-windows10.0.20348.0";
+//        string rid = "net8.0-windows10.0.20348.0";
 
             foreach (var sourcePlatform in SdkPlatforms)
             {
