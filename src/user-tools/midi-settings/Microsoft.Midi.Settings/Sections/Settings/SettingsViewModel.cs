@@ -1,4 +1,12 @@
-﻿using System.Reflection;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+using System.Reflection;
 using System.Windows.Input;
 
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -22,6 +30,8 @@ public class SettingsViewModel : ObservableRecipient
     //private bool _showDeveloperOptions;
     private string _versionDescription;
 
+    private bool _isPreviewChannelEnabled = false;
+
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
     public bool ShowHowToEnableDeveloperMode => !IsDeveloperModeEnabled;
@@ -30,6 +40,18 @@ public class SettingsViewModel : ObservableRecipient
     //    get => _generalSettingsService.ShowDeveloperOptions;
     //    set => _generalSettingsService.ShowDeveloperOptions = value;
     //}
+
+
+
+    // TODO: This needs a callback when the property changes
+    // probably need to call a service for this
+    public bool IsPreviewChannelEnabled
+    {
+        get => _isPreviewChannelEnabled;
+        set => SetProperty(ref _isPreviewChannelEnabled, value);
+    }
+
+
 
     public ElementTheme ElementTheme
     {

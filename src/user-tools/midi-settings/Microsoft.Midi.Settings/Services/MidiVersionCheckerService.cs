@@ -1,4 +1,14 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Windows.Devices.Midi2.Utilities.Update;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,35 +17,14 @@ using System.Threading.Tasks;
 namespace Microsoft.Midi.Settings.Services
 {
 
-    public enum AvailableRuntimeDownloadVersionType
-    {
-        StableRelease,
-        Preview
-    }
-
-    public struct AvailableRuntimeDownload
-    {
-        public Uri DownloadUri;
-
-        public AvailableRuntimeDownloadVersionType VersionType;
-
-
-
-    }
-
-    public class MidiVersionCheckerService
+    public class MidiVersionCheckerService : IMidiVersionCheckerService
     {
         // https://aka.ms/MidiServicesLatestSdkVersionJson
 
 
-        public IList<AvailableRuntimeDownload> GetAvailableRuntimeDownloads()
+        public IReadOnlyList<MidiRuntimeRelease> GetAvailableRuntimeDownloads()
         {
-            var results = new List<AvailableRuntimeDownload>();
-
-
-
-
-            return results;
+            return MidiRuntimeUpdateUtility.GetAvailableReleases();
         }
     }
 }

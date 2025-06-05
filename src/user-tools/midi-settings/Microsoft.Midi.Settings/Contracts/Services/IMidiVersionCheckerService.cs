@@ -6,7 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Endpoints.Loopback;
+using Microsoft.Windows.Devices.Midi2.Utilities.Update;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +15,9 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Contracts.Services
 {
-    public interface IMidiDefaultsService
+    internal interface IMidiVersionCheckerService
     {
-        string GetDefaultMidiConfigName();
-        string GetDefaultMidiConfigFileName();
-
-        MidiLoopbackEndpointCreationConfig GetDefaultLoopbackCreationConfig();
-        bool DoesDefaultLoopbackAlreadyExist();
+        IReadOnlyList<MidiRuntimeRelease> GetAvailableRuntimeDownloads();
     }
+
 }

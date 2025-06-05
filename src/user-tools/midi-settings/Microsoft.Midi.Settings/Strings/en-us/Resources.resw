@@ -524,4 +524,10 @@ This step requires Administrator rights, and must be repeated after any new Wind
   <data name="ForDevelopers_SystemSettingsSectionHeader" xml:space="preserve">
     <value>System Settings</value>
   </data>
+  <data name="SettingsPage_SdkChannelExpander.Header" xml:space="preserve">
+    <value>Enable Preview MIDI SDK Runtime and Tools Channel</value>
+  </data>
+  <data name="SettingsPage_SdkChannelExpander.Description" xml:space="preserve">
+    <value>Enable preview versions of the SDK runtime, including unstable features which may have bugs. Recommended only for technical users or developers. Once enabled, this can only be changed by uninstalling the SDK Runtime and Tools, removing the settings configuration file, and then reinstalling the SDK Runtime and Tools.</value>
+  </data>
 </root>

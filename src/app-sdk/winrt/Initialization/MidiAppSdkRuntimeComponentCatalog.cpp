@@ -114,7 +114,7 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkClientMatchCriteria", defaultThreading });
 
 
-
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Update.MidiRuntimeUpdateUtility", defaultThreading });
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveSender", defaultThreading });

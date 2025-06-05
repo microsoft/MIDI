@@ -43,10 +43,11 @@
                              CornerRadius="8"
                              IsOpen="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BoolNegationConverter}}"
                              Title="Service is Unavailable"
-                             Message="The Windows MIDI Service was not able to be started. Most options will be unavailable."
+                             Message="The Windows MIDI Service was not able to be started. Most options will not be available."
                              Severity="Error"
                              >
                     </InfoBar>
+
 
                     <InfoBar Margin="0,0,15,15"
                              CornerRadius="8"
@@ -61,6 +62,20 @@
                         </InfoBar.ActionButton>
                     </InfoBar>
 
+                    <InfoBar x:Name="NewVersionAvailableInfobar" 
+                             Margin="0,0,15,15"
+                             CornerRadius="8"
+                             IsOpen="{x:Bind ViewModel.IsNewSdkVersionAvailable, Converter={StaticResource BoolNegationConverter}}"
+                             Title="Update Available"
+                             Message="A newer version of the MIDI app runtime and tools is available for you to download and install."
+                             Severity="Informational"
+                             >
+                        <InfoBar.ActionButton>
+                            <Button Content="Update SDK Runtime"
+                                    Command="{x:Bind ViewModel.LaunchNewSdkVersionUpdateCommand}" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                    
                     <controls:SettingsExpander IsExpanded="True" 
                                            Margin="0,0,15,15" 
                                            CornerRadius="8"

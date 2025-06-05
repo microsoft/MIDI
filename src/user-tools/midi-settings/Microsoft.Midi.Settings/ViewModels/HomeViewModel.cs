@@ -1,4 +1,12 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
@@ -18,6 +26,11 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiConfigFileService m_configFileService;
 
         public ICommand LaunchFirstRunExperienceCommand
+        {
+            get; private set;
+        }
+
+        public ICommand LaunchNewSdkVersionUpdateCommand
         {
             get; private set;
         }
@@ -89,6 +102,17 @@ namespace Microsoft.Midi.Settings.ViewModels
                 return m_configFileService.IsConfigFileActive;
             }
         }
+
+        public bool IsNewSdkVersionAvailable
+        {
+            get
+            {
+                return true; // m_configFileService.IsConfigFileActive;
+            }
+        }
+
+
+
 
         public string CurrentConfigurationName
         {
