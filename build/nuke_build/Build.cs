@@ -124,9 +124,10 @@ class Build : NukeBuild
 
     AbsolutePath SetupBundleInfoIncludeFile => StagingRootFolder / "version" / "BundleInfo.wxi";
 
-    AbsolutePath SdkVersionHeaderFile => StagingRootFolder / "version" / "WindowsMidiServicesSdkRuntimeVersion.h";
-    AbsolutePath NuGetVersionHeaderFile => StagingRootFolder / "version" / "WindowsMidiServicesVersion.h";
-    AbsolutePath CommonVersionCSharpFile => StagingRootFolder / "version" / "WindowsMidiServicesVersion.cs";
+    AbsolutePath SdkVersionFilesFolder => StagingRootFolder / "version";
+    AbsolutePath SdkVersionHeaderFile => SdkVersionFilesFolder / "WindowsMidiServicesSdkRuntimeVersion.h";
+    AbsolutePath NuGetVersionHeaderFile => SdkVersionFilesFolder / "WindowsMidiServicesVersion.h";
+    AbsolutePath CommonVersionCSharpFile => SdkVersionFilesFolder / "WindowsMidiServicesVersion.cs";
 
     AbsolutePath SamplesRootFolder => NukeBuild.RootDirectory / "samples";
     AbsolutePath SamplesCppWinRTSolutionFolder => SamplesRootFolder / "cpp-winrt";
@@ -188,6 +189,11 @@ class Build : NukeBuild
 
             string buildVersionDateNumber = BuildDateNumber;
             string buildVersionTimeNumber = BuildTimeNumber;
+
+            // create directories if they do not exist
+
+            ThisReleaseFolder.CreateDirectory();
+            SdkVersionFilesFolder.CreateDirectory();
 
             // json version for published SDK releases. This needs to be manually copied to /docs/version/sdk_version.json
             // if this ends up being a published release
@@ -738,6 +744,13 @@ class Build : NukeBuild
                 Console.Out.WriteLine($"SolutionDir: {solutionDir}");
                 Console.Out.WriteLine($"Platform:    {platform}");
 
+                NuGetTasks.NuGetRestore(_ => _
+                    .SetProcessWorkingDirectory(solutionDir)
+                    .SetSource(@"https://api.nuget.org/v3/index.json")
+                    .SetSolutionDirectory(solutionDir)
+                //.SetConfigFile(packagesConfigFullPath)
+                );
+
                 var output = MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(InBoxComponentsSetupSolutionFolder / "midi-services-in-box-setup.sln")
                     .SetMaxCpuCount(14)
@@ -785,6 +798,13 @@ class Build : NukeBuild
             Console.Out.WriteLine($"----------------------------------------------------------------------");
             Console.Out.WriteLine($"SolutionDir: {solutionDir}");
             Console.Out.WriteLine($"Platform:    {platform}");
+
+            NuGetTasks.NuGetRestore(_ => _
+                .SetProcessWorkingDirectory(solutionDir)
+                .SetSource(@"https://api.nuget.org/v3/index.json")
+                .SetSolutionDirectory(solutionDir)
+            //.SetConfigFile(packagesConfigFullPath)
+            );
 
             var output = MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(InDevelopmentServiceComponentsSetupSolutionFolder / "midi-services-in-box-preview-setup.sln")
@@ -840,7 +860,7 @@ class Build : NukeBuild
             NuGetTasks.NuGetRestore(_ => _
                 .SetProcessWorkingDirectory(MidiSettingsSolutionFolder)
                 .SetSolutionDirectory(MidiSettingsSolutionFolder)
-                .SetSource(AppSdkNugetOutputFolder)
+                .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
             );
 
             bool wxsWritten = false;
@@ -916,7 +936,7 @@ class Build : NukeBuild
                 paths.Add(settingsOutputFolder / "System.Management.dll");
                 paths.Add(settingsOutputFolder / "System.ServiceProcess.ServiceController.dll");
 
-                paths.Add(settingsOutputFolder / "System.Text.Json.dll");
+             //   paths.Add(settingsOutputFolder / "System.Text.Json.dll");
 
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.dll");
                 paths.Add(settingsOutputFolder / "Microsoft.Web.WebView2.Core.Projection.dll");
@@ -1032,7 +1052,7 @@ class Build : NukeBuild
             NuGetTasks.NuGetRestore(_ => _
                 .SetProcessWorkingDirectory(MidiConsoleSolutionFolder)
                 .SetSolutionDirectory(MidiConsoleSolutionFolder)
-                .SetSource(AppSdkNugetOutputFolder)
+                .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
             );
 
             // build x64 and Arm64, no Arm64EC
@@ -1124,7 +1144,7 @@ class Build : NukeBuild
         NuGetTasks.NuGetRestore(_ => _
             .SetProcessWorkingDirectory(MidiPowerShellSolutionFolder)
             .SetSolutionDirectory(MidiPowerShellSolutionFolder)
-            .SetSource(AppSdkNugetOutputFolder)
+            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
         );
 
         // build x64 and Arm64, no Arm64EC
@@ -1207,14 +1227,14 @@ class Build : NukeBuild
         NuGetTasks.NuGetInstall(_ => _
             .SetProcessWorkingDirectory(projectDir)
             .SetPreRelease(true)
-            .SetSource(AppSdkNugetOutputFolder)
+            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
             .SetPackageID(NugetPackageId)
             .SetDependencyVersion(DependencyVersion.Highest)
         );
 
         NuGetTasks.NuGetRestore(_ => _
             .SetProcessWorkingDirectory(projectDir)
-            .SetSource(AppSdkNugetOutputFolder)
+            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
             .SetSolutionDirectory(solutionDir)
             //.SetConfigFile(packagesConfigFullPath)
         );
@@ -1432,7 +1452,7 @@ class Build : NukeBuild
         NuGetTasks.NuGetRestore(_ => _
             .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
             .SetSolutionDirectory(SamplesCSWinRTSolutionFolder)
-            .SetSource(AppSdkNugetOutputFolder)
+            .SetSource(AppSdkNugetOutputFolder, @"https://api.nuget.org/v3/index.json")
         );
 
 
