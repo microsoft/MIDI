@@ -29,6 +29,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private IMidiConfigFileService m_configFileService;
         private IMidiDefaultsService m_defaultsService;
         private INavigationService m_navigationService;
+        private IMidiServiceRegistrySettingsService m_registryService;
 
         public string ConfigFileName
         {
@@ -88,41 +89,63 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 if (m_configFileService.CreateNewConfigFile(newConfigName, newConfigFileName))
                 {
-                    m_configFileService.UpdateRegistryCurrentConfigFile(ConfigFileName);
-                    needServiceRestart = true;
+                    if (m_configFileService.UpdateRegistryCurrentConfigFile(ConfigFileName))
+                    {
+                        needServiceRestart = true;
+                    }
+                    else
+                    {
+                        // TODO: show an error and leave
+                    }
                 }
                 else
                 {
-                    // TODO: show an error
+                    // TODO: show an error and leave
                 }
             }
 
             if (CreateDefaultLoopbackEndpoints)
             {
-                var creationConfig = m_defaultsService.GetDefaultLoopbackCreationConfig();
-
-                var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
-
-                if (result.Success)
+                if (m_configFileService.CurrentConfig != null)
                 {
-                    m_configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+                    var creationConfig = m_defaultsService.GetDefaultLoopbackCreationConfig();
 
-                    // todo: show results
+                    var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
 
+                    if (result.Success)
+                    {
+                        m_configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+
+                        // TODO: show results
+                    }
+                    else
+                    {
+                        // TODO: update error information
+                    }
                 }
                 else
                 {
-                    // update error information
+                    // TODO: Report that a config file is needed
                 }
             }
 
             if (UseNewStyleWinMMPortNames)
             {
-                // update reg entry
+                bool storedUseNewStyleWinMMPortNames = m_registryService.GetDefaultUseNewStyleMidi1PortNaming();
 
-
-
-                needServiceRestart = true;
+                if (storedUseNewStyleWinMMPortNames != UseNewStyleWinMMPortNames)
+                {
+                    if (UseNewStyleWinMMPortNames)
+                    {
+                        m_registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNameSelectionProperty.PortName_UseInterfacePlusPinName);
+                        needServiceRestart = true;
+                    }
+                    else
+                    {
+                        m_registryService.SetDefaultUseNewStyleMidi1PortNaming(Midi1PortNameSelectionProperty.PortName_UseLegacyWinMM);
+                        needServiceRestart = true;
+                    }
+                }
             }
 
             if (SetServiceToAutoStart)
@@ -131,14 +154,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                 info.FileName = "cmd.exe";
                 info.UseShellExecute = true;
                 info.Verb = "runas";
-                info.Arguments = "/c \"midi service set-auto-start --restart & pause\"";
+                info.Arguments = "/c \"midi service set-auto-start --restart=false\"";
 
-                var proc = Process.Start(info);
-                if (proc != null)
+                using (var proc = Process.Start(info))
                 {
-                    // service updated
-
-                    // TODO: Need to wait for completion and then check return code                   
+                    if (proc != null)
+                    {
+                        proc.WaitForExit();
+                        needServiceRestart = true;
+                    }
                 }
             }
 
@@ -150,11 +174,15 @@ namespace Microsoft.Midi.Settings.ViewModels
                 info.Verb = "runas";
                 info.Arguments = "/c \"midi service restart\"";
 
-                if (Process.Start(info) != null)
+                using (var proc = Process.Start(info))
                 {
-                    // service restarted
-
+                    if (proc != null)
+                    {
+                        proc.WaitForExit();
+                        needServiceRestart = false;
+                    }
                 }
+
             }
 
             // set the flag saying the first-run setup is all done
@@ -169,18 +197,23 @@ namespace Microsoft.Midi.Settings.ViewModels
         public FirstRunExperienceViewModel(
             INavigationService navigationService,
             IMidiConfigFileService configService, 
-            IMidiDefaultsService defaultsService)
+            IMidiDefaultsService defaultsService,
+            IMidiServiceRegistrySettingsService registryService)
         {
             m_navigationService = navigationService;
             m_defaultsService = defaultsService;
             m_configFileService = configService;
+            m_registryService = registryService;
 
             CreateConfigurationFile = true;
             CreateDefaultLoopbackEndpoints = true;
             SetServiceToAutoStart = true;
 
-
             // todo: if that config exists, we use it and disable that control.
+
+
+            // if reg setting for MIDI 1 already set, reflect that setting
+            UseNewStyleWinMMPortNames = m_registryService.GetDefaultUseNewStyleMidi1PortNaming();
 
             //UpdateConfigFileName();
 
@@ -188,11 +221,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     CompleteFirstRunSetup();
                 });
-
+            m_registryService = registryService;
         }
-
-
-
-
     }
 }

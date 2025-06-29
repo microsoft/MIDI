@@ -28,63 +28,63 @@
 
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="Set up Windows MIDI Services" 
-                           Style="{StaticResource DialogHeaderTextBlockStyle}"
-                           Margin="13, 9, 13, 13"/>
+                    <TextBlock x:Uid="FirstRunSetup_Title"
+                               Style="{StaticResource DialogHeaderTextBlockStyle}"
+                               Margin="13, 9, 13, 13"/>
 
                     <TextBlock TextWrapping="WrapWholeWords" 
-                           Text="Many MIDI customizations are stored in a portable configuration file. These include customized endpoint properties like the name, definitions for persistent loopback endpoints, and your Network MIDI host and client reconnections."
-                           Style="{StaticResource DialogDescriptionTextBlockStyle}" 
-                           Margin="13"/>
+                               x:Uid="FirstRunSetup_ConfigFileDescription"
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
 
                     <ToggleSwitch Margin="13"
-                              IsEnabled="True"
-                              IsOn="{x:Bind ViewModel.CreateConfigurationFile, Mode=TwoWay}"
-                              Header="Create default configuration file." 
+                                  x:Uid="FirstRunSetup_CreateDefaultConfigFileSwitch"
+                                  IsEnabled="True"
+                                  IsOn="{x:Bind ViewModel.CreateConfigurationFile, Mode=TwoWay}"
                               />
 
                     <!-- todo: give an option to name it here? -->
 
                     <TextBlock TextWrapping="WrapWholeWords" 
-                           Text="Some applications and utilities, especially those on the web, rely on having a known loopback endpoint available. This requires a configuration file to store the loopback endpoint information."
-                           Style="{StaticResource DialogDescriptionTextBlockStyle}" 
-                           Margin="13"/>
+                               x:Uid="FirstRunSetup_DefaultLoopbacksDescription"
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
 
                     <ToggleSwitch Margin="13"
-                              IsEnabled="{x:Bind ViewModel.CanPersistChanges, Mode=OneWay}"
-                              IsOn="{x:Bind ViewModel.CreateDefaultLoopbackEndpoints, Mode=TwoWay}"
-                              Header="Create default loopback endpoints." 
-                              />
+                                  x:Uid="FirstRunSetup_CreateDefaultLoopbacksSwitch"
+                                  IsEnabled="{x:Bind ViewModel.CanPersistChanges, Mode=OneWay}"
+                                  IsOn="{x:Bind ViewModel.CreateDefaultLoopbackEndpoints, Mode=TwoWay}"
+                                  />
 
 
                     <TextBlock TextWrapping="WrapWholeWords" 
-                           Text="Apps using the older MIDI 1.0 API (WinMM) used port names as the identifier in many apps and files. By default, we use names that are compatible with those older names. However, if you want better port names by default, select the option below."
-                           Style="{StaticResource DialogDescriptionTextBlockStyle}" 
-                           Margin="13"/>
+                               x:Uid="FirstRunSetup_PortNamesDescription"
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
 
                     <ToggleSwitch Margin="13"
-                              IsEnabled="True"
-                              IsOn="{x:Bind ViewModel.UseNewStyleWinMMPortNames, Mode=TwoWay}"
-                              Header="Use new-style port names." 
-                              />
+                                  x:Uid="FirstRunSetup_UseNewPortNamesSwitch"
+                                  IsEnabled="True"
+                                  IsOn="{x:Bind ViewModel.UseNewStyleWinMMPortNames, Mode=TwoWay}"
+                                  />
 
 
 
                     <TextBlock TextWrapping="WrapWholeWords" 
-                           Text="By default, the MIDI Service is set to start only when the first MIDI connection is made by an app. This ensures Windows startup time is not impacted for those who do not use MIDI. But the first time a MIDI connection is made, it can take several seconds."
-                           Style="{StaticResource DialogDescriptionTextBlockStyle}" 
-                           Margin="13"/>
+                               x:Uid="FirstRunSetup_MidiServiceStartupDescription"
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
 
-                    <TextBlock TextWrapping="WrapWholeWords" 
-                           Text="If you use MIDI frequently, we recommend changing the service to start automatically with Windows, so you never have to wait when making a connection. This requires Administrator permissions to set."
-                           Style="{StaticResource DialogDescriptionTextBlockStyle}" 
-                           Margin="13"/>
+                    <TextBlock TextWrapping="WrapWholeWords"
+                               x:Uid="FirstRunSetup_MidiServiceStartupDescription2"
+                               Style="{StaticResource DialogDescriptionTextBlockStyle}" 
+                               Margin="13"/>
 
                     <ToggleSwitch Margin="13"
-                              IsEnabled="{x:Bind ViewModel.CreateConfigurationFile, Mode=OneWay}"
-                              IsOn="{x:Bind ViewModel.SetServiceToAutoStart, Mode=TwoWay}"
-                              Header="Set MIDI Service to auto-start with Windows" 
-                              />
+                                  x:Uid="FirstRunSetup_SetServiceAutoStartSwitch"
+                                  IsEnabled="{x:Bind ViewModel.CreateConfigurationFile, Mode=OneWay}"
+                                  IsOn="{x:Bind ViewModel.SetServiceToAutoStart, Mode=TwoWay}"
+                                  />
                 </StackPanel>
             </ScrollViewer>
             
