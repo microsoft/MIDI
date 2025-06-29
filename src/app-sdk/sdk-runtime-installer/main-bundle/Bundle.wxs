@@ -5,26 +5,32 @@
      >
 
     <?define DependenciesSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\dependencies ?>
+  
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
     <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
-
     <?include $(StagingVersionIncludeFile) ?>
 
     <!-- TODO: Gate on Arm64 or x64. No x86 installation -->
     
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <Bundle Name="Windows MIDI Services (MIDI Tools and Runtime) $(SetupVersionName) $(SetupVersionNumber)" 
+
+  <Bundle Name="Windows MIDI Services (MIDI Tools and Runtime) $(SetupVersionName) $(SetupVersionNumber)" 
           Manufacturer="Microsoft Corporation" 
           Version="$(SetupVersionNumber)" 
           UpgradeCode="7afb7a7b-86d4-42d7-8cb5-08f65ddcb1a9">
+    
+    
+
+        <!-- hard-coded path because sharing a directory with the other MSI is not possible. Would have to write to registry -->
+        <Variable Name="LaunchTarget" Value="[ProgramFiles64Folder]\Windows MIDI Services\Tools\Settings\MidiSettings.exe"/>
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
         <BootstrapperApplication>
-            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
+            <bal:WixStandardBootstrapperApplication LicenseUrl="" 
                                                     SuppressOptionsUI="true"
-                                                    SuppressRepair="true"
+                                                    SuppressRepair="false"
                                                     Theme="hyperlinkLicense" 
                                                     LogoFile="midi_installer_logo_square.png"/>
         </BootstrapperApplication>
@@ -77,7 +83,18 @@
                 InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt" 
                 />
 
-            <!-- arm64 install requires both the .NET 8 Arm64 and x64 versions -->
+          <!-- Windows App Runtime Install -->
+
+          <ExePackage
+              Vital="true"
+              Permanent="true"
+              DisplayName="Microsoft Windows App Runtime"
+              SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\WindowsAppRuntimeInstall-$(var.Platform).exe"
+              Compressed="yes"
+             />
+
+
+          <!-- arm64 install requires both the .NET 8 Arm64 and x64 versions -->
             
             <!-- Source File is required only at build time for WiX to get info about the package -->
             <?if $(var.Platform) = ARM64 ?>
@@ -85,7 +102,7 @@
                     Vital="true"
                     Permanent="true"
                     DisplayName="Microsoft .NET 8 Desktop Runtime"
-                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.16/windowsdesktop-runtime-8.0.16-win-arm64.exe"
+                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.17/windowsdesktop-runtime-8.0.17-win-arm64.exe"
                     SourceFile="$(DependenciesSourceRootFolder)\arm64\windowsdesktop-runtime-8.0.17-win-arm64.exe"
                     Compressed="no"
                     DetectCondition="DotNetDesktopRuntimeVersion_arm64 &gt;= v8.0.17"
@@ -97,7 +114,7 @@
                     Vital="true"
                     Permanent="true"
                     DisplayName="Microsoft .NET 8 Desktop Runtime"
-                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.16/windowsdesktop-runtime-8.0.16-win-x64.exe"
+                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.17/windowsdesktop-runtime-8.0.17-win-x64.exe"
                     SourceFile="$(DependenciesSourceRootFolder)\x64\windowsdesktop-runtime-8.0.17-win-x64.exe"
                     Compressed="no"
                     DetectCondition="DotNetDesktopRuntimeVersion_x64 &gt;= v8.0.17"
@@ -109,7 +126,7 @@
                     Vital="true"
                     Permanent="true"
                     DisplayName="Microsoft .NET 8 Desktop Runtime"
-                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.16/windowsdesktop-runtime-8.0.16-win-x64.exe"
+                    DownloadUrl="https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/8.0.17/windowsdesktop-runtime-8.0.17-win-x64.exe"
                     SourceFile="$(DependenciesSourceRootFolder)\x64\windowsdesktop-runtime-8.0.17-win-x64.exe"
                     Compressed="no"
                     DetectCondition="DotNetDesktopRuntimeVersion_x64 &gt;= v8.0.17"
@@ -118,14 +135,6 @@
                         />
             <?endif?>
 
-
-            <ExePackage
-                Vital="true"
-                Permanent="true"
-                DisplayName="Microsoft Windows App Runtime"
-                SourceFile="$(DependenciesSourceRootFolder)\$(var.Platform)\WindowsAppRuntimeInstall-$(var.Platform).exe"
-                Compressed="yes"
-                />
         </PackageGroup>
 
         

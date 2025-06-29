@@ -1,14 +1,16 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+  <?include $(StagingVersionIncludeFile) ?>
 
-    
-    
-    <Package
+
+  <Package
           Name="Windows MIDI Services (App SDK Runtime) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
-          Version="1.0.0.0"
+          Version="$(MidiSdkAndToolsVersion)"
           UpgradeCode="297714bb-dd77-4748-a4c1-553ad66da5d0"
+          UpgradeStrategy="majorUpgrade"
           >
 
         <MediaTemplate EmbedCab="yes" />
