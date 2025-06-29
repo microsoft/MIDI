@@ -42,8 +42,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             ref UInt32 versionMajor,
             ref UInt32 versionMinor,
             ref UInt32 versionRevision,
-            ref UInt32 versionDateNumber,
-            ref UInt32 versionTimeNumber,
+            ref UInt32 versionBuildNumber,
             ref string buildSource,
             ref string versionName,
             ref string versionFullString
@@ -55,8 +54,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             ref UInt32 versionMajor,
             ref UInt32 versionMinor,
             ref UInt32 versionRevision,
-            ref UInt32 versionDateNumber,
-            ref UInt32 versionTimeNumber,
+            ref UInt32 versionBuildNumber,
             ref string buildSource,
             ref string versionName,
             ref string versionFullString,
@@ -146,8 +144,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                 UInt32 versionMajor = 0;
                 UInt32 versionMinor = 0;
                 UInt32 versionRevision = 0;
-                UInt32 versionDateNumber = 0;
-                UInt32 versionTimeNumber = 0;
+                UInt32 versionBuildNumber = 0;
                 string buildSource = string.Empty;
                 string versionName = string.Empty;
                 string versionFullString = string.Empty;
@@ -157,8 +154,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                     ref versionMajor,
                     ref versionMinor,
                     ref versionRevision,
-                    ref versionDateNumber,
-                    ref versionTimeNumber,
+                    ref versionBuildNumber,
                     ref buildSource,
                     ref versionName,
                     ref versionFullString
@@ -191,8 +187,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             uint versionMajor = 0;
             uint versionMinor = 0;
             uint versionRevision = 0;
-            uint versionDayNumber = 0;
-            uint versionTimeNumber = 0;
+            uint versionBuildNumber = 0;
 
             try
             {
@@ -202,8 +197,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                     ref versionMajor,
                     ref versionMinor,
                     ref versionRevision,
-                    ref versionDayNumber,
-                    ref versionTimeNumber,
+                    ref versionBuildNumber,
                     ref buildSource,
                     ref versionName,
                     ref versionFullString
@@ -232,8 +226,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             uint versionMajor = 0;
             uint versionMinor = 0;
             uint versionRevision = 0;
-            uint versionDayNumber = 0;
-            uint versionTimeNumber = 0;
+            uint versionBuildNumber = 0;
 
             try
             { 
@@ -242,8 +235,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                     ref versionMajor,
                     ref versionMinor,
                     ref versionRevision,
-                    ref versionDayNumber,
-                    ref versionTimeNumber,
+                    ref versionBuildNumber,
                     ref buildSource,
                     ref versionName,
                     ref versionFullString
@@ -297,14 +289,12 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             uint onlineVersionMajor = 0;
             uint onlineVersionMinor = 0;
             uint onlineVersionRevision = 0;
-            uint onlineVersionDayNumber = 0;
-            uint onlineVersionTimeNumber = 0;
+            uint onlineVersionBuildNumber = 0;
 
             uint installedVersionMajor = 0;
             uint installedVersionMinor = 0;
             uint installedVersionRevision = 0;
-            uint installedVersionDayNumber = 0;
-            uint installedVersionTimeNumber = 0;
+            uint installedVersionBuildNumber = 0;
             string installedBuildSource = string.Empty;
             string installedVersionName = string.Empty;
             string installedVersionFullString = string.Empty;
@@ -314,8 +304,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                 ref onlineVersionMajor,
                 ref onlineVersionMinor,
                 ref onlineVersionRevision,
-                ref onlineVersionDayNumber,
-                ref onlineVersionTimeNumber,
+                ref onlineVersionBuildNumber,
                 ref onlineBuildSource,
                 ref onlineVersionName,
                 ref onlineVersionFullString,
@@ -330,8 +319,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                 ref installedVersionMajor,
                 ref installedVersionMinor,
                 ref installedVersionRevision,
-                ref installedVersionDayNumber,
-                ref installedVersionTimeNumber,
+                ref installedVersionBuildNumber,
                 ref installedBuildSource,
                 ref installedVersionName,
                 ref installedVersionFullString
@@ -340,8 +328,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             if (installedVersionMajor > onlineVersionMajor) return false;
             if (installedVersionMinor > onlineVersionMinor) return false;
             if (installedVersionRevision > onlineVersionRevision) return false;
-            if (installedVersionDayNumber > onlineVersionDayNumber) return false;
-            if (installedVersionTimeNumber > onlineVersionTimeNumber) return false;
+            if (installedVersionBuildNumber > onlineVersionBuildNumber) return false;
 
             return true;
         }

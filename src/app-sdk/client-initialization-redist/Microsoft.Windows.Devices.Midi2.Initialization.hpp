@@ -53,9 +53,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             DWORD* versionMajor,
             DWORD* versionMinor,
             DWORD* versionRevision,
-
-            DWORD* versionDateNumber,
-            DWORD* versionTimeNumber,
+            DWORD* versionBuildNumber,
 
             LPWSTR* buildSource,
             LPWSTR* versionName,
@@ -233,8 +231,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                     &installedVersionMajor,     // major
                     &installedVersionMinor,     // minor
                     &installedVersionRevision,  // revision
-                    nullptr,                    // date number
-                    nullptr,                    // time number
+                    nullptr,                    // build number
                     nullptr,                    // buildSource string. Remember to cotaskmemfree if provided
                     nullptr,                    // versionName string. Remember to cotaskmemfree if provided
                     nullptr                     // versionFullString string. Remember to cotaskmemfree if provided
