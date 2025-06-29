@@ -36,37 +36,37 @@ class Build : NukeBuild
 
     //string VersionName => "Developer Preview 9";
     string VersionName => "Customer Preview 3";
-    string NuGetVersionName => "preview-12";
+    //string NuGetVersionName => "preview-13";
     string BuildType => "Stable";        // Stable or Preview
 
     // we set these here, especially the time, so it's the same for all platforms in the single build
 
+    // for upgrades to work, the revision must be incremented.
+
     const string BuildVersionMajor = "1";
     const string BuildVersionMinor = "0";
-    const string BuildVersionRevision = "3";
-    const string BuildMajorMinorRevision = $"{BuildVersionMajor}.{BuildVersionMinor}.{BuildVersionRevision}";
+    const string BuildVersionRevision = "5";
+    const string BuildMajorMinorRevision = BuildVersionMajor + "." + BuildVersionMinor + "." + BuildVersionRevision;
 
-    //string BuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.DayOfYear.ToString("000");       // YYddd where ddd is the day number for the year
-    string BuildDateNumber = DateTime.Now.ToString("yy") + DateTime.Now.Month.ToString("00") + DateTime.Now.Day.ToString("00");
-    string BuildTimeNumber = UInt32.Parse(DateTime.Now.ToString("HHmm")).ToString();     // HHmm
-
-
-    string NugetVersionString => BuildMajorMinorRevision + "-" + NuGetVersionName + "." + BuildDateNumber + "-" + BuildTimeNumber ;
+    string BuildNumber = "0";
+    string BuildVersionString = "";
     string NugetPackageId => "Microsoft.Windows.Devices.Midi2";
+    string NugetPackageVersion => BuildMajorMinorRevision;
+    string NugetFullPackageIdWithVersion = "";
 
-    string NugetFullPackageIdWithVersion => NugetPackageId + "." + NugetVersionString;
 
 
-    string SetupBundleFullVersionString => BuildMajorMinorRevision + "-" + NuGetVersionName + "." + BuildDateNumber + "-" + BuildTimeNumber;
+
+    //string SetupBundleFullVersionString => BuildMajorMinorRevision + "-" + NuGetVersionName + "." + BuildDateNumber + "-" + BuildTimeNumber;
 
 
     AbsolutePath _thisReleaseFolder;
 
 
-    string[] AppSdkAssemblies => new string[] {
-        "Microsoft.Windows.Devices.Midi2",
-        "Microsoft.Windows.Devices.Midi2.Initialization"
-    };
+    //string[] AppSdkAssemblies => new string[] {
+    //    "Microsoft.Windows.Devices.Midi2",
+    //    "Microsoft.Windows.Devices.Midi2.Initialization"
+    //};
 
 
     // ===========================================================
@@ -94,6 +94,12 @@ class Build : NukeBuild
     AbsolutePath ApiSolutionFolder => SourceRootFolder / "api";
 
     AbsolutePath AppSdkSetupSolutionFolder => AppSdkSolutionFolder / "sdk-runtime-installer";
+
+    //AbsolutePath AppSdkSetupRuntimeFolder => AppSdkSetupSolutionFolder / "sdk-package";
+    //AbsolutePath AppSdkSetupSettingsFolder => AppSdkSetupSolutionFolder / "settings-package";
+    //AbsolutePath AppSdkSetupConsoleFolder => AppSdkSetupSolutionFolder / "console-package";
+    //AbsolutePath AppSdkSetupPowerShellFolder => AppSdkSetupSolutionFolder / "powershell-package";
+
 
     AbsolutePath InBoxComponentsSetupSolutionFolder => SourceRootFolder / "oob-setup";
 
@@ -123,6 +129,7 @@ class Build : NukeBuild
     //    AbsolutePath ElectronJSSamplesRootFolder => SamplesRootFolder / "electron-js";
 
     AbsolutePath SetupBundleInfoIncludeFile => StagingRootFolder / "version" / "BundleInfo.wxi";
+    AbsolutePath BuildVersionFile => StagingRootFolder / "version" / "BuildNumber.txt";
 
     AbsolutePath SdkVersionFilesFolder => StagingRootFolder / "version";
     AbsolutePath SdkVersionHeaderFile => SdkVersionFilesFolder / "WindowsMidiServicesSdkRuntimeVersion.h";
@@ -151,9 +158,6 @@ class Build : NukeBuild
     Dictionary<string, string> BuiltPreviewInBoxInstallers = new Dictionary<string, string>();
 
 
-
-
-
     public static int Main () => Execute<Build>(x => x.BuildAndPublishAll);
 
 
@@ -168,6 +172,11 @@ class Build : NukeBuild
                 Environment.SetEnvironmentVariable("MIDI_REPO_ROOT", NukeBuild.RootDirectory);
             }
 
+            IncrementBuildNumber();
+
+            BuildVersionString = BuildMajorMinorRevision + "." + BuildNumber;
+            NugetFullPackageIdWithVersion = NugetPackageId + "." + NugetPackageVersion;
+
             _thisReleaseFolder = $"{ReleaseRootFolder / VersionName} ({DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")})";
 
             // create the release folder
@@ -181,14 +190,11 @@ class Build : NukeBuild
         {
             string buildSource = "GitHub Preview";
             string versionName = VersionName;
-            string versionString = SetupBundleFullVersionString;
+            string versionString = BuildVersionString;
 
             string buildVersionMajor = BuildVersionMajor;
             string buildVersionMinor = BuildVersionMinor;
             string buildVersionRevision = BuildVersionRevision;
-
-            string buildVersionDateNumber = BuildDateNumber;
-            string buildVersionTimeNumber = BuildTimeNumber;
 
             // create directories if they do not exist
 
@@ -214,11 +220,10 @@ class Build : NukeBuild
                 writer.WriteLine($"            \"versionMajor\": {buildVersionMajor},");
                 writer.WriteLine($"            \"versionMinor\": {buildVersionMajor},");
                 writer.WriteLine($"            \"versionRevision\": {buildVersionRevision},");
-                writer.WriteLine($"            \"versionDateNumber\": {buildVersionDateNumber},");
-                writer.WriteLine($"            \"versionTimeNumber\": {buildVersionTimeNumber},");
-                writer.WriteLine($"            \"releaseDescription\": \"Replace this text with a summary of this SDK update\"");
-                writer.WriteLine($"            \"releasePageUri\": \"\"");
-                writer.WriteLine($"            \"directDownloadUriX64\": \"\"");
+                writer.WriteLine($"            \"versionBuildNumber\": {BuildNumber},");
+                writer.WriteLine($"            \"releaseDescription\": \"Replace this text with a summary of this SDK update\",");
+                writer.WriteLine($"            \"releasePageUri\": \"\",");
+                writer.WriteLine($"            \"directDownloadUriX64\": \"\",");
                 writer.WriteLine($"            \"directDownloadUriArm64\": \"\"");
                 writer.WriteLine("        }");
                 writer.WriteLine("    ]");
@@ -243,8 +248,7 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR        {buildVersionMajor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR        {buildVersionMinor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_REVISION     {buildVersionRevision}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_DATE_NUMBER  {buildVersionDateNumber}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_TIME_NUMBER  {buildVersionTimeNumber}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER {BuildNumber}");
                 writer.WriteLine();
                 writer.WriteLine("#endif");
                 writer.WriteLine();
@@ -264,8 +268,7 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR        {buildVersionMajor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR        {buildVersionMinor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_REVISION     {buildVersionRevision}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_DATE_NUMBER  {buildVersionDateNumber}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_TIME_NUMBER  {buildVersionTimeNumber}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER {BuildNumber}");
                 writer.WriteLine();
                 writer.WriteLine("#endif");
                 writer.WriteLine();
@@ -291,8 +294,7 @@ class Build : NukeBuild
                 writer.WriteLine($"\t\tpublic const uint VersionMajor = {buildVersionMajor};");
                 writer.WriteLine($"\t\tpublic const uint VersionMinor = {buildVersionMinor};");
                 writer.WriteLine($"\t\tpublic const uint VersionRevision = {buildVersionRevision};");
-                writer.WriteLine($"\t\tpublic const uint VersionDateNumber = {buildVersionDateNumber};");
-                writer.WriteLine($"\t\tpublic const uint VersionTimeNumber = {buildVersionTimeNumber};");
+                writer.WriteLine($"\t\tpublic const uint VersionBuildNumber = {BuildNumber};");
                 writer.WriteLine("\t}");
                 writer.WriteLine("}");
                 writer.WriteLine();
@@ -456,6 +458,8 @@ class Build : NukeBuild
         .DependsOn(BuildInDevelopmentServicePlugins)
         .Executes(() =>
         {
+            bool wxsWritten = false;
+
             foreach (var platform in SdkPlatforms)
             {
                 string solutionDir = AppSdkSolutionFolder.ToString() + @"\";
@@ -504,11 +508,11 @@ class Build : NukeBuild
                 // todo: it would be better to see if any of the generated winmds have changed and only
                 // do this step if those have changed. Maybe do a before/after date/time check?
 
-                Console.Out.WriteLine($"NuGet Version: {NugetVersionString}");
+                Console.Out.WriteLine($"NuGet Version: {BuildVersionString}");
 
                 NuGetTasks.NuGetPack(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "projections" / "dotnet-and-cpp" / "nuget" / "Microsoft.Windows.Devices.Midi2.nuspec")
-                    .AddProperty("version", NugetVersionString)
+                    .AddProperty("version", NugetPackageVersion)
                     .AddProperty("id", NugetPackageId)
                     .SetOutputDirectory(AppSdkNugetOutputFolder)
                 );
@@ -551,6 +555,8 @@ class Build : NukeBuild
                 FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "Microsoft.Windows.Devices.Midi2.Initialization.hpp", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 //FileSystemTasks.CopyFileToDirectory(AppSdkSolutionFolder / "client-initialization-redist" / "MidiDesktopAppSdkBootstrapper.cs", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
+
+
         });
 
 
@@ -699,7 +705,7 @@ class Build : NukeBuild
                 // todo: it would be better to see if any of the sdk files have changed and only
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
 
-                string newInstallerName = $"Windows MIDI Services (SDK Runtime and Tools) {SetupBundleFullVersionString}-{platform.ToLower()}.exe";
+                string newInstallerName = $"Windows MIDI Services (SDK Runtime and Tools) {BuildVersionString}-{platform.ToLower()}.exe";
                 FileSystemTasks.CopyFile(
                     AppSdkSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesSdkRuntimeSetup.exe",
                     ThisReleaseFolder / newInstallerName);
@@ -709,6 +715,49 @@ class Build : NukeBuild
 
         });
 
+
+    void IncrementBuildNumber()
+    {
+        int newBuildNumber = 0;
+
+        if (File.Exists(BuildVersionFile))
+        {
+            using (StreamReader reader = System.IO.File.OpenText(BuildVersionFile))
+            {
+                // first line is major/minor/revision. Second is build number.
+                var versionLine = reader.ReadLine();
+                var buildLine = reader.ReadLine();
+
+                if (versionLine.Trim() == BuildMajorMinorRevision)
+                {
+                    if (int.TryParse(buildLine, out newBuildNumber))
+                    {
+                        newBuildNumber++;
+                    }
+                    else
+                    {
+                        newBuildNumber = 0;
+                    }
+                }
+                else
+                {
+                    // we'll write the new info
+                }
+
+            }
+        }
+
+        using (StreamWriter writer = System.IO.File.CreateText(BuildVersionFile))
+        {
+            writer.WriteLine(BuildMajorMinorRevision);
+            writer.WriteLine(newBuildNumber.ToString());
+        }
+
+        BuildNumber = newBuildNumber.ToString();
+
+    }
+
+
     void UpdateSetupBundleInfoIncludeFile(string platform)
     {
         //string versionString = $"{SetupBuildMajorMinor}.{SetupBuildDateNumber}.{SetupBuildTimeNumber}";
@@ -717,7 +766,8 @@ class Build : NukeBuild
         {
             writer.WriteLine("<Include>");
             writer.WriteLine($"  <?define SetupVersionName=\"{VersionName} {platform}\" ?>");
-            writer.WriteLine($"  <?define SetupVersionNumber=\"{SetupBundleFullVersionString}\" ?>");
+            writer.WriteLine($"  <?define SetupVersionNumber=\"{BuildVersionString}\" ?>");
+            writer.WriteLine($"  <?define MidiSdkAndToolsVersion=\"{BuildVersionString}\" ?>");
             writer.WriteLine("</Include>");
         }
     }
@@ -767,7 +817,7 @@ class Build : NukeBuild
 
                 // todo: it would be better to see if any of the sdk files have changed and only
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
-                string newInstallerName = $"Windows MIDI Services (In-Box Service) {SetupBundleFullVersionString}-{platform.ToLower()}.exe";
+                string newInstallerName = $"Windows MIDI Services (In-Box Service) {BuildVersionString}-{platform.ToLower()}.exe";
 
                 FileSystemTasks.CopyFile(
                     InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
@@ -819,7 +869,7 @@ class Build : NukeBuild
                 .EnableNodeReuse()
             );
 
-            string newInstallerName = $"Windows MIDI Services (Preview Service Plugins) {SetupBundleFullVersionString}-{platform.ToLower()}.exe";
+            string newInstallerName = $"Windows MIDI Services (Preview Service Plugins) {BuildVersionString}-{platform.ToLower()}.exe";
 
             FileSystemTasks.CopyFile(
                 InDevelopmentServiceComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInDevelopmentServiceComponentsSetup.exe",
@@ -1294,7 +1344,7 @@ class Build : NukeBuild
             {
                 Console.WriteLine($"Updating {element}");
 
-                element.SetAttribute("version", NugetVersionString);
+                element.SetAttribute("version", NugetPackageVersion);
 
                 doc.Save(configFilePath);
 
