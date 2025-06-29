@@ -574,11 +574,20 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to start up the SDK initializer (COM object may not be available or registered).
+        ///   Looks up a localized string similar to Windows MIDI Services SDK runtime failed to initialize. Is it installed? (COM object may not be available or registered).
         /// </summary>
         internal static string ErrorSdkInitializerInitializationFailed {
             get {
                 return ResourceManager.GetString("ErrorSdkInitializerInitializationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Windows MIDI Services SDK runtime failed to initialize. Is it installed? (Exception creating initializer).
+        /// </summary>
+        internal static string ErrorSdkInitializerInitializationFailedExceptionInCreate {
+            get {
+                return ResourceManager.GetString("ErrorSdkInitializerInitializationFailedExceptionInCreate", resourceCulture);
             }
         }
         
