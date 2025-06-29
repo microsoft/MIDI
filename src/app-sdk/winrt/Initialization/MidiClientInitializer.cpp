@@ -130,8 +130,7 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
     DWORD* versionMajor,
     DWORD* versionMinor,
     DWORD* versionRevision,
-    DWORD* versionDateNumber,
-    DWORD* versionTimeNumber,
+    DWORD* versionBuildNumber,
     LPWSTR* buildSource,
     LPWSTR* versionName,
     LPWSTR* versionFullString
@@ -165,14 +164,9 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
             *versionRevision = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_REVISION);
         }
 
-        if (versionDateNumber != nullptr)
+        if (versionBuildNumber != nullptr)
         {
-            *versionDateNumber = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_DATE_NUMBER);
-        }
-
-        if (versionTimeNumber != nullptr)
-        {
-            *versionTimeNumber = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_TIME_NUMBER);
+            *versionBuildNumber = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER);
         }
 
         if (buildSource != nullptr)
