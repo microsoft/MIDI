@@ -10,7 +10,7 @@
   "license": "MIT",
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
-    "electron": "^27.3.11",
+    "electron": "^28.3.2",
     "electron-rebuild": "^3.2.9"
   }
 }
