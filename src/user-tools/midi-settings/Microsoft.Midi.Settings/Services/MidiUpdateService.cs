@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Windows.Devices.Midi2.Utilities.Update;
 using System;
 using System.Collections.Generic;
@@ -13,11 +14,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Midi.Settings.Contracts.Services
+namespace Microsoft.Midi.Settings.Services
 {
-    internal interface IMidiVersionCheckerService
-    {
-        IReadOnlyList<MidiRuntimeRelease> GetAvailableRuntimeDownloads();
-    }
 
+    public class MidiUpdateService : IMidiUpdateService
+    {
+        // https://aka.ms/MidiServicesLatestSdkVersionJson
+
+        public IReadOnlyList<MidiRuntimeRelease> GetAvailableRuntimeDownloads()
+        {
+            return MidiRuntimeUpdateUtility.GetAvailableReleases();
+        }
+
+        public bool DownloadUpdate(Uri uri)
+        {
+            // TODO
+
+
+
+
+            return false;
+        }
+    }
 }

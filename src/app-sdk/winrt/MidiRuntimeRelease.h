@@ -21,11 +21,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         winrt::hstring Description() const noexcept { return m_description; }
         winrt::hstring VersionFull() const noexcept { return m_versionFull; }
 
-        uint32_t VersionMajor() const noexcept { return m_versionMajor; }
-        uint32_t VersionMinor() const noexcept { return m_versionMinor; }
-        uint32_t VersionRevision() const noexcept { return m_versionRevision; }
-        uint32_t VersionDateNumber() const noexcept { return m_versionDateNumber; }
-        uint32_t VersionTimeNumber() const noexcept { return m_versionTimeNumber; }
+        uint16_t VersionMajor() const noexcept { return m_versionMajor; }
+        uint16_t VersionMinor() const noexcept { return m_versionMinor; }
+        uint16_t VersionRevision() const noexcept { return m_versionRevision; }
+        uint16_t VersionBuildNumber() const noexcept { return m_versionBuildNumber; }
         foundation::Uri ReleasePageUri() const noexcept { return m_releasePageUri; }
         foundation::Uri DirectDownloadUriX64() const noexcept { return m_directDownloadUriX64; }
         foundation::Uri DirectDownloadUriArm64() const noexcept { return m_directDownloadUriArm64; }
@@ -36,11 +35,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
             _In_ winrt::hstring const& name,
             _In_ winrt::hstring const& description,
             _In_ winrt::hstring const& versionFull,
-            _In_ uint32_t const versionMajor,
-            _In_ uint32_t const versionMinor,
-            _In_ uint32_t const versionRevision,
-            _In_ uint32_t const versionDateNumber,
-            _In_ uint32_t const versionTimeNumber,
+            _In_ uint16_t const versionMajor,
+            _In_ uint16_t const versionMinor,
+            _In_ uint16_t const versionRevision,
+            _In_ uint16_t const versionBuildNumber,
             _In_ foundation::Uri const& releasePageUri,
             _In_ foundation::Uri const& directDownloadUriX64,
             _In_ foundation::Uri const& directDownloadUriArm64
@@ -54,11 +52,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         winrt::hstring m_description{};
 
         winrt::hstring m_versionFull{};
-        uint32_t m_versionMajor{};
-        uint32_t m_versionMinor{};
-        uint32_t m_versionRevision{};
-        uint32_t m_versionDateNumber{};
-        uint32_t m_versionTimeNumber{};
+        uint16_t m_versionMajor{};
+        uint16_t m_versionMinor{};
+        uint16_t m_versionRevision{};
+        uint16_t m_versionBuildNumber{};
 
         foundation::Uri m_releasePageUri{ nullptr };
         foundation::Uri m_directDownloadUriX64{ nullptr };

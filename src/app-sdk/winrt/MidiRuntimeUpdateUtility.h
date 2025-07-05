@@ -15,7 +15,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     {
         MidiRuntimeUpdateUtility() = default;
 
-        static collections::IVectorView<midi2::Utilities::Update::MidiRuntimeRelease> GetAvailableReleases();
+        static collections::IVectorView<midi2::Utilities::Update::MidiRuntimeRelease> GetAllAvailableReleases();
+
+        static midi2::Utilities::Update::MidiRuntimeRelease GetNewestAvailableRelease();
+        static midi2::Utilities::Update::MidiRuntimeRelease GetNewestAvailableRelease(_In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseType releaseType);
+        static midi2::Utilities::Update::MidiRuntimeRelease GetNewestAvailableRelease(_In_ uint16_t specificMajorVersion, _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseType releaseType);
+
+    private:
+        static midi2::Utilities::Update::MidiRuntimeRelease ParseRuntimeReleaseFromJsonObject(_In_ json::JsonObject obj);
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::factory_implementation

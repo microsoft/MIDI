@@ -16,6 +16,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Popups;
 
+using Microsoft.Windows.Devices.Midi2.Utilities.Update;
+
 
 namespace Microsoft.Midi.Settings.Models;
 
@@ -123,6 +125,8 @@ public class AppState
         return val;
     }
 
+    // TODO: These should be in an Update service, not the state class
+
     public string GetInstalledSdkVersionString()
     {
         string val = "Unable to query SDK version";
@@ -135,10 +139,31 @@ public class AppState
         return val;
     }
 
-    public Uri GetMidiSdkInstallerUri()
+
+    // TODO: These should be in an Update service, not the state class
+
+    public bool IsNewerSdkVersionAvailableForDownload()
     {
-        return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
+        if (_initializer != null)
+        {
+            return _initializer.IsNewerVersionAvailableForDownload();
+        }
+
+        return false;
     }
+
+    // TODO: These should be in an Update service, not the state class
+
+    public MidiRuntimeRelease GetNewerSdkDownloadInformation()
+    {
+        
+    }
+
+
+    //public Uri GetMidiSdkInstallerUri()
+    //{
+    //    return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
+    //}
 
 
     public MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher

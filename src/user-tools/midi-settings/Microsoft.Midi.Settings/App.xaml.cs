@@ -54,7 +54,19 @@ public partial class App : Application
         return null;
     }
 
+    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern int MessageBox(
+        IntPtr hWnd,
+        string lpText,
+        string lpCaption,
+        int uType);
+
+
+
+    // this is set from the splashscreen handling in the activation service
     public static WinUIEx.WindowEx MainWindow { get; } = new MainWindow();
+
+    public static MidiServiceInitializationProgressWindow Splash { get; } = new MidiServiceInitializationProgressWindow();
 
     public App()
     {
@@ -62,144 +74,141 @@ public partial class App : Application
 
         try
         {
-            // initialize the SDK
-            if (AppState.Current.InitializeSdk())
-            {
-                InitializeComponent();
+            InitializeComponent();
 
-                Host = Microsoft.Extensions.Hosting.Host.
-                    CreateDefaultBuilder().
-                    UseContentRoot(AppContext.BaseDirectory).
-                    ConfigureServices((context, services) =>
-                    {
-                        // Default Activation Handler
-                        services.AddTransient<ActivationHandler<LaunchActivatedEventArgs>, DefaultActivationHandler>();
+            Host = Microsoft.Extensions.Hosting.Host.
+                CreateDefaultBuilder().
+                UseContentRoot(AppContext.BaseDirectory).
+                ConfigureServices((context, services) =>
+                {
+                    // Default Activation Handler
+                    services.AddTransient<ActivationHandler<LaunchActivatedEventArgs>, DefaultActivationHandler>();
 
-                        // Other Activation Handlers
+                    // Other Activation Handlers
 
-                        // Services
-                        services.AddSingleton<ILoggingService, LoggingService>();
+                    // Services
+                    services.AddSingleton<ILoggingService, LoggingService>();
 
-                        services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
-                        services.AddSingleton<IGeneralSettingsService, GeneralSettingsService>();
+                    services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
+                    services.AddSingleton<IGeneralSettingsService, GeneralSettingsService>();
 
-                        services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-                        services.AddTransient<INavigationViewService, NavigationViewService>();
+                    services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
+                    services.AddTransient<INavigationViewService, NavigationViewService>();
 
-                        services.AddSingleton<IActivationService, ActivationService>();
-                        services.AddSingleton<IPageService, PageService>();
-                        services.AddSingleton<INavigationService, NavigationService>();
+                    services.AddSingleton<IActivationService, ActivationService>();
+                    services.AddSingleton<IPageService, PageService>();
+                    services.AddSingleton<INavigationService, NavigationService>();
 
-                        // Core Services
-                        services.AddSingleton<ISampleDataService, SampleDataService>();
-                        services.AddSingleton<IFileService, FileService>();
+                    // Core Services
+                    services.AddSingleton<ISampleDataService, SampleDataService>();
+                    services.AddSingleton<IFileService, FileService>();
 
-                        // MIDI Services
-                        services.AddSingleton<IMidiTransportInfoService, MidiTransportInfoService>();
-                        services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
-                        services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
-                        services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
+                    // MIDI Services
+                    services.AddSingleton<IMidiTransportInfoService, MidiTransportInfoService>();
+                    services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
+                    services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
+                    services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
 
 
-                        // Views and ViewModels
-                        services.AddTransient<WinRTMidi1DevicesViewModel>();
-                        services.AddTransient<WinRTMidi1DevicesPage>();
+                    // Views and ViewModels
+                    services.AddTransient<WinRTMidi1DevicesViewModel>();
+                    services.AddTransient<WinRTMidi1DevicesPage>();
 
-                        services.AddTransient<WinMMMidi1DevicesViewModel>();
-                        services.AddTransient<WinMMMidi1DevicesPage>();
+                    services.AddTransient<WinMMMidi1DevicesViewModel>();
+                    services.AddTransient<WinMMMidi1DevicesPage>();
 
-                        services.AddTransient<SettingsViewModel>();
-                        services.AddTransient<SettingsPage>();
+                    services.AddTransient<SettingsViewModel>();
+                    services.AddTransient<SettingsPage>();
 
-                        services.AddTransient<ShellPage>();
-                        services.AddTransient<ShellViewModel>();
+                    services.AddTransient<ShellPage>();
+                    services.AddTransient<ShellViewModel>();
 
-                        services.AddTransient<ForDevelopersPage>();
-                        services.AddTransient<ForDevelopersViewModel>();
-
-
-                        services.AddTransient<EndpointsAllPage>();
-                        services.AddTransient<EndpointsAllViewModel>();
-
-                        services.AddTransient<EndpointsAppPage>();
-                        services.AddTransient<EndpointsAppViewModel>();
-
-                        services.AddTransient<EndpointsBle10Page>();
-                        services.AddTransient<EndpointsBle10ViewModel>();
-
-                        services.AddTransient<EndpointsKSPage>();
-                        services.AddTransient<EndpointsKSViewModel>();
-
-                        services.AddTransient<EndpointsKsaPage>();
-                        services.AddTransient<EndpointsKsaViewModel>();
-
-                        services.AddTransient<EndpointsNet2UdpPage>();
-                        services.AddTransient<EndpointsNet2UdpViewModel>();
-
-                        services.AddTransient<NetworkMidi2SetupPage>();
-                        services.AddTransient<NetworkMidi2SetupViewModel>();
-
-                        services.AddTransient<EndpointsLoopPage>();
-                        services.AddTransient<EndpointsLoopViewModel>();
-
-                        services.AddTransient<EndpointsDiagPage>();
-                        services.AddTransient<EndpointsDiagViewModel>();
+                    services.AddTransient<ForDevelopersPage>();
+                    services.AddTransient<ForDevelopersViewModel>();
 
 
-                        services.AddTransient<DeviceDetailPage>();
-                        services.AddTransient<DeviceDetailViewModel>();
+                    services.AddTransient<EndpointsAllPage>();
+                    services.AddTransient<EndpointsAllViewModel>();
+
+                    services.AddTransient<EndpointsAppPage>();
+                    services.AddTransient<EndpointsAppViewModel>();
+
+                    services.AddTransient<EndpointsBle10Page>();
+                    services.AddTransient<EndpointsBle10ViewModel>();
+
+                    services.AddTransient<EndpointsKSPage>();
+                    services.AddTransient<EndpointsKSViewModel>();
+
+                    services.AddTransient<EndpointsKsaPage>();
+                    services.AddTransient<EndpointsKsaViewModel>();
+
+                    services.AddTransient<EndpointsNet2UdpPage>();
+                    services.AddTransient<EndpointsNet2UdpViewModel>();
+
+                    services.AddTransient<NetworkMidi2SetupPage>();
+                    services.AddTransient<NetworkMidi2SetupViewModel>();
+
+                    services.AddTransient<EndpointsLoopPage>();
+                    services.AddTransient<EndpointsLoopViewModel>();
+
+                    services.AddTransient<EndpointsDiagPage>();
+                    services.AddTransient<EndpointsDiagViewModel>();
 
 
-                        services.AddTransient<ToolsMonitorPage>();
-                        services.AddTransient<ToolsMonitorViewModel>();
+                    services.AddTransient<DeviceDetailPage>();
+                    services.AddTransient<DeviceDetailViewModel>();
 
-                        services.AddTransient<ManagementSessionsPage>();
-                        services.AddTransient<ManagementSessionsViewModel>();
 
-                        services.AddTransient<PluginsProcessingPage>();
-                        services.AddTransient<PluginsProcessingViewModel>();
+                    services.AddTransient<ToolsMonitorPage>();
+                    services.AddTransient<ToolsMonitorViewModel>();
 
-                        services.AddTransient<PluginsTransportPage>();
-                        services.AddTransient<PluginsTransportViewModel>();
+                    services.AddTransient<ManagementSessionsPage>();
+                    services.AddTransient<ManagementSessionsViewModel>();
 
-                        services.AddTransient<ConfigurationsPage>();
-                        services.AddTransient<ConfigurationsViewModel>();
+                    services.AddTransient<PluginsProcessingPage>();
+                    services.AddTransient<PluginsProcessingViewModel>();
 
-                        services.AddTransient<ToolsConsolePage>();
-                        services.AddTransient<ToolsConsoleViewModel>();
+                    services.AddTransient<PluginsTransportPage>();
+                    services.AddTransient<PluginsTransportViewModel>();
 
-                        services.AddTransient<ToolsSysExPage>();
-                        services.AddTransient<ToolsSysExViewModel>();
+                    services.AddTransient<ConfigurationsPage>();
+                    services.AddTransient<ConfigurationsViewModel>();
 
-                        services.AddTransient<ToolsTestPage>();
-                        services.AddTransient<ToolsTestViewModel>();
+                    services.AddTransient<ToolsConsolePage>();
+                    services.AddTransient<ToolsConsoleViewModel>();
 
-                        services.AddTransient<TroubleshootingPage>();
-                        services.AddTransient<TroubleshootingViewModel>();
+                    services.AddTransient<ToolsSysExPage>();
+                    services.AddTransient<ToolsSysExViewModel>();
 
-                        services.AddTransient<HomePage>();
-                        services.AddTransient<HomeViewModel>();
+                    services.AddTransient<ToolsTestPage>();
+                    services.AddTransient<ToolsTestViewModel>();
 
-                        services.AddTransient<FirstRunExperiencePage>();
-                        services.AddTransient<FirstRunExperienceViewModel>();
+                    services.AddTransient<TroubleshootingPage>();
+                    services.AddTransient<TroubleshootingViewModel>();
 
-                        // Configuration
-                        services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
-                    }).
-                    Build();
+                    services.AddTransient<HomePage>();
+                    services.AddTransient<HomeViewModel>();
 
-                WindowsDeveloperModeHelper.Refresh();
-            }
-            else
-            {
-                MessageBox(
-                    (IntPtr)0,
-                    "Error_UnableToInitializeMidiRuntime".GetLocalized(),
-                    "Error_StartupMessageBoxTitle".GetLocalized(), 
-                    0);
+                    services.AddTransient<FirstRunExperiencePage>();
+                    services.AddTransient<FirstRunExperienceViewModel>();
 
-                Exit();
-            }
+                    // Configuration
+                    services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
+                }).
+                Build();
+
+
+            //}
+            //else
+            //{
+            //    MessageBox(
+            //        (IntPtr)0,
+            //        "Error_UnableToInitializeMidiRuntime".GetLocalized(),
+            //        "Error_StartupMessageBoxTitle".GetLocalized(),
+            //        0);
+
+            //    Exit();
+            //}
         }
         catch (Exception ex)
         {
@@ -211,8 +220,6 @@ public partial class App : Application
 
             Exit();
         }
-
-
 
         //App.GetService<ILoggingService>().LogError("This is a test message");
     }
@@ -235,28 +242,24 @@ public partial class App : Application
 
     }
 
-    private MidiDesktopAppSdkInitializer? _midiInitializer = null;
+    //private MidiDesktopAppSdkInitializer? _midiInitializer = null;
 
-    public MidiDesktopAppSdkInitializer? MidiInitializer => _midiInitializer;
-
-
-    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern int MessageBox(
-            IntPtr hWnd, 
-            string lpText, 
-            string lpCaption,
-            int uType);
+    //public MidiDesktopAppSdkInitializer? MidiInitializer => _midiInitializer;
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {
         try
         {
+
+           // InitializationProgressWindow.Completed += (s,e) => 
+
+
             base.OnLaunched(args);
 
             // this is not required for app startup, but is needed for other app features, so we initialize after launch
             // we do not fail if it fails because this app must run when the service is not present -- it's part of the
             // power user/developer install process.
-            AppState.Current.InitializeService();
+           // AppState.Current.InitializeService();
 
             await App.GetService<IActivationService>().ActivateAsync(args);
         }
@@ -266,4 +269,6 @@ public partial class App : Application
             // so just eat it here.
         }
     }
+
+
 }

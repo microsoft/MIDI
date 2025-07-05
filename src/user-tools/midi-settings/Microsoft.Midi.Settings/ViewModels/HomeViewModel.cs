@@ -103,15 +103,21 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
-        public bool IsNewSdkVersionAvailable
+        public bool IsNewSdkRuntimeDownloadAvailable
         {
             get
             {
-                return true; // m_configFileService.IsConfigFileActive;
+                return AppState.Current.IsNewerSdkVersionAvailableForDownload();
             }
         }
 
-
+        public string NewSdkRuntimeDownloadInformation
+        {
+            get
+            {
+                return AppState.Current.NewerSdkDownloadInformation();
+            }
+        }
 
 
         public string CurrentConfigurationName

@@ -22,15 +22,17 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
         String Description{ get; };
 
         String VersionFull{ get; };
-        UInt32 VersionMajor{ get; };
-        UInt32 VersionMinor{ get; };
-        UInt32 VersionRevision{ get; };
-        UInt32 VersionDateNumber{ get; };
-        UInt32 VersionTimeNumber{ get; };
+
+        UInt16 VersionMajor{ get; };
+        UInt16 VersionMinor{ get; };
+        UInt16 VersionRevision{ get; };
+        UInt16 VersionBuildNumber{ get; };
 
         Windows.Foundation.Uri ReleasePageUri{ get; };
 
         Windows.Foundation.Uri DirectDownloadUriX64{ get; };
         Windows.Foundation.Uri DirectDownloadUriArm64{ get; };
     }
+
+
 }

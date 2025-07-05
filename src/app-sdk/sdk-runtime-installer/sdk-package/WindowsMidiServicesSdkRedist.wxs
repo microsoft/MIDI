@@ -6,7 +6,7 @@
 
 
   <Package
-          Name="Windows MIDI Services (App SDK Runtime) $(var.Platform)"
+          Name="Microsoft Windows MIDI Services (App SDK Runtime) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
           Version="$(MidiSdkAndToolsVersion)"
           UpgradeCode="297714bb-dd77-4748-a4c1-553ad66da5d0"

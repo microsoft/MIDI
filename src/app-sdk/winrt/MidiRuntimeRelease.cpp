@@ -19,11 +19,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         winrt::hstring const& name,
         winrt::hstring const& description,
         winrt::hstring const& versionFull,
-        uint32_t const versionMajor,
-        uint32_t const versionMinor,
-        uint32_t const versionRevision,
-        uint32_t const versionDateNumber,
-        uint32_t const versionTimeNumber,
+        uint16_t const versionMajor,
+        uint16_t const versionMinor,
+        uint16_t const versionRevision,
+        uint16_t const versionBuildNumber,
         foundation::Uri const& releasePageUri,
         foundation::Uri const& directDownloadUriX64,
         foundation::Uri const& directDownloadUriArm64
@@ -38,8 +37,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         m_versionMajor = versionMajor;
         m_versionMinor = versionMinor;
         m_versionRevision = versionRevision;
-        m_versionDateNumber = versionDateNumber;
-        m_versionTimeNumber = versionTimeNumber;
+        m_versionBuildNumber = versionBuildNumber;
 
         m_releasePageUri = releasePageUri;
         m_directDownloadUriX64 = directDownloadUriX64;

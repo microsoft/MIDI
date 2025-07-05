@@ -39,10 +39,10 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
     {
         void GetInstalledWindowsMidiServicesSdkVersion(
             ref MidiAppSDKPlatform buildPlatform,
-            ref UInt32 versionMajor,
-            ref UInt32 versionMinor,
-            ref UInt32 versionRevision,
-            ref UInt32 versionBuildNumber,
+            ref UInt16 versionMajor,
+            ref UInt16 versionMinor,
+            ref UInt16 versionRevision,
+            ref UInt16 versionBuildNumber,
             ref string buildSource,
             ref string versionName,
             ref string versionFullString
@@ -50,15 +50,15 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
         void EnsureServiceAvailable();
             
-        void GetLatestAvailableDownloadableSdkVersion(
-            ref UInt32 versionMajor,
-            ref UInt32 versionMinor,
-            ref UInt32 versionRevision,
-            ref UInt32 versionBuildNumber,
-            ref string buildSource,
-            ref string versionName,
-            ref string versionFullString,
-            ref string releaseDescription);
+        //void GetLatestAvailableDownloadableSdkVersion(
+        //    ref UInt16 versionMajor,
+        //    ref UInt16 versionMinor,
+        //    ref UInt16 versionRevision,
+        //    ref UInt16 versionBuildNumber,
+        //    ref string buildSource,
+        //    ref string versionName,
+        //    ref string versionFullString,
+        //    ref string releaseDescription);
     }
 
     public class MidiDesktopAppSdkInitializer : IDisposable
@@ -141,10 +141,10 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                 // build platform is an output param. We just default it here
                 MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
 
-                UInt32 versionMajor = 0;
-                UInt32 versionMinor = 0;
-                UInt32 versionRevision = 0;
-                UInt32 versionBuildNumber = 0;
+                UInt16 versionMajor = 0;
+                UInt16 versionMinor = 0;
+                UInt16 versionRevision = 0;
+                UInt16 versionBuildNumber = 0;
                 string buildSource = string.Empty;
                 string versionName = string.Empty;
                 string versionFullString = string.Empty;
@@ -173,9 +173,9 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         }
 
         public bool CheckForMinimumRequiredSdkVersion(
-            UInt32 minRequiredVersionMajor,
-            UInt32 minRequiredVersionMinor,
-            UInt32 minRequiredVersionRevision)
+            UInt16 minRequiredVersionMajor,
+            UInt16 minRequiredVersionMinor,
+            UInt16 minRequiredVersionRevision)
         {
             // build platform is an output param. We just default it here
             MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
@@ -184,10 +184,10 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             string versionName = string.Empty;
             string versionFullString = string.Empty;
 
-            uint versionMajor = 0;
-            uint versionMinor = 0;
-            uint versionRevision = 0;
-            uint versionBuildNumber = 0;
+            ushort versionMajor = 0;
+            ushort versionMinor = 0;
+            ushort versionRevision = 0;
+            ushort versionBuildNumber = 0;
 
             try
             {
@@ -223,10 +223,10 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             string versionName = string.Empty;
             string versionFullString = string.Empty;
 
-            uint versionMajor = 0;
-            uint versionMinor = 0;
-            uint versionRevision = 0;
-            uint versionBuildNumber = 0;
+            ushort versionMajor = 0;
+            ushort versionMinor = 0;
+            ushort versionRevision = 0;
+            ushort versionBuildNumber = 0;
 
             try
             { 
@@ -279,59 +279,59 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         }
 
 
-        public bool IsNewerVersionAvailableForDownload()
-        {
-            string onlineBuildSource = string.Empty;
-            string onlineVersionName = string.Empty;
-            string onlineVersionFullString = string.Empty;
-            string onlineReleaseDescription = string.Empty;
+        //public bool IsNewerVersionAvailableForDownload()
+        //{
+        //    string onlineBuildSource = string.Empty;
+        //    string onlineVersionName = string.Empty;
+        //    string onlineVersionFullString = string.Empty;
+        //    string onlineReleaseDescription = string.Empty;
 
-            uint onlineVersionMajor = 0;
-            uint onlineVersionMinor = 0;
-            uint onlineVersionRevision = 0;
-            uint onlineVersionBuildNumber = 0;
+        //    ushort onlineVersionMajor = 0;
+        //    ushort onlineVersionMinor = 0;
+        //    ushort onlineVersionRevision = 0;
+        //    ushort onlineVersionBuildNumber = 0;
 
-            uint installedVersionMajor = 0;
-            uint installedVersionMinor = 0;
-            uint installedVersionRevision = 0;
-            uint installedVersionBuildNumber = 0;
-            string installedBuildSource = string.Empty;
-            string installedVersionName = string.Empty;
-            string installedVersionFullString = string.Empty;
-
-
-            _initializer!.GetLatestAvailableDownloadableSdkVersion(
-                ref onlineVersionMajor,
-                ref onlineVersionMinor,
-                ref onlineVersionRevision,
-                ref onlineVersionBuildNumber,
-                ref onlineBuildSource,
-                ref onlineVersionName,
-                ref onlineVersionFullString,
-                ref onlineReleaseDescription
-                );
+        //    ushort installedVersionMajor = 0;
+        //    ushort installedVersionMinor = 0;
+        //    ushort installedVersionRevision = 0;
+        //    ushort installedVersionBuildNumber = 0;
+        //    string installedBuildSource = string.Empty;
+        //    string installedVersionName = string.Empty;
+        //    string installedVersionFullString = string.Empty;
 
 
-            MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
+        //    _initializer!.GetLatestAvailableDownloadableSdkVersion(
+        //        ref onlineVersionMajor,
+        //        ref onlineVersionMinor,
+        //        ref onlineVersionRevision,
+        //        ref onlineVersionBuildNumber,
+        //        ref onlineBuildSource,
+        //        ref onlineVersionName,
+        //        ref onlineVersionFullString,
+        //        ref onlineReleaseDescription
+        //        );
 
-            _initializer!.GetInstalledWindowsMidiServicesSdkVersion(
-                ref platform,
-                ref installedVersionMajor,
-                ref installedVersionMinor,
-                ref installedVersionRevision,
-                ref installedVersionBuildNumber,
-                ref installedBuildSource,
-                ref installedVersionName,
-                ref installedVersionFullString
-                );
 
-            if (installedVersionMajor > onlineVersionMajor) return false;
-            if (installedVersionMinor > onlineVersionMinor) return false;
-            if (installedVersionRevision > onlineVersionRevision) return false;
-            if (installedVersionBuildNumber > onlineVersionBuildNumber) return false;
+        //    MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
 
-            return true;
-        }
+        //    _initializer!.GetInstalledWindowsMidiServicesSdkVersion(
+        //        ref platform,
+        //        ref installedVersionMajor,
+        //        ref installedVersionMinor,
+        //        ref installedVersionRevision,
+        //        ref installedVersionBuildNumber,
+        //        ref installedBuildSource,
+        //        ref installedVersionName,
+        //        ref installedVersionFullString
+        //        );
+
+        //    if (installedVersionMajor > onlineVersionMajor) return false;
+        //    if (installedVersionMinor > onlineVersionMinor) return false;
+        //    if (installedVersionRevision > onlineVersionRevision) return false;
+        //    if (installedVersionBuildNumber > onlineVersionBuildNumber) return false;
+
+        //    return true;
+        //}
 
 
         public void ShutdownSdkRuntime()

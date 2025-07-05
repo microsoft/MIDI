@@ -8,12 +8,19 @@
 
 using Microsoft.Midi.Settings.Activation;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Views;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System.Runtime.InteropServices;
 using Windows.Devices.Display;
 using Windows.Devices.Enumeration;
+using Windows.Foundation.Metadata;
+using Windows.UI.Core;
 using Windows.Win32.UI.Shell;
+using WinUIEx;
 
 namespace Microsoft.Midi.Settings.Services;
 
@@ -78,11 +85,68 @@ public class ActivationService : IActivationService
         }
     }
 
+    [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    static extern int MessageBox(
+    IntPtr hWnd,
+    string lpText,
+    string lpCaption,
+    int uType);
+
 
     public async Task ActivateAsync(object activationArgs)
     {
+        App.MainWindow.Hide();
+
         // Execute tasks before activation.
         await InitializeAsync();
+
+        WindowsDeveloperModeHelper.Refresh();
+
+        var serviceController = MidiServiceHelper.GetServiceController();
+
+        if (serviceController != null)
+        {
+            if (!MidiServiceHelper.ServiceIsReallyRunning(serviceController))
+            {
+                // just initialize the service
+                System.Diagnostics.Debug.WriteLine("Showing loading window");
+
+                // we use the main Window's dispatcher, since AppWindow doesn't surface this
+                App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+                {
+                    App.Splash.Show();
+                    App.Splash.Activate();
+                });
+            }
+
+            // run as a task so the splash screen gets a chance to
+            // actually show up if it has been displayed.
+            await Task.Run(() =>
+            {
+                if (!AppState.Current.InitializeSdk())
+                {
+                    MessageBox(
+                        (IntPtr)0,
+                        "Error_UnableToInitializeMidiRuntime".GetLocalized(),
+                        "Error_StartupMessageBoxTitle".GetLocalized(),
+                        0);
+
+                    //    Exit();
+                }
+                else if (!AppState.Current.InitializeService())
+                {
+                    MessageBox(
+                        (IntPtr)0,
+                        "Error_UnableToStartMidiService".GetLocalized(),
+                        "Error_StartupMessageBoxTitle".GetLocalized(),
+                        0);
+
+                    //Exit();
+                }
+            });
+        }
+
+        //App.MainWindow = (MainWindow)e!;
 
         // restore window size from last close
         PositionMainWindow();
@@ -97,7 +161,19 @@ public class ActivationService : IActivationService
         // Handle activation via ActivationHandlers.
         await HandleActivationAsync(activationArgs);
 
+        App.Splash.Close();
+
+        //if (App.Splash != null && App.Splash.Visible)
+        //{
+        //    App.Splash.DispatcherQueue.TryEnqueue(DispatcherQueuePriority.High, () =>
+        //    {
+        //        App.Splash.Close();
+        //    });
+        //}
+        //App.Splash.Dispatcher.ProcessEvents(CoreProcessEventsOption.ProcessAllIfPresent);
+
         // Activate the MainWindow.
+        //App.MainWindow.Show();
         App.MainWindow.Activate();
 
         // Execute tasks after activation.

@@ -124,7 +124,7 @@
       <PackageReference Include="System.Text.Json" Version="8.0.5" />
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 
-      <PackageReference Include="WinUIEx" Version="2.5.1" />
+      <PackageReference Include="WinUIEx" Version="2.6.0" />
 
 	  
     <PackageReference Include="CommunityToolkit.Common" Version="8.4.0" />
@@ -173,6 +173,9 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\MidiServiceInitializationProgressWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Sections\Endpoints\NET2UDP\NetworkMidi2SetupPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -27,10 +27,10 @@ struct __declspec(uuid("8087b303-d551-bce2-1ead-a2500d50c580")) IMidiClientIniti
 
     STDMETHOD(GetInstalledWindowsMidiServicesSdkVersion)(
         _Out_opt_ MidiAppSDKPlatform* buildPlatform,
-        _Out_opt_ DWORD* versionMajor,
-        _Out_opt_ DWORD* versionMinor,
-        _Out_opt_ DWORD* versionRevision,
-        _Out_opt_ DWORD* versionBuildNumber,
+        _Out_opt_ USHORT* versionMajor,
+        _Out_opt_ USHORT* versionMinor,
+        _Out_opt_ USHORT* versionRevision,
+        _Out_opt_ USHORT* versionBuildNumber,
 
         _Out_opt_ LPWSTR* buildSource,
         _Out_opt_ LPWSTR* versionName,
@@ -68,10 +68,10 @@ struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitia
 
     STDMETHOD(GetInstalledWindowsMidiServicesSdkVersion)(
         _Out_opt_ MidiAppSDKPlatform* buildPlatform,
-        _Out_opt_ DWORD* versionMajor,
-        _Out_opt_ DWORD* versionMinor,
-        _Out_opt_ DWORD* versionRevision,
-        _Out_opt_ DWORD* versionBuildNumber,
+        _Out_opt_ USHORT* versionMajor,
+        _Out_opt_ USHORT* versionMinor,
+        _Out_opt_ USHORT* versionRevision,
+        _Out_opt_ USHORT* versionBuildNumber,
 
         _Out_opt_ LPWSTR* buildSource,
         _Out_opt_ LPWSTR* versionName,
@@ -85,8 +85,7 @@ struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitia
     //    _Out_ DWORD* versionMajor,
     //    _Out_ DWORD* versionMinor,
     //    _Out_ DWORD* versionRevision,
-    //    _Out_opt_ DWORD* versionDateNumber,
-    //    _Out_opt_ DWORD* versionTimeNumber,
+    //    _Out_opt_ DWORD* versionBuildNumber,
     //    _Out_opt_ LPWSTR* buildSource,
     //    _Out_opt_ LPWSTR* versionName,
     //    _Out_opt_ LPWSTR* versionFullString,
@@ -109,10 +108,11 @@ private:
     wil::com_ptr_nothrow<IMidiTransport> m_serviceTransport{ nullptr };
 
 
-    DWORD m_onlineVersionMajor{};
-    DWORD m_onlineVersionMinor{};
-    DWORD m_onlineVersionRevision{};
-    DWORD m_onlineVersionBuildNumber{};
+    USHORT m_onlineVersionMajor{};
+    USHORT m_onlineVersionMinor{};
+    USHORT m_onlineVersionRevision{};
+    USHORT m_onlineVersionBuildNumber{};
+
     winrt::hstring m_onlineBuildSource{};
     winrt::hstring m_onlineVersionName{};
     winrt::hstring m_onlineVersionFullString{};

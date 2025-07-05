@@ -117,15 +117,18 @@ namespace Microsoft.Midi.Settings.ViewModels
                         m_configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
 
                         // TODO: show results
+
                     }
                     else
                     {
                         // TODO: update error information
+
                     }
                 }
                 else
                 {
                     // TODO: Report that a config file is needed
+
                 }
             }
 

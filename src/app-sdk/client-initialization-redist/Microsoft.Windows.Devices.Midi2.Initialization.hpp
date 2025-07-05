@@ -50,10 +50,10 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         // returns the SDK version info. Supply nullptr for arguments you don't care about
         STDMETHOD(GetInstalledWindowsMidiServicesSdkVersion)(
             MidiAppSDKPlatform* buildPlatform,
-            DWORD* versionMajor,
-            DWORD* versionMinor,
-            DWORD* versionRevision,
-            DWORD* versionBuildNumber,
+            USHORT* versionMajor,
+            USHORT* versionMinor,
+            USHORT* versionRevision,
+            USHORT* versionBuildNumber,
 
             LPWSTR* buildSource,
             LPWSTR* versionName,
@@ -216,15 +216,15 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         // You will need to shutdown the SDK before the customer can replace it.
         // The SDK version you compile against is the NuGet package major/minor (and optionally) revision.
         bool CheckForMinimumRequiredSdkVersion(
-            DWORD minRequiredVersionMajor, 
-            DWORD minRequiredVersionMinor, 
-            DWORD minRequiredVersionRevision)
+            USHORT minRequiredVersionMajor,
+            USHORT minRequiredVersionMinor,
+            USHORT minRequiredVersionRevision)
         {
             if (m_initializer != nullptr)
             {
-                DWORD installedVersionMajor{ 0 };
-                DWORD installedVersionMinor{ 0 };
-                DWORD installedVersionRevision{ 0 };
+                USHORT installedVersionMajor{ 0 };
+                USHORT installedVersionMinor{ 0 };
+                USHORT installedVersionRevision{ 0 };
 
                 if (SUCCEEDED(m_initializer->GetInstalledWindowsMidiServicesSdkVersion(
                     nullptr,                    // build platform

@@ -5,7 +5,7 @@
   <?include $(StagingVersionIncludeFile) ?>
 
   <Package  
-          Name="Windows MIDI Services (Settings App) $(var.Platform)"
+          Name="Microsoft Microsoft Windows MIDI Services (Settings App) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
           Version="$(MidiSdkAndToolsVersion)"
           UpgradeCode="6f21054a-1905-4aae-869f-46554de9ea98"

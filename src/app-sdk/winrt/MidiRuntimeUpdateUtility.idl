@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiRuntimeRelease.idl";
+import "MidiRuntimeUpdateReleaseTypeEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
 {
@@ -17,7 +18,12 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
     [static_name("Microsoft.Windows.Devices.Midi2.Utilities.Update.IMidiRuntimeUpdateUtilityStatics", 8087b303-0519-31d1-c0de-ee0001000000)]
     static runtimeclass MidiRuntimeUpdateUtility
     {
-        static IVectorView<MidiRuntimeRelease> GetAvailableReleases();
+        static IVectorView<MidiRuntimeRelease> GetAllAvailableReleases();
 
+        static MidiRuntimeRelease GetNewestAvailableRelease();
+        static MidiRuntimeRelease GetNewestAvailableRelease(MidiRuntimeUpdateReleaseType releaseType);
+        static MidiRuntimeRelease GetNewestAvailableRelease(UInt16 specificMajorVersion, MidiRuntimeUpdateReleaseType releaseType);
     }
+
+
 }

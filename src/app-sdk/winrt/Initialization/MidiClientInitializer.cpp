@@ -127,10 +127,10 @@ _Use_decl_annotations_
 HRESULT 
 MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
     MidiAppSDKPlatform* buildPlatform,
-    DWORD* versionMajor,
-    DWORD* versionMinor,
-    DWORD* versionRevision,
-    DWORD* versionBuildNumber,
+    USHORT* versionMajor,
+    USHORT* versionMinor,
+    USHORT* versionRevision,
+    USHORT* versionBuildNumber,
     LPWSTR* buildSource,
     LPWSTR* versionName,
     LPWSTR* versionFullString
@@ -227,11 +227,10 @@ _Use_decl_annotations_
 HRESULT
 MidiClientInitializer::GetLatestAvailableDownloadableSdkVersion(
     bool includePreview,
-    DWORD* versionMajor,
-    DWORD* versionMinor,
-    DWORD* versionRevision,
-    DWORD* versionDateNumber,
-    DWORD* versionTimeNumber,
+    USHORT* versionMajor,
+    USHORT* versionMinor,
+    USHORT* versionRevision,
+    USHORT* versionBuildNumber,
     LPWSTR* buildSource,
     LPWSTR* versionName,
     LPWSTR* versionFullString,
