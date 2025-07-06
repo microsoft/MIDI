@@ -12,18 +12,42 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implementation
 {
+    winrt::hstring MidiRuntimeRelease::ToString() const noexcept
+    { 
+        // the enum is a Flags enum, but in this use, it should never be more than one of these values
+
+        if (!m_versionFull.empty())
+        {
+            if (m_type == midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Preview)
+            {
+                // TODO: This string should come from resources
+                return m_versionFull + L" (Preview)";
+            }
+            else if (m_type == midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Stable)
+            {
+                // no suffix if stable release
+                return m_versionFull;
+            }
+        }
+
+        // TODO: This shoudl come from resources
+        return L"(Invalid Version Information)";
+    };
+
+
     _Use_decl_annotations_
     void MidiRuntimeRelease::InternalInitialize(
-        midi2::Utilities::Update::MidiRuntimeUpdateReleaseType const type,
+        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes const type,
         winrt::hstring const& source,
         winrt::hstring const& name,
         winrt::hstring const& description,
+        foundation::DateTime const& buildDate,
         winrt::hstring const& versionFull,
         uint16_t const versionMajor,
         uint16_t const versionMinor,
-        uint16_t const versionRevision,
-        uint16_t const versionBuildNumber,
-        foundation::Uri const& releasePageUri,
+        uint16_t const versionPatch,
+        winrt::hstring const& preview,
+        foundation::Uri const& releaseNotesUri,
         foundation::Uri const& directDownloadUriX64,
         foundation::Uri const& directDownloadUriArm64
     ) noexcept
@@ -33,13 +57,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         m_name = name;
         m_description = description;
 
+        m_buildDate = buildDate;
+
         m_versionFull = versionFull;
         m_versionMajor = versionMajor;
         m_versionMinor = versionMinor;
-        m_versionRevision = versionRevision;
-        m_versionBuildNumber = versionBuildNumber;
+        m_versionPatch = versionPatch;
 
-        m_releasePageUri = releasePageUri;
+        m_preview = preview;
+
+        m_releaseNotesUri = releaseNotesUri;
         m_directDownloadUriX64 = directDownloadUriX64;
         m_directDownloadUriArm64 = directDownloadUriArm64;
     }

@@ -52,8 +52,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
             MidiAppSDKPlatform* buildPlatform,
             USHORT* versionMajor,
             USHORT* versionMinor,
-            USHORT* versionRevision,
-            USHORT* versionBuildNumber,
+            USHORT* versionPatch,
 
             LPWSTR* buildSource,
             LPWSTR* versionName,
@@ -218,20 +217,19 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         bool CheckForMinimumRequiredSdkVersion(
             USHORT minRequiredVersionMajor,
             USHORT minRequiredVersionMinor,
-            USHORT minRequiredVersionRevision)
+            USHORT minRequiredVersionPatch)
         {
             if (m_initializer != nullptr)
             {
                 USHORT installedVersionMajor{ 0 };
                 USHORT installedVersionMinor{ 0 };
-                USHORT installedVersionRevision{ 0 };
+                USHORT installedVersionPatch{ 0 };
 
                 if (SUCCEEDED(m_initializer->GetInstalledWindowsMidiServicesSdkVersion(
                     nullptr,                    // build platform
                     &installedVersionMajor,     // major
                     &installedVersionMinor,     // minor
-                    &installedVersionRevision,  // revision
-                    nullptr,                    // build number
+                    &installedVersionPatch,     // patch
                     nullptr,                    // buildSource string. Remember to cotaskmemfree if provided
                     nullptr,                    // versionName string. Remember to cotaskmemfree if provided
                     nullptr                     // versionFullString string. Remember to cotaskmemfree if provided
@@ -239,7 +237,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 {
                     if (minRequiredVersionMajor > installedVersionMajor) return false;
                     if (minRequiredVersionMinor > installedVersionMinor) return false;
-                    if (minRequiredVersionRevision > installedVersionRevision) return false;
+                    if (minRequiredVersionPatch > installedVersionPatch) return false;
 
                     return true;
                 }

@@ -14,25 +14,101 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
 {
 
     _Use_decl_annotations_
-    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::ParseRuntimeReleaseFromJsonObject(json::JsonObject obj)
+    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetHigherReleaseValue(
+        midi2::Utilities::Update::MidiRuntimeRelease const& releaseA,
+        midi2::Utilities::Update::MidiRuntimeRelease const& releaseB
+        ) noexcept
+    {
+        // both are null, so just return null
+        if (releaseA == nullptr && releaseB == nullptr)
+        {
+            return nullptr;
+        }
+
+        // only A is null, so return B
+        if (releaseA == nullptr)
+        {
+            return releaseB;
+        }
+        
+        // only B is null, so return A
+        if (releaseB == nullptr)
+        {
+            return releaseA;
+        }
+
+        // nothing is null beyond this point
+
+        if (releaseA.VersionMajor() < releaseB.VersionMajor())
+        {
+            return releaseB;
+        }
+        else if (releaseA.VersionMajor() > releaseB.VersionMajor())
+        {
+            return releaseA;
+        }
+
+        // VersionMajor is equal beyond this point
+
+        if (releaseA.VersionMinor() < releaseB.VersionMinor())
+        {
+            return releaseB;
+        }
+        else if (releaseA.VersionMinor() > releaseB.VersionMinor())
+        {
+            return releaseA;
+        }
+
+        // VersionMinor is equal beyond this point
+
+        if (releaseA.VersionPatch() < releaseB.VersionPatch())
+        {
+            return releaseB;
+        }
+        else if (releaseA.VersionPatch() > releaseB.VersionPatch())
+        {
+            return releaseA;
+        }
+
+        // else, everything is exactly the same, so we just return releaseA
+
+        return releaseA;
+    }
+
+
+    _Use_decl_annotations_
+    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::ParseRuntimeReleaseFromJsonObject(json::JsonObject const& obj) noexcept
     {
         auto t = obj.GetNamedString(L"type", L"release");
 
-        MidiRuntimeUpdateReleaseType releaseType{ MidiRuntimeUpdateReleaseType::Preview };
+        MidiRuntimeUpdateReleaseTypes releaseType{ MidiRuntimeUpdateReleaseTypes::Preview };
 
         if (t == L"preview")
         {
-            releaseType = MidiRuntimeUpdateReleaseType::Preview;
+            releaseType = MidiRuntimeUpdateReleaseTypes::Preview;
         }
         else if (t == L"stable")
         {
-            releaseType = MidiRuntimeUpdateReleaseType::Stable;
+            releaseType = MidiRuntimeUpdateReleaseTypes::Stable;
         }
+
+        auto buildDateString = obj.GetNamedString(L"buildDate", L"");
+
+        foundation::DateTime buildDate{};
+
+        // TODO: Parse the ISO 8601 format date string into a foundation::DateTime
+
+
+
+
+
+
+
 
         auto versionMajor = static_cast<uint16_t>(obj.GetNamedNumber(L"versionMajor", 0));
         auto versionMinor = static_cast<uint16_t>(obj.GetNamedNumber(L"versionMinor", 0));
-        auto versionRevision = static_cast<uint16_t>(obj.GetNamedNumber(L"versionRevision", 0));
-        auto versionBuildNumber = static_cast<uint16_t>(obj.GetNamedNumber(L"versionBuildNumber", 0));
+        auto versionPatch = static_cast<uint16_t>(obj.GetNamedNumber(L"versionPatch", 0));
+        auto preview = obj.GetNamedString(L"preview", L"");
 
         auto buildSource = obj.GetNamedString(L"source", L"");
         auto versionName = obj.GetNamedString(L"name", L"");
@@ -69,11 +145,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
             buildSource,
             versionName,
             releaseDescription,
+            buildDate,
             versionFullString,
             versionMajor,
             versionMinor,
-            versionRevision,
-            versionBuildNumber,
+            versionPatch,
+            preview,
             releasePageUri,
             directDownloadUriX64,
             directDownloadUriArm64
@@ -83,7 +160,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     }
 
 
-    collections::IVectorView<midi2::Utilities::Update::MidiRuntimeRelease> MidiRuntimeUpdateUtility::GetAllAvailableReleases()
+    _Use_decl_annotations_
+    collections::IVector<midi2::Utilities::Update::MidiRuntimeRelease> MidiRuntimeUpdateUtility::InternalGetAvailableReleases(
+        bool restrictToMajorVersion,
+        uint16_t majorVersion,
+        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes
+        ) noexcept
     {
         auto results = winrt::single_threaded_vector<midi2::Utilities::Update::MidiRuntimeRelease>();
 
@@ -107,6 +189,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
 
                     auto release = ParseRuntimeReleaseFromJsonObject(obj);
 
+                    // if we're restricting to a major version, only add if the major version matches
+                    if (restrictToMajorVersion)
+                    {
+                        if (release.VersionMajor() != majorVersion)
+                        {
+                            continue;
+                        }
+                    }
+
+                    // only add if it's in scope
+                    if ((inScopeReleaseTypes & release.Type()) != release.Type())
+                    {
+                        continue;
+                    }
+
+
                     results.Append(release);
                 }
             }
@@ -120,15 +218,28 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
             // log failure
         }
 
-        return results.GetView();
+        return results;
+
+    }
+
+
+    collections::IVectorView<midi2::Utilities::Update::MidiRuntimeRelease> MidiRuntimeUpdateUtility::GetAllAvailableReleases() noexcept
+    {
+        return InternalGetAvailableReleases(
+            false, 0,
+            midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Preview | midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Stable
+        ).GetView();
     }
 
 
     // Checks for any release, regardless of type or major version
     // returns null if no match
-    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetNewestAvailableRelease()
+    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetHighestAvailableRelease() noexcept
     {
-        auto releases = GetAllAvailableReleases();
+        auto releases = InternalGetAvailableReleases(
+            false, 0, 
+            midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Preview | midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Stable);
+
 
         if (releases == nullptr || releases.Size() == 0)
         {
@@ -145,61 +256,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
 
         for (auto const& release : releases)
         {
-            if (highestRelease == nullptr)
-            {
-                highestRelease = release;
-            }
-            else
-            {
-                if (release.VersionMajor() < highestRelease.VersionMajor())
-                {
-                    continue;
-                }
-                else if (release.VersionMajor() > highestRelease.VersionMajor())
-                {
-                    highestRelease = release;
-                    continue;
-                }
-
-                // VersionMajor is equal beyond this point
-
-                if (release.VersionMinor() < highestRelease.VersionMinor())
-                {
-                    continue;
-                }
-                else if (release.VersionMinor() > highestRelease.VersionMinor())
-                {
-                    highestRelease = release;
-                    continue;
-                }
-
-                // VersionMinor is equal beyond this point
-
-                if (release.VersionRevision() < highestRelease.VersionRevision())
-                {
-                    continue;
-                }
-                else if (release.VersionRevision() > highestRelease.VersionRevision())
-                {
-                    highestRelease = release;
-                    continue;
-                }
-
-                // VersionRevision is equal beyond this point
-
-                if (release.VersionBuildNumber() < highestRelease.VersionBuildNumber())
-                {
-                    continue;
-                }
-                else if (release.VersionBuildNumber() > highestRelease.VersionBuildNumber())
-                {
-                    highestRelease = release;
-                    continue;
-                }
-
-                // else, everything is exactly the same, which is odd.
-            }
-
+            highestRelease = GetHigherReleaseValue(highestRelease, release);
         }
 
         return highestRelease;
@@ -208,16 +265,30 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     // Checks for a release for the specific type (Stable, Preview)
     // returns null if no match
     _Use_decl_annotations_
-    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetNewestAvailableRelease(
-        midi2::Utilities::Update::MidiRuntimeUpdateReleaseType releaseType)
+    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetHighestAvailableRelease(
+        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes) noexcept
     {
-        UNREFERENCED_PARAMETER(releaseType);
+        auto releases = InternalGetAvailableReleases(false, 0, inScopeReleaseTypes);
 
-        auto releases = GetAllAvailableReleases();
+        if (releases == nullptr || releases.Size() == 0)
+        {
+            return nullptr;
+        }
 
-        // TODO
+        // find one with highest version
+        if (releases.Size() == 1)
+        {
+            return releases.GetAt(0);
+        }
 
-        return nullptr;
+        midi2::Utilities::Update::MidiRuntimeRelease highestRelease{ nullptr };
+
+        for (auto const& release : releases)
+        {
+            highestRelease = GetHigherReleaseValue(highestRelease, release);
+        }
+
+        return highestRelease;
     }
 
     // Checks for a release for the specific type (Stable, Preview) and the specific major version.
@@ -225,18 +296,31 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     // major version 1, even if there's a 2.x release.
     // returns null if no match
     _Use_decl_annotations_
-    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetNewestAvailableRelease(
+    midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetHighestAvailableRelease(
         uint16_t specificMajorVersion, 
-        midi2::Utilities::Update::MidiRuntimeUpdateReleaseType releaseType)
+        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes) noexcept
     {
-        UNREFERENCED_PARAMETER(specificMajorVersion);
-        UNREFERENCED_PARAMETER(releaseType);
+        auto releases = InternalGetAvailableReleases(true, specificMajorVersion, inScopeReleaseTypes);
 
-        auto releases = GetAllAvailableReleases();
+        if (releases == nullptr || releases.Size() == 0)
+        {
+            return nullptr;
+        }
 
-        // TODO
+        // find one with highest version
+        if (releases.Size() == 1)
+        {
+            return releases.GetAt(0);
+        }
 
-        return nullptr;
+        midi2::Utilities::Update::MidiRuntimeRelease highestRelease{ nullptr };
+
+        for (auto const& release : releases)
+        {
+            highestRelease = GetHigherReleaseValue(highestRelease, release);
+        }
+
+        return highestRelease;
     }
 
 

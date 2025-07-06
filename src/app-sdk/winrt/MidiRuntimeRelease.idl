@@ -8,31 +8,33 @@
 
 import "MidiApiContracts.idl";
 
-import "MidiRuntimeUpdateReleaseTypeEnum.idl";
+import "MidiRuntimeUpdateReleaseTypesEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
 {
     [contract(MidiRuntimeUpdateUtilityApiContract, 1)]
     [interface_name("Microsoft.Windows.Devices.Midi2.Utilities.Update.IMidiRuntimeRelease", 8087b303-0519-31d1-c0de-dd0001000000)]
-    runtimeclass MidiRuntimeRelease
+    runtimeclass MidiRuntimeRelease : Windows.Foundation.IStringable
     {
-        MidiRuntimeUpdateReleaseType Type{ get; };
+        MidiRuntimeUpdateReleaseTypes Type{ get; };
         String Source{ get; };
         String Name{ get; };
         String Description{ get; };
+
+        Windows.Foundation.DateTime BuildDate{ get; };
 
         String VersionFull{ get; };
 
         UInt16 VersionMajor{ get; };
         UInt16 VersionMinor{ get; };
-        UInt16 VersionRevision{ get; };
-        UInt16 VersionBuildNumber{ get; };
+        UInt16 VersionPatch{ get; };
 
-        Windows.Foundation.Uri ReleasePageUri{ get; };
+        String Preview{ get; };
+
+        Windows.Foundation.Uri ReleaseNotesUri{ get; };
 
         Windows.Foundation.Uri DirectDownloadUriX64{ get; };
         Windows.Foundation.Uri DirectDownloadUriArm64{ get; };
+
     }
-
-
 }

@@ -54,6 +54,24 @@
                 </controls:SettingsExpander.Items>
             </controls:SettingsExpander>
 
+            <controls:SettingsExpander x:Name="CheckForUpdatesExpander"
+                                   x:Uid="SettingsPage_CheckForUpdatesExpander"
+                                       IsExpanded="True">
+                <controls:SettingsExpander.HeaderIcon>
+                    <FontIcon Glyph="&#xE790;" />
+                </controls:SettingsExpander.HeaderIcon>
+                <controls:SettingsExpander.Items>
+                    <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical">
+                        <StackPanel Margin="0,-12,0,0">
+
+                            <ToggleSwitch x:Uid="SettingsPage_CheckForUpdates_CheckSwitch" 
+                                          IsOn="{x:Bind ViewModel.IsUpdateCheckingEnabled, Mode=TwoWay}"/>
+
+                        </StackPanel>
+                    </controls:SettingsCard>
+                </controls:SettingsExpander.Items>
+            </controls:SettingsExpander>
+            
             <controls:SettingsExpander x:Name="SdkChannelExpander"
                                    x:Uid="SettingsPage_SdkChannelExpander"
                                        IsExpanded="True">

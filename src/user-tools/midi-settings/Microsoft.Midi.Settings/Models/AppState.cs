@@ -126,7 +126,6 @@ public class AppState
     }
 
     // TODO: These should be in an Update service, not the state class
-
     public string GetInstalledSdkVersionString()
     {
         string val = "Unable to query SDK version";
@@ -141,29 +140,27 @@ public class AppState
 
 
     // TODO: These should be in an Update service, not the state class
-
     public bool IsNewerSdkVersionAvailableForDownload()
     {
         if (_initializer != null)
         {
-            return _initializer.IsNewerVersionAvailableForDownload();
+           // return _initializer.IsNewerVersionAvailableForDownload();
         }
 
         return false;
     }
 
     // TODO: These should be in an Update service, not the state class
-
-    public MidiRuntimeRelease GetNewerSdkDownloadInformation()
-    {
-        
-    }
-
-
-    //public Uri GetMidiSdkInstallerUri()
+    //public MidiRuntimeRelease GetNewerSdkDownloadInformation()
     //{
-    //    return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
+
     //}
+
+
+    public Uri GetMidiSdkInstallerUri()
+    {
+        return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
+    }
 
 
     public MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher

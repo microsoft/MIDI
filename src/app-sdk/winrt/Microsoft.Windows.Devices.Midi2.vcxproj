@@ -827,7 +827,7 @@
     <Midl Include="Midi1PortFlowEnum.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
     <Midl Include="MidiRuntimeRelease.idl" />
-    <Midl Include="MidiRuntimeUpdateReleaseTypeEnum.idl" />
+    <Midl Include="MidiRuntimeUpdateReleaseTypesEnum.idl" />
     <Midl Include="MidiRuntimeUpdateUtility.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiSession.idl" />

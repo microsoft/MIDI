@@ -21,15 +21,35 @@ namespace Microsoft.Midi.Settings.Services
     {
         // https://aka.ms/MidiServicesLatestSdkVersionJson
 
-        public IReadOnlyList<MidiRuntimeRelease> GetAvailableRuntimeDownloads()
+        public IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads()
         {
-            return MidiRuntimeUpdateUtility.GetAvailableReleases();
+            return MidiRuntimeUpdateUtility.GetAllAvailableReleases();
         }
 
-        public bool DownloadUpdate(Uri uri)
+        public MidiRuntimeRelease? GetHighestAvailableRuntimeRelease()
+        {
+            // TODO: Check the registry to see if we're on preview or stable release channel
+
+            return MidiRuntimeUpdateUtility.GetHighestAvailableRelease(MidiRuntimeUpdateReleaseTypes.Stable);
+        }
+
+
+        // this is the general installer page, not the global page. Normally, this is not used from
+        // within the settings app, because it's there to install the runtime, including the settings app.
+        public Uri GetMidiSdkInstallerPageUri()
+        {
+            return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
+        }
+
+
+        public bool DownloadAndInstallUpdate(Uri uri)
         {
             // TODO
 
+            // validate internet access
+            // download the update
+            // launch the installer
+            // close this app
 
 
 

@@ -15,14 +15,30 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     {
         MidiRuntimeUpdateUtility() = default;
 
-        static collections::IVectorView<midi2::Utilities::Update::MidiRuntimeRelease> GetAllAvailableReleases();
+        static collections::IVectorView<midi2::Utilities::Update::MidiRuntimeRelease> GetAllAvailableReleases() noexcept;
 
-        static midi2::Utilities::Update::MidiRuntimeRelease GetNewestAvailableRelease();
-        static midi2::Utilities::Update::MidiRuntimeRelease GetNewestAvailableRelease(_In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseType releaseType);
-        static midi2::Utilities::Update::MidiRuntimeRelease GetNewestAvailableRelease(_In_ uint16_t specificMajorVersion, _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseType releaseType);
+        static midi2::Utilities::Update::MidiRuntimeRelease GetHighestAvailableRelease() noexcept;
+
+        static midi2::Utilities::Update::MidiRuntimeRelease GetHighestAvailableRelease(
+            _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes) noexcept;
+
+        static midi2::Utilities::Update::MidiRuntimeRelease GetHighestAvailableRelease(
+            _In_ uint16_t specificMajorVersion, 
+            _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes) noexcept;
 
     private:
-        static midi2::Utilities::Update::MidiRuntimeRelease ParseRuntimeReleaseFromJsonObject(_In_ json::JsonObject obj);
+        static midi2::Utilities::Update::MidiRuntimeRelease GetHigherReleaseValue(
+            _In_ midi2::Utilities::Update::MidiRuntimeRelease const& releaseA,
+            _In_ midi2::Utilities::Update::MidiRuntimeRelease const& releaseB
+        ) noexcept;
+
+        static collections::IVector<midi2::Utilities::Update::MidiRuntimeRelease> InternalGetAvailableReleases(
+            _In_ bool restrictToMajorVersion,
+            _In_ uint16_t majorVersion,
+            _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes
+        ) noexcept;
+
+        static midi2::Utilities::Update::MidiRuntimeRelease ParseRuntimeReleaseFromJsonObject(_In_ json::JsonObject const& obj) noexcept;
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::factory_implementation

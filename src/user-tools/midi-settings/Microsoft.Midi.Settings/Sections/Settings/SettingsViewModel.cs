@@ -31,6 +31,7 @@ public class SettingsViewModel : ObservableRecipient
     private string _versionDescription;
 
     private bool _isPreviewChannelEnabled = false;
+    private bool _isUpdateCheckingEnabled = true;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
@@ -51,6 +52,12 @@ public class SettingsViewModel : ObservableRecipient
         set => SetProperty(ref _isPreviewChannelEnabled, value);
     }
 
+    
+    public bool IsUpdateCheckingEnabled
+    {
+        get => _isUpdateCheckingEnabled;
+        set => SetProperty(ref _isUpdateCheckingEnabled, value);
+    }
 
 
     public ElementTheme ElementTheme

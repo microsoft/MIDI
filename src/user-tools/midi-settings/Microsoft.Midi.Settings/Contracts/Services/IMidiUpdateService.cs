@@ -17,9 +17,13 @@ namespace Microsoft.Midi.Settings.Contracts.Services
 {
     internal interface IMidiUpdateService
     {
-        IReadOnlyList<MidiRuntimeRelease> GetAvailableRuntimeDownloads();
+        IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads();
 
-        bool DownloadUpdate(Uri uri);
+        MidiRuntimeRelease? GetHighestAvailableRuntimeRelease();
+
+        Uri GetMidiSdkInstallerPageUri();
+
+        bool DownloadAndInstallUpdate(Uri uri);
     }
 
 }

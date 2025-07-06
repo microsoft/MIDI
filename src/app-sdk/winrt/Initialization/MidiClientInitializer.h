@@ -29,8 +29,7 @@ struct __declspec(uuid("8087b303-d551-bce2-1ead-a2500d50c580")) IMidiClientIniti
         _Out_opt_ MidiAppSDKPlatform* buildPlatform,
         _Out_opt_ USHORT* versionMajor,
         _Out_opt_ USHORT* versionMinor,
-        _Out_opt_ USHORT* versionRevision,
-        _Out_opt_ USHORT* versionBuildNumber,
+        _Out_opt_ USHORT* versionPatch,
 
         _Out_opt_ LPWSTR* buildSource,
         _Out_opt_ LPWSTR* versionName,
@@ -70,8 +69,7 @@ struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitia
         _Out_opt_ MidiAppSDKPlatform* buildPlatform,
         _Out_opt_ USHORT* versionMajor,
         _Out_opt_ USHORT* versionMinor,
-        _Out_opt_ USHORT* versionRevision,
-        _Out_opt_ USHORT* versionBuildNumber,
+        _Out_opt_ USHORT* versionPatch,
 
         _Out_opt_ LPWSTR* buildSource,
         _Out_opt_ LPWSTR* versionName,
@@ -79,18 +77,6 @@ struct __declspec(uuid("c3263827-c3b0-bdbd-2500-ce63a3f3f2c3")) MidiClientInitia
         ) noexcept override;
 
     STDMETHOD(EnsureServiceAvailable)() noexcept override;
-
-    //STDMETHOD(GetLatestAvailableDownloadableSdkVersion)(
-    //    _In_ bool includePreview,
-    //    _Out_ DWORD* versionMajor,
-    //    _Out_ DWORD* versionMinor,
-    //    _Out_ DWORD* versionRevision,
-    //    _Out_opt_ DWORD* versionBuildNumber,
-    //    _Out_opt_ LPWSTR* buildSource,
-    //    _Out_opt_ LPWSTR* versionName,
-    //    _Out_opt_ LPWSTR* versionFullString,
-    //    _Out_opt_ LPWSTR* releaseDescription
-    //    ) noexcept override;
 
     ULONG __stdcall AddRef() noexcept override;
     ULONG __stdcall Release() noexcept override;
@@ -110,8 +96,7 @@ private:
 
     USHORT m_onlineVersionMajor{};
     USHORT m_onlineVersionMinor{};
-    USHORT m_onlineVersionRevision{};
-    USHORT m_onlineVersionBuildNumber{};
+    USHORT m_onlineVersionPatch{};
 
     winrt::hstring m_onlineBuildSource{};
     winrt::hstring m_onlineVersionName{};

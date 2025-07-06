@@ -103,21 +103,23 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
-        public bool IsNewSdkRuntimeDownloadAvailable
+        public bool IsNewerSdkRuntimeDownloadAvailable
         {
             get
             {
+                // TODO: this should be in the update service, not app state
+
                 return AppState.Current.IsNewerSdkVersionAvailableForDownload();
             }
         }
 
-        public string NewSdkRuntimeDownloadInformation
-        {
-            get
-            {
-                return AppState.Current.NewerSdkDownloadInformation();
-            }
-        }
+        //public string NewSdkRuntimeDownloadInformation
+        //{
+        //    get
+        //    {
+        //        return AppState.Current.NewerSdkDownloadInformation();
+        //    }
+        //}
 
 
         public string CurrentConfigurationName

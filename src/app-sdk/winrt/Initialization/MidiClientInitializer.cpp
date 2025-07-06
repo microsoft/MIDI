@@ -129,8 +129,7 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
     MidiAppSDKPlatform* buildPlatform,
     USHORT* versionMajor,
     USHORT* versionMinor,
-    USHORT* versionRevision,
-    USHORT* versionBuildNumber,
+    USHORT* versionPatch,
     LPWSTR* buildSource,
     LPWSTR* versionName,
     LPWSTR* versionFullString
@@ -159,14 +158,9 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
             *versionMinor = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR);
         }
 
-        if (versionRevision != nullptr)
+        if (versionPatch != nullptr)
         {
-            *versionRevision = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_REVISION);
-        }
-
-        if (versionBuildNumber != nullptr)
-        {
-            *versionBuildNumber = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER);
+            *versionPatch = static_cast<DWORD>(WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_PATCH);
         }
 
         if (buildSource != nullptr)
@@ -221,120 +215,6 @@ MidiClientInitializer::GetInstalledWindowsMidiServicesSdkVersion(
 
 
 }
-
-#if false
-_Use_decl_annotations_
-HRESULT
-MidiClientInitializer::GetLatestAvailableDownloadableSdkVersion(
-    bool includePreview,
-    USHORT* versionMajor,
-    USHORT* versionMinor,
-    USHORT* versionRevision,
-    USHORT* versionBuildNumber,
-    LPWSTR* buildSource,
-    LPWSTR* versionName,
-    LPWSTR* versionFullString,
-    LPWSTR* releaseDescription
-) noexcept
-{
-    // todo get json from https://aka.ms/MidiServicesLatestSdkVersionJson
-
-    //{
-    //    "source": "GitHub Preview",
-    //    "name" : "Customer Preview 3",
-    //    "type" : "stableRelease",
-    //    "versionFull" : "1.0.3-preview-12.250524-1404",
-    //    "versionMajor" : 1,
-    //    "versionMinor" : 0,
-    //    "versionRevision" : 3,
-    //    "versionDateNumber" : 250524,
-    //    "versionTimeNumber" : 1404,
-    //    "releaseDescription" : "Added support for Network MIDI 2.0 configuration"
-    //}
-
-
-    try
-    {
-
-        winrt::Windows::Foundation::Uri uri(L"https://aka.ms/MidiServicesLatestSdkVersionJson");
-        winrt::Windows::Web::Http::HttpClient client;
-
-        auto jsonString = client.GetStringAsync(uri).get();
-
-        json::JsonObject jsonObject{};
-        if (json::JsonObject::TryParse(jsonString, jsonObject))
-        {
-            m_onlineVersionMajor = static_cast<DWORD>(jsonObject.GetNamedNumber(L"versionMajor", 0));
-            m_onlineVersionMinor = static_cast<DWORD>(jsonObject.GetNamedNumber(L"versionMinor", 0));
-            m_onlineVersionRevision = static_cast<DWORD>(jsonObject.GetNamedNumber(L"versionRevision", 0));
-            m_onlineVersionDateNumber = static_cast<DWORD>(jsonObject.GetNamedNumber(L"versionDateNumber", 0));
-            m_onlineVersionTimeNumber = static_cast<DWORD>(jsonObject.GetNamedNumber(L"versionTimeNumber", 0));
-
-            m_onlineBuildSource = jsonObject.GetNamedString(L"source", L"");
-            m_onlineVersionName = jsonObject.GetNamedString(L"name", L"");
-            m_onlineVersionFullString = jsonObject.GetNamedString(L"versionFull", L"");
-            m_onlineReleaseDescription = jsonObject.GetNamedString(L"releaseDescription", L"");
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_FAIL);
-        }
-    }
-    catch (...)
-    {
-        RETURN_IF_FAILED(E_FAIL);
-    }
-
-
-    if (versionMajor != nullptr)
-    {
-        *versionMajor = m_onlineVersionMajor;
-    }
-
-    if (versionMinor != nullptr)
-    {
-        *versionMinor = m_onlineVersionMinor;
-    }
-
-    if (versionRevision != nullptr)
-    {
-        *versionRevision = m_onlineVersionRevision;
-    }
-
-    if (versionDateNumber != nullptr)
-    {
-        *versionDateNumber = m_onlineVersionDateNumber;
-    }
-
-    if (versionTimeNumber != nullptr)
-    {
-        *versionTimeNumber = m_onlineVersionTimeNumber;
-    }
-
-
-    if (buildSource != nullptr)
-    {
-        *buildSource = (LPWSTR)m_onlineBuildSource.c_str();
-    }
-
-    if (versionName != nullptr)
-    {
-        *versionName = (LPWSTR)m_onlineVersionName.c_str();
-    }
-
-    if (versionFullString != nullptr)
-    {
-        *versionFullString = (LPWSTR)m_onlineVersionFullString.c_str();
-    }
-
-    if (releaseDescription != nullptr)
-    {
-        *releaseDescription = (LPWSTR)m_onlineReleaseDescription.c_str();
-    }
-
-    return S_OK;
-}
-#endif
 
 
 HRESULT

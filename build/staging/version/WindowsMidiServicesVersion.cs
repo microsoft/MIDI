@@ -8,12 +8,13 @@ namespace Microsoft.Windows.Devices.Midi2.Common
 	public static class MidiNuGetBuildInformation
 	{
 		public const string Source = "GitHub Preview";
+		public const string BuildDate = "2025-07-05";
 		public const string Name = "Customer Preview 3";
-		public const string BuildFullVersion = "1.0.5.7";
+		public const string BuildFullVersion = "1.0.0-preview.3.2";
 		public const ushort VersionMajor = 1;
 		public const ushort VersionMinor = 0;
-		public const ushort VersionRevision = 5;
-		public const ushort VersionBuildNumber = 7;
+		public const ushort VersionPatch = 0;
+		public const string Preview = "preview.3.2";
 	}
 }
 

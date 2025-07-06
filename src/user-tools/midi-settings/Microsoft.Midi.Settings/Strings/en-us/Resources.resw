@@ -560,4 +560,10 @@ This step requires Administrator rights, and must be repeated after any new Wind
   <data name="FirstRunSetup_SetServiceAutoStartSwitch.Header" xml:space="preserve">
     <value>Set MIDI Service to auto-start with Windows</value>
   </data>
+  <data name="SettingsPage_CheckForUpdatesExpander.Header" xml:space="preserve">
+    <value>Check for MIDI SDK Runtime Updates</value>
+  </data>
+  <data name="SettingsPage_CheckForUpdatesExpander.Description" xml:space="preserve">
+    <value>Automatically check for new releases of the MIDI SDK Runtime and Tools when starting the MIDI Settings app. </value>
+  </data>
 </root>
