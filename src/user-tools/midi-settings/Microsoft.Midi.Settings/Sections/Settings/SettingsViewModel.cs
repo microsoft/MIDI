@@ -116,6 +116,8 @@ public class SettingsViewModel : ObservableRecipient
             version = Assembly.GetExecutingAssembly().GetName().Version!;
         }
 
+        version = new();
+
         return $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
     }
 }

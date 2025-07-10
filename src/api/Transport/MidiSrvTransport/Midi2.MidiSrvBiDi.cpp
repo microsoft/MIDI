@@ -73,8 +73,17 @@ CMidi2MidiSrvBidi::SendMidiMessage(
 {
     if (m_MidiSrv)
     {
-        //return m_MidiSrv->SendMidiMessage(data, length, position);
-
+        TraceLoggingWrite(
+            MidiSrvTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
+            TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+        
         auto hr = m_MidiSrv->SendMidiMessage(data, length, position);
         LOG_IF_FAILED(hr);
 

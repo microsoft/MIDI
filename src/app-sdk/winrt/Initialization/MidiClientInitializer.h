@@ -38,17 +38,6 @@ struct __declspec(uuid("8087b303-d551-bce2-1ead-a2500d50c580")) IMidiClientIniti
 
     // demand-starts the service if present
     STDMETHOD(EnsureServiceAvailable)() = 0;
-
-    //STDMETHOD(GetLatestAvailableDownloadableSdkVersion)(
-    //    _Out_ DWORD* versionMajor,
-    //    _Out_ DWORD* versionMinor,
-    //    _Out_ DWORD* versionRevision,
-    //    _Out_opt_ DWORD* versionBuildNumber,
-    //    _Out_opt_ LPWSTR* buildSource,
-    //    _Out_opt_ LPWSTR* versionName,
-    //    _Out_opt_ LPWSTR* versionFullString,
-    //    _Out_opt_ LPWSTR* releaseDescription
-    //    ) = 0;
 };
 
 #define MIDI_CLIENT_INITIALIZER_CLASS_NAME      L"MidiClientInitializer"

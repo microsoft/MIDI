@@ -986,4 +986,7 @@ Timestamp</value>
   <data name="ParameterSendSysExFileReplaceGroup" xml:space="preserve">
     <value>For outgoing UMP format messages, replace the group index with this new value. If missing, the group indexes in the file will be used.</value>
   </data>
+  <data name="StartingMidiService" xml:space="preserve">
+    <value>Starting MIDI Service ...</value>
+  </data>
 </root>

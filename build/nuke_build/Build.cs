@@ -34,8 +34,9 @@ class Build : NukeBuild
     //readonly GitVersion MasterBuildVersion;
 
 
-    string VersionName => "Customer Preview 3";
-    //string NuGetVersionName => "preview-13";
+    string VersionName => "Preview 11";
+    UInt16 BuildVersionPreviewNumber = 11;
+
     string BuildType => "Preview";        // Stable or Preview
     //string BuildType => "Stable";        // Stable or Preview
 
@@ -43,17 +44,18 @@ class Build : NukeBuild
 
     // for upgrades to work, the revision must be incremented.
 
-    const string BuildVersionMajor = "1";
+    const string BuildVersionMajor = "0";       // change this to 1 for the first release
     const string BuildVersionMinor = "0";
     const string BuildVersionPatch = "0";
 
-    UInt16 BuildVersionPreviewNumber = 3;
     UInt16 PrereleaseBuildNumber = 0;
 
     const string BuildMajorMinorPatch = BuildVersionMajor + "." + BuildVersionMinor + "." + BuildVersionPatch;
 
     string BuildVersionPreviewString;
     string BuildVersionFullString = "";
+    string BuildVersionAssemblyFullString = "";
+    string BuildVersionFileFullString = "";
 
     string NugetPackageId => "Microsoft.Windows.Devices.Midi2";
     string NugetPackageVersion;
@@ -196,6 +198,9 @@ class Build : NukeBuild
             // they are the same, for our use here.
             BuildVersionFullString = NugetPackageVersion;
 
+            BuildVersionAssemblyFullString = BuildMajorMinorPatch + "." + PrereleaseBuildNumber;
+            BuildVersionFileFullString = BuildMajorMinorPatch + "." + PrereleaseBuildNumber;
+
             NugetFullPackageIdWithVersion = NugetPackageId + "." + NugetPackageVersion;
 
             _thisReleaseFolder = $"{ReleaseRootFolder / VersionName} ({DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")})";
@@ -273,7 +278,8 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      (uint16_t){buildVersionMajor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      (uint16_t){buildVersionMinor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      (uint16_t){buildVersionPatch}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            \"{BuildVersionPreviewString}\"");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L\"{BuildVersionPreviewString}\"");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L\"{BuildVersionFileFullString}\"");
                 writer.WriteLine();
                 writer.WriteLine("#endif");
                 writer.WriteLine();
@@ -294,7 +300,8 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR                    (uint16_t){buildVersionMajor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR                    (uint16_t){buildVersionMinor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_PATCH                    (uint16_t){buildVersionPatch}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_PREVIEW                          \"{BuildVersionPreviewString}\"");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_PREVIEW                          L\"{BuildVersionPreviewString}\"");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FILE                     L\"{BuildVersionFileFullString}\"");
                 writer.WriteLine();
                 writer.WriteLine("#endif");
                 writer.WriteLine();
@@ -322,12 +329,14 @@ class Build : NukeBuild
                 writer.WriteLine($"\t\tpublic const ushort VersionMinor = {buildVersionMinor};");
                 writer.WriteLine($"\t\tpublic const ushort VersionPatch = {buildVersionPatch};");
                 writer.WriteLine($"\t\tpublic const string Preview = \"{BuildVersionPreviewString}\";");
+                writer.WriteLine($"\t\tpublic const string AssemblyFullVersion = \"{BuildVersionAssemblyFullString}\";");
+                writer.WriteLine($"\t\tpublic const string FileFullVersion = \"{BuildVersionFileFullString}\";");
                 writer.WriteLine("\t}");
                 writer.WriteLine("}");
                 writer.WriteLine();
             }
 
-
+            
         });
 
     Target BuildServiceAndPlugins => _ => _
@@ -495,6 +504,10 @@ class Build : NukeBuild
                 msbuildProperties.Add("Platform", platform);
                 msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
                 msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+                msbuildProperties.Add("Version", BuildVersionFullString);
+                msbuildProperties.Add("VersionPrefix", BuildMajorMinorPatch);
+                msbuildProperties.Add("AssemblyVersion", BuildVersionAssemblyFullString);
+                msbuildProperties.Add("FileVersion", BuildVersionFileFullString);
 
                 Console.Out.WriteLine($"----------------------------------------------------------------------");
                 Console.Out.WriteLine($"SolutionDir:   {solutionDir}");
@@ -600,6 +613,10 @@ class Build : NukeBuild
                 msbuildProperties.Add("Platform", platform);
                 msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
                 msbuildProperties.Add("NoWarn", "MSB3271");             // winmd and dll platform mismatch with Arm64EC
+                msbuildProperties.Add("VersionPrefix", BuildMajorMinorPatch);
+                msbuildProperties.Add("Version", BuildVersionFullString);
+                msbuildProperties.Add("AssemblyVersion", BuildVersionAssemblyFullString);
+                msbuildProperties.Add("FileVersion", BuildVersionFileFullString);
 
                 Console.Out.WriteLine($"----------------------------------------------------------------------");
                 Console.Out.WriteLine($"SolutionDir:   {solutionDir}");
@@ -708,6 +725,9 @@ class Build : NukeBuild
                 var msbuildProperties = new Dictionary<string, object>();
                 msbuildProperties.Add("Platform", platform);
                 msbuildProperties.Add("SolutionDir", solutionDir);      // to include trailing slash
+                msbuildProperties.Add("VersionPrefix", BuildMajorMinorPatch);
+                msbuildProperties.Add("Version", BuildVersionFileFullString);
+                msbuildProperties.Add("FileVersion", BuildVersionFileFullString);
 
                 Console.Out.WriteLine($"----------------------------------------------------------------------");
                 Console.Out.WriteLine($"SolutionDir: {solutionDir}");
@@ -961,6 +981,10 @@ class Build : NukeBuild
                     .SetPublishTrimmed(false)
                     .SetSelfContained(false)
                     .SetRuntime(rid)
+                    .SetVersionPrefix(BuildMajorMinorPatch)
+                    .SetVersion(BuildVersionFullString)
+                    .SetFileVersion(BuildVersionFileFullString)
+                    .SetAssemblyVersion(BuildVersionAssemblyFullString)
                     .AddNoWarns(8618) // ignore CS8618 which I have no control over because it's in projection assemblies 
                 );
 
@@ -1156,6 +1180,10 @@ class Build : NukeBuild
                 DotNetTasks.DotNetBuild(_ => _
                     .SetProjectFile(MidiConsoleSolutionFolder / "Midi" / "Midi.csproj")
                     .SetConfiguration(Configuration.Release)
+                    .SetVersionPrefix(BuildMajorMinorPatch)
+                    .SetVersion(BuildVersionFullString)
+                    .SetFileVersion(BuildVersionFileFullString)
+                    .SetAssemblyVersion(BuildVersionAssemblyFullString)
                     .SetPublishSingleFile(false)
                     .SetPublishTrimmed(false)
                     .SetSelfContained(false)
@@ -1248,6 +1276,10 @@ class Build : NukeBuild
             DotNetTasks.DotNetBuild(_ => _
                 .SetProjectFile(MidiPowerShellSolutionFolder / "WindowsMidiServices.csproj")
                 .SetConfiguration(Configuration.Release)
+                .SetVersionPrefix(BuildMajorMinorPatch)
+                .SetVersion(BuildVersionFullString)
+                .SetFileVersion(BuildVersionFileFullString)
+                .SetAssemblyVersion(BuildVersionAssemblyFullString)
                 .SetPublishSingleFile(false)
                 .SetPublishTrimmed(false)
                 .SetSelfContained(false)

@@ -294,6 +294,17 @@ using (initializer)
         return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
     }
 
+    // is the service running? If not, show a message so the user knows what is happening
+
+    using (var controller = MidiServiceHelper.GetServiceController())
+    {
+        if (!MidiServiceHelper.ServiceIsReallyRunning(controller))
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.StartingMidiService));
+        }
+    }
+
+
     // start the service
     if (!initializer.EnsureServiceAvailable())
     {

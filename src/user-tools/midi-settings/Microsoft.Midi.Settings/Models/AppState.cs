@@ -57,10 +57,6 @@ public class AppState
 
             if (!_initializer!.InitializeSdkRuntime())
             {
-                // TODO: Localize these messages
-                //var dialog = new MessageDialog("Unable to initialize the Windows MIDI Services SDK runtime. Is it installed? Exiting.");
-                //dialog.ShowAsync().Wait();
-
                 return false;
             }
 
@@ -85,10 +81,6 @@ public class AppState
 
             if (!_initializer!.EnsureServiceAvailable())
             {
-                // TODO: Localize these messages
-                //var dialog = new MessageDialog("The Windows MIDI Services SDK is installed, but we failed to start the service.");
-                //dialog.ShowAsync().Wait();
-
                 return false;
             }
 

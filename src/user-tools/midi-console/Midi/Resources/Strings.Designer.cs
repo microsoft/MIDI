@@ -2532,6 +2532,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Starting MIDI Service ....
+        /// </summary>
+        internal static string StartingMidiService {
+            get {
+                return ResourceManager.GetString("StartingMidiService", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creating session and opening endpoint....
         /// </summary>
         internal static string StatusCreatingSessionAndOpeningEndpoint {

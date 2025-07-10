@@ -6,13 +6,14 @@
 #define WINDOWS_MIDI_SERVICES_NUGET_VERSION_INCLUDE
 
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L"GitHub Preview"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2025-07-05"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"Customer Preview 3"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"1.0.0-preview.3.2"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      (uint16_t)1
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2025-07-10"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"Preview 11"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"0.0.0-preview.11.1130"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      (uint16_t)0
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      (uint16_t)0
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      (uint16_t)0
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            "preview.3.2"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"preview.11.1130"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"0.0.0.1130"
 
 #endif
 

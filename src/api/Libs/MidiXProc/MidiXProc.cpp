@@ -314,6 +314,7 @@ CMidiXProc::SendMidiMessage(
     LONGLONG position
 )
 {
+
     bool bufferSent{false};
     UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
 

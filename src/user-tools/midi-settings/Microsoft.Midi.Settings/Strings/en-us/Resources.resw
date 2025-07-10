@@ -566,4 +566,7 @@ This step requires Administrator rights, and must be repeated after any new Wind
   <data name="SettingsPage_CheckForUpdatesExpander.Description" xml:space="preserve">
     <value>Automatically check for new releases of the MIDI SDK Runtime and Tools when starting the MIDI Settings app. </value>
   </data>
+  <data name="Error_UnableToStartMidiService" xml:space="preserve">
+    <value>Unable to start the MIDI Service. If this persists, please terminate the midisrv.exe process or reboot your PC.</value>
+  </data>
 </root>

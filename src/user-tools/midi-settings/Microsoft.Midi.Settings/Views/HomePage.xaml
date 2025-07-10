@@ -65,7 +65,7 @@
                     <InfoBar Margin="0,0,15,15"
                              CornerRadius="8"
                              IsOpen="{x:Bind ViewModel.IsFirstRunSetupComplete, Converter={StaticResource BoolNegationConverter}}"
-                             Title="Finish setting up MIDI on this PC"
+                             Title="Finish customizing MIDI on this PC"
                              Message="Customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
                              Severity="Warning"
                              >
