@@ -136,6 +136,9 @@
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib</AdditionalDependencies>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib</AdditionalDependencies>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib</AdditionalDependencies>
+      <UACExecutionLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">AsInvoker</UACExecutionLevel>
+      <UACExecutionLevel Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">AsInvoker</UACExecutionLevel>
+      <UACExecutionLevel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">AsInvoker</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
@@ -168,6 +171,9 @@
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib</AdditionalDependencies>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;midiks.lib;midikscommon.lib;midiksenum.lib</AdditionalDependencies>
       <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib</AdditionalDependencies>
+      <UACExecutionLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">AsInvoker</UACExecutionLevel>
+      <UACExecutionLevel Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">AsInvoker</UACExecutionLevel>
+      <UACExecutionLevel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AsInvoker</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

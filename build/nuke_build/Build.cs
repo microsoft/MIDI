@@ -627,7 +627,8 @@ class Build : NukeBuild
                         Path.Combine(solutionDir, @"tools\mididiag"),
                         Path.Combine(solutionDir, @"tools\midiusbinfo"),
                         Path.Combine(solutionDir, @"tools\midimdnsinfo"),
-                        //Path.Combine(solutionDir, "midimdnswatcher"),
+                        //Path.Combine(solutionDir, @"tools\midifixreg"),
+
                         Path.Combine(solutionDir, @"tests\InitializationExe"),
                         Path.Combine(solutionDir, @"tests\Benchmarks"),
                         Path.Combine(solutionDir, @"tests\Offline.unittests"),
@@ -693,12 +694,13 @@ class Build : NukeBuild
                     stagingPlatform = "Arm64";
                 }
 
-                // MIDI utilities
+                // Simple MIDI utilities
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "mididiag" / stagingPlatform / Configuration.Release / $"mididiag.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midiksinfo" / stagingPlatform / Configuration.Release / $"midiksinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midimdnsinfo" / stagingPlatform / Configuration.Release / $"midimdnsinfo.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midi1monitor" / stagingPlatform / Configuration.Release / $"midi1monitor.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
                 FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midi1enum" / stagingPlatform / Configuration.Release / $"midi1enum.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
+                FileSystemTasks.CopyFileToDirectory(sdkOutputRootFolder / "midifixreg" / stagingPlatform / Configuration.Release / $"midifixreg.exe", AppSdkStagingFolder / stagingPlatform, FileExistsPolicy.Overwrite, true);
             }
         });
 
