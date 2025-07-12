@@ -88,9 +88,6 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
 
             if (messageByteCount > 0)
             {
-                // TODO: If this fails, it leaves a bunch of stuff in the m_UMP2BS that will get sent next time
-                // around. Should likely drain that before moving on
-
                 TraceLoggingWrite(
                     MidiUMP2BSTransformTelemetryProvider::Provider(),
                     MIDI_TRACE_EVENT_VERBOSE,
@@ -98,13 +95,20 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
                     TraceLoggingWideString(L"Translated to", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingHexUInt8Array(static_cast<uint8_t*>(&(byteStream[0])), static_cast<uint16_t>(messageByteCount), "translated data"),
+                    TraceLoggingHexUInt8Array(static_cast<uint8_t*>(byteStream), static_cast<uint16_t>(messageByteCount), "translated data"),
                     TraceLoggingUInt32(static_cast<uint32_t>(messageByteCount), "length bytes"),
                     TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
                 );
 
                 // For transforms, by convention the context contains the group index.
-                RETURN_IF_FAILED(m_Callback->Callback(&(byteStream[0]), messageByteCount, position, m_UMP2BS.group));
+                auto hr = m_Callback->Callback(byteStream, messageByteCount, position, m_UMP2BS.group);
+
+                if (FAILED(hr))
+                {
+                    m_UMP2BS.resetBuffer();
+                    RETURN_IF_FAILED(hr);
+                }
+
             }
         }
     }
