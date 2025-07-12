@@ -90,7 +90,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
             // partially processed sysex data is put into a UMP, but leave
             // bs2ump in the sysex processing state because additional sysex
             // data may still come in.
-//            m_BS2UMP.dumpSysex7State(false);
+            m_BS2UMP.dumpSysex7State(false);
         }
 
         // retrieve the UMP(s) from the parser

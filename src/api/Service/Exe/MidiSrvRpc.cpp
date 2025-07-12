@@ -412,7 +412,8 @@ __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(nullptr, "this"),
-        TraceLoggingWideString(L"Enter context handle rundown", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Enter context handle rundown", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(phContext, "context")
     );
 
     std::shared_ptr<CMidiSessionTracker> sessionTracker;
@@ -543,85 +544,6 @@ MidiSrvGetTransportList(
 
     return S_OK;
 }
-
-//HRESULT
-//MidiSrvGetTransportList(
-//    /*[in]*/ handle_t bindingHandle,
-//    /*[in]*/ DWORD transportMetadataStructSize,
-//    __RPC__in PTRANSPORTMETADATA transportList,
-//    __RPC__inout DWORD* transportCount
-//)
-//{
-//    TraceLoggingWrite(
-//        MidiSrvTelemetryProvider::Provider(),
-//        MIDI_TRACE_EVENT_INFO,
-//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingWideString(L"Enter")
-//    );
-//
-//    UNREFERENCED_PARAMETER(bindingHandle);
-//    RETURN_HR_IF_NULL(E_INVALIDARG, transportCount);
-//
-//    std::shared_ptr<CMidiConfigurationManager> configManager;
-//
-//    auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
-//
-//    RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configManager));
-//    auto allMetadata = configManager->GetAllEnabledTransportMetadata();
-//
-//    DWORD structCount = allMetadata.size();
-//
-//    // if null is passed in, we just measure and return the data
-//    if (transportList == nullptr)
-//    {
-//        // return the count
-//        if (transportMetadataStructSize == sizeof(TRANSPORTMETADATA))
-//        {
-//            *transportCount = structCount;
-//
-//            return S_OK;
-//        }
-//        else
-//        {
-//            // unexpected struct size
-//            RETURN_IF_FAILED(E_INVALIDARG);
-//        }
-//    }
-//    else
-//    {
-//        // transportList is not nullptr
-//
-//        if (*transportCount != structCount)
-//        {
-//            // transport count has changed in between calls
-//            RETURN_IF_FAILED(E_INVALIDARG);
-//        }
-//
-//        // transportList is valid pointer, struct count is expected number, size is as expected
-//        // copy the metadata over into the provided buffer
-//
-//       
-//
-//    }
-//
-//
-//
-//
-//    // TODO: This code should probably live in the configuration manager instead of the RPC layer
-//
-//
-//    TraceLoggingWrite(
-//        MidiSrvTelemetryProvider::Provider(),
-//        MIDI_TRACE_EVENT_INFO,
-//        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-//        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-//        TraceLoggingWideString(L"Exit success")
-//    );
-//
-//    return S_OK;
-//}
-
 
 
 HRESULT

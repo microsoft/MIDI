@@ -15,7 +15,7 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
 
-  <Bundle Name="Microsoft Windows MIDI Services (Tools and Runtime) $(SetupVersionName) $(SetupVersionNumber)" 
+  <Bundle Name="Windows MIDI Services Runtime" 
           Manufacturer="Microsoft Corporation" 
           Version="$(SetupVersionNumber)" 
           UpgradeCode="7afb7a7b-86d4-42d7-8cb5-08f65ddcb1a9">
@@ -30,9 +30,11 @@
         <BootstrapperApplication>
             <bal:WixStandardBootstrapperApplication LicenseUrl="" 
                                                     SuppressOptionsUI="true"
-                                                    SuppressRepair="false"
-                                                    Theme="hyperlinkLicense" 
-                                                    LogoFile="midi_installer_logo_square.png"/>
+                                                    SuppressRepair="true"
+                                                    ShowVersion="true"
+                                                    LogoFile="logo.png"
+                                                    LogoSideFile="logo-sidebar.png" 
+                                                    Theme="hyperlinkSidebarLicense"/>
         </BootstrapperApplication>
 
         <Chain>

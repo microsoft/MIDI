@@ -204,11 +204,11 @@ CMidiClientPipe::SendMidiMessage(
     );
 
     auto lock = m_ClientPipeLock.lock();
-    if (m_MidiPump)
-    {
-        return m_MidiPump->SendMidiMessage(data, length, position);
-    }
-    return E_ABORT;
+
+    RETURN_HR_IF_NULL(E_ABORT, m_MidiPump);   
+    RETURN_IF_FAILED(m_MidiPump->SendMidiMessage(data, length, position));
+
+    return S_OK;
 }
 
 _Use_decl_annotations_
@@ -231,13 +231,11 @@ CMidiClientPipe::SendMidiMessageNow(
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
 
-
     auto lock = m_ClientPipeLock.lock();
-    if (m_MidiPump)
-    {
-        // TODO: add a SendMidiMessageNow routine to the transport layers.
-        return m_MidiPump->SendMidiMessage(data, length, position);
-    }
-    return E_ABORT;
+
+    RETURN_HR_IF_NULL(E_ABORT, m_MidiPump);
+    RETURN_IF_FAILED(m_MidiPump->SendMidiMessage(data, length, position));
+
+    return S_OK;
 }
 

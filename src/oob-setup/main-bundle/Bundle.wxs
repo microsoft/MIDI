@@ -15,7 +15,7 @@
     
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
-    <Bundle Name="Microsoft Windows MIDI Services Preview (Service and Plugins)" 
+    <Bundle Name="Windows MIDI Services Preview Service (Debug)" 
             Manufacturer="Microsoft Corporation" 
             Version="$(SetupVersionNumber)" 
             UpgradeCode="0ccb5d12-44a6-4dd8-8d07-0d130589c0a2">
@@ -34,7 +34,7 @@
                        Condition="DevModeEnabled=1" />
 
         <BootstrapperApplication>
-            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE"
+            <bal:WixStandardBootstrapperApplication LicenseUrl=""
                                                     SuppressOptionsUI="true"
                                                     SuppressRepair="true"
                                                     ShowVersion="true"

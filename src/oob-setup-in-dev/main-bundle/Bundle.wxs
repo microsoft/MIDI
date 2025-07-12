@@ -14,18 +14,32 @@
     <!-- TODO: Gate on Windows 10 22H2 or later -->
 
     <!--<Bundle Name="Microsoft Windows MIDI Services (Developer Preview 2)" -->
-    <Bundle Name="Microsoft Windows MIDI Services (Preview Service Plugins) $(SetupVersionName) $(SetupVersionNumber)" 
+    <Bundle Name="Windows MIDI Services Network MIDI 2.0 Preview" 
             Manufacturer="Microsoft Corporation" 
             Version="$(SetupVersionNumber)" 
             UpgradeCode="92fb6982-e97d-476f-8d27-44500086a690">
 
+        <!-- Require Dev Mode to be turned on to run this installer -->
+        <WixVariable Id="DevModeEnabled" Value="0" />
+        <util:RegistrySearch
+            Id="DevMode"
+            Root="HKLM"
+            Key="SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
+            Value="AllowDevelopmentWithoutDevLicense"
+            Variable="DevModeEnabled"
+            Result="value"/>
+
+        <bal:Condition Message="Developer mode in Windows Settings must be enabled to install this Windows MIDI Services preview package."
+                 Condition="DevModeEnabled=1" />
+      
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
         <BootstrapperApplication>
-            <bal:WixStandardBootstrapperApplication LicenseUrl="https://github.com/microsoft/MIDI/blob/main/LICENSE" 
+            <bal:WixStandardBootstrapperApplication LicenseUrl="" 
                                                     Theme="hyperlinkLicense" 
                                                     SuppressOptionsUI="true"
                                                     SuppressRepair="true"
+                                                    ShowVersion="true"
                                                     LogoFile="midi_installer_logo_square.png"/>
 
         

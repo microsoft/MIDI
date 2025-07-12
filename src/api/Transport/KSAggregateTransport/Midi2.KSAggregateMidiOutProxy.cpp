@@ -110,6 +110,18 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF_NULL(E_POINTER, m_ump2BSTransform);
 
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Sending MIDI Message to UMP2BS translator", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(length/sizeof(uint32_t)), "data"),
+        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+        TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    );
+
     // get the message translated. Comes back via the callback
     RETURN_IF_FAILED(m_ump2BSTransform->SendMidiMessage(data, length, timestamp));
 
