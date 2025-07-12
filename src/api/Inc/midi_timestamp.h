@@ -90,17 +90,17 @@ namespace WindowsMidiServicesInternal
 
     inline double ConvertTimestampToFractionalMilliseconds(_In_ uint64_t const timestampValue, _In_ uint64_t timestampFrequency)
     {
-        return (double)((timestampValue * (double)MILLISECONDS_PER_SECOND) / timestampFrequency);
+        return (double)((timestampValue * (double)MILLISECONDS_PER_SECOND) / (double)timestampFrequency);
     }
 
     inline double ConvertTimestampToFractionalMicroseconds(_In_ uint64_t const timestampValue, _In_ uint64_t timestampFrequency)
     {
-        return (double)((timestampValue * (double)MICROSECONDS_PER_SECOND) / timestampFrequency);
+        return (double)((timestampValue * (double)MICROSECONDS_PER_SECOND) / (double)timestampFrequency);
     }
 
     inline double ConvertTimestampToFractionalNanoseconds(_In_ uint64_t const timestampValue, _In_ uint64_t timestampFrequency)
     {
-        return (double)((timestampValue * (double)NANOSECONDS_PER_SECOND) / timestampFrequency);
+        return (double)((timestampValue * (double)NANOSECONDS_PER_SECOND) / (double)timestampFrequency);
     }
 
     
