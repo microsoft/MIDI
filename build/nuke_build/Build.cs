@@ -1860,13 +1860,16 @@ class Build : NukeBuild
             var regHelperPs1FileFullPath = regHelpersLocation / regHelperPs1FileName;
 
             string driverFile = "wdmaud2.drv";
+            string pdbFile = "wdmaud2.pdb";
 
             CopyFile(ApiStagingFolder / "arm64" / driverFile, arm64 / driverFile, FileExistsPolicy.Fail, false);
+            CopyFile(ApiStagingFolder / "arm64" / pdbFile, arm64 / pdbFile, FileExistsPolicy.Fail, false);
             CopyFile(regHelperCmdFileFullPath, arm64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
             CopyFile(regHelperPs1FileFullPath, arm64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
 
 
             CopyFile(ApiStagingFolder / "x64" / driverFile, x64 / driverFile, FileExistsPolicy.Fail, false);
+            CopyFile(ApiStagingFolder / "x64" / pdbFile, x64 / pdbFile, FileExistsPolicy.Fail, false);
             CopyFile(regHelperCmdFileFullPath, x64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
             CopyFile(regHelperPs1FileFullPath, x64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
 

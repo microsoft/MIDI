@@ -62,29 +62,11 @@ CMidi2KSAggregateMidi::Initialize(
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(
         endpointDeviceInterfaceId, additionalProperties, winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
 
-    //auto prop = deviceInfo.Properties().Lookup(STRING_DEVPKEY_KsMidiPort_KsFilterInterfaceId);
-    //RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-    //filterInterfaceId = winrt::unbox_value<winrt::hstring>(prop).c_str();
-
-    //prop = deviceInfo.Properties().Lookup(L"System.Devices.InterfaceClassGuid");
-    //RETURN_HR_IF_NULL(E_INVALIDARG, prop);
-    //interfaceClass = winrt::unbox_value<winrt::guid>(prop);
-
-    ULONG requestedBufferSize = PAGE_SIZE * 2;
+    // we don't actually use a buffer, but this is needed to initialize
+    // the KS code which will handle the ioctls
+    ULONG requestedBufferSize = PAGE_SIZE;
     RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
     
-
-
-    //TraceLoggingWrite(
-    //    MidiKSAggregateTransportTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_VERBOSE,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(L"Retrieved properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-    //    TraceLoggingWideString(filterInterfaceId.c_str(), "filter interface id"),
-    //    TraceLoggingGuid(interfaceClass, "interfaceClass")
-    //);
 
     // Apply pin map here. This will result in multiple KsMidiOutDevice and KsMidiInDevice entries
     // each mapped to a group

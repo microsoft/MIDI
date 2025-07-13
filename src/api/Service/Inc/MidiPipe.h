@@ -89,7 +89,7 @@ public:
             TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         );
 
-#if 1
+#if 0
         // TEMP Code for debugging a timestamp issue
         if (position != 0)
         {

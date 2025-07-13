@@ -315,6 +315,14 @@ CMidiXProc::SendMidiMessage(
 )
 {
 
+#if 0
+    // TEMP Code for debugging a timestamp issue
+    if (position != 0)
+    {
+        OutputDebugString(L"\nPosition/timestamp is non-zero\n");
+    }
+#endif
+
     bool bufferSent{false};
     UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
 
@@ -494,7 +502,7 @@ CMidiXProc::ProcessMidiIn()
                         header->Position = qpc.QuadPart;
                     }
 
-#if 1
+#if 0
                     // TEMP Code for debugging a timestamp issue
                     if (header->Position != 0)
                     {

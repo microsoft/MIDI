@@ -10,13 +10,13 @@ namespace Microsoft.Windows.Devices.Midi2.Common
 		public const string Source = "GitHub Preview";
 		public const string BuildDate = "2025-07-12";
 		public const string Name = "Preview 11";
-		public const string BuildFullVersion = "0.0.0-preview.11.1145";
+		public const string BuildFullVersion = "0.0.0-preview.11.1148";
 		public const ushort VersionMajor = 0;
 		public const ushort VersionMinor = 0;
 		public const ushort VersionPatch = 0;
-		public const string Preview = "preview.11.1145";
-		public const string AssemblyFullVersion = "0.0.0.1145";
-		public const string FileFullVersion = "0.0.0.1145";
+		public const string Preview = "preview.11.1148";
+		public const string AssemblyFullVersion = "0.0.0.1148";
+		public const string FileFullVersion = "0.0.0.1148";
 	}
 }
 
