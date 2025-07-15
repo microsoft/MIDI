@@ -314,6 +314,15 @@ CMidiXProc::SendMidiMessage(
     LONGLONG position
 )
 {
+
+#if 0
+    // TEMP Code for debugging a timestamp issue
+    if (position != 0)
+    {
+        OutputDebugString(L"\nPosition/timestamp is non-zero\n");
+    }
+#endif
+
     bool bufferSent{false};
     UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
 
@@ -343,7 +352,7 @@ CMidiXProc::SendMidiMessage(
         m_MidiOut->ReadEvent.ResetEvent();
 
         // the write position is the last position we have written,
-        // the read position is the last position the driver has read from
+        // the read position is the last position the driver (or client) has read from
         ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
         ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
         ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
@@ -493,6 +502,13 @@ CMidiXProc::ProcessMidiIn()
                         header->Position = qpc.QuadPart;
                     }
 
+#if 0
+                    // TEMP Code for debugging a timestamp issue
+                    if (header->Position != 0)
+                    {
+                        OutputDebugString(L"\nHeader position/timestamp is non-zero\n");
+                    }
+#endif
                     m_MidiInCallback->Callback(data, dataSize, header->Position, m_MidiInCallbackContext);
                 }
 

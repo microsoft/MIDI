@@ -21,6 +21,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         static internal::MidiTimestamp TimestampConstantSendImmediately() { return MIDI_TIMESTAMP_SEND_IMMEDIATELY; }
 
+        static internal::MidiTimestamp TimestampConstantMessageQueueMaximumFutureTicks() { return MIDI_OUTGOING_MESSAGE_QUEUE_MAX_FUTURE_SCHEDULING_SECONDS * internal::GetMidiTimestampFrequency(); }
+
         static uint64_t TimestampFrequency();
 
         static internal::MidiTimestamp OffsetTimestampByTicks(

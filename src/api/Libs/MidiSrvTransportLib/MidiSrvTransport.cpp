@@ -66,8 +66,9 @@ CMidi2MidiSrv::Initialize(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-        );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Initializing with no parameters", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
 
     return S_OK;
 }
@@ -89,8 +90,11 @@ CMidi2MidiSrv::Initialize(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-        );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Initializing with parameters", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(device, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingGuid(sessionId, "session")
+    );
 
     MIDISRV_CLIENTCREATION_PARAMS clientCreationParams{ };
     PMIDISRV_CLIENT client{ nullptr };
@@ -127,8 +131,8 @@ CMidi2MidiSrv::Initialize(
     // - See https://github.com/microsoft/MIDI/issues/219 for details
     
     clientCreationParams.BufferSize = PAGE_SIZE;  // original
-    //clientCreationParams.BufferSize = 512;    // Set this for debugging see https://github.com/microsoft/MIDI/issues/182 for all the drama :)
-    //clientCreationParams.BufferSize = PAGE_SIZE * 2;
+    //clientCreationParams.BufferSize = 256;    // Set this for debugging see https://github.com/microsoft/MIDI/issues/182 for all the drama :)
+    //clientCreationParams.BufferSize = PAGE_SIZE * 8;
 
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
@@ -254,12 +258,23 @@ CMidi2MidiSrv::SendMidiMessage(
     LONGLONG position
 )
 {
-    if (m_MidiPump)
-    {
-        return m_MidiPump->SendMidiMessage(data, length, position);;
-    }
+    //TraceLoggingWrite(
+    //    MidiSrvTransportTelemetryProvider::Provider(),
+    //    MIDI_TRACE_EVENT_VERBOSE,
+    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+    //    TraceLoggingPointer(this, "this"),
+    //    TraceLoggingWideString(L"Sending MIDI Message.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+    //    TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
+    //    TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+    //    TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    //);
 
-    return E_ABORT;
+    RETURN_HR_IF_NULL(E_ABORT, m_MidiPump);
+
+    RETURN_IF_FAILED(m_MidiPump->SendMidiMessage(data, length, position));
+
+    return S_OK;
 }
 
 _Use_decl_annotations_
@@ -274,8 +289,9 @@ CMidi2MidiSrv::AddClientSession(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Adding new session.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
 
     wil::unique_rpc_binding bindingHandle;
 
@@ -308,8 +324,11 @@ CMidi2MidiSrv::UpdateClientSessionName(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Updating session name", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(sessionId, "session Id"),
+        TraceLoggingWideString(sessionName, "new session name")
+        );
 
     wil::unique_rpc_binding bindingHandle;
 
@@ -342,8 +361,10 @@ CMidi2MidiSrv::RemoveClientSession(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
-    );
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Removing client session", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingGuid(sessionId, "session Id")
+        );
 
     wil::unique_rpc_binding bindingHandle;
 
@@ -376,7 +397,8 @@ CMidi2MidiSrv::GetSessionList(
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Getting session list", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     wil::unique_rpc_binding bindingHandle;
@@ -384,18 +406,45 @@ CMidi2MidiSrv::GetSessionList(
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
     RETURN_HR_IF_NULL(E_INVALIDARG, sessionList);
 
+
+    // requirement for RPC and also in case of failure
+    LPWSTR tempResultsString{ NULL };
+
+
     RETURN_IF_FAILED([&]()
         {
-            // RPC requirement            
-            *sessionList = nullptr;
-
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), sessionList));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetSessionList(bindingHandle.get(), &tempResultsString));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             return S_OK;
         }());
+
+
+
+    if (tempResultsString != nullptr)
+    {
+        // we need to return the string.
+        size_t length = wcslen(tempResultsString) + 1;
+
+        // allocate COM memory that the calling SDK will dispose of
+        *sessionList = (LPWSTR)CoTaskMemAlloc(length * sizeof(wchar_t));
+
+        if (*sessionList)
+        {
+            wcscpy_s(*sessionList, length, tempResultsString);
+        }
+
+        // dispose of the RPC-allocated memory
+        midl_user_free(tempResultsString);
+        tempResultsString = nullptr;
+    }
+    else
+    {
+        *sessionList = nullptr;
+    }
+
 
     return S_OK;
 }
@@ -408,7 +457,8 @@ CMidi2MidiSrv::VerifyConnectivity()
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Verifying connectivity", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     wil::unique_rpc_binding bindingHandle;
@@ -498,27 +548,59 @@ CMidi2MidiSrv::GetTransportList(LPWSTR* transportListJson)
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Getting transport list", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, transportListJson);
 
-    // requirement for RPC and also in case of failure
-    *transportListJson = NULL;
-
     wil::unique_rpc_binding bindingHandle;
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
+
+    // requirement for RPC and also in case of failure
+    LPWSTR tempResultsString{ NULL };
 
 
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransportList(bindingHandle.get(), transportListJson));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvGetTransportList(bindingHandle.get(), &tempResultsString));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
             return S_OK;
         }());
+
+    TraceLoggingWrite(
+        MidiSrvTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    if (tempResultsString != nullptr)
+    {
+        // we need to return the string.
+        size_t length = wcslen(tempResultsString) + 1;
+
+        // allocate COM memory that the calling SDK will dispose of
+        *transportListJson = (LPWSTR)CoTaskMemAlloc(length * sizeof(wchar_t));
+
+        if (*transportListJson)
+        {
+            wcscpy_s(*transportListJson, length, tempResultsString);
+        }
+
+        // dispose of the RPC-allocated memory
+        midl_user_free(tempResultsString);
+        tempResultsString = nullptr;
+    }
+    else
+    {
+        *transportListJson = nullptr;
+    }
 
     return S_OK;
 }
@@ -532,7 +614,8 @@ CMidi2MidiSrv::GetTransformList(LPWSTR* transformListJson)
         MIDI_TRACE_EVENT_INFO,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this")
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Getting transform list", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
     RETURN_HR_IF_NULL(E_INVALIDARG, transformListJson);

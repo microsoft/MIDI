@@ -39,11 +39,10 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
     {
         void GetInstalledWindowsMidiServicesSdkVersion(
             ref MidiAppSDKPlatform buildPlatform,
-            ref UInt32 versionMajor,
-            ref UInt32 versionMinor,
-            ref UInt32 versionRevision,
-            ref UInt32 versionDateNumber,
-            ref UInt32 versionTimeNumber,
+            ref UInt16 versionMajor,
+            ref UInt16 versionMinor,
+            ref UInt16 versionPatch,
+
             ref string buildSource,
             ref string versionName,
             ref string versionFullString
@@ -51,16 +50,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
         void EnsureServiceAvailable();
             
-        void GetLatestAvailableDownloadableSdkVersion(
-            ref UInt32 versionMajor,
-            ref UInt32 versionMinor,
-            ref UInt32 versionRevision,
-            ref UInt32 versionDateNumber,
-            ref UInt32 versionTimeNumber,
-            ref string buildSource,
-            ref string versionName,
-            ref string versionFullString,
-            ref string releaseDescription);
+
     }
 
     public class MidiDesktopAppSdkInitializer : IDisposable
@@ -143,11 +133,9 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                 // build platform is an output param. We just default it here
                 MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
 
-                UInt32 versionMajor = 0;
-                UInt32 versionMinor = 0;
-                UInt32 versionRevision = 0;
-                UInt32 versionDateNumber = 0;
-                UInt32 versionTimeNumber = 0;
+                UInt16 versionMajor = 0;
+                UInt16 versionMinor = 0;
+                UInt16 versionPatch = 0;
                 string buildSource = string.Empty;
                 string versionName = string.Empty;
                 string versionFullString = string.Empty;
@@ -156,9 +144,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                     ref platform,
                     ref versionMajor,
                     ref versionMinor,
-                    ref versionRevision,
-                    ref versionDateNumber,
-                    ref versionTimeNumber,
+                    ref versionPatch,
                     ref buildSource,
                     ref versionName,
                     ref versionFullString
@@ -177,9 +163,9 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
         }
 
         public bool CheckForMinimumRequiredSdkVersion(
-            UInt32 minRequiredVersionMajor,
-            UInt32 minRequiredVersionMinor,
-            UInt32 minRequiredVersionRevision)
+            UInt16 minRequiredVersionMajor,
+            UInt16 minRequiredVersionMinor,
+            UInt16 minRequiredVersionPatch)
         {
             // build platform is an output param. We just default it here
             MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
@@ -188,11 +174,9 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             string versionName = string.Empty;
             string versionFullString = string.Empty;
 
-            uint versionMajor = 0;
-            uint versionMinor = 0;
-            uint versionRevision = 0;
-            uint versionDayNumber = 0;
-            uint versionTimeNumber = 0;
+            ushort versionMajor = 0;
+            ushort versionMinor = 0;
+            ushort versionPatch = 0;
 
             try
             {
@@ -201,9 +185,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                     ref platform,
                     ref versionMajor,
                     ref versionMinor,
-                    ref versionRevision,
-                    ref versionDayNumber,
-                    ref versionTimeNumber,
+                    ref versionPatch,
                     ref buildSource,
                     ref versionName,
                     ref versionFullString
@@ -211,7 +193,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
 
                 if (minRequiredVersionMajor > versionMajor) return false;
                 if (minRequiredVersionMinor > versionMinor) return false;
-                if (minRequiredVersionRevision > versionRevision) return false;
+                if (minRequiredVersionPatch > versionPatch) return false;
 
                 return true;
             }
@@ -229,11 +211,9 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             string versionName = string.Empty;
             string versionFullString = string.Empty;
 
-            uint versionMajor = 0;
-            uint versionMinor = 0;
-            uint versionRevision = 0;
-            uint versionDayNumber = 0;
-            uint versionTimeNumber = 0;
+            ushort versionMajor = 0;
+            ushort versionMinor = 0;
+            ushort versionPatch = 0;
 
             try
             { 
@@ -241,9 +221,7 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
                     ref platform,
                     ref versionMajor,
                     ref versionMinor,
-                    ref versionRevision,
-                    ref versionDayNumber,
-                    ref versionTimeNumber,
+                    ref versionPatch,
                     ref buildSource,
                     ref versionName,
                     ref versionFullString
@@ -284,66 +262,6 @@ namespace Microsoft.Windows.Devices.Midi2.Initialization
             {
                 return "Not available";
             }
-        }
-
-
-        public bool IsNewerVersionAvailableForDownload()
-        {
-            string onlineBuildSource = string.Empty;
-            string onlineVersionName = string.Empty;
-            string onlineVersionFullString = string.Empty;
-            string onlineReleaseDescription = string.Empty;
-
-            uint onlineVersionMajor = 0;
-            uint onlineVersionMinor = 0;
-            uint onlineVersionRevision = 0;
-            uint onlineVersionDayNumber = 0;
-            uint onlineVersionTimeNumber = 0;
-
-            uint installedVersionMajor = 0;
-            uint installedVersionMinor = 0;
-            uint installedVersionRevision = 0;
-            uint installedVersionDayNumber = 0;
-            uint installedVersionTimeNumber = 0;
-            string installedBuildSource = string.Empty;
-            string installedVersionName = string.Empty;
-            string installedVersionFullString = string.Empty;
-
-
-            _initializer!.GetLatestAvailableDownloadableSdkVersion(
-                ref onlineVersionMajor,
-                ref onlineVersionMinor,
-                ref onlineVersionRevision,
-                ref onlineVersionDayNumber,
-                ref onlineVersionTimeNumber,
-                ref onlineBuildSource,
-                ref onlineVersionName,
-                ref onlineVersionFullString,
-                ref onlineReleaseDescription
-                );
-
-
-            MidiAppSDKPlatform platform = MidiAppSDKPlatform.x64;
-
-            _initializer!.GetInstalledWindowsMidiServicesSdkVersion(
-                ref platform,
-                ref installedVersionMajor,
-                ref installedVersionMinor,
-                ref installedVersionRevision,
-                ref installedVersionDayNumber,
-                ref installedVersionTimeNumber,
-                ref installedBuildSource,
-                ref installedVersionName,
-                ref installedVersionFullString
-                );
-
-            if (installedVersionMajor > onlineVersionMajor) return false;
-            if (installedVersionMinor > onlineVersionMinor) return false;
-            if (installedVersionRevision > onlineVersionRevision) return false;
-            if (installedVersionDayNumber > onlineVersionDayNumber) return false;
-            if (installedVersionTimeNumber > onlineVersionTimeNumber) return false;
-
-            return true;
         }
 
 

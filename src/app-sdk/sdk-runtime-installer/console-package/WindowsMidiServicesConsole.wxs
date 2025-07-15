@@ -1,15 +1,17 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+  <?include $(StagingVersionIncludeFile) ?>
 
-    <Package  
-          Name="Windows MIDI Services (Console) $(var.Platform)"
+  <Package  
+          Name="Microsoft Windows MIDI Services (Console) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
-          Version="1.0.0.0"
+          Version="$(MidiSdkAndToolsVersion)"
           UpgradeCode="725f08fc-24db-4824-8613-a796f2abf36a"
           Scope="perMachine"
           Compressed="true"
-          
+          UpgradeStrategy="majorUpgrade"
           >
        
         <MediaTemplate EmbedCab="yes" />
@@ -17,8 +19,6 @@
         
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
-                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
-                <Directory Id="API_INSTALLFOLDER" Name="API" />
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
                 </Directory>

@@ -1,15 +1,17 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+  <?include $(StagingVersionIncludeFile) ?>
 
-    <Package  
-          Name="Windows MIDI Services (Settings App) $(var.Platform)"
+  <Package  
+          Name="Microsoft Microsoft Windows MIDI Services (Settings App) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
-          Version="1.0.0.0"
+          Version="$(MidiSdkAndToolsVersion)"
           UpgradeCode="6f21054a-1905-4aae-869f-46554de9ea98"
           Scope="perMachine"
           Compressed="true"
-          
+          UpgradeStrategy="majorUpgrade"          
           >
        
         <MediaTemplate EmbedCab="yes" />
@@ -17,8 +19,6 @@
         
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
-                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
-                <Directory Id="API_INSTALLFOLDER" Name="API" />
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings">
                         <Directory Id="SETTINGSAPP_ASSETS_FOLDER" Name="Assets" />
@@ -47,8 +47,8 @@
             <Component Id="SettingsAppShortcut" Guid="c71be7ba-f0b6-483e-a409-e40985e90117">
                 <Shortcut Id="ApplicationStartMenuShortcut"
                           Name="MIDI Settings"
-                          Description="Windows MIDI Services Settings and Tools"
-                          Target="[#ShortcutTargetExe]"
+                          Description="Windows MIDI Services Settings and Configuration"
+                          Target="[!ShortcutTargetExe]"
                           WorkingDirectory="SETTINGSAPP_INSTALLFOLDER" />
             </Component>
         </StandardDirectory>

@@ -39,11 +39,13 @@ public:
     TEST_METHOD(TestTranslateFromBytesWithEmbeddedRealTimeAndSysEx7);
     TEST_METHOD(TestEmptySysEx7);
     TEST_METHOD(TestShortSysEx7);
+    TEST_METHOD(TestTimingClock);
+    TEST_METHOD(TestTimingClockPadded);
     //TEST_METHOD(TestLongSysEx7);
 
-    void InternalTestSysEx(
+    void InternalTestBytes(
         _In_ uint8_t const groupIndex,
-        _In_reads_bytes_(byteCount) uint8_t const sysexBytes[], 
+        _In_reads_bytes_(byteCount) uint8_t const bytes[], 
         _In_ uint32_t const byteCount, 
         _In_ uint16_t const expectedMessageCount,
         _In_ std::vector<uint32_t> const expectedWords);

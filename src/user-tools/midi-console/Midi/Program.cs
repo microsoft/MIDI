@@ -263,7 +263,19 @@ AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatAppVersionInformation(Microsoft
 AnsiConsole.WriteLine();
 
 
-var initializer = sdkInit.MidiDesktopAppSdkInitializer.Create();
+
+sdkInit.MidiDesktopAppSdkInitializer? initializer = null;
+
+try
+{
+    initializer = sdkInit.MidiDesktopAppSdkInitializer.Create();
+}
+catch (Exception)
+{
+    AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(Strings.ErrorSdkInitializerInitializationFailedExceptionInCreate));
+    return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
+}
+
 
 if (initializer == null)
 {
@@ -281,6 +293,17 @@ using (initializer)
 
         return (int)MidiConsoleReturnCode.ErrorMidiServicesSdkNotInstalled;
     }
+
+    // is the service running? If not, show a message so the user knows what is happening
+
+    using (var controller = MidiServiceHelper.GetServiceController())
+    {
+        if (!MidiServiceHelper.ServiceIsReallyRunning(controller))
+        {
+            AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatWarning(Strings.StartingMidiService));
+        }
+    }
+
 
     // start the service
     if (!initializer.EnsureServiceAvailable())

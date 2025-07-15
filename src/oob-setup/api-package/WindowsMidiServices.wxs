@@ -4,7 +4,7 @@
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
 
     <Package  
-          Name="Windows MIDI Services (Preview Service) $(var.Platform)"
+          Name="Microsoft Windows MIDI Services (Preview Service) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
           Version="1.0.0.0"
           UpgradeCode="c552e144-54d0-4e18-8e16-ff0f0a2eb34f"
@@ -62,18 +62,36 @@
                    Directory="SERVICE_INSTALLFOLDER"
                    Guid="76dbd487-7646-4c4b-a5c7-fde28a2102c7"  >
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.MidiSrvTransport.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.MidiSrvTransport.pdb"/>
+            
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSTransport.dll"                       SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSTransport.pdb"/>
+          
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateTransport.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.KSAggregateTransport.pdb"/>
+
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsTransport.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.DiagnosticsTransport.pdb"/>
+
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualMidiTransport.dll"              SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualMidiTransport.pdb"/>
+
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.LoopbackMidiTransport.dll"             SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.LoopbackMidiTransport.pdb"/>
 
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BS2UMPTransform.dll"                     SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UmpProtocolDownscalerTransform.dll"      SelfRegCost="1" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BS2UMPTransform.pdb"/>
 
-        <!--    <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" /> -->
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UMP2BSTransform.dll"                     SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UMP2BSTransform.pdb"/>
+
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UmpProtocolDownscalerTransform.dll"      SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.UmpProtocolDownscalerTransform.pdb"/>
+
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.SchedulerTransform.dll"                  SelfRegCost="1" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.SchedulerTransform.pdb" />
+
+          <!--    <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.VirtualPatchBayAbstraction.dll"          SelfRegCost="1" Vital="true" /> -->
         <!--    <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll"                SelfRegCost="1" Vital="true" /> -->
         </Component>
 
@@ -107,6 +125,7 @@
                    Guid="d2557869-303c-4985-a6be-67feb11a11d9" >
             
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\MidiSrv.exe" Id="WINDOWS_SERVICE"  Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\MidiSrv.pdb" />
 
         </Component>
 

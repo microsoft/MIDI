@@ -599,7 +599,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     // from this function immediately? That will require a queue worker that processes 
     // the device adds and whatnot.
     // Maybe better to use the non-WinRT versions of add/remove notification?
-    Sleep(500);
+//    Sleep(500);
 
 
     TraceLoggingWrite(

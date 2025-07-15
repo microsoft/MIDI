@@ -89,7 +89,7 @@ int main()
         if (!initializer->CheckForMinimumRequiredSdkVersion(
             WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR, 
             WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR,
-            WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_REVISION))
+            WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH))
         {
             // they have a version of the SDK installed, but it is older than what this app was built against
             // so we need to inform and prompt them to download and run the latest versions of the installer

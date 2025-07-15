@@ -546,7 +546,7 @@ HRESULT
 CMidiPorts::ForwardMidMessage(UINT msg, MidiPortHandle portHandle, DWORD_PTR param1, DWORD_PTR param2)
 {
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
+        MIDI_TRACE_EVENT_VERBOSE,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
@@ -567,7 +567,7 @@ HRESULT
 CMidiPorts::ForwardModMessage(UINT msg, MidiPortHandle portHandle, DWORD_PTR param1, DWORD_PTR param2)
 {
     TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
+        MIDI_TRACE_EVENT_VERBOSE,
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),

@@ -82,6 +82,15 @@ namespace Microsoft.Windows.Devices.Midi2.Reporting
     apicontract MidiReportingApiContract { };
 }
 
+namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
+{
+    [contractversion(1)]
+    apicontract MidiRuntimeUpdateUtilityApiContract { };
+}
+
+
+
+
 //namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
 //{
 //    [contractversion(1)]

@@ -42,6 +42,9 @@ CMidi2SchedulerMidiTransform::Initialize(
         );
 
 
+    // this is the max length of time from now that a message can be scheduled for
+    m_maxForwardSchedulingTicks = MIDI_OUTGOING_MESSAGE_QUEUE_MAX_FUTURE_SCHEDULING_SECONDS * internal::GetMidiTimestampFrequency() ;
+
     m_callback = callback;
     m_context = context;
 
@@ -268,8 +271,10 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
 
     if (m_queueWorkerThreadStopToken.stop_requested()) return S_OK;
 
+    auto timestampNow = internal::GetCurrentMidiTimestamp();
+
     // check to see if we're bypassing scheduling by sending a zero timestamp
-    if (timestamp == 0)
+    if (timestamp == 0 || static_cast<uint64_t>(timestamp) <= timestampNow)
     {
         // bypass scheduling logic completely
         auto hr = SendMidiMessageNow(data, size, timestamp);
@@ -295,12 +300,17 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
         }
     }
 
+    // validate the timestamp isn't too far into the future
+    if (timestamp - timestampNow > m_maxForwardSchedulingTicks)
+    {
+        RETURN_IF_FAILED(HR_E_MIDI_SENDMSG_TOO_FAR_INTO_FUTURE);
+    }
 
     try
     {
         // some timestamps are just indexes for debugging, so we need to check for < 0 after the subtraction
-        if ((timestamp <= (LONGLONG)(m_tickWindow + m_deviceLatencyTicks)) ||
-            internal::GetCurrentMidiTimestamp() >= timestamp - m_tickWindow - m_deviceLatencyTicks)
+        if ((timestamp <= (LONGLONG)(timestampNow + m_tickWindow + m_deviceLatencyTicks)) ||
+            (timestampNow >= timestamp - m_tickWindow - m_deviceLatencyTicks))
         {
             // timestamp is in the past or within our tick window: so send now
             auto hr = SendMidiMessageNow(data, size, timestamp);

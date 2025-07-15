@@ -130,9 +130,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="Midi2.NetworkMidiTransport.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>

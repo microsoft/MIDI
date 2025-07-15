@@ -50,12 +50,9 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         // returns the SDK version info. Supply nullptr for arguments you don't care about
         STDMETHOD(GetInstalledWindowsMidiServicesSdkVersion)(
             MidiAppSDKPlatform* buildPlatform,
-            DWORD* versionMajor,
-            DWORD* versionMinor,
-            DWORD* versionRevision,
-
-            DWORD* versionDateNumber,
-            DWORD* versionTimeNumber,
+            USHORT* versionMajor,
+            USHORT* versionMinor,
+            USHORT* versionPatch,
 
             LPWSTR* buildSource,
             LPWSTR* versionName,
@@ -218,23 +215,21 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
         // You will need to shutdown the SDK before the customer can replace it.
         // The SDK version you compile against is the NuGet package major/minor (and optionally) revision.
         bool CheckForMinimumRequiredSdkVersion(
-            DWORD minRequiredVersionMajor, 
-            DWORD minRequiredVersionMinor, 
-            DWORD minRequiredVersionRevision)
+            USHORT minRequiredVersionMajor,
+            USHORT minRequiredVersionMinor,
+            USHORT minRequiredVersionPatch)
         {
             if (m_initializer != nullptr)
             {
-                DWORD installedVersionMajor{ 0 };
-                DWORD installedVersionMinor{ 0 };
-                DWORD installedVersionRevision{ 0 };
+                USHORT installedVersionMajor{ 0 };
+                USHORT installedVersionMinor{ 0 };
+                USHORT installedVersionPatch{ 0 };
 
                 if (SUCCEEDED(m_initializer->GetInstalledWindowsMidiServicesSdkVersion(
                     nullptr,                    // build platform
                     &installedVersionMajor,     // major
                     &installedVersionMinor,     // minor
-                    &installedVersionRevision,  // revision
-                    nullptr,                    // date number
-                    nullptr,                    // time number
+                    &installedVersionPatch,     // patch
                     nullptr,                    // buildSource string. Remember to cotaskmemfree if provided
                     nullptr,                    // versionName string. Remember to cotaskmemfree if provided
                     nullptr                     // versionFullString string. Remember to cotaskmemfree if provided
@@ -242,7 +237,7 @@ namespace Microsoft::Windows::Devices::Midi2::Initialization
                 {
                     if (minRequiredVersionMajor > installedVersionMajor) return false;
                     if (minRequiredVersionMinor > installedVersionMinor) return false;
-                    if (minRequiredVersionRevision > installedVersionRevision) return false;
+                    if (minRequiredVersionPatch > installedVersionPatch) return false;
 
                     return true;
                 }

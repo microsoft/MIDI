@@ -132,97 +132,109 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Reporting::implementation
 
             serviceTransport = winrt::create_instance<IMidiTransport>(__uuidof(Midi2MidiSrvTransport), CLSCTX_ALL);
 
-            if (serviceTransport != nullptr)
+            if (serviceTransport == nullptr)
             {
-                if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker)))
+                return sessionList;
+            }
+
+            if (SUCCEEDED(serviceTransport->Activate(__uuidof(IMidiSessionTracker), (void**)&sessionTracker)))
+            {
+                if (FAILED(sessionTracker->Initialize()))
                 {
-                    if (FAILED(sessionTracker->Initialize()))
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Failed to initialize session tracker.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
+
+                    return sessionList;
+                }
+            }
+            else
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Failed to activate session tracker.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return sessionList;
+            }
+
+
+            LPWSTR rpcSessionListJson{ nullptr };
+            auto callStatus = sessionTracker->GetSessionList(&rpcSessionListJson);
+
+            // parse it into json objects
+
+            if (SUCCEEDED(callStatus) && rpcSessionListJson != nullptr && wcslen(rpcSessionListJson) > 0)
+            {
+                winrt::hstring hstr(rpcSessionListJson);
+
+                // Parse the json, create the objects, throw them into the vector and return
+
+                json::JsonObject jsonObject = json::JsonObject::Parse(hstr);
+
+                if (jsonObject != nullptr)
+                {
+                    auto sessionJsonArray = jsonObject.GetNamedArray(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY);
+
+                    GUID defaultGuid{};
+                    std::chrono::time_point<std::chrono::system_clock> noTime;
+
+                    for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
                     {
-                        return sessionList;
-                    }
+                        auto sessionJson = sessionJsonArray.GetObjectAt(i);
+                        auto sessionObject = winrt::make_self<rept::implementation::MidiServiceSessionInfo>();
 
-                    LPWSTR rpcSessionListJson{ nullptr };
-                    auto callStatus = sessionTracker->GetSessionList(&rpcSessionListJson);
+                        //    auto startTimeString = internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, L"").c_str();
 
-                    // parse it into json objects
+                        auto startTime = internal::JsonGetDateTimeProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, noTime);
 
-                    if (SUCCEEDED(callStatus) && rpcSessionListJson != nullptr && wcslen(rpcSessionListJson) > 0)
-                    {
-                        winrt::hstring hstr(rpcSessionListJson);
+                        sessionObject->InternalInitialize(
+                            internal::JsonGetGuidProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY, defaultGuid),
+                            sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, L"").c_str(),
+                            std::stol(sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, L"0").c_str()),
+                            sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, L"").c_str(),
+                            winrt::clock::from_sys(startTime)
+                        );
 
-                        // Parse the json, create the objects, throw them into the vector and return
 
-                        json::JsonObject jsonObject = json::JsonObject::Parse(hstr);
+                        // Add connections
 
-                        if (jsonObject != nullptr)
+                        auto connectionsJsonArray = sessionJson.GetNamedArray(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY, nullptr);
+
+                        if (connectionsJsonArray != nullptr && connectionsJsonArray.Size() > 0)
                         {
-                            auto sessionJsonArray = jsonObject.GetNamedArray(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY);
-
-                            GUID defaultGuid{};
-                            std::chrono::time_point<std::chrono::system_clock> noTime;
-
-                            for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
+                            for (uint32_t j = 0; j < connectionsJsonArray.Size(); j++)
                             {
-                                auto sessionJson = sessionJsonArray.GetObjectAt(i);
-                                auto sessionObject = winrt::make_self<rept::implementation::MidiServiceSessionInfo>();
+                                auto connectionJson = connectionsJsonArray.GetObjectAt(j);
+                                rept::MidiServiceSessionConnectionInfo connectionObject;
 
-                                //    auto startTimeString = internal::JsonGetWStringProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, L"").c_str();
+                                auto earliestConnectionTime = internal::JsonGetDateTimeProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, noTime);
 
-                                auto startTime = internal::JsonGetDateTimeProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY, noTime);
+                                connectionObject.EndpointDeviceId = connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L"");
+                                connectionObject.InstanceCount = (uint16_t)(connectionJson.GetNamedNumber(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0));
+                                connectionObject.EarliestConnectionTime = winrt::clock::from_sys(earliestConnectionTime);
 
-                                sessionObject->InternalInitialize(
-                                    internal::JsonGetGuidProperty(sessionJson, MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY, defaultGuid),
-                                    sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY, L"").c_str(),
-                                    std::stol(sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY, L"0").c_str()),
-                                    sessionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY, L"").c_str(),
-                                    winrt::clock::from_sys(startTime)
-                                );
-
-
-                                // Add connections
-
-                                auto connectionsJsonArray = sessionJson.GetNamedArray(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY, nullptr);
-
-                                if (connectionsJsonArray != nullptr && connectionsJsonArray.Size() > 0)
-                                {
-                                    for (uint32_t j = 0; j < connectionsJsonArray.Size(); j++)
-                                    {
-                                        auto connectionJson = connectionsJsonArray.GetObjectAt(j);
-                                        rept::MidiServiceSessionConnectionInfo connectionObject;
-
-                                        auto earliestConnectionTime = internal::JsonGetDateTimeProperty(connectionJson, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, noTime);
-
-                                        connectionObject.EndpointDeviceId = connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L"");
-                                        connectionObject.InstanceCount = (uint16_t)(connectionJson.GetNamedNumber(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, 0));
-                                        connectionObject.EarliestConnectionTime = winrt::clock::from_sys(earliestConnectionTime);
-
-                                        sessionObject->InternalAddConnection(connectionObject);
-                                    }
-                                }
-
-                                sessionList.Append(*sessionObject);
+                                sessionObject->InternalAddConnection(connectionObject);
                             }
                         }
 
-                        SAFE_COTASKMEMFREE(rpcSessionListJson);
+                        sessionList.Append(*sessionObject);
                     }
-                    else
-                    {
-                        LOG_IF_FAILED(callStatus);
-
-                        TraceLoggingWrite(
-                            Midi2SdkTelemetryProvider::Provider(),
-                            MIDI_SDK_TRACE_EVENT_ERROR,
-                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                            TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                            TraceLoggingWideString(L"Failed to call service function.", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                            TraceLoggingHResult(callStatus, "hresult")
-                        );
-                    }
-
                 }
+
+                SAFE_COTASKMEMFREE(rpcSessionListJson);
             }
+
+
         }
         catch (...)
         {

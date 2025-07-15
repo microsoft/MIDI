@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
@@ -70,44 +70,44 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
     <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
     <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
-      <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-      <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
-      <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-      <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
-      <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-      <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
-      <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-      <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
-      <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-      <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClInclude Include="color.hpp" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="midiupdatedriver_main.cpp" />
@@ -183,17 +184,20 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" />
-    <Import Project="$(SolutionDir)packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props'))" />
-    <Error Condition="!Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets'))" />
-    <Error Condition="!Exists('$(SolutionDir)packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
 </Project>
