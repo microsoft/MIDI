@@ -22,7 +22,7 @@ void __RPC_FAR* __RPC_API midl_user_allocate(size_t size)
 
 void __RPC_USER midl_user_free(void __RPC_FAR* p)
 {
-    delete[] (BYTE*)p;
+    delete[](BYTE*)p;
 }
 
 // used so apps have a method they can call to spin up the service and
@@ -430,6 +430,46 @@ __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
 
 }
 
+
+
+HRESULT
+CopyStringToOutputParameter(
+    _In_ LPCWSTR sourceString,
+    _Out_ LPWSTR* outputParameter)
+{
+    if (sourceString != nullptr)
+    {
+        size_t length = wcslen(sourceString) + 1;
+
+        if (length > 0 && outputParameter != nullptr)
+        {
+            size_t memorySize = length * sizeof(wchar_t);
+
+            *outputParameter = (LPWSTR)midl_user_allocate(memorySize);
+            if (*outputParameter)
+            {
+                //memset(*transportListJson, 0, memorySize);
+                wcscpy_s(*outputParameter, length, sourceString);
+            }
+        }
+    }
+
+    return S_OK;
+}
+
+HRESULT
+StringifyJsonToOutputParameter(
+    _In_ json::JsonObject sourceObject,
+    _Out_ LPWSTR* outputParameter)
+{
+    auto jsonString = sourceObject.Stringify();
+
+    return CopyStringToOutputParameter(jsonString.c_str(), outputParameter);
+}
+
+
+
+
 HRESULT
 MidiSrvGetSessionList(
     /* [in] */ handle_t bindingHandle,
@@ -453,7 +493,11 @@ MidiSrvGetSessionList(
 
     RETURN_IF_FAILED(g_MidiService->GetSessionTracker(sessionTracker));
 
-    RETURN_IF_FAILED(sessionTracker->GetSessionList(sessionListJson));
+    LPWSTR tempString{ nullptr };
+    RETURN_IF_FAILED(sessionTracker->GetSessionList(&tempString));
+
+    LOG_IF_FAILED(CopyStringToOutputParameter(tempString, sessionListJson));
+
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -468,6 +512,8 @@ MidiSrvGetSessionList(
 
 }
 
+
+
 HRESULT 
 MidiSrvGetTransportList(
     /*[in]*/ handle_t bindingHandle,
@@ -475,6 +521,7 @@ MidiSrvGetTransportList(
 )
 {
     UNREFERENCED_PARAMETER(bindingHandle);
+    RETURN_HR_IF_NULL(E_INVALIDARG, transportListJson);
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -485,15 +532,11 @@ MidiSrvGetTransportList(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    std::shared_ptr<CMidiConfigurationManager> configManager;
-
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
+    std::shared_ptr<CMidiConfigurationManager> configManager;
     RETURN_IF_FAILED(g_MidiService->GetConfigurationManager(configManager));
-
     auto allMetadata = configManager->GetAllEnabledTransportMetadata();
-
-    // TODO: This code should probably live in the configuration manager instead of the RPC layer
 
     json::JsonObject rootObject{};
 
@@ -529,9 +572,7 @@ MidiSrvGetTransportList(
 
     }
 
-    // stringify json to output parameter
-
-    internal::JsonStringifyObjectToOutParam(rootObject, transportListJson);
+    LOG_IF_FAILED(StringifyJsonToOutputParameter(rootObject, transportListJson));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -571,7 +612,7 @@ MidiSrvGetTransformList(
 
 
     // stringify json to output parameter
-    internal::JsonStringifyObjectToOutParam(rootObject, transformListJson);
+    LOG_IF_FAILED(StringifyJsonToOutputParameter(rootObject, transformListJson));
 
 
     return S_OK;
