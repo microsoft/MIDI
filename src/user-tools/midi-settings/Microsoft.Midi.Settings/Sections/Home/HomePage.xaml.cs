@@ -47,12 +47,27 @@ namespace Microsoft.Midi.Settings.Views
             _loggingService = App.GetService<ILoggingService>();
 
             ViewModel = App.GetService<HomeViewModel>();
+
+            ViewModel.UpdateFailed += ViewModel_UpdateFailed;
+
             InitializeComponent();
         }
 
-        private void SettingsCard_Click(object sender, RoutedEventArgs e)
+        private void ViewModel_UpdateFailed(object? sender, string e)
         {
+            Dialog_DownloadingUpdate_Progress.Visibility = Visibility.Collapsed;
+            Dialog_DownloadingUpdate_MainText.Text = "Download Failed...";               // TODO: Bind this to VM and have it set from a resource
 
+            Dialog_DownloadingUpdate.PrimaryButtonText = "Close";
+            Dialog_DownloadingUpdate.IsPrimaryButtonEnabled = true;
+        }
+
+        private void UpdateSdkRuntime_Click(object sender, RoutedEventArgs e)
+        {
+            // we show the dialog but do not wait on it
+            Dialog_DownloadingUpdate.ShowAsync();
+
+            ViewModel.StartSdkUpdate();
         }
     }
 }

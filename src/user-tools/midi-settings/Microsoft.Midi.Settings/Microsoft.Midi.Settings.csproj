@@ -57,6 +57,11 @@
 	  <AssemblyName>MidiSettings</AssemblyName>
 	</PropertyGroup>
 
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);MVVMTK0045;CS8618;CS8305</NoWarn>
+  </PropertyGroup>
+  
 	<ItemGroup>
 	  <Content Remove="Assets\AppIcon.ico" />
 	  <Content Remove="Assets\AppIcon.png" />

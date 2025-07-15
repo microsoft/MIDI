@@ -108,6 +108,7 @@ public partial class App : Application
                     services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
                     services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
                     services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
+                    services.AddSingleton<IMidiUpdateService, MidiUpdateService>();
 
 
                     // Views and ViewModels

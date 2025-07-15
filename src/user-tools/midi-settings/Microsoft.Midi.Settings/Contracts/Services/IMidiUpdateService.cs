@@ -15,15 +15,19 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Contracts.Services
 {
-    internal interface IMidiUpdateService
+    public interface IMidiUpdateService
     {
+        MidiRuntimeUpdateReleaseTypes GetCurrentInstalledChannel();
+
+        MidiRuntimeUpdateReleaseTypes GetCurrentPreferredChannel();
+
         IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads();
 
-        MidiRuntimeRelease? GetHighestAvailableRuntimeRelease();
+        MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeUpdateReleaseTypes releaseChannelType);
 
         Uri GetMidiSdkInstallerPageUri();
 
-        bool DownloadAndInstallUpdate(Uri uri);
+        Task<bool> DownloadAndInstallUpdate(Uri uri);
     }
 
 }

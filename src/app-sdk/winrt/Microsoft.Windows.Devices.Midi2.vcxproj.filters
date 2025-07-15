@@ -238,6 +238,7 @@
     <ClInclude Include="MidiRuntimeUpdateUtility.h">
       <Filter>SDK\Utilities\Update</Filter>
     </ClInclude>
+    <ClInclude Include="date_util.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
@@ -718,5 +719,6 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

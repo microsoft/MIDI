@@ -10,6 +10,7 @@
 #include "MidiRuntimeUpdateUtility.h"
 #include "Utilities.Update.MidiRuntimeUpdateUtility.g.cpp"
 
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implementation
 {
 
@@ -92,18 +93,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
             releaseType = MidiRuntimeUpdateReleaseTypes::Stable;
         }
 
-        auto buildDateString = obj.GetNamedString(L"buildDate", L"");
-
-        foundation::DateTime buildDate{};
-
-        // TODO: Parse the ISO 8601 format date string into a foundation::DateTime
-
-
-
-
-
-
-
+        auto buildDate = internal::DateTimeFromISO8601(obj.GetNamedString(L"buildDate", L""));
 
         auto versionMajor = static_cast<uint16_t>(obj.GetNamedNumber(L"versionMajor", 0));
         auto versionMinor = static_cast<uint16_t>(obj.GetNamedNumber(L"versionMinor", 0));
@@ -127,15 +117,27 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         {
             releasePageUri = foundation::Uri(releasePageUriString);
         }
+        else
+        {
+            releasePageUri = foundation::Uri(L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller");
+        }
 
         if (!directDownloadUriX64String.empty())
         {
             directDownloadUriX64 = foundation::Uri(directDownloadUriX64String);
         }
+        else
+        {
+            directDownloadUriX64 = foundation::Uri(L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64");
+        }
 
         if (!directDownloadUriArm64String.empty())
         {
             directDownloadUriArm64 = foundation::Uri(directDownloadUriArm64String);
+        }
+        else
+        {
+            directDownloadUriArm64 = foundation::Uri(L"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64");
         }
 
         auto release = winrt::make_self<MidiRuntimeRelease>();
@@ -213,9 +215,33 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
                 // log failure
             }
         }
+        catch (winrt::hresult_error const& ex)
+        {
+            LOG_IF_FAILED(static_cast<HRESULT>(ex.code()));
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Failed to get latest available updates from network.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), "error message")
+            );
+        }
         catch (...)
         {
-            // log failure
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unexpected exception trying to get latest available updates from network.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
         }
 
         return results;

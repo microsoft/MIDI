@@ -20,20 +20,24 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class HomeViewModel : ObservableRecipient, INavigationAware
+    public partial class HomeViewModel : ObservableRecipient, INavigationAware
     {
         private readonly INavigationService _navigationService;
-        private readonly IMidiConfigFileService m_configFileService;
+        private readonly IMidiConfigFileService _configFileService;
+        private readonly IMidiUpdateService _updateService;
+
+
+        public event EventHandler<string> UpdateFailed;
 
         public ICommand LaunchFirstRunExperienceCommand
         {
             get; private set;
         }
 
-        public ICommand LaunchNewSdkVersionUpdateCommand
-        {
-            get; private set;
-        }
+        //public ICommand LaunchNewSdkVersionUpdateCommand
+        //{
+        //    get; private set;
+        //}
 
         public ICommand CommonTaskCreateLoopbackEndpointsCommand
         {
@@ -61,6 +65,9 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; set;
         }
 
+        [ObservableProperty]
+        private bool isSdkDownloadInProgress;
+
 
         public string MidiClockResolutionFormattedNanoseconds
         {
@@ -83,13 +90,15 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                return AppState.Current.GetMidiSdkInstallerUri();
+                //return AppState.Current.GetMidiSdkInstallerUri();
+
+                return new Uri("https://github.com/microsoft/MIDI/releases/download/customer-preview-2/arm64-full.zip");
             }
         }
 
         public bool IsValidConfigLoaded
         {
-            get => m_configFileService.IsConfigFileActive;
+            get => _configFileService.IsConfigFileActive;
         }
 
         public bool IsServiceAvailable => AppState.Current.IsServiceInitialized();
@@ -99,7 +108,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                return m_configFileService.IsConfigFileActive;
+                return _configFileService.IsConfigFileActive;
             }
         }
 
@@ -109,7 +118,9 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 // TODO: this should be in the update service, not app state
 
-                return AppState.Current.IsNewerSdkVersionAvailableForDownload();
+                //return AppState.Current.IsNewerSdkVersionAvailableForDownload();
+
+                return true;
             }
         }
 
@@ -126,9 +137,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                if (IsValidConfigLoaded && m_configFileService.CurrentConfig.Header != null)
+                if (IsValidConfigLoaded && _configFileService.CurrentConfig.Header != null)
                 {
-                    return m_configFileService.CurrentConfig.Header.Name;
+                    return _configFileService.CurrentConfig.Header.Name;
                 }
                 else
                 {
@@ -141,9 +152,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                if (m_configFileService.CurrentConfig != null)
+                if (_configFileService.CurrentConfig != null)
                 {
-                    return m_configFileService.CurrentConfig.FileName;
+                    return _configFileService.CurrentConfig.FileName;
                 }
                 else
                 {
@@ -153,10 +164,31 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
-        public HomeViewModel(INavigationService navigationService, IMidiConfigFileService midiConfigFileService)
+        public async void StartSdkUpdate()
+        {
+            IsSdkDownloadInProgress = true;
+
+            //Task.Run(() =>
+            //{
+            var updateUri = this.MidiSdkDownloadUri;
+
+            bool success = await _updateService.DownloadAndInstallUpdate(updateUri);
+            //});
+
+            // if we got here, the download failed
+
+            IsSdkDownloadInProgress = false;
+            UpdateFailed(this, "Downloading the update file failed.");
+        }
+
+        public HomeViewModel(
+            INavigationService navigationService, 
+            IMidiConfigFileService midiConfigFileService, 
+            IMidiUpdateService updateService)
         {
             _navigationService = navigationService;
-            m_configFileService = midiConfigFileService;
+            _configFileService = midiConfigFileService;
+            _updateService = updateService;
 
             LaunchFirstRunExperienceCommand = new RelayCommand(
                 () =>
@@ -175,6 +207,13 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     _navigationService.NavigateTo(typeof(ToolsSysExViewModel).FullName!, "send");
                 });
+
+
+            //LaunchNewSdkVersionUpdateCommand = new RelayCommand(
+            //    () => 
+            //    {
+            //    });
+
 
         }
 
