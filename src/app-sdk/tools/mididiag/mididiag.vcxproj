@@ -3,7 +3,7 @@
   <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <Import Project="$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
-    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.0.0.0-preview.11.1148</WindowsMidiServicesSdkPackage>
+    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.10-preview.11.1729</WindowsMidiServicesSdkPackage>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
@@ -73,37 +73,37 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);%(AdditionalIncludeDirectories)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);%(AdditionalIncludeDirectories)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);%(AdditionalIncludeDirectories)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);%(AdditionalIncludeDirectories)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);%(AdditionalIncludeDirectories)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);%(AdditionalIncludeDirectories)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
@@ -123,9 +123,9 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\..\shared\api-ref\$(Platform)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\..\shared\api-ref\$(Platform)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\..\shared\api-ref\$(Platform)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -153,9 +153,9 @@
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(GeneratedFilesDir);$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\Release\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\..\shared\api-ref\$(Platform)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\..\shared\api-ref\$(Platform)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">%(AdditionalIncludeDirectories);$(SolutionDir)..\api\inc;$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)client-initialization-redist;$(SolutionDir)..\..\shared\api-ref\$(Platform)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

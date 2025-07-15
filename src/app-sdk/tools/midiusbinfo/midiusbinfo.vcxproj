@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
-    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.0.0.0-preview.11.1148</WindowsMidiServicesSdkPackage>
+    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.10-preview.11.1729</WindowsMidiServicesSdkPackage>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
@@ -74,42 +74,42 @@
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
     <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
     <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
     <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
     <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
     <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
     <IntDir>$(SolutionDir)vsfiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
     <LibraryPath>$(SolutionDir)..\api\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)..\api\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\IDL\$(Platform)\$(Configuration)</ExternalIncludePath>
+    <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

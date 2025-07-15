@@ -43,6 +43,11 @@
         <Deterministic>true</Deterministic>
     </PropertyGroup>
 
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS8618;CS8305</NoWarn>
+  </PropertyGroup>
+  
     <PropertyGroup>
         <!-- Workaround for MSB3271 error on processor architecture mismatch -->
         <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
