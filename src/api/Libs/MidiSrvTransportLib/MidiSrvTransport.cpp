@@ -386,6 +386,60 @@ CMidi2MidiSrv::RemoveClientSession(
 
 
 
+HRESULT
+CopyStringToOutputParameter(
+    _In_ LPCWSTR sourceString,
+    _Out_ LPWSTR* outputParameter)
+{
+
+    if (sourceString != nullptr)
+    {
+        // we need to return the string.
+        size_t length = wcslen(sourceString) + 1;
+
+        // allocate COM memory that the calling SDK will dispose of
+        *outputParameter = (LPWSTR)CoTaskMemAlloc(length * sizeof(wchar_t));
+
+        if (*outputParameter)
+        {
+            wcscpy_s(*outputParameter, length, sourceString);
+        }
+
+        // dispose of the RPC-allocated memory
+        midl_user_free((void*)sourceString);
+        sourceString = nullptr;
+    }
+    else
+    {
+        *outputParameter = nullptr;
+    }
+
+
+
+
+
+
+
+    if (sourceString != nullptr)
+    {
+        size_t length = wcslen(sourceString) + 1;
+
+        if (length > 0 && outputParameter != nullptr)
+        {
+            size_t memorySize = length * sizeof(wchar_t);
+
+            *outputParameter = (LPWSTR)midl_user_allocate(memorySize);
+            if (*outputParameter)
+            {
+                //memset(*transportListJson, 0, memorySize);
+                wcscpy_s(*outputParameter, length, sourceString);
+            }
+        }
+    }
+
+    return S_OK;
+}
+
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrv::GetSessionList(
@@ -422,29 +476,7 @@ CMidi2MidiSrv::GetSessionList(
         }());
 
 
-
-    if (tempResultsString != nullptr)
-    {
-        // we need to return the string.
-        size_t length = wcslen(tempResultsString) + 1;
-
-        // allocate COM memory that the calling SDK will dispose of
-        *sessionList = (LPWSTR)CoTaskMemAlloc(length * sizeof(wchar_t));
-
-        if (*sessionList)
-        {
-            wcscpy_s(*sessionList, length, tempResultsString);
-        }
-
-        // dispose of the RPC-allocated memory
-        midl_user_free(tempResultsString);
-        tempResultsString = nullptr;
-    }
-    else
-    {
-        *sessionList = nullptr;
-    }
-
+    LOG_IF_FAILED(CopyStringToOutputParameter(tempResultsString, sessionList));
 
     return S_OK;
 }
@@ -506,19 +538,20 @@ CMidi2MidiSrv::UpdateConfiguration(LPCWSTR configurationJson, LPWSTR* responseJs
 
     RETURN_HR_IF_NULL(E_INVALIDARG, responseJson);
 
-    // requirement for RPC and also in case of failure
-    *responseJson = NULL;
-
     RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
 
     wil::unique_rpc_binding bindingHandle;
     RETURN_IF_FAILED(GetMidiSrvBindingHandle(&bindingHandle));
 
+    // requirement for RPC and also in case of failure
+    LPWSTR tempResultsString{ NULL };
+
+
     RETURN_IF_FAILED([&]()
         {
             // RPC calls are placed in a lambda to work around compiler error C2712, limiting use of try/except blocks
             // with structured exception handling.
-            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, responseJson));
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(bindingHandle.get(), configurationJson, &tempResultsString));
             RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
             RpcEndExcept
 
@@ -529,12 +562,14 @@ CMidi2MidiSrv::UpdateConfiguration(LPCWSTR configurationJson, LPWSTR* responseJs
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Completed RPC call", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(configurationJson, "config json"),
-                TraceLoggingPointer(responseJson, "Response pointer")
+                TraceLoggingWideString(configurationJson, "config json")
             );
 
             return S_OK;
         }());
+
+
+    LOG_IF_FAILED(CopyStringToOutputParameter(tempResultsString, responseJson));
 
     return S_OK;
 }
@@ -580,27 +615,7 @@ CMidi2MidiSrv::GetTransportList(LPWSTR* transportListJson)
         TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    if (tempResultsString != nullptr)
-    {
-        // we need to return the string.
-        size_t length = wcslen(tempResultsString) + 1;
-
-        // allocate COM memory that the calling SDK will dispose of
-        *transportListJson = (LPWSTR)CoTaskMemAlloc(length * sizeof(wchar_t));
-
-        if (*transportListJson)
-        {
-            wcscpy_s(*transportListJson, length, tempResultsString);
-        }
-
-        // dispose of the RPC-allocated memory
-        midl_user_free(tempResultsString);
-        tempResultsString = nullptr;
-    }
-    else
-    {
-        *transportListJson = nullptr;
-    }
+    LOG_IF_FAILED(CopyStringToOutputParameter(tempResultsString, transportListJson));
 
     return S_OK;
 }

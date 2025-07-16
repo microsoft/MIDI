@@ -25,6 +25,45 @@ void __RPC_USER midl_user_free(void __RPC_FAR* p)
     delete[](BYTE*)p;
 }
 
+
+
+HRESULT
+CopyStringToOutputParameter(
+    _In_ LPCWSTR sourceString,
+    _Out_ LPWSTR* outputParameter)
+{
+    if (sourceString != nullptr)
+    {
+        size_t length = wcslen(sourceString) + 1;
+
+        if (length > 0 && outputParameter != nullptr)
+        {
+            size_t memorySize = length * sizeof(wchar_t);
+
+            *outputParameter = (LPWSTR)midl_user_allocate(memorySize);
+            if (*outputParameter)
+            {
+                //memset(*transportListJson, 0, memorySize);
+                wcscpy_s(*outputParameter, length, sourceString);
+            }
+        }
+    }
+
+    return S_OK;
+}
+
+HRESULT
+StringifyJsonToOutputParameter(
+    _In_ json::JsonObject sourceObject,
+    _Out_ LPWSTR* outputParameter)
+{
+    auto jsonString = sourceObject.Stringify();
+
+    return CopyStringToOutputParameter(jsonString.c_str(), outputParameter);
+}
+
+
+
 // used so apps have a method they can call to spin up the service and
 // be able to do things like device enumeration which rely on the service
 // to be running, but do not actually trigger service start
@@ -251,7 +290,8 @@ MidiSrvUpdateConfiguration(
     // TODO: Should use tryparse here instead
     auto responseObject = json::JsonObject::Parse(response);
 
-    internal::JsonStringifyObjectToOutParam(responseObject, responseJson);
+
+    LOG_IF_FAILED(StringifyJsonToOutputParameter(responseObject, responseJson));
 
     // TODO: Now check to see if it has settings for anything else, and send those along to be processed
 
@@ -430,42 +470,6 @@ __RPC_USER PMIDISRV_CONTEXT_HANDLE_rundown(
 
 }
 
-
-
-HRESULT
-CopyStringToOutputParameter(
-    _In_ LPCWSTR sourceString,
-    _Out_ LPWSTR* outputParameter)
-{
-    if (sourceString != nullptr)
-    {
-        size_t length = wcslen(sourceString) + 1;
-
-        if (length > 0 && outputParameter != nullptr)
-        {
-            size_t memorySize = length * sizeof(wchar_t);
-
-            *outputParameter = (LPWSTR)midl_user_allocate(memorySize);
-            if (*outputParameter)
-            {
-                //memset(*transportListJson, 0, memorySize);
-                wcscpy_s(*outputParameter, length, sourceString);
-            }
-        }
-    }
-
-    return S_OK;
-}
-
-HRESULT
-StringifyJsonToOutputParameter(
-    _In_ json::JsonObject sourceObject,
-    _Out_ LPWSTR* outputParameter)
-{
-    auto jsonString = sourceObject.Stringify();
-
-    return CopyStringToOutputParameter(jsonString.c_str(), outputParameter);
-}
 
 
 
