@@ -314,15 +314,6 @@ CMidiXProc::SendMidiMessage(
     LONGLONG position
 )
 {
-
-#if 0
-    // TEMP Code for debugging a timestamp issue
-    if (position != 0)
-    {
-        OutputDebugString(L"\nPosition/timestamp is non-zero\n");
-    }
-#endif
-
     bool bufferSent{false};
     UINT32 requiredBufferSize = sizeof(LOOPEDDATAFORMAT) + length;
 
@@ -343,6 +334,9 @@ CMidiXProc::SendMidiMessage(
     PMEMORY_MAPPED_REGISTERS registers = &(m_MidiOut->Registers);
     PMEMORY_MAPPED_DATA data = &(m_MidiOut->Data);
     bool retry {false};
+
+
+
 
     do{
         retry = false;
@@ -396,6 +390,10 @@ CMidiXProc::SendMidiMessage(
                 LARGE_INTEGER qpc{ 0 };
                 QueryPerformanceCounter(&qpc);
                 header->Position = qpc.QuadPart;
+            }
+            else
+            {
+                header->Position = 0;
             }
 
             // update the write position and notify the other side that data is available.
@@ -502,13 +500,6 @@ CMidiXProc::ProcessMidiIn()
                         header->Position = qpc.QuadPart;
                     }
 
-#if 0
-                    // TEMP Code for debugging a timestamp issue
-                    if (header->Position != 0)
-                    {
-                        OutputDebugString(L"\nHeader position/timestamp is non-zero\n");
-                    }
-#endif
                     m_MidiInCallback->Callback(data, dataSize, header->Position, m_MidiInCallbackContext);
                 }
 
