@@ -225,9 +225,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiKsCommon.cpp" />
+	<ClCompile Include="KsHandleWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Inc\MidiKSCommon.h" />
+	<ClInclude Include="..\..\Inc\KsHandleWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
