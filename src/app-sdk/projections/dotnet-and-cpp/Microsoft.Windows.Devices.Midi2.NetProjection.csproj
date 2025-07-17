@@ -10,17 +10,19 @@
 
 	<PropertyGroup>
         <CsWinRTIncludes>
-            Microsoft.Windows.Devices.Midi2
-            Microsoft.Windows.Devices.Midi2.CapabilityInquiry
-            Microsoft.Windows.Devices.Midi2.ClientPlugins
-            Microsoft.Windows.Devices.Midi2.Diagnostics
-            Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
-            Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
-            Microsoft.Windows.Devices.Midi2.Messages
-            Microsoft.Windows.Devices.Midi2.ServiceConfig
-            Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
-            Microsoft.Windows.Devices.Midi2.VirtualPatchBay
-            Microsoft.Windows.Devices.Midi2.Initializer
+          Microsoft.Windows.Devices.Midi2.Initializer
+          Microsoft.Windows.Devices.Midi2
+          Microsoft.Windows.Devices.Midi2.CapabilityInquiry
+          Microsoft.Windows.Devices.Midi2.ClientPlugins
+          Microsoft.Windows.Devices.Midi2.Diagnostics
+          Microsoft.Windows.Devices.Midi2.Reporting
+          Microsoft.Windows.Devices.Midi2.Messages
+          Microsoft.Windows.Devices.Midi2.ServiceConfig
+          Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
+          Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
+          Microsoft.Windows.Devices.Midi2.Endpoints.Network
+          Microsoft.Windows.Devices.Midi2.Utilities.Update
+          Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
         </CsWinRTIncludes>
 		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
 	</PropertyGroup>
@@ -41,6 +43,11 @@
         <Deterministic>true</Deterministic>
     </PropertyGroup>
 
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS8618;CS8305</NoWarn>
+  </PropertyGroup>
+  
     <PropertyGroup>
         <!-- Workaround for MSB3271 error on processor architecture mismatch -->
         <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>

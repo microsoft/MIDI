@@ -22,9 +22,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     UINT MidiClock::m_lastTimeBeginPeriodValue{};
     bool MidiClock::m_inLowLatencyPeriod{ false };
-
-
-
     uint64_t MidiClock::m_timestampFrequency{ 0 };
 
     internal::MidiTimestamp MidiClock::Now() 
@@ -92,8 +89,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
 
     _Use_decl_annotations_
-        double MidiClock::ConvertTimestampTicksToNanoseconds(
-            internal::MidiTimestamp const timestampValue)
+    double MidiClock::ConvertTimestampTicksToNanoseconds(
+        internal::MidiTimestamp const timestampValue)
     {
 
         return internal::ConvertTimestampToFractionalNanoseconds(timestampValue, TimestampFrequency());

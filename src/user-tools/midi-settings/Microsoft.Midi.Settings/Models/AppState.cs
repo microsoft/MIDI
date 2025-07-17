@@ -1,4 +1,12 @@
-﻿using Microsoft.Win32;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,6 +15,8 @@ using System.Resources;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Popups;
+
+using Microsoft.Windows.Devices.Midi2.Utilities.Update;
 
 
 namespace Microsoft.Midi.Settings.Models;
@@ -47,10 +57,6 @@ public class AppState
 
             if (!_initializer!.InitializeSdkRuntime())
             {
-                // TODO: Localize these messages
-                //var dialog = new MessageDialog("Unable to initialize the Windows MIDI Services SDK runtime. Is it installed? Exiting.");
-                //dialog.ShowAsync().Wait();
-
                 return false;
             }
 
@@ -75,10 +81,6 @@ public class AppState
 
             if (!_initializer!.EnsureServiceAvailable())
             {
-                // TODO: Localize these messages
-                //var dialog = new MessageDialog("The Windows MIDI Services SDK is installed, but we failed to start the service.");
-                //dialog.ShowAsync().Wait();
-
                 return false;
             }
 
@@ -115,6 +117,7 @@ public class AppState
         return val;
     }
 
+    // TODO: These should be in an Update service, not the state class
     public string GetInstalledSdkVersionString()
     {
         string val = "Unable to query SDK version";
@@ -126,6 +129,25 @@ public class AppState
 
         return val;
     }
+
+
+    // TODO: These should be in an Update service, not the state class
+    public bool IsNewerSdkVersionAvailableForDownload()
+    {
+        if (_initializer != null)
+        {
+           // return _initializer.IsNewerVersionAvailableForDownload();
+        }
+
+        return false;
+    }
+
+    // TODO: These should be in an Update service, not the state class
+    //public MidiRuntimeRelease GetNewerSdkDownloadInformation()
+    //{
+
+    //}
+
 
     public Uri GetMidiSdkInstallerUri()
     {

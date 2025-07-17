@@ -7,14 +7,17 @@ namespace Microsoft.Windows.Devices.Midi2.Common
 {
 	public static class MidiNuGetBuildInformation
 	{
+		public const bool IsPreview = true;
 		public const string Source = "GitHub Preview";
-		public const string Name = "Customer Preview 3";
-		public const string BuildFullVersion = "1.0.3-preview-12.250530-1655";
-		public const uint VersionMajor = 1;
-		public const uint VersionMinor = 0;
-		public const uint VersionRevision = 3;
-		public const uint VersionDateNumber = 250530;
-		public const uint VersionTimeNumber = 1655;
+		public const string BuildDate = "2025-07-17";
+		public const string Name = "Preview 11";
+		public const string BuildFullVersion = "1.0.10-preview.11.1737";
+		public const ushort VersionMajor = 1;
+		public const ushort VersionMinor = 0;
+		public const ushort VersionPatch = 10;
+		public const string Preview = "preview.11.1737";
+		public const string AssemblyFullVersion = "1.0.10.1737";
+		public const string FileFullVersion = "1.0.10.1737";
 	}
 }
 

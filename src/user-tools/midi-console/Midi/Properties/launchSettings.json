@@ -50,6 +50,10 @@
     "Send SysEx Help": {
       "commandName": "Project",
       "commandLineArgs": "endpoint send-sysex-file --help"
+    },
+    "Clock": {
+      "commandName": "Project",
+      "commandLineArgs": "clock"
     }
   }
 }

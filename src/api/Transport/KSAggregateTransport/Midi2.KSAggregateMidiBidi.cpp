@@ -151,4 +151,3 @@ CMidi2KSAggregateMidiBidi::SendMidiMessage(
     }
 
 }
-

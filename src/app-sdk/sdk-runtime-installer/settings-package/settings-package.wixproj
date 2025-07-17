@@ -1,4 +1,4 @@
-﻿<Project Sdk="WixToolset.Sdk/4.0.2">
+﻿<Project Sdk="WixToolset.Sdk/6.0.0">
   <PropertyGroup>
     <OutputName>WindowsMIDIServicesSettingsAppStandAloneSetup</OutputName>
   </PropertyGroup>
@@ -9,5 +9,8 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Arm64' ">
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <SuppressIces>ICE38;ICE43</SuppressIces>
   </PropertyGroup>
 </Project>

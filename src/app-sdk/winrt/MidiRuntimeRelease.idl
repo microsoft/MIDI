@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiApiContracts.idl";
+
+import "MidiRuntimeUpdateReleaseTypesEnum.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
+{
+    [contract(MidiRuntimeUpdateUtilityApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Utilities.Update.IMidiRuntimeRelease", 8087b303-0519-31d1-c0de-dd0001000000)]
+    runtimeclass MidiRuntimeRelease : Windows.Foundation.IStringable
+    {
+        MidiRuntimeUpdateReleaseTypes Type{ get; };
+        String Source{ get; };
+        String Name{ get; };
+        String Description{ get; };
+
+        Windows.Foundation.DateTime BuildDate{ get; };
+
+        String VersionFull{ get; };
+
+        UInt16 VersionMajor{ get; };
+        UInt16 VersionMinor{ get; };
+        UInt16 VersionPatch{ get; };
+
+        String Preview{ get; };
+
+        Windows.Foundation.Uri ReleaseNotesUri{ get; };
+
+        Windows.Foundation.Uri DirectDownloadUriX64{ get; };
+        Windows.Foundation.Uri DirectDownloadUriArm64{ get; };
+
+    }
+}

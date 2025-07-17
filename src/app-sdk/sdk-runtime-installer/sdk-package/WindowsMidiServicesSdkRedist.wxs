@@ -1,14 +1,16 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)build\staging ?>
+  <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+  <?include $(StagingVersionIncludeFile) ?>
 
-    
-    
-    <Package
-          Name="Windows MIDI Services (App SDK Runtime) $(var.Platform)"
+
+  <Package
+          Name="Microsoft Windows MIDI Services (App SDK Runtime) $(var.Platform)"
           Manufacturer="Microsoft Corporation"
-          Version="1.0.0.0"
+          Version="$(MidiSdkAndToolsVersion)"
           UpgradeCode="297714bb-dd77-4748-a4c1-553ad66da5d0"
+          UpgradeStrategy="majorUpgrade"
           >
 
         <MediaTemplate EmbedCab="yes" />
@@ -111,8 +113,22 @@
                             Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
         </Component>
 
+        <!-- Install MIDI fix registry Utility -->
+        <Component Id="MidiFixRegUtility"
+                   Permanent="no"
+                   Bitness="always64"
+                   Directory="TOOLSROOT_INSTALLFOLDER"
+                   Guid="fbafecf6-5bf1-4ee5-bee6-fdec96e0bb04"  >
+          <File Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midifixreg.exe" Vital="true" />
 
-        <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
+          <!-- Add folder to path -->
+          <Environment Id="AddMidi1FixRegUtilityToSystemPath"
+                          Name="PATH" Action="set" Part="last" System="yes"
+                          Value="[TOOLSROOT_INSTALLFOLDER]" Permanent="no"/>
+        </Component>
+
+    
+    <!-- Add SDK Runtime folders to registry so that the SDK type resolver can find them -->
         <Component Id="WindowsMidiServicesAppSdkImplementationRegEntries"
                    Permanent="no"
                    Bitness="always64"
@@ -135,6 +151,7 @@
             <ComponentRef Id="MidiMdnsUtility"/>
             <ComponentRef Id="Midi1MonitorUtility"/>
             <ComponentRef Id="Midi1EnumUtility"/>
+            <ComponentRef Id="MidiFixRegUtility"/>
         </Feature>
 
     </Package>

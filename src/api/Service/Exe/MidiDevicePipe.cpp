@@ -252,6 +252,19 @@ CMidiDevicePipe::SendMidiMessageNow(
     LONGLONG timestamp
 )
 {
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Sending MIDI Message to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
+        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+        TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    );
+
+
     // TODO: This function is where we'll check to see if we're in SysEx or not. If we are
     // then we need to add the message to the SysEx set-aside scheduler, or maybe just add
     // it to the regular scheduler queue?

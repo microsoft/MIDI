@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
     <ProjectName>Microsoft.Windows.Devices.Midi2</ProjectName>
     <RootNamespace>Microsoft.Windows.Devices.Midi2</RootNamespace>
@@ -172,9 +172,9 @@
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatWarningAsError>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\Release;$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\Release;$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">stdcpp20</LanguageStandard>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">stdcpp20</LanguageStandard>
     </ClCompile>
@@ -223,9 +223,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\api\vsfiles\intermediate\idl\$(Platform)\$(Configuration);$(SolutionDir)..\api\vsfiles\intermediate\Midi2.MidiSrvTransport\$(Platform)\$(Configuration);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version\;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)..\api\inc;$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)sdk-shared;$(SolutionDir)..\..\build\staging\version;$(ProjectDir)libmidi2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">true</TreatWarningAsError>
       <TreatWarningAsError Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</TreatWarningAsError>
@@ -263,8 +263,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
-    <ClInclude Include="MidiNetworkAdvertisedHost.h" />
-    <ClInclude Include="MidiNetworkClientMatchCriteria.h" />
+    <ClInclude Include="date_util.h" />
+    <ClInclude Include="MidiNetworkAdvertisedHost.h">
+      <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClientMatchCriteria.h">
+      <DependentUpon>MidiNetworkClientMatchCriteria.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiClientInitializerFactory.h" />
     <ClInclude Include="MidiClientInitializerSingleton.h" />
     <ClInclude Include="MidiEndpointAssociatedPortDeviceInformation.h">
@@ -470,11 +475,21 @@
       <DependentUpon>MidiSession.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="MidiRuntimeRelease.h">
+      <DependentUpon>MidiRuntimeRelease.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRuntimeUpdateUtility.h">
+      <DependentUpon>MidiRuntimeUpdateUtility.idl</DependentUpon>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiNetworkAdvertisedHost.cpp" />
-    <ClCompile Include="MidiNetworkClientMatchCriteria.cpp" />
+    <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
+      <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkClientMatchCriteria.cpp">
+      <DependentUpon>MidiNetworkClientMatchCriteria.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiClientInitializerFactory.cpp" />
     <ClCompile Include="MidiEndpointAssociatedPortDeviceInformation.cpp">
       <DependentUpon>MidiEndpointAssociatedPortDeviceInformation.idl</DependentUpon>
@@ -762,6 +777,12 @@
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="MidiRuntimeRelease.cpp">
+      <DependentUpon>MidiRuntimeRelease.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRuntimeUpdateUtility.cpp">
+      <DependentUpon>MidiRuntimeUpdateUtility.idl</DependentUpon>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiEndpointConnectionSource.idl" />
@@ -822,6 +843,9 @@
     <Midl Include="MidiNetworkHostRemovalResult.idl" />
     <Midl Include="Midi1PortFlowEnum.idl" />
     <Midl Include="MidiProtocolEnum.idl" />
+    <Midl Include="MidiRuntimeRelease.idl" />
+    <Midl Include="MidiRuntimeUpdateReleaseTypesEnum.idl" />
+    <Midl Include="MidiRuntimeUpdateUtility.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
@@ -891,15 +915,15 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" />
-    <Import Project="..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.240405.15\build\native\Microsoft.Windows.CppWinRT.targets'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.ImplementationLibrary.1.0.240803.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.250303.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.ImplementationLibrary.1.0.250325.1\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
   </Target>
 </Project>

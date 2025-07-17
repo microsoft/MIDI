@@ -110,6 +110,4 @@ namespace WindowsMidiServicesInternal
 
 
 }
-
-
 #endif

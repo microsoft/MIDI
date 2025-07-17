@@ -524,4 +524,49 @@ This step requires Administrator rights, and must be repeated after any new Wind
   <data name="ForDevelopers_SystemSettingsSectionHeader" xml:space="preserve">
     <value>System Settings</value>
   </data>
+  <data name="SettingsPage_SdkChannelExpander.Header" xml:space="preserve">
+    <value>Enable Preview MIDI SDK Runtime and Tools Channel</value>
+  </data>
+  <data name="SettingsPage_SdkChannelExpander.Description" xml:space="preserve">
+    <value>Enable preview versions of the SDK runtime, including unstable features which may have bugs. Recommended only for technical users or developers. Once enabled, this can only be changed by uninstalling the SDK Runtime and Tools, removing the settings configuration file, and then reinstalling the SDK Runtime and Tools.</value>
+  </data>
+  <data name="FirstRunSetup_Title.Text" xml:space="preserve">
+    <value>Set up Windows MIDI Services</value>
+  </data>
+  <data name="FirstRunSetup_ConfigFileDescription.Text" xml:space="preserve">
+    <value>Many MIDI customizations are stored in a portable configuration file. These include customized endpoint properties like the name, definitions for persistent loopback endpoints, and your Network MIDI host and client reconnections.</value>
+  </data>
+  <data name="FirstRunSetup_CreateDefaultConfigFileSwitch.Header" xml:space="preserve">
+    <value>Create default configuration file.</value>
+  </data>
+  <data name="FirstRunSetup_DefaultLoopbacksDescription.Text" xml:space="preserve">
+    <value>Some applications and utilities, especially those on the web, rely on having a known loopback endpoint available. This requires a configuration file to store the loopback endpoint information.</value>
+  </data>
+  <data name="FirstRunSetup_CreateDefaultLoopbacksSwitch.Header" xml:space="preserve">
+    <value>Create default loopback endpoints.</value>
+  </data>
+  <data name="FirstRunSetup_PortNamesDescription.Text" xml:space="preserve">
+    <value>Apps using the older MIDI 1.0 API (WinMM) used port names as the identifier in many apps and files. By default, we use names that are compatible with those older names. However, if you want better port names by default, select the option below.</value>
+  </data>
+  <data name="FirstRunSetup_UseNewPortNamesSwitch.Header" xml:space="preserve">
+    <value>Use new-style MIDI 1 port names.</value>
+  </data>
+  <data name="FirstRunSetup_MidiServiceStartupDescription.Text" xml:space="preserve">
+    <value>By default, the MIDI Service is set to start only when the first MIDI connection is made by an app. This ensures Windows startup time is not impacted for those who do not use MIDI. But the first time a MIDI connection is made, it can take several seconds.</value>
+  </data>
+  <data name="FirstRunSetup_MidiServiceStartupDescription2.Text" xml:space="preserve">
+    <value>If you use MIDI frequently, we recommend changing the service to start automatically with Windows, so you never have to wait when making a connection. This requires Administrator permissions to set.</value>
+  </data>
+  <data name="FirstRunSetup_SetServiceAutoStartSwitch.Header" xml:space="preserve">
+    <value>Set MIDI Service to auto-start with Windows</value>
+  </data>
+  <data name="SettingsPage_CheckForUpdatesExpander.Header" xml:space="preserve">
+    <value>Check for MIDI SDK Runtime Updates</value>
+  </data>
+  <data name="SettingsPage_CheckForUpdatesExpander.Description" xml:space="preserve">
+    <value>Automatically check for new releases of the MIDI SDK Runtime and Tools when starting the MIDI Settings app. </value>
+  </data>
+  <data name="Error_UnableToStartMidiService" xml:space="preserve">
+    <value>Unable to start the MIDI Service. If this persists, please terminate the midisrv.exe process or reboot your PC.</value>
+  </data>
 </root>

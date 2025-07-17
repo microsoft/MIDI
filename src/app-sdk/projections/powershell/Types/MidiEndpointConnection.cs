@@ -31,6 +31,8 @@ namespace WindowsMidiServices
         {
             if (MessageReceived != null)
             {
+                // this could be more efficient.
+
                 List<UInt32> words = [];
                 args.AppendWordsToList(words);
 

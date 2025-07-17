@@ -842,4 +842,3 @@ void CMidi2SchedulerMidiTransform::QueueWorker()
 
 }
 
-

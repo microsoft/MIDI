@@ -38,6 +38,10 @@
 
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS8625;CS8618;CS8305</NoWarn>
+  </PropertyGroup>
+
   <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />

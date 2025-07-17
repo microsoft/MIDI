@@ -870,7 +870,10 @@ Timestamp</value>
     <value>Windows MIDI Services SDK runtime failed to initialize. Is it installed?</value>
   </data>
   <data name="ErrorSdkInitializerInitializationFailed" xml:space="preserve">
-    <value>Failed to start up the SDK initializer (COM object may not be available or registered)</value>
+    <value>Windows MIDI Services SDK runtime failed to initialize. Is it installed? (COM object may not be available or registered)</value>
+  </data>
+  <data name="ErrorSdkInitializerInitializationFailedExceptionInCreate" xml:space="preserve">
+    <value>Windows MIDI Services SDK runtime failed to initialize. Is it installed? (Exception creating initializer)</value>
   </data>
   <data name="CommandEnumerateMdnsAdvertisementsDescription" xml:space="preserve">
     <value>List discovered MDNS advertisements for Network MIDI 2.0 (UDP) services on the network.</value>
@@ -982,5 +985,8 @@ Timestamp</value>
   </data>
   <data name="ParameterSendSysExFileReplaceGroup" xml:space="preserve">
     <value>For outgoing UMP format messages, replace the group index with this new value. If missing, the group indexes in the file will be used.</value>
+  </data>
+  <data name="StartingMidiService" xml:space="preserve">
+    <value>Starting MIDI Service ...</value>
   </data>
 </root>

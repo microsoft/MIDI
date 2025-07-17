@@ -335,6 +335,9 @@ CMidiXProc::SendMidiMessage(
     PMEMORY_MAPPED_DATA data = &(m_MidiOut->Data);
     bool retry {false};
 
+
+
+
     do{
         retry = false;
 
@@ -343,7 +346,7 @@ CMidiXProc::SendMidiMessage(
         m_MidiOut->ReadEvent.ResetEvent();
 
         // the write position is the last position we have written,
-        // the read position is the last position the driver has read from
+        // the read position is the last position the driver (or client) has read from
         ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
         ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
         ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
@@ -387,6 +390,10 @@ CMidiXProc::SendMidiMessage(
                 LARGE_INTEGER qpc{ 0 };
                 QueryPerformanceCounter(&qpc);
                 header->Position = qpc.QuadPart;
+            }
+            else
+            {
+                header->Position = 0;
             }
 
             // update the write position and notify the other side that data is available.

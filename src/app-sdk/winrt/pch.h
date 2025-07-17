@@ -85,6 +85,8 @@ namespace midi2 = ::winrt::Microsoft::Windows::Devices::Midi2;
 #include <swd_helpers.h>
 #include <midi_ump_message_defs.h>
 
+#include "date_util.h"
+
 // service interface
 #include <WindowsMidiServices.h>
 #include <WindowsMidiServices_i.c>
@@ -257,3 +259,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "Initialization/MidiClientInitializer.h"
 #include "MidiClientInitializerSingleton.h"
 #include "MidiClientInitializerFactory.h"
+
+#include "MidiRuntimeRelease.h"
+#include "MidiRuntimeUpdateUtility.h"
+

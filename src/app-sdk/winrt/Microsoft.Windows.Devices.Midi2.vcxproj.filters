@@ -106,6 +106,12 @@
     <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
       <Filter>SDK\Endpoints\Network\Watcher</Filter>
     </ClCompile>
+    <ClCompile Include="MidiRuntimeRelease.cpp">
+      <Filter>SDK\Utilities\Update</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiRuntimeUpdateUtility.cpp">
+      <Filter>SDK\Utilities\Update</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -226,6 +232,13 @@
     <ClInclude Include="MidiNetworkAdvertisedHost.h">
       <Filter>SDK\Endpoints\Network\Watcher</Filter>
     </ClInclude>
+    <ClInclude Include="MidiRuntimeRelease.h">
+      <Filter>SDK\Utilities\Update</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiRuntimeUpdateUtility.h">
+      <Filter>SDK\Utilities\Update</Filter>
+    </ClInclude>
+    <ClInclude Include="date_util.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
@@ -573,6 +586,15 @@
     <Midl Include="MidiNetworkAdvertisedHost.idl">
       <Filter>SDK\Endpoints\Network\Watcher</Filter>
     </Midl>
+    <Midl Include="MidiRuntimeUpdateUtility.idl">
+      <Filter>SDK\Utilities\Update</Filter>
+    </Midl>
+    <Midl Include="MidiRuntimeRelease.idl">
+      <Filter>SDK\Utilities\Update</Filter>
+    </Midl>
+    <Midl Include="MidiRuntimeUpdateReleaseTypesEnum.idl">
+      <Filter>SDK\Utilities\Update</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -691,8 +713,12 @@
     <Filter Include="SDK\Core\Enumeration\Metadata\Windows\Midi1">
       <UniqueIdentifier>{fee31bbd-64fa-4ca2-9a6e-4ccb45184c1b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SDK\Utilities\Update">
+      <UniqueIdentifier>{5baf52df-449c-4b3e-a461-f8a030d42edd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

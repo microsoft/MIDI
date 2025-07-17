@@ -24,6 +24,11 @@ CMidi2KSAggregateMidiPluginMetadataProvider::GetMetadata(
     RETURN_HR_IF_NULL(E_INVALIDARG, metadata);
 
 
+    // TODO: Version resource needs to come from the standard resources
+    // that are updated during the Windows build. This needs to be implemented
+    // across all transports.
+
+
     //ATL:CComBSTR smallImagePath();
     //smallImagePath.CopyTo(&metadata->SmallImagePath);
 
