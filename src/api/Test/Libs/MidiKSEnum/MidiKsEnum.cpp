@@ -14,6 +14,7 @@
 #include "MidiKsDef.h"
 #include "MidiKsCommon.h"
 #include "MidiKsEnum.h"
+#include "KsHandleWrapper.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -36,28 +37,38 @@ KSMidiDeviceEnum::EnumerateFilters()
 
     for (auto const& device : deviceList)
     {
-        wil::unique_handle hFilter;
         PCWSTR deviceId = device.Id().c_str();
         ULONG cPins = 0;
 
-        if (FAILED(FilterInstantiate(deviceId, &hFilter)))
+        // Wrapper opens the handle internally.
+        KsHandleWrapper deviceHandleWrapper(deviceId);
+
+        if (FAILED(deviceHandleWrapper.Open()))
         {
             continue;
         }
 
-        if (FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins))))
+        // Using lamba function to prevent handle from dissapearing when being used. 
+        HRESULT hr = deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+            return PinPropertySimple(h, 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins));
+        });
+
+        if (FAILED(hr))
         {
             continue;
         }
 
         for (UINT i = 0; i < cPins; i++)
         {
-            wil::unique_handle hPin;
             KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
             MidiTransport transportCapability { MidiTransport_Invalid };
             KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
 
-            if(FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION))))
+            HRESULT hr = deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+                return PinPropertySimple(h, i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION));
+            });
+
+            if (FAILED(hr))
             {
                 continue;
             }
@@ -70,28 +81,38 @@ KSMidiDeviceEnum::EnumerateFilters()
                 continue;
             }
 
+            // Duplicate the handle to safely pass it to another component or store it.
+            wil::unique_handle handleDupe(deviceHandleWrapper.GetHandle());
+            RETURN_IF_NULL_ALLOC(handleDupe);
+
+            KsHandleWrapper m_PinHandleWrapper1(deviceId, i, MidiTransport_CyclicUMP, handleDupe.get());
+
             // Cyclic buffering with UMP messages, MIDI 2 driver and peripheral.
-            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicUMP, &hPin)))
+            if (SUCCEEDED(m_PinHandleWrapper1.Open()))
             {
                 transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
-                hPin.reset();
+                m_PinHandleWrapper1.Close();
             }
+
+            KsHandleWrapper m_PinHandleWrapper2(deviceId, i, MidiTransport_CyclicByteStream, handleDupe.get());
 
             // Cyclic buffering, but legacy bytestream, potentially useful for moving
             // MIDI 1 messages efficiently to and from a new driver communicating with
             // a legacy peripheral. Only useful for a driver that also supports cyclic
             // UMP
-            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicByteStream, &hPin)))
+            if (SUCCEEDED(m_PinHandleWrapper2.Open()))
             {
                 transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicByteStream);
-                hPin.reset();
+                m_PinHandleWrapper2.Close();
             }
 
+            KsHandleWrapper m_PinHandleWrapper3(deviceId, i, MidiTransport_StandardByteStream, handleDupe.get());
+
             // Standard buffering with bytesteam, a MIDI 1 KS driver.
-            if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_StandardByteStream, &hPin)))
+            if (SUCCEEDED(m_PinHandleWrapper3.Open()))
             {
                 transportCapability = (MidiTransport )((DWORD) transportCapability |  (DWORD) MidiTransport_StandardByteStream);
-                hPin.reset();
+                m_PinHandleWrapper3.Close();
             }
 
             // if this pin supports nothing, then it's not a streaming pin.
@@ -100,7 +121,11 @@ KSMidiDeviceEnum::EnumerateFilters()
                 continue;
             }
 
-            if (FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_DATAFLOW, &dataFlow, sizeof(KSPIN_DATAFLOW))))
+            HRESULT lambdaHr = deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+                return PinPropertySimple(h, i, KSPROPSETID_Pin, KSPROPERTY_PIN_DATAFLOW, &dataFlow, sizeof(KSPIN_DATAFLOW));
+            });
+
+            if (FAILED(lambdaHr))
             {
                 continue;
             }

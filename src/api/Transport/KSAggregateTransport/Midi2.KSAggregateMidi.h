@@ -49,7 +49,7 @@ private:
     std::map<uint8_t, wil::com_ptr_nothrow<CMidi2KSAggregateMidiOutProxy>> m_midiOutDeviceGroupMap;
 
 
-    std::map<std::wstring, HANDLE> m_openKsFilters;
+    std::map<std::wstring, std::unique_ptr<KsHandleWrapper>> m_openKsFilters;
 
 
     // group map. key is the group index.

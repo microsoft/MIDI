@@ -693,10 +693,18 @@ public:
         m_FilterFilename = wil::make_cotaskmem_string_nothrow(device);
         RETURN_IF_NULL_ALLOC(m_FilterFilename);
 
-        RETURN_IF_FAILED(FilterInstantiate(m_FilterFilename.get(), &m_Filter));
+        // Wrapper opens the handle internally.
+        m_FilterHandleWrapper = std::make_unique<KsHandleWrapper>(m_FilterFilename.get());
+        RETURN_IF_FAILED(m_FilterHandleWrapper->Open());
+
         m_PinID = pinId;
 
-        RETURN_IF_FAILED(InstantiateMidiPin(m_Filter.get(), m_PinID, m_Transport, &m_Pin));
+        // Duplicate the handle to safely pass it to another component or store it.
+        wil::unique_handle handleDupe(m_FilterHandleWrapper->GetHandle());
+        RETURN_IF_NULL_ALLOC(handleDupe);
+
+        m_PinHandleWrapper = std::make_unique<KsHandleWrapper>(m_FilterFilename.get(), m_PinID, m_Transport, handleDupe.get());
+        RETURN_IF_FAILED(m_PinHandleWrapper->Open());
 
         return S_OK;
     }
@@ -706,7 +714,16 @@ public:
         _In_ HANDLE *CreatedPinHandle
     )
     {
-        return InstantiateMidiPin(m_Filter.get(), m_PinID, m_Transport, CreatedPinHandle);
+        wil::unique_handle handleDupe(m_FilterHandleWrapper->GetHandle());
+        RETURN_IF_NULL_ALLOC(handleDupe);
+
+        KsHandleWrapper tempPinWrapper(m_FilterFilename.get(), m_PinID, m_Transport, handleDupe.get());
+        RETURN_IF_FAILED(tempPinWrapper.Open());
+
+        *CreatedPinHandle = tempPinWrapper.GetHandle();
+        RETURN_IF_NULL_ALLOC(*CreatedPinHandle);
+
+        return S_OK;
     }
 
     HRESULT
@@ -720,15 +737,18 @@ public:
         property.Set    = KSPROPSETID_Connection; 
         property.Id     = KSPROPERTY_CONNECTION_STATE;       
         property.Flags  = KSPROPERTY_TYPE_SET;
-    
-        RETURN_IF_FAILED(SyncIoctl(
-            m_Pin.get(),
-            IOCTL_KS_PROPERTY,
-            &property,
-            propertySize,
-            &pinState,
-            sizeof(KSSTATE),
-            nullptr));
+
+        // Using lamba function to prevent handle from dissapearing when being used. 
+        RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
+            return SyncIoctl(
+                h,
+                IOCTL_KS_PROPERTY,
+                &property,
+                propertySize,
+                &pinState,
+                sizeof(KSSTATE),
+                nullptr);
+        }));
     
         return S_OK;
     }
@@ -747,14 +767,16 @@ public:
         property.Property.Flags         = KSPROPERTY_TYPE_GET;
         property.RequestedBufferSize    = bufferSize;
 
-        RETURN_IF_FAILED(SyncIoctl(
-            m_Pin.get(),
-            IOCTL_KS_PROPERTY,
-            &property,
-            propertySize,
-            &buffer,
-            sizeof(buffer),
-            nullptr));
+        RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
+            return SyncIoctl(
+                h,
+                IOCTL_KS_PROPERTY,
+                &property,
+                propertySize,
+                &buffer,
+                sizeof(buffer),
+                nullptr);
+        }));
 
         bufferSize = buffer.ActualBufferSize;
 
@@ -775,14 +797,16 @@ public:
         property.Id     = KSPROPERTY_MIDILOOPEDSTREAMING_REGISTERS;       
         property.Flags  = KSPROPERTY_TYPE_GET;
 
-        RETURN_IF_FAILED(SyncIoctl(
-            m_Pin.get(),
-            IOCTL_KS_PROPERTY,
-            &property,
-            propertySize,
-            &registers,
-            sizeof(registers),
-            nullptr));
+        RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
+            return SyncIoctl(
+                h,
+                IOCTL_KS_PROPERTY,
+                &property,
+                propertySize,
+                &registers,
+                sizeof(registers),
+                nullptr);
+        }));
 
         ReadPosition = (PULONG) registers.ReadPosition;
         WritePosition = (PULONG) registers.WritePosition;
@@ -807,14 +831,16 @@ public:
         property.Id     = KSPROPERTY_MIDILOOPEDSTREAMING_NOTIFICATION_EVENT;       
         property.Flags  = KSPROPERTY_TYPE_SET;
 
-        RETURN_IF_FAILED(SyncIoctl(
-            m_Pin.get(),
-            IOCTL_KS_PROPERTY,
-            &property,
-            propertySize,
-            &LoopedEvent,
-            sizeof(LoopedEvent),
-            nullptr));
+        RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) -> HRESULT {
+            return SyncIoctl(
+                h,
+                IOCTL_KS_PROPERTY,
+                &property,
+                propertySize,
+                &LoopedEvent,
+                sizeof(LoopedEvent),
+                nullptr);
+        }));
 
         return S_OK;
     }

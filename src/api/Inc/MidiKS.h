@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "KsHandleWrapper.h"
+
 // copied from wdm.h
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
@@ -41,8 +43,9 @@ protected:
     HRESULT ConfigureLoopedRegisters();
     HRESULT ConfigureLoopedEvent();
 
-    wil::unique_handle m_Filter;    
-    wil::unique_handle m_Pin;
+    std::unique_ptr<KsHandleWrapper> m_FilterHandleWrapper;
+    std::unique_ptr<KsHandleWrapper> m_PinHandleWrapper;
+
     wil::unique_cotaskmem_string m_FilterFilename;
     UINT m_PinID {0};
     MidiTransport m_Transport {MidiTransport_Invalid};

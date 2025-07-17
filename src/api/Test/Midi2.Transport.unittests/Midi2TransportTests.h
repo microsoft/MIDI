@@ -92,6 +92,10 @@ public:
     TEST_METHOD(TestMidiSrvMultiClientBidi_ByteStream_Any);
     TEST_METHOD(TestMidiSrvMultiClientBidi_Any_UMP);
     TEST_METHOD(TestMidiSrvMultiClientBidi_UMP_Any);
+    TEST_METHOD(TestKsHandleWrapperQueryRemove_FilterHandle);
+    TEST_METHOD(TestKsHandleWrapperSurpriseRemove_FilterHandle);
+    TEST_METHOD(TestKsHandleWrapperQueryRemove_PinHandle);
+    TEST_METHOD(TestKsHandleWrapperSurpriseRemove_PinHandle);
 
     STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
     {

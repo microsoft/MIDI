@@ -45,11 +45,20 @@ KSMidiDevice::Initialize(
 
     if (!filter)
     {
-        RETURN_IF_FAILED(FilterInstantiate(m_FilterFilename.get(), &m_Filter));
+        // Wrapper opens the handle internally.
+        m_FilterHandleWrapper = std::make_unique<KsHandleWrapper>(m_FilterFilename.get());
+        RETURN_IF_FAILED(m_FilterHandleWrapper->Open());
     }
     else
     {
-        RETURN_IF_WIN32_BOOL_FALSE(DuplicateHandle(GetCurrentProcess(), filter, GetCurrentProcess(), &m_Filter, 0, FALSE, DUPLICATE_SAME_ACCESS));
+        // Duplicate the incoming handle and assign it to the wrapper directly.
+        HANDLE dupHandle = nullptr;
+        RETURN_IF_WIN32_BOOL_FALSE(
+            DuplicateHandle(GetCurrentProcess(), filter, GetCurrentProcess(), &dupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS));
+
+        m_FilterHandleWrapper = std::make_unique<KsHandleWrapper>(m_FilterFilename.get());
+        m_FilterHandleWrapper->SetHandle(wil::unique_handle(dupHandle));
+        RETURN_IF_FAILED(m_FilterHandleWrapper->RegisterForNotifications());
     }
 
     m_PinID = pinId;
@@ -67,7 +76,12 @@ HRESULT
 KSMidiDevice::OpenStream(ULONG& bufferSize
 )
 {
-    RETURN_IF_FAILED(InstantiateMidiPin(m_Filter.get(), m_PinID, m_Transport, &m_Pin));
+    // Duplicate the handle to safely pass it to another component or store it.
+    wil::unique_handle handleDupe(m_FilterHandleWrapper->GetHandle());
+    RETURN_IF_NULL_ALLOC(handleDupe);
+
+    m_PinHandleWrapper = std::make_unique<KsHandleWrapper>(m_FilterFilename.get(), m_PinID, m_Transport, handleDupe.get());
+    RETURN_IF_FAILED(m_PinHandleWrapper->Open());
 
     BOOL looped = ((m_Transport == MidiTransport_CyclicByteStream) || (m_Transport == MidiTransport_CyclicUMP));
 
@@ -116,16 +130,16 @@ KSMidiDevice::Shutdown()
         m_MidiPipe.reset();
     }
 
-    if (nullptr != m_Pin.get())
+    if (m_PinHandleWrapper && m_PinHandleWrapper->IsOpen())
     {
-        PinSetState(KSSTATE_PAUSE);
-        PinSetState(KSSTATE_ACQUIRE);
-        PinSetState(KSSTATE_STOP);
+        RETURN_IF_FAILED(PinSetState(KSSTATE_PAUSE));
+        RETURN_IF_FAILED(PinSetState(KSSTATE_ACQUIRE));
+        RETURN_IF_FAILED(PinSetState(KSSTATE_STOP));
     }
 
-    m_Pin.reset();
-    m_Filter.reset();
-
+    m_PinHandleWrapper.reset();
+    m_FilterHandleWrapper.reset();
+    
     // if a worker has configured mmcss and hasn't yet cleaned
     // it up, this is our last chance
     DisableMmcss(m_MmcssHandle);
@@ -146,14 +160,22 @@ KSMidiDevice::PinSetState(
     property.Id     = KSPROPERTY_CONNECTION_STATE;       
     property.Flags  = KSPROPERTY_TYPE_SET;
 
-    RETURN_IF_FAILED(SyncIoctl(
-        m_Pin.get(),
-        IOCTL_KS_PROPERTY,
-        &property,
-        propertySize,
-        &pinState,
-        sizeof(KSSTATE),
-        nullptr));
+    if (!m_PinHandleWrapper)
+    {
+        return E_HANDLE;
+    }
+
+    // Using lamba function to prevent handle from dissapearing when being used. 
+    RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
+        return SyncIoctl(
+            h,
+            IOCTL_KS_PROPERTY,
+            &property,
+            propertySize,
+            &pinState,
+            sizeof(KSSTATE),
+            nullptr);
+    }));
 
     return S_OK;
 }
@@ -175,14 +197,21 @@ KSMidiDevice::ConfigureLoopedBuffer(ULONG& bufferSize
     // TBD make this configurable via api or registry.
     property.RequestedBufferSize    = bufferSize;
 
-    RETURN_IF_FAILED(SyncIoctl(
-        m_Pin.get(),
-        IOCTL_KS_PROPERTY,
-        &property,
-        propertySize,
-        &buffer,
-        sizeof(buffer),
-        nullptr));
+    if (!m_PinHandleWrapper)
+    {
+        return E_HANDLE;
+    }
+
+    RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
+        return SyncIoctl(
+            h,
+            IOCTL_KS_PROPERTY,
+            &property,
+            propertySize,
+            &buffer,
+            sizeof(buffer),
+            nullptr);
+}));
 
     m_MidiPipe->Data.BufferAddress = (PBYTE) buffer.BufferAddress;
     bufferSize = m_MidiPipe->Data.BufferSize = buffer.ActualBufferSize;
@@ -201,14 +230,21 @@ KSMidiDevice::ConfigureLoopedRegisters()
     property.Id     = KSPROPERTY_MIDILOOPEDSTREAMING_REGISTERS;       
     property.Flags  = KSPROPERTY_TYPE_GET;
 
-    RETURN_IF_FAILED(SyncIoctl(
-        m_Pin.get(),
-        IOCTL_KS_PROPERTY,
-        &property,
-        propertySize,
-        &registers,
-        sizeof(registers),
-        nullptr));
+    if (!m_PinHandleWrapper)
+    {
+        return E_HANDLE;
+    }
+
+    RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
+        return SyncIoctl(
+            h,
+            IOCTL_KS_PROPERTY,
+            &property,
+            propertySize,
+            &registers,
+            sizeof(registers),
+            nullptr);
+}));
 
     m_MidiPipe->Registers.ReadPosition = (PULONG) registers.ReadPosition;
     m_MidiPipe->Registers.WritePosition = (PULONG) registers.WritePosition;
@@ -230,14 +266,21 @@ KSMidiDevice::ConfigureLoopedEvent()
     property.Id     = KSPROPERTY_MIDILOOPEDSTREAMING_NOTIFICATION_EVENT;       
     property.Flags  = KSPROPERTY_TYPE_SET;
 
-    RETURN_IF_FAILED(SyncIoctl(
-        m_Pin.get(),
-        IOCTL_KS_PROPERTY,
-        &property,
-        propertySize,
-        &LoopedEvent,
-        sizeof(LoopedEvent),
-        nullptr));
+    if (!m_PinHandleWrapper)
+    {
+        return E_HANDLE;
+    }
+
+    RETURN_IF_FAILED(m_PinHandleWrapper->Execute([&](HANDLE h) {
+        return SyncIoctl(
+            h,
+            IOCTL_KS_PROPERTY,
+            &property,
+            propertySize,
+            &LoopedEvent,
+            sizeof(LoopedEvent),
+            nullptr);
+}));
 
     return S_OK;
 }
@@ -340,14 +383,21 @@ KSMidiOutDevice::WritePacketMidiData(
 
     kssh.Data = reinterpret_cast<BYTE*>(event);
 
-    HRESULT hr = SyncIoctl(
-            m_Pin.get(),
+    if (!m_PinHandleWrapper)
+    {
+        return E_HANDLE;
+    }
+
+    HRESULT hr = m_PinHandleWrapper->Execute([&](HANDLE h) {
+        return SyncIoctl(
+            h,
             IOCTL_KS_WRITE_STREAM,
             nullptr,
             0,
             (UCHAR*)&kssh,
             kssh.Size,
             nullptr);
+    });
 
     RETURN_IF_FAILED(hr);
 
@@ -404,14 +454,22 @@ KSMidiInDevice::SendRequestToDriver()
         kssh.FrameExtent = sizeof(event);
         kssh.Data = &event;
 
-        HRESULT hr = SyncIoctl(
-                m_Pin.get(),
+        if (!m_PinHandleWrapper)
+        {
+            return E_HANDLE;
+        }
+
+        HRESULT hr = m_PinHandleWrapper->Execute([&](HANDLE h) {
+            return SyncIoctl(
+                h,
                 IOCTL_KS_READ_STREAM,
                 nullptr,
                 0,
                 (UCHAR*)&kssh,
                 kssh.Size,
                 nullptr);
+        });
+
         if (SUCCEEDED(hr))
         {
             UINT32 payloadSize = event.ksMusicFormat.ByteCount;

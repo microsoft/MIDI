@@ -13,8 +13,16 @@
 #include "MidiKsCommon.h"
 #include "MidiXProc.h"
 #include <mmdeviceapi.h>
+#include "KsHandleWrapper.h"
+#include "MidiKsEnum.h"
+
+#include <wil/resource.h>
+#include <setupapi.h>
+#include <cfgmgr32.h>
 
 #define TEST_APPID {0xc24cc593, 0xbc6b, 0x4726,{ 0xb5, 0x52, 0xbe, 0xc8, 0x2d, 0xed, 0xb6, 0x8c}}
+
+using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -1609,6 +1617,242 @@ void MidiTransportTests::TestMidiSrvMultiClientBidi_Any_UMP()
 void MidiTransportTests::TestMidiSrvMultiClientBidi_UMP_Any()
 {
     TestMidiSrvMultiClientBidi(MidiDataFormats_UMP, MidiDataFormats_Any);
+}
+
+HRESULT
+GetInstanceIdFromFilterName(PCWSTR filterName, std::wstring& instanceIdOut)
+{
+    instanceIdOut.clear();
+
+    // Use KSCATEGORY_AUDIO_DEVICE_INTERFACE GUID
+    static const GUID InterfaceCategory = {0x6994ad04, 0x93ef, 0x11d0, {0xa3, 0xcc, 0x0, 0xa0, 0xc9, 0x22, 0x31, 0x96}};
+
+    auto devInfo = unique_hdevinfo{SetupDiGetClassDevs(&InterfaceCategory, nullptr, nullptr, DIGCF_PRESENT | DIGCF_DEVICEINTERFACE)};
+    RETURN_HR_IF(HRESULT_FROM_WIN32(GetLastError()), !devInfo);
+
+    SP_DEVICE_INTERFACE_DATA deviceInterfaceData = {};
+    deviceInterfaceData.cbSize = sizeof(deviceInterfaceData);
+
+    for (DWORD index = 0; SetupDiEnumDeviceInterfaces(devInfo.get(), nullptr, &InterfaceCategory, index, &deviceInterfaceData); ++index)
+    {
+        DWORD requiredSize = 0;
+        SetupDiGetDeviceInterfaceDetail(devInfo.get(), &deviceInterfaceData, nullptr, 0, &requiredSize, nullptr);
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            continue;
+        }
+
+        std::unique_ptr<BYTE[]> detailBuffer = std::make_unique<BYTE[]>(requiredSize);
+        auto* detailData = reinterpret_cast<SP_DEVICE_INTERFACE_DETAIL_DATA*>(detailBuffer.get());
+        detailData->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+        SP_DEVINFO_DATA deviceInfoData = {};
+        deviceInfoData.cbSize = sizeof(SP_DEVINFO_DATA);
+
+        if (!SetupDiGetDeviceInterfaceDetail(devInfo.get(), &deviceInterfaceData, detailData, requiredSize, nullptr, &deviceInfoData))
+        {
+            continue;
+        }
+
+        // Match to the filter name we are looking for
+        if (_wcsicmp(detailData->DevicePath, filterName) == 0)
+        {
+            WCHAR instanceId[MAX_DEVICE_ID_LEN] = {};
+            if (SetupDiGetDeviceInstanceId(devInfo.get(), &deviceInfoData, instanceId, ARRAYSIZE(instanceId), nullptr))
+            {
+                instanceIdOut = instanceId;
+                return S_OK;
+            }
+            else
+            {
+                return HRESULT_FROM_WIN32(GetLastError());
+            }
+        }
+    }
+
+    return HRESULT_FROM_WIN32(ERROR_NOT_FOUND);
+}
+
+bool SetDeviceEnabled(_In_ PCWSTR deviceInstanceId, _In_ bool enable)
+{
+    bool result = false;
+    HDEVINFO devInfo = SetupDiCreateDeviceInfoList(nullptr, nullptr);
+    if (devInfo == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+
+    SP_DEVINFO_DATA devInfoData = {};
+    devInfoData.cbSize = sizeof(devInfoData);
+    if (SetupDiOpenDeviceInfo(devInfo, deviceInstanceId, nullptr, 0, &devInfoData))
+    {
+        SP_PROPCHANGE_PARAMS propChangeParams = {};
+        propChangeParams.ClassInstallHeader.cbSize = sizeof(propChangeParams.ClassInstallHeader);
+        propChangeParams.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+        propChangeParams.Scope = DICS_FLAG_GLOBAL;
+        propChangeParams.StateChange = enable ? DICS_ENABLE : DICS_DISABLE;
+
+        if (SetupDiSetClassInstallParams(devInfo, &devInfoData, &propChangeParams.ClassInstallHeader, sizeof(propChangeParams)))
+        {
+            if (SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, devInfo, &devInfoData))
+            {
+                result = true;
+            }
+        }
+    }
+
+    SetupDiDestroyDeviceInfoList(devInfo);
+    return result;
+}
+
+void MidiTransportTests::TestKsHandleWrapperQueryRemove_FilterHandle()
+{
+    // Enumerate KS filters
+    KSMidiDeviceEnum ksEnum;
+    VERIFY_SUCCEEDED(ksEnum.EnumerateFilters());
+
+    if (ksEnum.m_AvailableMidiOutPinCount == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"No MIDI OUT pins found.");
+        return;
+    }
+
+    // Use the first available output filter
+    auto filterName = ksEnum.m_AvailableMidiOutPins[0].FilterName.get();
+
+    KsHandleWrapper filterWrapper(filterName);
+    VERIFY_SUCCEEDED(filterWrapper.Open());
+
+    std::wstring instanceId;
+    HRESULT hr = GetInstanceIdFromFilterName(filterName, instanceId);
+    VERIFY_SUCCEEDED(hr);
+    VERIFY_IS_FALSE(instanceId.empty());
+
+    filterWrapper.Close();
+
+    if (!SetDeviceEnabled(instanceId.c_str(), false))
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Unable to disable device (it may be virtual or protected).");
+        return;
+    }
+
+    VERIFY_IS_TRUE(filterWrapper.GetHandle() == nullptr);
+
+    if (!SetDeviceEnabled(instanceId.c_str(), true))
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Unable to enable device (it may be virtual or protected).");
+        return;
+    }
+}
+
+void MidiTransportTests::TestKsHandleWrapperQueryRemove_PinHandle()
+{
+    // Enumerate KS filters
+    KSMidiDeviceEnum ksEnum;
+    VERIFY_SUCCEEDED(ksEnum.EnumerateFilters());
+
+    if (ksEnum.m_AvailableMidiOutPinCount == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"No MIDI OUT pins found.");
+        return;
+    }
+
+    auto& pinInfo = ksEnum.m_AvailableMidiOutPins[0];
+    auto filterName = pinInfo.FilterName.get();
+    UINT pinId = pinInfo.PinId;
+
+    // Open filter handle
+    KsHandleWrapper parentFilterWrapper(filterName);
+    VERIFY_SUCCEEDED(parentFilterWrapper.Open());
+
+    // Get handle duplicate
+    wil::unique_handle dupHandle(parentFilterWrapper.GetHandle());
+    VERIFY_IS_NOT_NULL(dupHandle.get());
+
+    // Create pin wrapper
+    KsHandleWrapper pinWrapper(filterName, pinId, MidiTransport_CyclicUMP, dupHandle.get());
+    VERIFY_SUCCEEDED(pinWrapper.Open());
+
+    std::wstring instanceId;
+    HRESULT hr = GetInstanceIdFromFilterName(filterName, instanceId);
+    VERIFY_SUCCEEDED(hr);
+    VERIFY_IS_FALSE(instanceId.empty());
+
+    pinWrapper.Close();
+    parentFilterWrapper.Close();
+
+    if (!SetDeviceEnabled(instanceId.c_str(), false))
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Unable to disable device (it may be virtual or protected).");
+        return;
+    }
+
+    VERIFY_IS_TRUE(pinWrapper.GetHandle() == nullptr);
+
+    if (!SetDeviceEnabled(instanceId.c_str(), true))
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Unable to enable device (it may be virtual or protected).");
+        return;
+    }
+}
+
+void MidiTransportTests::TestKsHandleWrapperSurpriseRemove_FilterHandle()
+{
+    // Enumerate KS filters
+    KSMidiDeviceEnum ksEnum;
+    VERIFY_SUCCEEDED(ksEnum.EnumerateFilters());
+
+    if (ksEnum.m_AvailableMidiOutPinCount == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"No MIDI OUT pins found.");
+        return;
+    }
+
+    // Use the first available output filter
+    auto filterName = ksEnum.m_AvailableMidiOutPins[0].FilterName.get();
+
+    KsHandleWrapper filterWrapper(filterName);
+    VERIFY_SUCCEEDED(filterWrapper.Open());
+
+    // TODO: Simulate surprise remove
+    filterWrapper.OnDeviceRemove();
+
+    VERIFY_IS_TRUE(filterWrapper.GetHandle() == nullptr);
+}
+
+void MidiTransportTests::TestKsHandleWrapperSurpriseRemove_PinHandle()
+{
+    // Enumerate KS filters
+    KSMidiDeviceEnum ksEnum;
+    VERIFY_SUCCEEDED(ksEnum.EnumerateFilters());
+
+    if (ksEnum.m_AvailableMidiOutPinCount == 0)
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"No MIDI OUT pins found.");
+        return;
+    }
+
+    auto& pinInfo = ksEnum.m_AvailableMidiOutPins[0];
+    auto filterName = pinInfo.FilterName.get();
+    UINT pinId = pinInfo.PinId;
+
+    // Open filter handle
+    KsHandleWrapper parentFilterWrapper(filterName);
+    VERIFY_SUCCEEDED(parentFilterWrapper.Open());
+
+    // Get handle duplicate
+    wil::unique_handle dupHandle(parentFilterWrapper.GetHandle());
+    VERIFY_IS_NOT_NULL(dupHandle.get());
+
+    // Create pin wrapper
+    KsHandleWrapper pinWrapper(filterName, pinId, MidiTransport_CyclicUMP, dupHandle.get());
+    VERIFY_SUCCEEDED(pinWrapper.Open());
+
+    // TODO: Simulate surprise remove
+    pinWrapper.OnDeviceRemove();
+
+    VERIFY_IS_TRUE(pinWrapper.GetHandle() == nullptr);
 }
 
 bool MidiTransportTests::TestSetup()
