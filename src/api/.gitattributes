@@ -25,3 +25,4 @@ packages.config text eol=crlf
 *.zip binary
 *.ico binary
 *.aps binary
+
