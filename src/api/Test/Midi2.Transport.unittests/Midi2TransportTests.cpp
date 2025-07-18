@@ -1711,11 +1711,24 @@ bool SetDeviceEnabled(_In_ PCWSTR deviceInstanceId, _In_ bool enable)
         propChangeParams.Scope = DICS_FLAG_GLOBAL;
         propChangeParams.StateChange = enable ? DICS_ENABLE : DICS_DISABLE;
 
+        auto cleanupOnFailure = wil::scope_exit([&]() {
+
+            // if request was to disable and we failed, restore to enabled state
+            // so it isn't applied after the next reboot, interfering with other tests.
+            if (false == enable)
+            {
+                propChangeParams.StateChange = DICS_ENABLE;
+                SetupDiSetClassInstallParams(devInfo, &devInfoData, &propChangeParams.ClassInstallHeader, sizeof(propChangeParams));
+                SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, devInfo, &devInfoData);
+            }
+        });
+
         if (SetupDiSetClassInstallParams(devInfo, &devInfoData, &propChangeParams.ClassInstallHeader, sizeof(propChangeParams)))
         {
             if (SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, devInfo, &devInfoData))
             {
                 result = true;
+                cleanupOnFailure.release();
             }
         }
     }
