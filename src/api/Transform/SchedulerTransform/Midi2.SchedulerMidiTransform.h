@@ -67,6 +67,8 @@ private:
     // the actual wake-up frequency
     uint64_t m_tickWindow{ MIDI_SCHEDULER_LOCK_AND_SEND_FUNCTION_LATENCY_TICKS + MIDI_SCHEDULER_ENQUEUE_OVERHEAD_LATENCY_TICKS };
 
+    uint64_t m_maxForwardSchedulingTicks{ 0 };
+
     // TODO: we may allow device latency to be set for the device as a property value with key
     // PKEY_MIDI_MidiOutLatencyTicks. We'd then pre-fetch from the queue by this amount.
     uint64_t m_deviceLatencyTicks{ 0 };
