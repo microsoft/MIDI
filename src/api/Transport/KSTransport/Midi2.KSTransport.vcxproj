@@ -122,20 +122,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
@@ -143,20 +143,20 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiksenum\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)\VSFiles\intermediate\midikscommon\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midiks\$(Platform)\$(Configuration);$(SolutionDir)\VSFiles\intermediate\midixproc\$(Platform)\$(Configuration);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
     <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
@@ -205,7 +205,7 @@
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -226,7 +226,7 @@
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -247,7 +247,7 @@
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -268,7 +268,7 @@
       <DisableSpecificWarnings>4324</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -280,7 +280,7 @@
       <TypeLibraryName>$(IntDir)$(ProjectName).tlb</TypeLibraryName>
     </Midl>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
     </Link>
     <ClCompile>
@@ -301,7 +301,7 @@
       <TypeLibraryName>$(IntDir)$(ProjectName).tlb</TypeLibraryName>
     </Midl>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
     </Link>
     <ClCompile>
@@ -316,7 +316,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
     </Link>
     <ClCompile>
@@ -338,7 +338,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;midiksenum.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;midiks.lib;midikscommon.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>Midi2.KSTransport.def</ModuleDefinitionFile>
     </Link>
     <ClCompile>

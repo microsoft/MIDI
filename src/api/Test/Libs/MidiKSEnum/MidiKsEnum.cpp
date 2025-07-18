@@ -64,7 +64,7 @@ KSMidiDeviceEnum::EnumerateFilters()
             MidiTransport transportCapability { MidiTransport_Invalid };
             KSPIN_COMMUNICATION communication = (KSPIN_COMMUNICATION)0;
 
-            HRESULT hr = deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+            hr = deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
                 return PinPropertySimple(h, i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION));
             });
 
