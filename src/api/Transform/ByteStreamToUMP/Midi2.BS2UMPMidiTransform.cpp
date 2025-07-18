@@ -119,17 +119,17 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
             // if we have a complete UMP, we send it along
             if (expectedWordCount == m_umpMessageCurrentWordCount)
             {
-                TraceLoggingWrite(
-                    MidiBS2UMPTransformTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_VERBOSE,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Translated to", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingHexUInt32Array(static_cast<uint32_t*>(m_umpMessage), static_cast<uint16_t>(m_umpMessageCurrentWordCount), "ump data"),
-                    TraceLoggingUInt32(static_cast<uint32_t>(m_umpMessageCurrentWordCount * sizeof(uint32_t)), "length bytes"),
-                    TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-                );
+                //TraceLoggingWrite(
+                //    MidiBS2UMPTransformTelemetryProvider::Provider(),
+                //    MIDI_TRACE_EVENT_VERBOSE,
+                //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                //    TraceLoggingPointer(this, "this"),
+                //    TraceLoggingWideString(L"Translated to", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                //    TraceLoggingHexUInt32Array(static_cast<uint32_t*>(m_umpMessage), static_cast<uint16_t>(m_umpMessageCurrentWordCount), "ump data"),
+                //    TraceLoggingUInt32(static_cast<uint32_t>(m_umpMessageCurrentWordCount * sizeof(uint32_t)), "length bytes"),
+                //    TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+                //);
 
                 // send the message
                 // By context, for the conversion transforms the context contains the group index

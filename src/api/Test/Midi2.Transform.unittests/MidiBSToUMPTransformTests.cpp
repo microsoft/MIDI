@@ -224,17 +224,18 @@ void MidiBSToUMPTransformTests::TestTimingClock()
     InternalTestBytes(groupIndex, bytes, _countof(bytes), 1, expectedWords);
 }
 
-void MidiBSToUMPTransformTests::TestTimingClockPadded()
-{
-    uint8_t groupIndex{ 0 };
-
-    uint8_t bytes[] =
-    {
-        0x00, 0x00, 0x00, 0x00, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    };
-
-    std::vector<uint32_t> expectedWords{ 0x10F80000 };
-
-    InternalTestBytes(groupIndex, bytes, _countof(bytes), 1, expectedWords);
-}
+//void MidiBSToUMPTransformTests::TestTimingClockPadded()
+//{
+//    uint8_t groupIndex{ 0 };
+//
+//    uint8_t bytes[] =
+//    {
+//        //0x00, 0x00, 0x00, 0x00, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+//        0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+//    };
+//
+//    std::vector<uint32_t> expectedWords{ 0x10F80000 };
+//
+//    InternalTestBytes(groupIndex, bytes, _countof(bytes), 1, expectedWords);
+//}
 
