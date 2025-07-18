@@ -454,4 +454,3 @@ CMidi2KSAggregateMidi::SendMidiMessage(
 // unreachable
 //    return E_ABORT;
 }
-

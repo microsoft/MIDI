@@ -561,4 +561,3 @@ KSMidiInDevice::Initialize(
 
     return S_OK;
 }
-

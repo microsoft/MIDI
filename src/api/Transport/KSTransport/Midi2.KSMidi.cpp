@@ -222,4 +222,3 @@ CMidi2KSMidi::SendMidiMessage(
 
     return E_ABORT;
 }
-

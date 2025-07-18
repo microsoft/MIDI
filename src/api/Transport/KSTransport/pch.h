@@ -112,4 +112,3 @@ class TransportState;
 #include "Midi2.KSMidiPluginMetadataProvider.h"
 
 #include "TransportState.h"
-

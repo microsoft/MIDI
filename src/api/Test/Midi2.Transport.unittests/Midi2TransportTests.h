@@ -123,4 +123,3 @@ private:
 
     GUID m_SessionId{};
 };
-

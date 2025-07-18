@@ -1877,4 +1877,3 @@ bool MidiTransportTests::ClassCleanup()
 {
     return true;
 }
-

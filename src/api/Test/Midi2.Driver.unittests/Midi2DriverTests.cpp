@@ -1079,4 +1079,3 @@ bool Midi2DriverTests::ClassCleanup()
 {
     return true;
 }
-
