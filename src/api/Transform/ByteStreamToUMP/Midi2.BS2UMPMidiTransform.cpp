@@ -131,6 +131,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
                 //    TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
                 //);
 
+
                 // send the message
                 // By context, for the conversion transforms the context contains the group index
                 LOG_IF_FAILED(m_Callback->Callback(
