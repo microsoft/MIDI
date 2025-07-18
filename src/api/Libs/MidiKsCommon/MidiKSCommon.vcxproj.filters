@@ -18,9 +18,15 @@
     <ClCompile Include="MidiKsCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+	<ClCompile Include="KsHandleWrapper.cpp">
+      <Filter>Source Files</Filter>
+	</ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Inc\MidiKSCommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+	<ClInclude Include="..\..\Inc\KsHandleWrapper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

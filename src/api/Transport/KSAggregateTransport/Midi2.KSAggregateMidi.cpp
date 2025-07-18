@@ -156,7 +156,6 @@ CMidi2KSAggregateMidi::Initialize(
 
     while (pinMapEntry != nullptr && (PBYTE)pinMapEntry < ((PBYTE)pinMap + totalBytes))
     {
-        HANDLE filter{ };
         std::wstring filterInterfaceId{ (WCHAR*)pinMapEntry->FilterId };
 
         std::wstring mapEntryFlow{ };
@@ -187,18 +186,26 @@ CMidi2KSAggregateMidi::Initialize(
             TraceLoggingWideString(mapEntryFlow.c_str(), "Flow Type")
         );
 
-        // we keep a map of filters because many devices will have multiple pins on the same filter
-        // and we want to open any given filter only once.
-        if (auto const& filterEntry = m_openKsFilters.find(filterInterfaceId); filterEntry != m_openKsFilters.end())
+        KsHandleWrapper* filterWrapper = nullptr;
+
+        // Check if we've already opened this filter
+        auto it = m_openKsFilters.find(filterInterfaceId);
+        if (it != m_openKsFilters.end())
         {
-            filter = filterEntry->second;
+            filterWrapper = it->second.get();
         }
         else
         {
-            RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
+            auto newWrapper = std::make_unique<KsHandleWrapper>(filterInterfaceId);
+            RETURN_IF_FAILED(newWrapper->Open());
 
-            m_openKsFilters.insert_or_assign(filterInterfaceId, filter);
+            auto [insertIt, _] = m_openKsFilters.insert_or_assign(filterInterfaceId, std::move(newWrapper));
+            filterWrapper = insertIt->second.get();
         }
+
+        // Duplicate the handle to safely pass it to another component or store it.
+        wil::unique_handle handleDupe(filterWrapper->GetHandle());
+        RETURN_IF_NULL_ALLOC(handleDupe);
 
         if (pinMapEntry->PinDataFlow == MidiFlow::MidiFlowOut)
         {
@@ -210,7 +217,7 @@ CMidi2KSAggregateMidi::Initialize(
             auto initResult =
                 proxy->Initialize(
                     endpointDeviceInterfaceId,
-                    filter,
+                    handleDupe.get(),
                     pinMapEntry->PinId,
                     requestedBufferSize,
                     mmCssTaskId,
@@ -252,7 +259,7 @@ CMidi2KSAggregateMidi::Initialize(
             auto initResult =
                 proxy->Initialize(
                     endpointDeviceInterfaceId,
-                    filter,
+                    handleDupe.get(),
                     pinMapEntry->PinId,
                     requestedBufferSize,
                     mmCssTaskId,
@@ -349,14 +356,7 @@ CMidi2KSAggregateMidi::Shutdown()
         it = m_midiOutDeviceGroupMap.erase(it);
     }
 
-    while (!m_openKsFilters.empty())
-    {
-        auto it = m_openKsFilters.begin();
-        CloseHandle(it->second);
-
-        it = m_openKsFilters.erase(it);
-    }
-
+    m_openKsFilters.clear();
 
     return S_OK;
 }
@@ -454,4 +454,3 @@ CMidi2KSAggregateMidi::SendMidiMessage(
 // unreachable
 //    return E_ABORT;
 }
-

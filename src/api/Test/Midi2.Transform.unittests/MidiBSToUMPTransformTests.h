@@ -68,4 +68,3 @@ private:
 
     std::function<void(PVOID, UINT, LONGLONG, LONGLONG)> m_MidiInCallback;
 };
-

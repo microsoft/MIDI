@@ -95,4 +95,3 @@ private:
     uint64_t m_timestampFrequency = internal::GetMidiTimestampFrequency();
 };
 
-

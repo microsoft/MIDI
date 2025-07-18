@@ -20,9 +20,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Midi2DirectKs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Midi2DriverTests.h">
       <Filter>Header Files</Filter>
     </ClInclude>

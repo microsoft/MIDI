@@ -93,7 +93,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 //    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 //    DEVPROP_BOOLEAN devPropFalse = DEVPROP_FALSE;
 
-    wil::unique_handle hFilter;
     std::wstring deviceName;
     std::wstring filterName{ device.Name() };
     std::wstring deviceId;
@@ -144,8 +143,15 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     std::vector<std::unique_ptr<MIDI_PIN_INFO>> newMidiPins;
 
     // instantiate the interface
-    RETURN_IF_FAILED(FilterInstantiate(deviceId.c_str(), &hFilter));
-    RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins)));
+
+    // Wrapper opens the handle internally.
+    KsHandleWrapper deviceHandleWrapper(deviceId.c_str());
+    RETURN_IF_FAILED(deviceHandleWrapper.Open());
+
+    // Using lamba function to prevent handle from dissapearing when being used. 
+    RETURN_IF_FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+        return PinPropertySimple(h, 0, KSPROPSETID_Pin, KSPROPERTY_PIN_CTYPES, &cPins, sizeof(cPins));
+    }));
 
     //UINT portNumberDifferentiatorInput{ 0 };
     //UINT portNumberDifferentiatorOutput{ 0 };
@@ -163,7 +169,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             TraceLoggingUInt32(i, "pin id")
         );
 
-        wil::unique_handle hPin;
         KSPIN_DATAFLOW dataFlow = (KSPIN_DATAFLOW)0;
         MidiTransport transportCapability { MidiTransport_Invalid };
         MidiDataFormats dataFormatCapability { MidiDataFormats_Invalid };
@@ -185,7 +190,9 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         UINT16 deviceVID{ 0 };
         UINT16 devicePID{ 0 };
 
-        RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION)));
+        RETURN_IF_FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+            return PinPropertySimple(h, i, KSPROPSETID_Pin, KSPROPERTY_PIN_COMMUNICATION, &communication, sizeof(KSPIN_COMMUNICATION));
+        }));
 
         // The external connector pin representing the physical connection
         // has KSPIN_COMMUNICATION_NONE. We can only create on software IO pins which
@@ -209,8 +216,18 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         // ================== Cyclic UMP Interfaces ===============================================
         // attempt to instantiate using cyclic streaming for UMP buffers
         // and set that flag if we can.
-        if (SUCCEEDED(InstantiateMidiPin(hFilter.get(), i, MidiTransport_CyclicUMP, &hPin)))
-        {
+
+        // Duplicate the handle to safely pass it to another component or store it.
+        wil::unique_handle handleDupe(deviceHandleWrapper.GetHandle());
+        RETURN_IF_NULL_ALLOC(handleDupe);
+
+        KsHandleWrapper m_PinHandleWrapper(deviceId.c_str(), i, MidiTransport_CyclicUMP, handleDupe.get());
+
+        RETURN_IF_FAILED(m_PinHandleWrapper.Open());
+
+        // Using lamba function to prevent handle from dissapearing when being used.
+        RETURN_IF_FAILED(m_PinHandleWrapper.Execute([&](HANDLE handle) {
+
             TraceLoggingWrite(
                 MidiKSTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_INFO,
@@ -219,44 +236,41 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Pin is MidiTransport_CyclicUMP pin", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(device.Id().c_str(), "device id"),
-                TraceLoggingUInt32(i, "pin id")
-            );
+                TraceLoggingUInt32(i, "pin id"));
 
-            transportCapability = (MidiTransport)((DWORD) transportCapability |  (DWORD) MidiTransport_CyclicUMP);
-            dataFormatCapability = (MidiDataFormats) ((DWORD) dataFormatCapability | (DWORD) MidiDataFormats_UMP);
+            transportCapability = (MidiTransport)((DWORD)transportCapability | (DWORD)MidiTransport_CyclicUMP);
+            dataFormatCapability = (MidiDataFormats)((DWORD)dataFormatCapability | (DWORD)MidiDataFormats_UMP);
 
             LOG_IF_FAILED_WITH_EXPECTED(
-                PinPropertySimple(hPin.get(), 
-                    i, 
+                PinPropertySimple(
+                    handle,
+                    i,
                     KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-                    KSPROPERTY_MIDI2_NATIVEDATAFORMAT, 
-                    &nativeDataFormat, 
+                    KSPROPERTY_MIDI2_NATIVEDATAFORMAT,
+                    &nativeDataFormat,
                     sizeof(nativeDataFormat)),
                 HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             LOG_IF_FAILED_WITH_EXPECTED(
-                PinPropertyAllocate(hPin.get(), 
-                    i, 
-                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, 
+                PinPropertyAllocate(
+                    handle,
+                    i,
+                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
                     KSPROPERTY_MIDI2_GROUP_TERMINAL_BLOCKS,
-                    (PVOID *)&groupTerminalBlockData, 
+                    (PVOID*)&groupTerminalBlockData,
                     &groupTerminalBlockDataSize),
                 HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             // Get the serial number
             LOG_IF_FAILED_WITH_EXPECTED(
-                PinPropertyAllocate(hPin.get(),
-                    i,
-                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-                    KSPROPERTY_MIDI2_SERIAL_NUMBER,
-                    (PVOID*)&serialNumberData,
-                    &serialNumberDataSize),
+                PinPropertyAllocate(
+                    handle, i, KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, KSPROPERTY_MIDI2_SERIAL_NUMBER, (PVOID*)&serialNumberData, &serialNumberDataSize),
                 HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
-
 
             // Get the manufacturer name
             LOG_IF_FAILED_WITH_EXPECTED(
-                PinPropertyAllocate(hPin.get(),
+                PinPropertyAllocate(
+                    handle,
                     i,
                     KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
                     KSPROPERTY_MIDI2_DEVICE_MANUFACTURER,
@@ -266,26 +280,18 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
             // VID iVendor
             LOG_IF_FAILED_WITH_EXPECTED(
-                PinPropertySimple(hPin.get(),
-                    i,
-                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-                    KSPROPERTY_MIDI2_DEVICE_VID,
-                    &deviceVID,
-                    sizeof(deviceVID)),
+                PinPropertySimple(
+                    handle, i, KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, KSPROPERTY_MIDI2_DEVICE_VID, &deviceVID, sizeof(deviceVID)),
                 HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
             // PID iProduct
             LOG_IF_FAILED_WITH_EXPECTED(
-                PinPropertySimple(hPin.get(),
-                    i,
-                    KSPROPSETID_MIDI2_ENDPOINT_INFORMATION,
-                    KSPROPERTY_MIDI2_DEVICE_PID,
-                    &devicePID,
-                    sizeof(devicePID)),
+                PinPropertySimple(
+                    handle, i, KSPROPSETID_MIDI2_ENDPOINT_INFORMATION, KSPROPERTY_MIDI2_DEVICE_PID, &devicePID, sizeof(devicePID)),
                 HRESULT_FROM_WIN32(ERROR_SET_NOT_FOUND));
 
-            hPin.reset();
-        }
+            return S_OK;
+        }));
 
         // if this pin supports nothing, then it's not a streaming pin,
         // continue on
@@ -305,7 +311,9 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             continue;
         }
 
-        RETURN_IF_FAILED(PinPropertySimple(hFilter.get(), i, KSPROPSETID_Pin, KSPROPERTY_PIN_DATAFLOW, &dataFlow, sizeof(KSPIN_DATAFLOW)));
+        RETURN_IF_FAILED(deviceHandleWrapper.Execute([&](HANDLE h) -> HRESULT {
+            return PinPropertySimple(h, i, KSPROPSETID_Pin, KSPROPERTY_PIN_DATAFLOW, &dataFlow, sizeof(KSPIN_DATAFLOW));
+        }));
 
         std::unique_ptr<MIDI_PIN_INFO> midiPin = std::make_unique<MIDI_PIN_INFO>();
         RETURN_IF_NULL_ALLOC(midiPin);

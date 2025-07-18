@@ -11,7 +11,6 @@
 #include "midi2.kstransport.h"
 
 
-
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidi::Initialize(
@@ -42,7 +41,6 @@ CMidi2KSMidi::Initialize(
         TraceLoggingPointer(callback, "callback")
         );
 
-    wil::unique_handle filter;
     std::unique_ptr<KSMidiInDevice> midiInDevice;
     std::unique_ptr<KSMidiOutDevice> midiOutDevice;
     winrt::guid interfaceClass;
@@ -121,8 +119,10 @@ CMidi2KSMidi::Initialize(
 
     ULONG requestedBufferSize = PAGE_SIZE * 2;
     RETURN_IF_FAILED(GetRequiredBufferSize(requestedBufferSize));
-    RETURN_IF_FAILED(FilterInstantiate(filterInterfaceId.c_str(), &filter));
 
+    // Wrapper opens the handle internally.
+    KsHandleWrapper deviceHandleWrapper(filterInterfaceId.c_str());
+    RETURN_IF_FAILED(deviceHandleWrapper.Open());
 
     if (flow == MidiFlowBidirectional)
     {
@@ -157,19 +157,24 @@ CMidi2KSMidi::Initialize(
         }
     }
 
+    // Duplicate the handle to safely pass it to another component or store it.
+    wil::unique_handle handleDupe(deviceHandleWrapper.GetHandle());
+    RETURN_IF_NULL_ALLOC(handleDupe);
+
     if (flow == MidiFlowIn || flow == MidiFlowBidirectional)
     {
         midiInDevice.reset(new (std::nothrow) KSMidiInDevice());
         RETURN_IF_NULL_ALLOC(midiInDevice);
-        RETURN_IF_FAILED(midiInDevice->Initialize(device, filter.get(), inPinId, transport, requestedBufferSize, mmcssTaskId, callback, context));
+        RETURN_IF_FAILED(midiInDevice->Initialize(device, handleDupe.get(), inPinId, transport, requestedBufferSize, mmcssTaskId, callback, context));
         m_MidiInDevice = std::move(midiInDevice);
     }
 
     if (flow == MidiFlowOut || flow == MidiFlowBidirectional)
     {
+
         midiOutDevice.reset(new (std::nothrow) KSMidiOutDevice());
         RETURN_IF_NULL_ALLOC(midiOutDevice);
-        RETURN_IF_FAILED(midiOutDevice->Initialize(device, filter.get(), outPinId, transport, requestedBufferSize, mmcssTaskId));
+        RETURN_IF_FAILED(midiOutDevice->Initialize(device, handleDupe.get(), outPinId, transport, requestedBufferSize, mmcssTaskId));
         m_MidiOutDevice = std::move(midiOutDevice);
     }
 
@@ -217,4 +222,3 @@ CMidi2KSMidi::SendMidiMessage(
 
     return E_ABORT;
 }
-

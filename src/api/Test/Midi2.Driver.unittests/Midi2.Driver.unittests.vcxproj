@@ -22,7 +22,6 @@
     <ClCompile Include="Midi2DriverTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Midi2DirectKs.h" />
     <ClInclude Include="Midi2DriverTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

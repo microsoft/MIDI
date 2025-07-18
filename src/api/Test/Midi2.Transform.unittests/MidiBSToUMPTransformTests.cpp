@@ -209,7 +209,6 @@ void MidiBSToUMPTransformTests::TestShortSysEx7()
     InternalTestBytes(groupIndex, sysexBytes, _countof(sysexBytes), 1, expectedWords);
 }
 
-
 void MidiBSToUMPTransformTests::TestTimingClock()
 {
     uint8_t groupIndex{ 0 };
@@ -238,4 +237,3 @@ void MidiBSToUMPTransformTests::TestTimingClock()
 //
 //    InternalTestBytes(groupIndex, bytes, _countof(bytes), 1, expectedWords);
 //}
-
