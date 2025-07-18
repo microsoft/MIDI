@@ -149,16 +149,21 @@ public partial class ForDevelopersViewModel : ObservableRecipient
 
                 acl.ResetAccessRule(rule);
 
-                regKey.SetAccessControl(acl);
+                if (regKey != null)
+                {
+                    regKey.SetAccessControl(acl);
+
+                    // recurse
+                    foreach (var subKey in regKey.OpenSubKey("").GetSubKeyNames())
+                    {
+                        GrantAdministratorFullRegKeyPermissions(location, key + "\\" + subKey, recurseLevel + 1);
+                    }
+                }
+                else
+                {
+                    return false;
+                }
             }
-
-
-            // recurse
-            foreach (var subKey in regKey.OpenSubKey("").GetSubKeyNames()) 
-            {
-                GrantAdministratorFullRegKeyPermissions(location, key + "\\" + subKey, recurseLevel+1);
-            }
-
         }
         else
         {

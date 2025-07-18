@@ -53,7 +53,7 @@ class Build : NukeBuild
 
     const UInt16 BuildVersionMajor = 1;       
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 10;
+    const UInt16 BuildVersionPatch = 11;
 
     UInt16 PrereleaseBuildNumber = 0;
 
@@ -221,6 +221,10 @@ class Build : NukeBuild
 
             // create the release folder
             Directory.CreateDirectory(ThisReleaseFolder.ToString());
+
+
+            Console.WriteLine($"Building {BuildVersionFullString}");
+
         });
 
 

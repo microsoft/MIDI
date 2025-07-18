@@ -62,6 +62,7 @@ namespace Microsoft.Midi.Settings.Views
             Dialog_DownloadingUpdate.IsPrimaryButtonEnabled = true;
         }
 
+#pragma warning disable 4014
         private void UpdateSdkRuntime_Click(object sender, RoutedEventArgs e)
         {
             // we show the dialog but do not wait on it
@@ -69,5 +70,7 @@ namespace Microsoft.Midi.Settings.Views
 
             ViewModel.StartSdkUpdate();
         }
+#pragma warning restore 4014
+
     }
 }

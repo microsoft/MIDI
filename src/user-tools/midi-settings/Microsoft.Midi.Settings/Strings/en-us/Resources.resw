@@ -537,13 +537,13 @@ This step requires Administrator rights, and must be repeated after any new Wind
     <value>Many MIDI customizations are stored in a portable configuration file. These include customized endpoint properties like the name, definitions for persistent loopback endpoints, and your Network MIDI host and client reconnections.</value>
   </data>
   <data name="FirstRunSetup_CreateDefaultConfigFileSwitch.Header" xml:space="preserve">
-    <value>Create default configuration file.</value>
+    <value>Create default configuration file if it doesn't already exist.</value>
   </data>
   <data name="FirstRunSetup_DefaultLoopbacksDescription.Text" xml:space="preserve">
     <value>Some applications and utilities, especially those on the web, rely on having a known loopback endpoint available. This requires a configuration file to store the loopback endpoint information.</value>
   </data>
   <data name="FirstRunSetup_CreateDefaultLoopbacksSwitch.Header" xml:space="preserve">
-    <value>Create default loopback endpoints.</value>
+    <value>Create default loopback endpoints if they don't already exist.</value>
   </data>
   <data name="FirstRunSetup_PortNamesDescription.Text" xml:space="preserve">
     <value>Apps using the older MIDI 1.0 API (WinMM) used port names as the identifier in many apps and files. By default, we use names that are compatible with those older names. However, if you want better port names by default, select the option below.</value>

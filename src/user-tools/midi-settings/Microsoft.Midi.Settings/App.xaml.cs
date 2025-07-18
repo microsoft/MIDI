@@ -36,6 +36,7 @@ public partial class App : Application
         get;
     }
 
+#pragma warning disable 8603
     public static T GetService<T>()
         where T : class
     {
@@ -53,6 +54,8 @@ public partial class App : Application
 
         return null;
     }
+#pragma warning restore 8603
+
 
     [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     static extern int MessageBox(

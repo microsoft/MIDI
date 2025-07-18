@@ -114,17 +114,24 @@ namespace Microsoft.Midi.Settings.Helpers
 
                 var process = Process.Start(psi);
 
-                process.WaitForExit(timeoutMilliseconds);
+                if (process != null)
+                {
+                    process.WaitForExit(timeoutMilliseconds);
 
-                var output = process.StandardOutput.ReadToEnd();
+                    var output = process.StandardOutput.ReadToEnd();
 
-                if (process.ExitCode != 0)
+                    if (process.ExitCode != 0)
+                    {
+                        return false;
+                        //throw new Exception(string.Format("Service delete for Windows Service {0} failed.", serviceName));
+                    }
+
+                    return true;
+                }
+                else
                 {
                     return false;
-                    //throw new Exception(string.Format("Service delete for Windows Service {0} failed.", serviceName));
                 }
-
-                return true;
             }
             catch (Exception)
             {

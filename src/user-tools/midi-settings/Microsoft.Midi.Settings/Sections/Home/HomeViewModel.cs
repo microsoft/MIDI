@@ -137,13 +137,20 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                if (IsValidConfigLoaded && _configFileService.CurrentConfig.Header != null)
+                if (_configFileService.CurrentConfig != null)
                 {
-                    return _configFileService.CurrentConfig.Header.Name;
+                    if (IsValidConfigLoaded && _configFileService.CurrentConfig.Header != null)
+                    {
+                        return _configFileService.CurrentConfig.Header.Name;
+                    }
+                    else
+                    {
+                        return string.Empty;
+                    }
                 }
                 else
-                {
-                    return string.Empty;
+                { 
+                    return string.Empty; 
                 }
             }
         }

@@ -47,17 +47,17 @@ namespace Microsoft.Midi.Settings.Services
 
         }
 
-        internal class Reg
-        {
-            public const string ConfigFileRegKey = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services";
-            public const string ConfigFileCurrentRegValue = @"CurrentConfig";
+        //internal class Reg
+        //{
+        //    public const string ConfigFileRegKey = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services";
+        //    public const string ConfigFileCurrentRegValue = @"CurrentConfig";
 
-            public const string UseMmcssRegValue = @"UseMMCSS";
-            public const string Midi2DiscoveryEnabled = @"Midi2DiscoveryEnabled";
-            public const string Midi2DiscoveryTimeout = @"Midi2DiscoveryTimeoutMS";
+        //    public const string UseMmcssRegValue = @"UseMMCSS";
+        //    public const string Midi2DiscoveryEnabled = @"Midi2DiscoveryEnabled";
+        //    public const string Midi2DiscoveryTimeout = @"Midi2DiscoveryTimeoutMS";
 
-            public const string DefaultToOldMidi1PortNaming = @"DefaultToOldMidi1PortNaming";
-        }
+        //    public const string DefaultToOldMidi1PortNaming = @"DefaultToOldMidi1PortNaming";
+        //}
 
         public const string DefaultConfigurationName = "WindowsMidiServices";
         
@@ -224,19 +224,23 @@ namespace Microsoft.Midi.Settings.Services
         {
             try
             {
-                // CreateText opens and overwrites if already there
-                using (var fs = File.CreateText(m_fullFileName))
+                if (m_config != null)
                 {
-                    fs.Write(m_config.Stringify());
-                    fs.Close();
-                }
+                    // CreateText opens and overwrites if already there
+                    using (var fs = File.CreateText(m_fullFileName))
+                    {
+                        fs.Write(m_config.Stringify());
+                        fs.Close();
+                    }
 
-                return true;
+                    return true;
+                }
             }
             catch (Exception)
             {
-                return false;
             }
+
+            return false;
         }
 
 
@@ -357,6 +361,10 @@ namespace Microsoft.Midi.Settings.Services
             {
                 return m_currentConfigFile;
             }
+            set
+            {
+                m_currentConfigFile = (MidiConfigFile?)value;
+            }
         }
 
         public bool IsConfigFileActive
@@ -370,7 +378,7 @@ namespace Microsoft.Midi.Settings.Services
             m_currentConfigFileName = string.Empty;
             m_currentConfigName = string.Empty;
 
-            m_currentConfigFile = LoadCurrentConfigFileFromRegistry();
+            //m_currentConfigFile = LoadCurrentConfigFileFromRegistry();
         }
 
 
@@ -409,19 +417,16 @@ namespace Microsoft.Midi.Settings.Services
             return configList;
         }
 
-        private MidiConfigFile? LoadCurrentConfigFileFromRegistry()
+        private MidiConfigFile? LoadConfigFile(string localFileName)
         {
-            // get reg key
-            var currentLocalFileName = (string)Registry.GetValue(MidiConfigConstants.Reg.ConfigFileRegKey, MidiConfigConstants.Reg.ConfigFileCurrentRegValue, string.Empty);
-
             // early Canary builds went out with a file of this name, and
             // it's protected in a way that we can't write to it without
             // some futzing around, so we just pretend it doesn't exist.
-            if (currentLocalFileName != null &&
-                currentLocalFileName != string.Empty &&
-                currentLocalFileName.ToLower() != "default.midiconfig.json")
+            if (localFileName != null &&
+                localFileName != string.Empty &&
+                localFileName.ToLower() != "default.midiconfig.json")
             {
-                var config = new MidiConfigFile(currentLocalFileName);
+                var config = new MidiConfigFile(localFileName);
 
                 if (config.Load())
                 {
@@ -432,26 +437,26 @@ namespace Microsoft.Midi.Settings.Services
             return null;
         }
 
-        public bool UpdateRegistryCurrentConfigFile(string configFileName)
-        {
-            try
-            {
-                Registry.SetValue(MidiConfigConstants.Reg.ConfigFileRegKey, MidiConfigConstants.Reg.ConfigFileCurrentRegValue, configFileName, RegistryValueKind.String);
+        //public bool UpdateRegistryCurrentConfigFile(string configFileName)
+        //{
+        //    try
+        //    {
+        //        Registry.SetValue(MidiConfigConstants.Reg.ConfigFileRegKey, MidiConfigConstants.Reg.ConfigFileCurrentRegValue, configFileName, RegistryValueKind.String);
 
-                var config = LoadCurrentConfigFileFromRegistry();
+        //        var config = LoadCurrentConfigFileFromRegistry();
 
-                // set the config as current
-                m_currentConfigFile = config;
+        //        // set the config as current
+        //        m_currentConfigFile = config;
 
-                return true;
-            }
-            catch (Exception)
-            {
+        //        return true;
+        //    }
+        //    catch (Exception)
+        //    {
 
-            }
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         public string GetDefaultConfigName()
         {
@@ -518,6 +523,8 @@ namespace Microsoft.Midi.Settings.Services
 
                 if (ConfigFileExists(configLocalFileName))
                 {
+                    // TODO: Back up the old one and overwrite this one?
+
                     return false;
                 }
 

@@ -101,14 +101,22 @@ namespace Microsoft.Midi.Settings.Services
                         return false;
                     }
 
-                    string installerFileName = response.Content.Headers.ContentDisposition.FileName;
+                    string installerFileName = string.Empty;
+                    if (response.Content.Headers.ContentDisposition != null && 
+                        response.Content.Headers.ContentDisposition.FileName != null)
+                    {
+                        installerFileName = response.Content.Headers.ContentDisposition.FileName;
+                    }
 
                     string downloadsFolder;
                     SHGetKnownFolderPath(FOLDERID_Downloads, 0, IntPtr.Zero, out downloadsFolder);
 
                     string installerFullPath = string.Empty;
 
-                    if (installerFileName == null || installerFileName == string.Empty || downloadsFolder == null || downloadsFolder == string.Empty)
+                    if (installerFileName == null || 
+                        installerFileName == string.Empty || 
+                        downloadsFolder == null || 
+                        downloadsFolder == string.Empty)
                     {
                         installerFullPath = Path.GetTempFileName();
                     }

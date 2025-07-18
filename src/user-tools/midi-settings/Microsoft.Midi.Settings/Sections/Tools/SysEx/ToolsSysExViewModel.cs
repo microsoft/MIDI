@@ -130,7 +130,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     op.Progress = new AsyncOperationProgressHandler<bool, MidiSystemExclusiveSendProgress>(
                         (info, progress) =>
                         {
-                            DispatcherQueue.TryEnqueue(() =>
+                            DispatcherQueue?.TryEnqueue(() =>
                             {
                                 TransferBytesRead = (double)(progress.BytesRead);
                                 TransferMessagesSent = progress.MessagesSent;
@@ -140,7 +140,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                     await op;
                 }
             });
-
 
         }
 

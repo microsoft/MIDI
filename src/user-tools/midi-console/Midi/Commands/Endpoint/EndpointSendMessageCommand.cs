@@ -324,6 +324,8 @@ namespace Microsoft.Midi.ConsoleApp
                 });
 
 
+                bool escapePressed = false;
+
                 //    const uint bufferWarningThreshold = 10000;
 
                 if (settings.Count == 1)
@@ -337,7 +339,15 @@ namespace Microsoft.Midi.ConsoleApp
                 }
                 else
                 {
+
                     AnsiConsole.Progress()
+                        .Columns(new ProgressColumn[]
+                        {
+                            new TaskDescriptionColumn(),
+                            new ProgressBarColumn(),
+                            new PercentageColumn(),
+                            new TotalMessagesSentColumn()
+                        })
                         .Start(ctx =>
                         {
                             var sendTask = ctx.AddTask("[white]Sending messages to MIDI service[/]");
@@ -363,6 +373,7 @@ namespace Microsoft.Midi.ConsoleApp
                                     if (keyInfo.Key == ConsoleKey.Escape)
                                     {
                                         stillSending = false;
+                                        escapePressed = true;
 
                                         // wake up the threads so they terminate
                                         m_messageDispatcherThreadWakeup.Set();
@@ -449,30 +460,34 @@ namespace Microsoft.Midi.ConsoleApp
                 }
 
 
-                if (!settings.NoWait)
+                if (!escapePressed)
                 {
-                    AnsiConsole.MarkupLine(Strings.SendMessagePressEscapeToCloseConnectionMessage);
-                    AnsiConsole.WriteLine();
-
-                    bool continueWaiting = true;
-
-                    while (continueWaiting)
+                    if (!settings.NoWait)
                     {
-                        if (Console.KeyAvailable)
-                        {
-                            var keyInfo = Console.ReadKey(true);
+                        AnsiConsole.WriteLine();
+                        AnsiConsole.MarkupLine(Strings.SendMessagePressEscapeToCloseConnectionMessage);
+                        AnsiConsole.WriteLine();
 
-                            if (keyInfo.Key == ConsoleKey.Escape)
+                        bool continueWaiting = true;
+
+                        while (continueWaiting)
+                        {
+                            if (Console.KeyAvailable)
                             {
-                                continueWaiting = false;
+                                var keyInfo = Console.ReadKey(true);
 
-                                AnsiConsole.WriteLine();
-                                AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
+                                if (keyInfo.Key == ConsoleKey.Escape)
+                                {
+                                    continueWaiting = false;
+
+                                    AnsiConsole.WriteLine();
+                                    AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
+                                }
                             }
-                        }
-                        else
-                        {
-                            Thread.Sleep(500);
+                            else
+                            {
+                                Thread.Sleep(500);
+                            }
                         }
                     }
                 }

@@ -126,7 +126,7 @@ namespace Microsoft.Midi.Settings.Controls
             this.InitializeComponent();
         }
 
-        protected void RebuildGroupList()
+        public void RebuildGroupList()
         {
             if (SelectedEndpoint == null)
             {
