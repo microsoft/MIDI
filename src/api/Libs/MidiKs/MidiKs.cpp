@@ -87,6 +87,9 @@ KSMidiDevice::OpenStream(ULONG& bufferSize
 
     if (looped)
     {
+        GUID generatedName;
+        wil::unique_cotaskmem_string readEventName;
+
         m_MidiPipe.reset(new (std::nothrow) MEMORY_MAPPED_PIPE);
         RETURN_IF_NULL_ALLOC(m_MidiPipe);
 
@@ -94,8 +97,15 @@ KSMidiDevice::OpenStream(ULONG& bufferSize
         m_CrossProcessMidiPump.reset(new (std::nothrow) CMidiXProc());
         RETURN_IF_NULL_ALLOC(m_CrossProcessMidiPump);
 
+        // generate a unique name for the read event
+        RETURN_IF_FAILED(CoCreateGuid(&generatedName));
+        RETURN_IF_FAILED(StringFromCLSID(generatedName, &readEventName));
+
         m_MidiPipe->WriteEvent.create(wil::EventOptions::ManualReset);
-        m_MidiPipe->ReadEvent.create(wil::EventOptions::ManualReset);
+
+        m_MidiPipe->ReadEventName = L"Global\\";
+        m_MidiPipe->ReadEventName += readEventName.get();
+        m_MidiPipe->ReadEvent.reset(CreateEvent(NULL, TRUE, FALSE, m_MidiPipe->ReadEventName.c_str()));
 
         // if we're looped (cyclic buffer), we need to
         // configure the buffer, registers, and event.
@@ -313,6 +323,7 @@ KSMidiOutDevice::Initialize(
 _Use_decl_annotations_
 HRESULT
 KSMidiOutDevice::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     void * midiData,
     UINT32 length,
     LONGLONG position
@@ -323,7 +334,7 @@ KSMidiOutDevice::SendMidiMessage(
 
     if (m_CrossProcessMidiPump)
     {
-        auto hr = m_CrossProcessMidiPump->SendMidiMessage(midiData, length, position);
+        auto hr = m_CrossProcessMidiPump->SendMidiMessage(optionFlags, midiData, length, position);
         LOG_IF_FAILED(hr);
         return hr;
     }
@@ -479,7 +490,7 @@ KSMidiInDevice::SendRequestToDriver()
             // is closed and the SyncIoctl returns, it may succeed, but have no data.
             if (m_MidiInCallback && payloadSize > 0)
             {
-                LOG_IF_FAILED(m_MidiInCallback->Callback(data, payloadSize, kssh.PresentationTime.Time, m_MidiInCallbackContext));
+                LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, kssh.PresentationTime.Time, m_MidiInCallbackContext));
             }
         }
         else

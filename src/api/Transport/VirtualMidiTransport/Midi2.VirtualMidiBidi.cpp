@@ -142,6 +142,7 @@ CMidi2VirtualMidiBidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiBidi::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID Message,
     UINT Size,
     LONGLONG Position
@@ -169,7 +170,7 @@ CMidi2VirtualMidiBidi::SendMidiMessage(
 
     if (m_linkedBidiCallback != nullptr)
     {
-        RETURN_IF_FAILED(m_linkedBidiCallback->Callback(Message, Size, Position, m_callbackContext));
+        RETURN_IF_FAILED(m_linkedBidiCallback->Callback(optionFlags, Message, Size, Position, m_callbackContext));
 
         return S_OK;
     }
@@ -203,6 +204,7 @@ CMidi2VirtualMidiBidi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2VirtualMidiBidi::Callback(
+    MessageOptionFlags optionFlags,
     PVOID Message,
     UINT Size,
     LONGLONG Position,
@@ -228,7 +230,7 @@ CMidi2VirtualMidiBidi::Callback(
 
     if (m_callback != nullptr)
     {
-        RETURN_IF_FAILED(m_callback->Callback(Message, Size, Position, context));
+        RETURN_IF_FAILED(m_callback->Callback(optionFlags, Message, Size, Position, context));
     }
     else
     {

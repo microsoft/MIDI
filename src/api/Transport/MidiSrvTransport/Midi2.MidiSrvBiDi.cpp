@@ -66,6 +66,7 @@ CMidi2MidiSrvBidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvBidi::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
     LONGLONG position
@@ -84,8 +85,8 @@ CMidi2MidiSrvBidi::SendMidiMessage(
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
             TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         );
-        
-        auto hr = m_MidiSrv->SendMidiMessage(data, length, position);
+
+        auto hr = m_MidiSrv->SendMidiMessage(optionFlags, data, length, position);
         LOG_IF_FAILED(hr);
 
         return hr;

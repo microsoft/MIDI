@@ -45,6 +45,8 @@ public:
     TEST_METHOD(TestMidiKSIO_Latency_ByteStream);
     TEST_METHOD(TestMidiKSIOSlowMessages_Latency_UMP);
     TEST_METHOD(TestMidiKSIOSlowMessages_Latency_ByteStream);
+    TEST_METHOD(TestMidiKSIO_Latency_UMP_WaitForSendComplete);
+    TEST_METHOD(TestMidiKSIO_Latency_ByteStream_WaitForSendComplete);
 
     TEST_METHOD(TestMidiSrvTransport_UMP);
     TEST_METHOD(TestMidiSrvTransport_ByteStream);
@@ -65,6 +67,8 @@ public:
     TEST_METHOD(TestMidiSrvIO_Latency_ByteStream);
     TEST_METHOD(TestMidiSrvIOSlowMessages_Latency_UMP);
     TEST_METHOD(TestMidiSrvIOSlowMessages_Latency_ByteStream);
+    TEST_METHOD(TestMidiSrvIO_Latency_UMP_WaitForSendComplete);
+    TEST_METHOD(TestMidiSrvIO_Latency_ByteStream_WaitForSendComplete);
     TEST_METHOD(TestMidiSrvMultiClient_UMP_UMP);
     TEST_METHOD(TestMidiSrvMultiClient_ByteStream_ByteStream);
     TEST_METHOD(TestMidiSrvMultiClient_Any_Any);
@@ -97,7 +101,7 @@ public:
     TEST_METHOD(TestKsHandleWrapperQueryRemove_PinHandle);
     TEST_METHOD(TestKsHandleWrapperSurpriseRemove_PinHandle);
 
-    STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
+    STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
     {
         if (m_MidiInCallback)
         {
@@ -115,7 +119,7 @@ private:
     void TestMidiTransport(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiTransportCreationOrder(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiTransportBidi(_In_ REFIID, _In_ MidiDataFormats);
-    void TestMidiIO_Latency(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL);
+    void TestMidiIO_Latency(_In_ REFIID, _In_ MidiDataFormats, _In_ BOOL, _In_ MessageOptionFlags);
     void TestMidiSrvMultiClient(_In_ MidiDataFormats, _In_ MidiDataFormats, _In_ BOOL);
     void TestMidiSrvMultiClientBidi(_In_ MidiDataFormats, _In_ MidiDataFormats);
 

@@ -172,6 +172,7 @@ CMidi2SchedulerMidiTransform::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2SchedulerMidiTransform::SendMidiMessageNow(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT size,
     LONGLONG timestamp)
@@ -193,7 +194,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     {
         if (m_callback != nullptr && data != nullptr)
         {
-            RETURN_IF_FAILED(m_callback->Callback(data, size, timestamp, m_context));
+            RETURN_IF_FAILED(m_callback->Callback(optionFlags, data, size, timestamp, m_context));
 
             return S_OK;
         }
@@ -243,6 +244,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
     if (m_queueWorkerThreadStopToken.stop_requested()) return S_OK;
 
     return SendMidiMessageNow(
+        MessageOptionFlags_None,
         (PVOID)(message.Data), 
         message.ByteCount, 
         (LONGLONG)(message.Timestamp));
@@ -253,6 +255,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessageNow(
 _Use_decl_annotations_
 HRESULT
 CMidi2SchedulerMidiTransform::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT size,
     LONGLONG timestamp)
@@ -277,7 +280,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
     if (timestamp == 0 || static_cast<uint64_t>(timestamp) <= timestampNow)
     {
         // bypass scheduling logic completely
-        auto hr = SendMidiMessageNow(data, size, timestamp);
+        auto hr = SendMidiMessageNow(optionFlags, data, size, timestamp);
 
         if (SUCCEEDED(hr))
         {
@@ -313,7 +316,7 @@ CMidi2SchedulerMidiTransform::SendMidiMessage(
             (timestampNow >= timestamp - m_tickWindow - m_deviceLatencyTicks))
         {
             // timestamp is in the past or within our tick window: so send now
-            auto hr = SendMidiMessageNow(data, size, timestamp);
+            auto hr = SendMidiMessageNow(optionFlags, data, size, timestamp);
 
             if (SUCCEEDED(hr))
             {

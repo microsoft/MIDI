@@ -47,10 +47,11 @@ typedef ULONGLONG MidiClientHandle;
 
 typedef struct MIDISRV_CLIENTCREATION_PARAMS
 {
-    MidiDataFormats DataFormat;
-    MidiFlow     Flow;
-    ULONG        BufferSize;
-    GUID         CallingComponent;
+    MessageOptionFlags  MessageOptions;
+    MidiDataFormats     DataFormat;
+    MidiFlow            Flow;
+    ULONG               BufferSize;
+    GUID                CallingComponent;
 } MIDISRV_CLIENTCREATION_PARAMS, *PMIDISRV_CLIENTCREATION_PARAMS;
 
 typedef struct MIDISRV_CLIENT
@@ -154,3 +155,4 @@ interface MidiSrvRPC
         [in] handle_t bindingHandle);
 
 }
+

@@ -50,7 +50,7 @@ public:
         _In_ uint16_t const expectedMessageCount,
         _In_ std::vector<uint32_t> const expectedWords);
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
+    STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
     {
         if (m_MidiInCallback)
         {

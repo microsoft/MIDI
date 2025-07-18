@@ -189,6 +189,7 @@ CMidiEndpointProtocolWorker::Start(
 
             // we only support UMP data format for protocol negotiation
             TRANSPORTCREATIONPARAMS transportCreationParams{ };
+            transportCreationParams.MessageOptions = MessageOptionFlags_None;
             transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
             transportCreationParams.CallingComponent = MIDISRV_APIID;
 
@@ -323,6 +324,7 @@ CMidiEndpointProtocolWorker::CheckIfDiscoveryComplete()
 _Use_decl_annotations_
 HRESULT
 CMidiEndpointProtocolWorker::Callback(
+    MessageOptionFlags,
     PVOID data,
     UINT size,
     LONGLONG position,
@@ -875,7 +877,7 @@ CMidiEndpointProtocolWorker::RequestAllFunctionBlocks()
         MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_MESSAGE_ALL_FILTER_FLAGS);
 
     // send it immediately
-    RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0));
+    RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&ump, (UINT)sizeof(ump), 0));
 
     return S_OK;
 }
@@ -905,7 +907,7 @@ CMidiEndpointProtocolWorker::RequestAllEndpointDiscoveryInformation()
     internal::SetMidiWordMostSignificantByte4(ump.word1, filterBitmap);
 
     // send it immediately
-    RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&ump, (UINT)sizeof(ump), 0));
+    RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&ump, (UINT)sizeof(ump), 0));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -962,7 +964,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
             m_alreadyTriedToNegotiationOnce = true;
 
             // send it immediately
-            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0));
+            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0));
 
             return S_OK;
         }
@@ -981,7 +983,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
 
             LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
 
-            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
+            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
             
             return S_OK;
         }
@@ -998,7 +1000,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
 
         LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
 
-        RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage((byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
+        RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
 
         return S_OK;
     }

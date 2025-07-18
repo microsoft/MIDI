@@ -146,6 +146,7 @@ CMidi2LoopbackMidiBidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBidi::SendMidiMessage(
+    MessageOptionFlags,
     PVOID Message,
     UINT Size,
     LONGLONG Position
@@ -217,6 +218,7 @@ CMidi2LoopbackMidiBidi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBidi::Callback(
+    MessageOptionFlags optionFlags,
     PVOID Message,
     UINT Size,
     LONGLONG Position,
@@ -236,7 +238,7 @@ CMidi2LoopbackMidiBidi::Callback(
 
     if (m_callback != nullptr)
     {
-        return m_callback->Callback(Message, Size, Position, Context);
+        return m_callback->Callback(optionFlags, Message, Size, Position, Context);
     }
 
     return S_OK;

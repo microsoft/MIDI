@@ -102,6 +102,7 @@ CMidi2KSAggregateMidiOutProxy::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
     LONGLONG timestamp
@@ -109,6 +110,7 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF_NULL(E_POINTER, m_ump2BSTransform);
+
 
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -123,7 +125,7 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
     );
 
     // get the message translated. Comes back via the callback
-    RETURN_IF_FAILED(m_ump2BSTransform->SendMidiMessage(data, length, timestamp));
+    RETURN_IF_FAILED(m_ump2BSTransform->SendMidiMessage(optionFlags, data, length, timestamp));
 
     return S_OK;
 }
@@ -131,6 +133,7 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiOutProxy::Callback(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
     LONGLONG timestamp,
@@ -153,7 +156,7 @@ CMidi2KSAggregateMidiOutProxy::Callback(
     );
 
     // Send transformed message to device
-    RETURN_IF_FAILED(m_device->SendMidiMessage(data, length, timestamp));
+    RETURN_IF_FAILED(m_device->SendMidiMessage(optionFlags, data, length, timestamp));
 
     return S_OK;
 }

@@ -368,6 +368,7 @@ CMidi2KSAggregateMidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidi::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID inputData,
     UINT length,
     LONGLONG position
@@ -385,6 +386,8 @@ CMidi2KSAggregateMidi::SendMidiMessage(
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
 
+    // We're only capable of handling 1 client at a time
+    auto deviceLock = m_SendLock.lock();
 
     if (length >= sizeof(uint32_t))
     {
@@ -399,7 +402,7 @@ CMidi2KSAggregateMidi::SendMidiMessage(
 
             if (mapEntry != m_midiOutDeviceGroupMap.end())
             {
-                RETURN_IF_FAILED(mapEntry->second->SendMidiMessage(inputData, length, position));
+                RETURN_IF_FAILED(mapEntry->second->SendMidiMessage(optionFlags, inputData, length, position));
 
                 return S_OK;
             }

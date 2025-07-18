@@ -136,6 +136,7 @@ CMidi2LoopbackMidiBidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBidi::SendMidiMessage(
+    MessageOptionFlags,
     PVOID message,
     UINT size,
     LONGLONG timestamp
@@ -164,6 +165,7 @@ CMidi2LoopbackMidiBidi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2LoopbackMidiBidi::Callback(
+    MessageOptionFlags optionFlags,
     PVOID message,
     UINT size,
     LONGLONG timestamp,
@@ -182,6 +184,6 @@ CMidi2LoopbackMidiBidi::Callback(
     RETURN_HR_IF_NULL(E_POINTER, m_Callback);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-    return m_Callback->Callback(message, size, timestamp, m_Context);
+    return m_Callback->Callback(optionFlags, message, size, timestamp, m_Context);
 }
 

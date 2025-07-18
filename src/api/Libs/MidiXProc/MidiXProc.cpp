@@ -28,6 +28,9 @@
 // infinite timeouts when waiting for read events cause the server to just hang
 #define MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT 5000
 
+// timeout waiting for the messages to be recieved
+#define MIDI_XPROC_BUFFER_EMPTY_WAIT_TIMEOUT 5000
+
 _Use_decl_annotations_
 HRESULT
 GetRequiredBufferSize(ULONG& requestedSize
@@ -216,6 +219,94 @@ bool CMidiXProc::MMCSSUseEnabled()
     return m_useMMCSS;
 }
 
+_Use_decl_annotations_
+HRESULT
+CMidiXProc::WaitForSendComplete(ULONG startingReadPosition, ULONG BufferWrittenPosition, UINT32 BufferLength)
+{
+    // Wait for midi messages to be recieved by other end of pipe
+    if (m_MidiOut)
+    {
+        // Open a new handle to the read event, this will be a different handle than the
+        // event used for adding messages to the queue, ensuring that a thread waiting for
+        // space to come available won't interfere with a thread waiting for its message
+        // to be consumed
+        wil::unique_event_nothrow openedReadEvent;
+        HANDLE readEventHandle = m_MidiOut->ReadEvent.get();
+
+        if (m_MidiOut->ReadEventName.size() > 0)
+        {
+            openedReadEvent.reset(OpenEvent(EVENT_ALL_ACCESS, FALSE, m_MidiOut->ReadEventName.c_str()));
+            if (openedReadEvent.get())
+            {
+                readEventHandle = openedReadEvent.get();
+            }
+        }
+        HANDLE handles[] = { m_ThreadTerminateEvent.get(), readEventHandle };
+
+        // calculate the linear position for the end of the written buffer.
+        // We are using linear positions rather than looped position to simplify the calculations
+        // needed to determine if the data has been read yet.
+        ULONG bufferWrittenEndPosition = (BufferWrittenPosition + BufferLength);
+
+        // the starting read position is the read position at the time the buffer was written, which is
+        // by definition earlier than the linear position of the buffer that was just written.
+        // If the buffer was written into the xproc queue behind the current read position,
+        // then the linear position it was written into is actually 1 buffer size ahead relative to the 
+        // starting read position, so we need to move the bufferWrittenEndPosition forward
+        // by one BufferSize.
+        if (startingReadPosition > BufferWrittenPosition)
+        {
+            bufferWrittenEndPosition += m_MidiOut->Data.BufferSize;
+        }
+
+        // used for calculating and counting times the buffer has looped since monitoring
+        // for completion of this buffer started
+        ULONG previousReadPosition = startingReadPosition;
+        ULONG loopcount = 0;
+
+        do
+        {
+            // wait for either the other end to read the buffer, termination, or timeout with no messages read
+            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_EMPTY_WAIT_TIMEOUT);
+            if (ret == (WAIT_OBJECT_0 + 1))
+            {
+                // this is a manual reset event, so reset the event before reading the updated position so
+                // that we do not miss any reads.
+                ResetEvent(readEventHandle);
+
+                // received a read event, retrieve the new read position
+                ULONG readPosition = InterlockedCompareExchange((LONG*)m_MidiOut->Registers.ReadPosition, 0, 0);
+
+                // if the new read position is less than the previous, we've read past the end of the buffer,
+                // so we've completed a loop, increment the loop count.
+                if (readPosition < previousReadPosition)
+                {
+                    loopcount++;
+                }
+
+                // calculate the current linear read position, accounting for loops
+                readPosition += (m_MidiOut->Data.BufferSize * loopcount);
+
+                // comparing linear positions, if the read position has advanced past the end of the buffer,
+                // then it has been read.
+                if (readPosition > bufferWrittenEndPosition)
+                {
+                    return S_OK;
+                }
+
+                previousReadPosition = readPosition;
+            }
+            else
+            {
+                // termination or timeout, wait aborted
+                return E_ABORT;
+            }
+        } while (true);
+    }
+
+    // no midi out pipe, waiting not applicable
+    return S_FALSE;
+}
 
 _Use_decl_annotations_
 HRESULT
@@ -309,6 +400,7 @@ CMidiXProc::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidiXProc::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     void * midiData,
     UINT32 length,
     LONGLONG position
@@ -334,92 +426,109 @@ CMidiXProc::SendMidiMessage(
     PMEMORY_MAPPED_REGISTERS registers = &(m_MidiOut->Registers);
     PMEMORY_MAPPED_DATA data = &(m_MidiOut->Data);
     bool retry {false};
+    ULONG bufferWrittenPosition {0};
+    ULONG startingReadPosition {0};
 
+    {
+        // only 1 caller may add a message to the xproc queue at a time
+        auto lock = m_MessageSendLock.lock();
 
+        do{
+            retry = false;
 
+            // reset the read event, so we will know when the client reads data in the event
+            // that the buffer is full
+            m_MidiOut->ReadEvent.ResetEvent();
 
-    do{
-        retry = false;
+            // the write position is the last position we have written,
+            // the read position is the last position the driver (or client) has read from
+            ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
+            ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
+            ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
+            ULONG bytesAvailable{ 0 };
 
-        // reset the read event, so we will know when the client reads data in the event
-        // that the buffer is full
-        m_MidiOut->ReadEvent.ResetEvent();
-
-        // the write position is the last position we have written,
-        // the read position is the last position the driver (or client) has read from
-        ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
-        ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
-        ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
-        ULONG bytesAvailable{ 0 };
-
-        // Calculate the available space in the buffer.
-        if (readPosition <= writePosition)
-        {
-            bytesAvailable = data->BufferSize - (writePosition - readPosition);
-        }
-        else
-        {
-            bytesAvailable = (readPosition - writePosition);
-        }
-
-        // Note, if we fill the buffer up 100%, then write position == read position,
-        // which is the same as when the buffer is empty and everything in the buffer
-        // would be lost.
-        // Reserve 1 byte so that when the buffer is full the write position will trail
-        // the read position.
-        // Because of this reserve, and the above calculation, the true bytesAvailable 
-        // count can never be 0.
-        assert(bytesAvailable != 0);
-        bytesAvailable--;
-
-        // if there is sufficient space to write the buffer, send it
-        if (bytesAvailable >= requiredBufferSize)
-        {
-            PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)data->BufferAddress) + writePosition);
-
-            header->ByteCount = length;
-            CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), midiData, length);
-
-            // if a position provided is nonzero, use it, otherwise use the current QPC
-            if (position)
+            // Calculate the available space in the buffer.
+            if (readPosition <= writePosition)
             {
-                header->Position = position;
-            }
-            else if (m_OverwriteZeroTimestamp)
-            {
-                LARGE_INTEGER qpc{ 0 };
-                QueryPerformanceCounter(&qpc);
-                header->Position = qpc.QuadPart;
+                bytesAvailable = data->BufferSize - (writePosition - readPosition);
             }
             else
             {
-                header->Position = 0;
+                bytesAvailable = (readPosition - writePosition);
             }
 
-            // update the write position and notify the other side that data is available.
-            InterlockedExchange((LONG*)registers->WritePosition, newWritePosition);
-            RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
+            // Note, if we fill the buffer up 100%, then write position == read position,
+            // which is the same as when the buffer is empty and everything in the buffer
+            // would be lost.
+            // Reserve 1 byte so that when the buffer is full the write position will trail
+            // the read position.
+            // Because of this reserve, and the above calculation, the true bytesAvailable 
+            // count can never be 0.
+            assert(bytesAvailable != 0);
+            bytesAvailable--;
 
-            bufferSent = true;
-        }
-        else
-        {
-            // Buffer is full, wait for the client to read some data out of the buffer to
-            // make space
-            HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
-            //DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
-            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT);
-            if (ret == (WAIT_OBJECT_0 + 1))
+            // if there is sufficient space to write the buffer, send it
+            if (bytesAvailable >= requiredBufferSize)
             {
-                // space has been made, try again.
-                retry = true;
-                continue;
+                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)data->BufferAddress) + writePosition);
+
+                header->ByteCount = length;
+                CopyMemory((((BYTE*)header) + sizeof(LOOPEDDATAFORMAT)), midiData, length);
+
+                // if a position provided is nonzero, use it, otherwise use the current QPC
+                if (position)
+                {
+                    header->Position = position;
+                }
+                else if (m_OverwriteZeroTimestamp)
+                {
+                    LARGE_INTEGER qpc{ 0 };
+                    QueryPerformanceCounter(&qpc);
+                    header->Position = qpc.QuadPart;
+                }
+                else
+                {
+                    header->Position = 0;
+                }
+
+                // update the write position and notify the other side that data is available.
+                InterlockedExchange((LONG*)registers->WritePosition, newWritePosition);
+                RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiOut->WriteEvent.get()));
+
+                bufferSent = true;
+
+                // Retain the position that the buffer was written into, if the client requires
+                // us to wait for it to complete.
+                bufferWrittenPosition = writePosition;
+                startingReadPosition = readPosition;
             }
+            else
+            {
+                // Buffer is full, wait for the client to read some data out of the buffer to
+                // make space
+                HANDLE handles[] = { m_ThreadTerminateEvent.get(), m_MidiOut->ReadEvent.get() };
+                //DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, INFINITE);
+                DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_FULL_WAIT_TIMEOUT);
+                if (ret == (WAIT_OBJECT_0 + 1))
+                {
+                    // space has been made, try again.
+                    retry = true;
+                    continue;
+                }
 
-            // couldn't find room. 
+                // couldn't find room. 
 
-        }
-    }while (retry);
+            }
+        }while (retry);
+    }
+
+    // if we successfully sent data, and are configured to wait for the transfer to complete
+    // wait for the pipe to be emptied. This is done outside of the lock, to enable multiple
+    // callers to wait for their send to complete without blocking others from sending.
+    if (bufferSent && (MessageOptionFlags_WaitForSendComplete == (optionFlags & MessageOptionFlags_WaitForSendComplete)))
+    {
+        RETURN_IF_FAILED(WaitForSendComplete(startingReadPosition, bufferWrittenPosition, length));
+    }
 
     // Failed to send the buffer due to insufficient space,
     // fail.
@@ -500,7 +609,7 @@ CMidiXProc::ProcessMidiIn()
                         header->Position = qpc.QuadPart;
                     }
 
-                    m_MidiInCallback->Callback(data, dataSize, header->Position, m_MidiInCallbackContext);
+                    m_MidiInCallback->Callback(MessageOptionFlags_None, data, dataSize, header->Position, m_MidiInCallbackContext);
                 }
 
                 // advance to the next midi packet, we loop processing them one at a time

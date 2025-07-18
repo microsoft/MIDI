@@ -56,11 +56,15 @@ CMidi2BS2UMPMidiTransform::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2BS2UMPMidiTransform::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID inputData,
     UINT length,
     LONGLONG position
 )
 {
+    // can only transform 1 message at a time
+    auto lock = m_SendLock.lock();
+
     TraceLoggingWrite(
         MidiBS2UMPTransformTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -72,7 +76,6 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
-
 
     // Note: Group number is set in the initialize function
      
@@ -135,6 +138,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
                 // send the message
                 // By context, for the conversion transforms the context contains the group index
                 LOG_IF_FAILED(m_Callback->Callback(
+                    (MessageOptionFlags) (optionFlags | MessageOptionFlags_ContextContainsGroupIndex),
                     (PVOID)m_umpMessage, 
                     (UINT)m_umpMessageCurrentWordCount * sizeof(uint32_t), 
                     position, 

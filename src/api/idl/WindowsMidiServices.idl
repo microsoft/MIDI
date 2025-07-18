@@ -50,9 +50,17 @@ typedef enum
     MetadataFlags_IsClientConfigurable = 8
 } MetadataFlags;
 
+typedef enum
+{
+    MessageOptionFlags_None = 0,
+    MessageOptionFlags_WaitForSendComplete = 1,
+    MessageOptionFlags_ContextContainsGroupIndex = 2
+} MessageOptionFlags;
+
 // Structure used during transport initialization to communicate format information and other configuration
 typedef struct
 {
+    MessageOptionFlags MessageOptions;
     MidiDataFormats DataFormat;
     GUID CallingComponent;
 } TRANSPORTCREATIONPARAMS, * PTRANSPORTCREATIONPARAMS;
@@ -99,6 +107,7 @@ interface IMidiTransport : IUnknown
 interface IMidiCallback : IUnknown
 {
     HRESULT Callback(
+        [in, annotation("_In_")] MessageOptionFlags optionFlags,
         [in, annotation("_In_")] PVOID message,
         [in, annotation("_In_")] UINT size,
         [in, annotation("_In_")] LONGLONG position,
@@ -152,10 +161,10 @@ interface IMidiOut : IUnknown
     // The position should either be 0 indicating that it should be delivered immediately, or the QPC 
     // that it should be delivered at for scheduled playback.
     HRESULT SendMidiMessage(
+        [in, annotation("_In_")] MessageOptionFlags optionFlags,
         [in, annotation("_In_")] PVOID message,
         [in, annotation("_In_")] UINT size,
         [in, annotation("_In_")] LONGLONG position
-
     );
 };
 
@@ -186,6 +195,7 @@ interface IMidiBidirectional : IUnknown
     // The position should either be 0 indicating that it should be delivered immediately, or the QPC 
     // that it should be delivered at for scheduled playback.
     HRESULT SendMidiMessage(
+        [in, annotation("_In_")] MessageOptionFlags optionFlags,
         [in, annotation("_In_")] PVOID message,
         [in, annotation("_In_")] UINT size,
         [in, annotation("_In_")] LONGLONG position
@@ -428,6 +438,7 @@ interface IMidiDataTransform : IUnknown
     HRESULT Shutdown();
 
     HRESULT SendMidiMessage(
+        [in, annotation("_In_")] MessageOptionFlags optionFlags,
         [in, annotation("_In_")] PVOID message,
         [in, annotation("_In_")] UINT size,
         [in, annotation("_In_")] LONGLONG position

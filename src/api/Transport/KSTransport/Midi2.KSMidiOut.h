@@ -17,7 +17,7 @@ class CMidi2KSMidiOut :
 public:
 
     STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSPORTCREATIONPARAMS, _In_ DWORD *, _In_ GUID));
-    STDMETHOD(SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG));
+    STDMETHOD(SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG));
     STDMETHOD(Shutdown)();
 
 private:

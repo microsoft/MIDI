@@ -32,7 +32,7 @@ MidiPingBidiDevice::SendMidiMessage
 
     auto newTimestamp = internal::GetCurrentMidiTimestamp();
 
-    return m_Callback->Callback(&responseUmp, sizeof(internal::PackedPingResponseUmp), newTimestamp, m_Context);
+    return m_Callback->Callback(MessageOptionFlags_None, &responseUmp, sizeof(internal::PackedPingResponseUmp), newTimestamp, m_Context);
 }
 
 _Use_decl_annotations_

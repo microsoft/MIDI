@@ -98,6 +98,7 @@ CMidi2KSAggregateMidiBidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiBidi::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
     LONGLONG timestamp
@@ -117,7 +118,7 @@ CMidi2KSAggregateMidiBidi::SendMidiMessage(
             TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         );
 
-        RETURN_IF_FAILED(m_midiDevice->SendMidiMessage(data, length, timestamp));
+        RETURN_IF_FAILED(m_midiDevice->SendMidiMessage(optionFlags, data, length, timestamp));
 
         m_countMidiMessageSent++;
 

@@ -105,6 +105,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiInProxy::Callback(
+    MessageOptionFlags optionFlags,
     PVOID data, 
     UINT length,
     LONGLONG timestamp,
@@ -128,7 +129,7 @@ CMidi2KSAggregateMidiInProxy::Callback(
     );
 
     // the callback for the transform is wired up in initialize
-    return m_bs2UmpTransform->SendMidiMessage(data, length, timestamp);
+    return m_bs2UmpTransform->SendMidiMessage(optionFlags, data, length, timestamp);
 }
 
 HRESULT

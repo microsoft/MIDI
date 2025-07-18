@@ -11,10 +11,11 @@ class CMidi2UMP2BSMidiTransform :
 public:
 
     STDMETHOD(Initialize(_In_ LPCWSTR, _In_ PTRANSFORMCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG, _In_ IMidiDeviceManager*));
-    STDMETHOD(SendMidiMessage(_In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
+    STDMETHOD(SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID message, _In_ UINT size, _In_ LONGLONG));
     STDMETHOD(Shutdown)();
 
 private:
+    wil::critical_section m_SendLock;
 
     std::wstring m_Device;
     wil::com_ptr_nothrow<IMidiCallback> m_Callback;

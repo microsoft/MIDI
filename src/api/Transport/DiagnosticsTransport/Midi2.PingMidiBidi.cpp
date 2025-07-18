@@ -83,6 +83,7 @@ CMidi2PingMidiBidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2PingMidiBidi::SendMidiMessage(
+    MessageOptionFlags,
     PVOID message,
     UINT size,
     LONGLONG timestamp
@@ -99,6 +100,7 @@ CMidi2PingMidiBidi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2PingMidiBidi::Callback(
+    MessageOptionFlags optionFlags,
     PVOID message,
     UINT size,
     LONGLONG timestamp,
@@ -109,6 +111,6 @@ CMidi2PingMidiBidi::Callback(
     RETURN_HR_IF_NULL(E_POINTER, m_Callback);
     RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
 
-    return m_Callback->Callback(message, size, timestamp, m_Context);
+    return m_Callback->Callback(optionFlags, message, size, timestamp, m_Context);
 }
 

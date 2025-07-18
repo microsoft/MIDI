@@ -22,7 +22,7 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromAToB(
 
     // Sending message from A output to B input
 
-    return m_CallbackB->Callback(message, size, timestamp, m_ContextB);
+    return m_CallbackB->Callback(MessageOptionFlags_None, message, size, timestamp, m_ContextB);
 
 }
 
@@ -39,7 +39,7 @@ HRESULT MidiLoopbackBidiDevice::SendMidiMessageFromBToA(
 
     // Sending message from B output to A input
 
-    return m_CallbackA->Callback(message, size, timestamp, m_ContextB);
+    return m_CallbackA->Callback(MessageOptionFlags_None, message, size, timestamp, m_ContextB);
 }
 
 

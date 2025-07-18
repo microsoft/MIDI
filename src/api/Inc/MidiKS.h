@@ -70,6 +70,7 @@ public:
         _In_ DWORD*);
 
     HRESULT SendMidiMessage(
+        _In_ MessageOptionFlags,
         _In_ void *,
         _In_ UINT32,
         _In_ LONGLONG);

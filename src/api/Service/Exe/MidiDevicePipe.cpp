@@ -29,12 +29,12 @@ CMidiDevicePipe::Initialize(
     );
 
 
-    auto deviceLock = m_DevicePipeLock.lock();
+    auto deviceLock = m_DevicePipeLock.lock_exclusive();
 
     TRANSPORTCREATIONPARAMS transportCreationParams;
 
     RETURN_IF_FAILED(CMidiPipe::Initialize(device, creationParams->Flow));
-
+    transportCreationParams.MessageOptions = MessageOptionFlags_None;
     transportCreationParams.DataFormat = creationParams->DataFormat;
     transportCreationParams.CallingComponent = MIDISRV_APIID;
 
@@ -182,7 +182,7 @@ CMidiDevicePipe::Shutdown()
     );
 
     {
-        auto lock = m_DevicePipeLock.lock();
+        auto lock = m_DevicePipeLock.lock_exclusive();
 
         if (m_MidiBidiDevice)
         {
@@ -219,6 +219,7 @@ CMidiDevicePipe::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidiDevicePipe::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
     LONGLONG timestamp
@@ -238,50 +239,19 @@ CMidiDevicePipe::SendMidiMessage(
     // for jitter calculation. The DevicePipe is the single connection to the device, so
     // we can ensure order there before it goes to the transport.
 
-    auto hr = SendMidiMessageNow(data, length, timestamp);
-    LOG_IF_FAILED(hr);
-
-    return hr;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidiDevicePipe::SendMidiMessageNow(
-    PVOID data,
-    UINT length,
-    LONGLONG timestamp
-)
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_VERBOSE,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Sending MIDI Message to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
-        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
-        TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
-    );
-
-
-    // TODO: This function is where we'll check to see if we're in SysEx or not. If we are
-    // then we need to add the message to the SysEx set-aside scheduler, or maybe just add
-    // it to the regular scheduler queue?
-
-    // only one client may send a message to the device at a time
-    auto lock = m_DevicePipeLock.lock();
+    // multiple clients may send at the same time, contention is handled in the transport layer
+    auto lock = m_DevicePipeLock.lock_shared();
 
     if (m_MidiBidiDevice)
     {
-        auto hr = m_MidiBidiDevice->SendMidiMessage(data, length, timestamp);
+        auto hr = m_MidiBidiDevice->SendMidiMessage(optionFlags, data, length, timestamp);
         RETURN_IF_FAILED(hr);
 
         return S_OK;
     }
     else if (m_MidiOutDevice)
     {
-        auto hr = m_MidiOutDevice->SendMidiMessage(data, length, timestamp);
+        auto hr = m_MidiOutDevice->SendMidiMessage(optionFlags, data, length, timestamp);
         RETURN_IF_FAILED(hr);
 
         return S_OK;

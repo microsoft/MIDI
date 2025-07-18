@@ -178,7 +178,7 @@ void MidiTransportTests::TestMidiTransport(REFIID iid, MidiDataFormats dataForma
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
-    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_None, dataFormat, TEST_APPID };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
@@ -282,25 +282,25 @@ void MidiTransportTests::TestMidiTransport(REFIID iid, MidiDataFormats dataForma
         if (nativeInDataFormat == MidiDataFormats_ByteStream || 
             nativeOutDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_64, sizeof(UMP64), 0));
-            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_96, sizeof(UMP96), 0));
-            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &midiTestData_128, sizeof(UMP128), 0));
+            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_64, sizeof(UMP64), 0));
+            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_96, sizeof(UMP96), 0));
+            VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &midiTestData_128, sizeof(UMP128), 0));
         }
     }
     else
     {
-        VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiOutDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
     }
 
     // wait for up to 30 seconds for all the messages
@@ -380,7 +380,7 @@ void MidiTransportTests::TestMidiTransportCreationOrder(REFIID iid, _In_ MidiDat
     DWORD mmcssTaskIdIn {0};
     DWORD mmcssTaskIdOut {0};
     unique_mmcss_handle mmcssHandle;
-    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_None, dataFormat, TEST_APPID };
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
 
@@ -554,7 +554,7 @@ void MidiTransportTests::TestMidiTransportBidi(REFIID iid, MidiDataFormats dataF
     wil::unique_event_nothrow allMessagesReceived;
     UINT32 expectedMessageCount = 4;
     UINT midiMessagesReceived = 0;
-    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_None, dataFormat, TEST_APPID };
     std::wstring midiBidirectionalInstanceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
@@ -621,25 +621,25 @@ void MidiTransportTests::TestMidiTransportBidi(REFIID iid, MidiDataFormats dataF
         // that will roundtrip, the others will get dropped.
         if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), 0));
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), 0));
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), 0));
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_64, sizeof(UMP64), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_96, sizeof(UMP96), 0));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_128, sizeof(UMP128), 0));
         }
     }
     else
     {
-        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
-        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
+        VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), 0));
     }
 
     // wait for up to 30 seconds for all the messages
@@ -689,7 +689,7 @@ void MidiTransportTests::TestMidiSrvTransportBidi_Any()
 }
 
 _Use_decl_annotations_
-void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataFormat, BOOL delayedMessages)
+void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataFormat, BOOL delayedMessages, MessageOptionFlags messageOptions)
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);
 
@@ -722,7 +722,7 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
     LONGLONG previousReceive{ 0 };
 
     long double qpcPerMs = 0;
-    TRANSPORTCREATIONPARAMS transportCreationParams { dataFormat, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams { messageOptions, dataFormat, TEST_APPID };
     std::wstring midiBidirectionalInstanceId;
 
     QueryPerformanceFrequency(&performanceFrequency);
@@ -869,11 +869,11 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
         QueryPerformanceCounter(&qpcBefore);
         if (transportCreationParams.DataFormat == MidiDataFormats_UMP)
         {
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(messageOptions, (void*)&g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), qpcBefore.QuadPart));
+            VERIFY_SUCCEEDED(midiBidiDevice->SendMidiMessage(messageOptions, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), qpcBefore.QuadPart));
         }
         QueryPerformanceCounter(&qpcAfter);
 
@@ -995,38 +995,56 @@ void MidiTransportTests::TestMidiIO_Latency(REFIID iid, MidiDataFormats dataForm
 
 void MidiTransportTests::TestMidiKSIO_Latency_UMP()
 {
-    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_UMP, FALSE);
+    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_UMP, FALSE, MessageOptionFlags_None);
 }
 void MidiTransportTests::TestMidiKSIO_Latency_ByteStream()
 {
-    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_ByteStream, FALSE);
+    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_ByteStream, FALSE, MessageOptionFlags_None);
 }
 
 void MidiTransportTests::TestMidiSrvIO_Latency_UMP()
 {
-    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, FALSE);
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, FALSE, MessageOptionFlags_None);
 }
 void MidiTransportTests::TestMidiSrvIO_Latency_ByteStream()
 {
-    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_ByteStream, FALSE);
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_ByteStream, FALSE, MessageOptionFlags_None);
 }
 
 void MidiTransportTests::TestMidiKSIOSlowMessages_Latency_UMP()
 {
-    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_UMP, TRUE);
+    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_UMP, TRUE, MessageOptionFlags_None);
 }
 void MidiTransportTests::TestMidiKSIOSlowMessages_Latency_ByteStream()
 {
-    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_ByteStream, TRUE);
+    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_ByteStream, TRUE, MessageOptionFlags_None);
 }
 
 void MidiTransportTests::TestMidiSrvIOSlowMessages_Latency_UMP()
 {
-    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, TRUE);
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, TRUE, MessageOptionFlags_None);
 }
 void MidiTransportTests::TestMidiSrvIOSlowMessages_Latency_ByteStream()
 {
-    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_ByteStream, TRUE);
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_ByteStream, TRUE, MessageOptionFlags_None);
+}
+
+void MidiTransportTests::TestMidiKSIO_Latency_UMP_WaitForSendComplete()
+{
+    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_UMP, FALSE, MessageOptionFlags_WaitForSendComplete);
+}
+void MidiTransportTests::TestMidiKSIO_Latency_ByteStream_WaitForSendComplete()
+{
+    TestMidiIO_Latency(__uuidof(Midi2KSTransport), MidiDataFormats_ByteStream, FALSE, MessageOptionFlags_WaitForSendComplete);
+}
+
+void MidiTransportTests::TestMidiSrvIO_Latency_UMP_WaitForSendComplete()
+{
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, FALSE, MessageOptionFlags_WaitForSendComplete);
+}
+void MidiTransportTests::TestMidiSrvIO_Latency_ByteStream_WaitForSendComplete()
+{
+    TestMidiIO_Latency(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_ByteStream, FALSE, MessageOptionFlags_WaitForSendComplete);
 }
 
 UMP32 g_MidiTestData2_32 = {0x20A04321 };
@@ -1063,8 +1081,8 @@ void MidiTransportTests::TestMidiSrvMultiClient(MidiDataFormats dataFormat1, Mid
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    TRANSPORTCREATIONPARAMS transportCreationParams1 { dataFormat1, TEST_APPID };
-    TRANSPORTCREATIONPARAMS transportCreationParams2 { dataFormat2, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams1 { MessageOptionFlags_None, dataFormat1, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams2 { MessageOptionFlags_None, dataFormat2, TEST_APPID };
 
     std::wstring midiInInstanceId;
     std::wstring midiOutInstanceId;
@@ -1211,35 +1229,35 @@ void MidiTransportTests::TestMidiSrvMultiClient(MidiDataFormats dataFormat1, Mid
         if (nativeInDataFormat == MidiDataFormats_ByteStream || 
             nativeOutDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_32, sizeof(UMP32), 29));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_32, sizeof(UMP32), 30));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_32, sizeof(UMP32), 31));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_32, sizeof(UMP32), 32));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_32, sizeof(UMP32), 29));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_32, sizeof(UMP32), 30));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_32, sizeof(UMP32), 31));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_32, sizeof(UMP32), 32));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_32, sizeof(UMP32), 11));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_64, sizeof(UMP64), 12));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_32, sizeof(UMP32), 11));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_64, sizeof(UMP64), 12));
             if (transportCreationParams2.DataFormat == MidiDataFormats_UMP)
             {
                 // if communicating UMP to UMP, we can send 96 and 128 messages
-                VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_96, sizeof(UMP96), 13));
-                VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_128, sizeof(UMP128), 14));
+                VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_96, sizeof(UMP96), 13));
+                VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_128, sizeof(UMP128), 14));
             }
             else
             {
                 // if communicating to bytestream, UMP 96 and 128 don't translate, so resend the note on message
-                VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_64, sizeof(UMP64), 13));
-                VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData_64, sizeof(UMP64), 14));
+                VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_64, sizeof(UMP64), 13));
+                VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData_64, sizeof(UMP64), 14));
             }
         }
     }
     else
     {
-        VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 15));
-        VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 16));
-        VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 17));
-        VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 18));
+        VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 15));
+        VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 16));
+        VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 17));
+        VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 18));
     }
 
     if (transportCreationParams2.DataFormat == MidiDataFormats_UMP)
@@ -1249,33 +1267,33 @@ void MidiTransportTests::TestMidiSrvMultiClient(MidiDataFormats dataFormat1, Mid
         if (nativeInDataFormat == MidiDataFormats_ByteStream || 
             nativeOutDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData2_32, sizeof(UMP32), 33));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData2_32, sizeof(UMP32), 34));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData2_32, sizeof(UMP32), 35));
-            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage((void*)&midiTestData2_32, sizeof(UMP32), 36));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 33));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 34));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 35));
+            VERIFY_SUCCEEDED(midiOutDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 36));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_32, sizeof(UMP32), 21));
-            VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_64, sizeof(UMP64), 22));
+            VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_32, sizeof(UMP32), 21));
+            VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_64, sizeof(UMP64), 22));
             if (transportCreationParams1.DataFormat == MidiDataFormats_UMP)
             {
-                VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_96, sizeof(UMP96), 23));
-                VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_128, sizeof(UMP128), 24));
+                VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_96, sizeof(UMP96), 23));
+                VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_128, sizeof(UMP128), 24));
             }
             else
             {
-                VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_64, sizeof(UMP64), 23));
-                VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&midiTestData2_64, sizeof(UMP64), 24));
+                VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_64, sizeof(UMP64), 23));
+                VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&midiTestData2_64, sizeof(UMP64), 24));
             }
         }
     }
     else
     {
-        VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 25));
-        VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 26));
-        VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 27));
-        VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage((void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 28));
+        VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 25));
+        VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 26));
+        VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 27));
+        VERIFY_SUCCEEDED(midiOutDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 28));
     }
 
     // wait for up to 30 seconds for all the messages
@@ -1401,8 +1419,8 @@ void MidiTransportTests::TestMidiSrvMultiClientBidi(MidiDataFormats dataFormat1,
     // we need to ensure that only 1 is processed at a time.
     wil::critical_section callbackLock;
 
-    TRANSPORTCREATIONPARAMS transportCreationParams1 { dataFormat1, TEST_APPID };
-    TRANSPORTCREATIONPARAMS transportCreationParams2 { dataFormat2, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams1 { MessageOptionFlags_None, dataFormat1, TEST_APPID };
+    TRANSPORTCREATIONPARAMS transportCreationParams2 { MessageOptionFlags_None, dataFormat2, TEST_APPID };
     std::wstring midiInstanceId;
 
     VERIFY_SUCCEEDED(CoCreateInstance(__uuidof(Midi2MidiSrvTransport), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport)));
@@ -1495,33 +1513,33 @@ void MidiTransportTests::TestMidiSrvMultiClientBidi(MidiDataFormats dataFormat1,
         // that will roundtrip, the others will get dropped.
         if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 33));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 34));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 35));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 36));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 33));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 34));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 35));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 36));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 11));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_64, sizeof(UMP64), 12));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 11));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_64, sizeof(UMP64), 12));
             if (transportCreationParams2.DataFormat == MidiDataFormats_UMP)
             {
-                VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_96, sizeof(UMP96), 13));
-                VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_128, sizeof(UMP128), 14));
+                VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_96, sizeof(UMP96), 13));
+                VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_128, sizeof(UMP128), 14));
             }
             else
             {
-                VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_64, sizeof(UMP64), 13));
-                VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData_64, sizeof(UMP64), 14));
+                VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_64, sizeof(UMP64), 13));
+                VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_64, sizeof(UMP64), 14));
             }
         }
     }
     else
     {
-        VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 15));
-        VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 16));
-        VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 17));
-        VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 18));
+        VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 15));
+        VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 16));
+        VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 17));
+        VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage, sizeof(MIDI_MESSAGE), 18));
     }
 
     if (transportCreationParams2.DataFormat == MidiDataFormats_UMP)
@@ -1530,33 +1548,33 @@ void MidiTransportTests::TestMidiSrvMultiClientBidi(MidiDataFormats dataFormat1,
         // that will roundtrip, the others will get dropped.
         if (nativeDataFormat == MidiDataFormats_ByteStream)
         {
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 33));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 34));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 35));
-            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 36));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 33));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 34));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 35));
+            VERIFY_SUCCEEDED(midiDevice1->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 36));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_32, sizeof(UMP32), 21));
-            VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_64, sizeof(UMP64), 22));
+            VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_32, sizeof(UMP32), 21));
+            VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_64, sizeof(UMP64), 22));
             if (transportCreationParams1.DataFormat == MidiDataFormats_UMP)
             {
-                VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_96, sizeof(UMP96), 23));
-                VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_128, sizeof(UMP128), 24));
+                VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_96, sizeof(UMP96), 23));
+                VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_128, sizeof(UMP128), 24));
             }
             else
             {
-                VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_64, sizeof(UMP64), 23));
-                VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestData2_64, sizeof(UMP64), 24));
+                VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_64, sizeof(UMP64), 23));
+                VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData2_64, sizeof(UMP64), 24));
             }
         }
     }
     else
     {
-        VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 25));
-        VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 26));
-        VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 27));
-        VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage((void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 28));
+        VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 25));
+        VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 26));
+        VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 27));
+        VERIFY_SUCCEEDED(midiDevice2->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestMessage2, sizeof(MIDI_MESSAGE), 28));
     }
 
     // wait for up to 30 seconds for all the messages

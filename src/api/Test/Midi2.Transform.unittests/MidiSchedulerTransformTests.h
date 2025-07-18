@@ -36,7 +36,7 @@ public:
     //TEST_METHOD_CLEANUP(TestCleanup);
 
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
+    STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
     {
         if (m_MidiInCallback)
         {
