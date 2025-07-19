@@ -385,12 +385,15 @@ CMidi2MidiSrv::RemoveClientSession(
 }
 
 
-
+// This version is for the client side of the RPC calls.
+// It requires the calling SDK to CoTaskMemFree (or our SAFE_COTASKMEMFREE)
+// the string once it is done with it.
 HRESULT
 CopyStringToOutputParameter(
     _In_ LPCWSTR sourceString,
     _Out_ LPWSTR* outputParameter)
 {
+    RETURN_HR_IF_NULL(E_INVALIDARG, outputParameter);
 
     if (sourceString != nullptr)
     {
@@ -400,10 +403,9 @@ CopyStringToOutputParameter(
         // allocate COM memory that the calling SDK will dispose of
         *outputParameter = (LPWSTR)CoTaskMemAlloc(length * sizeof(wchar_t));
 
-        if (*outputParameter)
-        {
-            wcscpy_s(*outputParameter, length, sourceString);
-        }
+        RETURN_IF_NULL_ALLOC(*outputParameter);
+
+        wcscpy_s(*outputParameter, length, sourceString);
 
         // dispose of the RPC-allocated memory
         midl_user_free((void*)sourceString);
@@ -412,29 +414,6 @@ CopyStringToOutputParameter(
     else
     {
         *outputParameter = nullptr;
-    }
-
-
-
-
-
-
-
-    if (sourceString != nullptr)
-    {
-        size_t length = wcslen(sourceString) + 1;
-
-        if (length > 0 && outputParameter != nullptr)
-        {
-            size_t memorySize = length * sizeof(wchar_t);
-
-            *outputParameter = (LPWSTR)midl_user_allocate(memorySize);
-            if (*outputParameter)
-            {
-                //memset(*transportListJson, 0, memorySize);
-                wcscpy_s(*outputParameter, length, sourceString);
-            }
-        }
     }
 
     return S_OK;
