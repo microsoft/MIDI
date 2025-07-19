@@ -391,14 +391,14 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(ApiSolutionFolder / "midi2.sln")
-                    //.SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     //.SetConfiguration(buildConfiguration)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     //.SetTargets("Rebuild") 
                     .SetProperties(msbuildProperties)
                     .SetVerbosity(BuildVerbosity)
-                    //.EnableNodeReuse()
+                    .EnableNodeReuse()
                 );
             }
 
@@ -513,7 +513,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(ApiSolutionFolder / "midi2-service-component-preview.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -570,7 +570,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -726,7 +726,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk-tools-and-tests.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -795,7 +795,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSetupSolutionFolder / "midi-services-app-sdk-runtime-setup.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -907,7 +907,7 @@ class Build : NukeBuild
 
                 var output = MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(InBoxComponentsSetupSolutionFolder / "midi-services-in-box-setup.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -962,7 +962,7 @@ class Build : NukeBuild
 
             var output = MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(InDevelopmentServiceComponentsSetupSolutionFolder / "midi-services-in-box-preview-setup.sln")
-                .SetMaxCpuCount(14)
+                .SetMaxCpuCount(null)
                 /*.SetOutDir(outputFolder) */
                 /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                 /*.SetTargets("Build") */
@@ -1573,7 +1573,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(solution)
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -1652,7 +1652,7 @@ class Build : NukeBuild
 
             MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(solution)
-                .SetMaxCpuCount(14)
+                .SetMaxCpuCount(null)
                 /*.SetOutDir(outputFolder) */
                 .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
                 /*.SetTargets("Build") */
