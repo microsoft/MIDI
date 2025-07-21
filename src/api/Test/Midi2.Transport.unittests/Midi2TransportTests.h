@@ -3,10 +3,19 @@
 
 #include <WexTestClass.h>
 
+void ErrorHandler(bool, wil::FailureInfo const& failure) WI_NOEXCEPT
+{
+    // This callback enables us to have wil fallback errors logged into the test output.
+    WCHAR failureString[2048];
+    wil::GetFailureLogString(failureString, _countof(failureString), failure);
+    LOG_OUTPUT( L"WIL error: %s", failureString);
+}
+
 MODULE_SETUP(ModuleSetup);
 bool ModuleSetup()
 {
     winrt::init_apartment();
+    wil::SetResultTelemetryFallback(ErrorHandler);
     return true;
 }
 
@@ -100,6 +109,8 @@ public:
     TEST_METHOD(TestKsHandleWrapperSurpriseRemove_FilterHandle);
     TEST_METHOD(TestKsHandleWrapperQueryRemove_PinHandle);
     TEST_METHOD(TestKsHandleWrapperSurpriseRemove_PinHandle);
+
+    TEST_METHOD(MultiThreadedMidiSendTest)
 
     STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
     {

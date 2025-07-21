@@ -555,8 +555,8 @@ KSMidiInDevice::Initialize(
     {
         m_MmcssTaskId = *mmcssTaskId;
 
-        m_ThreadTerminateEvent.create();
-        m_ThreadStartedEvent.create();
+        m_ThreadTerminateEvent.create(wil::EventOptions::ManualReset);
+        m_ThreadStartedEvent.create(wil::EventOptions::ManualReset);
 
         // grab the callback/lambda that was passed in, for use later for message callbacks.
         m_MidiInCallback = callback;

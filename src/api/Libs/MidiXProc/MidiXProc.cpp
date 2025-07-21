@@ -339,8 +339,8 @@ CMidiXProc::Initialize(DWORD* mmcssTaskId,
 
     m_MidiInCallback = midiInCallback;
     m_MidiInCallbackContext = context;
-    m_ThreadTerminateEvent.create();
-    m_ThreadStartedEvent.create();
+    m_ThreadTerminateEvent.create(wil::EventOptions::ManualReset);
+    m_ThreadStartedEvent.create(wil::EventOptions::ManualReset);
     m_MmcssTaskId = *mmcssTaskId;
 
     // now that we know we will succeed, take ownership of the
@@ -556,66 +556,76 @@ CMidiXProc::ProcessMidiIn()
 
             do
             {
-                // we're doing a pass on the buffer, so safe to reset the event right now, no chance
-                // of missing anything if we reset it before we retrieve the current positions.
-                m_MidiIn->WriteEvent.ResetEvent();
-
-                // the read position is the last position we have read,
-                // the write position is the last position written to
-                ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
-                ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
-                ULONG bytesAvailable{ 0 };
-
-                if (readPosition <= writePosition)
+                // if we're processing a backlog of data and recieve a thread termination,
+                // stop processing data
+                ret = WaitForSingleObject(m_ThreadTerminateEvent.get(), 0);
+                if (ret == WAIT_OBJECT_0)
                 {
-                    bytesAvailable = writePosition - readPosition;
+                    break;
                 }
                 else
                 {
-                    bytesAvailable = mappedData->BufferSize - (readPosition - writePosition);
-                }
+                    // we're doing a pass on the buffer, so safe to reset the event right now, no chance
+                    // of missing anything if we reset it before we retrieve the current positions.
+                    m_MidiIn->WriteEvent.ResetEvent();
 
-                if (0 == bytesAvailable ||
-                    bytesAvailable < sizeof(LOOPEDDATAFORMAT))
-                {
-                    // nothing to do, need at least the LOOPEDDATAFORMAT
-                    // to move forward. Driver will set the event when the
-                    // write position advances.
-                    break;
-                }
+                    // the read position is the last position we have read,
+                    // the write position is the last position written to
+                    ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
+                    ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
+                    ULONG bytesAvailable{ 0 };
 
-                PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + readPosition);
-                UINT32 dataSize = header->ByteCount;
-                UINT32 totalSize = dataSize + sizeof(LOOPEDDATAFORMAT);
-                ULONG newReadPosition = (readPosition + totalSize) % mappedData->BufferSize;
-
-                if (bytesAvailable < totalSize)
-                {
-                    // if the full contents of this buffer isn't yet available,
-                    // stop processing and wait for data to come in.
-                    // Driver will set an event when the write position advances.
-                    break;
-                }
-
-                PVOID data = (PVOID)(((BYTE*)header) + sizeof(LOOPEDDATAFORMAT));
-
-                if (m_MidiInCallback)
-                {
-                    // if a position provided is nonzero, use it, otherwise use the current QPC
-                    if (header->Position == 0 && m_OverwriteZeroTimestamp)
+                    if (readPosition <= writePosition)
                     {
-                        LARGE_INTEGER qpc{ 0 };
-                        QueryPerformanceCounter(&qpc);
-                        header->Position = qpc.QuadPart;
+                        bytesAvailable = writePosition - readPosition;
+                    }
+                    else
+                    {
+                        bytesAvailable = mappedData->BufferSize - (readPosition - writePosition);
                     }
 
-                    m_MidiInCallback->Callback(MessageOptionFlags_None, data, dataSize, header->Position, m_MidiInCallbackContext);
-                }
+                    if (0 == bytesAvailable ||
+                        bytesAvailable < sizeof(LOOPEDDATAFORMAT))
+                    {
+                        // nothing to do, need at least the LOOPEDDATAFORMAT
+                        // to move forward. Driver will set the event when the
+                        // write position advances.
+                        break;
+                    }
 
-                // advance to the next midi packet, we loop processing them one at a time
-                // until we have processed all that is available for this pass.
-                InterlockedExchange((LONG*)registers->ReadPosition, newReadPosition);
-                RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiIn->ReadEvent.get()));
+                    PLOOPEDDATAFORMAT header = (PLOOPEDDATAFORMAT)(((BYTE*)mappedData->BufferAddress) + readPosition);
+                    UINT32 dataSize = header->ByteCount;
+                    UINT32 totalSize = dataSize + sizeof(LOOPEDDATAFORMAT);
+                    ULONG newReadPosition = (readPosition + totalSize) % mappedData->BufferSize;
+
+                    if (bytesAvailable < totalSize)
+                    {
+                        // if the full contents of this buffer isn't yet available,
+                        // stop processing and wait for data to come in.
+                        // Driver will set an event when the write position advances.
+                        break;
+                    }
+
+                    PVOID data = (PVOID)(((BYTE*)header) + sizeof(LOOPEDDATAFORMAT));
+
+                    if (m_MidiInCallback)
+                    {
+                        // if a position provided is nonzero, use it, otherwise use the current QPC
+                        if (header->Position == 0 && m_OverwriteZeroTimestamp)
+                        {
+                            LARGE_INTEGER qpc{ 0 };
+                            QueryPerformanceCounter(&qpc);
+                            header->Position = qpc.QuadPart;
+                        }
+
+                        m_MidiInCallback->Callback(MessageOptionFlags_None, data, dataSize, header->Position, m_MidiInCallbackContext);
+                    }
+
+                    // advance to the next midi packet, we loop processing them one at a time
+                    // until we have processed all that is available for this pass.
+                    InterlockedExchange((LONG*)registers->ReadPosition, newReadPosition);
+                    RETURN_LAST_ERROR_IF(FALSE == SetEvent(m_MidiIn->ReadEvent.get()));
+                }
             } while (TRUE);
         }
         else
