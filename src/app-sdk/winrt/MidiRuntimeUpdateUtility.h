@@ -20,11 +20,18 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         static midi2::Utilities::Update::MidiRuntimeRelease GetHighestAvailableRelease() noexcept;
 
         static midi2::Utilities::Update::MidiRuntimeRelease GetHighestAvailableRelease(
-            _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes) noexcept;
+            _In_ midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes inScopeReleaseTypes) noexcept;
 
         static midi2::Utilities::Update::MidiRuntimeRelease GetHighestAvailableRelease(
             _In_ uint16_t specificMajorVersion, 
-            _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes) noexcept;
+            _In_ midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes inScopeReleaseTypes) noexcept;
+
+        static bool IsReleaseNewerThanInstalled(
+            _In_ midi2::Utilities::Update::MidiRuntimeRelease release, 
+            _In_ bool ignoreReleaseType) noexcept;
+
+        static midi2::Utilities::RuntimeInformation::MidiRuntimeArchitecture InstalledRuntimeArchitecture();
+
 
     private:
         static midi2::Utilities::Update::MidiRuntimeRelease GetHigherReleaseValue(
@@ -35,7 +42,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         static collections::IVector<midi2::Utilities::Update::MidiRuntimeRelease> InternalGetAvailableReleases(
             _In_ bool restrictToMajorVersion,
             _In_ uint16_t majorVersion,
-            _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes
+            _In_ midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes inScopeReleaseTypes
         ) noexcept;
 
         static midi2::Utilities::Update::MidiRuntimeRelease ParseRuntimeReleaseFromJsonObject(_In_ json::JsonObject const& obj) noexcept;

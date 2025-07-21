@@ -59,8 +59,16 @@ public class TroubleshootingViewModel : ObservableRecipient, INavigationAware
     public void RestartService()
     {
         var controller = MidiServiceHelper.GetServiceController();
-        MidiServiceHelper.StopService(controller);
-        MidiServiceHelper.StartService(controller);
+
+        if (controller != null)
+        {
+            MidiServiceHelper.StopService(controller);
+            MidiServiceHelper.StartService(controller);
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("Unable to get service controller");
+        }
     }
 
 

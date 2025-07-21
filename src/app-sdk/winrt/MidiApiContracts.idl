@@ -88,6 +88,11 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
     apicontract MidiRuntimeUpdateUtilityApiContract { };
 }
 
+namespace Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation
+{
+    [contractversion(1)]
+    apicontract MidiRuntimeInformationApiContract { };
+}
 
 
 

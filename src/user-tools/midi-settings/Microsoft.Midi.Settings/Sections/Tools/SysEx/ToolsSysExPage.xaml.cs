@@ -26,7 +26,6 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage.Pickers;
 
-using System.Runtime.InteropServices;
 using global::Windows.Win32.Foundation;
 using global::Windows.Win32;
 using global::Windows.Win32.UI.Shell;

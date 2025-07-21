@@ -30,10 +30,18 @@ public class ActivationService : IActivationService
     private readonly IEnumerable<IActivationHandler> _activationHandlers;
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly IGeneralSettingsService _generalSettingsService;
+    private readonly IMidiSdkService _sdkService;
+
     private UIElement? _shell = null;
 
-    public ActivationService(ActivationHandler<LaunchActivatedEventArgs> defaultHandler, IEnumerable<IActivationHandler> activationHandlers, IThemeSelectorService themeSelectorService, IGeneralSettingsService generalSettingsService)
+    public ActivationService(
+        ActivationHandler<LaunchActivatedEventArgs> defaultHandler, 
+        IEnumerable<IActivationHandler> activationHandlers, 
+        IThemeSelectorService themeSelectorService, 
+        IGeneralSettingsService generalSettingsService,
+        IMidiSdkService sdkService)
     {
+        _sdkService = sdkService;
         _defaultHandler = defaultHandler;
         _activationHandlers = activationHandlers;
         _themeSelectorService = themeSelectorService;
@@ -123,7 +131,9 @@ public class ActivationService : IActivationService
             // actually show up if it has been displayed.
             await Task.Run(() =>
             {
-                if (!AppState.Current.InitializeSdk())
+                if (_sdkService == null) return;
+
+                if (!_sdkService.InitializeSdk())
                 {
                     MessageBox(
                         (IntPtr)0,
@@ -133,7 +143,7 @@ public class ActivationService : IActivationService
 
                     //    Exit();
                 }
-                else if (!AppState.Current.InitializeService())
+                else if (!_sdkService.InitializeService())
                 {
                     MessageBox(
                         (IntPtr)0,

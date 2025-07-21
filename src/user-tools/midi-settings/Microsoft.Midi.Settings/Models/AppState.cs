@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Windows.UI.Popups;
 
 using Microsoft.Windows.Devices.Midi2.Utilities.Update;
+using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 
 
 namespace Microsoft.Midi.Settings.Models;
@@ -24,77 +25,14 @@ namespace Microsoft.Midi.Settings.Models;
 // TODO: Make this an injected singleton
 public class AppState
 {
-    private MidiEndpointDeviceWatcher? _watcher = null;
-
-
     private static AppState? _current;
 
-    private MidiDesktopAppSdkInitializer? _initializer;
-    private bool _serviceInitialized = false;
 
     private AppState()
     {
 
     }
 
-    public bool IsServiceInitialized()
-    {
-        return _serviceInitialized;
-    }
-
-    public bool InitializeSdk()
-    {
-        try
-        {
-            _initializer = Microsoft.Windows.Devices.Midi2.Initialization.MidiDesktopAppSdkInitializer.Create();
-
-            if (_initializer == null)
-            {
-                // TODO: Failed
-                return false;
-
-            }
-
-            if (!_initializer!.InitializeSdkRuntime())
-            {
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
-
-    public bool InitializeService()
-    {
-        try
-        {
-            if (_initializer == null)
-            {
-                // TODO: Failed
-                return false;
-
-            }
-
-            if (!_initializer!.EnsureServiceAvailable())
-            {
-                return false;
-            }
-
-            _serviceInitialized = true;
-
-            StartDeviceWatcher(true);
-
-            return true;
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-    }
 
     public static AppState Current
     {
@@ -120,129 +58,11 @@ public class AppState
     // TODO: These should be in an Update service, not the state class
     public string GetInstalledSdkVersionString()
     {
-        string val = "Unable to query SDK version";
+        var version = MidiRuntimeInformation.GetInstalledVersion();
 
-        if (_initializer != null)
-        {
-            val = _initializer.GetInstalledSdkDescription(true, true, true);
-        }
-
-        return val;
+        return version.ToString();
     }
 
-
-    // TODO: These should be in an Update service, not the state class
-    public bool IsNewerSdkVersionAvailableForDownload()
-    {
-        if (_initializer != null)
-        {
-           // return _initializer.IsNewerVersionAvailableForDownload();
-        }
-
-        return false;
-    }
-
-    // TODO: These should be in an Update service, not the state class
-    //public MidiRuntimeRelease GetNewerSdkDownloadInformation()
-    //{
-
-    //}
-
-
-    public Uri GetMidiSdkInstallerUri()
-    {
-        return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
-    }
-
-
-    public MidiEndpointDeviceWatcher MidiEndpointDeviceWatcher
-    {
-        get
-        {
-            return _watcher!;
-        }
-    }
-
-
-
-
-
-    private void StartDeviceWatcher(bool includeAll)
-    {
-        if (_watcher != null)
-        {
-            ShutDownDeviceWatcher();
-        }
-
-        var filter = MidiEndpointDeviceInformationFilters.AllStandardEndpoints;
-
-        if (includeAll)
-        {
-            filter |= MidiEndpointDeviceInformationFilters.DiagnosticLoopback;
-            filter |= MidiEndpointDeviceInformationFilters.DiagnosticPing;
-            filter |= MidiEndpointDeviceInformationFilters.VirtualDeviceResponder;
-        }
-
-        _watcher = MidiEndpointDeviceWatcher.Create(filter);
-
-        _watcher.Stopped += OnDeviceWatcherStopped;
-        //_watcher.Updated += OnDeviceWatcherEndpointUpdated;
-        //_watcher.Removed += OnDeviceWatcherEndpointRemoved;
-        //_watcher.Added += OnDeviceWatcherEndpointAdded;
-        _watcher.EnumerationCompleted += OnDeviceWatcherEnumerationCompleted;
-
-        _watcher.Start();
-    }
-
-    private void OnDeviceWatcherEnumerationCompleted(MidiEndpointDeviceWatcher sender, object args)
-    {
-        // todo
-    }
-
-    //private void OnDeviceWatcherEndpointAdded(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationAddedEventArgs args)
-    //{
-    //    MidiEndpointDevices.Add(args.AddedDevice);
-    //}
-
-    //private void OnDeviceWatcherEndpointRemoved(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationRemovedEventArgs args)
-    //{
-    //    foreach (MidiEndpointDeviceInformation info in MidiEndpointDevices)
-    //    {
-    //        if (info.Id == args.Id)
-    //        {
-    //            MidiEndpointDevices.Remove(info);
-    //            break;
-    //        }
-    //    }
-    //}
-
-    //private void OnDeviceWatcherEndpointUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
-    //{
-    //    if (EndpointDeviceUpdated != null)
-    //    {
-    //        EndpointDeviceUpdated(sender, args);
-    //    }
-    //}
-
-    private void OnDeviceWatcherStopped(MidiEndpointDeviceWatcher sender, object args)
-    {
-        // nothing to do.
-    }
-
-    private void ShutDownDeviceWatcher()
-    {
-        if (_watcher != null)
-        {
-            _watcher.Stop();
-
-            _watcher.Stopped -= OnDeviceWatcherStopped;
-            //_watcher.Updated -= OnDeviceWatcherEndpointUpdated;
-            //_watcher.Removed -= OnDeviceWatcherEndpointRemoved;
-            //_watcher.Added -= OnDeviceWatcherEndpointAdded;
-
-            _watcher = null;
-        }
-    }
 
 
 }

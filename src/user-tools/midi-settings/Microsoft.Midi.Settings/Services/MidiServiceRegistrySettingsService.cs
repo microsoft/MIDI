@@ -162,6 +162,25 @@ namespace Microsoft.Midi.Settings.Services
         const string ValueName_Midi2DiscoveryEnabled = "Midi2DiscoveryEnabled";
         const string ValueName_Midi2DiscoveryTimeoutMS = "Midi2DiscoveryTimeoutMS";
         const string ValueName_UseMMCSS = "UseMMCSS";
+        const string ValueName_CurrentConfig = "CurrentConfig";
+
+
+        public bool IsConfigFileSpecified()
+        {
+            return GetCurrentConfigFileName() != string.Empty;
+        }
+
+        public string GetCurrentConfigFileName()
+        {
+            return GetRegistryStringValue(MidiRootRegKey, ValueName_CurrentConfig, string.Empty);
+        }
+
+        public bool UpdateRegistryCurrentConfigFileName(string configFileName)
+        {
+            return SetRegistryStringValue(MidiRootRegKey, ValueName_CurrentConfig, configFileName);
+        }
+
+
 
 
 

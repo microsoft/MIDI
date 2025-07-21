@@ -12,6 +12,7 @@ using Microsoft.Midi.Settings.Models;
 using Microsoft.Windows.Devices.Midi2.Common;
 using Microsoft.Windows.Devices.Midi2.Initialization;
 using Microsoft.Windows.Devices.Midi2.Utilities.Update;
+using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,22 +28,26 @@ namespace Microsoft.Midi.Settings.Services
     {
         // https://aka.ms/MidiServicesLatestSdkVersionJson
 
+        private IMidiSdkService _sdkService;
 
-        public MidiRuntimeUpdateReleaseTypes GetCurrentInstalledChannel()
+        public MidiRuntimeReleaseTypes GetCurrentInstalledChannel()
         {
             // TODO: If the current in-use release is a preview, then put the user on the preview channel.
 
-            //MidiNuGetBuildInformation.
 
-            return MidiRuntimeUpdateReleaseTypes.Preview;
+            return MidiRuntimeReleaseTypes.Preview;
         }
 
-        public MidiRuntimeUpdateReleaseTypes GetCurrentPreferredChannel()
+        public MidiRuntimeReleaseTypes GetCurrentPreferredChannel()
         {
             // TODO: read from registry.
 
-            return MidiRuntimeUpdateReleaseTypes.Stable;
+            return MidiRuntimeReleaseTypes.Preview;
         }
+
+
+
+
 
 
         public IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads()
@@ -50,13 +55,13 @@ namespace Microsoft.Midi.Settings.Services
             return MidiRuntimeUpdateUtility.GetAllAvailableReleases();
         }
 
-        public MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeUpdateReleaseTypes releaseChannelType)
+        public MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeReleaseTypes releaseChannelType)
         {
 
             // TODO
 
 
-            return MidiRuntimeUpdateUtility.GetHighestAvailableRelease(MidiRuntimeUpdateReleaseTypes.Stable);
+            return MidiRuntimeUpdateUtility.GetHighestAvailableRelease(GetCurrentPreferredChannel());
         }
 
 
@@ -101,14 +106,22 @@ namespace Microsoft.Midi.Settings.Services
                         return false;
                     }
 
-                    string installerFileName = response.Content.Headers.ContentDisposition.FileName;
+                    string installerFileName = string.Empty;
+                    if (response.Content.Headers.ContentDisposition != null && 
+                        response.Content.Headers.ContentDisposition.FileName != null)
+                    {
+                        installerFileName = response.Content.Headers.ContentDisposition.FileName;
+                    }
 
                     string downloadsFolder;
                     SHGetKnownFolderPath(FOLDERID_Downloads, 0, IntPtr.Zero, out downloadsFolder);
 
                     string installerFullPath = string.Empty;
 
-                    if (installerFileName == null || installerFileName == string.Empty || downloadsFolder == null || downloadsFolder == string.Empty)
+                    if (installerFileName == null || 
+                        installerFileName == string.Empty || 
+                        downloadsFolder == null || 
+                        downloadsFolder == string.Empty)
                     {
                         installerFullPath = Path.GetTempFileName();
                     }
@@ -159,5 +172,14 @@ namespace Microsoft.Midi.Settings.Services
             // upon a false return, the calling code should pop up a browser window with the general release page
             return false;
         }
+
+
+
+        public MidiUpdateService(IMidiSdkService sdkService)
+        {
+            _sdkService = sdkService;
+        }
+
+
     }
 }

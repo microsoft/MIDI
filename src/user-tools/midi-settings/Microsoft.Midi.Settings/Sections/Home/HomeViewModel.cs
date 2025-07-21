@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
+using Microsoft.Windows.Devices.Midi2.Utilities.Update;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly INavigationService _navigationService;
         private readonly IMidiConfigFileService _configFileService;
         private readonly IMidiUpdateService _updateService;
+        private readonly IMidiSdkService _sdkService;
 
 
         public event EventHandler<string> UpdateFailed;
@@ -82,7 +84,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                return AppState.Current.GetInstalledSdkVersionString();
+                return _sdkService.InstalledRuntimeDetailedVersionString;
             }
         }
 
@@ -90,9 +92,13 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                //return AppState.Current.GetMidiSdkInstallerUri();
+               // if (_newRelease == null)
+               // {
+                    // return the default URL
+                    return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
+               // }
 
-                return new Uri("https://github.com/microsoft/MIDI/releases/download/customer-preview-2/arm64-full.zip");
+
             }
         }
 
@@ -101,7 +107,13 @@ namespace Microsoft.Midi.Settings.ViewModels
             get => _configFileService.IsConfigFileActive;
         }
 
-        public bool IsServiceAvailable => AppState.Current.IsServiceInitialized();
+        public bool IsServiceAvailable
+        {
+            get
+            {
+                return _sdkService.IsServiceInitialized;
+            }
+        }
 
 
         public bool IsFirstRunSetupComplete
@@ -112,17 +124,9 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
-        public bool IsNewerSdkRuntimeDownloadAvailable
-        {
-            get
-            {
-                // TODO: this should be in the update service, not app state
 
-                //return AppState.Current.IsNewerSdkVersionAvailableForDownload();
 
-                return true;
-            }
-        }
+
 
         //public string NewSdkRuntimeDownloadInformation
         //{
@@ -137,13 +141,20 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             get
             {
-                if (IsValidConfigLoaded && _configFileService.CurrentConfig.Header != null)
+                if (_configFileService.CurrentConfig != null)
                 {
-                    return _configFileService.CurrentConfig.Header.Name;
+                    if (IsValidConfigLoaded && _configFileService.CurrentConfig.Header != null)
+                    {
+                        return _configFileService.CurrentConfig.Header.Name;
+                    }
+                    else
+                    {
+                        return string.Empty;
+                    }
                 }
                 else
-                {
-                    return string.Empty;
+                { 
+                    return string.Empty; 
                 }
             }
         }
@@ -163,9 +174,77 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
+        private MidiRuntimeRelease? _newRelease;
+
+
+
+        public void CheckForSdkUpdates()
+        {
+            try
+            {
+                IsNewerSdkRuntimeDownloadAvailable = false;
+                _newRelease = null;
+
+                // TODO: This needs to check the correct channel
+                var newRelease = _updateService.GetHighestAvailableRuntimeRelease(_updateService.GetCurrentPreferredChannel());
+                var installedVersion = _sdkService.InstalledVersion;
+
+                if (newRelease == null || installedVersion == null) return;
+
+                if (newRelease.Version.IsGreaterThan(installedVersion))
+                {
+                    _newRelease = newRelease;
+
+                    IsNewerSdkRuntimeDownloadAvailable = true;
+                }
+            }
+            catch (Exception ex)
+            { 
+                // error trying to check for a new release. Firewall? No network?
+
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+
+        }
+
+
+        [ObservableProperty]
+        bool isNewerSdkRuntimeDownloadAvailable;
+
+
+        public string NewerSdkRuntimeDownloadVersion
+        {
+            get
+            {
+                if (_newRelease != null)
+                {
+                    return _newRelease.Version.ToString();
+                }
+
+                return "";
+            }
+        }
+
+        public string NewSdkRuntimeDownloadAvailableMessage
+        {
+            get
+            {
+                if (_newRelease != null)
+                {
+                    return $"Version {_newRelease.Version.ToString()} from {_newRelease.BuildDate} is available. {_newRelease.Description}";
+                }
+
+                return string.Empty;
+            }
+        }
+
+
+        
 
         public async void StartSdkUpdate()
         {
+            // TODO: We need to make sure we pull the correct architecture
+
             IsSdkDownloadInProgress = true;
 
             //Task.Run(() =>
@@ -184,11 +263,14 @@ namespace Microsoft.Midi.Settings.ViewModels
         public HomeViewModel(
             INavigationService navigationService, 
             IMidiConfigFileService midiConfigFileService, 
-            IMidiUpdateService updateService)
+            IMidiUpdateService updateService,
+            IMidiSdkService sdkService
+            )
         {
             _navigationService = navigationService;
             _configFileService = midiConfigFileService;
             _updateService = updateService;
+            _sdkService = sdkService;
 
             LaunchFirstRunExperienceCommand = new RelayCommand(
                 () =>

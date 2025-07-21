@@ -17,7 +17,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class EndpointsDiagViewModel : SingleTransportEndpointViewModelBase
     {
-        public EndpointsDiagViewModel(INavigationService navigationService) : base("DIAG", navigationService)
+        public EndpointsDiagViewModel(
+            INavigationService navigationService,
+            IMidiEndpointEnumerationService enumerationService
+            ) : base("DIAG", navigationService, enumerationService)
         {
         }
 

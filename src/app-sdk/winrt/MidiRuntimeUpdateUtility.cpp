@@ -13,84 +13,34 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implementation
 {
-
     _Use_decl_annotations_
     midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetHigherReleaseValue(
         midi2::Utilities::Update::MidiRuntimeRelease const& releaseA,
         midi2::Utilities::Update::MidiRuntimeRelease const& releaseB
-        ) noexcept
+    ) noexcept
     {
-        // both are null, so just return null
-        if (releaseA == nullptr && releaseB == nullptr)
-        {
-            return nullptr;
-        }
-
-        // only A is null, so return B
-        if (releaseA == nullptr)
+        if (releaseB.Version().IsGreaterThan(releaseA.Version()))
         {
             return releaseB;
         }
-        
-        // only B is null, so return A
-        if (releaseB == nullptr)
-        {
-            return releaseA;
-        }
-
-        // nothing is null beyond this point
-
-        if (releaseA.VersionMajor() < releaseB.VersionMajor())
-        {
-            return releaseB;
-        }
-        else if (releaseA.VersionMajor() > releaseB.VersionMajor())
-        {
-            return releaseA;
-        }
-
-        // VersionMajor is equal beyond this point
-
-        if (releaseA.VersionMinor() < releaseB.VersionMinor())
-        {
-            return releaseB;
-        }
-        else if (releaseA.VersionMinor() > releaseB.VersionMinor())
-        {
-            return releaseA;
-        }
-
-        // VersionMinor is equal beyond this point
-
-        if (releaseA.VersionPatch() < releaseB.VersionPatch())
-        {
-            return releaseB;
-        }
-        else if (releaseA.VersionPatch() > releaseB.VersionPatch())
-        {
-            return releaseA;
-        }
-
-        // else, everything is exactly the same, so we just return releaseA
 
         return releaseA;
     }
-
 
     _Use_decl_annotations_
     midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::ParseRuntimeReleaseFromJsonObject(json::JsonObject const& obj) noexcept
     {
         auto t = obj.GetNamedString(L"type", L"release");
 
-        MidiRuntimeUpdateReleaseTypes releaseType{ MidiRuntimeUpdateReleaseTypes::Preview };
+        midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes releaseType{ midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes::Preview };
 
         if (t == L"preview")
         {
-            releaseType = MidiRuntimeUpdateReleaseTypes::Preview;
+            releaseType = midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes::Preview;
         }
         else if (t == L"stable")
         {
-            releaseType = MidiRuntimeUpdateReleaseTypes::Stable;
+            releaseType = midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes::Stable;
         }
 
         auto buildDate = internal::DateTimeFromISO8601(obj.GetNamedString(L"buildDate", L""));
@@ -98,6 +48,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
         auto versionMajor = static_cast<uint16_t>(obj.GetNamedNumber(L"versionMajor", 0));
         auto versionMinor = static_cast<uint16_t>(obj.GetNamedNumber(L"versionMinor", 0));
         auto versionPatch = static_cast<uint16_t>(obj.GetNamedNumber(L"versionPatch", 0));
+        auto versionBuildNumber = static_cast<uint16_t>(obj.GetNamedNumber(L"versionBuildNumber", 0));
         auto preview = obj.GetNamedString(L"preview", L"");
 
         auto buildSource = obj.GetNamedString(L"source", L"");
@@ -142,17 +93,24 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
 
         auto release = winrt::make_self<MidiRuntimeRelease>();
 
+        auto version = winrt::make_self<midi2::Utilities::RuntimeInformation::implementation::MidiRuntimeVersion>();
+
+        version->InternalInitialize(
+            versionMajor,
+            versionMinor,
+            versionPatch,
+            versionBuildNumber,
+            preview,
+            versionFullString
+        );
+        
         release->InternalInitialize(
             releaseType,
             buildSource,
             versionName,
             releaseDescription,
             buildDate,
-            versionFullString,
-            versionMajor,
-            versionMinor,
-            versionPatch,
-            preview,
+            *version,
             releasePageUri,
             directDownloadUriX64,
             directDownloadUriArm64
@@ -166,7 +124,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     collections::IVector<midi2::Utilities::Update::MidiRuntimeRelease> MidiRuntimeUpdateUtility::InternalGetAvailableReleases(
         bool restrictToMajorVersion,
         uint16_t majorVersion,
-        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes
+        midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes inScopeReleaseTypes
         ) noexcept
     {
         auto results = winrt::single_threaded_vector<midi2::Utilities::Update::MidiRuntimeRelease>();
@@ -194,7 +152,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
                     // if we're restricting to a major version, only add if the major version matches
                     if (restrictToMajorVersion)
                     {
-                        if (release.VersionMajor() != majorVersion)
+                        if (release.Version().Major() != majorVersion)
                         {
                             continue;
                         }
@@ -253,7 +211,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     {
         return InternalGetAvailableReleases(
             false, 0,
-            midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Preview | midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Stable
+            midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes::Preview | midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes::Stable
         ).GetView();
     }
 
@@ -264,7 +222,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     {
         auto releases = InternalGetAvailableReleases(
             false, 0, 
-            midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Preview | midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes::Stable);
+            midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes::Preview | midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes::Stable);
 
 
         if (releases == nullptr || releases.Size() == 0)
@@ -292,7 +250,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     // returns null if no match
     _Use_decl_annotations_
     midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetHighestAvailableRelease(
-        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes) noexcept
+        midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes inScopeReleaseTypes) noexcept
     {
         auto releases = InternalGetAvailableReleases(false, 0, inScopeReleaseTypes);
 
@@ -324,7 +282,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     _Use_decl_annotations_
     midi2::Utilities::Update::MidiRuntimeRelease MidiRuntimeUpdateUtility::GetHighestAvailableRelease(
         uint16_t specificMajorVersion, 
-        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes inScopeReleaseTypes) noexcept
+        midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes inScopeReleaseTypes) noexcept
     {
         auto releases = InternalGetAvailableReleases(true, specificMajorVersion, inScopeReleaseTypes);
 
@@ -351,6 +309,26 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
 
 
 
+    _Use_decl_annotations_
+    bool MidiRuntimeUpdateUtility::IsReleaseNewerThanInstalled(
+        midi2::Utilities::Update::MidiRuntimeRelease release,
+        bool ignoreReleaseType) noexcept
+    {
+        // TODO
+
+        UNREFERENCED_PARAMETER(release);
+        UNREFERENCED_PARAMETER(ignoreReleaseType);
+
+        // TEMP
+        return true;
+    }
+
+    _Use_decl_annotations_
+    midi2::Utilities::RuntimeInformation::MidiRuntimeArchitecture MidiRuntimeUpdateUtility::InstalledRuntimeArchitecture()
+    {
+        // TODO
+        return  midi2::Utilities::RuntimeInformation::MidiRuntimeArchitecture::x64;
+    }
 
 
 

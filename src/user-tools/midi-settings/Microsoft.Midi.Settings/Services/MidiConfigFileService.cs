@@ -47,17 +47,17 @@ namespace Microsoft.Midi.Settings.Services
 
         }
 
-        internal class Reg
-        {
-            public const string ConfigFileRegKey = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services";
-            public const string ConfigFileCurrentRegValue = @"CurrentConfig";
+        //internal class Reg
+        //{
+        //    public const string ConfigFileRegKey = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services";
+        //    public const string ConfigFileCurrentRegValue = @"CurrentConfig";
 
-            public const string UseMmcssRegValue = @"UseMMCSS";
-            public const string Midi2DiscoveryEnabled = @"Midi2DiscoveryEnabled";
-            public const string Midi2DiscoveryTimeout = @"Midi2DiscoveryTimeoutMS";
+        //    public const string UseMmcssRegValue = @"UseMMCSS";
+        //    public const string Midi2DiscoveryEnabled = @"Midi2DiscoveryEnabled";
+        //    public const string Midi2DiscoveryTimeout = @"Midi2DiscoveryTimeoutMS";
 
-            public const string DefaultToOldMidi1PortNaming = @"DefaultToOldMidi1PortNaming";
-        }
+        //    public const string DefaultToOldMidi1PortNaming = @"DefaultToOldMidi1PortNaming";
+        //}
 
         public const string DefaultConfigurationName = "WindowsMidiServices";
         
@@ -117,6 +117,8 @@ namespace Microsoft.Midi.Settings.Services
 
         internal bool LoadHeaderOnly()
         {
+            if (m_fullFileName == string.Empty) return false;
+
             try
             {
                 string contents;
@@ -165,6 +167,8 @@ namespace Microsoft.Midi.Settings.Services
 
         public bool Load()
         {
+            if (m_fullFileName == string.Empty) return false;
+
             try
             {
                 if (!File.Exists(m_fullFileName))
@@ -222,6 +226,9 @@ namespace Microsoft.Midi.Settings.Services
 
         private bool Save()
         {
+            if (m_config == null) return false;
+            if (m_fullFileName == string.Empty) return false;
+
             try
             {
                 // CreateText opens and overwrites if already there
@@ -235,14 +242,18 @@ namespace Microsoft.Midi.Settings.Services
             }
             catch (Exception)
             {
-                return false;
             }
+
+            return false;
         }
 
 
 
         private bool MergeEndpointTransportSectionIntoJsonObject(JsonObject mainConfigObject, JsonObject objectToMergeIn)
         {
+            if (mainConfigObject == null) return false;
+            if (objectToMergeIn == null) return false;
+
             // this assumes the object to merge in has a singular tree structure to pull in. We're
             // not doing any recursion here. The intent is to do something like add another endpoint
             // create section to the master document, without having to manually create everything.
@@ -320,6 +331,9 @@ namespace Microsoft.Midi.Settings.Services
         // this assumes the config has already been run against the service to create the pair. We're just storing them here.
         public bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig)
         {
+            if (m_config == null) return false;
+            if (creationConfig == null) return false;
+
             // get the latest from disk
             if (!Load())
             {
@@ -340,6 +354,8 @@ namespace Microsoft.Midi.Settings.Services
             return false;
         }
 
+
+
     }
 
 
@@ -357,6 +373,10 @@ namespace Microsoft.Midi.Settings.Services
             {
                 return m_currentConfigFile;
             }
+            set
+            {
+                m_currentConfigFile = (MidiConfigFile?)value;
+            }
         }
 
         public bool IsConfigFileActive
@@ -370,7 +390,7 @@ namespace Microsoft.Midi.Settings.Services
             m_currentConfigFileName = string.Empty;
             m_currentConfigName = string.Empty;
 
-            m_currentConfigFile = LoadCurrentConfigFileFromRegistry();
+            //m_currentConfigFile = LoadCurrentConfigFileFromRegistry();
         }
 
 
@@ -409,19 +429,16 @@ namespace Microsoft.Midi.Settings.Services
             return configList;
         }
 
-        private MidiConfigFile? LoadCurrentConfigFileFromRegistry()
+        private MidiConfigFile? LoadConfigFile(string localFileName)
         {
-            // get reg key
-            var currentLocalFileName = (string)Registry.GetValue(MidiConfigConstants.Reg.ConfigFileRegKey, MidiConfigConstants.Reg.ConfigFileCurrentRegValue, string.Empty);
-
             // early Canary builds went out with a file of this name, and
             // it's protected in a way that we can't write to it without
             // some futzing around, so we just pretend it doesn't exist.
-            if (currentLocalFileName != null &&
-                currentLocalFileName != string.Empty &&
-                currentLocalFileName.ToLower() != "default.midiconfig.json")
+            if (localFileName != null &&
+                localFileName != string.Empty &&
+                localFileName.ToLower() != "default.midiconfig.json")
             {
-                var config = new MidiConfigFile(currentLocalFileName);
+                var config = new MidiConfigFile(localFileName);
 
                 if (config.Load())
                 {
@@ -432,26 +449,26 @@ namespace Microsoft.Midi.Settings.Services
             return null;
         }
 
-        public bool UpdateRegistryCurrentConfigFile(string configFileName)
-        {
-            try
-            {
-                Registry.SetValue(MidiConfigConstants.Reg.ConfigFileRegKey, MidiConfigConstants.Reg.ConfigFileCurrentRegValue, configFileName, RegistryValueKind.String);
+        //public bool UpdateRegistryCurrentConfigFile(string configFileName)
+        //{
+        //    try
+        //    {
+        //        Registry.SetValue(MidiConfigConstants.Reg.ConfigFileRegKey, MidiConfigConstants.Reg.ConfigFileCurrentRegValue, configFileName, RegistryValueKind.String);
 
-                var config = LoadCurrentConfigFileFromRegistry();
+        //        var config = LoadCurrentConfigFileFromRegistry();
 
-                // set the config as current
-                m_currentConfigFile = config;
+        //        // set the config as current
+        //        m_currentConfigFile = config;
 
-                return true;
-            }
-            catch (Exception)
-            {
+        //        return true;
+        //    }
+        //    catch (Exception)
+        //    {
 
-            }
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         public string GetDefaultConfigName()
         {
@@ -518,6 +535,8 @@ namespace Microsoft.Midi.Settings.Services
 
                 if (ConfigFileExists(configLocalFileName))
                 {
+                    // TODO: Back up the old one and overwrite this one?
+
                     return false;
                 }
 

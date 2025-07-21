@@ -26,12 +26,15 @@ void __RPC_USER midl_user_free(void __RPC_FAR* p)
 }
 
 
-
+// this version is for the service-side of the RPC calls. It only 
+// handles allocation with midl_user_allocate, not with CoTaskMemAlloc
 HRESULT
 CopyStringToOutputParameter(
     _In_ LPCWSTR sourceString,
     _Out_ LPWSTR* outputParameter)
 {
+    RETURN_HR_IF_NULL(E_INVALIDARG, outputParameter);
+
     if (sourceString != nullptr)
     {
         size_t length = wcslen(sourceString) + 1;
@@ -41,12 +44,16 @@ CopyStringToOutputParameter(
             size_t memorySize = length * sizeof(wchar_t);
 
             *outputParameter = (LPWSTR)midl_user_allocate(memorySize);
-            if (*outputParameter)
-            {
-                //memset(*transportListJson, 0, memorySize);
-                wcscpy_s(*outputParameter, length, sourceString);
-            }
+
+            RETURN_IF_NULL_ALLOC(*outputParameter);
+
+            //memset(*transportListJson, 0, memorySize);
+            wcscpy_s(*outputParameter, length, sourceString);
         }
+    }
+    else
+    {
+        *outputParameter = nullptr;
     }
 
     return S_OK;

@@ -87,21 +87,32 @@ namespace Microsoft.Midi.Settings.ViewModels
                 string newConfigName = m_defaultsService.GetDefaultMidiConfigName(); ;
                 string newConfigFileName = m_defaultsService.GetDefaultMidiConfigFileName();
 
-                if (m_configFileService.CreateNewConfigFile(newConfigName, newConfigFileName))
+                if (ConfigFileName == null || ConfigFileName == string.Empty)
                 {
-                    if (m_configFileService.UpdateRegistryCurrentConfigFile(ConfigFileName))
-                    {
-                        needServiceRestart = true;
-                    }
-                    else
-                    {
-                        // TODO: show an error and leave
-                    }
+                    ConfigFileName = newConfigFileName;
+                }
+
+                // if the config file exists, we don't overwrite it
+                if (!m_configFileService.ConfigFileExists(ConfigFileName))
+                {
+                    // this can be false if the config file already existed
+                    bool newConfigCreated = m_configFileService.CreateNewConfigFile(newConfigName, newConfigFileName);
+                }
+
+                if (m_registryService.UpdateRegistryCurrentConfigFileName(ConfigFileName))
+                {
+                    needServiceRestart = true;
+
+                    var config = new MidiConfigFile(ConfigFileName);
+                    config.Load();
+
+                    m_configFileService.CurrentConfig = config;
                 }
                 else
                 {
                     // TODO: show an error and leave
                 }
+
             }
 
             if (CreateDefaultLoopbackEndpoints)
@@ -109,6 +120,10 @@ namespace Microsoft.Midi.Settings.ViewModels
                 if (m_configFileService.CurrentConfig != null)
                 {
                     var creationConfig = m_defaultsService.GetDefaultLoopbackCreationConfig();
+
+
+                    // TODO: Verify they don't already exist
+
 
                     var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
 

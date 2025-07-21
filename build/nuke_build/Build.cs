@@ -53,9 +53,9 @@ class Build : NukeBuild
 
     const UInt16 BuildVersionMajor = 1;       
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 10;
+    const UInt16 BuildVersionPatch = 11;
 
-    UInt16 PrereleaseBuildNumber = 0;
+    UInt16 BuildVersionBuildNumber = 0;
 
     readonly string BuildMajorMinorPatch = BuildVersionMajor.ToString() + "." + BuildVersionMinor.ToString() + "." + BuildVersionPatch.ToString();
 
@@ -205,15 +205,15 @@ class Build : NukeBuild
             }
             else if (BuildType == MidiBuildType.Preview)
             {
-                BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + PrereleaseBuildNumber;
+                BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
                 NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
             }
 
             // they are the same, for our use here.
             BuildVersionFullString = NugetPackageVersion;
 
-            BuildVersionAssemblyFullString = BuildMajorMinorPatch + "." + PrereleaseBuildNumber;
-            BuildVersionFileFullString = BuildMajorMinorPatch + "." + PrereleaseBuildNumber;
+            BuildVersionAssemblyFullString = BuildMajorMinorPatch + "." + BuildVersionBuildNumber;
+            BuildVersionFileFullString = BuildMajorMinorPatch + "." + BuildVersionBuildNumber;
 
             NugetFullPackageIdWithVersion = NugetPackageId + "." + NugetPackageVersion;
 
@@ -221,6 +221,10 @@ class Build : NukeBuild
 
             // create the release folder
             Directory.CreateDirectory(ThisReleaseFolder.ToString());
+
+
+            Console.WriteLine($"Building {BuildVersionFullString}");
+
         });
 
 
@@ -263,6 +267,7 @@ class Build : NukeBuild
                 writer.WriteLine($"            \"versionMajor\": {buildVersionMajor},");
                 writer.WriteLine($"            \"versionMinor\": {buildVersionMajor},");
                 writer.WriteLine($"            \"versionPatch\": {buildVersionPatch},");
+                writer.WriteLine($"            \"versionBuildNumber\": {BuildVersionBuildNumber},");
                 writer.WriteLine($"            \"preview\": \"{BuildVersionPreviewString}\",");
                 writer.WriteLine($"            \"releaseDescription\": \"Replace this text with a summary of this SDK update\",");
                 writer.WriteLine($"            \"releaseNotesUri\": \"\",");
@@ -294,6 +299,7 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      (uint16_t){buildVersionMajor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      (uint16_t){buildVersionMinor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      (uint16_t){buildVersionPatch}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               (uint16_t){BuildVersionBuildNumber}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L\"{BuildVersionPreviewString}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L\"{BuildVersionFileFullString}\"");
                 writer.WriteLine();
@@ -317,6 +323,7 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR                    (uint16_t){buildVersionMajor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR                    (uint16_t){buildVersionMinor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_PATCH                    (uint16_t){buildVersionPatch}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER             (uint16_t){BuildVersionBuildNumber}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_PREVIEW                          L\"{BuildVersionPreviewString}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FILE                     L\"{BuildVersionFileFullString}\"");
                 writer.WriteLine();
@@ -346,6 +353,7 @@ class Build : NukeBuild
                 writer.WriteLine($"\t\tpublic const ushort VersionMajor = {buildVersionMajor};");
                 writer.WriteLine($"\t\tpublic const ushort VersionMinor = {buildVersionMinor};");
                 writer.WriteLine($"\t\tpublic const ushort VersionPatch = {buildVersionPatch};");
+                writer.WriteLine($"\t\tpublic const ushort VersionBuildNumber = {BuildVersionBuildNumber};");
                 writer.WriteLine($"\t\tpublic const string Preview = \"{BuildVersionPreviewString}\";");
                 writer.WriteLine($"\t\tpublic const string AssemblyFullVersion = \"{BuildVersionAssemblyFullString}\";");
                 writer.WriteLine($"\t\tpublic const string FileFullVersion = \"{BuildVersionFileFullString}\";");
@@ -387,14 +395,14 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(ApiSolutionFolder / "midi2.sln")
-                    //.SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     //.SetConfiguration(buildConfiguration)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     //.SetTargets("Rebuild") 
                     .SetProperties(msbuildProperties)
                     .SetVerbosity(BuildVerbosity)
-                    //.EnableNodeReuse()
+                    .EnableNodeReuse()
                 );
             }
 
@@ -509,7 +517,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(ApiSolutionFolder / "midi2-service-component-preview.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -566,7 +574,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -722,7 +730,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSolutionFolder / "app-sdk-tools-and-tests.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -791,7 +799,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(AppSdkSetupSolutionFolder / "midi-services-app-sdk-runtime-setup.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -853,7 +861,7 @@ class Build : NukeBuild
             writer.WriteLine(newBuildNumber.ToString());
         }
 
-        PrereleaseBuildNumber = (ushort)newBuildNumber;
+        BuildVersionBuildNumber = (ushort)newBuildNumber;
 
     }
 
@@ -903,7 +911,7 @@ class Build : NukeBuild
 
                 var output = MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(InBoxComponentsSetupSolutionFolder / "midi-services-in-box-setup.sln")
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -958,7 +966,7 @@ class Build : NukeBuild
 
             var output = MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(InDevelopmentServiceComponentsSetupSolutionFolder / "midi-services-in-box-preview-setup.sln")
-                .SetMaxCpuCount(14)
+                .SetMaxCpuCount(null)
                 /*.SetOutDir(outputFolder) */
                 /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                 /*.SetTargets("Build") */
@@ -1569,7 +1577,7 @@ class Build : NukeBuild
 
                 MSBuildTasks.MSBuild(_ => _
                     .SetTargetPath(solution)
-                    .SetMaxCpuCount(14)
+                    .SetMaxCpuCount(null)
                     /*.SetOutDir(outputFolder) */
                     /*.SetProcessWorkingDirectory(ApiSolutionFolder)*/
                     /*.SetTargets("Build") */
@@ -1648,7 +1656,7 @@ class Build : NukeBuild
 
             MSBuildTasks.MSBuild(_ => _
                 .SetTargetPath(solution)
-                .SetMaxCpuCount(14)
+                .SetMaxCpuCount(null)
                 /*.SetOutDir(outputFolder) */
                 .SetProcessWorkingDirectory(SamplesCSWinRTSolutionFolder)
                 /*.SetTargets("Build") */
