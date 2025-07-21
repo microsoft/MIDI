@@ -55,7 +55,7 @@ class Build : NukeBuild
     const UInt16 BuildVersionMinor = 0;
     const UInt16 BuildVersionPatch = 11;
 
-    UInt16 PrereleaseBuildNumber = 0;
+    UInt16 BuildVersionBuildNumber = 0;
 
     readonly string BuildMajorMinorPatch = BuildVersionMajor.ToString() + "." + BuildVersionMinor.ToString() + "." + BuildVersionPatch.ToString();
 
@@ -205,15 +205,15 @@ class Build : NukeBuild
             }
             else if (BuildType == MidiBuildType.Preview)
             {
-                BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + PrereleaseBuildNumber;
+                BuildVersionPreviewString = "preview." + BuildVersionPreviewNumber + "." + BuildVersionBuildNumber;
                 NugetPackageVersion = BuildMajorMinorPatch + "-" + BuildVersionPreviewString;
             }
 
             // they are the same, for our use here.
             BuildVersionFullString = NugetPackageVersion;
 
-            BuildVersionAssemblyFullString = BuildMajorMinorPatch + "." + PrereleaseBuildNumber;
-            BuildVersionFileFullString = BuildMajorMinorPatch + "." + PrereleaseBuildNumber;
+            BuildVersionAssemblyFullString = BuildMajorMinorPatch + "." + BuildVersionBuildNumber;
+            BuildVersionFileFullString = BuildMajorMinorPatch + "." + BuildVersionBuildNumber;
 
             NugetFullPackageIdWithVersion = NugetPackageId + "." + NugetPackageVersion;
 
@@ -267,6 +267,7 @@ class Build : NukeBuild
                 writer.WriteLine($"            \"versionMajor\": {buildVersionMajor},");
                 writer.WriteLine($"            \"versionMinor\": {buildVersionMajor},");
                 writer.WriteLine($"            \"versionPatch\": {buildVersionPatch},");
+                writer.WriteLine($"            \"versionBuildNumber\": {BuildVersionBuildNumber},");
                 writer.WriteLine($"            \"preview\": \"{BuildVersionPreviewString}\",");
                 writer.WriteLine($"            \"releaseDescription\": \"Replace this text with a summary of this SDK update\",");
                 writer.WriteLine($"            \"releaseNotesUri\": \"\",");
@@ -298,6 +299,7 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      (uint16_t){buildVersionMajor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      (uint16_t){buildVersionMinor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      (uint16_t){buildVersionPatch}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               (uint16_t){BuildVersionBuildNumber}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L\"{BuildVersionPreviewString}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L\"{BuildVersionFileFullString}\"");
                 writer.WriteLine();
@@ -321,6 +323,7 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR                    (uint16_t){buildVersionMajor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR                    (uint16_t){buildVersionMinor}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_PATCH                    (uint16_t){buildVersionPatch}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER             (uint16_t){BuildVersionBuildNumber}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_PREVIEW                          L\"{BuildVersionPreviewString}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FILE                     L\"{BuildVersionFileFullString}\"");
                 writer.WriteLine();
@@ -350,6 +353,7 @@ class Build : NukeBuild
                 writer.WriteLine($"\t\tpublic const ushort VersionMajor = {buildVersionMajor};");
                 writer.WriteLine($"\t\tpublic const ushort VersionMinor = {buildVersionMinor};");
                 writer.WriteLine($"\t\tpublic const ushort VersionPatch = {buildVersionPatch};");
+                writer.WriteLine($"\t\tpublic const ushort VersionBuildNumber = {BuildVersionBuildNumber};");
                 writer.WriteLine($"\t\tpublic const string Preview = \"{BuildVersionPreviewString}\";");
                 writer.WriteLine($"\t\tpublic const string AssemblyFullVersion = \"{BuildVersionAssemblyFullString}\";");
                 writer.WriteLine($"\t\tpublic const string FileFullVersion = \"{BuildVersionFileFullString}\";");
@@ -857,7 +861,7 @@ class Build : NukeBuild
             writer.WriteLine(newBuildNumber.ToString());
         }
 
-        PrereleaseBuildNumber = (ushort)newBuildNumber;
+        BuildVersionBuildNumber = (ushort)newBuildNumber;
 
     }
 
