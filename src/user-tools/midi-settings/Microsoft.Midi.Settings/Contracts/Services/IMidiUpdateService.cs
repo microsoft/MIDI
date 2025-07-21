@@ -7,6 +7,7 @@
 // ============================================================================
 
 using Microsoft.Windows.Devices.Midi2.Utilities.Update;
+using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,13 +18,13 @@ namespace Microsoft.Midi.Settings.Contracts.Services
 {
     public interface IMidiUpdateService
     {
-        MidiRuntimeUpdateReleaseTypes GetCurrentInstalledChannel();
+        MidiRuntimeReleaseTypes GetCurrentInstalledChannel();
 
-        MidiRuntimeUpdateReleaseTypes GetCurrentPreferredChannel();
+        MidiRuntimeReleaseTypes GetCurrentPreferredChannel();
 
         IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads();
 
-        MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeUpdateReleaseTypes releaseChannelType);
+        MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeReleaseTypes releaseChannelType);
 
         Uri GetMidiSdkInstallerPageUri();
 

@@ -36,7 +36,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
     public partial class EndpointsLoopViewModel : SingleTransportEndpointViewModelBase, INavigationAware
     {
-        private IMidiConfigFileService m_midiConfigFileService;
+        private IMidiConfigFileService _midiConfigFileService;
 
         public ICommand ShowCreateLoopbackPairsDialogCommand
         {
@@ -51,41 +51,41 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public bool IsConfigFileActive
         {
-            get { return m_midiConfigFileService.IsConfigFileActive; }
+            get { return _midiConfigFileService.IsConfigFileActive; }
         }
 
 
-        private string m_newLoopbackEndpointAName;
+        private string _newLoopbackEndpointAName;
         public string NewLoopbackEndpointAName
         {
-            get { return m_newLoopbackEndpointAName; }
+            get { return _newLoopbackEndpointAName; }
             set
             {
-                m_newLoopbackEndpointAName = value.Trim();
+                _newLoopbackEndpointAName = value.Trim();
                 UpdateValidState();
                 OnPropertyChanged();
             }
         }
 
-        private string m_newLoopbackEndpointBName;
+        private string _newLoopbackEndpointBName;
         public string NewLoopbackEndpointBName
         {
-            get { return m_newLoopbackEndpointBName; }
+            get { return _newLoopbackEndpointBName; }
             set
             {
-                m_newLoopbackEndpointBName = value.Trim();
+                _newLoopbackEndpointBName = value.Trim();
                 UpdateValidState();
                 OnPropertyChanged();
             }
         }
 
-        private string m_newUniqueIdentifier;
+        private string _newUniqueIdentifier;
         public string NewUniqueIdentifier
         {
-            get { return m_newUniqueIdentifier; }
+            get { return _newUniqueIdentifier; }
             set
             {
-                m_newUniqueIdentifier = value.Trim();
+                _newUniqueIdentifier = value.Trim();
 
                 UpdateValidState();
                 OnPropertyChanged();
@@ -198,9 +198,9 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 if (result.Success)
                 {
-                    if (m_midiConfigFileService.CurrentConfig != null)
+                    if (_midiConfigFileService.CurrentConfig != null)
                     {
-                        m_midiConfigFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+                        _midiConfigFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
 
                         RefreshDeviceCollection();
                     }
@@ -224,7 +224,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             var ids = new Dictionary<string, bool>();
 
             // we shouldn't be reloading here. optimize this later.
-            var endpoints = AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices
+            var endpoints = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices
                 .Where(x => x.Value.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
                 .Select(i => i.Value);
 
@@ -255,15 +255,19 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
 
-        public EndpointsLoopViewModel(INavigationService navigationService, IMidiConfigFileService midiConfigFileService) : base("LOOP", navigationService)
+        public EndpointsLoopViewModel(
+            INavigationService navigationService, 
+            IMidiConfigFileService midiConfigFileService,
+            IMidiEndpointEnumerationService enumerationService
+            ) : base("LOOP", navigationService, enumerationService)
         {
             LoadExistingEndpointPairs();
 
-            m_midiConfigFileService = midiConfigFileService;
+            _midiConfigFileService = midiConfigFileService;
 
             GenerateNewUniqueId();
 
-            if (m_midiConfigFileService.IsConfigFileActive)
+            if (_midiConfigFileService.IsConfigFileActive)
             {
                 NewLoopbackIsPersistent = true;
             }

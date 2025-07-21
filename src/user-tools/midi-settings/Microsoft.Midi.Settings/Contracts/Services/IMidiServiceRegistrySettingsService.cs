@@ -44,7 +44,11 @@ namespace Microsoft.Midi.Settings.Contracts.Services
         bool SetMidi2DiscoveryTimeoutMS(UInt32 newValue);
 
 
+        bool IsConfigFileSpecified();
 
+        string GetCurrentConfigFileName();
+
+        bool UpdateRegistryCurrentConfigFileName(string configFileName);
 
     }
 }

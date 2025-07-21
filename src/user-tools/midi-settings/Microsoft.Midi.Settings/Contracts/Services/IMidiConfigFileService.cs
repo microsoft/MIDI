@@ -35,7 +35,7 @@ public interface IMidiConfigFileService
 {
     bool IsConfigFileActive { get; }
 
-    IMidiConfigFile? CurrentConfig { get; }
+    IMidiConfigFile? CurrentConfig { get; set; }
 
     string GetConfigFilesLocation();
 
@@ -49,6 +49,6 @@ public interface IMidiConfigFileService
 
     string BuildConfigLocalFileNameFromConfigName(string configName);
 
-    bool UpdateRegistryCurrentConfigFile(string configFileName);
+//    bool UpdateRegistryCurrentConfigFile(string configFileName);
 
 }

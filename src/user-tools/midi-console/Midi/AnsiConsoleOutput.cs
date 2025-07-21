@@ -17,23 +17,23 @@ namespace Microsoft.Midi.ConsoleApp
         {
             // TODO: These should likely be localized
 
-            string offsetUnitNanoseconds = "ns";
-            string offsetUnitMicroseconds = "μs";
-            string offsetUnitMilliseconds = "ms";
-            string offsetUnitSeconds = "s";
-            string offsetUnitMinutes = "mn";
-            string offsetUnitHours = "hr";
-            string offsetUnitDays = "dd";
-            string offsetUnitYears = "yy";
+            const string offsetUnitNanoseconds = "ns";
+            const string offsetUnitMicroseconds = "μs";
+            const string offsetUnitMilliseconds = "ms";
+            const string offsetUnitSeconds = "s";
+            const string offsetUnitMinutes = "mn";
+            const string offsetUnitHours = "hr";
+            const string offsetUnitDays = "dd";
+            const string offsetUnitYears = "yy";
 
-            string offsetUnitNanosecondsLong = "nanoseconds";
-            string offsetUnitMicrosecondsLong = "microseconds";
-            string offsetUnitMillisecondsLong = "milliseconds";
-            string offsetUnitSecondsLong = "seconds";
-            string offsetUnitMinutesLong = "minutes";
-            string offsetUnitHoursLong = "hours";
-            string offsetUnitDaysLong = "days";
-            string offsetUnitYearsLong = "years";
+            const string offsetUnitNanosecondsLong = "nanoseconds";
+            const string offsetUnitMicrosecondsLong = "microseconds";
+            const string offsetUnitMillisecondsLong = "milliseconds";
+            const string offsetUnitSecondsLong = "seconds";
+            const string offsetUnitMinutesLong = "minutes";
+            const string offsetUnitHoursLong = "hours";
+            const string offsetUnitDaysLong = "days";
+            const string offsetUnitYearsLong = "years";
 
 
             const double secondsPerMinute = 60;
@@ -48,9 +48,36 @@ namespace Microsoft.Midi.ConsoleApp
             double ticksPerDay = MidiClock.TimestampFrequency * secondsPerDay;
             double ticksPerYear = MidiClock.TimestampFrequency * secondsPerYear;
 
-            double ticksPerMillisecond = MidiClock.TimestampFrequency / 1000;
-            double ticksPerMicrosecond = MidiClock.TimestampFrequency / 1000000;
-            double ticksPerNanosecond = MidiClock.TimestampFrequency / 1000000000;
+            const double millisecondsPerSecond = 1000.0;
+            const double microsecondsPerSecond = 1000000.0;
+            const double nanosecondsPerSecond = 1000000000.0;
+
+            double ticksPerMillisecond = (double)MidiClock.TimestampFrequency / millisecondsPerSecond;
+            double ticksPerMicrosecond = (double)MidiClock.TimestampFrequency / microsecondsPerSecond;
+            //double ticksPerNanosecond = (double)MidiClock.TimestampFrequency / nanosecondsPerSecond;
+
+            double nanosecondsPerTick = nanosecondsPerSecond / (double)MidiClock.TimestampFrequency;
+
+
+            //var frequency = MidiClock.TimestampFrequency;
+
+            //if (frequency >= 100000)
+            //{
+            //    convertedFrequency = 1.0 / frequency * 1000000000.0;
+            //    units = "ns";
+            //}
+            //else if (frequency >= 1000)
+            //{
+            //    convertedFrequency = 1.0 / frequency * 1000000.0;
+            //    units = "μs";
+            //}
+            //else
+            //{
+            //    convertedFrequency = 1.0 / frequency * 1000.0;
+            //    units = "ms";
+            //}
+
+
 
 
             if (ticksToConvert == 0)
@@ -109,7 +136,7 @@ namespace Microsoft.Midi.ConsoleApp
             {
                 // convert to nanoseconds
                 convertedUnitLabel = longLabel ? offsetUnitNanosecondsLong : offsetUnitNanoseconds;
-                convertedValue = (double)ticksToConvert / ticksPerNanosecond;
+                convertedValue = (double)ticksToConvert * nanosecondsPerTick;
             }
 
         }

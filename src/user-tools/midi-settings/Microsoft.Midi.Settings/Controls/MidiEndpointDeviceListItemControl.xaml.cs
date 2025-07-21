@@ -23,7 +23,7 @@ namespace Microsoft.Midi.Settings.Controls
 {
     public sealed partial class MidiEndpointDeviceListItemControl : UserControl
     {
-        bool _initialized = false;
+//        bool _initialized = false;
 
         public MidiEndpointDeviceListItemControl()
         {

@@ -25,6 +25,7 @@ namespace Microsoft.Midi.Settings.ViewModels
     public partial class SingleTransportEndpointViewModelBase : ObservableRecipient
     {
         private readonly INavigationService _navigationService;
+        protected readonly IMidiEndpointEnumerationService _enumerationService;
 
         protected readonly string _transportCode;
 
@@ -35,11 +36,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public DispatcherQueue? DispatcherQueue { get; set; }
 
-        public SingleTransportEndpointViewModelBase(string transportCode, INavigationService navigationService)
+        public SingleTransportEndpointViewModelBase(string transportCode, 
+            INavigationService navigationService,
+            IMidiEndpointEnumerationService enumerationService)
         {
             _transportCode = transportCode.ToUpper().Trim();
 
             _navigationService = navigationService;
+            _enumerationService = enumerationService;
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointDeviceInformation>(
                 (param) =>
@@ -78,7 +82,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // now get all the endpoint devices and put them in groups by transport
 
-                var enumeratedDevices = AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x=>x.Name);
+                var enumeratedDevices = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x=>x.Name);
 
                 foreach (var endpointDevice in enumeratedDevices)
                 {

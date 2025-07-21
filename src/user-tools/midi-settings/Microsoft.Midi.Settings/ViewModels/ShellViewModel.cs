@@ -26,12 +26,19 @@ public class ShellViewModel : ObservableRecipient
     private readonly IGeneralSettingsService _generalSettingsService;
 
     private readonly IMidiConfigFileService m_configFileService;
+    private readonly IMidiSdkService _sdkService;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
     public bool IsRunningAsAdministrator => UserHelper.CurrentUserHasAdminRights();
 
-    public bool IsServiceAvailable => AppState.Current.IsServiceInitialized();
+    public bool IsServiceAvailable
+    {
+        get
+        {
+            return _sdkService.IsServiceInitialized;
+        }
+    }
 
     //public bool AreDeveloperOptionsEnabled
     //{
@@ -72,8 +79,11 @@ public class ShellViewModel : ObservableRecipient
     public ShellViewModel(INavigationService navigationService, 
         INavigationViewService navigationViewService, 
         IGeneralSettingsService generalSettingsService,
-        IMidiConfigFileService midiConfigFileService)
+        IMidiConfigFileService midiConfigFileService,
+        IMidiSdkService sdkService
+        )
     {
+        _sdkService = sdkService;
         NavigationService = navigationService;
         NavigationService.Navigated += OnNavigated;
         NavigationViewService = navigationViewService;

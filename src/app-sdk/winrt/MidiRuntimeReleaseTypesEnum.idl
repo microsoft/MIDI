@@ -10,12 +10,13 @@
 import "MidiApiContracts.idl";
 
 
-namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
+namespace Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation
 {
-    [contract(MidiRuntimeUpdateUtilityApiContract, 1)]
+    [contract(MidiRuntimeInformationApiContract, 1)]
     [flags]
-    enum MidiRuntimeUpdateReleaseTypes
+    enum MidiRuntimeReleaseTypes
     {
+        Unknown =   0x00000000,
         Stable =    0x00000001,
         Preview =   0x00000002,
     };

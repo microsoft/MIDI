@@ -16,7 +16,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class EndpointsBle10ViewModel : SingleTransportEndpointViewModelBase
     {
-        public EndpointsBle10ViewModel(INavigationService navigationService) : base("BLE10MS", navigationService)
+        public EndpointsBle10ViewModel(
+            INavigationService navigationService,
+            IMidiEndpointEnumerationService enumerationService
+            ) : base("BLE10MS", navigationService, enumerationService)
         {
         }
 
