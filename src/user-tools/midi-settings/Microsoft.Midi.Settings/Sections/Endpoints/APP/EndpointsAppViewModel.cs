@@ -25,7 +25,11 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class EndpointsAppViewModel : SingleTransportEndpointViewModelBase
     {
-        public EndpointsAppViewModel(INavigationService navigationService) : base("APP", navigationService)
+        public EndpointsAppViewModel(
+            INavigationService navigationService,
+            IMidiEndpointEnumerationService enumerationService
+            ) : 
+            base("APP", navigationService, enumerationService)
         {
         }
 

@@ -24,11 +24,16 @@ using Windows.Storage;
 using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
 using Microsoft.Extensions.Logging.Abstractions;
 using Windows.Foundation;
+using Microsoft.Midi.Settings.Services;
+using Microsoft.Midi.Settings.Contracts.Services;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class ToolsSysExViewModel : ObservableRecipient
     {
+        private readonly IMidiSdkService _sdkService;
+        private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
+
         public DispatcherQueue? DispatcherQueue { get; set; }
 
         public ICommand SendSysExCommand
@@ -37,8 +42,14 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
-        public ToolsSysExViewModel()
+        public ToolsSysExViewModel(
+            IMidiSdkService sdkService,
+            IMidiEndpointEnumerationService endpointEnumerationService
+            )
         {
+            _sdkService = sdkService;
+            _endpointEnumerationService = endpointEnumerationService;
+
             DelayBetweenMessagesText = DefaultDelayBetweenMessagesMilliseconds.ToString();
 
             SendSysExCommand = new RelayCommand(
@@ -214,7 +225,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // now get all the endpoint devices and put them in groups by transport
 
-                var enumeratedDevices = AppState.Current.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x => x.Name);
+                var enumeratedDevices = _endpointEnumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x => x.Name);
 
                 foreach (var endpointDevice in enumeratedDevices)
                 {

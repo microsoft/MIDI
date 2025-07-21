@@ -153,10 +153,15 @@ public partial class ForDevelopersViewModel : ObservableRecipient
                 {
                     regKey.SetAccessControl(acl);
 
-                    // recurse
-                    foreach (var subKey in regKey.OpenSubKey("").GetSubKeyNames())
+                    var regkey2 = regKey.OpenSubKey("");
+
+                    if (regkey2 != null)
                     {
-                        GrantAdministratorFullRegKeyPermissions(location, key + "\\" + subKey, recurseLevel + 1);
+                        // recurse
+                        foreach (var subKey in regkey2.GetSubKeyNames())
+                        {
+                            GrantAdministratorFullRegKeyPermissions(location, key + "\\" + subKey, recurseLevel + 1);
+                        }
                     }
                 }
                 else

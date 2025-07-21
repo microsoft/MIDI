@@ -6,7 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Windows.Devices.Midi2.Utilities.Update;
+
 using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 using System;
 using System.Collections.Generic;
@@ -16,19 +16,17 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Contracts.Services
 {
-    public interface IMidiUpdateService
+    public interface IMidiSdkService
     {
-        MidiRuntimeReleaseTypes GetCurrentInstalledChannel();
+        bool IsServiceInitialized { get; }
+        bool IsRuntimeInitialized { get; }
 
-        MidiRuntimeReleaseTypes GetCurrentPreferredChannel();
+        string InstalledRuntimeDetailedVersionString { get; }
 
-        IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads();
+        MidiRuntimeVersion? InstalledVersion { get; }
 
-        MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeReleaseTypes releaseChannelType);
+        bool InitializeSdk();
 
-        Uri GetMidiSdkInstallerPageUri();
-
-        Task<bool> DownloadAndInstallUpdate(Uri uri);
+        bool InitializeService();
     }
-
 }

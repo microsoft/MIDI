@@ -16,7 +16,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class EndpointsKsaViewModel : SingleTransportEndpointViewModelBase
     {
-        public EndpointsKsaViewModel(INavigationService navigationService) : base("KSA", navigationService)
+        public EndpointsKsaViewModel(
+            INavigationService navigationService,
+            IMidiEndpointEnumerationService enumerationService
+            ) : base("KSA", navigationService, enumerationService)
         {
         }
 

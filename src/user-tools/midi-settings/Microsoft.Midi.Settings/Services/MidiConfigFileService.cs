@@ -117,6 +117,8 @@ namespace Microsoft.Midi.Settings.Services
 
         internal bool LoadHeaderOnly()
         {
+            if (m_fullFileName == string.Empty) return false;
+
             try
             {
                 string contents;
@@ -165,6 +167,8 @@ namespace Microsoft.Midi.Settings.Services
 
         public bool Load()
         {
+            if (m_fullFileName == string.Empty) return false;
+
             try
             {
                 if (!File.Exists(m_fullFileName))
@@ -222,19 +226,19 @@ namespace Microsoft.Midi.Settings.Services
 
         private bool Save()
         {
+            if (m_config == null) return false;
+            if (m_fullFileName == string.Empty) return false;
+
             try
             {
-                if (m_config != null)
+                // CreateText opens and overwrites if already there
+                using (var fs = File.CreateText(m_fullFileName))
                 {
-                    // CreateText opens and overwrites if already there
-                    using (var fs = File.CreateText(m_fullFileName))
-                    {
-                        fs.Write(m_config.Stringify());
-                        fs.Close();
-                    }
-
-                    return true;
+                    fs.Write(m_config.Stringify());
+                    fs.Close();
                 }
+
+                return true;
             }
             catch (Exception)
             {
@@ -247,6 +251,9 @@ namespace Microsoft.Midi.Settings.Services
 
         private bool MergeEndpointTransportSectionIntoJsonObject(JsonObject mainConfigObject, JsonObject objectToMergeIn)
         {
+            if (mainConfigObject == null) return false;
+            if (objectToMergeIn == null) return false;
+
             // this assumes the object to merge in has a singular tree structure to pull in. We're
             // not doing any recursion here. The intent is to do something like add another endpoint
             // create section to the master document, without having to manually create everything.
@@ -324,6 +331,9 @@ namespace Microsoft.Midi.Settings.Services
         // this assumes the config has already been run against the service to create the pair. We're just storing them here.
         public bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig)
         {
+            if (m_config == null) return false;
+            if (creationConfig == null) return false;
+
             // get the latest from disk
             if (!Load())
             {

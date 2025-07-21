@@ -119,6 +119,12 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveSender", defaultThreading });
 
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.RuntimeInformation.MidiRuntimeInformation.MidiRuntimeVersion", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.RuntimeInformation.MidiRuntimeInformation.MidiRuntimeInformation", defaultThreading });
+
+
+    
+
 
 
     return types;

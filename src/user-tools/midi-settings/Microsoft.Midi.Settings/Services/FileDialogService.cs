@@ -14,7 +14,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-using System.Runtime.InteropServices;
 using global::Windows.Win32.Foundation;
 using global::Windows.Win32;
 using global::Windows.Win32.UI.Shell;

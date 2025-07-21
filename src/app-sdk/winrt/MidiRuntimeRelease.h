@@ -15,38 +15,30 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
     {
         MidiRuntimeRelease() = default;
 
-        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes Type() const noexcept { return m_type; }
+        midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes Type() const noexcept { return m_type; }
         winrt::hstring Source() const noexcept { return m_source; }
         winrt::hstring Name() const noexcept { return m_name; }
         winrt::hstring Description() const noexcept { return m_description; }
-        winrt::hstring VersionFull() const noexcept { return m_versionFull; }
 
         foundation::DateTime BuildDate() const noexcept { return m_buildDate; }
 
-        uint16_t VersionMajor() const noexcept { return m_versionMajor; }
-        uint16_t VersionMinor() const noexcept { return m_versionMinor; }
-        uint16_t VersionPatch() const noexcept { return m_versionPatch; }
-        winrt::hstring Preview() const noexcept{ return m_preview; }
+        midi2::Utilities::RuntimeInformation::MidiRuntimeVersion Version() const noexcept { return m_version; }
 
         foundation::Uri ReleaseNotesUri() const noexcept { return m_releaseNotesUri; }
+
         foundation::Uri DirectDownloadUriX64() const noexcept { return m_directDownloadUriX64; }
         foundation::Uri DirectDownloadUriArm64() const noexcept { return m_directDownloadUriArm64; }
-
+        foundation::Uri DirectDownloadUriForCurrentRuntimeArchitecture() const noexcept;
 
         winrt::hstring ToString() const noexcept;
 
-
         void InternalInitialize(
-            _In_ midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes const type,
+            _In_ midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes const type,
             _In_ winrt::hstring const& source,
             _In_ winrt::hstring const& name,
             _In_ winrt::hstring const& description,
             _In_ foundation::DateTime const& buildDate,
-            _In_ winrt::hstring const& versionFull,
-            _In_ uint16_t const versionMajor,
-            _In_ uint16_t const versionMinor,
-            _In_ uint16_t const versionPatch,
-            _In_ winrt::hstring const& preview,
+            _In_ midi2::Utilities::RuntimeInformation::MidiRuntimeVersion const& version,
             _In_ foundation::Uri const& releaseNotesUri,
             _In_ foundation::Uri const& directDownloadUriX64,
             _In_ foundation::Uri const& directDownloadUriArm64
@@ -54,18 +46,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
 
     private:
 
-        midi2::Utilities::Update::MidiRuntimeUpdateReleaseTypes m_type{};
+        midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes m_type{};
         winrt::hstring m_source{};
         winrt::hstring m_name {};
         winrt::hstring m_description{};
 
         foundation::DateTime m_buildDate{};
 
-        winrt::hstring m_versionFull{};
-        uint16_t m_versionMajor{};
-        uint16_t m_versionMinor{};
-        uint16_t m_versionPatch{};
-        winrt::hstring m_preview{};
+        midi2::Utilities::RuntimeInformation::MidiRuntimeVersion m_version{ nullptr };
 
         foundation::Uri m_releaseNotesUri{ nullptr };
         foundation::Uri m_directDownloadUriX64{ nullptr };

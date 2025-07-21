@@ -93,7 +93,11 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         }
 
-        public EndpointsNet2UdpViewModel(INavigationService navigationService, IMidiConfigFileService midiConfigFileService) : base("NET2UDP", navigationService)
+        public EndpointsNet2UdpViewModel(
+            INavigationService navigationService, 
+            IMidiConfigFileService midiConfigFileService,
+            IMidiEndpointEnumerationService enumerationService
+            ) : base("NET2UDP", navigationService, enumerationService)
         {
             m_midiConfigFileService = midiConfigFileService;
 

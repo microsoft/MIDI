@@ -112,6 +112,12 @@
     <ClCompile Include="MidiRuntimeUpdateUtility.cpp">
       <Filter>SDK\Utilities\Update</Filter>
     </ClCompile>
+    <ClCompile Include="MidiRuntimeInformation.cpp">
+      <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiRuntimeVersion.cpp">
+      <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -239,6 +245,12 @@
       <Filter>SDK\Utilities\Update</Filter>
     </ClInclude>
     <ClInclude Include="date_util.h" />
+    <ClInclude Include="MidiRuntimeInformation.h">
+      <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiRuntimeVersion.h">
+      <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
@@ -592,8 +604,17 @@
     <Midl Include="MidiRuntimeRelease.idl">
       <Filter>SDK\Utilities\Update</Filter>
     </Midl>
-    <Midl Include="MidiRuntimeUpdateReleaseTypesEnum.idl">
-      <Filter>SDK\Utilities\Update</Filter>
+    <Midl Include="MidiRuntimeVersion.idl">
+      <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </Midl>
+    <Midl Include="MidiRuntimeInformation.idl">
+      <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </Midl>
+    <Midl Include="MidiRuntimeArchitectureEnum.idl">
+      <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </Midl>
+    <Midl Include="MidiRuntimeReleaseTypesEnum.idl">
+      <Filter>SDK\Utilities\RuntimeInformation</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -715,6 +736,9 @@
     </Filter>
     <Filter Include="SDK\Utilities\Update">
       <UniqueIdentifier>{5baf52df-449c-4b3e-a461-f8a030d42edd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Utilities\RuntimeInformation">
+      <UniqueIdentifier>{a2ff49fc-76c1-470a-a352-66b6349db495}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
