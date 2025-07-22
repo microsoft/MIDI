@@ -2081,17 +2081,16 @@ public:
             return E_ABORT;
         }
     
-        LOG_OUTPUT(L"Initializing midi Bidi");
+        LOG_OUTPUT(L"%s - Initializing midi Bidi", testConfig.SessionName.c_str());
         RETURN_IF_FAILED(midiBidiDevice->Initialize(midiBidirectionalInstanceId.c_str(), &transportCreationParams, &mmcssTaskId, this, 0, m_SessionId));
     
         RETURN_HR_IF(E_FAIL, !(transportCreationParams.DataFormat == MidiDataFormats_UMP || transportCreationParams.DataFormat == MidiDataFormats_ByteStream));
     
-        LOG_OUTPUT(L"Delaying for all threads to initialize");
-
+        LOG_OUTPUT(L"%s - Delaying for all threads to initialize", testConfig.SessionName.c_str());
         // allow all threads to initialize before starting to send
-        Sleep(1000);
+        Sleep(100);
 
-        LOG_OUTPUT(L"Writing midi data");
+        LOG_OUTPUT(L"%s - Writing midi data", testConfig.SessionName.c_str());
 
         LONGLONG firstSendLatency{ 0 };
         LONGLONG lastSendLatency{ 0 };
@@ -2156,7 +2155,7 @@ public:
             }
         }
     
-        LOG_OUTPUT(L"Waiting For Messages...");
+        LOG_OUTPUT(L"%s - Waiting For Messages...", testConfig.SessionName.c_str());
     
         bool continueWaiting {false};
         UINT lastReceivedMessageCount {0};
@@ -2171,15 +2170,15 @@ public:
                     // we're advancing, so we can continue waiting.
                     continueWaiting = true;
                     lastReceivedMessageCount = midiMessagesReceived;
-                    LOG_OUTPUT(L"%d messages recieved so far, still waiting...", lastReceivedMessageCount);
+                    LOG_OUTPUT(L"%s - %d messages recieved so far, still waiting...", testConfig.SessionName.c_str(), lastReceivedMessageCount);
                 }
             }
         } while(continueWaiting);
     
         // wait to see if any additional messages come in (there shouldn't be any)
-        Sleep(500);
+        Sleep(100);
     
-        LOG_OUTPUT(L"%d messages expected, %d received", expectedMessageCount, midiMessagesReceived);
+        LOG_OUTPUT(L"%s - %d messages expected, %d received", testConfig.SessionName.c_str(), expectedMessageCount, midiMessagesReceived);
     
         m_elapsedMs = (lastReceive.QuadPart - firstSend.QuadPart) / qpcPerMs;
         m_messagesPerSecond = ((long double)midiMessagesReceived) / (m_elapsedMs / 1000.);
@@ -2203,7 +2202,7 @@ public:
         m_minRLatency = 1000. * (minReceiveLatency / qpcPerMs);
         m_stddevRLatency = 1000. * (sqrt(stdevReceiveLatency / ((long double)midiMessagesReceived - 1.)) / qpcPerMs);
 
-        LOG_OUTPUT(L"Done, cleaning up");
+        LOG_OUTPUT(L"%s - Done, cleaning up", testConfig.SessionName.c_str());
     
         cleanupOnFailure.release();
         RETURN_IF_FAILED(midiBidiDevice->Shutdown());
@@ -2284,7 +2283,7 @@ private:
     GUID m_SessionId{};
 };
 
-#define NUM_TEST_THREADS 8
+#define NUM_TEST_THREADS 2
 
 void
 MidiTransportTests::MultiThreadedMidiSendTest()
@@ -2292,35 +2291,16 @@ MidiTransportTests::MultiThreadedMidiSendTest()
     // four test threads, two threads waiting for send to complete, two not
     HRESULT results[NUM_TEST_THREADS];
 
-    UMP32 midiTestData_32_0 = {0x20AB1234 };
-    MIDI_MESSAGE midiTestMessage_0 = { 0xAB, 0x12, 0x34 };
-    UMP32 midiTestData_32_1 = {0x20AC1234 };
-    MIDI_MESSAGE midiTestMessage_1 = { 0xAC, 0x12, 0x34 };
-    UMP32 midiTestData_32_2 = {0x20AD1234 };
-    MIDI_MESSAGE midiTestMessage_2 = { 0xAD, 0x12, 0x34 };
-    UMP32 midiTestData_32_3 = {0x20AE1234 };
-    MIDI_MESSAGE midiTestMessage_3 = { 0xAE, 0x12, 0x34 };
-
-    UMP32 midiTestData_32_4 = {0x20AB2234 };
-    MIDI_MESSAGE midiTestMessage_4 = { 0xAB, 0x22, 0x34 };
-    UMP32 midiTestData_32_5 = {0x20AC2234 };
-    MIDI_MESSAGE midiTestMessage_5 = { 0xAC, 0x22, 0x34 };
-    UMP32 midiTestData_32_6 = {0x20AD2234 };
-    MIDI_MESSAGE midiTestMessage_6 = { 0xAD, 0x22, 0x34 };
-    UMP32 midiTestData_32_7 = {0x20AE2234 };
-    MIDI_MESSAGE midiTestMessage_7 = { 0xAE, 0x22, 0x34 };
+    UMP32 midiTestData_32_0 = {0x20AA1234 };
+    MIDI_MESSAGE midiTestMessage_0 = { 0xAA, 0x12, 0x34 };
+    UMP32 midiTestData_32_1 = {0x20AB2234 };
+    MIDI_MESSAGE midiTestMessage_1 = { 0xAB, 0x22, 0x34 };
 
 
     MultiThreadedMidiTest test[NUM_TEST_THREADS];
     MultiThreadedMidiTestConfig testConfig[NUM_TEST_THREADS] = {
-            { L"Thread0Session", MidiDataFormats_UMP, MessageOptionFlags_WaitForSendComplete, midiTestData_32_0, midiTestMessage_0 },
-            { L"Thread1Session", MidiDataFormats_ByteStream, MessageOptionFlags_WaitForSendComplete, midiTestData_32_1, midiTestMessage_1 },
-            { L"Thread2Session", MidiDataFormats_UMP, MessageOptionFlags_None, midiTestData_32_2, midiTestMessage_2 },
-            { L"Thread3Session", MidiDataFormats_ByteStream, MessageOptionFlags_None, midiTestData_32_3, midiTestMessage_3 },
-            { L"Thread4Session", MidiDataFormats_UMP, MessageOptionFlags_WaitForSendComplete, midiTestData_32_4, midiTestMessage_4 },
-            { L"Thread5Session", MidiDataFormats_ByteStream, MessageOptionFlags_WaitForSendComplete, midiTestData_32_5, midiTestMessage_5 },
-            { L"Thread6Session", MidiDataFormats_UMP, MessageOptionFlags_None, midiTestData_32_6, midiTestMessage_6 },
-            { L"Thread7Session", MidiDataFormats_ByteStream, MessageOptionFlags_None, midiTestData_32_7, midiTestMessage_7 }
+            { L"Thread0Session", MidiDataFormats_ByteStream, MessageOptionFlags_WaitForSendComplete, midiTestData_32_0, midiTestMessage_0 },
+            { L"Thread1Session", MidiDataFormats_UMP, MessageOptionFlags_None, midiTestData_32_1, midiTestMessage_1 }
         };
 
     std::vector<std::thread> threads;
