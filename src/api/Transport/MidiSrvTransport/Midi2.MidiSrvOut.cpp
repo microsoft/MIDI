@@ -69,6 +69,7 @@ CMidi2MidiSrvOut::SendMidiMessage(
 {
     if (m_MidiSrv)
     {
+#ifdef _DEBUG
         TraceLoggingWrite(
             MidiSrvTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_VERBOSE,
@@ -80,6 +81,19 @@ CMidi2MidiSrvOut::SendMidiMessage(
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
             TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         );
+#else
+        TraceLoggingWrite(
+            MidiSrvTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Sending MIDI Message.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingPointer(data, "data pointer"),
+            TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+#endif
 
         auto hr = m_MidiSrv->SendMidiMessage(data, length, position);
         LOG_IF_FAILED(hr);

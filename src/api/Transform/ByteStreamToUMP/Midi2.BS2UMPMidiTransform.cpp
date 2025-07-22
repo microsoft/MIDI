@@ -61,6 +61,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
     LONGLONG position
 )
 {
+#ifdef _DEBUG
     TraceLoggingWrite(
         MidiBS2UMPTransformTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -68,10 +69,23 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Translating MIDI 1.0 message to UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingHexUInt8Array(static_cast<uint8_t*>(inputData), static_cast<uint16_t>(length), "midi1 data"),
+        TraceLoggingHexUInt8Array(static_cast<uint8_t*>(inputData), static_cast<uint16_t>(length), "data bytes"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
+#else
+    TraceLoggingWrite(
+        MidiBS2UMPTransformTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Translating MIDI 1.0 message to UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(inputData, "data pointer"),
+        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+        TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    );
+#endif
 
 
     // Note: Group number is set in the initialize function

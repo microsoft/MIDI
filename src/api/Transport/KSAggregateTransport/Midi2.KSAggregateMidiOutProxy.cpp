@@ -110,6 +110,7 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF_NULL(E_POINTER, m_ump2BSTransform);
 
+#ifdef _DEBUG
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -121,6 +122,19 @@ CMidi2KSAggregateMidiOutProxy::SendMidiMessage(
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
+#else
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Sending MIDI Message to UMP2BS translator", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(data, "data pointer"),
+        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+        TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    );
+#endif
 
     // get the message translated. Comes back via the callback
     RETURN_IF_FAILED(m_ump2BSTransform->SendMidiMessage(data, length, timestamp));
@@ -140,6 +154,7 @@ CMidi2KSAggregateMidiOutProxy::Callback(
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
     RETURN_HR_IF_NULL(E_POINTER, m_device);
 
+#ifdef _DEBUG
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -147,10 +162,23 @@ CMidi2KSAggregateMidiOutProxy::Callback(
         TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"MidiOut callback received from translation. Sending data to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
+        TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(length / sizeof(uint32_t)), "data"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
+#else
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"MidiOut callback received from translation. Sending data to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(data, "data pointer"),
+        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+        TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    );
+#endif
 
     // Send transformed message to device
     RETURN_IF_FAILED(m_device->SendMidiMessage(data, length, timestamp));

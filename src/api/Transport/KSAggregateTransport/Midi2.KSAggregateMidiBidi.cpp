@@ -105,6 +105,7 @@ CMidi2KSAggregateMidiBidi::SendMidiMessage(
 {
     if (m_midiDevice != nullptr)
     {
+#ifdef _DEBUG
         TraceLoggingWrite(
             MidiKSAggregateTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_VERBOSE,
@@ -116,6 +117,19 @@ CMidi2KSAggregateMidiBidi::SendMidiMessage(
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
             TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         );
+#else
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Received MIDI Message. Sending to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingPointer(data, "data pointer"),
+            TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+            TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+#endif
 
         RETURN_IF_FAILED(m_midiDevice->SendMidiMessage(data, length, timestamp));
 
@@ -135,6 +149,7 @@ CMidi2KSAggregateMidiBidi::SendMidiMessage(
     }
     else
     {
+#ifdef _DEBUG
         TraceLoggingWrite(
             MidiKSAggregateTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_ERROR,
@@ -147,8 +162,9 @@ CMidi2KSAggregateMidiBidi::SendMidiMessage(
             TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD),
             TraceLoggingUInt64(m_countMidiMessageSent, "Count messages sent so far")
         );
+#endif
 
-        return E_FAIL;
+        RETURN_IF_FAILED(E_FAIL);
     }
 
 }
