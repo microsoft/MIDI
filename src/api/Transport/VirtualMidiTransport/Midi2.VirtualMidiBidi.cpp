@@ -157,6 +157,7 @@ CMidi2VirtualMidiBidi::SendMidiMessage(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingBool(m_isDeviceSide, "is device side"),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingUInt32(Size, "bytes"),
         TraceLoggingUInt64(Position, "timestamp"),
         TraceLoggingGuid(m_sessionId, "session id")
@@ -220,6 +221,7 @@ CMidi2VirtualMidiBidi::Callback(
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingWideString(m_endpointId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
         TraceLoggingBool(m_isDeviceSide, "is device side"),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingUInt32(Size, "bytes"),
         TraceLoggingUInt64(Position, "timestamp"),
         TraceLoggingGuid(m_sessionId, "session id")

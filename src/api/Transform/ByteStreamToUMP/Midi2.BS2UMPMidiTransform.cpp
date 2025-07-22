@@ -72,7 +72,8 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Translating MIDI 1.0 message to UMP", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingHexUInt8Array(static_cast<uint8_t*>(inputData), static_cast<uint16_t>(length), "midi1 data"),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
+        TraceLoggingPointer(inputData, "midi1 data"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
@@ -129,7 +130,7 @@ CMidi2BS2UMPMidiTransform::SendMidiMessage(
                 //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 //    TraceLoggingPointer(this, "this"),
                 //    TraceLoggingWideString(L"Translated to", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                //    TraceLoggingHexUInt32Array(static_cast<uint32_t*>(m_umpMessage), static_cast<uint16_t>(m_umpMessageCurrentWordCount), "ump data"),
+                //    TraceLoggingPointer(m_umpMessage, "ump data"),
                 //    TraceLoggingUInt32(static_cast<uint32_t>(m_umpMessageCurrentWordCount * sizeof(uint32_t)), "length bytes"),
                 //    TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
                 //);

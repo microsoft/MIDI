@@ -113,6 +113,7 @@ CMidi2KSAggregateMidiBidi::SendMidiMessage(
             TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Received MIDI Message. Sending to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
             TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(length/sizeof(uint32_t)), "data"),
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
             TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
@@ -144,6 +145,7 @@ CMidi2KSAggregateMidiBidi::SendMidiMessage(
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"MidiDevice is nullptr. Returning E_FAIL", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
             TraceLoggingUInt32(length, "data length"),
             TraceLoggingUInt64(timestamp, MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD),
             TraceLoggingUInt64(m_countMidiMessageSent, "Count messages sent so far")

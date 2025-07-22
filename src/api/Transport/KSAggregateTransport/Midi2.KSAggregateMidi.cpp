@@ -381,7 +381,8 @@ CMidi2KSAggregateMidi::SendMidiMessage(
         TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Received UMP message to translate and send", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingHexUInt8Array(static_cast<uint8_t*>(inputData), static_cast<uint16_t>(length), "data"),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
+        TraceLoggingPointer(inputData, "data"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );

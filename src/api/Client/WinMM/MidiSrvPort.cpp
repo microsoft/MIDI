@@ -395,7 +395,7 @@ CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::Callback(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
+CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -404,6 +404,7 @@ CMidiPort::Callback(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _I
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingPointer(data, "data"),
         TraceLoggingValue(size, "size"),
         TraceLoggingValue(position, "position"),
@@ -429,6 +430,7 @@ CMidiPort::Callback(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _I
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingPointer(this, "this"),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
             TraceLoggingPointer(data, "data"),
             TraceLoggingValue(size, "size"),
             TraceLoggingValue(position, "position"),

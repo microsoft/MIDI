@@ -81,9 +81,11 @@ CMidi2MidiSrvBidi::SendMidiMessage(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Sending MIDI Message.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
+            TraceLoggingPointer(data, "data"),
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
-            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags")
         );
 
         auto hr = m_MidiSrv->SendMidiMessage(optionFlags, data, length, position);
