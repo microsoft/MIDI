@@ -35,12 +35,6 @@ namespace Microsoft.Windows.Devices.Midi2
 
         MidiEndpointConnection CreateEndpointConnection(
             String endpointDeviceId,
-            Boolean autoReconnect
-        );
-
-        MidiEndpointConnection CreateEndpointConnection(
-            String endpointDeviceId,
-            Boolean autoReconnect,
             IMidiEndpointConnectionSettings settings
         );
 

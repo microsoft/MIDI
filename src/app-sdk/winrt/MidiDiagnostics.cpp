@@ -106,7 +106,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Diagnostics::implementation
 
             // This ID must be consistent with what the service is set up to use.
 
-            auto endpoint = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID, false);
+            auto endpoint = session.CreateEndpointConnection(MIDI_DIAGNOSTICS_PING_BIDI_ID, nullptr);
 
             if (endpoint == nullptr)
             {

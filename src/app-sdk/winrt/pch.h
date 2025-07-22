@@ -169,6 +169,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiFunctionBlock.h"
 #include "MidiGroupTerminalBlock.h"
 
+#include "MidiEndpointConnectionBasicSettings.h"
 #include "MidiEndpointConnection.h"
 
 #include "MidiMessageReceivedEventArgs.h"

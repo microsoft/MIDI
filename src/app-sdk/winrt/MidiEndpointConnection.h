@@ -39,7 +39,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         void LogMessageDataValidationErrorDetails(_In_ bool value) { m_logUmpDataErrors = value; }
 
         bool IsOpen() const noexcept { return m_isOpen; }
-        bool IsAutoReconnectEnabled() const noexcept { return m_autoReconnect; }
+        //bool IsAutoReconnectEnabled() const noexcept { return m_autoReconnect; }
 
         midi2::IMidiEndpointConnectionSettings Settings() const noexcept { return m_settings; }
 
@@ -182,12 +182,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         _Success_(return == true)
         bool InternalInitialize(
-            _In_ winrt::guid sessionId,
+            _In_ winrt::guid const& sessionId,
             _In_ winrt::com_ptr<IMidiTransport> serviceTransport,
-            _In_ winrt::guid const connectionId,
-            _In_ winrt::hstring const endpointDeviceId,
-            _In_ midi2::IMidiEndpointConnectionSettings connectionSettings,
-            _In_ bool autoReconnect
+            _In_ winrt::guid const& connectionId,
+            _In_ winrt::hstring const& endpointDeviceId,
+            _In_ midi2::IMidiEndpointConnectionSettings const& connectionSettings
         );
 
 
@@ -202,7 +201,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         bool m_logUmpDataErrors{ false };
 
         midi2::IMidiEndpointConnectionSettings m_connectionSettings;
-        bool m_autoReconnect{ false };
 
 
         uint64_t m_maxAllowedTimestampOffset{};

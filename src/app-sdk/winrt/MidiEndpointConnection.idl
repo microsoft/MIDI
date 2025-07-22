@@ -34,7 +34,7 @@ namespace Microsoft.Windows.Devices.Midi2
 
         Boolean LogMessageDataValidationErrorDetails;
 
-        IMidiEndpointConnectionSettings Settings{ get; };
+        //IMidiEndpointConnectionSettings Settings{ get; };
 
         Boolean Open();
 

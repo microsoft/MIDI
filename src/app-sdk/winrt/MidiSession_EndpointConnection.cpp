@@ -13,17 +13,23 @@
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
-
-
-
-
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId,
-        bool const autoReconnect,
         midi2::IMidiEndpointConnectionSettings const& settings
     ) noexcept
     {
+        // load up defaults if nullptr was provided for settings
+        midi2::IMidiEndpointConnectionSettings defaultSettings{ nullptr };
+
+        if (settings == nullptr)
+        {
+            auto newSettings = winrt::make<MidiEndpointConnectionBasicSettings>();
+
+            defaultSettings = newSettings.as<IMidiEndpointConnectionSettings>();
+        }
+
+
         try
         {
             auto normalizedDeviceId = winrt::to_hstring(internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId.c_str()).c_str());
@@ -45,7 +51,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             // generate internal endpoint Id
             auto connectionInstanceId = foundation::GuidHelper::CreateNewGuid();
 
-            if (endpointConnection->InternalInitialize(m_id, m_serviceTransport, connectionInstanceId, normalizedDeviceId, settings, autoReconnect))
+            bool initSuccess{ false };
+            bool autoReconnect{ false };
+
+            if (settings == nullptr)
+            {
+                autoReconnect = defaultSettings.AutoReconnect();
+                initSuccess = endpointConnection->InternalInitialize(m_id, m_serviceTransport, connectionInstanceId, normalizedDeviceId, defaultSettings);
+            }
+            else
+            {
+                autoReconnect = settings.AutoReconnect();
+                initSuccess = endpointConnection->InternalInitialize(m_id, m_serviceTransport, connectionInstanceId, normalizedDeviceId, settings);
+            }
+
+            if (initSuccess)
             {
                 m_connections.Insert(connectionInstanceId, *endpointConnection);
 
@@ -78,7 +98,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
                     TraceLoggingWideString(L"WinRT Endpoint connection wouldn't initialize", MIDI_SDK_TRACE_MESSAGE_FIELD)
                 );
-                // TODO: Cleanup
+
+                // TODO: Any Cleanup
 
                 return nullptr;
             }
@@ -118,21 +139,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         }
     }
 
-    _Use_decl_annotations_
-    midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
-        winrt::hstring const& endpointDeviceId,
-        bool autoReconnect
-    ) noexcept
-    {
-        return CreateEndpointConnection(endpointDeviceId, autoReconnect, nullptr);
-    }
 
     _Use_decl_annotations_
     midi2::MidiEndpointConnection MidiSession::CreateEndpointConnection(
         winrt::hstring const& endpointDeviceId
     ) noexcept
     {
-        return CreateEndpointConnection(endpointDeviceId, false, nullptr);
+        // default settings
+        midi2::MidiEndpointConnectionBasicSettings settings{};
+
+        return CreateEndpointConnection(endpointDeviceId, settings);
     }
 
 
