@@ -226,7 +226,17 @@ namespace Microsoft.Midi.ConsoleApp
                     return (int)MidiConsoleReturnCode.ErrorCreatingSession;
                 }
 
-                var connection = session.CreateEndpointConnection(endpointId, settings.AutoReconnect);
+                IMidiEndpointConnectionSettings connectionSettings;
+                if (settings.AutoReconnect)
+                {
+                    connectionSettings = new MidiEndpointConnectionBasicSettings(false, true);
+                }
+                else
+                {
+                    connectionSettings = new MidiEndpointConnectionBasicSettings(false, false);
+                }
+
+                var connection = session.CreateEndpointConnection(endpointId, connectionSettings);
 
                 if (connection == null)
                 {
