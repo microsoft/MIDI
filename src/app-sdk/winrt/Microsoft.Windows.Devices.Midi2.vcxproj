@@ -264,6 +264,7 @@
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
     <ClInclude Include="date_util.h" />
+    <ClInclude Include="MidiEndpointConnectionBasicSettings.h" />
     <ClInclude Include="MidiNetworkAdvertisedHost.h">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
     </ClInclude>
@@ -278,8 +279,12 @@
     <ClInclude Include="MidiEndpointDeviceIdHelper.h">
       <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiRuntimeInformation.h" />
-    <ClInclude Include="MidiRuntimeVersion.h" />
+    <ClInclude Include="MidiRuntimeInformation.h">
+      <DependentUpon>MidiRuntimeInformation.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiRuntimeVersion.h">
+      <DependentUpon>MidiRuntimeVersion.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiUniversalSystemExclusiveMessageBuilder.h">
       <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClInclude>
@@ -486,6 +491,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp" />
     <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
     </ClCompile>
@@ -499,8 +505,12 @@
     <ClCompile Include="MidiEndpointDeviceIdHelper.cpp">
       <DependentUpon>MidiEndpointDeviceIdHelper.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiRuntimeInformation.cpp" />
-    <ClCompile Include="MidiRuntimeVersion.cpp" />
+    <ClCompile Include="MidiRuntimeInformation.cpp">
+      <DependentUpon>MidiRuntimeInformation.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiRuntimeVersion.cpp">
+      <DependentUpon>MidiRuntimeVersion.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiUniversalSystemExclusiveMessageBuilder.cpp">
       <DependentUpon>MidiUniversalSystemExclusiveMessageBuilder.idl</DependentUpon>
     </ClCompile>
@@ -794,6 +804,7 @@
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="MidiApiContracts.idl" />
     <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl" />
+    <Midl Include="MidiEndpointConnectionBasicSettings.idl" />
     <Midl Include="MidiEndpointDeviceIdHelper.idl" />
     <Midl Include="Midi1PortNameTableEntry.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />

@@ -311,16 +311,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
 
     _Use_decl_annotations_
     bool MidiRuntimeUpdateUtility::IsReleaseNewerThanInstalled(
-        midi2::Utilities::Update::MidiRuntimeRelease release,
-        bool ignoreReleaseType) noexcept
+        midi2::Utilities::Update::MidiRuntimeRelease release) noexcept
     {
-        // TODO
+        auto installedVersion = midi2::Utilities::RuntimeInformation::MidiRuntimeInformation::GetInstalledVersion();
 
-        UNREFERENCED_PARAMETER(release);
-        UNREFERENCED_PARAMETER(ignoreReleaseType);
+        if (release.Version().IsGreaterThan(installedVersion))
+        {
+            return true;
+        }
 
-        // TEMP
-        return true;
+        return false;
     }
 
     _Use_decl_annotations_

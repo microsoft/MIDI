@@ -30,8 +30,7 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
             Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation.MidiRuntimeReleaseTypes inScopeReleaseTypes);
 
         static Boolean IsReleaseNewerThanInstalled(
-            Microsoft.Windows.Devices.Midi2.Utilities.Update.MidiRuntimeRelease release, 
-            Boolean ignoreReleaseType);
+            Microsoft.Windows.Devices.Midi2.Utilities.Update.MidiRuntimeRelease release);
 
     }
 

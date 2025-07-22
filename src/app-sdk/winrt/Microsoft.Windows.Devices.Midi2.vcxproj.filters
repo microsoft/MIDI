@@ -118,6 +118,9 @@
     <ClCompile Include="MidiRuntimeVersion.cpp">
       <Filter>SDK\Utilities\RuntimeInformation</Filter>
     </ClCompile>
+    <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
+      <Filter>SDK\Core\Session</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -250,6 +253,9 @@
     </ClInclude>
     <ClInclude Include="MidiRuntimeVersion.h">
       <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
+      <Filter>SDK\Core\Session</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -615,6 +621,9 @@
     </Midl>
     <Midl Include="MidiRuntimeReleaseTypesEnum.idl">
       <Filter>SDK\Utilities\RuntimeInformation</Filter>
+    </Midl>
+    <Midl Include="MidiEndpointConnectionBasicSettings.idl">
+      <Filter>SDK\Core\Session</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

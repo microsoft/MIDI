@@ -74,18 +74,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::RuntimeInformati
             return true;
         }
 
-        // if a preview, compare build numbers
+        // Major, Minor, and Patch are all equal
+        // compare build numbers. Per semver, this should only be for previews, but we'll ignore that here
 
-        if (m_buildNumber != 0)
+        if (m_buildNumber < versionToCompare.BuildNumber())
         {
-            if (m_buildNumber < versionToCompare.BuildNumber())
-            {
-                return false;
-            }
-            else if (m_buildNumber > versionToCompare.BuildNumber())
-            {
-                return true;
-            }
+            return false;
+        }
+        else if (m_buildNumber > versionToCompare.BuildNumber())
+        {
+            return true;
         }
 
         return false;
