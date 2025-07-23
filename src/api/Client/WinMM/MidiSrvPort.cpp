@@ -43,7 +43,7 @@ CMidiPort::RuntimeClassInitialize(GUID sessionId, std::wstring& interfaceId, Mid
         TraceLoggingValue((int)flow, "MidiFlow"),
         TraceLoggingValue(flags, "flags"));
 
-    TRANSPORTCREATIONPARAMS transportCreationParams { MidiDataFormats_ByteStream, WINMM_APIID };
+    TRANSPORTCREATIONPARAMS transportCreationParams { MessageOptionFlags_WaitForSendComplete, MidiDataFormats_ByteStream, WINMM_APIID };
     DWORD mmcssTaskId {0};
     LARGE_INTEGER qpc{ 0 };
     
@@ -395,7 +395,7 @@ CMidiPort::CompleteLongBuffer(UINT message, LONGLONG position)
 
 _Use_decl_annotations_
 HRESULT
-CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
+CMidiPort::Callback(_In_ MessageOptionFlags optionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LONGLONG context)
 {
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
@@ -404,6 +404,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingPointer(this, "this"),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingPointer(data, "data"),
         TraceLoggingValue(size, "size"),
         TraceLoggingValue(position, "position"),
@@ -429,6 +430,7 @@ CMidiPort::Callback(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, LON
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingPointer(this, "this"),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
             TraceLoggingPointer(data, "data"),
             TraceLoggingValue(size, "size"),
             TraceLoggingValue(position, "position"),
@@ -734,7 +736,7 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
-        });
+    });
 
     {
         auto lock = m_Lock.lock();
@@ -795,7 +797,8 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
 
             // send the message to the transport
             // pass a timestamp of 0 to bypass scheduler
-            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, messageSize, timestamp));
+            // For legacy compatibility purposes, always wait for the message send to complete
+            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, &midiMessage, messageSize, timestamp));
         }
         else if (m_IsInRunningStatus)
         {
@@ -820,7 +823,8 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
             //    TraceLoggingUInt64(timestamp, "timestamp")
             //);
 
-            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(&midiMessage, messageSize, timestamp));
+            // For legacy compatibility purposes, always wait for the message send to complete
+            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, &midiMessage, messageSize, timestamp));
         }
         else
         {
@@ -882,7 +886,8 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
         do
         {
             UINT32 bytesToSend = min(MAXIMUM_LOOPED_BYTESTREAM_DATASIZE, buffer->dwBufferLength - bytesSent);
-            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(buffer->lpData + bytesSent, bytesToSend, 0));
+            // For legacy compatibility purposes, always wait for the message send to complete
+            RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, buffer->lpData + bytesSent, bytesToSend, 0));
             bytesSent += bytesToSend;
         }
         while (bytesSent < buffer->dwBufferLength);

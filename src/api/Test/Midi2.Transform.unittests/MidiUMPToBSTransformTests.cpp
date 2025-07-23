@@ -91,7 +91,7 @@ void MidiUMPToBSTransformTests::InternalTestMessages(
     //}
     //std::cout << std::endl;
 
-    VERIFY_SUCCEEDED(transform->SendMidiMessage((PVOID)words.data(), (UINT)(words.size() * sizeof(uint32_t)), 0));
+    VERIFY_SUCCEEDED(transform->SendMidiMessage(MessageOptionFlags_None, (PVOID)words.data(), (UINT)(words.size() * sizeof(uint32_t)), 0));
 
     // wait (TODO: This should be an event, not a sleep)
     Sleep(1000);

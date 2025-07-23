@@ -55,7 +55,7 @@ public:
     Midi2DriverTests()
     {}
 
-    STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
+    STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context)
     {
         if (m_MidiInCallback)
         {

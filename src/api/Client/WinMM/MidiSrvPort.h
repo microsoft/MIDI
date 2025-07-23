@@ -24,7 +24,7 @@ private:
     HRESULT Close();
 
     // IMidiCallback, for receiving midi in messages from the service.
-    STDMETHOD(Callback)(_In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context);
+    STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID data, _In_ UINT size, _In_ LONGLONG position, _In_ LONGLONG context);
 
     HRESULT SendMidiMessage(_In_ UINT32 midiMessage);
     HRESULT SendLongMessage(_In_ LPMIDIHDR buffer);

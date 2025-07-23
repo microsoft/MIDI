@@ -96,7 +96,7 @@ void MidiBSToUMPTransformTests::InternalTestBytes(
     }
     std::cout << std::endl;
 
-    VERIFY_SUCCEEDED(transform->SendMidiMessage((void*)bytes, byteCount, 0));
+    VERIFY_SUCCEEDED(transform->SendMidiMessage(MessageOptionFlags_None, (void*)bytes, byteCount, 0));
 
     // wait
     Sleep(1000);

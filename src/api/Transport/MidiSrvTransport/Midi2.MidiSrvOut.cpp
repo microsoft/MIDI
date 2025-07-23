@@ -62,6 +62,7 @@ CMidi2MidiSrvOut::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSrvOut::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
     LONGLONG position
@@ -77,6 +78,7 @@ CMidi2MidiSrvOut::SendMidiMessage(
             TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Sending MIDI Message.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
             TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
             TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
@@ -89,13 +91,14 @@ CMidi2MidiSrvOut::SendMidiMessage(
             TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Sending MIDI Message.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
             TraceLoggingPointer(data, "data pointer"),
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
             TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         );
 #endif
 
-        auto hr = m_MidiSrv->SendMidiMessage(data, length, position);
+        auto hr = m_MidiSrv->SendMidiMessage(optionFlags, data, length, position);
         LOG_IF_FAILED(hr);
 
         return hr;

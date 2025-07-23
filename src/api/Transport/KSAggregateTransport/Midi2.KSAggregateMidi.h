@@ -34,12 +34,14 @@ class CMidi2KSAggregateMidi
 public:
 
     HRESULT Initialize(_In_ LPCWSTR, _In_ MidiFlow, _In_ PTRANSPORTCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG);
-    HRESULT SendMidiMessage(_In_ PVOID , _In_ UINT , _In_ LONGLONG);
+    HRESULT SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID , _In_ UINT , _In_ LONGLONG);
     HRESULT Shutdown();
 
  //   HRESULT HandleCallback(_In_ uint8_t, _In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
 private:
+    wil::critical_section m_SendLock;
+
     IMidiCallback* m_callback;
 
     // midi input proxies. These connect to the input device and include translation

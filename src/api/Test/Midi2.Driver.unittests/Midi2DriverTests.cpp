@@ -105,32 +105,32 @@ void Midi2DriverTests::TestMidiIO(MidiTransport transport)
     if (transport == MidiTransport_CyclicUMP)
     {
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
 /*
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_64, sizeof(UMP64), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_64, sizeof(UMP64), position.QuadPart));
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_96, sizeof(UMP96), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_96, sizeof(UMP96), position.QuadPart));
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_128, sizeof(UMP128), position.QuadPart));
 */
     }
     else
     {
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
         QueryPerformanceCounter(&position);
-        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+        VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
     }
 
     // wait for up to 30 seconds for all the messages
@@ -239,12 +239,12 @@ void Midi2DriverTests::TestMidiIO_ManyMessages(MidiTransport transport, ULONG bu
         if (transport == MidiTransport_CyclicUMP)
         {
             QueryPerformanceCounter(&position);
-            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestData_32, sizeof(UMP32), position.QuadPart));
         }
         else
         {
             QueryPerformanceCounter(&position);
-            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), position.QuadPart));
         }
     }
 
@@ -471,11 +471,11 @@ void Midi2DriverTests::TestMidiIO_Latency(MidiTransport transport, BOOL delayedM
         QueryPerformanceCounter(&qpcBefore);
         if (transport == MidiTransport_CyclicUMP)
         {
-            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void*) &g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void*) &g_MidiTestData_32, sizeof(UMP32), qpcBefore.QuadPart));
         }
         else
         {
-            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage((void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), qpcBefore.QuadPart));
+            VERIFY_SUCCEEDED(midiOutDevice.SendMidiMessage(MessageOptionFlags_None, (void *) &g_MidiTestMessage, sizeof(MIDI_MESSAGE), qpcBefore.QuadPart));
         }
         QueryPerformanceCounter(&qpcAfter);
 

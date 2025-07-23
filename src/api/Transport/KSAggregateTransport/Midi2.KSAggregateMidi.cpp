@@ -368,11 +368,13 @@ CMidi2KSAggregateMidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidi::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID inputData,
     UINT length,
     LONGLONG position
 )
 {
+#if _DEBUG
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -380,11 +382,28 @@ CMidi2KSAggregateMidi::SendMidiMessage(
         TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Received UMP message to translate and send", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingHexUInt8Array(static_cast<uint8_t*>(inputData), static_cast<uint16_t>(length), "data"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
+#else
+    TraceLoggingWrite(
+        MidiKSAggregateTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Received UMP message to translate and send", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
+        TraceLoggingPointer(inputData, "data"),
+        TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+        TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+    );
+#endif
 
+    // We're only capable of handling 1 client at a time
+    auto deviceLock = m_SendLock.lock();
 
     if (length >= sizeof(uint32_t))
     {
@@ -399,7 +418,7 @@ CMidi2KSAggregateMidi::SendMidiMessage(
 
             if (mapEntry != m_midiOutDeviceGroupMap.end())
             {
-                RETURN_IF_FAILED(mapEntry->second->SendMidiMessage(inputData, length, position));
+                RETURN_IF_FAILED(mapEntry->second->SendMidiMessage(optionFlags, inputData, length, position));
 
                 return S_OK;
             }

@@ -25,7 +25,7 @@ public:
         _In_ LONGLONG context,
         _In_ BYTE groupIndex);
 
-    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
+    STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
 
     HRESULT Shutdown();
 

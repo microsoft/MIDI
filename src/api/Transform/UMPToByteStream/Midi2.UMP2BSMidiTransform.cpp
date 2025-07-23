@@ -49,6 +49,7 @@ CMidi2UMP2BSMidiTransform::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2UMP2BSMidiTransform::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID inputData,
     UINT length,
     LONGLONG position
@@ -62,11 +63,11 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Translating UMP to MIDI 1.0 bytes", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingHexUInt32Array(static_cast<uint32_t*>(inputData), static_cast<uint16_t>(length/sizeof(uint32_t)), "data"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
-
 #else
     TraceLoggingWrite(
         MidiUMP2BSTransformTelemetryProvider::Provider(),
@@ -75,13 +76,15 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Translating UMP to MIDI 1.0 bytes", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingPointer(inputData, "data pointer"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
 #endif
 
-
+    // can only transform 1 message at a time
+    auto lock = m_SendLock.lock();
 
     // Send the UMP(s) to the parser
     uint32_t *data = (uint32_t *)inputData;
@@ -118,7 +121,7 @@ CMidi2UMP2BSMidiTransform::SendMidiMessage(
                 //);
 
                 // For transforms, by convention the context contains the group index.
-                auto hr = m_Callback->Callback(byteStream, messageByteCount, position, m_UMP2BS.group);
+                auto hr = m_Callback->Callback(optionFlags, &(byteStream[0]), messageByteCount, position, m_UMP2BS.group);
 
                 if (FAILED(hr))
                 {

@@ -41,6 +41,7 @@ typedef struct MEMORY_MAPPED_PIPE
     MEMORY_MAPPED_REGISTERS Registers;
     wil::unique_event_nothrow WriteEvent;
     wil::unique_event_nothrow ReadEvent;
+    std::wstring ReadEventName;
 } MEMORY_MAPPED_PIPE, *PMEMORY_MAPPED_PIPE;
 
 HRESULT GetRequiredBufferSize(_In_ ULONG&);
@@ -97,6 +98,7 @@ public:
     }
 
     HRESULT SendMidiMessage(
+        _In_ MessageOptionFlags,
         _In_ void *,
         _In_ UINT32,
         _In_ LONGLONG);
@@ -105,8 +107,11 @@ public:
     static bool MMCSSUseEnabled();
 
 private:
-
     BOOL m_OverwriteZeroTimestamp{ true };
+
+    // only 1 client may send a message at a time on the cross process
+    // queue
+    wil::critical_section m_MessageSendLock;
 
     static BOOL m_useMMCSS;             // true if we are configured to use MMCSS
     static BOOL m_mmcssSettingRead;     // true if the MMCSS use value has been read from the registry
@@ -124,6 +129,10 @@ private:
     static DWORD WINAPI MidiInWorker(_In_ LPVOID);
 
     HRESULT ProcessMidiIn();
+
+    HRESULT WaitForSendComplete(_In_ ULONG,
+                                     _In_ ULONG,
+                                     _In_ UINT32 );
 
     wil::unique_event_nothrow m_ThreadTerminateEvent;
     wil::unique_event_nothrow m_ThreadStartedEvent;

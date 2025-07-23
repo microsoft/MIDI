@@ -105,6 +105,7 @@ CMidi2KSAggregateMidiInProxy::Initialize(
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiInProxy::Callback(
+    MessageOptionFlags optionFlags,
     PVOID data, 
     UINT length,
     LONGLONG timestamp,
@@ -123,6 +124,7 @@ CMidi2KSAggregateMidiInProxy::Callback(
         TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"MidiIn Callback received from device. Sending data to bs2UmpTransform.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
@@ -135,6 +137,7 @@ CMidi2KSAggregateMidiInProxy::Callback(
         TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"MidiIn Callback received from device. Sending data to bs2UmpTransform.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
         TraceLoggingPointer(data, "data pointer"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
@@ -143,7 +146,7 @@ CMidi2KSAggregateMidiInProxy::Callback(
 
     // the callback for the transform is wired up in initialize
 
-    auto hr = m_bs2UmpTransform->SendMidiMessage(data, length, timestamp);
+    auto hr = m_bs2UmpTransform->SendMidiMessage(optionFlags, data, length, timestamp);
     RETURN_IF_FAILED(hr);
 
     return hr;

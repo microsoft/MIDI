@@ -42,7 +42,7 @@ public:
 
     virtual HRESULT Shutdown()
     {
-        auto lock = m_Lock.lock();
+        auto lock = m_Lock.lock_exclusive();
         m_ConnectedPipes.clear();
         m_Clients.clear();
 
@@ -51,7 +51,7 @@ public:
 
     virtual HRESULT AddConnectedPipe(wil::com_ptr_nothrow<CMidiPipe>& connectedOutputPipe)
     {
-        auto lock = m_Lock.lock();
+        auto lock = m_Lock.lock_exclusive();
         m_ConnectedPipes[(MidiPipeHandle)connectedOutputPipe.get()] = connectedOutputPipe;
 
         return S_OK;
@@ -59,7 +59,7 @@ public:
     
     virtual HRESULT RemoveConnectedPipe(wil::com_ptr_nothrow<CMidiPipe>& connectedOutputPipe)  
     {
-        auto lock = m_Lock.lock();
+        auto lock = m_Lock.lock_exclusive();
 
         auto item = m_ConnectedPipes.find((MidiPipeHandle)connectedOutputPipe.get());
 
@@ -72,11 +72,11 @@ public:
         return E_INVALIDARG;
     }
 
-    virtual HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG) { return E_NOTIMPL; }
-    virtual HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG) { return E_NOTIMPL; }
+    virtual HRESULT SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG) { return E_NOTIMPL; }
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT length, _In_ LONGLONG position, _In_ LONGLONG context)
+    STDMETHOD(Callback)(_In_ MessageOptionFlags optionFlags, _In_ PVOID Data, _In_ UINT length, _In_ LONGLONG position, _In_ LONGLONG context)
     {
+#ifdef _DEBUG
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_VERBOSE,
@@ -84,23 +84,40 @@ public:
             TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Sending MIDI Message from callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
             TraceLoggingHexUInt8Array(static_cast<uint8_t*>(Data), static_cast<uint16_t>(length), "data"),
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
             TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         );
+#else
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Sending MIDI Message from callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
+            TraceLoggingPointer(Data, "data"),
+            TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+#endif
 
 #if 0
-        // TEMP Code for debugging a timestamp issue
-        if (position != 0)
-        {
-            OutputDebugString(L"\nPosition/timestamp is non-zero\n");
-        }
+                // TEMP Code for debugging a timestamp issue
+                if (position != 0)
+                {
+                    OutputDebugString(L"\nPosition/timestamp is non-zero\n");
+                }
 #endif
+
+        BOOL contextContainsGroupIndex = (MessageOptionFlags_ContextContainsGroupIndex == (optionFlags & MessageOptionFlags_ContextContainsGroupIndex));
 
         // need to hold the client pipe lock to ensure that
         // no clients are added or removed while performing the callback
         // to the client.
-        auto lock = m_Lock.lock();
+        auto lock = m_Lock.lock_shared();
 
         for (auto const& Client : m_ConnectedPipes)
         {
@@ -108,16 +125,16 @@ public:
             // If this client is group filtered, and the context is a valid group index, then
             // filter the messages being sent to this client by the group index.
             // otherwise, send all messages to the client.
-            if (Client.second->IsGroupFiltered() && IS_VALID_GROUP_INDEX(context))
+            if (contextContainsGroupIndex && Client.second->IsGroupFiltered() && IS_VALID_GROUP_INDEX(context))
             {
                 if (Client.second->GroupIndex() == (UINT32) context)
                 {
-                    LOG_IF_FAILED(Client.second->SendMidiMessage(Data, length, position));
+                    LOG_IF_FAILED(Client.second->SendMidiMessage((MessageOptionFlags)(optionFlags & ~MessageOptionFlags_ContextContainsGroupIndex), Data, length, position));
                 }
             }
             else
             {
-                LOG_IF_FAILED(Client.second->SendMidiMessage(Data, length, position));
+                LOG_IF_FAILED(Client.second->SendMidiMessage((MessageOptionFlags)(optionFlags & ~MessageOptionFlags_ContextContainsGroupIndex), Data, length, position));
             }
         }
 
@@ -176,7 +193,7 @@ public:
 
     virtual BOOL InUse()
     {
-        auto lock = m_Lock.lock();
+        auto lock = m_Lock.lock_shared();
         return !m_Clients.empty();
     }
 
@@ -193,7 +210,7 @@ public:
             TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        auto lock = m_Lock.lock();
+        auto lock = m_Lock.lock_exclusive();
         auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
         if (client == m_Clients.end())
         {
@@ -227,7 +244,7 @@ public:
             TraceLoggingWideString(m_Device.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        auto lock = m_Lock.lock();
+        auto lock = m_Lock.lock_exclusive();
         auto client = std::find(m_Clients.begin(), m_Clients.end(), handle);
         if (client != m_Clients.end())
         {
@@ -260,9 +277,8 @@ private:
     MidiDataFormats m_DataFormatOut{ MidiDataFormats_Invalid };
     MidiFlow m_Flow{ MidiFlowIn };
 
-    wil::critical_section m_Lock;
+    wil::srwlock m_Lock;
     std::map<MidiPipeHandle, wil::com_ptr_nothrow<CMidiPipe>> m_ConnectedPipes;
     std::vector<MidiClientHandle> m_Clients;
-
 };
 

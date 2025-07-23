@@ -107,23 +107,12 @@ CMidiTransformPipe::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidiTransformPipe::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
     LONGLONG timestamp
 )
 {
-    return m_MidiDataTransform->SendMidiMessage(data, length, timestamp);
-}
-
-
-_Use_decl_annotations_
-HRESULT
-CMidiTransformPipe::SendMidiMessageNow(
-    PVOID data,
-    UINT length,
-    LONGLONG timestamp
-)
-{
-    return m_MidiDataTransform->SendMidiMessage(data, length, timestamp);
+    return m_MidiDataTransform->SendMidiMessage(optionFlags, data, length, timestamp);
 }
 
