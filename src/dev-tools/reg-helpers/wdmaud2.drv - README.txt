@@ -1,0 +1,21 @@
+wdmaud2.drv is the driver which connects the WinMM API to the new Windows MIDI Service. This is required on systems with Windows MIDI Services installed, if you want to use existing MIDI 1.0 apps.
+
+Replacing wdmaud2.drv requires bypassing Windows File Protection. The midi-replace-wdmaud2-drv.ps1 script (launched from the cmd file of the same name) performs this work. 
+
+To run the script, you must have PowerShell scripting enabled in Windows Settings
+
+System > For Developers > PowerShell > Change execution policy for local unsigned scripts (Turn On)
+
+After that PowerShell permission change has been made, you can install wdmaud2.drv via the following steps.
+- Unzip the wdmaud2.drv zip file for your system's architecture (x64 or Arm64)
+- Open an Administrator command prompt / terminal (not PowerShell, but regular command prompt)
+- Navigate to the directory where you have unzipped the files to
+- From that administrator command prompt, type 
+
+.\dev-replace-wdmaud2
+
+and then hit enter. The script will do the rest, and will prompt you as appropriate.
+
+Do not do this on a production system. This is for development and testing purposes only.
+
+The version of wdmaud2.drv in the releases here typically show up in Windows Insider releases 1-2 months after the GitHub release.

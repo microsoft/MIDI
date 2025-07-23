@@ -20,12 +20,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     bool MidiEndpointConnection::InternalInitialize(
-        winrt::guid sessionId,
+        winrt::guid const& sessionId,
         winrt::com_ptr<IMidiTransport> serviceTransport,
-        winrt::guid const connectionId,
-        winrt::hstring const endpointDeviceId,
-        midi2::IMidiEndpointConnectionSettings connectionSettings,
-        bool autoReconnect
+        winrt::guid const& connectionId,
+        winrt::hstring const& endpointDeviceId,
+        midi2::IMidiEndpointConnectionSettings const& connectionSettings
     )
     {
         if (serviceTransport == nullptr)
@@ -47,14 +46,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         try
         {
+            if (connectionSettings != nullptr)
+            {
+                m_connectionSettings = connectionSettings;
+            }
+            else
+            {
+                // no connection settings provided, so use basic defaults
+                m_connectionSettings = winrt::make<MidiEndpointConnectionBasicSettings>();
+            }
+
+
             m_sessionId = sessionId;
             m_connectionId = connectionId;
             m_endpointDeviceId = endpointDeviceId;
 
             m_serviceTransport = serviceTransport;
-
-            m_connectionSettings = connectionSettings;
-            m_autoReconnect = autoReconnect;
 
             return true;
         }

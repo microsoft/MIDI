@@ -76,6 +76,7 @@ public:
 
     STDMETHOD(Callback)(_In_ MessageOptionFlags optionFlags, _In_ PVOID Data, _In_ UINT length, _In_ LONGLONG position, _In_ LONGLONG context)
     {
+#ifdef _DEBUG
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_VERBOSE,
@@ -84,11 +85,24 @@ public:
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Sending MIDI Message from callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
-            //TraceLoggingHexUInt8Array(static_cast<uint8_t*>(Data), static_cast<uint16_t>(length), "data"),
+            TraceLoggingHexUInt8Array(static_cast<uint8_t*>(Data), static_cast<uint16_t>(length), "data"),
+            TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
+            TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
+        );
+#else
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_VERBOSE),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Sending MIDI Message from callback.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
             TraceLoggingPointer(Data, "data"),
             TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
             TraceLoggingUInt64(static_cast<uint64_t>(position), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
         );
+#endif
 
 #if 0
                 // TEMP Code for debugging a timestamp issue

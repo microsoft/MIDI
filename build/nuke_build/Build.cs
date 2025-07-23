@@ -296,10 +296,10 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L\"{buildDate}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L\"{versionName}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L\"{versionString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      (uint16_t){buildVersionMajor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      (uint16_t){buildVersionMinor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      (uint16_t){buildVersionPatch}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               (uint16_t){BuildVersionBuildNumber}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      {buildVersionMajor}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      {buildVersionMinor}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      {buildVersionPatch}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               {BuildVersionBuildNumber}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L\"{BuildVersionPreviewString}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L\"{BuildVersionFileFullString}\"");
                 writer.WriteLine();
@@ -320,10 +320,10 @@ class Build : NukeBuild
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_DATE                             L\"{buildDate}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_NAME                     L\"{versionName}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FULL                     L\"{versionString}\"");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR                    (uint16_t){buildVersionMajor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR                    (uint16_t){buildVersionMinor}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_PATCH                    (uint16_t){buildVersionPatch}");
-                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER             (uint16_t){BuildVersionBuildNumber}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MAJOR                    {buildVersionMajor}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_MINOR                    {buildVersionMinor}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_PATCH                    {buildVersionPatch}");
+                writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_BUILD_NUMBER             {BuildVersionBuildNumber}");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_PREVIEW                          L\"{BuildVersionPreviewString}\"");
                 writer.WriteLine($"#define WINDOWS_MIDI_SERVICES_SDK_RUNTIME_BUILD_VERSION_FILE                     L\"{BuildVersionFileFullString}\"");
                 writer.WriteLine();
@@ -1892,10 +1892,12 @@ class Build : NukeBuild
 
             var regHelperCmdFileName = "dev-replace-wdmaud2.cmd";
             var regHelperPs1FileName = "midi-replace-wdmaud2-drv.ps1";
+            var readmeFileName = "wdmaud2.drv - README.txt";
 
 
             var regHelperCmdFileFullPath = regHelpersLocation / regHelperCmdFileName;
             var regHelperPs1FileFullPath = regHelpersLocation / regHelperPs1FileName;
+            var readmeFileFullPath = regHelpersLocation / readmeFileName;
 
             string driverFile = "wdmaud2.drv";
             string pdbFile = "wdmaud2.pdb";
@@ -1904,12 +1906,14 @@ class Build : NukeBuild
             CopyFile(ApiStagingFolder / "arm64" / pdbFile, arm64 / pdbFile, FileExistsPolicy.Fail, false);
             CopyFile(regHelperCmdFileFullPath, arm64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
             CopyFile(regHelperPs1FileFullPath, arm64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
+            CopyFile(readmeFileFullPath, arm64 / readmeFileName, FileExistsPolicy.Fail, false);
 
 
             CopyFile(ApiStagingFolder / "x64" / driverFile, x64 / driverFile, FileExistsPolicy.Fail, false);
             CopyFile(ApiStagingFolder / "x64" / pdbFile, x64 / pdbFile, FileExistsPolicy.Fail, false);
             CopyFile(regHelperCmdFileFullPath, x64 / regHelperCmdFileName, FileExistsPolicy.Fail, false);
             CopyFile(regHelperPs1FileFullPath, x64 / regHelperPs1FileName, FileExistsPolicy.Fail, false);
+            CopyFile(readmeFileFullPath, x64 / readmeFileName, FileExistsPolicy.Fail, false);
 
 
             x64.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-x64.zip");

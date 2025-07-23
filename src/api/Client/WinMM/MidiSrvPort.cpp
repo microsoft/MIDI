@@ -714,6 +714,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiPort::SendMidiMessage(UINT32 midiMessage)
 {
+#ifdef _DEBUG
     TraceLoggingWrite(
         WdmAud2TelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_VERBOSE,
@@ -723,6 +724,7 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
         TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingHexUInt32(midiMessage, "data")
         );
+#endif
 
     auto exitCallback = wil::scope_exit([&]()
     {
@@ -781,17 +783,17 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
                 messageSize = 3;
             }
 
-            TraceLoggingWrite(
-                WdmAud2TelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_VERBOSE,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Byte is status byte. Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingHexUInt32(midiMessage, "message"),
-                TraceLoggingUInt32(messageSize, "message size"),
-                TraceLoggingUInt64(timestamp, "timestamp")
-            );
+            //TraceLoggingWrite(
+            //    WdmAud2TelemetryProvider::Provider(),
+            //    MIDI_TRACE_EVENT_VERBOSE,
+            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            //    TraceLoggingPointer(this, "this"),
+            //    TraceLoggingWideString(L"Byte is status byte. Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            //    TraceLoggingHexUInt32(midiMessage, "message"),
+            //    TraceLoggingUInt32(messageSize, "message size"),
+            //    TraceLoggingUInt64(timestamp, "timestamp")
+            //);
 
             // send the message to the transport
             // pass a timestamp of 0 to bypass scheduler
@@ -809,33 +811,33 @@ CMidiPort::SendMidiMessage(UINT32 midiMessage)
                 messageSize = 2;
             }
 
-            TraceLoggingWrite(
-                WdmAud2TelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_VERBOSE,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"In running status. Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingHexUInt32(midiMessage, "message"),
-                TraceLoggingUInt32(messageSize, "message size"),
-                TraceLoggingUInt64(timestamp, "timestamp")
-            );
+            //TraceLoggingWrite(
+            //    WdmAud2TelemetryProvider::Provider(),
+            //    MIDI_TRACE_EVENT_VERBOSE,
+            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            //    TraceLoggingPointer(this, "this"),
+            //    TraceLoggingWideString(L"In running status. Sending Message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            //    TraceLoggingHexUInt32(midiMessage, "message"),
+            //    TraceLoggingUInt32(messageSize, "message size"),
+            //    TraceLoggingUInt64(timestamp, "timestamp")
+            //);
 
             // For legacy compatibility purposes, always wait for the message send to complete
             RETURN_IF_FAILED(m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, &midiMessage, messageSize, timestamp));
         }
         else
         {
-            TraceLoggingWrite(
-                WdmAud2TelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Invalid message. Not in running status and not a status byte.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingHexUInt32(midiMessage, "message"),
-                TraceLoggingUInt64(timestamp, "timestamp")
-            );
+            //TraceLoggingWrite(
+            //    WdmAud2TelemetryProvider::Provider(),
+            //    MIDI_TRACE_EVENT_ERROR,
+            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            //    TraceLoggingPointer(this, "this"),
+            //    TraceLoggingWideString(L"Invalid message. Not in running status and not a status byte.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            //    TraceLoggingHexUInt32(midiMessage, "message"),
+            //    TraceLoggingUInt64(timestamp, "timestamp")
+            //);
 
             // no status byte, and running status isn't possible, this is an error.
             RETURN_IF_FAILED(E_INVALIDARG);
