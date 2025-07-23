@@ -30,8 +30,7 @@ public:
     ); 
     HRESULT Shutdown();
 
-    HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
-    HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    HRESULT SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
     GUID TransformGuid();
 

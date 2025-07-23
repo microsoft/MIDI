@@ -246,10 +246,10 @@ void Midi2ServiceTests::TestMidiServiceClientRPC()
 
     LOG_OUTPUT(L"Writing midi data");
     messagesExpected = 4;
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData_32, sizeof(UMP32), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData_64, sizeof(UMP64), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData_96, sizeof(UMP96), 0));
-    VERIFY_SUCCEEDED(midiPump->SendMidiMessage((void*)&g_MidiTestData_128, sizeof(UMP128), 0));
+    VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_32, sizeof(UMP32), 0));
+    VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_64, sizeof(UMP64), 0));
+    VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_96, sizeof(UMP96), 0));
+    VERIFY_SUCCEEDED(midiPump->SendMidiMessage(MessageOptionFlags_None, (void*)&g_MidiTestData_128, sizeof(UMP128), 0));
 
     VERIFY_IS_TRUE(allMessagesReceived.wait(5000));
 
@@ -310,22 +310,22 @@ void Midi2ServiceTests::TestMidiServiceInvalidCreationParams()
     PMIDISRV_CLIENT client {nullptr};
 
     MIDISRV_CLIENTCREATION_PARAMS creationParams[] = {
-            { MidiDataFormats_UMP, MidiFlowBidirectional, 0 },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + 1 },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + 2 },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + PAGE_SIZE },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - 1 },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - 2 },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE - 1 },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE - 2 },
-            { MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX/2 + 1 },
-            { (MidiDataFormats) 0, MidiFlowBidirectional, PAGE_SIZE },
-            { (MidiDataFormats) 4, MidiFlowBidirectional, PAGE_SIZE },  // 1, 2, and 3 are valid formats
-            { (MidiDataFormats) (MidiDataFormats_Any - 1), MidiFlowBidirectional, PAGE_SIZE },  // 1, 2, and 3 are valid formats
-            { MidiDataFormats_UMP, (MidiFlow) (MidiFlowBidirectional + 1), PAGE_SIZE },
-            { MidiDataFormats_UMP, (MidiFlow) (MidiFlowBidirectional + 2), PAGE_SIZE },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, 0 },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + 1 },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + 2 },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, MAXIMUM_LOOPED_BUFFER_SIZE + PAGE_SIZE },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - 1 },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - 2 },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE - 1 },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX - PAGE_SIZE - 2 },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, ULONG_MAX/2 + 1 },
+            { MessageOptionFlags_None, (MidiDataFormats) 0, MidiFlowBidirectional, PAGE_SIZE },
+            { MessageOptionFlags_None, (MidiDataFormats) 4, MidiFlowBidirectional, PAGE_SIZE },  // 1, 2, and 3 are valid formats
+            { MessageOptionFlags_None, (MidiDataFormats) (MidiDataFormats_Any - 1), MidiFlowBidirectional, PAGE_SIZE },  // 1, 2, and 3 are valid formats
+            { MessageOptionFlags_None, MidiDataFormats_UMP, (MidiFlow) (MidiFlowBidirectional + 1), PAGE_SIZE },
+            { MessageOptionFlags_None, MidiDataFormats_UMP, (MidiFlow) (MidiFlowBidirectional + 2), PAGE_SIZE },
         };
 
     // In the event that a creation does succeed, clean it up on our way out.
@@ -378,7 +378,7 @@ void Midi2ServiceTests::TestMidiServiceInvalidCreationParams()
         }());
     }
 
-    MIDISRV_CLIENTCREATION_PARAMS creationParam = { MidiDataFormats_UMP, MidiFlowBidirectional, PAGE_SIZE };
+    MIDISRV_CLIENTCREATION_PARAMS creationParam = { MessageOptionFlags_None, MidiDataFormats_UMP, MidiFlowBidirectional, PAGE_SIZE };
 
     LOG_OUTPUT(L"Testing invalid binding handle");
     VERIFY_FAILED([&]() {

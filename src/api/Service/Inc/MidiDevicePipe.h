@@ -26,14 +26,10 @@ public:
                        _In_ DWORD *);
     HRESULT Shutdown();
 
-    // called by the client
-    HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
-
-    // called by the scheduler
-    HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    HRESULT SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
 private:
-    wil::critical_section m_DevicePipeLock;
+    wil::srwlock m_DevicePipeLock;
     winrt::guid m_TransportGuid{};
     wil::com_ptr_nothrow<IMidiBidirectional> m_MidiBidiDevice;
     wil::com_ptr_nothrow<IMidiIn> m_MidiInDevice;

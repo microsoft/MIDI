@@ -88,7 +88,7 @@ private:
     //    _In_ wil::com_ptr_nothrow<CMidiPipe>&);
 
 
-    wil::critical_section m_ClientManagerLock;
+    wil::srwlock m_ClientManagerLock;
 
     std::shared_ptr<CMidiPerformanceManager> m_PerformanceManager;
     std::shared_ptr<CMidiProcessManager> m_ProcessManager;

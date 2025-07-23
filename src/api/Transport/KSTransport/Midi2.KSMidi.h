@@ -13,7 +13,7 @@ class CMidi2KSMidi
 public:
 
     HRESULT Initialize(_In_ LPCWSTR, _In_ MidiFlow, _In_ PTRANSPORTCREATIONPARAMS, _In_ DWORD *, _In_opt_ IMidiCallback *, _In_ LONGLONG);
-    HRESULT SendMidiMessage(_In_ PVOID , _In_ UINT , _In_ LONGLONG);
+    HRESULT SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID , _In_ UINT , _In_ LONGLONG);
     HRESULT Shutdown();
 
 private:

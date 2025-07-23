@@ -53,7 +53,7 @@ public:
     {
         if (m_callbackB != nullptr)
         {
-            return m_callbackB->Callback(message, size, position, context);
+            return m_callbackB->Callback(MessageOptionFlags_None, message, size, position, context);
         }
 
         return S_OK;
@@ -63,7 +63,7 @@ public:
     {
         if (m_callbackA != nullptr)
         {
-            return m_callbackA->Callback(message, size, position, context);
+            return m_callbackA->Callback(MessageOptionFlags_None, message, size, position, context);
         }
 
         return S_OK;

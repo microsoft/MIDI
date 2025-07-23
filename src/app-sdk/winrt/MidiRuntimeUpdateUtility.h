@@ -27,8 +27,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Update::implemen
             _In_ midi2::Utilities::RuntimeInformation::MidiRuntimeReleaseTypes inScopeReleaseTypes) noexcept;
 
         static bool IsReleaseNewerThanInstalled(
-            _In_ midi2::Utilities::Update::MidiRuntimeRelease release, 
-            _In_ bool ignoreReleaseType) noexcept;
+            _In_ midi2::Utilities::Update::MidiRuntimeRelease release) noexcept;
 
         static midi2::Utilities::RuntimeInformation::MidiRuntimeArchitecture InstalledRuntimeArchitecture();
 

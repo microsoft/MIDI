@@ -210,6 +210,7 @@ CMidi2KSMidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidi::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID data,
     UINT length,
     LONGLONG position
@@ -217,7 +218,7 @@ CMidi2KSMidi::SendMidiMessage(
 {
     if (m_MidiOutDevice)
     {
-        return m_MidiOutDevice->SendMidiMessage(data, length, position);
+        return m_MidiOutDevice->SendMidiMessage(optionFlags, data, length, position);
     }
 
     return E_ABORT;

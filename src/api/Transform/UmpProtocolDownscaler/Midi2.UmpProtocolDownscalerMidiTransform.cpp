@@ -219,6 +219,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
+    MessageOptionFlags optionFlags,
     PVOID inputData,
     UINT length,
     LONGLONG timestamp
@@ -232,11 +233,13 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
     //    TraceLoggingPointer(this, "this")
     //);
 
+    // only 1 message may be downscaled at a time
+    auto lock = m_SendLock.lock();
 
     // if downscaling and upscaling aren't required, quickly move on
     if (!m_downscalingRequiredForEndpoint && !m_upscalingRequiredForEndpoint)
     {
-        RETURN_IF_FAILED(m_Callback->Callback(inputData, length, timestamp, m_Context));
+        RETURN_IF_FAILED(m_Callback->Callback(optionFlags, inputData, length, timestamp, m_Context));
     }
     else if (m_downscalingRequiredForEndpoint)
     {
@@ -245,7 +248,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
             // downscale only MIDI 2.0 channel voice messages : message type 4. Everything else passes through
             if (internal::GetUmpMessageTypeFromFirstWord(internal::MidiWord0FromVoidMessageDataPointer(inputData)) != 4)
             {
-                RETURN_IF_FAILED(m_Callback->Callback(inputData, length, timestamp, m_Context));
+                RETURN_IF_FAILED(m_Callback->Callback(optionFlags, inputData, length, timestamp, m_Context));
 
                 return S_OK;
             }
@@ -272,7 +275,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
                 if (wordCount > 0)
                 {
                     // we use return here instead of log, because the number of UMPs created should be no more than 1
-                    RETURN_IF_FAILED(m_Callback->Callback(&(words[0]), wordCount * sizeof(uint32_t), timestamp, m_Context));
+                    RETURN_IF_FAILED(m_Callback->Callback(optionFlags, &(words[0]), wordCount * sizeof(uint32_t), timestamp, m_Context));
                 }
             }
         }
@@ -301,7 +304,7 @@ CMidi2UmpProtocolDownscalerMidiTransform::SendMidiMessage(
         // easy addition of this in the future when libmidi2 supports protocol upscaling
         // https://github.com/midi2-dev/AM_MIDI2.0Lib/issues/25
 
-        RETURN_IF_FAILED(m_Callback->Callback(inputData, length, timestamp, m_Context));
+        RETURN_IF_FAILED(m_Callback->Callback(optionFlags, inputData, length, timestamp, m_Context));
 
         return S_OK;
     }

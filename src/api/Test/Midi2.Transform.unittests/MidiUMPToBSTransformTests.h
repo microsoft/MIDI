@@ -34,7 +34,7 @@ public:
         _In_ std::vector<uint32_t> words,
         _In_ std::vector<uint8_t> const expectedBytes);
 
-    STDMETHOD(Callback)(_In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
+    STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
     {
         if (m_MidiInCallback)
         {

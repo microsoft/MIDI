@@ -9,16 +9,16 @@ namespace Microsoft.Windows.Devices.Midi2.Common
 	{
 		public const bool IsPreview = true;
 		public const string Source = "GitHub Preview";
-		public const string BuildDate = "2025-07-20";
+		public const string BuildDate = "2025-07-22";
 		public const string Name = "Preview 11";
-		public const string BuildFullVersion = "1.0.11-preview.11.1759";
+		public const string BuildFullVersion = "1.0.11-preview.11.1765";
 		public const ushort VersionMajor = 1;
 		public const ushort VersionMinor = 0;
 		public const ushort VersionPatch = 11;
-		public const ushort VersionBuildNumber = 1759;
-		public const string Preview = "preview.11.1759";
-		public const string AssemblyFullVersion = "1.0.11.1759";
-		public const string FileFullVersion = "1.0.11.1759";
+		public const ushort VersionBuildNumber = 1765;
+		public const string Preview = "preview.11.1765";
+		public const string AssemblyFullVersion = "1.0.11.1765";
+		public const string FileFullVersion = "1.0.11.1765";
 	}
 }
 

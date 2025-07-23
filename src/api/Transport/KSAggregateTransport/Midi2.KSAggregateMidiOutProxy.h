@@ -25,11 +25,11 @@ public:
         _In_ BYTE groupIndex
     );
 
-    STDMETHOD(SendMidiMessage)(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    STDMETHOD(SendMidiMessage)(_In_ MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
     // in this case, the callback fires when we get the translation back
     // from the transform
-    STDMETHOD(Callback)(_In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
+    STDMETHOD(Callback)(MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG, _In_ LONGLONG);
 
     HRESULT Shutdown();
 
@@ -43,4 +43,4 @@ private:
 
     LONGLONG m_context{};
     uint8_t m_groupIndex{};
-};
+};

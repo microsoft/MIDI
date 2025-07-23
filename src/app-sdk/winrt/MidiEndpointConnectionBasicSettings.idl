@@ -8,17 +8,17 @@
 
 
 import "MidiApiContracts.idl";
-
+import "IMidiEndpointConnectionSettings.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [uuid("8087b303-0519-31d1-c0de-ff0000000020"), version(1.0)]
-    interface IMidiEndpointConnectionSettings
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionBasicSettings", 8087b303-0519-31d1-c0de-dd00100a0000)]  
+    runtimeclass MidiEndpointConnectionBasicSettings : IMidiEndpointConnectionSettings
     {
-        Boolean WaitForEndpointReceiptOnSend{ get; };
-        Boolean AutoReconnect{ get; };
+        MidiEndpointConnectionBasicSettings();
+        MidiEndpointConnectionBasicSettings(Boolean waitForEndpointReceiptOnSend);
+        MidiEndpointConnectionBasicSettings(Boolean waitForEndpointReceiptOnSend, Boolean autoReconnect);
 
-        String SettingsJson { get; };
     }
 }

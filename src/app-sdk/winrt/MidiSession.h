@@ -36,12 +36,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         midi2::MidiEndpointConnection CreateEndpointConnection(
             _In_ winrt::hstring const& endpointDeviceId,
-            _In_ bool const autoReconnect
-        ) noexcept;
-
-        midi2::MidiEndpointConnection CreateEndpointConnection(
-            _In_ winrt::hstring const& endpointDeviceId,
-            _In_ bool const autoReconnect,
             _In_ midi2::IMidiEndpointConnectionSettings const& settings
         ) noexcept;
 

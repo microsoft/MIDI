@@ -23,9 +23,7 @@ public:
                             _In_ DWORD *,
                             _In_ BOOL);
     HRESULT Shutdown();
-
-    HRESULT SendMidiMessage(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
-    HRESULT SendMidiMessageNow(_In_ PVOID, _In_ UINT, _In_ LONGLONG);
+    HRESULT SendMidiMessage(_In_ MessageOptionFlags, _In_ PVOID, _In_ UINT, _In_ LONGLONG);
 
     // client pipe must have the same format for both in and out, so
     // setting the format for one or the other sets for both.
@@ -74,7 +72,7 @@ public:
 private:
     HRESULT AdjustForBufferingRequirements(_In_ PMIDISRV_CLIENTCREATION_PARAMS CreationParams);
 
-    wil::critical_section m_ClientPipeLock;
+    wil::srwlock m_ClientPipeLock;
     MidiClientHandle m_ClientHandle{ 0 };
     std::unique_ptr<CMidiXProc> m_MidiPump;
 
@@ -83,5 +81,7 @@ private:
 
     BOOL m_GroupFiltered{FALSE};
     BYTE m_GroupIndex{0};
+
+    MessageOptionFlags m_MessageOptions { MessageOptionFlags_None };
 };
 

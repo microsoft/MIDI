@@ -70,8 +70,11 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage96", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiMessage128", defaultThreading });
 
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointConnectionBasicSettings", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiEndpointConnection", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".MidiSession", defaultThreading });
+
+  
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".CapabilityInquiry.MidiUniqueId", defaultThreading });
 
