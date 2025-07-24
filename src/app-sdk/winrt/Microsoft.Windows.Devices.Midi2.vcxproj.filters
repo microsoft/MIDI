@@ -121,6 +121,9 @@
     <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
       <Filter>SDK\Core\Session</Filter>
     </ClCompile>
+    <ClCompile Include="MidiClockGenerator.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -256,6 +259,9 @@
     </ClInclude>
     <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
       <Filter>SDK\Core\Session</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiClockGenerator.h">
+      <Filter>SDK\Utilities\Sequencing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -625,6 +631,9 @@
     <Midl Include="MidiEndpointConnectionBasicSettings.idl">
       <Filter>SDK\Core\Session</Filter>
     </Midl>
+    <Midl Include="MidiClockGenerator.idl">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -748,6 +757,9 @@
     </Filter>
     <Filter Include="SDK\Utilities\RuntimeInformation">
       <UniqueIdentifier>{a2ff49fc-76c1-470a-a352-66b6349db495}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Utilities\Sequencing">
+      <UniqueIdentifier>{ab2d1b29-0c94-47aa-ae74-fe4041181d0b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
