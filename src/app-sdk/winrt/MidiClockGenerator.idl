@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "MidiEndpointConnection.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Utilities.Sequencing
+{
+    [experimental]
+    runtimeclass MidiClockGenerator
+    {
+        MidiClockGenerator();
+        MidiClockGenerator(IVector<Microsoft.Windows.Devices.Midi2.MidiEndpointConnection> connections);
+        MidiClockGenerator(IVector<Microsoft.Windows.Devices.Midi2.MidiEndpointConnection> connections, Double bpm);
+        MidiClockGenerator(IVector<Microsoft.Windows.Devices.Midi2.MidiEndpointConnection> connections, Double bpm, UInt16 pulsesPerQuarterNote);
+
+        void UpdateRunningClock(Double bpm);
+        void UpdateRunningClock(Double bpm, UInt16 pulsesPerQuarterNote);
+
+        Boolean Start(Boolean sendMidiStartMessage);   // start the clock
+        Boolean Stop(Boolean sendMidiStopMessage);     // stop the clock
+    }
+}
