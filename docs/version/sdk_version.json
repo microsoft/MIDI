@@ -4,18 +4,18 @@
         {
             "type": "preview",
             "source": "GitHub Preview",
-            "name": "Preview 11",
-            "description": "",
-            "buildDate": "2025-07-12",
-            "versionFull": "0.0.0-preview.11.1148",
-            "versionMajor": 0,
-            "versionMinor": 0,
-            "versionPatch": 0,
-            "preview": "preview.11.1148",
-            "releaseDescription": "Replace this text with a summary of this SDK update",
-            "releaseNotesUri": "",
-            "directDownloadUriX64": "",
-            "directDownloadUriArm64": ""
+            "name": "Test Preview 15",
+            "description": "This is a test release for testing out the SDK updating functions in the MIDI Settings app. It adds new features like Foo, Bar, and Baz. This is the release you really want.",
+            "buildDate": "2025-07-23",
+            "versionFull": "1.1.15-testentry.15.1769",
+            "versionMajor": 1,
+            "versionMinor": 1,
+            "versionPatch": 15,
+            "versionBuildNumber": 1769,
+            "preview": "testentry.15.1769",
+            "releaseNotesUri": "https://github.com/microsoft/MIDI/releases/tag/customer-preview-2",
+            "directDownloadUriX64": "https://github.com/microsoft/MIDI/releases/download/customer-preview-2/x64-full.zip",
+            "directDownloadUriArm64": "https://github.com/microsoft/MIDI/releases/download/customer-preview-2/x64-full.zip"
         }
     ]
 }
