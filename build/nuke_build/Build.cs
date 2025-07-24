@@ -261,7 +261,7 @@ class Build : NukeBuild
                 writer.WriteLine($"            \"type\": \"{BuildType.ToString().ToLower()}\",");
                 writer.WriteLine($"            \"source\": \"{buildSource}\",");
                 writer.WriteLine($"            \"name\": \"{versionName}\",");
-                writer.WriteLine($"            \"description\": \"\",");
+                writer.WriteLine($"            \"description\": \"Replace this text with a summary of this SDK update\",");
                 writer.WriteLine($"            \"buildDate\": \"{buildDate}\",");
                 writer.WriteLine($"            \"versionFull\": \"{versionString}\",");
                 writer.WriteLine($"            \"versionMajor\": {buildVersionMajor},");
@@ -269,7 +269,6 @@ class Build : NukeBuild
                 writer.WriteLine($"            \"versionPatch\": {buildVersionPatch},");
                 writer.WriteLine($"            \"versionBuildNumber\": {BuildVersionBuildNumber},");
                 writer.WriteLine($"            \"preview\": \"{BuildVersionPreviewString}\",");
-                writer.WriteLine($"            \"releaseDescription\": \"Replace this text with a summary of this SDK update\",");
                 writer.WriteLine($"            \"releaseNotesUri\": \"\",");
                 writer.WriteLine($"            \"directDownloadUriX64\": \"\",");
                 writer.WriteLine($"            \"directDownloadUriArm64\": \"\"");

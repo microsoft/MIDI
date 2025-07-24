@@ -318,13 +318,22 @@ enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0003
         MetadataFlags_IsClientConfigurable	= 8
     } 	MetadataFlags;
 
-typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004
+typedef /* [public][public][public][public][public][public][public][public] */ 
+enum __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004
     {
+        MessageOptionFlags_None	= 0,
+        MessageOptionFlags_WaitForSendComplete	= 1,
+        MessageOptionFlags_ContextContainsGroupIndex	= 2
+    } 	MessageOptionFlags;
+
+typedef /* [public] */ struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0005
+    {
+    MessageOptionFlags MessageOptions;
     MidiDataFormats DataFormat;
     GUID CallingComponent;
     } 	TRANSPORTCREATIONPARAMS;
 
-typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0004 *PTRANSPORTCREATIONPARAMS;
+typedef struct __MIDL___MIDL_itf_WindowsMidiServices_0000_0000_0005 *PTRANSPORTCREATIONPARAMS;
 
 
 
@@ -438,6 +447,8 @@ EXTERN_C const IID IID_IMidiCallback;
     public:
         virtual HRESULT STDMETHODCALLTYPE Callback( 
             /* [annotation][in] */ 
+            _In_  MessageOptionFlags optionFlags,
+            /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
             _In_  UINT size,
@@ -474,6 +485,8 @@ EXTERN_C const IID IID_IMidiCallback;
         HRESULT ( STDMETHODCALLTYPE *Callback )( 
             IMidiCallback * This,
             /* [annotation][in] */ 
+            _In_  MessageOptionFlags optionFlags,
+            /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
             _In_  UINT size,
@@ -505,8 +518,8 @@ EXTERN_C const IID IID_IMidiCallback;
     ( (This)->lpVtbl -> Release(This) ) 
 
 
-#define IMidiCallback_Callback(This,message,size,position,context)	\
-    ( (This)->lpVtbl -> Callback(This,message,size,position,context) ) 
+#define IMidiCallback_Callback(This,optionFlags,message,size,position,context)	\
+    ( (This)->lpVtbl -> Callback(This,optionFlags,message,size,position,context) ) 
 
 #endif /* COBJMACROS */
 
@@ -663,6 +676,8 @@ EXTERN_C const IID IID_IMidiOut;
         
         virtual HRESULT STDMETHODCALLTYPE SendMidiMessage( 
             /* [annotation][in] */ 
+            _In_  MessageOptionFlags optionFlags,
+            /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
             _In_  UINT size,
@@ -713,6 +728,8 @@ EXTERN_C const IID IID_IMidiOut;
         HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
             IMidiOut * This,
             /* [annotation][in] */ 
+            _In_  MessageOptionFlags optionFlags,
+            /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
             _In_  UINT size,
@@ -748,8 +765,8 @@ EXTERN_C const IID IID_IMidiOut;
 #define IMidiOut_Shutdown(This)	\
     ( (This)->lpVtbl -> Shutdown(This) ) 
 
-#define IMidiOut_SendMidiMessage(This,message,size,position)	\
-    ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
+#define IMidiOut_SendMidiMessage(This,optionFlags,message,size,position)	\
+    ( (This)->lpVtbl -> SendMidiMessage(This,optionFlags,message,size,position) ) 
 
 #endif /* COBJMACROS */
 
@@ -794,6 +811,8 @@ EXTERN_C const IID IID_IMidiBidirectional;
         virtual HRESULT STDMETHODCALLTYPE Shutdown( void) = 0;
         
         virtual HRESULT STDMETHODCALLTYPE SendMidiMessage( 
+            /* [annotation][in] */ 
+            _In_  MessageOptionFlags optionFlags,
             /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
@@ -849,6 +868,8 @@ EXTERN_C const IID IID_IMidiBidirectional;
         HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
             IMidiBidirectional * This,
             /* [annotation][in] */ 
+            _In_  MessageOptionFlags optionFlags,
+            /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
             _In_  UINT size,
@@ -884,8 +905,8 @@ EXTERN_C const IID IID_IMidiBidirectional;
 #define IMidiBidirectional_Shutdown(This)	\
     ( (This)->lpVtbl -> Shutdown(This) ) 
 
-#define IMidiBidirectional_SendMidiMessage(This,message,size,position)	\
-    ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
+#define IMidiBidirectional_SendMidiMessage(This,optionFlags,message,size,position)	\
+    ( (This)->lpVtbl -> SendMidiMessage(This,optionFlags,message,size,position) ) 
 
 #endif /* COBJMACROS */
 
@@ -1605,6 +1626,8 @@ EXTERN_C const IID IID_IMidiDataTransform;
         
         virtual HRESULT STDMETHODCALLTYPE SendMidiMessage( 
             /* [annotation][in] */ 
+            _In_  MessageOptionFlags optionFlags,
+            /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
             _In_  UINT size,
@@ -1659,6 +1682,8 @@ EXTERN_C const IID IID_IMidiDataTransform;
         HRESULT ( STDMETHODCALLTYPE *SendMidiMessage )( 
             IMidiDataTransform * This,
             /* [annotation][in] */ 
+            _In_  MessageOptionFlags optionFlags,
+            /* [annotation][in] */ 
             _In_  PVOID message,
             /* [annotation][in] */ 
             _In_  UINT size,
@@ -1694,8 +1719,8 @@ EXTERN_C const IID IID_IMidiDataTransform;
 #define IMidiDataTransform_Shutdown(This)	\
     ( (This)->lpVtbl -> Shutdown(This) ) 
 
-#define IMidiDataTransform_SendMidiMessage(This,message,size,position)	\
-    ( (This)->lpVtbl -> SendMidiMessage(This,message,size,position) ) 
+#define IMidiDataTransform_SendMidiMessage(This,optionFlags,message,size,position)	\
+    ( (This)->lpVtbl -> SendMidiMessage(This,optionFlags,message,size,position) ) 
 
 #endif /* COBJMACROS */
 

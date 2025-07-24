@@ -135,13 +135,19 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         DWORD mmcssTaskId{};
         LPCWSTR connectionSettingsJsonString = nullptr;
+        TRANSPORTCREATIONPARAMS transportCreationParams{ };
+        transportCreationParams.MessageOptions = MessageOptionFlags::MessageOptionFlags_None;
 
         if (m_connectionSettings != nullptr)
         {
             connectionSettingsJsonString = static_cast<LPCWSTR>(m_connectionSettings.SettingsJson().c_str());
+
+            if (m_connectionSettings.WaitForEndpointReceiptOnSend())
+            {
+                transportCreationParams.MessageOptions = MessageOptionFlags::MessageOptionFlags_WaitForSendComplete;
+            }
         }
 
-        TRANSPORTCREATIONPARAMS transportCreationParams{ };
         transportCreationParams.DataFormat = MidiDataFormats::MidiDataFormats_UMP;
         //transportCreationParams.InstanceConfigurationJsonData = connectionSettingsJsonString;
 
