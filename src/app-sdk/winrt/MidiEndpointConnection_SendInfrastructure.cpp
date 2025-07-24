@@ -119,7 +119,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
             if (endpoint != nullptr)
             {
-                auto hr = endpoint->SendMidiMessage(data, sizeInBytes, timestamp);
+                MessageOptionFlags flags{ MessageOptionFlags::MessageOptionFlags_None };
+
+                if (m_connectionSettings.WaitForEndpointReceiptOnSend())
+                {
+                    flags = MessageOptionFlags::MessageOptionFlags_WaitForSendComplete;
+                }
+
+                auto hr = endpoint->SendMidiMessage(flags, data, sizeInBytes, timestamp);
 
                 
                 if (FAILED(hr))

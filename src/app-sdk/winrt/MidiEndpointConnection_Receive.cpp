@@ -13,9 +13,10 @@
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
     _Use_decl_annotations_
-    HRESULT MidiEndpointConnection::Callback(PVOID data, UINT size, LONGLONG timestamp, LONGLONG context)
+    HRESULT MidiEndpointConnection::Callback(MessageOptionFlags optionFlags, PVOID data, UINT size, LONGLONG timestamp, LONGLONG context)
     {
         UNREFERENCED_PARAMETER(context);
+        UNREFERENCED_PARAMETER(optionFlags);
 
         if ((!m_messageReceivedEvent) && (!m_messageProcessingPlugins || m_messageProcessingPlugins.Size() == 0))
         {
