@@ -331,6 +331,7 @@ MidiNetworkConnection::HandleIncomingUmpData(
             uint8_t messageWordCount = internal::GetUmpLengthInMidiWordsFromFirstWord(*it);
 
             LOG_IF_FAILED(m_callback->Callback(
+                MessageOptionFlags::MessageOptionFlags_None,
                 (PVOID)(&(*it)),
                 (UINT)(messageWordCount * sizeof(uint32_t)),
                 timestamp, 

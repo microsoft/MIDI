@@ -86,11 +86,13 @@ CMidi2NetworkMidiBidi::Shutdown()
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBidi::SendMidiMessage(
-    PVOID message,
-    UINT size,
+    MessageOptionFlags optionFlags,
+    PVOID data,
+    UINT length,
     LONGLONG position
 )
 {
+#ifdef _DEBUG
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -98,17 +100,31 @@ CMidi2NetworkMidiBidi::SendMidiMessage(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt32(size, "Byte count")
+        TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(length / sizeof(uint32_t)), "data"),
+        TraceLoggingUInt32(length, "Byte count")
     );
+#else
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(data, "data pointer"),
+        TraceLoggingUInt32(length, "Byte count")
+    );
+#endif
 
     UNREFERENCED_PARAMETER(position);
+    UNREFERENCED_PARAMETER(optionFlags);
 
-    RETURN_HR_IF_NULL(E_INVALIDARG, message);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF_NULL(E_INVALIDARG, data);
+    RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
     if (auto conn = m_connection.lock())
     {
-        RETURN_IF_FAILED(conn->QueueMidiMessagesToSendToNetwork(message, size));
+        RETURN_IF_FAILED(conn->QueueMidiMessagesToSendToNetwork(data, length));
     }
 
     return S_OK;
@@ -117,12 +133,14 @@ CMidi2NetworkMidiBidi::SendMidiMessage(
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiBidi::Callback(
-    PVOID message,
-    UINT size,
+    MessageOptionFlags optionFlags,
+    PVOID data,
+    UINT length,
     LONGLONG timestamp,
     LONGLONG context
 )
 {
+#ifdef _DEBUG
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -130,13 +148,26 @@ CMidi2NetworkMidiBidi::Callback(
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt32(size, "Byte count")
+        TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(length / sizeof(uint32_t)), "data"),
+        TraceLoggingUInt32(length, "Byte count")
     );
+#else
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(data, "data pointer"),
+        TraceLoggingUInt32(length, "Byte count")
+    );
+#endif
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, m_callback);
-    RETURN_HR_IF(E_INVALIDARG, size < sizeof(uint32_t));
+    RETURN_HR_IF(E_INVALIDARG, length < sizeof(uint32_t));
 
-    RETURN_IF_FAILED(m_callback->Callback(message, size, timestamp, context));
+    RETURN_IF_FAILED(m_callback->Callback(optionFlags, data, length, timestamp, context));
 
     return S_OK;
 }
