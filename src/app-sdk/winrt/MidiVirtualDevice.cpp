@@ -78,6 +78,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Virtual::impleme
 
         auto oldBlock = m_functionBlocks.Lookup(updatedBlock.Number());
 
+        if (oldBlock == nullptr)
+        {
+            return false;
+        }
+
         // Update the block info and send the notification messages
         if (SendFunctionBlockInfoNotificationMessage(updatedBlock))
         {
