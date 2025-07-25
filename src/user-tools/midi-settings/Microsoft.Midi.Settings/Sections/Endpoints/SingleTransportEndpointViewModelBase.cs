@@ -82,7 +82,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // now get all the endpoint devices and put them in groups by transport
 
-                var enumeratedDevices = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x=>x.Name);
+                // the ToList() takes a snapshot so we can iterate safely even if new devices are found or others are removed
+                var enumeratedDevices = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x => x.Name).ToList();
 
                 foreach (var endpointDevice in enumeratedDevices)
                 {

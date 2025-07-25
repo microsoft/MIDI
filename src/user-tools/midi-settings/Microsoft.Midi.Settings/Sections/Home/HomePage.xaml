@@ -38,28 +38,11 @@
 
                         <InfoBar Margin="0,0,15,15"
                                  CornerRadius="8"
-                                 IsOpen="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BoolNegationConverter}}"
+                                 IsOpen="{x:Bind ViewModel.IsServiceAvailable, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
                                  Title="Service is Unavailable"
                                  Message="The Windows MIDI Service was not able to be started. Most options will not be available."
                                  Severity="Error"
                                  >
-                        </InfoBar>
-
-                        <!-- SDK Update -->
-                        
-                        <InfoBar Margin="0,0,15,15"
-                                 CornerRadius="8"
-                                 IsOpen="{x:Bind ViewModel.IsNewerSdkRuntimeDownloadAvailable}"
-                                 Title="New Windows MIDI Services Runtime Available"
-                                 Message="{x:Bind ViewModel.NewSdkRuntimeDownloadAvailableMessage}"
-                                 Severity="Warning"
-                                 >
-                            <InfoBar.ActionButton>
-                                <Button Content="Update SDK Runtime"
-                                        Click="UpdateSdkRuntime_Click"
-                                        IsEnabled="{x:Bind ViewModel.IsSdkDownloadInProgress, Mode=OneWay,Converter={StaticResource BoolNegationConverter}}"
-                                        />
-                            </InfoBar.ActionButton>
                         </InfoBar>
 
 
@@ -67,9 +50,9 @@
 
                         <InfoBar Margin="0,0,15,15"
                                  CornerRadius="8"
-                                 IsOpen="{x:Bind ViewModel.IsFirstRunSetupComplete, Converter={StaticResource BoolNegationConverter}}"
-                                 Title="Finish customizing MIDI on this PC"
-                                 Message="Customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
+                                 IsOpen="{x:Bind ViewModel.IsFirstRunSetupComplete, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                                 Title="Finish MIDI setup and customization on this PC"
+                                 Message="Create the required configuration file and then customize Windows MIDI Services for your needs: Enable portable setups, device and port customization, default loopback endpoints, auto MIDI service startup, and more"
                                  Severity="Warning"
                                  >
                             <InfoBar.ActionButton>
@@ -79,12 +62,83 @@
                         </InfoBar>
 
 
+                        <!-- SDK Update -->
+                        
+                        <InfoBar Margin="0,0,15,15"
+                                 CornerRadius="8"
+                                 IsOpen="{x:Bind ViewModel.IsNewerSdkRuntimeDownloadAvailable, Mode=OneWay}"
+                                 Title="New Windows MIDI Services Runtime Available"
+                                 Severity="Informational"
+                                 >
+                            <InfoBar.Content>
+                                <StackPanel Orientation="Vertical">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Installed Version" 
+                                                   Grid.Column="0" 
+                                                   Grid.Row="0" 
+                                                   Style="{StaticResource SmallPropertyLabel}"/>
+                                        <TextBlock Text="{x:Bind ViewModel.MidiSdkCurrentReleaseVersionString, Mode=OneWay}" 
+                                                   Grid.Column="1" 
+                                                   Grid.Row="0"
+                                                   Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
+
+                                        <TextBlock Text="New Version" 
+                                                   Grid.Column="0" 
+                                                   Grid.Row="1" 
+                                                   Style="{StaticResource SmallPropertyLabel}"/>
+                                        <TextBlock Text="{x:Bind ViewModel.MidiSdkNewReleaseVersionString, Mode=OneWay}" 
+                                                   Grid.Column="1" 
+                                                   Grid.Row="1"
+                                                   Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
+
+                                        <TextBlock Text="Build Date" 
+                                                   Grid.Column="0" 
+                                                   Grid.Row="2" 
+                                                   Style="{StaticResource SmallPropertyLabel}"/>
+                                        <TextBlock Text="{x:Bind ViewModel.MidiSdkNewReleaseDateString, Mode=OneWay}" 
+                                                   Grid.Column="1" 
+                                                   Grid.Row="2"
+                                                   Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
+
+                                        <TextBlock TextWrapping="WrapWholeWords"
+                                                   Margin="32,2,2,2"
+                                                   Grid.Row="0"
+                                                   Grid.Column="2"
+                                                   Grid.RowSpan="2">
+                                            <Run Text="{x:Bind ViewModel.NewSdkRuntimeDownloadAvailableMessage, Mode=OneWay}" />
+                                            <Hyperlink NavigateUri="{x:Bind ViewModel.MidiSdkReleaseNotesUri}">Learn more...</Hyperlink>
+                                        </TextBlock>
+
+                                    </Grid>
+                                                                       
+                                    <Button Content="Update SDK Runtime"
+                                            Margin="0,12,0,16"
+                                            Click="UpdateSdkRuntime_Click"
+                                            IsEnabled="{x:Bind ViewModel.IsSdkDownloadInProgress, Mode=OneWay,Converter={StaticResource BoolNegationConverter}}"
+                                            />
+                                </StackPanel>
+                            </InfoBar.Content>
+                            
+                        </InfoBar>
+
+
+
                         <!-- Current configuration -->
 
                         <controls:SettingsExpander IsExpanded="True" 
                                                Margin="0,0,15,15" 
                                                CornerRadius="8"
-                                               Visibility="{x:Bind ViewModel.IsValidConfigLoaded, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                               Visibility="{x:Bind ViewModel.IsValidConfigLoaded, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <controls:SettingsExpander.Header>
                                 <StackPanel>
                                     <TextBlock Text="Current Configuration" Style="{StaticResource HomeCardHeaderTitleStyle}" />
@@ -100,8 +154,8 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Margin="5" Text="{x:Bind ViewModel.CurrentConfigurationName}" Style="{StaticResource SmallPropertyLabel}" FontWeight="Bold" />
-                                            <TextBlock Grid.Column="1" Margin="5" Text="{x:Bind ViewModel.CurrentConfigurationFileName}" Style="{StaticResource SmallPlainPropertyValue}" />
+                                            <TextBlock Grid.Column="0" Margin="5" Text="{x:Bind ViewModel.CurrentConfigurationName, Mode=OneWay}" Style="{StaticResource SmallPropertyLabel}" FontWeight="Bold" />
+                                            <TextBlock Grid.Column="1" Margin="5" Text="{x:Bind ViewModel.CurrentConfigurationFileName, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}" />
                                             <!-- TODO: last column will have button to open file in editor -->
                                         </Grid>
                                     </controls:SettingsCard.Header>
@@ -113,6 +167,7 @@
 
                 <!-- Current installed runtime -->
 
+                <!--
                 <Grid Grid.Row="1">
                     <controls:SettingsExpander IsExpanded="True" Margin="0,0,15,15" CornerRadius="8">
                         <controls:SettingsExpander.Header>
@@ -126,7 +181,7 @@
                                 <controls:SettingsCard.Header>
                                     <HyperlinkButton Grid.Column="2" x:Name="DownloadLatestSdk" 
                                                  Content="Check for and download latest SDK runtime and tools" 
-                                                 NavigateUri="{x:Bind ViewModel.MidiSdkDownloadUri}" 
+                                                 NavigateUri="{x:Bind ViewModel.MidiSdkDownloadUri, Mode=OneWay}" 
                                                  VerticalAlignment="Center" />
                                 </controls:SettingsCard.Header>
                                 <controls:SettingsCard.HeaderIcon>
@@ -136,7 +191,8 @@
                         </controls:SettingsExpander.Items>
                     </controls:SettingsExpander>
                 </Grid>
-
+                -->
+                
                 <!-- Remaining blocks on the page -->
 
                 <Grid Grid.Row="2">
@@ -219,7 +275,8 @@
                                 <TextBlock x:Uid="CommonTasksGroup_Other" Style="{StaticResource HomeCardItemSeparatorStyle}"/>
                             </Border>-->
 
-                                <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
+                                <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                       Command="{x:Bind ViewModel.CommonTaskOpenMidiConsoleCommand}">
                                     <controls:SettingsCard.Header>
                                         <TextBlock x:Uid="CommonTasks_OpenConsole" TextWrapping="WrapWholeWords" />
                                     </controls:SettingsCard.Header>
@@ -227,8 +284,9 @@
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;" Style="{StaticResource CommonTasksIconStyles}"/>
                                     </controls:SettingsCard.HeaderIcon>
                                 </controls:SettingsCard>
-
-                                <controls:SettingsCard IsClickEnabled="True" IsEnabled="False">
+                                
+                                <controls:SettingsCard IsClickEnabled="True" IsEnabled="True"
+                                                       Command="{x:Bind ViewModel.CommonTaskMidiDiagCommand}">
                                     <controls:SettingsCard.Header>
                                         <TextBlock x:Uid="CommonTasks_CaptureMidiDiag" TextWrapping="WrapWholeWords" />
                                     </controls:SettingsCard.Header>
@@ -504,6 +562,7 @@
                                     </controls:SettingsCard.HeaderIcon>
                                 </controls:SettingsCard>
 
+                                <!--
                                 <controls:SettingsCard IsClickEnabled="False">
                                     <controls:SettingsCard.Header>
                                         <HyperlinkButton NavigateUri="https://learn.microsoft.com/windows/terminal/install">
@@ -516,7 +575,7 @@
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"/>
                                     </controls:SettingsCard.HeaderIcon>
                                 </controls:SettingsCard>
-
+                                -->
                             </controls:SettingsExpander.Items>
                         </controls:SettingsExpander>
 

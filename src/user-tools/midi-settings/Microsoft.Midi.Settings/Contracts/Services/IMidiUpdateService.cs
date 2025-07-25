@@ -21,10 +21,17 @@ namespace Microsoft.Midi.Settings.Contracts.Services
         MidiRuntimeReleaseTypes GetCurrentInstalledChannel();
 
         MidiRuntimeReleaseTypes GetCurrentPreferredChannel();
+        void SetCurrentPreferredChannel(MidiRuntimeReleaseTypes preferredChannel);
+
+
+        void SetAutoCheckForUpdatesEnabled(bool newValue);
+        bool GetAutoCheckForUpdatesEnabled();
 
         IReadOnlyList<MidiRuntimeRelease> GetAllAvailableRuntimeDownloads();
 
         MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeReleaseTypes releaseChannelType);
+
+        MidiRuntimeRelease? CheckForUpdates();
 
         Uri GetMidiSdkInstallerPageUri();
 
