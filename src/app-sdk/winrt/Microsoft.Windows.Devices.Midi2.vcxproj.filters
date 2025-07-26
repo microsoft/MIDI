@@ -124,6 +124,9 @@
     <ClCompile Include="MidiClockGenerator.cpp">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </ClCompile>
+    <ClCompile Include="MidiClockDestination.cpp">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -261,6 +264,9 @@
       <Filter>SDK\Core\Session</Filter>
     </ClInclude>
     <ClInclude Include="MidiClockGenerator.h">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiClockDestination.h">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </ClInclude>
   </ItemGroup>
@@ -632,6 +638,9 @@
       <Filter>SDK\Core\Session</Filter>
     </Midl>
     <Midl Include="MidiClockGenerator.idl">
+      <Filter>SDK\Utilities\Sequencing</Filter>
+    </Midl>
+    <Midl Include="MidiClockDestination.idl">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </Midl>
   </ItemGroup>

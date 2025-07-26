@@ -122,13 +122,11 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveMessageHelper", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.SysExTransfer.MidiSystemExclusiveSender", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.RuntimeInformation.MidiRuntimeInformation.MidiRuntimeVersion", defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.RuntimeInformation.MidiRuntimeInformation.MidiRuntimeInformation", defaultThreading });
+    //types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.RuntimeInformation.MidiRuntimeVersion", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.RuntimeInformation.MidiRuntimeInformation", defaultThreading });
 
-
-    
-
-
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockGenerator", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockDestination", defaultThreading });
 
     return types;
 }

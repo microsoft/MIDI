@@ -7,21 +7,17 @@
 // ============================================================================
 
 import "MidiEndpointConnection.idl";
-import "MidiClockDestination.idl";
+import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.Sequencing
 {
     [experimental]
-    runtimeclass MidiClockGenerator
+    runtimeclass MidiClockDestination
     {
-        MidiClockGenerator(IVector<MidiClockDestination> destinations, Double bpm, UInt16 pulsesPerQuarterNote);
+        MidiClockDestination(Microsoft.Windows.Devices.Midi2.MidiEndpointConnection connection, IVector<Microsoft.Windows.Devices.Midi2.MidiGroup> groups);
 
-        void UpdateRunningClock(Double bpm);
-        void UpdateRunningClock(Double bpm, UInt16 pulsesPerQuarterNote);
+        Microsoft.Windows.Devices.Midi2.MidiEndpointConnection Connection{ get; };
+        IVectorView<Microsoft.Windows.Devices.Midi2.MidiGroup> Groups{ get; };
 
-        IVectorView<MidiClockDestination> Destinations{ get; };
-
-        Boolean Start(Boolean sendMidiStartMessage);   // start the clock
-        Boolean Stop(Boolean sendMidiStopMessage);     // stop the clock
     }
 }

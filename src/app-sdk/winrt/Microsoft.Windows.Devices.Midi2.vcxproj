@@ -489,6 +489,7 @@
       <DependentUpon>MidiRuntimeUpdateUtility.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiClockGenerator.h" />
+    <ClInclude Include="MidiClockDestination.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -799,12 +800,14 @@
       <DependentUpon>MidiRuntimeUpdateUtility.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiClockGenerator.cpp" />
+    <ClCompile Include="MidiClockDestination.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />
     <Midl Include="MidiApiContracts.idl" />
+    <Midl Include="MidiClockDestination.idl" />
     <Midl Include="MidiClockGenerator.idl" />
     <Midl Include="MidiEndpointAssociatedPortDeviceInformation.idl" />
     <Midl Include="MidiEndpointConnectionBasicSettings.idl" />

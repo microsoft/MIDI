@@ -266,3 +266,6 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiRuntimeUpdateUtility.h"
 #include "MidiRuntimeInformation.h"
 
+#include "MidiClockDestination.h"
+#include "MidiClockGenerator.h"
+

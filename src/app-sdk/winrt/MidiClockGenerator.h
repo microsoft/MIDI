@@ -13,12 +13,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
 {
     struct MidiClockGenerator : MidiClockGeneratorT<MidiClockGenerator>
     {
-        MidiClockGenerator() = default;
+        MidiClockGenerator(_In_ collections::IVector<midi2::Utilities::Sequencing::MidiClockDestination> const& destinations, _In_ double const bpm, _In_ uint16_t const pulsesPerQuarterNote) noexcept;       
 
-        MidiClockGenerator(_In_ collections::IVector<midi2::MidiEndpointConnection> const& connections) noexcept;
-        MidiClockGenerator(_In_ collections::IVector<midi2::MidiEndpointConnection> const& connections, _In_ double const bpm) noexcept;
-        MidiClockGenerator(_In_ collections::IVector<midi2::MidiEndpointConnection> const& connections, _In_ double const bpm, _In_ uint16_t const pulsesPerQuarterNote) noexcept;
-        
+        collections::IVectorView<midi2::Utilities::Sequencing::MidiClockDestination> Destinations() { return m_destinations.GetView(); }
+
         void UpdateRunningClock(_In_ double const bpm) noexcept;
         void UpdateRunningClock(_In_ double const bpm, _In_ uint16_t const pulsesPerQuarterNote) noexcept;
         
@@ -29,11 +27,23 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
         uint16_t m_pulsesPerQuarterNote{ 24 };
         double m_bpm{ 120 };
 
-        collections::IVector<midi2::MidiEndpointConnection> m_connections;
+        uint64_t m_midiTimestampClockTicksPerMinute{ 0 };
+
+        bool m_sendMidiStartMessage{ false };
+        bool m_sendMidiStopMessage{ false };
+
+        collections::IVector<midi2::Utilities::Sequencing::MidiClockDestination> m_destinations = 
+            winrt::single_threaded_vector<midi2::Utilities::Sequencing::MidiClockDestination>();
 
         std::jthread m_workerThread;
+        std::stop_token m_workerThreadStopToken;
 
-        void WorkerThread();
+        const uint32_t m_umpMidiTimingClockMessage{ 0x10F80000 };   // does not include group index
+        const uint32_t m_umpMidiStartMessage{ 0x10FA0000 };         // does not include group index
+        const uint32_t m_umpMidiStopMessage{ 0x10FC0000 };          // does not include group index
+
+        void ThreadWorker();
+        void SendMessageToAllDestinations(_In_ internal::MidiTimestamp timestamp, _In_ uint32_t const message);
 
     };
 }
