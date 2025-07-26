@@ -105,7 +105,7 @@ app.Configure(config =>
         endpoint.AddCommand<EndpointMonitorCommand>("monitor")
             .WithAlias("monitor")
             .WithAlias("listen")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV#MIDIU_DIAG_LOOPBACK_A#{e7cce071-3c03-423f-88d3-f1045d02552b}", "monitor")
+            .WithExample("endpoint", "\\\\?\\swd#midisrv#midiu_diag_loopback_b#{e7cce071-3c03-423f-88d3-f1045d02552b}", "monitor")
             .WithExample("endpoint", "monitor", "--capture-to-file", "%USERPROFILE%\\Documents\\MyMidiCapture.midi2", "--annotate-capture", "--capture-field-delimiter", "Pipe")
             .WithExample("endpoint", "monitor", "--verbose")
             .WithDescription(Strings.CommandMonitorEndpointDescription)
@@ -114,7 +114,7 @@ app.Configure(config =>
         endpoint.AddCommand<EndpointSendMessageCommand>("send-message")
             .WithAlias("send-ump")
             .WithAlias("send")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-message", "0x405F3AB7", "0x12345789", "--count", "10", "--delay", "20")
+            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-message", "0x405F3AB7", "0x12345789", "--count", "10", "--delay", "20")
             .WithExample("endpoint", "send-message", "0x21234567", "--count", "10", "--offset-microseconds", "2000000")
             .WithDescription(Strings.CommandSendMessageDescription)
             ;
@@ -122,29 +122,40 @@ app.Configure(config =>
         endpoint.AddCommand<EndpointSendMessagesFileCommand>("send-message-file")
             .WithAlias("send-ump-file")
             .WithAlias("send-file")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-message-file", "%USERPROFILE%\\Documents\\messages.midi2")
+            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-message-file", "%USERPROFILE%\\Documents\\messages.midi2")
             .WithDescription(Strings.CommandSendMessagesFileDescription)
             ;
 
         endpoint.AddCommand<EndpointSendSysExFileCommand>("send-sysex-file")
             .WithAlias("send-sysex")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "send-sysex-file", "%USERPROFILE%\\Documents\\patch_dump.syx")
+            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-sysex-file", "%USERPROFILE%\\Documents\\patch_dump.syx")
             .WithExample("endpoint", "send-sysex", "patch_dump.syx")
             .WithDescription(Strings.CommandSendSysExFileDescription)
             ;
 
         endpoint.AddCommand<EndpointPlayNotesCommand>("play-notes")
             .WithAlias("play")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "play-notes", "127 32 56 98", "--length", "500", "--velocity", "50", "--forever", "--midi2")
+            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "play-notes", "127 32 56 98", "--length", "500", "--velocity", "50", "--forever", "--midi2")
             .WithDescription(Strings.CommandPlayNotesDescription)
             ;
 
 
         endpoint.AddCommand<EndpointPropertiesCommand>("properties")
             .WithAlias("props")
-            .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "properties")
+            .WithAlias("information")
+            .WithAlias("info")
+            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "properties")
             .WithDescription(Strings.CommandEndpointPropertiesDescription)
             ;
+
+        endpoint.AddCommand<EndpointSendClockCommand>("send-beat-clock")
+            .WithAlias("send-clock")
+            .WithAlias("clock")
+            .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "send-clock", "--tempo", "120", "--ppqn", "24", "--group", "8")
+            .WithExample("endpoint", "send-clock", "--tempo", "120", "--group", "1", "--group", "2", "--group", "16", "--send-start", "--send-stop")
+            .WithDescription(Strings.CommandSendClockDescription)
+            ;
+
 
 
 
@@ -158,8 +169,8 @@ app.Configure(config =>
                 .WithAlias("fb")
                 .WithAlias("function")
                 .WithAlias("functions")
-                .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "function-blocks", "--all")
-                .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "function-blocks", "--number", "2")
+                .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "request", "function-blocks", "--all")
+                .WithExample("endpoint", "request", "function-block", "--number", "2")
                 .WithDescription(Strings.CommandEndpointRequestFunctionBlocksDescription)
                 ;
 
@@ -168,7 +179,8 @@ app.Configure(config =>
                 .WithAlias("endpoint-data")
                 .WithAlias("em")
                 .WithAlias("metadata")
-                .WithExample("endpoint", "\\\\?\\SWD#MIDISRV...}", "request", "endpoint-metadata", "--all")
+                .WithExample("endpoint", "\\\\?\\swd#midisrv...}", "request", "endpoint-info", "--all")
+                .WithExample("endpoint", "request", "endpoint-info", "--device-identity", "--product-instance-id")
                 .WithDescription(Strings.CommandEndpointRequestEndpointMetadataDescription)
                 ;
         }).WithAlias("req");
@@ -226,7 +238,6 @@ app.Configure(config =>
     config.AddCommand<WatchEndpointsCommand>("watch-endpoints")
         .WithDescription(Strings.CommandWatchEndpointsDescription)
         .WithExample("watch-endpoints")
-        .WithAlias("watch")
         ;
 
     /*
