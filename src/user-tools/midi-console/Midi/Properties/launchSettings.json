@@ -54,6 +54,10 @@
     "Clock": {
       "commandName": "Project",
       "commandLineArgs": "clock"
+    },
+    "Send-Clock": {
+      "commandName": "Project",
+      "commandLineArgs": "endpoint send-clock --tempo 120 --ppqn 24 --group 8 --send-start --send-stop"
     }
   }
 }
