@@ -19,13 +19,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
         midi2::MidiEndpointConnection Connection() const noexcept { return m_connection; }
         collections::IVectorView<midi2::MidiGroup> Groups() const noexcept { return m_groups.GetView(); }
 
-
-
+        // internal
+        collections::IVector<uint32_t> MessagesForAllGroups{ winrt::single_threaded_vector<uint32_t>() };
 
     private:
         midi2::MidiEndpointConnection m_connection{ nullptr };
 
         collections::IVector<midi2::MidiGroup> m_groups = winrt::single_threaded_vector< midi2::MidiGroup>();
+
+
+
 
     };
 }

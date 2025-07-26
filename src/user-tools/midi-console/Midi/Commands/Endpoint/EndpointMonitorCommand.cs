@@ -365,8 +365,8 @@ namespace Microsoft.Midi.ConsoleApp
                                 totalDeltaBetweenMessages += receivedMessage.ReceivedOffsetFromLastMessage;
                             }
 
-
-                            if (index > 1 && e.Timestamp < lastMessageTimestamp)
+                            // > 0 here to account for internal loopbacks which pass through 0 unchanged
+                            if (index > 1 && e.Timestamp > 0 && e.Timestamp < lastMessageTimestamp)
                             {
                                 outOfTimestampOrderMessageCount++;
                                 receivedMessage.HasError = true;

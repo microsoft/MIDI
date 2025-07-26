@@ -32,18 +32,20 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
         bool m_sendMidiStartMessage{ false };
         bool m_sendMidiStopMessage{ false };
 
-        collections::IVector<midi2::Utilities::Sequencing::MidiClockDestination> m_destinations = 
+        collections::IVector<midi2::Utilities::Sequencing::MidiClockDestination> m_destinations =
             winrt::single_threaded_vector<midi2::Utilities::Sequencing::MidiClockDestination>();
 
         std::jthread m_workerThread;
         std::stop_token m_workerThreadStopToken;
 
-        const uint32_t m_umpMidiTimingClockMessage{ 0x10F80000 };   // does not include group index
+        //const uint32_t m_umpMidiTimingClockMessage{  };   // does not include group index
         const uint32_t m_umpMidiStartMessage{ 0x10FA0000 };         // does not include group index
         const uint32_t m_umpMidiStopMessage{ 0x10FC0000 };          // does not include group index
 
         void ThreadWorker();
-        void SendMessageToAllDestinations(_In_ internal::MidiTimestamp timestamp, _In_ uint32_t const message);
+        void SendMessageToAllDestinations(_In_ internal::MidiTimestamp const timestamp, _In_ uint32_t const message);
+        void SendClockToAllDestinations(_In_ internal::MidiTimestamp const timestamp);
+
 
     };
 }

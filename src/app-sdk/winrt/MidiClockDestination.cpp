@@ -24,6 +24,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
             for (auto const& group : groups)
             {
                 m_groups.Append(group);
+
+                // build the message for this group
+                MessagesForAllGroups.Append(internal::GetFirstWordWithNewGroup(0x10F80000, group.Index()));
             }
         }
 

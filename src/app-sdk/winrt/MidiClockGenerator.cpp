@@ -84,29 +84,39 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
 
 
     _Use_decl_annotations_
-    void MidiClockGenerator::SendMessageToAllDestinations(internal::MidiTimestamp timestamp, uint32_t const message)
+    void MidiClockGenerator::SendMessageToAllDestinations(internal::MidiTimestamp const timestamp, uint32_t const message)
     {
         for (auto const& destination : m_destinations)
         {
             for (auto const& group : destination.Groups())
             {
-                // this could be optimized to use a multiple-message function to send all groups at once
-
                 destination.Connection().SendSingleMessageWords(
                     timestamp,
                     internal::GetFirstWordWithNewGroup(message, group.Index()));
+
             }
         }
 
     }
 
+    _Use_decl_annotations_
+    void MidiClockGenerator::SendClockToAllDestinations(internal::MidiTimestamp const timestamp)
+    {
+        for (auto const& destination : m_destinations)
+        {
+            destination.Connection().SendMultipleMessagesWordList(
+                timestamp,
+                winrt::get_self<midi2::Utilities::Sequencing::implementation::MidiClockDestination>(destination)->MessagesForAllGroups);
+        }
+
+    }
+
+
 
     void MidiClockGenerator::ThreadWorker()
     {
         // we send out 2 seconds of messages at a time
-        const uint16_t maxScheduledSeconds = 1;
-
-        uint64_t lastScheduledTimestamp{ 0 };
+        const uint16_t maxScheduledSeconds = 2;
 
         if (m_sendMidiStartMessage)
         {
@@ -123,21 +133,20 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
             // calculate delta ticks at current bpm and ppqn
             double deltaTicks = (double)m_midiTimestampClockTicksPerMinute / (double)m_bpm / (double)m_pulsesPerQuarterNote;
 
+            uint64_t messageTimestamp{ 0 };
 
             // schedule next chunk of clock messages
             for (int i = 0; i < maxScheduledMessages && !m_workerThreadStopToken.stop_requested(); i++)
             {
                 // send for each connection for each group
 
-                uint64_t nextStamp = static_cast<uint64_t>((i * deltaTicks) + batchStartTimestamp);
+                messageTimestamp = static_cast<uint64_t>((i * deltaTicks) + batchStartTimestamp);
 
-                SendMessageToAllDestinations(nextStamp, m_umpMidiTimingClockMessage);
-
-                lastScheduledTimestamp = nextStamp;
+                SendClockToAllDestinations(messageTimestamp);
             }
 
             // next batch starts at the last timestamp + the delta
-            batchStartTimestamp = static_cast<uint64_t>(lastScheduledTimestamp + deltaTicks);
+            batchStartTimestamp = static_cast<uint64_t>(messageTimestamp + deltaTicks);
 
             // sleep. May need to adjust this timing. Need to keep track of last timing and go with delta from that.
             // this sleep is not really accurate enough
