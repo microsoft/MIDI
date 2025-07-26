@@ -14,16 +14,19 @@ using System.Threading.Tasks;
 
 namespace WindowsMidiServices
 {
-    public class MidiSessionInfoOpenConnection
+    public class MidiClockGenerator
     {
-        public string EndpointDeviceId => BackingSessionConnectionInfo.EndpointDeviceId;
-        public UInt16 InstanceCount => BackingSessionConnectionInfo.InstanceCount;
+        internal Microsoft.Windows.Devices.Midi2.Utilities.Sequencing.MidiClockGenerator? BackingClockGenerator { get; set; }
 
-        internal Microsoft.Windows.Devices.Midi2.Reporting.MidiServiceSessionConnectionInfo BackingSessionConnectionInfo { get; set; }
+        internal bool SendStopMessage { get; set; }
 
-        public MidiSessionInfoOpenConnection(Microsoft.Windows.Devices.Midi2.Reporting.MidiServiceSessionConnectionInfo backingSessionConnectionInfo)
+        public MidiClockGenerator(
+            Microsoft.Windows.Devices.Midi2.Utilities.Sequencing.MidiClockGenerator backingClockGenerator,
+            bool sendStopMessage)
         {
-            BackingSessionConnectionInfo = backingSessionConnectionInfo;
+            BackingClockGenerator = backingClockGenerator;
+            SendStopMessage = sendStopMessage;
         }
+
     }
 }
