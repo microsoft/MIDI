@@ -18,6 +18,11 @@
   description: A simple command-line tool for monitoring incoming MIDI data using WinMM MIDI 1.0
   details_url: "/tools/midi1monitor/"
 
+- title: "MIDI Registry Fixer"
+  image:
+  description: Some third-party driver installers/uninstallers cause problems in the midi...midi9 registry entries. This fixes those issues.
+  details_url: "/tools/midifixreg/"
+
 - title: "PowerShell Cmdlets"
   image:
   description: If you want to script MIDI using PowerShell 7+, we have your back!
