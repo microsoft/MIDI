@@ -24,14 +24,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         winrt::hstring Name() const noexcept { return m_name; }
         void Name(_In_ winrt::hstring const& value) { m_name = internal::TrimmedHStringCopy(value); }
 
-        winrt::hstring HostInstanceName() const noexcept { return m_hostInstanceName; }
-        void HostInstanceName(_In_ winrt::hstring const& value) { m_hostInstanceName = internal::TrimmedHStringCopy(value); }
+        winrt::hstring ServiceInstanceName() const noexcept { return m_serviceInstanceName; }
+        void ServiceInstanceName(_In_ winrt::hstring const& value) { m_serviceInstanceName = internal::TrimmedHStringCopy(value); }
 
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
         void ProductInstanceId(_In_ winrt::hstring const& value) { m_productInstanceId = internal::TrimmedHStringCopy(value); }
 
-        bool UmpOnly() const noexcept { return m_umpOnly; }
-        void UmpOnly(_In_ bool const value) { m_umpOnly = value; }
+        bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
+        void CreateOnlyUmpEndpoints(_In_ bool const value) { m_umpOnly = value; }
 
         bool UseAutomaticPortAllocation() const noexcept { return m_useAutomaticPortAllocation; }
         void UseAutomaticPortAllocation(_In_ bool const value) { m_useAutomaticPortAllocation = value; }
@@ -42,7 +42,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         bool Advertise() const noexcept { return m_advertise; }
         void Advertise(_In_ bool const value) { m_advertise = value; }
 
-        collections::IVector<winrt::Windows::Networking::HostName> AllowedClientConnectionList() { return m_allowedClientConnectionList; }
+ //       collections::IVector<winrt::Windows::Networking::HostName> AllowedClientConnectionList() { return m_allowedClientConnectionList; }
 
         network::MidiNetworkAuthenticationType AuthenticationType() { return m_authenticationType; }
         void AuthenticationType(_In_ network::MidiNetworkAuthenticationType const& value) { m_authenticationType = value; }
@@ -50,9 +50,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
     private:
         winrt::hstring m_id{};
-        winrt::hstring m_name;
-        winrt::hstring m_hostInstanceName;
-        winrt::hstring m_productInstanceId;
+        winrt::hstring m_name{};
+        winrt::hstring m_serviceInstanceName{};
+        winrt::hstring m_productInstanceId{};
         bool m_umpOnly{ true };
         bool m_useAutomaticPortAllocation{ true };
         winrt::hstring m_manuallyAssignedPort{};
@@ -60,8 +60,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
         network::MidiNetworkAuthenticationType m_authenticationType{ network::MidiNetworkAuthenticationType::NoAuthentication };
 
-        collections::IVector<winrt::Windows::Networking::HostName> m_allowedClientConnectionList{
-            winrt::multi_threaded_vector<winrt::Windows::Networking::HostName>() };
+        //collections::IVector<winrt::Windows::Networking::HostName> m_allowedClientConnectionList{
+        //    winrt::multi_threaded_vector<winrt::Windows::Networking::HostName>() };
 
     };
 }

@@ -33,8 +33,7 @@ struct MidiNetworkClientDefinition
     winrt::hstring MatchId{};
 
     // these are direct connections. HostName or IP are required, plus the port
-    winrt::hstring MatchDirectHostName{};
-    winrt::hstring MatchDirectIPAddress{};
+    winrt::hstring MatchDirectHostNameOrIPAddress{};
     winrt::hstring MatchDirectPort{};
 };
 

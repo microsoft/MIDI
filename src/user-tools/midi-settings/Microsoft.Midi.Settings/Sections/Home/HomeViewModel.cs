@@ -305,7 +305,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             // TODO: Move this impl to a service
             CommonTaskOpenMidiConsoleCommand = new RelayCommand(
-                async () =>
+                () =>
                 {
                     try
                     {
@@ -322,7 +322,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                         //consoleProcess.WaitForExit();
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         //var dialog = new MessageDialog("Error opening MIDI console");
                         //dialog.Content = ex.ToString();
@@ -333,7 +333,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             // TODO: Move this impl to a service
             CommonTaskMidiDiagCommand = new RelayCommand(
-                async () =>
+                () =>
                 {
                     try
                     {
@@ -363,7 +363,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                         notepadProcess.Start();
 
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         //var dialog = new MessageDialog("Error opening MIDI console");
                         //dialog.Content = ex.ToString();

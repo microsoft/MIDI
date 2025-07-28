@@ -22,6 +22,8 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Popups;
+using WinRT.Interop;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -67,13 +69,103 @@ namespace Microsoft.Midi.Settings.Views
             UpdateDialogSize(Dialog_CreateDirectConnection);
 
             var result = await Dialog_CreateDirectConnection.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                CreateManualConnectionButton.IsEnabled = false;
+                if (ViewModel.CreateClientDirect())
+                {
+                    // success
+
+                    var dialog = new ContentDialog()
+                    {
+                        XamlRoot = this.XamlRoot,
+                        Title = "Network Client Created",
+                        Content = "The new client has been created and also saved to the service configuration file. When the specified device appears on the network, and if it accepts the connection request, the MIDI endpoint will be created.",
+                        CloseButtonText = "OK"
+                    };
+
+                    await dialog.ShowAsync();
+                }
+                else
+                {
+                    var dialog = new ContentDialog()
+                    {
+                        XamlRoot = this.XamlRoot,
+                        Title = "Failed to create Network Client",
+                        Content = "The network client could not be created.",
+                        CloseButtonText = "OK"
+                    };
+
+                    await dialog.ShowAsync();
+
+                    System.Diagnostics.Debug.WriteLine("Failed to create new network client.");
+                }
+                CreateManualConnectionButton.IsEnabled = true;
+            }
+
         }
+
+        private async void CreateClientFromHostList_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel.CreateClientFromMdns(((Button)sender).Tag.ToString()))
+            {
+                var dialog = new ContentDialog()
+                {
+                    XamlRoot = this.XamlRoot,
+                    Title = "Connected",
+                    Content = "The MIDI Service will connect to this host and create the MIDI endpoints shortly.",
+                    CloseButtonText = "OK"
+                };
+
+                await dialog.ShowAsync();
+            }
+
+            // TODO: Update status of the host to show there's a connection
+
+                // TODO: Show a disconnect button
+        }
+
 
         private async void CreateHost_Click(object sender, RoutedEventArgs e)
         {
             UpdateDialogSize(Dialog_CreateHost);
 
             var result = await Dialog_CreateHost.ShowAsync();
+
+            if (result == ContentDialogResult.Primary)
+            {
+                CreateHostButton.IsEnabled = false;
+                if (ViewModel.CreateHost())
+                {
+                    // success
+
+                    var dialog = new ContentDialog()
+                    {
+                        XamlRoot = this.XamlRoot,
+                        Title = "Network Host Created",
+                        Content = "The new host has been created and also saved to the service configuration file. It will take a moment to be visible on the network. If you do not see it after a minute, check your firewall settings for midisrv.exe.",
+                        CloseButtonText="OK"
+                    };
+
+                    await dialog.ShowAsync();
+                }
+                else
+                {
+                    var dialog = new ContentDialog()
+                    {
+                        XamlRoot = this.XamlRoot,
+                        Title = "Failed to create Network Host",
+                        Content = "The network host could not be created. Double-check that the data is valid and the host name has not already been used.",
+                        CloseButtonText = "OK"
+                    };
+
+                    await dialog.ShowAsync();
+
+                    System.Diagnostics.Debug.WriteLine("Failed to create new network host.");
+                }
+                CreateHostButton.IsEnabled = true;
+            }
         }
 
         private async void AdvancedSettings_Click(object sender, RoutedEventArgs e)

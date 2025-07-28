@@ -316,8 +316,8 @@
     <ClInclude Include="MidiNetworkClientEndpointRemovalConfig.h">
       <DependentUpon>MidiNetworkClientEndpointRemovalConfig.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiNetworkEndpointManager.h">
-      <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
+    <ClInclude Include="MidiNetworkTransportManager.h">
+      <DependentUpon>MidiNetworkTransportManager.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiNetworkHostCreationConfig.h">
       <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
@@ -542,8 +542,8 @@
     <ClCompile Include="MidiNetworkClientEndpointRemovalConfig.cpp">
       <DependentUpon>MidiNetworkClientEndpointRemovalConfig.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiNetworkEndpointManager.cpp">
-      <DependentUpon>MidiNetworkEndpointManager.idl</DependentUpon>
+    <ClCompile Include="MidiNetworkTransportManager.cpp">
+      <DependentUpon>MidiNetworkTransportManager.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiNetworkHostCreationConfig.cpp">
       <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
@@ -856,7 +856,7 @@
     <Midl Include="MidiNetworkClientEndpointRemovalConfig.idl" />
     <Midl Include="MidiNetworkClientEndpointRemovalResult.idl" />
     <Midl Include="MidiNetworkClientMatchCriteria.idl" />
-    <Midl Include="MidiNetworkEndpointManager.idl" />
+    <Midl Include="MidiNetworkTransportManager.idl" />
     <Midl Include="MidiNetworkHostConnectionPolicyEnum.idl" />
     <Midl Include="MidiNetworkHostCreationConfig.idl" />
     <Midl Include="MidiNetworkHostCreationResult.idl" />

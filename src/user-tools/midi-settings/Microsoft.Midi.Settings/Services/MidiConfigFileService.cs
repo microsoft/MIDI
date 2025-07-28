@@ -355,6 +355,56 @@ namespace Microsoft.Midi.Settings.Services
         }
 
 
+        public bool StoreNetworkHost(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkHostCreationConfig creationConfig)
+        {
+            if (m_config == null) return false;
+            if (creationConfig == null) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                return false;
+            }
+
+            JsonObject mergeObject;
+            if (JsonObject.TryParse(creationConfig.GetConfigJson(), out mergeObject))
+            {
+                if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
+                {
+                    // write the property
+
+                    return Save();
+                }
+            }
+
+            return false;
+        }
+
+        public bool StoreNetworkClient(Microsoft.Windows.Devices.Midi2.Endpoints.Network.MidiNetworkClientEndpointCreationConfig creationConfig)
+        {
+            if (m_config == null) return false;
+            if (creationConfig == null) return false;
+
+            // get the latest from disk
+            if (!Load())
+            {
+                return false;
+            }
+
+            JsonObject mergeObject;
+            if (JsonObject.TryParse(creationConfig.GetConfigJson(), out mergeObject))
+            {
+                if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
+                {
+                    // write the property
+
+                    return Save();
+                }
+            }
+
+            return false;
+        }
+
 
     }
 
@@ -363,8 +413,7 @@ namespace Microsoft.Midi.Settings.Services
 
     class MidiConfigFileService : IMidiConfigFileService
     {
-        private string m_currentConfigName;
-        private string m_currentConfigFileName;
+        private readonly IMidiServiceRegistrySettingsService _registryService;
 
         private MidiConfigFile? m_currentConfigFile = null;
         public IMidiConfigFile? CurrentConfig
@@ -385,14 +434,18 @@ namespace Microsoft.Midi.Settings.Services
         }
 
 
-        public MidiConfigFileService()
+        public MidiConfigFileService(IMidiServiceRegistrySettingsService registryService)
         {
-            m_currentConfigFileName = string.Empty;
-            m_currentConfigName = string.Empty;
+            _registryService = registryService;
 
-            //m_currentConfigFile = LoadCurrentConfigFileFromRegistry();
+            string localFileName = _registryService.GetCurrentConfigFileName();
+
+            if (!string.IsNullOrEmpty(localFileName))
+            {
+                CurrentConfig = LoadConfigFile(localFileName);
+            }
+
         }
-
 
 
 

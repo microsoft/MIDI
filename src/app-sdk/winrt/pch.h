@@ -207,7 +207,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiNetworkHostRemovalConfig.h"
 #include "MidiNetworkClientEndpointCreationConfig.h"
 #include "MidiNetworkClientEndpointRemovalConfig.h"
-#include "MidiNetworkEndpointManager.h"
+#include "MidiNetworkTransportManager.h"
 
 #include "MidiNetworkAdvertisedHost.h"
 

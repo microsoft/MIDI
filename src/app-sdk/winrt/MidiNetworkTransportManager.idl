@@ -26,8 +26,8 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 {
     [experimental]
     [contract(MidiEndpointsNetworkApiContract, 1)]
-    [static_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkEndpointManagerStatics")]
-    static runtimeclass MidiNetworkEndpointManager
+    [static_name("Microsoft.Windows.Devices.Midi2.Endpoints.Network.IMidiNetworkTransportManagerStatics")]
+    static runtimeclass MidiNetworkTransportManager
     {
         static Boolean IsTransportAvailable{ get; };
         static Guid TransportId{ get; };

@@ -541,7 +541,7 @@
     <Midl Include="MidiMessageBuilder.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
-    <Midl Include="MidiNetworkEndpointManager.idl">
+    <Midl Include="MidiNetworkTransportManager.idl">
       <Filter>SDK\Endpoints\Network</Filter>
     </Midl>
     <Midl Include="MidiNetworkClientEndpointCreationConfig.idl">

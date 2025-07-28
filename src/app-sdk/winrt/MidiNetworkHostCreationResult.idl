@@ -13,7 +13,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     [experimental]
     struct MidiNetworkHostCreationResult
     {
-        Guid HostId;
+        //Guid HostId;
 
 		Boolean Success;
 

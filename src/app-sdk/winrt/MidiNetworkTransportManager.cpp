@@ -7,12 +7,12 @@
 // ============================================================================
 
 #include "pch.h"
-#include "MidiNetworkEndpointManager.h"
-#include "Endpoints.Network.MidiNetworkEndpointManager.g.cpp"
+#include "MidiNetworkTransportManager.h"
+#include "Endpoints.Network.MidiNetworkTransportManager.g.cpp"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    bool MidiNetworkEndpointManager::IsTransportAvailable() noexcept
+    bool MidiNetworkTransportManager::IsTransportAvailable() noexcept
     {
         // TODO: Check to see if service transport is installed and running. May require a new service call
         return true;
@@ -21,18 +21,27 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
 
     _Use_decl_annotations_
-    network::MidiNetworkHostCreationResult MidiNetworkEndpointManager::CreateNetworkHost(
+    network::MidiNetworkHostCreationResult MidiNetworkTransportManager::CreateNetworkHost(
         network::MidiNetworkHostCreationConfig const& creationConfig)
     {
-        UNREFERENCED_PARAMETER(creationConfig);
+        auto createResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
-        // TEMP
         network::MidiNetworkHostCreationResult result{ };
+
+        if (createResponse.Status == svc::MidiServiceConfigResponseStatus::Success)
+        {
+            result.Success = true;
+        }
+        else
+        {
+            result.Success = false;
+        }
+
         return result;
     }
 
     _Use_decl_annotations_
-    network::MidiNetworkHostRemovalResult MidiNetworkEndpointManager::RemoveNetworkHost(
+    network::MidiNetworkHostRemovalResult MidiNetworkTransportManager::RemoveNetworkHost(
         network::MidiNetworkHostRemovalConfig const& removalConfig)
     {
         UNREFERENCED_PARAMETER(removalConfig);
@@ -43,18 +52,27 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     }
 
     _Use_decl_annotations_
-    network::MidiNetworkClientEndpointCreationResult MidiNetworkEndpointManager::CreateNetworkClient(
+    network::MidiNetworkClientEndpointCreationResult MidiNetworkTransportManager::CreateNetworkClient(
         network::MidiNetworkClientEndpointCreationConfig const& creationConfig)
     {
-        UNREFERENCED_PARAMETER(creationConfig);
+        auto createResponse = svc::MidiServiceConfig::UpdateTransportPluginConfig(creationConfig);
 
-        // TEMP
         network::MidiNetworkClientEndpointCreationResult result{ };
+
+        if (createResponse.Status == svc::MidiServiceConfigResponseStatus::Success)
+        {
+            result.Success = true;
+        }
+        else
+        {
+            result.Success = false;
+        }
+
         return result;
     }
 
     _Use_decl_annotations_
-    network::MidiNetworkClientEndpointRemovalResult MidiNetworkEndpointManager::RemoveNetworkClient(
+    network::MidiNetworkClientEndpointRemovalResult MidiNetworkTransportManager::RemoveNetworkClient(
         network::MidiNetworkClientEndpointRemovalConfig const& removalConfig)
     {
         UNREFERENCED_PARAMETER(removalConfig);
@@ -65,33 +83,33 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
     }
 
 
-    winrt::hstring MidiNetworkEndpointManager::MidiNetworkUdpDnsServiceType() noexcept
+    winrt::hstring MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType() noexcept
     { 
         return L"_midi2._udp"; 
     }
 
-    winrt::hstring MidiNetworkEndpointManager::MidiNetworkUdpDnsDomain() noexcept
+    winrt::hstring MidiNetworkTransportManager::MidiNetworkUdpDnsDomain() noexcept
     { 
         return L"local"; 
     }
 
-    winrt::hstring MidiNetworkEndpointManager::MidiNetworkUdpDnsSdQueryString() noexcept
+    winrt::hstring MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryString() noexcept
     {
         // protocol guid from https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/enumerate-devices-over-a-network
 
         return
             L"System.Devices.AepService.ProtocolId:={4526e8c1-8aac-4153-9b16-55e86ada0e54} AND " \
-            L"System.Devices.Dnssd.ServiceName:=\"" + MidiNetworkEndpointManager::MidiNetworkUdpDnsServiceType() + L"\" AND " \
-            L"System.Devices.Dnssd.Domain:=\"" + MidiNetworkEndpointManager::MidiNetworkUdpDnsDomain() + L"\"";
+            L"System.Devices.Dnssd.ServiceName:=\"" + MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType() + L"\" AND " \
+            L"System.Devices.Dnssd.Domain:=\"" + MidiNetworkTransportManager::MidiNetworkUdpDnsDomain() + L"\"";
     }
 
-    enumeration::DeviceInformationKind MidiNetworkEndpointManager::MidiNetworkUdpDnsSdDeviceInformationKind() noexcept
+    enumeration::DeviceInformationKind MidiNetworkTransportManager::MidiNetworkUdpDnsSdDeviceInformationKind() noexcept
     {
         return enumeration::DeviceInformationKind::AssociationEndpointService;
     }
 
 
-    collections::IVector<winrt::hstring> MidiNetworkEndpointManager::MidiNetworkUdpDnsSdQueryAdditionalProperties() noexcept
+    collections::IVector<winrt::hstring> MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryAdditionalProperties() noexcept
     {
         auto props = winrt::single_threaded_vector<winrt::hstring>();
 
@@ -114,7 +132,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 	// this method takes way too long. This needs to be changed to pull from the cache in the 
 	// service via the json methods.
 
-    collections::IVectorView<network::MidiNetworkAdvertisedHost> MidiNetworkEndpointManager::GetAdvertisedHosts() noexcept
+    collections::IVectorView<network::MidiNetworkAdvertisedHost> MidiNetworkTransportManager::GetAdvertisedHosts() noexcept
     {
         auto results = winrt::single_threaded_vector<network::MidiNetworkAdvertisedHost>();
 

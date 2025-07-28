@@ -101,6 +101,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "boost/circular_buffer.hpp"
 
 #include "transport_defs.h"
+#include "network_json_defs.h"
 #include "MidiSequenceNumber.h"
 
 class CMidi2NetworkMidiEndpointManager;

@@ -7,11 +7,11 @@
 // ============================================================================
 
 #pragma once
-#include "Endpoints.Network.MidiNetworkEndpointManager.g.h"
+#include "Endpoints.Network.MidiNetworkTransportManager.g.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
-    struct MidiNetworkEndpointManager
+    struct MidiNetworkTransportManager
     {
         //MidiNetworkEndpointManager() = default;
 
@@ -40,7 +40,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::factory_implementation
 {
-    struct MidiNetworkEndpointManager : MidiNetworkEndpointManagerT<MidiNetworkEndpointManager, implementation::MidiNetworkEndpointManager, winrt::static_lifetime>
+    struct MidiNetworkTransportManager : MidiNetworkTransportManagerT<MidiNetworkTransportManager, implementation::MidiNetworkTransportManager, winrt::static_lifetime>
     {
     };
 }

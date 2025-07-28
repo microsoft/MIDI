@@ -124,11 +124,16 @@ MidiNetworkClient::Start(
     auto conn = std::make_shared<MidiNetworkConnection>();
     RETURN_IF_NULL_ALLOC(conn);
 
-    DatagramSocket socket;
-    m_socket = std::move(socket);
+    {
+        //m_socket = winrt::make<DatagramSocket>();
 
-    m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
-    m_socket.Control().DontFragment(true);
+        DatagramSocket socket;
+        m_socket = socket;
+        m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
+        m_socket.Control().DontFragment(true);
+    }
+
+
 
     auto messageReceivedHandler = winrt::Windows::Foundation::TypedEventHandler<DatagramSocket, DatagramSocketMessageReceivedEventArgs>(this, &MidiNetworkClient::OnMessageReceived);
     m_messageReceivedEventToken = m_socket.MessageReceived(messageReceivedHandler);
@@ -143,13 +148,6 @@ MidiNetworkClient::Start(
         TraceLoggingWideString(remoteHostName.ToString().c_str(), "remote hostname"),
         TraceLoggingWideString(remotePort.c_str(), "remote port"));
 
-
-    //EndpointPair pair(
-    //    nullptr, 
-    //    L"",
-    //    remoteHostName, 
-    //    remotePort);
-
     // establish the remote connection
     try
     {
@@ -157,7 +155,7 @@ MidiNetworkClient::Start(
         // the connect otherwise fails
 
         //m_socket.ConnectAsync(pair).get();
-        m_socket.ConnectAsync(remoteHostName, remotePort);
+        m_socket.ConnectAsync(remoteHostName, remotePort).get();
     }
     catch (winrt::hresult_error err)
     {

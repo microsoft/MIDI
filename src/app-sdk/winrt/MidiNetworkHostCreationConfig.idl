@@ -23,10 +23,10 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         String Id;
 
         String Name;
-        String HostInstanceName;
+        String ServiceInstanceName;
         String ProductInstanceId;
 
-        Boolean UmpOnly;
+        Boolean CreateOnlyUmpEndpoints;
 
         Boolean UseAutomaticPortAllocation;
         String ManuallyAssignedPort;
@@ -36,7 +36,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         // todo: network adapter/interface
 
         // todo: connection rules
-        IVector<Windows.Networking.HostName> AllowedClientConnectionList{ get; };
+ //       IVector<Windows.Networking.HostName> AllowedClientConnectionList{ get; };
 
 
 

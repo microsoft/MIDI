@@ -22,12 +22,15 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
 		// Windows mDNS-discovered host's id (full id from DeviceInformation.Id() )
 		String DeviceId;
 
-		// For IP or string-based connection 
-		Windows.Networking.HostName HostName; // todo: if host name can't be resolved, does this still work? Need to use a string instead?
-		UInt16 Port;
+		// For IP based connection 
+		String DirectHostNameOrIPAddress;
+			 
+		// required for IP or host name
+		UInt16 DirectPort;
 
 
 
+		String GetConfigJson();
 	}
 }
 

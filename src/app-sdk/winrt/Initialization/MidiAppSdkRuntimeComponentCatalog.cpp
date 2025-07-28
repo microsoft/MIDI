@@ -107,7 +107,7 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Virtual.MidiVirtualDeviceManager", defaultThreading });
 
     // Network MIDI 2.0
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkEndpointManager", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkTransportManager", defaultThreading });
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkHostCreationConfig", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Network.MidiNetworkHostRemovalConfig", defaultThreading });
