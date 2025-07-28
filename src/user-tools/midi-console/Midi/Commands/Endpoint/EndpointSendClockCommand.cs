@@ -162,12 +162,12 @@ namespace Microsoft.Midi.ConsoleApp
                         if (keyInfo.Key == ConsoleKey.Escape)
                         {
                             stillSending = false;
-                            generator.Stop(settings.SendMidiStopMessage);
-
-                            Thread.Sleep(1000);
 
                             AnsiConsole.WriteLine();
                             AnsiConsole.MarkupLine("🛑 " + Strings.SendMessageEscapePressedMessage);
+
+                            generator.Stop(settings.SendMidiStopMessage);
+
                         }
 
                     }

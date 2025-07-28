@@ -108,7 +108,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
                 timestamp,
                 winrt::get_self<midi2::Utilities::Sequencing::implementation::MidiClockDestination>(destination)->MessagesForAllGroups);
         }
-
     }
 
 
@@ -118,13 +117,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
         // we send out 2 seconds of messages at a time
         const uint16_t maxScheduledSeconds = 2;
 
+        auto freq = internal::GetMidiTimestampFrequency();
+
         if (m_sendMidiStartMessage)
         {
             SendMessageToAllDestinations(0, m_umpMidiStartMessage);
         }
 
         uint64_t now = internal::GetCurrentMidiTimestamp();
-        uint64_t batchStartTimestamp{ now };
+        uint64_t nextBatchStartTimestamp{ now };
+        uint64_t messageTimestamp{ 0 };
 
         while (!m_workerThreadStopToken.stop_requested())
         {
@@ -133,26 +135,30 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Sequencing::impl
             // calculate delta ticks at current bpm and ppqn
             double deltaTicks = (double)m_midiTimestampClockTicksPerMinute / (double)m_bpm / (double)m_pulsesPerQuarterNote;
 
-            uint64_t messageTimestamp{ 0 };
-
             // schedule next chunk of clock messages
             for (int i = 0; i < maxScheduledMessages && !m_workerThreadStopToken.stop_requested(); i++)
             {
-                // send for each connection for each group
-
-                messageTimestamp = static_cast<uint64_t>((i * deltaTicks) + batchStartTimestamp);
+                messageTimestamp = static_cast<uint64_t>((i * deltaTicks) + nextBatchStartTimestamp);
 
                 SendClockToAllDestinations(messageTimestamp);
             }
 
             // next batch starts at the last timestamp + the delta
-            batchStartTimestamp = static_cast<uint64_t>(messageTimestamp + deltaTicks);
+            nextBatchStartTimestamp = static_cast<uint64_t>(messageTimestamp + deltaTicks);
 
             // sleep. May need to adjust this timing. Need to keep track of last timing and go with delta from that.
             // this sleep is not really accurate enough
             
             //std::this_thread::sleep_until();
-            Sleep(maxScheduledSeconds * 1000);
+
+            auto sleepDurationMilliseconds = 
+                static_cast<DWORD>(internal::ConvertTimestampToWholeMilliseconds(nextBatchStartTimestamp - internal::GetCurrentMidiTimestamp(), freq) - 20);
+
+            // validate the math didn't cause a wrap around
+            if (sleepDurationMilliseconds < (maxScheduledSeconds + 1) * 1000)
+            {
+                Sleep(sleepDurationMilliseconds);
+            }
         }
 
         if (m_sendMidiStopMessage)
