@@ -6,15 +6,15 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 import "MidiVirtualPatchBayRouteCreationResult.idl";
 import "MidiVirtualPatchBayRouteUpdateResult.idl";
-
 import "MidiVirtualPatchBayRouteCreationConfig.idl";
 import "MidiVirtualPatchBayRouteRemovalConfig.idl";
 import "MidiVirtualPatchBayRouteUpdateConfig.idl";
-
 import "MidiVirtualPatchBayRouteDefinition.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay

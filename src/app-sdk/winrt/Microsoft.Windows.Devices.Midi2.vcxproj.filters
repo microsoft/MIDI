@@ -49,9 +49,6 @@
     <ClCompile Include="MidiNetworkClientEndpointRemovalConfig.cpp">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </ClCompile>
-    <ClCompile Include="MidiNetworkEndpointManager.cpp">
-      <Filter>SDK\Endpoints\Network</Filter>
-    </ClCompile>
     <ClCompile Include="Initialization\MidiAppSdkRuntimeComponent.cpp">
       <Filter>Initializer\WinRT Detour</Filter>
     </ClCompile>
@@ -179,9 +176,6 @@
     <ClInclude Include="MidiNetworkClientEndpointRemovalConfig.h">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </ClInclude>
-    <ClInclude Include="MidiNetworkEndpointManager.h">
-      <Filter>SDK\Endpoints\Network</Filter>
-    </ClInclude>
     <ClInclude Include="Initialization\MidiAppSdkRuntimeComponent.h">
       <Filter>Initializer\WinRT Detour</Filter>
     </ClInclude>
@@ -268,6 +262,9 @@
     </ClInclude>
     <ClInclude Include="MidiClockDestination.h">
       <Filter>SDK\Utilities\Sequencing</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_sdk_idl_defs.h">
+      <Filter>SDK\API Contracts</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -486,33 +483,6 @@
     </Midl>
     <Midl Include="MidiVirtualDeviceManager.idl">
       <Filter>SDK\Endpoints\VirtualDevice</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBayDestinationDefinition.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBayManager.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBayRouteCreationConfig.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBayRouteCreationResult.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBayRouteDefinition.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBayRouteRemovalConfig.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBayRouteUpdateConfig.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBayRouteUpdateResult.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
-    </Midl>
-    <Midl Include="MidiVirtualPatchBaySourceDefinition.idl">
-      <Filter>SDK\Endpoints\VirtualPatchBay</Filter>
     </Midl>
     <Midl Include="MidiStreamMessageBuilder.idl">
       <Filter>SDK\Utilities\Messages</Filter>

@@ -6,12 +6,11 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
-
-
 import "MidiVirtualPatchBayRouteDefinition.idl";
-
 import "IMidiServiceTransportPluginConfig.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.VirtualPatchBay

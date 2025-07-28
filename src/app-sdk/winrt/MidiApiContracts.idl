@@ -6,6 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
+
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contractversion(1)]

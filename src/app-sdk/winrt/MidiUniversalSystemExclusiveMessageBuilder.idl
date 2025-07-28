@@ -6,26 +6,25 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 import "IMidiUniversalPacket.idl";
-
 import "MidiMessage32.idl";
 import "MidiMessage64.idl";
 import "MidiMessage96.idl";
 import "MidiMessage128.idl";
-
 import "MidiGroup.idl";
 import "MidiChannel.idl";
 import "MidiUniversalSystemExclusiveChannel.idl";
-
 import "MidiDeclaredDeviceIdentity.idl";
 
 
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [experimental]
-    //[static_name("IMidiUniversalSystemExclusiveMessageBuilderStatics", 8087b303-0519-31d1-c0de-ee0000a00000)]
+    //[static_name("IMidiUniversalSystemExclusiveMessageBuilderStatics", UUID_IMidiUniversalSystemExclusiveMessageBuilderStatics)]
     static runtimeclass MidiUniversalSystemExclusiveMessageBuilder
     {
         static Microsoft.Windows.Devices.Midi2.MidiMessage64 BuildIdentityRequest(

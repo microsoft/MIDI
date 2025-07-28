@@ -6,21 +6,20 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
 import "MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl";
-
 import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiFunctionBlock", 8087b303-0519-31d1-c0de-dd000000f000)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiFunctionBlockStatics", 8087b303-0519-31d1-c0de-ee000000f000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiFunctionBlock", UUID_IMidiFunctionBlock)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiFunctionBlockStatics", UUID_IMidiFunctionBlockStatics)]
     runtimeclass MidiFunctionBlock : Windows.Foundation.IStringable
     {
         MidiFunctionBlock();

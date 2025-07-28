@@ -6,26 +6,25 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 
 import "MidiGroup.idl";
 import "MidiChannel.idl";
-
 import "MidiMessage32.idl";
 import "MidiMessage64.idl";
 import "MidiMessage96.idl";
 import "MidiMessage128.idl";
-
 import "MidiSystemExclusive8StatusEnum.idl";
-
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
-    [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageBuilderStatics", 8087b303-0519-31d1-c0de-ee0000600000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageBuilderStatics", UUID_IMidiMessageBuilderStatics)]
     static runtimeclass MidiMessageBuilder
     {
         static Microsoft.Windows.Devices.Midi2.MidiMessage32 BuildUtilityMessage(

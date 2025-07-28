@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
 import "IMidiEndpointConnectionSettings.idl";
@@ -13,7 +14,7 @@ import "IMidiEndpointConnectionSettings.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionBasicSettings", 8087b303-0519-31d1-c0de-dd00100a0000)]  
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionBasicSettings", UUID_IMidiEndpointConnectionBasicSettings)]
     runtimeclass MidiEndpointConnectionBasicSettings : IMidiEndpointConnectionSettings
     {
         MidiEndpointConnectionBasicSettings();

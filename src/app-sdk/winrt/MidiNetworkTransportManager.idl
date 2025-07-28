@@ -6,20 +6,18 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 import "MidiNetworkHostCreationResult.idl";
 import "MidiNetworkHostCreationConfig.idl";
-
 import "MidiNetworkHostRemovalResult.idl";
 import "MidiNetworkHostRemovalConfig.idl";
-
 import "MidiNetworkClientEndpointCreationResult.idl";
 import "MidiNetworkClientEndpointCreationConfig.idl";
-
 import "MidiNetworkClientEndpointRemovalResult.idl";
 import "MidiNetworkClientEndpointRemovalConfig.idl";
-
 import "MidiNetworkAdvertisedHost.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network

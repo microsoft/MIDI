@@ -6,20 +6,19 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "MidiLoopbackEndpointCreationResult.idl";
 import "MidiLoopbackEndpointCreationConfig.idl";
 import "MidiLoopbackEndpointRemovalConfig.idl";
-
 import "MidiEndpointDeviceInformation.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    [static_name("Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointManagerStatics", 8087b303-0519-31d1-c0de-ee00000c0000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointManagerStatics", UUID_IMidiLoopbackEndpointManagerStatics)]
     static runtimeclass MidiLoopbackEndpointManager
     {
         static Boolean IsTransportAvailable{ get; };
