@@ -25,10 +25,10 @@
                                 &nbsp;|&nbsp;
                                 <a id="download_arm64" style="color:white" href="{{release.link_arm64}}">{{release.label_arm64}}</a>
                                 &nbsp;|&nbsp;
-                                <span id="slider_links_release_notes" style="display: none">
-                                    <a id="release_notes" style="color:white" href="{{release.link_release_notes}}">Release notes and more downloads</a>
-                                </span>                       
                              </p>
+                                <p id="slider_links_release_notes" style="display: block">
+                                    <a id="release_notes" style="color:white" href="{{release.link_release_notes}}">Release notes and more downloads</a>
+                                </p>                       
                            </div>
                         {% endfor %}
                     </div>
@@ -50,10 +50,10 @@ function enableArchitectureSpecificDownloads()
         var elem_download_this_pc_arm64 = document.getElementById("download_this_pc_arm64");
 
         var elem_download_all_slider_links = document.getElementById("download_all_slider_links");
-        var elem_release_notes = document.getElementById("slider_links_release_notes");
+        //var elem_release_notes = document.getElementById("slider_links_release_notes");
 
         // always display this
-        elem_release_notes.style.display = "block";
+        //elem_release_notes.style.display = "block";
 
         if ((elem_download_this_pc_arm64 != null) && (elem_download_this_pc_x64 != null))
         {

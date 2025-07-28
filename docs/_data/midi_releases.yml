@@ -2,7 +2,7 @@
   featured: true
   type: "preview"
   version: "1.0.11 Preview 11"
-  description: <span>Get everything you need for a great MIDI experience on Windows 11.</span> (This version requires the preview MIDI service which can be downloaded below.) Download and install the MIDI 2.0 runtime for apps, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI scripting, MIDI Console, and more, all in one package.
+  description: This version requires the preview MIDI service which can be downloaded below. <span>Get everything you need for a great MIDI experience on Windows 11.</span> Download and install the MIDI 2.0 runtime for apps, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI scripting, MIDI Console, and more, all in one package.
   label_x64: "Download Latest x64 Installer"
   link_x64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64"
   label_arm64: "Download Latest Arm64 Installer"
