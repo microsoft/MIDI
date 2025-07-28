@@ -40,22 +40,25 @@ class Build : NukeBuild
         Stable
     }
 
-    MidiBuildType BuildType => MidiBuildType.Preview;        // Stable or Preview
     MSBuildVerbosity BuildVerbosity => MSBuildVerbosity.Quiet;
     LogLevel LoggingLevel => LogLevel.Error;
 
+    // --------------------------------------------------------------------------------------
+    // Version information to change 
+    // --------------------------------------------------------------------------------------
 
-    const UInt16 BuildVersionPreviewNumber = 11;
-    string VersionName => "Preview "+ BuildVersionPreviewNumber;
-    // we set these here, especially the time, so it's the same for all platforms in the single build
-
-    // for upgrades to work, the revision must be incremented.
-
-    const UInt16 BuildVersionMajor = 1;       
+    MidiBuildType BuildType => MidiBuildType.Preview;        // Stable or Preview
+    
+    const UInt16 BuildVersionMajor = 1;
     const UInt16 BuildVersionMinor = 0;
-    const UInt16 BuildVersionPatch = 11;
+    const UInt16 BuildVersionPatch = 12;
 
-    UInt16 BuildVersionBuildNumber = 0;
+    const UInt16 BuildVersionPreviewNumber = 12;
+    string VersionName => "Preview " + BuildVersionPreviewNumber;
+
+    // --------------------------------------------------------------------------------------
+
+    UInt16 BuildVersionBuildNumber = 0; // gets read from the version file and reset with each patch change
 
     readonly string BuildMajorMinorPatch = BuildVersionMajor.ToString() + "." + BuildVersionMinor.ToString() + "." + BuildVersionPatch.ToString();
 
@@ -269,9 +272,9 @@ class Build : NukeBuild
                 writer.WriteLine($"            \"versionPatch\": {buildVersionPatch},");
                 writer.WriteLine($"            \"versionBuildNumber\": {BuildVersionBuildNumber},");
                 writer.WriteLine($"            \"preview\": \"{BuildVersionPreviewString}\",");
-                writer.WriteLine($"            \"releaseNotesUri\": \"\",");
-                writer.WriteLine($"            \"directDownloadUriX64\": \"\",");
-                writer.WriteLine($"            \"directDownloadUriArm64\": \"\"");
+                writer.WriteLine($"            \"releaseNotesUri\": \"https://github.com/microsoft/MIDI/releases/tag/ (TODO)\",");
+                writer.WriteLine($"            \"directDownloadUriX64\": \"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64\",");
+                writer.WriteLine($"            \"directDownloadUriArm64\": \"https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64\"");
                 writer.WriteLine("        }");
                 writer.WriteLine("    ]");
                 writer.WriteLine("}");
