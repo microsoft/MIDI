@@ -305,8 +305,8 @@ CMidiEndpointProtocolWorker::CheckIfDiscoveryComplete()
 {
     if (m_taskEndpointInfoReceived &&
         m_taskEndpointNameReceived &&
-        m_taskEndpointProductInstanceIdReceived &&
-        m_taskDeviceIdentityReceived &&
+/*      m_taskEndpointProductInstanceIdReceived && */
+/*      m_taskDeviceIdentityReceived && */
         m_functionBlocks.size() == m_declaredFunctionBlockCount &&
         m_functionBlockNames.size() == m_declaredFunctionBlockCount)
     {
@@ -671,7 +671,8 @@ CMidiEndpointProtocolWorker::ProcessFunctionBlockNameNotificationMessage(interna
     {
         MidiFunctionBlockName name{ };
 
-        name.Name = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
+        //name.Name = internal::TrimmedWStringCopy(ParseStreamTextMessage(ump));
+        name.Name = ParseStreamTextMessage(ump);
         name.IsComplete = false;
 
         m_functionBlockNames.insert_or_assign(functionBlockNumber, name);

@@ -95,7 +95,7 @@ bool CreateVirtualDevice()
     MidiFunctionBlock block3;
     block3.Number(3);
     block3.IsActive(true);
-    block3.Name(L"Block 3");
+    block3.Name(L"Block 3 2 1 Contact");
     block3.FirstGroup(MidiGroup(static_cast<uint8_t>(11)));
     block3.GroupCount(5);                                       // this gets us to index 15, which is max index
     block3.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
