@@ -268,7 +268,7 @@ class Build : NukeBuild
                 writer.WriteLine($"            \"buildDate\": \"{buildDate}\",");
                 writer.WriteLine($"            \"versionFull\": \"{versionString}\",");
                 writer.WriteLine($"            \"versionMajor\": {buildVersionMajor},");
-                writer.WriteLine($"            \"versionMinor\": {buildVersionMajor},");
+                writer.WriteLine($"            \"versionMinor\": {buildVersionMinor},");
                 writer.WriteLine($"            \"versionPatch\": {buildVersionPatch},");
                 writer.WriteLine($"            \"versionBuildNumber\": {BuildVersionBuildNumber},");
                 writer.WriteLine($"            \"preview\": \"{BuildVersionPreviewString}\",");
