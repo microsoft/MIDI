@@ -131,6 +131,7 @@ enum Midi1PortNameSelectionProperty : uint32_t
 // this is the amount of time we allocate to discovery across all native UMP format MIDI 2 devices. Needs to fit within uint16_t
 #define MIDI_DISCOVERY_TIMEOUT_REG_VALUE                L"Midi2DiscoveryTimeoutMS"
 #define MIDI_DISCOVERY_TIMEOUT_DEFAULT_VALUE            10000
+#define MIDI_DISCOVERY_TIMEOUT_DEFAULT_VALUE            5000
 #define MIDI_DISCOVERY_TIMEOUT_MINIMUM_VALUE            500
 #define MIDI_DISCOVERY_TIMEOUT_MAXIMUM_VALUE            50000
 
