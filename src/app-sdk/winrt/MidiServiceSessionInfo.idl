@@ -6,16 +6,16 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "MidiServiceSessionConnectionInfo.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Reporting
 {
     [contract(MidiReportingApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Reporting.IMidiServiceSessionInfo", 8087b303-0519-31d1-c0de-dd0000c00000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Reporting.IMidiServiceSessionInfo", UUID_IMidiServiceSessionInfo)]
     runtimeclass MidiServiceSessionInfo
     {
         Guid SessionId{ get; };

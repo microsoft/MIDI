@@ -6,16 +6,15 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 import "MidiSystemExclusiveDataReaderFormatEnum.idl";
 import "MidiSystemExclusiveDataFormatEnum.idl";
-
 import "MidiSystemExclusiveSendProgress.idl";
-
 import "MidiGroup.idl";
 import "MidiChannel.idl";
-
 import "MidiEndpointConnection.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer

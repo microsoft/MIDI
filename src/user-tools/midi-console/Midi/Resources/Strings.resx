@@ -157,7 +157,7 @@
     <value>List all MIDI transport plugins installed on this PC.</value>
   </data>
   <data name="CommandMonitorEndpointDescription" xml:space="preserve">
-    <value>Monitors a UMP endpoint for incoming messages</value>
+    <value>Monitors a UMP endpoint for incoming messages and optionally displays them as they arrive.</value>
   </data>
   <data name="CommandSendMessageDescription" xml:space="preserve">
     <value>Send a single message to a UMP endpoint as a list of up to four 32 bit MIDI words</value>
@@ -184,7 +184,7 @@
     <value>Stops the MIDI Service, freeing up all resources in use, closing all devices, and clearing any runtime configuration. Must be run as Administrator.</value>
   </data>
   <data name="CommandTimeDescription" xml:space="preserve">
-    <value>Get the current MIDI clock timestamp value</value>
+    <value>Get the current MIDI clock timestamp value and information about the clock resolution.</value>
   </data>
   <data name="CommandWatchEndpointsDescription" xml:space="preserve">
     <value>Watch endpoints for add/remove and PnP property change notifications</value>
@@ -988,5 +988,26 @@ Timestamp</value>
   </data>
   <data name="StartingMidiService" xml:space="preserve">
     <value>Starting MIDI Service ...</value>
+  </data>
+  <data name="ParameterSendClockTempo" xml:space="preserve">
+    <value>Clock tempo in beats-per-minute. Fractional amounts are allowed.</value>
+  </data>
+  <data name="ParameterSendClockPPQN" xml:space="preserve">
+    <value>Clock messages (pulses) per quarter note. Normally, this is 24, but for some uses, 48 is common.</value>
+  </data>
+  <data name="ParameterSendClockGroupNumbers" xml:space="preserve">
+    <value>The list of groups to send the clock messages to</value>
+  </data>
+  <data name="CommandSendClockDescription" xml:space="preserve">
+    <value>(Experimental Feature) Send MIDI beat clock to one or more groups on an endpoint</value>
+  </data>
+  <data name="SendClockPressEscapeToStopSendingMessage" xml:space="preserve">
+    <value>Press escape to stop sending MIDI beat clock messages.</value>
+  </data>
+  <data name="ParameterSendClockSendMidiStartMessage" xml:space="preserve">
+    <value>Set this option to send a MIDI Start message</value>
+  </data>
+  <data name="ParameterSendClockSendMidiStopMessage" xml:space="preserve">
+    <value>Set this option to send a MIDI Stop message</value>
   </data>
 </root>

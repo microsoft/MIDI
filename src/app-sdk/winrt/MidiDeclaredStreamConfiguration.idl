@@ -9,7 +9,6 @@
 
 import "MidiApiContracts.idl";
 
-
 import "MidiProtocolEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2

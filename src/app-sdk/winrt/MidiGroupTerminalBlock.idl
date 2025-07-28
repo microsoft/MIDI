@@ -6,22 +6,20 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "MidiGroupTerminalBlockDirectionEnum.idl";
 import "MidiGroupTerminalBlockProtocolEnum.idl";
 import "MidiGroup.idl";
-
 import "MidiFunctionBlock.idl";
-import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiGroupTerminalBlock", 8087b303-0519-31d1-c0de-dd0000010000)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiGroupTerminalBlockStatics", 8087b303-0519-31d1-c0de-ee0000010000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiGroupTerminalBlock", UUID_IMidiGroupTerminalBlock)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiGroupTerminalBlockStatics", UUID_IMidiGroupTerminalBlockStatics)]
     runtimeclass MidiGroupTerminalBlock : Windows.Foundation.IStringable
     {
         static String ShortLabel{ get; };

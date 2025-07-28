@@ -82,6 +82,7 @@
               "CreateVersionIncludes",
               "Prerequisites",
               "ZipPowershellDevUtilities",
+              "ZipSamples",
               "ZipWdmaud2"
             ]
           }
@@ -110,6 +111,7 @@
               "CreateVersionIncludes",
               "Prerequisites",
               "ZipPowershellDevUtilities",
+              "ZipSamples",
               "ZipWdmaud2"
             ]
           }

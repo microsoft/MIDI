@@ -5,7 +5,7 @@
             "type": "preview",
             "source": "GitHub Preview",
             "name": "Test Preview 15",
-            "description": "This is a test release for testing out the SDK updating functions in the MIDI Settings app. It adds new features like Foo, Bar, and Baz. This is the release you really want.",
+            "description": "This is a test release for testing out the SDK updating functions in the MIDI Settings app. It adds new features like auto-updating, Network MIDI 2.0, SDK versioning, and a clock generator.",
             "buildDate": "2025-07-23",
             "versionFull": "1.1.15-testentry.15.1769",
             "versionMajor": 1,

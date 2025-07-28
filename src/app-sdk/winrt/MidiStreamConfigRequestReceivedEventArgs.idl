@@ -6,15 +6,15 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
-
-
 import "MidiProtocolEnum.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
     [contract(MidiEndpointsVirtualApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.IMidiStreamConfigRequestReceivedEventArgs", 8087b303-0519-31d1-c0de-dd00000e0000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.IMidiStreamConfigRequestReceivedEventArgs", UUID_IMidiStreamConfigRequestReceivedEventArgs)]
     runtimeclass MidiStreamConfigRequestReceivedEventArgs
     {
         UInt64 Timestamp{ get; };

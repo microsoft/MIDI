@@ -7,6 +7,7 @@
 // ============================================================================
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,6 +26,7 @@ namespace Microsoft.Midi.Settings.Services
 
         private const string MidiRootRegKey = @"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows MIDI Services";
 
+        private const string MidiSdkRootRegKey = MidiRootRegKey + @"\Desktop App SDK Runtime";
         private UInt32 GetRegistryNumericDWORDValue(string keyName, string valueName, UInt32 defaultValue)
         {
             try
@@ -36,10 +38,10 @@ namespace Microsoft.Midi.Settings.Services
                     // happens when the key does not exist
                     return defaultValue;
                 }
-                else
-                {
-                    return (UInt32)value;
-                }
+
+                UInt32 valueDWORD = Convert.ToUInt32(value);
+
+                return (UInt32)valueDWORD;
             }
             catch (Exception)
             {
@@ -65,7 +67,10 @@ namespace Microsoft.Midi.Settings.Services
                     // happens when the key does not exist
                     return defaultValue;
                 }
-                else if ((UInt32)value > 0)
+
+                UInt32 valueDWORD = Convert.ToUInt32(value);
+
+                if (valueDWORD > 0)
                 {
                     return true;
                 }
@@ -111,7 +116,7 @@ namespace Microsoft.Midi.Settings.Services
         {
             try
             {
-                Microsoft.Win32.Registry.SetValue(keyName, valueName, newValue);
+                Microsoft.Win32.Registry.SetValue(keyName, valueName, newValue, Win32.RegistryValueKind.DWord);
 
                 return true;
             }
@@ -127,7 +132,7 @@ namespace Microsoft.Midi.Settings.Services
             {
                 var val = newValue ? (UInt32)1 : (UInt32)0;
 
-                Microsoft.Win32.Registry.SetValue(keyName, valueName, val);
+                Microsoft.Win32.Registry.SetValue(keyName, valueName, val, Win32.RegistryValueKind.DWord);
 
                 return true;
             }
@@ -141,7 +146,7 @@ namespace Microsoft.Midi.Settings.Services
         {
             try
             {
-                Microsoft.Win32.Registry.SetValue(keyName, valueName, newValue.Trim());
+                Microsoft.Win32.Registry.SetValue(keyName, valueName, newValue.Trim(), Win32.RegistryValueKind.String);
 
                 return true;
             }
@@ -164,6 +169,11 @@ namespace Microsoft.Midi.Settings.Services
         const string ValueName_UseMMCSS = "UseMMCSS";
         const string ValueName_CurrentConfig = "CurrentConfig";
 
+        const string ValueName_AutoCheckForRuntimeUpdates = "AutoCheckForRuntimeUpdates";
+
+        const string ValueName_PreferredRuntimeReleaseType = "PreferredRuntimeReleaseType";
+        const string Value_PreferredRuntimeReleaseType_Preview = "preview";
+        const string Value_PreferredRuntimeReleaseType_Stable = "stable";
 
         public bool IsConfigFileSpecified()
         {
@@ -178,6 +188,57 @@ namespace Microsoft.Midi.Settings.Services
         public bool UpdateRegistryCurrentConfigFileName(string configFileName)
         {
             return SetRegistryStringValue(MidiRootRegKey, ValueName_CurrentConfig, configFileName);
+        }
+
+
+
+        public MidiRuntimeReleaseTypes GetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes defaultIfMissing)
+        {
+            var value = GetRegistryStringValue(
+                MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, "").ToLower().Trim();
+
+            if (string.IsNullOrEmpty(value))
+            {
+                return defaultIfMissing;
+            }
+
+
+            if (value == Value_PreferredRuntimeReleaseType_Preview)
+            {
+                return MidiRuntimeReleaseTypes.Preview;
+            }
+            else if (value == Value_PreferredRuntimeReleaseType_Stable)
+            { 
+                return MidiRuntimeReleaseTypes.Stable; 
+            }
+
+            return MidiRuntimeReleaseTypes.Unknown;
+        }
+
+
+        public bool SetPreferredSdkRuntimeReleaseType(MidiRuntimeReleaseTypes releaseType)
+        {
+            if (releaseType == MidiRuntimeReleaseTypes.Preview)
+            {
+                return SetRegistryStringValue(MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, Value_PreferredRuntimeReleaseType_Preview);
+            }
+            else // we default to stable
+            {
+                return SetRegistryStringValue(MidiSdkRootRegKey, ValueName_PreferredRuntimeReleaseType, Value_PreferredRuntimeReleaseType_Stable);
+            }
+        }
+
+
+
+
+        public bool GetAutoCheckForUpdatesEnabled()
+        {
+            return GetRegistryBooleanDWORDValue(MidiSdkRootRegKey, ValueName_AutoCheckForRuntimeUpdates, true);
+        }
+
+        public bool SetAutoCheckForUpdatesEnabled(bool newValue)
+        {
+            return SetRegistryBooleanDWORDValue(MidiSdkRootRegKey, ValueName_AutoCheckForRuntimeUpdates, newValue);
         }
 
 

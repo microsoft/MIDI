@@ -956,7 +956,7 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
         {
             internal::PackedUmp128 configurationRequestUmp{};
 
-            ump.word0 = internal::BuildStreamConfigurationRequestFirstWord(
+            configurationRequestUmp.word0 = internal::BuildStreamConfigurationRequestFirstWord(
                 m_preferredMidiProtocol,
                 m_preferToSendJRTimestampsToEndpoint,
                 m_preferToReceiveJRTimestampsFromEndpoint);
@@ -964,7 +964,11 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
             m_alreadyTriedToNegotiationOnce = true;
 
             // send it immediately
-            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&configurationRequestUmp, (UINT)sizeof(configurationRequestUmp), 0));
+            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(
+                MessageOptionFlags_None, 
+                (byte*)&configurationRequestUmp, 
+                (UINT)sizeof(configurationRequestUmp), 
+                0));
 
             return S_OK;
         }
@@ -975,15 +979,19 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
 
             internal::PackedUmp128 configurationNotificationUmp{};
 
-            ump.word0 = internal::BuildStreamConfigurationNotificationFirstWord(
+            configurationNotificationUmp.word0 = internal::BuildStreamConfigurationNotificationFirstWord(
                 m_preferredMidiProtocol,
                 m_preferToReceiveJRTimestampsFromEndpoint,  // reversed from the request message. See spec
                 m_preferToSendJRTimestampsToEndpoint        // reversed from the request message. See spec
             );
 
-            LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
+            LOG_IF_FAILED(UpdateStreamConfigurationProperties(configurationNotificationUmp));
 
-            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
+            RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(
+                MessageOptionFlags_None, 
+                (byte*)&configurationNotificationUmp, 
+                (UINT)sizeof(configurationNotificationUmp), 
+                0));
             
             return S_OK;
         }
@@ -992,15 +1000,19 @@ CMidiEndpointProtocolWorker::ProcessStreamConfigurationRequest(internal::PackedU
     {
         internal::PackedUmp128 configurationNotificationUmp{};
 
-        ump.word0 = internal::BuildStreamConfigurationNotificationFirstWord(
+        configurationNotificationUmp.word0 = internal::BuildStreamConfigurationNotificationFirstWord(
             m_preferredMidiProtocol,
             m_preferToReceiveJRTimestampsFromEndpoint,  // reversed from the request message. See spec
             m_preferToSendJRTimestampsToEndpoint        // reversed from the request message. See spec
             );
 
-        LOG_IF_FAILED(UpdateStreamConfigurationProperties(ump));
+        LOG_IF_FAILED(UpdateStreamConfigurationProperties(configurationNotificationUmp));
 
-        RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&configurationNotificationUmp, (UINT)sizeof(configurationNotificationUmp), 0));
+        RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(
+            MessageOptionFlags_None, 
+            (byte*)&configurationNotificationUmp, 
+            (UINT)sizeof(configurationNotificationUmp), 
+            0));
 
         return S_OK;
     }

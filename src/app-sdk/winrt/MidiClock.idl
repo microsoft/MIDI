@@ -6,15 +6,16 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiSystemTimerSettings.idl";
+#include "midi_sdk_idl_defs.h"
 
+import "MidiSystemTimerSettings.idl";
 import "MidiApiContracts.idl";
 
 
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiClockStatics", 8087b303-0519-31d1-c0de-ee0000006000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiClockStatics", UUID_IMidiClockStatics)]
     static runtimeclass MidiClock
     {
         static UInt64 Now{ get; };

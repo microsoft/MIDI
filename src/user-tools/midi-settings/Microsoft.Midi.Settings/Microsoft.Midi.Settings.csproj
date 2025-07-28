@@ -59,7 +59,7 @@
 
 
   <PropertyGroup>
-    <NoWarn>$(NoWarn);MVVMTK0045;CS8618;CS8305</NoWarn>
+    <NoWarn>$(NoWarn);MVVMTK0050;MVVMTK0045;CS8618;CS8305</NoWarn>
   </PropertyGroup>
   
 	<ItemGroup>
@@ -106,12 +106,12 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.1.240916" />
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.1.240916" />
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.1.240916" />
-    <PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.1.240916" />
-    <PackageReference Include="CommunityToolkit.WinUI.Extensions" Version="8.1.240916" />
-    <PackageReference Include="CommunityToolkit.WinUI.Helpers" Version="8.1.240916" />
+    <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.2.250402" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.250402" />
+    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.250402" />
+    <PackageReference Include="CommunityToolkit.WinUI.Converters" Version="8.2.250402" />
+    <PackageReference Include="CommunityToolkit.WinUI.Extensions" Version="8.2.250402" />
+    <PackageReference Include="CommunityToolkit.WinUI.Helpers" Version="8.2.250402" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.TraceSource" Version="8.0.0" />
@@ -122,7 +122,7 @@
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
      <PackageReference Include="Microsoft.Windows.Devices.Midi2" Version="*-*" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250606001" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="3.0.0" />
       
       <PackageReference Include="System.Management" Version="8.0.0" />
       <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
@@ -130,7 +130,6 @@
       <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
 
       <PackageReference Include="WinUIEx" Version="2.6.0" />
-
 	  
     <PackageReference Include="CommunityToolkit.Common" Version="8.4.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />

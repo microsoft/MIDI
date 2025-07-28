@@ -188,13 +188,13 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiLoopbackEndpointCreationConfig.h"
 #include "MidiLoopbackEndpointRemovalConfig.h"
 
-#include "MidiVirtualPatchBayManager.h"
-#include "MidiVirtualPatchBayDestinationDefinition.h"
-#include "MidiVirtualPatchBayRouteCreationConfig.h"
-#include "MidiVirtualPatchBayRouteDefinition.h"
-#include "MidiVirtualPatchBayRouteRemovalConfig.h"
-#include "MidiVirtualPatchBayRouteUpdateConfig.h"
-#include "MidiVirtualPatchBaySourceDefinition.h"
+//#include "MidiVirtualPatchBayManager.h"
+//#include "MidiVirtualPatchBayDestinationDefinition.h"
+//#include "MidiVirtualPatchBayRouteCreationConfig.h"
+//#include "MidiVirtualPatchBayRouteDefinition.h"
+//#include "MidiVirtualPatchBayRouteRemovalConfig.h"
+//#include "MidiVirtualPatchBayRouteUpdateConfig.h"
+//#include "MidiVirtualPatchBaySourceDefinition.h"
 
 #include "MidiStreamConfigRequestReceivedEventArgs.h"
 #include "MidiVirtualDevice.h"
@@ -207,7 +207,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiNetworkHostRemovalConfig.h"
 #include "MidiNetworkClientEndpointCreationConfig.h"
 #include "MidiNetworkClientEndpointRemovalConfig.h"
-#include "MidiNetworkEndpointManager.h"
+#include "MidiNetworkTransportManager.h"
 
 #include "MidiNetworkAdvertisedHost.h"
 
@@ -265,4 +265,7 @@ namespace network = ::winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Netw
 #include "MidiRuntimeRelease.h"
 #include "MidiRuntimeUpdateUtility.h"
 #include "MidiRuntimeInformation.h"
+
+#include "MidiClockDestination.h"
+#include "MidiClockGenerator.h"
 

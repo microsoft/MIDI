@@ -9,6 +9,7 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.Common.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.Mvvm.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Animations.dll" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Collections.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Controls.Primitives.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Controls.SettingsControls.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Converters.dll" /> 
@@ -67,7 +68,6 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.WindowsAppRuntime.Bootstrap.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.WinUI.dll" /> 
-      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Xaml.Interactions.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Xaml.Interactivity.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\WinUIEx.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" /> 

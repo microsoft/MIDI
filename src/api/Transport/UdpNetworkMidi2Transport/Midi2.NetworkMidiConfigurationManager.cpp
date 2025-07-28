@@ -200,7 +200,7 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 //                "networkProtocol" : "udp",
 //                "match" :
 //                {
-//                    "directIPAddress": "192.168.1.243",
+//                    "directHostNameOrIP": "192.168.1.243",
 //                    "directPort": "39820"
 //                }
 //            },
@@ -210,7 +210,7 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
 //                "networkProtocol" : "udp",
 //                "match" :
 //                {
-//                    "directHostName": "BomeBox.local",
+//                    "directHostNameOrIP": "BomeBox.local",
 //                    "directPort": "51492"
 //                }
 //            }
@@ -279,6 +279,9 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     auto removeSection = jsonObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY, nullptr);
 
     // transport-global settings
+
+    // TODO: Move these to registry instead?
+
     if (transportSettingsSection != nullptr && transportSettingsSection.Size() > 0)
     {
         uint32_t fecPackets{ };
@@ -527,8 +530,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                         definition->MatchId = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID_KEY, L""));
 
                         // direct connection properties
-                        definition->MatchDirectHostName = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_KEY, L""));
-                        definition->MatchDirectIPAddress = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_IP_ADDRESS_KEY, L""));
+                        definition->MatchDirectHostNameOrIPAddress = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_OR_IP_ADDRESS_KEY, L""));
                         definition->MatchDirectPort = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT_KEY, L""));
 
                         // TODO: Validate port range, etc. and return an error if invalid

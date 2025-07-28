@@ -128,6 +128,9 @@
     <ClInclude Include="MidiNetworkClient.h">
       <Filter>Header Files\Service</Filter>
     </ClInclude>
+    <ClInclude Include="network_json_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2.NetworkMidiTransport.rc">
@@ -138,5 +141,9 @@
     <Midl Include="Midi2NetworkMidiTransport.idl">
       <Filter>Source Files</Filter>
     </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
 </Project>

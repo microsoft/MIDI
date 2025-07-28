@@ -9,10 +9,13 @@
 using Microsoft.Extensions.Options;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Models;
+using Microsoft.UI.Composition;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.Windows.Devices.Midi2.Common;
 using Microsoft.Windows.Devices.Midi2.Initialization;
-using Microsoft.Windows.Devices.Midi2.Utilities.Update;
 using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
+using Microsoft.Windows.Devices.Midi2.Utilities.Update;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -28,7 +31,12 @@ namespace Microsoft.Midi.Settings.Services
     {
         // https://aka.ms/MidiServicesLatestSdkVersionJson
 
-        private IMidiSdkService _sdkService;
+        private readonly IMidiSdkService _sdkService;
+        private readonly ILocalSettingsService _localSettingsService;
+        private readonly IMidiServiceRegistrySettingsService _registrySettingsService;
+
+        private const string AutoCheckSettingsKey = "AutoCheckForUpdates";
+
 
         public MidiRuntimeReleaseTypes GetCurrentInstalledChannel()
         {
@@ -40,11 +48,25 @@ namespace Microsoft.Midi.Settings.Services
 
         public MidiRuntimeReleaseTypes GetCurrentPreferredChannel()
         {
-            // TODO: read from registry.
-
-            return MidiRuntimeReleaseTypes.Preview;
+            return _registrySettingsService.GetPreferredSdkRuntimeReleaseType(GetCurrentInstalledChannel());
         }
 
+        public void SetCurrentPreferredChannel(MidiRuntimeReleaseTypes preferredReleaseType)
+        {
+            _registrySettingsService.SetPreferredSdkRuntimeReleaseType(preferredReleaseType);
+        }
+
+
+        public void SetAutoCheckForUpdatesEnabled(bool newValue)
+        {
+            _registrySettingsService.SetAutoCheckForUpdatesEnabled(newValue);
+        }
+
+
+        public bool GetAutoCheckForUpdatesEnabled()
+        {
+            return _registrySettingsService.GetAutoCheckForUpdatesEnabled();
+        }
 
 
 
@@ -58,10 +80,12 @@ namespace Microsoft.Midi.Settings.Services
         public MidiRuntimeRelease? GetHighestAvailableRuntimeRelease(MidiRuntimeReleaseTypes releaseChannelType)
         {
 
-            // TODO
+            return MidiRuntimeUpdateUtility.GetHighestAvailableRelease(releaseChannelType);
+        }
 
-
-            return MidiRuntimeUpdateUtility.GetHighestAvailableRelease(GetCurrentPreferredChannel());
+        public MidiRuntimeRelease? CheckForUpdates()
+        {
+            return GetHighestAvailableRuntimeRelease(GetCurrentPreferredChannel());
         }
 
 
@@ -174,10 +198,28 @@ namespace Microsoft.Midi.Settings.Services
         }
 
 
+        public bool IsAutoCheckForUpdatesEnabled
+        {
+            get
+            {
+                return _localSettingsService.ReadSettingAsync<bool>(AutoCheckSettingsKey, true).GetAwaiter().GetResult();
+            }
+            set
+            {
+                _localSettingsService.SaveSettingAsync<bool>(AutoCheckSettingsKey, value).GetAwaiter().GetResult();
+            }
+        }
 
-        public MidiUpdateService(IMidiSdkService sdkService)
+
+
+        public MidiUpdateService(
+            IMidiSdkService sdkService, 
+            ILocalSettingsService localSettingsService,
+            IMidiServiceRegistrySettingsService registrySettingsService)
         {
             _sdkService = sdkService;
+            _localSettingsService = localSettingsService;
+            _registrySettingsService = registrySettingsService;
         }
 
 

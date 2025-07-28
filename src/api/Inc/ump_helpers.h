@@ -298,7 +298,7 @@ namespace WindowsMidiServicesInternal
             return false;
 
         case 0x1: // MidiUmpMessageType::SystemCommon32    // type 1
-            return true;
+            return false;
         case 0x2: // MidiUmpMessageType::Midi1ChannelVoice32   // type 2
             return true;
         case 0x3: // MidiUmpMessageType::DataMessage64   // type 3 - sysex. Sysex doesn't include channel but does have a group

@@ -6,9 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
@@ -19,8 +19,8 @@ import "IMidiEndpointConnectionSource.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointConnection", 8087b303-0519-31d1-c0de-dd0000080000)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionStatics", 8087b303-0519-31d1-c0de-ee0000080000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointConnection", UUID_IMidiEndpointConnection)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointConnectionStatics", UUID_IMidiEndpointConnectionStatics)]
     runtimeclass MidiEndpointConnection : IMidiMessageReceivedEventSource,
                                           IMidiEndpointConnectionSource,
                                           Windows.Foundation.IStringable

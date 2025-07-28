@@ -18,16 +18,21 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
         winrt::hstring DeviceId() const noexcept { return m_deviceId; }
         void DeviceId(_In_ winrt::hstring const& value) noexcept { m_deviceId = value; }
 
-        winrt::Windows::Networking::HostName HostName() const noexcept { return m_hostName; }
-        void HostName(_In_ winrt::Windows::Networking::HostName const& value) { m_hostName = value; }
 
-        uint16_t Port() const noexcept { return m_port; }
-        void Port(_In_ uint16_t value) noexcept { m_port = value; }
+        winrt::hstring DirectHostNameOrIPAddress() const noexcept { return m_directAddress; }
+        void DirectHostNameOrIPAddress(_In_ winrt::hstring const& value) { m_directAddress = value; }
+
+        uint16_t DirectPort() const noexcept { return m_port; }
+        void DirectPort(_In_ uint16_t value) noexcept { m_port = value; }
+
+
+        winrt::hstring GetConfigJson() const noexcept;
 
     private:
         winrt::hstring m_deviceId{};
 
-        winrt::Windows::Networking::HostName m_hostName{ nullptr };
+        winrt::hstring m_directAddress{ };
+
         uint16_t m_port{ 0 };
     };
 }

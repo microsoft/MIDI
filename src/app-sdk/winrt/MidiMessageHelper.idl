@@ -6,17 +6,15 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
-
 import "IMidiUniversalPacket.idl";
-
 import "Midi1ChannelVoiceMessageStatusEnum.idl";
 import "Midi2ChannelVoiceMessageStatusEnum.idl";
-
 import "MidiMessageTypeEnum.idl";
 import "MidiPacketTypeEnum.idl";
-
 import "MidiGroup.idl";
 import "MidiChannel.idl";
 
@@ -24,7 +22,7 @@ import "MidiChannel.idl";
 namespace Microsoft.Windows.Devices.Midi2.Messages
 {
     [contract(MidiMessageUtilitiesApiContract, 1)]
-    [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageHelperStatics", 8087b303-0519-31d1-c0de-ee0000800000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Messages.IMidiMessageHelperStatics", UUID_IMidiMessageHelperStatics)]
     static runtimeclass MidiMessageHelper
     {
         static Boolean ValidateMessage32MessageType(UInt32 word0);

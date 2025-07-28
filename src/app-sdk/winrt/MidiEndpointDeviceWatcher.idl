@@ -6,9 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "MidiEndpointDeviceInformationFiltersEnum.idl";
 import "MidiEndpointDeviceInformation.idl";
@@ -20,8 +20,8 @@ import "MidiEndpointDeviceInformationAddedEventArgs.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceWatcher", 8087b303-0519-31d1-c0de-dd000000e000)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceWatcherStatics", 8087b303-0519-31d1-c0de-ee000000e000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceWatcher", UUID_IMidiEndpointDeviceWatcher)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceWatcherStatics", UUID_IMidiEndpointDeviceWatcherStatics)]
     runtimeclass MidiEndpointDeviceWatcher
     {
         static MidiEndpointDeviceWatcher Create();

@@ -6,9 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "IMidiServiceTransportPluginConfig.idl";
 import "IMidiServiceMessageProcessingPluginConfig.idl";
@@ -17,7 +17,7 @@ import "MidiServiceConfigResponse.idl";
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
     [contract(MidiServiceConfigApiContract, 1)]
-    [static_name("Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigStatics", 8087b303-0519-31d1-c0de-ee0000300000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigStatics", UUID_IMidiServiceConfigStatics)]
     static runtimeclass MidiServiceConfig
     {
         static MidiServiceConfigResponse UpdateTransportPluginConfig(

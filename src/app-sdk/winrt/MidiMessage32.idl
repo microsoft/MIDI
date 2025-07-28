@@ -6,9 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "IMidiUniversalPacket.idl";
 import "MidiMessageStruct.idl";
@@ -17,8 +17,8 @@ import "MidiMessageStruct.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiMessage32", 8087b303-0519-31d1-c0de-dd0000040000)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiMessage32Statics", 8087b303-0519-31d1-c0de-ee0000040000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiMessage32", UUID_IMidiMessage32)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiMessage32Statics", UUID_IMidiMessage32Statics)]
     unsealed runtimeclass MidiMessage32 : IMidiUniversalPacket,
                                           Windows.Foundation.IStringable
     {

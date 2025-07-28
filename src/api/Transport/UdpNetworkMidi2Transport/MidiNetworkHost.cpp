@@ -50,13 +50,13 @@ MidiNetworkHost::Initialize(
 
     m_hostDefinition = hostDefinition;
 
-    DatagramSocket socket;
-    m_socket = std::move(socket);
-
-    m_socket.Control().DontFragment(true);
-    //m_socket.Control().InboundBufferSizeInBytes(10000);
-    m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
-
+    {
+        DatagramSocket socket;
+        m_socket = socket;
+        m_socket.Control().DontFragment(true);
+        //m_socket.Control().InboundBufferSizeInBytes(10000);
+        m_socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
+    }
 
     if (m_hostDefinition.Advertise)
     {

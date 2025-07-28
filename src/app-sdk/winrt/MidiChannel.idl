@@ -6,14 +6,15 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
 
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiCoreApiContract,1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiChannel", 8087b303-0519-31d1-c0de-dd0000005000)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiChannelStatics", 8087b303-0519-31d1-c0de-ee0000005000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiChannel", UUID_IMidiChannel)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiChannelStatics", UUID_IMidiChannelStatics)]
     runtimeclass MidiChannel : Windows.Foundation.IStringable
     {
         MidiChannel();

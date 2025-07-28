@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
 import "Midi1PortFlowEnum.idl";
@@ -14,7 +15,7 @@ import "MidiGroup.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointAssociatedPortDeviceInformation", 8087b303-0519-31d1-c0de-dd0000020000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointAssociatedPortDeviceInformation", UUID_IMidiEndpointAssociatedPortDeviceInformation)]
     runtimeclass MidiEndpointAssociatedPortDeviceInformation : Windows.Foundation.IStringable
     {
         Guid ContainerId{ get; };               // container this exists in. It will be the same as the parent endpoint's. Here for convenience.

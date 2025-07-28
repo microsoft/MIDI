@@ -196,7 +196,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Monitors a UMP endpoint for incoming messages.
+        ///   Looks up a localized string similar to Monitors a UMP endpoint for incoming messages and optionally displays them as they arrive..
         /// </summary>
         internal static string CommandMonitorEndpointDescription {
             get {
@@ -210,6 +210,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string CommandPlayNotesDescription {
             get {
                 return ResourceManager.GetString("CommandPlayNotesDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Experimental Feature) Send MIDI beat clock to one or more groups on an endpoint.
+        /// </summary>
+        internal static string CommandSendClockDescription {
+            get {
+                return ResourceManager.GetString("CommandSendClockDescription", resourceCulture);
             }
         }
         
@@ -295,7 +304,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get the current MIDI clock timestamp value.
+        ///   Looks up a localized string similar to Get the current MIDI clock timestamp value and information about the clock resolution..
         /// </summary>
         internal static string CommandTimeDescription {
             get {
@@ -1308,6 +1317,51 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ParameterRequestFunctionBlocksAll {
             get {
                 return ResourceManager.GetString("ParameterRequestFunctionBlocksAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list of groups to send the clock messages to.
+        /// </summary>
+        internal static string ParameterSendClockGroupNumbers {
+            get {
+                return ResourceManager.GetString("ParameterSendClockGroupNumbers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clock messages (pulses) per quarter note. Normally, this is 24, but for some uses, 48 is common..
+        /// </summary>
+        internal static string ParameterSendClockPPQN {
+            get {
+                return ResourceManager.GetString("ParameterSendClockPPQN", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set this option to send a MIDI Start message.
+        /// </summary>
+        internal static string ParameterSendClockSendMidiStartMessage {
+            get {
+                return ResourceManager.GetString("ParameterSendClockSendMidiStartMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set this option to send a MIDI Stop message.
+        /// </summary>
+        internal static string ParameterSendClockSendMidiStopMessage {
+            get {
+                return ResourceManager.GetString("ParameterSendClockSendMidiStopMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clock tempo in beats-per-minute. Fractional amounts are allowed..
+        /// </summary>
+        internal static string ParameterSendClockTempo {
+            get {
+                return ResourceManager.GetString("ParameterSendClockTempo", resourceCulture);
             }
         }
         
@@ -2447,6 +2501,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertyValueNativeDataFormatUnknown {
             get {
                 return ResourceManager.GetString("PropertyValueNativeDataFormatUnknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press escape to stop sending MIDI beat clock messages..
+        /// </summary>
+        internal static string SendClockPressEscapeToStopSendingMessage {
+            get {
+                return ResourceManager.GetString("SendClockPressEscapeToStopSendingMessage", resourceCulture);
             }
         }
         

@@ -46,6 +46,12 @@ namespace Microsoft.Midi.Settings.Services
             _watcher.Start();
         }
 
+        public MidiEndpointEnumerationService()
+        {
+            StartDeviceWatcher(true);
+        }
+
+
         private void OnDeviceWatcherEnumerationCompleted(MidiEndpointDeviceWatcher sender, object args)
         {
             // todo

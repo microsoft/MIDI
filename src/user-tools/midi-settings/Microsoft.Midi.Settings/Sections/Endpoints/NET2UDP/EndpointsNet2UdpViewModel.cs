@@ -43,6 +43,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         public string? newHostName;
 
         [ObservableProperty]
+        public string? newServiceInstanceName;
+
+        [ObservableProperty]
         public string? newHostUniqueId;
 
         [ObservableProperty]
@@ -72,15 +75,20 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             config.Advertise = NewHostAdvertise;
             config.AuthenticationType = MidiNetworkAuthenticationType.NoAuthentication; // TEMP: set this up with actual configured auth
-            config.ProductInstanceId = NewHostUniqueId;
-            //config.HostInstanceName = 
-            config.Name = NewHostName;
+            config.ProductInstanceId = NewHostUniqueId?.Trim();
+            config.ServiceInstanceName = NewServiceInstanceName?.Trim();
+            config.Name = NewHostName?.Trim();
             config.Id = new Guid().ToString();
-            config.UmpOnly = NewHostUmpOnly;
+            config.CreateOnlyUmpEndpoints = NewHostUmpOnly;
             config.UseAutomaticPortAllocation = string.IsNullOrEmpty(NewHostPort) || NewHostPort.Trim() == string.Empty;
 
+            if (!config.UseAutomaticPortAllocation)
+            {
+                config.ManuallyAssignedPort = NewHostPort?.Trim();
+            }
 
-            var result = MidiNetworkEndpointManager.CreateNetworkHost(config);
+
+            var result = MidiNetworkTransportManager.CreateNetworkHost(config);
 
             if (result.Success)
             {

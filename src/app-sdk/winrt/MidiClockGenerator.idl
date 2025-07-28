@@ -6,20 +6,22 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiEndpointConnection.idl";
+import "MidiClockDestination.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.Sequencing
 {
     [experimental]
     runtimeclass MidiClockGenerator
     {
-        MidiClockGenerator();
-        MidiClockGenerator(IVector<Microsoft.Windows.Devices.Midi2.MidiEndpointConnection> connections);
-        MidiClockGenerator(IVector<Microsoft.Windows.Devices.Midi2.MidiEndpointConnection> connections, Double bpm);
-        MidiClockGenerator(IVector<Microsoft.Windows.Devices.Midi2.MidiEndpointConnection> connections, Double bpm, UInt16 pulsesPerQuarterNote);
+        MidiClockGenerator(IVector<MidiClockDestination> destinations, Double bpm, UInt16 pulsesPerQuarterNote);
 
         void UpdateRunningClock(Double bpm);
         void UpdateRunningClock(Double bpm, UInt16 pulsesPerQuarterNote);
+
+        IVectorView<MidiClockDestination> Destinations{ get; };
 
         Boolean Start(Boolean sendMidiStartMessage);   // start the clock
         Boolean Stop(Boolean sendMidiStopMessage);     // stop the clock

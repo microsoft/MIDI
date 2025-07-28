@@ -16,7 +16,7 @@ using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml;
-
+using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 using Windows.ApplicationModel;
 
 namespace Microsoft.Midi.Settings.ViewModels;
@@ -26,6 +26,8 @@ public class SettingsViewModel : ObservableRecipient
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IGeneralSettingsService _generalSettingsService;
+    private readonly IMidiUpdateService _midiUpdateService;
+
     private ElementTheme _elementTheme;
     //private bool _showDeveloperOptions;
     private string _versionDescription;
@@ -43,20 +45,34 @@ public class SettingsViewModel : ObservableRecipient
     //}
 
 
-
-    // TODO: This needs a callback when the property changes
-    // probably need to call a service for this
     public bool IsPreviewChannelEnabled
     {
-        get => _isPreviewChannelEnabled;
-        set => SetProperty(ref _isPreviewChannelEnabled, value);
+        get => _midiUpdateService.GetCurrentPreferredChannel() == MidiRuntimeReleaseTypes.Preview;
+        set => SetProperty(_isPreviewChannelEnabled, value, (newValue) => 
+        { 
+            //_isPreviewChannelEnabled = newValue;  
+
+            if (newValue)
+            {
+                _midiUpdateService.SetCurrentPreferredChannel(Windows.Devices.Midi2.Utilities.RuntimeInformation.MidiRuntimeReleaseTypes.Preview);
+            }
+            else
+            {
+                _midiUpdateService.SetCurrentPreferredChannel(Windows.Devices.Midi2.Utilities.RuntimeInformation.MidiRuntimeReleaseTypes.Stable);
+            }
+        });
     }
 
     
     public bool IsUpdateCheckingEnabled
     {
-        get => _isUpdateCheckingEnabled;
-        set => SetProperty(ref _isUpdateCheckingEnabled, value);
+        get => _midiUpdateService.GetAutoCheckForUpdatesEnabled();
+        set => SetProperty(_isUpdateCheckingEnabled, value, (newValue) => 
+        { 
+            _isUpdateCheckingEnabled = newValue;
+
+            _midiUpdateService.SetAutoCheckForUpdatesEnabled(newValue);
+        });
     }
 
 
@@ -80,10 +96,15 @@ public class SettingsViewModel : ObservableRecipient
 
     public SettingsViewModel(
         IThemeSelectorService themeSelectorService, 
+        IMidiUpdateService midiUpdateService,
         ILocalSettingsService localSettingsService, 
         IGeneralSettingsService generalSettingsService)
     {
+        _midiUpdateService = midiUpdateService;
         _themeSelectorService = themeSelectorService;
+        _localSettingsService = localSettingsService;
+        _generalSettingsService = generalSettingsService;
+
         _elementTheme = _themeSelectorService.Theme;
         _versionDescription = GetVersionDescription();
 
@@ -97,8 +118,10 @@ public class SettingsViewModel : ObservableRecipient
                 }
             });
 
-        _localSettingsService = localSettingsService;
-        _generalSettingsService = generalSettingsService;
+        _isUpdateCheckingEnabled = _midiUpdateService.GetAutoCheckForUpdatesEnabled();
+
+        _isPreviewChannelEnabled = 
+            (_midiUpdateService.GetCurrentPreferredChannel() == MidiRuntimeReleaseTypes.Preview);
     }
 
     private static string GetVersionDescription()

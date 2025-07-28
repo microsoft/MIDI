@@ -7,11 +7,11 @@
 // ============================================================================
 
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
-
 import "MidiVirtualPatchBayRouteDefinition.idl";
-
 import "IMidiServiceTransportPluginConfig.idl";
 
 

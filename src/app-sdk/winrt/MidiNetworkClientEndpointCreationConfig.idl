@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 import "MidiNetworkClientMatchCriteria.idl";
 import "IMidiServiceTransportPluginConfig.idl";
@@ -19,9 +21,10 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     {
         MidiNetworkClientEndpointCreationConfig();
 
-		String Id;				// GUID or other string we use in the config file and for subsequent edits/deletes
-		Boolean UmpOnly;	        // todo: this will also need a table of port names
-		Boolean AutoReconnect;		// true if we reconnect after any disconnects. Otherwise, we connect only once.
+		String Id;							// GUID or other string we use in the config file and for subsequent edits/deletes
+		String Comment;						// optional comment that is put into the config file
+		Boolean CreateOnlyUmpEndpoints;	    // todo: this will also need a table of port names
+		Boolean AutoReconnect;				// true if we reconnect after any disconnects. Otherwise, we connect only once.
 
 		// sets the criteria we look for when creating the endpoint. mDNS is generally preferred.
 		MidiNetworkClientMatchCriteria MatchCriteria;

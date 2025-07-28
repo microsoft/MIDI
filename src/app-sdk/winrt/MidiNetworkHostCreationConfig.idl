@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
@@ -23,10 +25,10 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         String Id;
 
         String Name;
-        String HostInstanceName;
+        String ServiceInstanceName;
         String ProductInstanceId;
 
-        Boolean UmpOnly;
+        Boolean CreateOnlyUmpEndpoints;
 
         Boolean UseAutomaticPortAllocation;
         String ManuallyAssignedPort;
@@ -36,7 +38,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         // todo: network adapter/interface
 
         // todo: connection rules
-        IVector<Windows.Networking.HostName> AllowedClientConnectionList{ get; };
+ //       IVector<Windows.Networking.HostName> AllowedClientConnectionList{ get; };
 
 
 

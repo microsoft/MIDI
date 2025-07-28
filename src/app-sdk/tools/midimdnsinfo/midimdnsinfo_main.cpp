@@ -197,7 +197,7 @@ int __cdecl main()
 
     auto enumerationCompleteToken = watcher.EnumerationCompleted([](auto const&, foundation::IInspectable const&)
         {
-            std::cout << std::endl << dye::aqua("Initial enumeration complete.") << std::endl;
+            std::cout << std::endl << dye::aqua("Initial enumeration complete. Continuing to watch for new hosts. Press escape to cancel.") << std::endl << std::endl;
         });
 
 

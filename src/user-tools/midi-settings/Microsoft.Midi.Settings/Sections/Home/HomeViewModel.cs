@@ -18,6 +18,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.UI.Popups;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
@@ -36,6 +37,17 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public ICommand CommonTaskOpenMidiConsoleCommand
+        {
+            get; private set;
+        }
+
+        public ICommand CommonTaskMidiDiagCommand
+        {
+            get; private set;
+        }
+
+        
         //public ICommand LaunchNewSdkVersionUpdateCommand
         //{
         //    get; private set;
@@ -88,19 +100,20 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
-        public Uri MidiSdkDownloadUri
-        {
-            get
-            {
-               // if (_newRelease == null)
-               // {
-                    // return the default URL
-                    return new Uri(MidiDesktopAppSdkInitializer.LatestMidiAppSdkDownloadUrl);
-               // }
+        [ObservableProperty]
+        private Uri midiSdkDownloadUri;
 
+        [ObservableProperty]
+        private Uri midiSdkReleaseNotesUri;
 
-            }
-        }
+        [ObservableProperty]
+        private string midiSdkNewReleaseVersionString;
+
+        [ObservableProperty]
+        private string midiSdkNewReleaseDateString;
+
+        [ObservableProperty]
+        private string midiSdkCurrentReleaseVersionString;
 
         public bool IsValidConfigLoaded
         {
@@ -123,19 +136,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                 return _configFileService.IsConfigFileActive;
             }
         }
-
-
-
-
-
-        //public string NewSdkRuntimeDownloadInformation
-        //{
-        //    get
-        //    {
-        //        return AppState.Current.NewerSdkDownloadInformation();
-        //    }
-        //}
-
 
         public string CurrentConfigurationName
         {
@@ -182,20 +182,32 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             try
             {
+
                 IsNewerSdkRuntimeDownloadAvailable = false;
                 _newRelease = null;
 
                 // TODO: This needs to check the correct channel
-                var newRelease = _updateService.GetHighestAvailableRuntimeRelease(_updateService.GetCurrentPreferredChannel());
+                var newRelease = _updateService.CheckForUpdates();
                 var installedVersion = _sdkService.InstalledVersion;
 
                 if (newRelease == null || installedVersion == null) return;
+
+                MidiSdkCurrentReleaseVersionString = installedVersion.ToString();
 
                 if (newRelease.Version.IsGreaterThan(installedVersion))
                 {
                     _newRelease = newRelease;
 
+                    MidiSdkDownloadUri = newRelease.DirectDownloadUriForCurrentRuntimeArchitecture;
+                    MidiSdkReleaseNotesUri = newRelease.ReleaseNotesUri;
+                    MidiSdkNewReleaseDateString = newRelease.BuildDate.ToString("MMMM dd, yyyy");
+                    MidiSdkNewReleaseVersionString = newRelease.Version.ToString();
+
                     IsNewerSdkRuntimeDownloadAvailable = true;
+                }
+                else
+                {
+                    IsNewerSdkRuntimeDownloadAvailable = false;
                 }
             }
             catch (Exception ex)
@@ -231,7 +243,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 if (_newRelease != null)
                 {
-                    return $"Version {_newRelease.Version.ToString()} from {_newRelease.BuildDate} is available. {_newRelease.Description}";
+                    return _newRelease.Description;
                 }
 
                 return string.Empty;
@@ -290,6 +302,82 @@ namespace Microsoft.Midi.Settings.ViewModels
                     _navigationService.NavigateTo(typeof(ToolsSysExViewModel).FullName!, "send");
                 });
 
+
+            // TODO: Move this impl to a service
+            CommonTaskOpenMidiConsoleCommand = new RelayCommand(
+                () =>
+                {
+                    try
+                    {
+                        string arguments =
+                            " new-tab --title \"Windows MIDI Services Console\"" +
+                            " cmd /k midi.exe";
+
+                        var consoleProcess = new System.Diagnostics.Process();
+
+                        consoleProcess.StartInfo.FileName = "wt";
+                        consoleProcess.StartInfo.Arguments = arguments;
+                        consoleProcess.StartInfo.UseShellExecute = true;
+                        consoleProcess.Start();
+
+                        //consoleProcess.WaitForExit();
+                    }
+                    catch (Exception)
+                    {
+                        //var dialog = new MessageDialog("Error opening MIDI console");
+                        //dialog.Content = ex.ToString();
+
+                        //dialog.ShowAsync().Wait();
+                    }
+                });
+
+            // TODO: Move this impl to a service
+            CommonTaskMidiDiagCommand = new RelayCommand(
+                () =>
+                {
+                    try
+                    {
+                        
+                        string mididiagTempFileName = Path.GetTempFileName();
+
+                        using (var consoleProcess = new System.Diagnostics.Process())
+                        {
+                            consoleProcess.StartInfo.FileName = $"mididiag.exe";
+                            consoleProcess.StartInfo.RedirectStandardOutput = true;
+                            consoleProcess.Start();
+                            //consoleProcess.WaitForExit();
+
+                            var output = consoleProcess.StandardOutput.ReadToEnd();
+
+                            var fileStream = File.OpenWrite(mididiagTempFileName);
+
+                            using (StreamWriter writer = new StreamWriter(fileStream))
+                            {
+                                writer.WriteLine(output);
+                            }
+                        }
+
+                        var notepadProcess = new System.Diagnostics.Process();
+                        notepadProcess.StartInfo.FileName = "notepad.exe";
+                        notepadProcess.StartInfo.Arguments = mididiagTempFileName;
+                        notepadProcess.Start();
+
+                    }
+                    catch (Exception)
+                    {
+                        //var dialog = new MessageDialog("Error opening MIDI console");
+                        //dialog.Content = ex.ToString();
+
+                        //dialog.ShowAsync().Wait();
+                    }
+                });
+
+
+
+            if (_updateService.GetAutoCheckForUpdatesEnabled())
+            {
+                CheckForSdkUpdates();
+            }
 
             //LaunchNewSdkVersionUpdateCommand = new RelayCommand(
             //    () => 

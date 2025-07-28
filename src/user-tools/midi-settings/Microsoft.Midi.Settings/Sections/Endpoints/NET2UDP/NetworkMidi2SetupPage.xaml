@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="Microsoft.Midi.Settings.Views.NetworkMidi2SetupPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -14,6 +13,7 @@
     mc:Ignorable="d">
 
     <Grid>
+        
         <Grid x:Name="ContentArea">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -41,12 +41,20 @@
                            Text="Available MIDI 2.0 Hosts"/>
 
                     <!-- List of discovered network MIDI 2.0 hosts -->
-                    <ItemsControl ItemsSource="{x:Bind ViewModel.RemoteHostEntries}">
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.RemoteHostEntriesSorted}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="local:MidiNetworkRemoteHostEntry">
                                 <controls:SettingsCard CornerRadius="9" 
-                                                       Margin="3"
-                                                       Header="{x:Bind Name}">
+                                                       Margin="3">
+
+                                    <controls:SettingsCard.Header>
+                                        <TextBlock TextWrapping="NoWrap">
+                                            <Run Text="{x:Bind Name}" FontWeight="Bold" />
+                                            <Run Text="on" />
+                                            <Run Text="{x:Bind AdvertisedHost.HostName}" />
+                                        </TextBlock>
+                                    </controls:SettingsCard.Header>
+                                    
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -55,7 +63,7 @@
 
                                         <Grid Grid.Column="0">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="175" />
+                                                <ColumnDefinition Width="150" />
                                                 <ColumnDefinition Width="400" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -64,18 +72,16 @@
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Host Name" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind AdvertisedHost.HostName}" Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" />
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="IP Addresses" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind StringifiedIpAddresses}" Style="{StaticResource SmallPlainPropertyValue}" />
 
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Full Name" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind AdvertisedHost.FullName}" Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" />
-
-                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{x:Bind AdvertisedHost.ProductInstanceId}" Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind AdvertisedHost.ProductInstanceId}" Style="{StaticResource SmallPlainPropertyValue}" />
                                         </Grid>
 
                                         <StackPanel Orientation="Horizontal" Grid.Column="1">
-                                            <Button Content="Connect" />
+                                            <Button Content="Connect" Tag="{x:Bind AdvertisedHost.DeviceId, Mode=OneTime}"
+                                                    Click="CreateClientFromHostList_Click"/>
                                         </StackPanel>
                                     </Grid>
 
@@ -96,7 +102,7 @@
                                            Header="Connect to remote host via IP or host name"
                                            Description="Not all remote hosts advertise over mDNS. If you know the IP address or host name of the host you want to connect to, you can manually connect to it here. Windows will attempt to connect to it again in the future, but if the host's address changes, you will need to update it here.">
 
-                        <Button Content="Create Manual Connection" Click="CreateManualConnection_Click" />
+                        <Button x:Name="CreateManualConnectionButton" Content="Create Manual Connection" Click="CreateManualConnection_Click" />
                     </controls:SettingsCard>
 
 
@@ -104,16 +110,19 @@
                     <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
                            Text="Configure this PC as a Host"/>
 
-                    <!-- TODO: Show existing host entry here -->
+                    <!-- TODO: Show existing host entries here -->
                     
                     <controls:SettingsCard CornerRadius="9"
                                            Margin="3"
                                            Header="Create a host"
-                                           Description="For this PC to advertise itself as a Network MIDI 2.0 host on the network, it must have at least one host entry. Typically, only one host is required. However, you may create multiple hosts if you want them to have different configuration settings.">
+                                           Description="For this PC to advertise itself as a Network MIDI 2.0 host on the network, it must have at least one host entry. Typically, only one host is required. However, you may create multiple hosts if you want them to have different configuration settings. Once you create a new host, it may take a minute for it to show up on the network.">
 
-                        <Button Content="Create Host" Click="CreateHost_Click" />
+                        <Button x:Name="CreateHostButton" Content="Create Host" Click="CreateHost_Click" />
                     </controls:SettingsCard>
 
+
+                    <!-- Advanced settings. Uncomment when implemented -->
+                    <!--
                     <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
                            Text="Advanced Settings"/>
 
@@ -123,9 +132,9 @@
                                            Header="Transport-wide settings"
                                            Description="These settings impact all Network MIDI 2.0 endpoints, and should only be changed if you need to address a specific issue on your network.">
 
-                        <Button Content="Advanced Settings" Click="AdvancedSettings_Click" />
+                        <Button x:Name="AdvancedSettingsButton" Content="Advanced Settings" Click="AdvancedSettings_Click" />
                     </controls:SettingsCard>
-
+                    -->
                 </StackPanel>
             </ScrollViewer>
         </Grid>
@@ -181,10 +190,14 @@
                         <HyperlinkButton Content="Help and Additional Information" NavigateUri="https://aka.ms/MidiSettingsHelp_Net2_CreateDirect" />
                     </StackPanel>
 
-                    <TextBox Margin="3" Header="IP Address or Host Name"/>
-                    <TextBox Margin="3" Header="Port Number" />
+                    <TextBox Margin="3" Header="IP Address or Host Name"
+                             Text="{x:Bind ViewModel.NewClientHostNameOrIP, Mode=TwoWay}"/>
                     
-                    <ToggleSwitch Margin="3" Header="Create MIDI 1.0 Proxy Ports" IsOn="True" />
+                    <TextBox Margin="3" Header="Port Number" 
+                             Text="{x:Bind ViewModel.NewClientPortNumber, Mode=TwoWay}"/>
+                    
+                    <ToggleSwitch Margin="3" Header="Create MIDI 1.0 Proxy Ports" 
+                                  IsOn="{x:Bind ViewModel.NewClientEnableMidi1Ports, Mode=TwoWay}"/>
                     
                     <!-- TODO: Security, name/description, etc. -->
                 </StackPanel>
@@ -215,16 +228,17 @@
                     <!-- Basic Settings -->
 
                     <controls:SettingsCard Header="Endpoint Name Visible to Other Network Clients" Margin="3">
-                        <TextBox Header="Name" Width="300" MaxLength="98"/>
+                        <TextBox Header="Name" Width="300" MaxLength="98"
+                                 Text="{x:Bind ViewModel.NewHostEndpointName, Mode=TwoWay}"/>
                     </controls:SettingsCard>
 
                     <controls:SettingsCard Header="Create MIDI 1.0 Proxy Ports by Default" Margin="3">
-                        <ToggleSwitch IsOn="True" />
+                        <ToggleSwitch IsOn="{x:Bind ViewModel.NewHostEnableMidi1Ports, Mode=TwoWay}" />
                     </controls:SettingsCard>
                     
-                    <!-- Advanced Settings -->
+                    <!-- Advanced Settings. -->
                     
-                    <controls:SettingsExpander Margin="3">
+                    <controls:SettingsExpander Margin="3" >
                         <controls:SettingsExpander.Header>
                             <TextBlock Text="Advanced Settings" />
                         </controls:SettingsExpander.Header>
@@ -238,8 +252,13 @@
                                         <ColumnDefinition Width="200" />
                                     </Grid.ColumnDefinitions>
 
-                                    <ToggleSwitch Grid.Column="0" Margin="3"  IsOn="True" VerticalAlignment="Bottom" />
-                                    <TextBox Grid.Column="1" Margin="3" Header="Port Number" IsEnabled="False" VerticalAlignment="Bottom"/>
+                                    <ToggleSwitch Grid.Column="0" Margin="3"
+                                                  IsOn="{x:Bind ViewModel.NewHostUseAutomaticPortNumber, Mode=TwoWay}" 
+                                                  VerticalAlignment="Bottom" />
+                                    <TextBox Grid.Column="1" Margin="3" Header="Port Number" 
+                                             Text="{x:Bind ViewModel.NewHostPortNumber, Mode=TwoWay}"
+                                             IsEnabled="{x:Bind ViewModel.NewHostUseAutomaticPortNumber, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}" 
+                                             VerticalAlignment="Bottom"/>
                                 </Grid>
                             </controls:SettingsCard>
 
@@ -250,8 +269,15 @@
                                         <ColumnDefinition Width="200" />
                                     </Grid.ColumnDefinitions>
 
-                                    <ToggleSwitch Grid.Column="0" Margin="3"  IsOn="True" VerticalAlignment="Bottom" />
-                                    <TextBox Grid.Column="1" Margin="3" Header="Service Instance Name" IsEnabled="True" VerticalAlignment="Bottom"/>
+                                    <ToggleSwitch Grid.Column="0" Margin="3"  
+                                                  IsOn="{x:Bind ViewModel.NewHostEnableAdvertising, Mode=TwoWay}" 
+                                                  VerticalAlignment="Bottom" />
+                                    
+                                    <TextBox Grid.Column="1" Margin="3" 
+                                             Header="Service Instance Name" 
+                                             Text="{x:Bind ViewModel.NewHostServiceInstanceName, Mode=TwoWay}"
+                                             IsEnabled="{x:Bind ViewModel.NewHostEnableAdvertising, Mode=OneWay}" 
+                                             VerticalAlignment="Bottom"/>
                                 </Grid>
                             </controls:SettingsCard>
 
@@ -262,7 +288,8 @@
                                     </Grid.ColumnDefinitions>
 
                                     <TextBox Grid.Column="0" Margin="3" 
-                                             Header="Product Instance Id" 
+                                             Header="Product Instance Id"
+                                             Text="{x:Bind ViewModel.NewHostProductInstanceId, Mode=TwoWay}"
                                              MaxLength="42"
                                              VerticalAlignment="Bottom"/>
                                 </Grid>

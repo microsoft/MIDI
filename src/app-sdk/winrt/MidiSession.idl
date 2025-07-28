@@ -6,9 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "MidiEndpointConnection.idl";
 import "IMidiEndpointConnectionSettings.idl";
@@ -16,8 +16,8 @@ import "IMidiEndpointConnectionSettings.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiSession", 8087b303-0519-31d1-c0de-dd00000a0000)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiSessionStatics", 8087b303-0519-31d1-c0de-ee00000a0000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiSession", UUID_IMidiSession)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiSessionStatics", UUID_IMidiSessionStatics)]
     runtimeclass MidiSession : Windows.Foundation.IClosable, Windows.Foundation.IStringable
     {
         Guid SessionId { get; };

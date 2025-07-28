@@ -69,9 +69,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
             auto watcher = winrt::make_self<MidiNetworkAdvertisedHostWatcher>();
             auto baseWatcher = enumeration::DeviceInformation::CreateWatcher(
-                network::MidiNetworkEndpointManager::MidiNetworkUdpDnsSdQueryString(),
-                network::MidiNetworkEndpointManager::MidiNetworkUdpDnsSdQueryAdditionalProperties(),
-                network::MidiNetworkEndpointManager::MidiNetworkUdpDnsSdDeviceInformationKind());
+                network::MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryString(),
+                network::MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryAdditionalProperties(),
+                network::MidiNetworkTransportManager::MidiNetworkUdpDnsSdDeviceInformationKind());
 
             watcher->InternalInitialize(baseWatcher);
 

@@ -6,12 +6,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation
 {
     [contract(MidiRuntimeInformationApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation.IMidiRuntimeVersion", 8087b303-0519-31d1-c0de-dd0001600000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation.IMidiRuntimeVersion", UUID_IMidiRuntimeVersion)]
     runtimeclass MidiRuntimeVersion : Windows.Foundation.IStringable
     {
         UInt16 Major{ get; };

@@ -50,9 +50,6 @@ namespace Microsoft.Midi.Settings.Views
 
             ViewModel.UpdateFailed += ViewModel_UpdateFailed;
 
-            // do this before showing the page
-            ViewModel.CheckForSdkUpdates();
-
             InitializeComponent();
         }
 

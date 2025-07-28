@@ -6,14 +6,14 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiApiContracts.idl";
+#include "midi_sdk_idl_defs.h"
 
+import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiDeclaredEndpointInfo.idl";
 import "MidiDeclaredDeviceIdentity.idl";
 import "MidiEndpointUserSuppliedInfo.idl";
-
 import "MidiDeclaredDeviceIdentity.idl";
 import "MidiDeclaredEndpointInfo.idl";
 import "MidiEndpointUserSuppliedInfo.idl";
@@ -24,7 +24,7 @@ import "MidiFunctionBlock.idl";
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
 {
     [contract(MidiEndpointsVirtualApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.IMidiVirtualDeviceCreationConfig", 8087b303-0519-31d1-c0de-dd0000100000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Virtual.IMidiVirtualDeviceCreationConfig", UUID_IMidiVirtualDeviceCreationConfig)]
     runtimeclass MidiVirtualDeviceCreationConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiVirtualDeviceCreationConfig(

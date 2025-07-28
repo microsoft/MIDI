@@ -6,6 +6,8 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
@@ -13,7 +15,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
     [experimental]
     struct MidiNetworkHostCreationResult
     {
-        Guid HostId;
+        //Guid HostId;
 
 		Boolean Success;
 

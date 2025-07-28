@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiEndpointConnection.idl";
+import "MidiGroup.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.Utilities.Sequencing
+{
+    [experimental]
+    runtimeclass MidiClockDestination
+    {
+        MidiClockDestination(Microsoft.Windows.Devices.Midi2.MidiEndpointConnection connection, IVector<Microsoft.Windows.Devices.Midi2.MidiGroup> groups);
+
+        Microsoft.Windows.Devices.Midi2.MidiEndpointConnection Connection{ get; };
+        IVectorView<Microsoft.Windows.Devices.Midi2.MidiGroup> Groups{ get; };
+
+    }
+}

@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
 
@@ -33,8 +34,8 @@ import "Midi1PortNameTableEntry.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiEnumerationApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceInformation", 8087b303-0519-31d1-c0de-dd000000a000)]
-    [static_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceInformationStatics", 8087b303-0519-31d1-c0de-ee000000a000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceInformation", UUID_IMidiEndpointDeviceInformation)]
+    [static_name("Microsoft.Windows.Devices.Midi2.IMidiEndpointDeviceInformationStatics", UUID_IMidiEndpointDeviceInformationStatics)]
     runtimeclass MidiEndpointDeviceInformation : Windows.Foundation.IStringable
     {
         static MidiEndpointDeviceInformation CreateFromEndpointDeviceId(String endpointDeviceId);

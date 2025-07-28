@@ -6,9 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
-
 
 import "MidiMessageReceivedEventArgs.idl";
 
@@ -17,7 +17,7 @@ import "IMidiEndpointConnectionSource.idl";
 namespace Microsoft.Windows.Devices.Midi2
 {
     [contract(MidiSessionAndConnectionApiContract, 1)]
-    [uuid("8087b303-0519-31d1-c0de-ff0000000050"), version(1.0)]
+    [uuid(UUID_IMidiMessageReceivedEventSource), version(1.0)]
     interface IMidiMessageReceivedEventSource
     {      
         event Windows.Foundation.TypedEventHandler<IMidiMessageReceivedEventSource, MidiMessageReceivedEventArgs> MessageReceived;

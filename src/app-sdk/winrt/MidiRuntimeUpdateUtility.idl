@@ -6,6 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
 
@@ -15,7 +16,7 @@ import "MidiRuntimeReleaseTypesEnum.idl";
 namespace Microsoft.Windows.Devices.Midi2.Utilities.Update
 {
     [contract(MidiRuntimeUpdateUtilityApiContract, 1)]
-    [static_name("Microsoft.Windows.Devices.Midi2.Utilities.Update.IMidiRuntimeUpdateUtilityStatics", 8087b303-0519-31d1-c0de-ee0001000000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Utilities.Update.IMidiRuntimeUpdateUtilityStatics", UUID_IMidiRuntimeUpdateUtilityStatics)]
     static runtimeclass MidiRuntimeUpdateUtility
     {
         static IVectorView<Microsoft.Windows.Devices.Midi2.Utilities.Update.MidiRuntimeRelease> GetAllAvailableReleases();

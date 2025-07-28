@@ -6,18 +6,20 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-import "MidiGroup.idl";
+#include "midi_sdk_idl_defs.h"
 
+import "MidiApiContracts.idl";
+
+import "MidiGroup.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "IMidiMessageReceivedEventSource.idl";
 
-import "MidiApiContracts.idl";
 
 
 namespace Microsoft.Windows.Devices.Midi2.ClientPlugins
 {
     [contract(MidiClientPluginsApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.ClientPlugins.IMidiGroupEndpointListener", 8087b303-0519-31d1-c0de-dd0000003000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.ClientPlugins.IMidiGroupEndpointListener", UUID_IMidiGroupEndpointListener)]
     runtimeclass MidiGroupEndpointListener : Microsoft.Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin,
                                              Microsoft.Windows.Devices.Midi2.IMidiMessageReceivedEventSource
     {

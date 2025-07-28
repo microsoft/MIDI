@@ -6,16 +6,16 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
+
 import "MidiApiContracts.idl";
-
-
 
 import "MidiServicePingResponseSummary.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.Diagnostics
 {
     [contract(MidiDiagnosticsApiContract, 1)]
-    [static_name("Microsoft.Windows.Devices.Midi2.Diagnostics.IMidiDiagnosticsStatics", 8087b303-0519-31d1-c0de-ee0000400000)]
+    [static_name("Microsoft.Windows.Devices.Midi2.Diagnostics.IMidiDiagnosticsStatics", UUID_IMidiDiagnosticsStatics)]
     static runtimeclass MidiDiagnostics
     {
         static String DiagnosticsLoopbackAEndpointDeviceId{ get; };

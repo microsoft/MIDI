@@ -454,26 +454,6 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 }
 
 
-//winrt::hstring
-//GetStringProperty(_In_ DeviceInformation di, _In_ winrt::hstring propertyName, _In_ winrt::hstring defaultValue)
-//{
-//    auto prop = di.Properties().Lookup(propertyName);
-//
-//    if (prop == nullptr)
-//    {
-//        return defaultValue;
-//    }
-//
-//    auto value = winrt::unbox_value<winrt::hstring>(prop);
-//
-//    if (value.empty())
-//    {
-//        return defaultValue;
-//    }
-//
-//    return value;
-//}
-
 HRESULT
 GetPinName(_In_ HANDLE const hFilter, _In_ UINT const pinIndex, _Inout_ std::wstring& pinName)
 {
@@ -599,7 +579,7 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     // from this function immediately? That will require a queue worker that processes 
     // the device adds and whatnot.
     // Maybe better to use the non-WinRT versions of add/remove notification?
-//    Sleep(500);
+    Sleep(500);
 
 
     TraceLoggingWrite(

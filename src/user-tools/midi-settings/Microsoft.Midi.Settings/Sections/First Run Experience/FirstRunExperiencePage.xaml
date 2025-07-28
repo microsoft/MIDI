@@ -45,6 +45,11 @@
 
                     <!-- todo: give an option to name it here? -->
 
+                    <Border Height="1" HorizontalAlignment="Stretch"
+                            Margin="12,6,12,6"
+                            Background="{StaticResource SmokeFillColorDefaultBrush}"/>
+
+
                     <TextBlock TextWrapping="WrapWholeWords" 
                                x:Uid="FirstRunSetup_DefaultLoopbacksDescription"
                                Style="{StaticResource DialogDescriptionTextBlockStyle}" 
@@ -56,6 +61,11 @@
                                   IsOn="{x:Bind ViewModel.CreateDefaultLoopbackEndpoints, Mode=TwoWay}"
                                   />
 
+                    <Border Height="1" HorizontalAlignment="Stretch"
+                            Margin="12,6,12,6"
+                            Background="{StaticResource SmokeFillColorDefaultBrush}"/>
+
+                    
 
                     <TextBlock TextWrapping="WrapWholeWords" 
                                x:Uid="FirstRunSetup_PortNamesDescription"
@@ -68,8 +78,12 @@
                                   IsOn="{x:Bind ViewModel.UseNewStyleWinMMPortNames, Mode=TwoWay}"
                                   />
 
+                    <Border Height="1" HorizontalAlignment="Stretch"
+                            Margin="12,6,12,6"
+                            Background="{StaticResource SmokeFillColorDefaultBrush}"/>
 
-
+                    
+                    
                     <TextBlock TextWrapping="WrapWholeWords" 
                                x:Uid="FirstRunSetup_MidiServiceStartupDescription"
                                Style="{StaticResource DialogDescriptionTextBlockStyle}" 
@@ -85,6 +99,8 @@
                                   IsEnabled="{x:Bind ViewModel.CreateConfigurationFile, Mode=OneWay}"
                                   IsOn="{x:Bind ViewModel.SetServiceToAutoStart, Mode=TwoWay}"
                                   />
+                    
+                    
                 </StackPanel>
             </ScrollViewer>
             

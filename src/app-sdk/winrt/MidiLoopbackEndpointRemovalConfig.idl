@@ -6,19 +6,18 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include "midi_sdk_idl_defs.h"
 
 import "MidiApiContracts.idl";
 
-
 import "MidiLoopbackEndpointDefinition.idl";
-
 import "IMidiServiceTransportPluginConfig.idl";
 
 
 namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 {
     [contract(MidiEndpointsLoopbackApiContract, 1)]
-    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointRemovalConfig", 8087b303-0519-31d1-c0de-dd00000d0000)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.IMidiLoopbackEndpointRemovalConfig", UUID_IMidiLoopbackEndpointRemovalConfig)]
     runtimeclass MidiLoopbackEndpointRemovalConfig : Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiLoopbackEndpointRemovalConfig(Guid associationId);

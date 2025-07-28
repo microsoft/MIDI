@@ -311,9 +311,9 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
     if (!hostNameOrIPAddress.empty() && hostPort != 0)
     {
         HostName hostName(hostNameOrIPAddress);
-        winrt::hstring portNameString = winrt::to_hstring(hostPort);
+        winrt::hstring portNumberString = winrt::to_hstring(hostPort);
 
-        auto startHr = client->Start(hostName, portNameString);
+        auto startHr = client->Start(hostName, portNumberString);
         RETURN_IF_FAILED(startHr);
 
         // Add the client and mark as created so we don't try to process it again
@@ -508,7 +508,7 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                 winrt::hstring hostNameOrIPAddress{ };
 
                 // by IP address
-                if (!clientDefinition->MatchDirectIPAddress.empty())
+                if (!clientDefinition->MatchDirectHostNameOrIPAddress.empty())
                 {
                     TraceLoggingWrite(
                         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -517,29 +517,29 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
                         TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(clientDefinition->MatchDirectIPAddress.c_str(), "remote IP address"),
+                        TraceLoggingWideString(clientDefinition->MatchDirectHostNameOrIPAddress.c_str(), "remote IP address"),
                         TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
                     );
 
-                    hostNameOrIPAddress = clientDefinition->MatchDirectIPAddress;
+                    hostNameOrIPAddress = clientDefinition->MatchDirectHostNameOrIPAddress;
 
                 }
                 // by host name
-                else if (!clientDefinition->MatchDirectHostName.empty())
-                {
-                    TraceLoggingWrite(
-                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(clientDefinition->MatchDirectHostName.c_str(), "remote host name"),
-                        TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
-                    );
+                //else if (!clientDefinition->MatchDirectHostName.empty())
+                //{
+                //    TraceLoggingWrite(
+                //        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                //        MIDI_TRACE_EVENT_INFO,
+                //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                //        TraceLoggingPointer(this, "this"),
+                //        TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                //        TraceLoggingWideString(clientDefinition->MatchDirectHostName.c_str(), "remote host name"),
+                //        TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
+                //    );
 
-                    hostNameOrIPAddress = clientDefinition->MatchDirectHostName;
-                }
+                //    hostNameOrIPAddress = clientDefinition->MatchDirectHostName;
+                //}
 
                 // TODO: Check to see if the client is actually online
 
