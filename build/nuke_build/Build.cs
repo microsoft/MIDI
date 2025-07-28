@@ -1111,7 +1111,7 @@ class Build : NukeBuild
                 paths.Add(settingsOutputFolder / "Microsoft.WindowsAppRuntime.Bootstrap.Net.dll");
 
                 paths.Add(settingsOutputFolder / "Microsoft.WinUI.dll");
-                paths.Add(settingsOutputFolder / "Microsoft.Xaml.Interactions.dll");
+  //              paths.Add(settingsOutputFolder / "Microsoft.Xaml.Interactions.dll");
                 paths.Add(settingsOutputFolder / "Microsoft.Xaml.Interactivity.dll");
 
                 paths.Add(settingsOutputFolder / "WinUIEx.dll");
@@ -1866,6 +1866,57 @@ class Build : NukeBuild
     });
 
 
+    Target ZipSamples => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(CreateVersionIncludes)
+        .DependsOn(BuildAndPackAllAppSDKs)
+        .DependsOn(BuildCSharpSamples)
+        .DependsOn(BuildCppSamples)
+        .Executes(() =>
+        {
+            var samplesFolder = RootDirectory / "samples" ;
+
+            // have to do a string compare on the folders here because the type throws
+            // an exception if you use the HasDirectory or similar methods, and the directory
+            // does not exist
+            samplesFolder.ZipTo(
+                ThisReleaseFolder / $"samples.zip",
+                filter: x =>
+                    !x.HasExtension("nupkg") &&
+                    !x.HasExtension("user") &&
+                    !x.HasExtension("log") &&
+                    !x.HasExtension("pfx") &&
+                    !x.ToString().Contains(@"\packages\") &&
+                    !x.ToString().Contains(@"\.vs\") &&
+                    !x.ToString().Contains(@"\obj\") &&
+                    !x.ToString().Contains(@"\bin\") &&
+                    !x.ToString().Contains(@"\intermediate\") &&
+                    !x.ToString().Contains(@"\vsfiles\") &&
+                    !x.ToString().Contains(@"\node_modules\")
+                //filter: x =>
+                //    x.HasExtension("ps1") ||
+
+                //    x.HasExtension("md") ||
+
+                //    x.HasExtension("sln") ||
+                //    x.HasExtension("props") ||
+                //    x.HasExtension("pfx") ||
+
+                //    x.HasExtension("vcxproj") ||
+                //    x.HasExtension("cpp") ||
+                //    x.HasExtension("h") ||
+                //    x.HasExtension("config") ||
+                //    x.HasExtension("filters") ||
+
+                //    x.HasExtension("csproj") ||
+                //    x.HasExtension("cs") ||
+                //    x.HasExtension("xaml") ||
+                //    x.HasExtension("json") ||
+
+                //    x.HasExtension("js") ||
+                //    x.HasExtension("html") 
+                );
+        });
 
     Target ZipPowershellDevUtilities => _ => _
         .DependsOn(Prerequisites)
@@ -1937,6 +1988,7 @@ class Build : NukeBuild
         .DependsOn(BuildCppSamples)
         .DependsOn(BuildCSharpSamples)
         .DependsOn(ZipPowershellDevUtilities)
+        .DependsOn(ZipSamples)
         .Executes(() =>
         {
             if (BuiltInBoxInstallers.Count > 0)
