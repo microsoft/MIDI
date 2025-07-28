@@ -2,11 +2,12 @@
   featured: true
   type: "preview"
   version: "1.0 Preview 11"
-  description: <span>Get everything you need for a great MIDI experience on Windows 11.</span> Download and install the MIDI 2.0 runtime for apps, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI scripting, MIDI Console, and more, all in one package.
+  description: <span>Get everything you need for a great MIDI experience on Windows 11.</span> <b>This version requires the preview MIDI service below.</b> Download and install the MIDI 2.0 runtime for apps, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI scripting, MIDI Console, and more, all in one package.
   label_x64: "Download Latest x64 Installer"
   link_x64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64"
   label_arm64: "Download Latest Arm64 Installer"
   link_arm64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64"
+  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-11
 
 - title: "Preview MIDI Service"
   featured: false
@@ -17,6 +18,7 @@
   link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.DEBUG.In-Box.Service.1.0.11-preview.11.1809-x64.exe"
   label_arm64: "Download Arm64 Installer"
   link_arm64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.DEBUG.In-Box.Service.1.0.11-preview.11.1809-arm64.exe"
+  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-11
 
 
 - title: "Preview Network MIDI 2.0 Service Plugin"
@@ -28,3 +30,4 @@
   link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.Preview.Service.Plugins.1.0.11-preview.11.1809-x64.exe"
   label_arm64: "Download Arm64 Installer"
   link_arm64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.Preview.Service.Plugins.1.0.11-preview.11.1809-arm64.exe"
+  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-11
