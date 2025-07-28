@@ -4,18 +4,18 @@
         {
             "type": "preview",
             "source": "GitHub Preview",
-            "name": "Test Preview 15",
-            "description": "This is a test release for testing out the SDK updating functions in the MIDI Settings app. It adds new features like auto-updating, Network MIDI 2.0, SDK versioning, and a clock generator.",
-            "buildDate": "2025-07-23",
-            "versionFull": "1.1.15-testentry.15.1769",
+            "name": "Preview 11",
+            "description": "Preview for use only with the GitHub release of the MIDI Service. Includes preview Network MIDI 2.0 support, update checking, updated versioning, new tools, more PowerShell cmdlets, and updates to both the MIDI Console and MIDI Settings apps.",
+            "buildDate": "2025-07-28",
+            "versionFull": "1.0.11-preview.11.1809",
             "versionMajor": 1,
             "versionMinor": 1,
-            "versionPatch": 15,
-            "versionBuildNumber": 1769,
-            "preview": "testentry.15.1769",
-            "releaseNotesUri": "https://github.com/microsoft/MIDI/releases/tag/customer-preview-2",
-            "directDownloadUriX64": "https://github.com/microsoft/MIDI/releases/download/customer-preview-2/x64-full.zip",
-            "directDownloadUriArm64": "https://github.com/microsoft/MIDI/releases/download/customer-preview-2/x64-full.zip"
+            "versionPatch": 11,
+            "versionBuildNumber": 1809,
+            "preview": "preview.11.1809",
+            "releaseNotesUri": "https://github.com/microsoft/MIDI/releases/tag/preview-11",
+            "directDownloadUriX64": "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64",
+            "directDownloadUriArm64": "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64"
         }
     ]
 }
