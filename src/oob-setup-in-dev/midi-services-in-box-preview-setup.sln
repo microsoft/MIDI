@@ -7,6 +7,8 @@ Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "api-package", "api-package\
 EndProject
 Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "main-bundle", "main-bundle\main-bundle.wixproj", "{182F17E6-CF91-4D65-B767-6469D523F5AC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "customactions", "..\oob-setup-shared\custom-actions\customactions.csproj", "{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -31,6 +33,14 @@ Global
 		{182F17E6-CF91-4D65-B767-6469D523F5AC}.Release|ARM64.Build.0 = Release|ARM64
 		{182F17E6-CF91-4D65-B767-6469D523F5AC}.Release|x64.ActiveCfg = Release|x64
 		{182F17E6-CF91-4D65-B767-6469D523F5AC}.Release|x64.Build.0 = Release|x64
+		{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}.Debug|ARM64.Build.0 = Debug|ARM64
+		{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}.Debug|x64.ActiveCfg = Debug|x64
+		{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}.Debug|x64.Build.0 = Debug|x64
+		{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}.Release|ARM64.ActiveCfg = Release|ARM64
+		{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}.Release|ARM64.Build.0 = Release|ARM64
+		{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}.Release|x64.ActiveCfg = Release|x64
+		{A2CAE01A-0F39-D1AD-AFBB-FB815826B0ED}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

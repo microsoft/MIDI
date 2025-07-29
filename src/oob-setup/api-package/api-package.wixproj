@@ -11,6 +11,7 @@
     <SuppressValidation>true</SuppressValidation>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\oob-setup-shared\custom-actions\customactions.csproj" />
     <ProjectReference Include="..\custom-actions\customactions.csproj" />
   </ItemGroup>
 </Project>
