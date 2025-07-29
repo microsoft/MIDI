@@ -16,10 +16,10 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.Sequencing
     [experimental]
     runtimeclass MidiClockGenerator
     {
-        MidiClockGenerator(IVector<MidiClockDestination> destinations, Double bpm, UInt16 pulsesPerQuarterNote);
+        MidiClockGenerator(IVector<MidiClockDestination> destinations, Double tempo, UInt16 pulsesPerQuarterNote);
 
-        void UpdateRunningClock(Double bpm);
-        void UpdateRunningClock(Double bpm, UInt16 pulsesPerQuarterNote);
+        void UpdateRunningClock(Double tempo);
+        void UpdateRunningClock(Double tempo, UInt16 pulsesPerQuarterNote);
 
         IVectorView<MidiClockDestination> Destinations{ get; };
 
