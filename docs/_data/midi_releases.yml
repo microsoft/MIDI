@@ -1,7 +1,7 @@
 - title: "<span>Get the latest</span> Windows MIDI Services runtime and tools"
   featured: true
   type: "preview"
-  version: "1.0.11 Preview 11"
+  version: "1.0.12 Preview 12"
   description: This version requires the preview MIDI service which can be downloaded below. <span>Get everything you need for a great MIDI experience on Windows 11.</span> Download and install the MIDI 2.0 runtime for apps, MIDI Settings app for creating loopback endpoints and customizing MIDI, management tools, PowerShell 7 cmdlets for MIDI scripting, MIDI Console, and more, all in one package.
   label_x64: "Download Latest x64 Installer"
   link_x64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64"
@@ -12,7 +12,7 @@
 - title: "Preview MIDI Service"
   featured: false
   type: "preview"
-  version: "1.0.11 Preview 11"
+  version: "1.0.12 Preview 12"
   description: Service and In-Box Service Plugins
   label_x64: "Download x64 Installer"
   link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.DEBUG.In-Box.Service.1.0.11-preview.11.1809-x64.exe"
@@ -24,7 +24,7 @@
 - title: "Preview Network MIDI 2.0 Service Plugin"
   featured: false
   type: "preview"
-  version: "1.0.11 Preview 11"
+  version: "1.0.12 Preview 12"
   description: Try the new Network MIDI 2.0 preview
   label_x64: "Download x64 Installer"
   link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.Preview.Service.Plugins.1.0.11-preview.11.1809-x64.exe"

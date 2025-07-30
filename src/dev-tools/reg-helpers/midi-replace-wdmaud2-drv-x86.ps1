@@ -11,7 +11,7 @@
 #Requires -Version 7.0
 
 Write-Host
-Write-Host "Windows MIDI Services 32 BIT SysWOW wdmaud2.drv replacement script " -ForegroundColor DarkCyan
+Write-Host "Windows MIDI Services 32-Bit SysWOW wdmaud2.drv replacement script " -ForegroundColor DarkCyan
 Write-Host "=========================================================================" -ForegroundColor DarkGray
 Write-Host "This script is for developers and power users who need to run the latest" -ForegroundColor DarkCyan
 Write-Host "MIDI 1.0 / WinMM backwards compatibility code on a PC which has Windows" -ForegroundColor DarkCyan
@@ -55,7 +55,7 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
             del /F /Q $wdmaud2SystemBakPath
         }
 
-        Write-Host "Renaming existing 32-bit wdmaud2.drv to wdmaud2.drv.bak..." -ForegroundColor DarkCyan
+        Write-Host "Renaming existing 32-bit wdmaud2.drv to wdmaud2.bak..." -ForegroundColor DarkCyan
         Move-Item $wdmaud2SystemPath $wdmaud2SystemBakPath
 
         # now copy wdmaud2.drv into SysWOW64

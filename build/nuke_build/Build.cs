@@ -74,7 +74,10 @@ class Build : NukeBuild
     DateTime BuildDate;
 
 
-    readonly string ServiceBuildConfiguration = Configuration.Debug;
+    // can't release debug versions unless you copy over the debug runtimes
+    // which makes a mess. So release-only.
+    //readonly string ServiceBuildConfiguration = Configuration.Debug;
+    readonly string ServiceBuildConfiguration = Configuration.Release;
 
 
 
@@ -937,7 +940,11 @@ class Build : NukeBuild
 
                 // todo: it would be better to see if any of the sdk files have changed and only
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
-                string newInstallerName = $"Windows MIDI Services (DEBUG In-Box Service) {BuildVersionFullString}-{platform.ToLower()}.exe";
+
+                string installerType = ServiceBuildConfiguration == Configuration.Debug ? "DEBUG" : "";
+
+
+                string newInstallerName = $"Windows MIDI Services ({installerType}In-Box Service) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
                 FileSystemTasks.CopyFile(
                     InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",

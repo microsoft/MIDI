@@ -55,7 +55,7 @@ if ($confirmation -eq 'y' -or $confirmation -eq 'Y')
             del /F /Q $wdmaud2SystemBakPath
         }
 
-        Write-Host "Renaming existing wdmaud2.drv to wdmaud2.drv.bak..." -ForegroundColor DarkCyan
+        Write-Host "Renaming existing wdmaud2.drv to wdmaud2.bak..." -ForegroundColor DarkCyan
         Move-Item $wdmaud2SystemPath $wdmaud2SystemBakPath
 
         # now copy wdmaud2.drv into System32
