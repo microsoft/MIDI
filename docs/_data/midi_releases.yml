@@ -7,7 +7,7 @@
   link_x64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64"
   label_arm64: "Download Latest Arm64 Installer"
   link_arm64: "https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64"
-  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-11
+  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-12
 
 - title: "Preview MIDI Service"
   featured: false
@@ -15,10 +15,10 @@
   version: "1.0.12 Preview 12"
   description: Service and In-Box Service Plugins
   label_x64: "Download x64 Installer"
-  link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.DEBUG.In-Box.Service.1.0.11-preview.11.1809-x64.exe"
+  link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-12/Windows.MIDI.Services.In-Box.Service.1.0.12-preview.12.10-x64.exe"
   label_arm64: "Download Arm64 Installer"
-  link_arm64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.DEBUG.In-Box.Service.1.0.11-preview.11.1809-arm64.exe"
-  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-11
+  link_arm64: "https://github.com/microsoft/MIDI/releases/download/preview-12/Windows.MIDI.Services.In-Box.Service.1.0.12-preview.12.10-arm64.exe"
+  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-12
 
 
 - title: "Preview Network MIDI 2.0 Service Plugin"
@@ -27,7 +27,7 @@
   version: "1.0.12 Preview 12"
   description: Try the new Network MIDI 2.0 preview
   label_x64: "Download x64 Installer"
-  link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.Preview.Service.Plugins.1.0.11-preview.11.1809-x64.exe"
+  link_x64: "https://github.com/microsoft/MIDI/releases/download/preview-12/Windows.MIDI.Services.Preview.Service.Plugins.1.0.12-preview.12.10-x64.exe"
   label_arm64: "Download Arm64 Installer"
-  link_arm64: "https://github.com/microsoft/MIDI/releases/download/preview-11/Windows.MIDI.Services.Preview.Service.Plugins.1.0.11-preview.11.1809-arm64.exe"
-  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-11
+  link_arm64: "https://github.com/microsoft/MIDI/releases/download/preview-12/Windows.MIDI.Services.Preview.Service.Plugins.1.0.12-preview.12.10-arm64.exe"
+  link_release_notes: https://github.com/microsoft/MIDI/releases/tag/preview-12
