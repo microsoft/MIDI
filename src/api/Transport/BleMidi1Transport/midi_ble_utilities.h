@@ -37,7 +37,7 @@ namespace MidiBleUtilities
     {
         //    std::cout << __FUNCTION__ << std::endl;
 
-        winrt::guid MIDI_BLE_SERVICE_UUID{ MIDI_BLE_SERVICE };
+        winrt::guid bleServiceUUID { MIDI_BLE_SERVICE_UUID };
 
         auto gattServicesResult = bleDevice.GetGattServicesAsync(BluetoothCacheMode::Uncached).get();
         if (gattServicesResult.Status() == GattCommunicationStatus::Success)
@@ -45,7 +45,7 @@ namespace MidiBleUtilities
             auto services = gattServicesResult.Services();
 
             // find the MIDI BLE service
-            if (auto it = std::find_if(services.begin(), services.end(), [&](GattDeviceService const& x) { return x.Uuid() == MIDI_BLE_SERVICE_UUID; }); it != services.end())
+            if (auto it = std::find_if(services.begin(), services.end(), [&](GattDeviceService const& x) { return x.Uuid() == bleServiceUUID; }); it != services.end())
             {
                 // just grab the first one. Shouldn't be more than one match.
                 auto midiService = *it;
@@ -63,11 +63,11 @@ namespace MidiBleUtilities
     {
         //    std::cout << __FUNCTION__ << std::endl;
 
-        winrt::guid MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID{ MIDI_BLE_DATA_IO_CHARACTERISTIC };
+        winrt::guid characteristicUUID { MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID };
 
         if (midiService != nullptr)
         {
-            auto characteristicsResult = midiService.GetCharacteristicsForUuidAsync(MIDI_BLE_DATA_IO_CHARACTERISTIC_UUID).get();
+            auto characteristicsResult = midiService.GetCharacteristicsForUuidAsync(characteristicUUID).get();
 
             if (characteristicsResult.Status() == GattCommunicationStatus::Success && characteristicsResult.Characteristics().Size() > 0)
             {
