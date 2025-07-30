@@ -13,8 +13,10 @@ After that PowerShell permission change has been made, you can install wdmaud2.d
 - From that administrator command prompt, type 
 
 .\dev-replace-wdmaud2
-
 and then hit enter. The script will do the rest, and will prompt you as appropriate.
+
+The 32-bit version has a different name, just to avoid confusion. This is needed only if you use 32-bit MIDI apps like some older editors and MIDI-OX, and more. It installs wdmaud2.drv to the Windows\SysWOW64 folder
+.\dev-replace-wdmaud2-x86
 
 Do not do this on a production system. This is for development and testing purposes only.
 
