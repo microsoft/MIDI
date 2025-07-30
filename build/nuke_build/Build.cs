@@ -74,7 +74,10 @@ class Build : NukeBuild
     DateTime BuildDate;
 
 
-    readonly string ServiceBuildConfiguration = Configuration.Debug;
+    // can't release debug versions unless you copy over the debug runtimes
+    // which makes a mess. So release-only.
+    //readonly string ServiceBuildConfiguration = Configuration.Debug;
+    readonly string ServiceBuildConfiguration = Configuration.Release;
 
 
 
@@ -376,7 +379,11 @@ class Build : NukeBuild
         // Some of the IDL and other references point to Release only, and
         // the reference files come from Release
 
-        foreach (var platform in ServiceAndApiPlatformsAll)
+        var platforms = new List<string>();
+        platforms.AddRange(ServiceAndApiPlatformsAll);
+        platforms.Add("Win32");
+
+        foreach (var platform in platforms)
         {
             string solutionDir = ApiSolutionFolder.ToString() + @"\";
 
@@ -411,6 +418,7 @@ class Build : NukeBuild
             // copy binaries to staging folder
             var stagingFiles = new List<AbsolutePath>();
 
+
             // This transport gets compiled to Arm64X and x64. The Arm64X output is in the Arm64EC folder
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / ServiceBuildConfiguration / $"Midi2.MidiSrvTransport.dll");
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / ServiceBuildConfiguration / $"Midi2.MidiSrvTransport.pdb");
@@ -418,39 +426,43 @@ class Build : NukeBuild
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / ServiceBuildConfiguration / $"wdmaud2.drv");
             stagingFiles.Add(ApiSolutionFolder / "vsfiles" / platform / ServiceBuildConfiguration / $"wdmaud2.pdb");
 
-            // only in-proc files, like the MidiSrvTransport, are Arm64EC. For all the others
-            // any reference to Arm64EC is just Arm64. We don't use any of the Arm64X output
-            var servicePlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64" : "x64";
+            var servicePlatform = (platform == "Arm64EC" || platform == "Arm64") ? "Arm64" : platform;
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midisrv.exe");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midisrv.pdb");
+            if (platform != "Win32")
+            {
+                // only in-proc files, like the MidiSrvTransport, are Arm64EC. For all the others
+                // any reference to Arm64EC is just Arm64. We don't use any of the Arm64X output
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.DiagnosticsTransport.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.DiagnosticsTransport.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midisrv.exe");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midisrv.pdb");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSTransport.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSTransport.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.DiagnosticsTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.DiagnosticsTransport.pdb");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSAggregateTransport.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSAggregateTransport.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSTransport.pdb");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualMidiTransport.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualMidiTransport.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSAggregateTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.KSAggregateTransport.pdb");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.LoopbackMidiTransport.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.LoopbackMidiTransport.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualMidiTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.VirtualMidiTransport.pdb");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BS2UMPTransform.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BS2UMPTransform.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.LoopbackMidiTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.LoopbackMidiTransport.pdb");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UMP2BSTransform.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UMP2BSTransform.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BS2UMPTransform.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.BS2UMPTransform.pdb");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UmpProtocolDownscalerTransform.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UmpProtocolDownscalerTransform.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UMP2BSTransform.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UMP2BSTransform.pdb");
 
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SchedulerTransform.dll");
-            stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SchedulerTransform.pdb");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UmpProtocolDownscalerTransform.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.UmpProtocolDownscalerTransform.pdb");
+
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SchedulerTransform.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.SchedulerTransform.pdb");
+            }
 
             foreach (var file in stagingFiles)
             {
@@ -537,6 +549,7 @@ class Build : NukeBuild
                 var servicePlatform = platform;
 
                 stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.NetworkMidiTransport.dll");
+                stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / ServiceBuildConfiguration / $"Midi2.NetworkMidiTransport.pdb");
                 // stagingFiles.Add(ApiSolutionFolder / "vsfiles" / servicePlatform / Configuration.Release / $"Midi2.VirtualPatchBay.dll");
 
                 foreach (var file in stagingFiles)
@@ -927,7 +940,11 @@ class Build : NukeBuild
 
                 // todo: it would be better to see if any of the sdk files have changed and only
                 // do this copy if a new setup file was created. Maybe do a before/after date/time check?
-                string newInstallerName = $"Windows MIDI Services (DEBUG In-Box Service) {BuildVersionFullString}-{platform.ToLower()}.exe";
+
+                string installerType = ServiceBuildConfiguration == Configuration.Debug ? "DEBUG" : "";
+
+
+                string newInstallerName = $"Windows MIDI Services ({installerType}In-Box Service) {BuildVersionFullString}-{platform.ToLower()}.exe";
 
                 FileSystemTasks.CopyFile(
                     InBoxComponentsSetupSolutionFolder / "main-bundle" / "bin" / platform / Configuration.Release / "WindowsMidiServicesInBoxComponentsSetup.exe",
@@ -1940,6 +1957,7 @@ class Build : NukeBuild
 
             var arm64 = (zipRoot / "arm64").CreateOrCleanDirectory();
             var x64 = (zipRoot / "x64").CreateOrCleanDirectory();
+            var x86 = (zipRoot / "Win32").CreateOrCleanDirectory();
 
             var regHelpersLocation = RootDirectory / "src" / "dev-tools" / "reg-helpers";
 
@@ -1947,10 +1965,16 @@ class Build : NukeBuild
             var regHelperPs1FileName = "midi-replace-wdmaud2-drv.ps1";
             var readmeFileName = "wdmaud2.drv - README.txt";
 
+            var regHelperx86CmdFileName = "dev-replace-wdmaud2-x86.cmd";
+            var regHelperx86Ps1FileName = "midi-replace-wdmaud2-drv-x86.ps1";
+
 
             var regHelperCmdFileFullPath = regHelpersLocation / regHelperCmdFileName;
             var regHelperPs1FileFullPath = regHelpersLocation / regHelperPs1FileName;
             var readmeFileFullPath = regHelpersLocation / readmeFileName;
+
+            var regHelperx86CmdFileFullPath = regHelpersLocation / regHelperx86CmdFileName;
+            var regHelperx86Ps1FileFullPath = regHelpersLocation / regHelperx86Ps1FileName;
 
             string driverFile = "wdmaud2.drv";
             string pdbFile = "wdmaud2.pdb";
@@ -1969,8 +1993,16 @@ class Build : NukeBuild
             CopyFile(readmeFileFullPath, x64 / readmeFileName, FileExistsPolicy.Fail, false);
 
 
+            CopyFile(ApiStagingFolder / "Win32" / driverFile, x86 / driverFile, FileExistsPolicy.Fail, false);
+            CopyFile(ApiStagingFolder / "Win32" / pdbFile, x86 / pdbFile, FileExistsPolicy.Fail, false);
+            CopyFile(regHelperx86CmdFileFullPath, x86 / regHelperx86CmdFileName, FileExistsPolicy.Fail, false);
+            CopyFile(regHelperx86Ps1FileFullPath, x86 / regHelperx86Ps1FileName, FileExistsPolicy.Fail, false);
+            CopyFile(readmeFileFullPath, x86 / readmeFileName, FileExistsPolicy.Fail, false);
+
+
             x64.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-x64.zip");
             arm64.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-arm64.zip");
+            x86.ZipTo(ThisReleaseFolder / $"wdmaud2-winmm-x86-win32.zip");
 
         });
 

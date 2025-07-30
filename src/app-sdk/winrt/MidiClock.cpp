@@ -152,6 +152,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     }
 
+    // A good article about how these functions work post-2020.
+    // https://randomascii.wordpress.com/2020/10/04/windows-timer-resolution-the-great-rule-change/
 
     bool MidiClock::BeginLowLatencySystemTimerPeriod()
     {

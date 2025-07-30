@@ -17,10 +17,6 @@
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
                 <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
                 <Directory Id="API_INSTALLFOLDER" Name="API" />
-                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
-                    <Directory Id="CONSOLEAPP_INSTALLFOLDER" Name="Console" />
-                    <Directory Id="SETTINGSAPP_INSTALLFOLDER" Name="Settings" />
-                </Directory>
             </Directory>
         </StandardDirectory>
         
@@ -139,6 +135,7 @@
             <RegistryKey Root="HKLM"
                          Key="SOFTWARE\Microsoft\Windows MIDI Services">
 
+                
                 <RegistryValue Type="integer" Name="Midi2DiscoveryEnabled" Value="1"  />
                 <RegistryValue Type="integer" Name="UseMMCSS" Value="0" />
                 <!--<RegistryValue Type="integer" Name="DefaultMidi1PortNaming" Value="51"/> -->

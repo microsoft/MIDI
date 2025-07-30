@@ -7,7 +7,7 @@ Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "api-package", "api-package\
 EndProject
 Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "main-bundle", "main-bundle\main-bundle.wixproj", "{182F17E6-CF91-4D65-B767-6469D523F5AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "customactions", "custom-actions\customactions.csproj", "{9D071AF0-9445-4F9C-8766-7111E37EC930}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "customactions", "..\oob-setup-shared\custom-actions\customactions.csproj", "{9D071AF0-9445-4F9C-8766-7111E37EC930}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

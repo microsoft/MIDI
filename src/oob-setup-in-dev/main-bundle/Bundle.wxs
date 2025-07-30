@@ -46,14 +46,29 @@
         </BootstrapperApplication>
 
         <Chain>
-            <PackageGroupRef Id="MidiServicesPackages" />
+          <PackageGroupRef Id="Prerequisites" />
+          <PackageGroupRef Id="MidiServicesPackages" />
         </Chain>
     </Bundle>
 
     
     <Fragment>
-        
-        <PackageGroup Id="MidiServicesPackages">
+      <PackageGroup Id="Prerequisites">
+
+        <!-- C++ Runtime. The x64 download contains both Arm64 and X64 versions -->
+        <ExePackage
+            Vital="false"
+            DisplayName="Microsoft Visual C++ Runtime"
+            SourceFile="$(DependenciesSourceRootFolder)\VC_redist.x64.exe"
+            Compressed="yes"
+            InstallArguments="/install /passive /norestart /log midi_vcruntime_install_log.txt"
+            Permanent="true"
+                >
+        </ExePackage>
+
+      </PackageGroup>
+
+      <PackageGroup Id="MidiServicesPackages">
             <MsiPackage
                 Id="WindowsMIDIServicesInDevelopmentSetup"
                 Vital="true"
