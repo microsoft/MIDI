@@ -21,7 +21,7 @@ public:
     TransportState(_In_ const TransportState&) = delete;
     TransportState& operator=(_In_ const TransportState&) = delete;
 
-    MidiTransportSettings TransportSettings{ };
+//    MidiTransportSettings TransportSettings{ };
 
 
     wil::com_ptr<CMidi2Ble1MidiEndpointManager> GetEndpointManager()
