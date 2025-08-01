@@ -15,7 +15,7 @@ The NuGet package is a compile-time artifact.
 
 As a result, the two could get out of sync. For example, a customer could have version 1.2.3 installed, and the app was compiled against 1.0.2. How will this work?
 
-# Versioning
+# App SDK Versioning
 
 Except for during the preview period before the first production release, the App SDK generally follows SemVer versioning rules. The version is represented by `Major.Minor.Patch` with some additional build number and preview data optionally at the end.
 
@@ -31,3 +31,4 @@ Here's what you should expect when looking at version numbers between the NuGet 
 # Service Versioning
 
 The MIDI Service itself may require changes over time, and is delivered with Windows. Our plan is to not break compatibility here, but instead to add on to existing interfaces or create new interfaces as-needed, just like we do for other COM APIs in Windows. We also have a good extensibility mechanism based on json which makes the creation of new COM interfaces needed only in limited circumstances. For example, adding a new type of Transport does not require a new interface, because we handle transport configurations through a common JSON endpoint.
+
