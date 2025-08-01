@@ -23,8 +23,8 @@ Here's what you should expect when looking at version numbers between the NuGet 
 
 | Version Component Change | Expectation |
 | ------------------------ | ----------- |
-| Major | When this number changes, compatibility has been broken. We'll install side-by-side with the previous compatibility version to ensure both old and new apps will work. Apps using the new SDK version may have a different bootstrapper COM component to activate.|
-| Minor | New features have been added which typically only light up for apps using a matching NuGet package. Older apps will continue to work as expected. |
+| Major | When this number changes, compatibility has been broken. Compatibility is only guaranteed within a single major version number. We'll install side-by-side with the previous compatibility version to ensure both old and new apps will work. Apps using the new SDK version may have a different bootstrapper COM component to activate.|
+| Minor | New features have been added which typically only light up for apps using a matching NuGet package. Older apps will continue to work as expected. If compatibility is broken, that is a bug.|
 | Patch | Bug fixes. No SDK compatibility changes, but could have limited behavioral changes as a result of the bug fix. |
 | Build metadata | Internal. Not factored into compatibility. Resets with each patch. |
 
