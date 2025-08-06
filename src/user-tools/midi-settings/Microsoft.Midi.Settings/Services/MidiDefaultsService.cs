@@ -19,8 +19,8 @@ namespace Microsoft.Midi.Settings.Services
 {
     public class MidiDefaultsService : IMidiDefaultsService
     {
-        const string DefaultLoopbackAUniqueId = "DEFAULT_LOOPBACK_A";
-        const string DefaultLoopbackBUniqueId = "DEFAULT_LOOPBACK_B";
+        const string DefaultLoopbackAUniqueId = "DEFAULT";
+        const string DefaultLoopbackBUniqueId = "DEFAULT";
 
         public string GetDefaultMidiConfigName()
         {
@@ -42,8 +42,8 @@ namespace Microsoft.Midi.Settings.Services
             // if endpoint A or B unique ids are empty, do not close. display suggestion to generate them
             // todo: need to limit to alpha plus just a couple other characters, and only 32 in length
 
-            endpointA.Name = "Default Loopback A";
-            endpointB.Name = "Default Loopback B";
+            endpointA.Name = "Default App Loopback A";
+            endpointB.Name = "Default App Loopback B";
 
             endpointA.UniqueId = DefaultLoopbackAUniqueId;
             endpointB.UniqueId = DefaultLoopbackBUniqueId;
@@ -65,7 +65,16 @@ namespace Microsoft.Midi.Settings.Services
         {
             // TODO: Check to see if an endpoint with the unique ids here already exists
 
-            return false;
+            if (Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.DoesLoopbackAExist(DefaultLoopbackAUniqueId))
+            {
+                return true;
+            }
+            else
+            {
+                return Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.DoesLoopbackBExist(DefaultLoopbackBUniqueId);
+            }
         }
+
+
     }
 }
