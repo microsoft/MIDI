@@ -83,6 +83,7 @@
               "Prerequisites",
               "ZipPowershellDevUtilities",
               "ZipSamples",
+              "ZipServicePdbs",
               "ZipWdmaud2"
             ]
           }
@@ -112,6 +113,7 @@
               "Prerequisites",
               "ZipPowershellDevUtilities",
               "ZipSamples",
+              "ZipServicePdbs",
               "ZipWdmaud2"
             ]
           }

@@ -1938,6 +1938,26 @@ class Build : NukeBuild
                 );
         });
 
+
+    Target ZipServicePdbs => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildServiceAndPlugins)
+        .Executes(() =>
+    {
+        foreach (var platform in new string[]{ "arm64", "x64"})
+        {
+            var folder = ApiStagingFolder / platform;
+
+            folder.ZipTo(
+                ThisReleaseFolder / $"service-pdbs-{platform}.zip",
+                filter: x =>
+                    x.HasExtension("pdb")
+                );
+            
+        }
+
+    });
+
     Target ZipPowershellDevUtilities => _ => _
         .DependsOn(Prerequisites)
         .DependsOn(CreateVersionIncludes)
@@ -2024,6 +2044,7 @@ class Build : NukeBuild
         .DependsOn(BuildCSharpSamples)
         .DependsOn(ZipPowershellDevUtilities)
         .DependsOn(ZipSamples)
+        .DependsOn(ZipServicePdbs)
         .Executes(() =>
         {
             if (BuiltInBoxInstallers.Count > 0)
