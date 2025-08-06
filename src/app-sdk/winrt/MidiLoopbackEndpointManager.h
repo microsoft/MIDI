@@ -36,6 +36,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
         static midi2::MidiEndpointDeviceInformation GetAssociatedLoopbackEndpoint(
             _In_ midi2::MidiEndpointDeviceInformation const& loopbackEndpoint);
 
+        static bool DoesLoopbackAExist(_In_ winrt::hstring uniqueIdentifier);
+        static bool DoesLoopbackBExist(_In_ winrt::hstring uniqueIdentifier);
+
     };
 }
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::factory_implementation

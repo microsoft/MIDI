@@ -18,6 +18,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Network
         Guid ClientId;
 
 		Boolean Success;
+        String ErrorInformation;
 
 		// we won't have the endpoint device id yet, so cannot return it here
 

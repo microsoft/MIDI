@@ -17,6 +17,7 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
     struct MidiLoopbackEndpointCreationResult
     {
         Boolean Success;
+        String ErrorInformation;
 
         Guid AssociationId;
 

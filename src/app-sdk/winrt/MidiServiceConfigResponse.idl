@@ -18,6 +18,7 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
     struct MidiServiceConfigResponse
     {
         MidiServiceConfigResponseStatus Status;
+        String ServiceMessage;
 
         String ResponseJson;
     };

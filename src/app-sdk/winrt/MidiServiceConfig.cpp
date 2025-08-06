@@ -233,7 +233,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         }
         else
         {
-            response.Status = svc::MidiServiceConfigResponseStatus::ErrorProcessingResponseJson;
+            response.Status = svc::MidiServiceConfigResponseStatus::ErrorFromService;
+            response.ServiceMessage = responseJsonObject.GetNamedString(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, L"");
 
             return response;
         }
