@@ -82,8 +82,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 // now get all the endpoint devices and put them in groups by transport
 
+                // TODO: The ToList isn't fixing the issue. Would be better to re-enumerate when the VM is activated, anyway
+                // so don't use a watcher, but just a collection on this page.
+                // ------------------------------------------------------------------------------------------------------------
                 // the ToList() takes a snapshot so we can iterate safely even if new devices are found or others are removed
-                var enumeratedDevices = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x => x.Name).ToList();
+                var enumeratedDevices = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.ToList();
+                enumeratedDevices.Sort(new Comparison<MidiEndpointDeviceInformation>((x,y) => { return x.Name.CompareTo(y.Name); }));
+
+                // .OrderBy(x => x.Name).ToList();
 
                 foreach (var endpointDevice in enumeratedDevices)
                 {

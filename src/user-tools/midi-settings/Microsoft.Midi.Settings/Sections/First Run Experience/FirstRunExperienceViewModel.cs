@@ -70,6 +70,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         public bool setServiceToAutoStart;
 
+        [ObservableProperty]
+        public string errorMessage;
+
         public bool CanPersistChanges
         {
             get
@@ -81,6 +84,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         private void CompleteFirstRunSetup()
         {
             bool needServiceRestart = false;
+
+            ErrorMessage = string.Empty;
 
             if (CreateConfigurationFile)
             {
@@ -110,7 +115,9 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
                 else
                 {
-                    // TODO: show an error and leave
+                    //  show an error and leave
+                    ErrorMessage = "Unable to update registry config file name.";
+                    return;
                 }
 
             }
@@ -130,20 +137,17 @@ namespace Microsoft.Midi.Settings.ViewModels
                     if (result.Success)
                     {
                         m_configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
-
-                        // TODO: show results
-
                     }
                     else
                     {
-                        // TODO: update error information
-
+                        // update error information
+                        ErrorMessage = "Error creating loopback endpoints. " + result.ErrorInformation;
                     }
                 }
                 else
                 {
                     // TODO: Report that a config file is needed
-
+                    ErrorMessage = "Cannot create loopback endpoints without a valid config file.";
                 }
             }
 
