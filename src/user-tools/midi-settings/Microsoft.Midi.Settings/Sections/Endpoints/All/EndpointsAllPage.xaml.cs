@@ -58,7 +58,7 @@ namespace Microsoft.Midi.Settings.Views
         {
             ViewModel.DispatcherQueue = this.DispatcherQueue;
 
-            ViewModel.RefreshDeviceCollection();
+        //    ViewModel.RefreshDeviceCollection();
         }
 
 

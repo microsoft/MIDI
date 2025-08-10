@@ -184,155 +184,167 @@ void DisplayDecodedChannelVoiceMessage(std::string messageName, uint8_t channel,
 
 }
 
+//concurrency::task<void> 
 void DisplayMidiMessage(DWORD dwMidiMessage, DWORD dwTimestamp, bool isError)
 {
     UNREFERENCED_PARAMETER(dwTimestamp);
 
-    // message format 0 | data 2 | data 1 | status
+    DWORD safeMessage = dwMidiMessage;
 
-    byte status = static_cast<byte>(dwMidiMessage & 0x000000FF);
-    byte data1 = static_cast<byte>((dwMidiMessage & 0x0000FF00) >> 8);
-    byte data2 = static_cast<byte>((dwMidiMessage & 0x00FF0000) >> 16);
+    //return concurrency::create_task([&]
+    //{
+        // message format 0 | data 2 | data 1 | status
 
-    m_countStatusBytesReceived++;
-    m_countAllBytesReceived++;
+        byte status = static_cast<byte>(safeMessage & 0x000000FF);
+        byte data1 = static_cast<byte>((safeMessage & 0x0000FF00) >> 8);
+        byte data2 = static_cast<byte>((safeMessage & 0x00FF0000) >> 16);
 
-    if (status == MIDI_ACTIVESENSE && !m_showActiveSense)
-    {
-        return;
-    }
-
-    if (status == MIDI_TIMINGCLOCK && !m_showClock)
-    {
-        return;
-    }
-
-    DisplayStatusByte(status, isError);
-
-
-    if (MIDI_MESSAGE_IS_TWO_BYTES(status) ||
-        MIDI_MESSAGE_IS_THREE_BYTES(status))
-    {
-        DisplayDataByte(data1, isError);
+        m_countStatusBytesReceived++;
         m_countAllBytesReceived++;
-    }
 
-    if (MIDI_MESSAGE_IS_THREE_BYTES(status))
-    {
-        DisplayDataByte(data2, isError);
-        m_countAllBytesReceived++;
-    }
-
-    // display a decoding of the message to the right
-
-    if (status != MIDI_SYSEX && status != MIDI_EOX)
-    {
-        uint16_t spaces{ 0 };
-
-        if (MIDI_MESSAGE_IS_ONE_BYTE(status))
+        if (status == MIDI_ACTIVESENSE && !m_showActiveSense)
         {
-            spaces = 6;
-        }
-        else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
-        {
-            spaces = 3;
-        }
-        else
-        {
-            spaces = 1;
+            return;
         }
 
-        std::cout << std::setw(spaces + 2) << std::setfill(' ') << "";
-
-        if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
+        if (status == MIDI_TIMINGCLOCK && !m_showClock)
         {
-            uint8_t channel = (status & 0x0F) + 1;
+            return;
+        }
 
-            switch (status & 0xF0)
+        DisplayStatusByte(status, isError);
+
+
+        if (MIDI_MESSAGE_IS_TWO_BYTES(status) ||
+            MIDI_MESSAGE_IS_THREE_BYTES(status))
+        {
+            DisplayDataByte(data1, isError);
+            m_countAllBytesReceived++;
+        }
+
+        if (MIDI_MESSAGE_IS_THREE_BYTES(status))
+        {
+            DisplayDataByte(data2, isError);
+            m_countAllBytesReceived++;
+        }
+
+        // display a decoding of the message to the right
+
+        if (status != MIDI_SYSEX && status != MIDI_EOX)
+        {
+            uint16_t spaces{ 0 };
+
+            if (MIDI_MESSAGE_IS_ONE_BYTE(status))
             {
-            case MIDI_NOTEOFF:
-                DisplayDecodedChannelVoiceMessage("Note Off", channel, "Note", data1, "Velocity", data2);
-                break;
-            case MIDI_NOTEON:
-                DisplayDecodedChannelVoiceMessage("Note On", channel, "Note", data1, "Velocity", data2);
-                break;
-            case MIDI_POLYAFTERTOUCH:
-                DisplayDecodedChannelVoiceMessage("Poly Aftertouch", channel, "Note", data1, "Pressure", data2);
-                break;
-            case MIDI_CONTROLCHANGE:
-                DisplayDecodedChannelVoiceMessage("Control Change", channel, "Controller", data1, "Value", data2);
-                break;
-            case MIDI_PROGRAMCHANGE:
-                DisplayDecodedChannelVoiceMessage("Program Change", channel, "Program", data1);
-                break;
-            case MIDI_MONOAFTERTOUCH:
-                DisplayDecodedChannelVoiceMessage("Channel Pressure", channel, "Pressure", data1);
-                break;
-            case MIDI_PITCHBEND:
-                DisplayDecodedChannelVoiceMessage("Pitch Bend", channel, "LSB", data1, "MSB", data2);
-                break;
-            default:
-                break;
+                spaces = 6;
+            }
+            else if (MIDI_MESSAGE_IS_TWO_BYTES(status))
+            {
+                spaces = 3;
+            }
+            else
+            {
+                spaces = 1;
+            }
+
+            std::cout << std::setw(spaces + 2) << std::setfill(' ') << "";
+
+            if (MIDI_STATUS_IS_CHANNEL_VOICE_MESSAGE(status))
+            {
+                uint8_t channel = (status & 0x0F) + 1;
+
+                switch (status & 0xF0)
+                {
+                case MIDI_NOTEOFF:
+                    DisplayDecodedChannelVoiceMessage("Note Off", channel, "Note", data1, "Velocity", data2);
+                    break;
+                case MIDI_NOTEON:
+                    DisplayDecodedChannelVoiceMessage("Note On", channel, "Note", data1, "Velocity", data2);
+                    break;
+                case MIDI_POLYAFTERTOUCH:
+                    DisplayDecodedChannelVoiceMessage("Poly Aftertouch", channel, "Note", data1, "Pressure", data2);
+                    break;
+                case MIDI_CONTROLCHANGE:
+                    DisplayDecodedChannelVoiceMessage("Control Change", channel, "Controller", data1, "Value", data2);
+                    break;
+                case MIDI_PROGRAMCHANGE:
+                    DisplayDecodedChannelVoiceMessage("Program Change", channel, "Program", data1);
+                    break;
+                case MIDI_MONOAFTERTOUCH:
+                    DisplayDecodedChannelVoiceMessage("Channel Pressure", channel, "Pressure", data1);
+                    break;
+                case MIDI_PITCHBEND:
+                    DisplayDecodedChannelVoiceMessage("Pitch Bend", channel, "LSB", data1, "MSB", data2);
+                    break;
+                default:
+                    break;
+                }
+            }
+            else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
+            {
+                switch (status)
+                {
+                case MIDI_TIMINGCLOCK:
+                    std::cout << dye::light_aqua("System Real-Time: Clock");
+                    break;
+                case MIDI_START:
+                    std::cout << dye::green("System Real-Time: Start");
+                    break;
+                case MIDI_CONTINUE:
+                    std::cout << dye::light_yellow("System Real-Time: Continue");
+                    break;
+                case MIDI_STOP:
+                    std::cout << dye::red("System Real-Time: Stop");
+                    break;
+                case MIDI_ACTIVESENSE:
+                    std::cout << dye::grey("System Real-Time: Active Sense");
+                    break;
+                case MIDI_RESET:
+                    std::cout << dye::light_red("System Real-Time: Reset");
+                    break;
+                }
             }
         }
-        else if (MIDI_BYTE_IS_SYSTEM_REALTIME_STATUS(status))
-        {
-            switch (status)
-            {
-            case MIDI_TIMINGCLOCK:
-                std::cout << dye::light_aqua("System Real-Time: Clock");
-                break;
-            case MIDI_START:
-                std::cout << dye::green("System Real-Time: Start");
-                break;
-            case MIDI_CONTINUE:
-                std::cout << dye::light_yellow("System Real-Time: Continue");
-                break;
-            case MIDI_STOP:
-                std::cout << dye::red("System Real-Time: Stop");
-                break;
-            case MIDI_ACTIVESENSE:
-                std::cout << dye::grey("System Real-Time: Active Sense");
-                break;
-            case MIDI_RESET:
-                std::cout << dye::light_red("System Real-Time: Reset");
-                break;
-            }
-        }
-    }
-
+    //});
 }
 
+//concurrency::task<void> 
 void DisplayMidiLongMessage(LPMIDIHDR header, DWORD dwTimestamp, bool error)
 {
     UNREFERENCED_PARAMETER(dwTimestamp);
 
-    if (header)
-    {
-        byte* current = (byte*)(header->lpData);
-
-        while (header->dwBytesRecorded-- && current != nullptr)
+    // To do this async, needs to memcpy the data into another buffer, which itself
+    // can be expensive and/or require managing a chain of buffers.
+    
+    //return concurrency::create_task([&]
+    //{
+        if (header)
         {
-            if (MIDI_BYTE_IS_STATUS_BYTE(*current))
-            {
-                DisplayStatusByte(*current, error);
-                m_countStatusBytesReceived++;
-                m_countAllBytesReceived++;
-            }
-            else
-            {
-                DisplayDataByte(*current, error);
-                m_countAllBytesReceived++;
-            }
+            byte* current = (byte*)(header->lpData);
 
-            current++;
-            m_countAllBytesReceived++;
+            while (header->dwBytesRecorded-- && current != nullptr)
+            {
+                if (MIDI_BYTE_IS_STATUS_BYTE(*current))
+                {
+                    DisplayStatusByte(*current, error);
+                    m_countStatusBytesReceived++;
+                    m_countAllBytesReceived++;
+                }
+                else
+                {
+                    DisplayDataByte(*current, error);
+                    m_countAllBytesReceived++;
+                }
+
+                current++;
+                m_countAllBytesReceived++;
+            }
         }
-    }
-    else
-    {
-        WriteError("Header is null");
-    }
+        else
+        {
+            WriteError("Header is null");
+        }
+    //});
 }
 
 #define MIDI_BUFFER_SIZE 4096

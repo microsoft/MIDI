@@ -92,7 +92,7 @@
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
-                    <Image Source="/Assets/LoopbackDiagram.svg" Height="80" HorizontalAlignment="Center" Margin="0"/>
+                    <Image Source="/Assets/Loopback-Diagram.svg" Height="80" HorizontalAlignment="Center" Margin="0"/>
 
 
                     <TextBlock TextWrapping="WrapWholeWords" 

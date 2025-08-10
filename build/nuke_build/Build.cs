@@ -787,6 +787,7 @@ class Build : NukeBuild
         .DependsOn(BuildPowerShellProjection)
         .DependsOn(BuildAndPackAllAppSDKs)
         .DependsOn(BuildAppSDKToolsAndTests)
+        .DependsOn(CopySharedDesignAssets)
         .Executes(() =>
         {
             // we build for Arm64 and x64. No EC required here
@@ -1155,12 +1156,17 @@ class Build : NukeBuild
                 // Add Assets folder with app icon. This ends up special-cased
 
                 paths.Add(settingsOutputFolder / "Assets" / "AppIcon.ico");
-                paths.Add(settingsOutputFolder / "Assets" / "AppIcon.png");
-                paths.Add(settingsOutputFolder / "Assets" / "LoopbackDiagram.svg");
+                paths.Add(settingsOutputFolder / "Assets" / "AppIcon.svg");
 
+                paths.Add(settingsOutputFolder / "Assets" / "Loopback-Diagram.svg");
+
+                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-CreateLoopbackEndpoints.svg");
+                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-Endpoints.svg");
+                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-GlobalSettings.svg");
+                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-Home.svg");
+                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-NetworkMidi.svg");
 
                 // TODO: This doesn't deal with any localization content
-
 
                 // copy all the globbed files
 
@@ -1214,6 +1220,43 @@ class Build : NukeBuild
             }
 
         });
+
+
+
+    Target CopySharedDesignAssets => _ => _
+        .DependsOn(Prerequisites)
+        .DependsOn(BuildAndPackAllAppSDKs)
+        .DependsOn(BuildUserToolsSharedComponents)
+        .Executes(() =>
+        {
+            var designSourceFolder = RootDirectory / "design";
+
+            var assetsStagingRoot = StagingRootFolder / "Assets";
+            var transportAssetsStagingRoot = assetsStagingRoot / "Transports";
+            var endpointAssetsStagingRoot = assetsStagingRoot / "Endpoints";
+
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "APPPUB-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "BLE10-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "DIAG-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "KSA-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "KS-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "LOOP-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "NET2UDP-small.svg", transportAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+
+
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-apppub-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ble10-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-diag-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ksa-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-ks-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-loop-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+            FileSystemTasks.CopyFileToDirectory(designSourceFolder / "default-net2udp-small.svg", endpointAssetsStagingRoot, FileExistsPolicy.Overwrite, true);
+
+        });
+
+
+
 
     Target BuildConsoleApp => _ => _
         .DependsOn(Prerequisites)

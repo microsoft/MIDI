@@ -59,27 +59,27 @@ public sealed partial class ShellPage : Page
 
             switch (transport.TransportCode)
             {
-                case "KS":
-                    SectionKS.Visibility = Visibility.Visible;
-                    break;
-                case "KSA":
-                    SectionKSA.Visibility = Visibility.Visible;
-                    break;
+                //case "KS":
+                //    SectionKS.Visibility = Visibility.Visible;
+                //    break;
+                //case "KSA":
+                //    SectionKSA.Visibility = Visibility.Visible;
+                //    break;
                 case "LOOP":
                     SectionLOOP.Visibility = Visibility.Visible;
                     break;
-                case "APP":
-                    SectionAPP.Visibility = Visibility.Visible;
-                    break;
+                //case "APP":
+                //    SectionAPP.Visibility = Visibility.Visible;
+                //    break;
                 case "BLE10":
                     SectionBLE10.Visibility = Visibility.Visible;
                     break;
                 case "NET2UDP":
                     SectionNET2UDP.Visibility = Visibility.Visible;
                     break;
-                case "DIAG":
-                    SectionDIAG.Visibility = Visibility.Visible;
-                    break;
+                //case "DIAG":
+                //    SectionDIAG.Visibility = Visibility.Visible;
+                //    break;
 
             }
         }

@@ -470,6 +470,7 @@
     </ClInclude>
     <ClInclude Include="MidiClockGenerator.h" />
     <ClInclude Include="MidiClockDestination.h" />
+    <ClInclude Include="MidiImageAssetHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -760,8 +761,10 @@
     </ClCompile>
     <ClCompile Include="MidiClockGenerator.cpp" />
     <ClCompile Include="MidiClockDestination.cpp" />
+    <ClCompile Include="MidiImageAssetHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="MidiImageAssetHelper.idl" />
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />
     <Midl Include="IMidiMessageReceivedEventSource.idl" />

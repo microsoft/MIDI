@@ -17,11 +17,27 @@ namespace Microsoft.Midi.Settings.Services
 {
     class MidiTransportInfoService : IMidiTransportInfoService
     {
+        private IList<MidiServiceTransportPluginInfo>? _transports = null;
         public MidiServiceTransportPluginInfo GetTransportForCode(string transportCode)
         {
-            var codes = MidiReporting.GetInstalledTransportPlugins();
+            if (_transports == null)
+            {
+                _transports = MidiReporting.GetInstalledTransportPlugins();
+            }
 
-            return codes.Where(p => p.TransportCode.ToUpper() == transportCode.ToUpper()).FirstOrDefault<MidiServiceTransportPluginInfo>();
+            return _transports.Where(p => p.TransportCode.ToUpper() == transportCode.ToUpper()).FirstOrDefault<MidiServiceTransportPluginInfo>();
         }
+
+
+        public MidiServiceTransportPluginInfo GetTransportForId(Guid transportId)
+        {
+            if (_transports == null)
+            {
+                _transports = MidiReporting.GetInstalledTransportPlugins();
+            }
+
+            return _transports.Where(p => p.Id == transportId).FirstOrDefault<MidiServiceTransportPluginInfo>();
+        }
+
     }
 }

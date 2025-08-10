@@ -27,8 +27,20 @@
             </Directory>
         </StandardDirectory>
 
+        <StandardDirectory Id="CommonAppDataFolder">
+          <Directory Name="Microsoft">
+            <Directory Id="CONFIGURATION_FOLDER" Name="MIDI">
+              <Directory Id="CONFIGURATION_ASSETS_FOLDER" Name="Assets">
+                <Directory Id="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER" Name="Endpoints" />
+                <Directory Id="CONFIGURATION_ASSETS_TRANSPORTS_FOLDER" Name="Transports" />
+              </Directory>
+            </Directory>
+          </Directory>
+        </StandardDirectory>
 
-<!--        <Component Id="SettingsAppExe"
+
+
+    <!--        <Component Id="SettingsAppExe"
                    Bitness="always64"
                    Directory="SETTINGSAPP_INSTALLFOLDER"
                    Guid="de6c83ee-2d1d-4b21-a098-e4a4079b6872"> -->
@@ -58,14 +70,49 @@
                     Directory="SETTINGSAPP_ASSETS_FOLDER"
                     Guid="f4f2b375-347b-413c-b81d-e900f392f786">
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.ico" />
-            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.png" />
-            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LoopbackDiagram.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Loopback-Diagram.svg" />
+
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-CreateLoopbackEndpoints.svg" />          
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Endpoints.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-GlobalSettings.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Home.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-NetworkMidi.svg" />
         </Component>
-        
-        <Feature Id="WindowsMidiServicesSettings">
-            <ComponentRef Id="SettingsAppExe"/>
-            <ComponentRef Id="SettingsAppShortcut"/>
-            <ComponentRef Id="SettingsAppAssets"/>
-        </Feature>
+
+      <Component Id="SharedEndpointsAssets"
+                  Bitness="always64"
+                  Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"
+                  Guid="9072e81b-4b94-41a6-bc4a-54600f447a03">
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-small.svg" />
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-apppub-small.svg" />
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-ble10-small.svg" />
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-diag-small.svg" />
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-ksa-small.svg" />
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-ks-small.svg" />
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-loop-small.svg" />
+        <File Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-net2udp-small.svg" />
+      </Component>
+
+    <Component Id="SharedTransportsAssets"
+                Bitness="always64"
+                Directory="CONFIGURATION_ASSETS_TRANSPORTS_FOLDER"
+                Guid="ff69242e-1bad-472a-97e5-a11f01cba4b4">
+      <File Source="$(StagingSourceRootFolder)\Assets\Transports\apppub-small.svg" />
+      <File Source="$(StagingSourceRootFolder)\Assets\Transports\ble10-small.svg" />
+      <File Source="$(StagingSourceRootFolder)\Assets\Transports\diag-small.svg" />
+      <File Source="$(StagingSourceRootFolder)\Assets\Transports\ksa-small.svg" />
+      <File Source="$(StagingSourceRootFolder)\Assets\Transports\ks-small.svg" />
+      <File Source="$(StagingSourceRootFolder)\Assets\Transports\loop-small.svg" />
+      <File Source="$(StagingSourceRootFolder)\Assets\Transports\net2udp-small.svg" />
+    </Component>
+
+    <Feature Id="WindowsMidiServicesSettings">
+      <ComponentRef Id="SettingsAppExe"/>
+      <ComponentRef Id="SettingsAppShortcut"/>
+      <ComponentRef Id="SettingsAppAssets"/>
+      <ComponentRef Id="SharedEndpointsAssets"/>
+      <ComponentRef Id="SharedTransportsAssets"/>
+    </Feature>
     </Package>
 </Wix>

@@ -59,13 +59,4 @@ public sealed partial class MainWindow : WinUIEx.WindowEx
         }
     }
 
-    //private void MainWindow_SizeChanged(object sender, UI.Xaml.WindowSizeChangedEventArgs args)
-    //{
-    //    // todo: keep the value in app settings and save when app is closed
-    //}
-
-    //private void MainWindow_PositionChanged(object? sender, global::Windows.Graphics.PointInt32 e)
-    //{
-    //    // todo: keep the value in app settings and save when app is closed
-    //}
 }

@@ -49,6 +49,8 @@
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
 
+#include <pplawait.h>
+
 //#include "SWDevice.h"
 #include <initguid.h>
 //#include "Devpkey.h"

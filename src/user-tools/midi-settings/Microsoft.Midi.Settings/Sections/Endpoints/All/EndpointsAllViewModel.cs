@@ -12,20 +12,162 @@ using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.Devices.Midi2.Utilities.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class EndpointsAllViewModel : ObservableRecipient, INavigationAware
+    public partial class MidiEndpointDisplayItem : ObservableRecipient
+    {
+        public string Name { get; private set; }
+        public string Description { get; private set; }
+
+        public string TransportCode { get; private set; }
+
+        public string Id { get; private set; }
+
+        public string UniqueIdentifier { get; private set; }
+        public bool HasUniqueIdentifier { get; private set; }
+
+        public bool IsNativeUmp { get; private set; }
+        public bool SupportsMidi2 { get; private set; }
+
+        public ImageSource SmallImage { get; private set; }
+
+        [ObservableProperty]
+        private int countMidi1InputPorts;
+
+        [ObservableProperty]
+        private int countMidi1OutputPorts;
+
+        public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1InputPorts { get; private set; } = [];
+        public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1OutputPorts { get; private set; } = [];
+
+        public MidiEndpointDisplayItem(MidiEndpointDeviceInformation deviceInformation, IMidiTransportInfoService transportInfoService)
+        {
+            Name = deviceInformation.Name;
+            Id = deviceInformation.EndpointDeviceId;
+            TransportCode = deviceInformation.GetTransportSuppliedInfo().TransportCode;
+
+            // description
+            if (deviceInformation.GetUserSuppliedInfo().Description != string.Empty)
+            {
+                Description = deviceInformation.GetUserSuppliedInfo().Description;
+            }
+            else
+            {
+                // look up the name of the transport given the transport id
+                Description = "A " +
+                    transportInfoService.GetTransportForId(deviceInformation.GetTransportSuppliedInfo().TransportId).Name +
+                    " endpoint.";
+            }
+
+            // unique identifier
+            if (deviceInformation.GetDeclaredEndpointInfo().ProductInstanceId != string.Empty)
+            {
+                UniqueIdentifier = deviceInformation.GetDeclaredEndpointInfo().ProductInstanceId;
+            }
+            else if (deviceInformation.GetTransportSuppliedInfo().SerialNumber != string.Empty)
+            {
+                UniqueIdentifier = deviceInformation.GetTransportSuppliedInfo().SerialNumber;
+            }
+            else
+            {
+                UniqueIdentifier = string.Empty;
+            }
+
+            HasUniqueIdentifier = UniqueIdentifier != string.Empty;
+
+
+            // small image
+
+            var imagePath = MidiImageAssetHelper.GetSmallImageFullPathForEndpoint(deviceInformation);
+
+            if (imagePath.ToLower().EndsWith(".svg"))
+            {
+                // SVG requires a specific decoder
+                var source = new SvgImageSource(new Uri(imagePath, UriKind.Absolute));
+                SmallImage = source;
+            }
+            else
+            {
+                // this works with PNG, JPG, etc.
+                var source = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
+                SmallImage = source;
+            }
+
+            // native UMP
+
+            if (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
+            {
+                IsNativeUmp = true;
+            }
+            else
+            {
+                IsNativeUmp = false;
+            }
+
+            // MIDI 2.0 protocol
+
+            if (deviceInformation.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
+            {
+                SupportsMidi2 = true;
+            }
+            else
+            {
+                SupportsMidi2 = false;
+            }
+
+            var uiThreadContext = SynchronizationContext.Current;
+
+            // TODO: These may be a bit expensive to get. TBD
+
+            Task.Run(() =>
+            {
+                // MIDI 1.0 Input Ports / Sources
+                var inputPorts = deviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageSource);
+                var outputPorts = deviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
+
+
+                uiThreadContext.Post(_ =>
+                {
+                    foreach (var source in inputPorts)
+                    {
+                        Midi1InputPorts.Add(source);
+                    }
+
+                    // MIDI 1.0 Output Ports / Destinations
+                    foreach (var destination in outputPorts)
+                    {
+                        Midi1OutputPorts.Add(destination);
+                    }
+
+                    CountMidi1InputPorts = Midi1InputPorts.Count;
+                    CountMidi1OutputPorts = Midi1OutputPorts.Count;
+
+                }, null);
+
+            });
+
+
+
+        }
+    }
+
+    public partial class EndpointsAllViewModel : ObservableRecipient, INavigationAware
     {
         private readonly INavigationService _navigationService;
         private readonly IMidiEndpointEnumerationService _enumerationService;
+        private readonly IMidiTransportInfoService _transportInfoService;
 
         public ICommand ViewDeviceDetailsCommand
         {
@@ -36,11 +178,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public EndpointsAllViewModel(
             INavigationService navigationService,
-            IMidiEndpointEnumerationService enumerationService
+            IMidiEndpointEnumerationService enumerationService,
+            IMidiTransportInfoService transportInfoService
             )
         {
             _navigationService = navigationService;
             _enumerationService = enumerationService;
+            _transportInfoService = transportInfoService;
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointDeviceInformation>(
                 (param) =>
@@ -52,85 +196,37 @@ namespace Microsoft.Midi.Settings.ViewModels
                 });
         }
 
-        public ObservableCollection<MidiEndpointDevicesByTransport> MidiEndpointDevicesByTransport { get; } = [];
+        public ObservableCollection<MidiEndpointDisplayItem> Endpoints { get; } = [];
 
+        [ObservableProperty]
+        private string filterString = string.Empty;
 
-        public void RefreshDeviceCollection(bool showDiagnosticsEndpoints = false)
+        // todo: this should have a sort order and filter
+        public void RefreshMidiEndpointDevices()
         {
-            if (DispatcherQueue == null) return;
+            var allEndpoints = MidiEndpointDeviceInformation.FindAll(MidiEndpointDeviceInformationSortOrder.Name);
 
-            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            // todo: sort
+
+            foreach (var endpoint in allEndpoints)
             {
-                System.Diagnostics.Debug.WriteLine("Begin RefreshDeviceCollection");
-
-                ObservableCollection<MidiEndpointDevicesByTransport> tempCollection = [];
-
-                // go through devices in AppState and group by parent
-
-                // pre-populate with transports
-
-                foreach (var transport in MidiReporting.GetInstalledTransportPlugins())
+                if (FilterString.Trim() == string.Empty)
                 {
-                    var t = new MidiEndpointDevicesByTransport(transport);
-
-                    tempCollection.Add(t);
+                    Endpoints.Add(new MidiEndpointDisplayItem(endpoint, _transportInfoService));
                 }
-
-                // now get all the endpoint devices and put them in groups by transport
-
-                var enumeratedDevices = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices;
-
-                foreach (var endpointDevice in enumeratedDevices.Values)
+                else
                 {
-                    if (endpointDevice != null)
+                    // TODO: process with filter
+
+                    if (endpoint.Name.StartsWith(filterString))
                     {
-                        // Get the transport
-
-                        var transportInfo = endpointDevice.GetTransportSuppliedInfo();
-                        var transportId = transportInfo.TransportId;
-
-                        var parentTransport = tempCollection.Where(x => x.Transport.Id == transportId).FirstOrDefault();
-
-                        // add this device to the transport's collection
-                        if (parentTransport != null)
-                        {
-                            parentTransport.EndpointDevices.Add(new MidiEndpointDeviceListItem(endpointDevice));
-                        }
+                        Endpoints.Add(new MidiEndpointDisplayItem(endpoint, _transportInfoService));
                     }
                 }
 
-
-                // Only show relevant transports. Either they have children, or support
-                // creating a runtime through the settings application
-
-                MidiEndpointDevicesByTransport.Clear();
-
-                foreach (var item in tempCollection.OrderBy(x => x.Transport.Name))
-                {
-                    // TODO: this is a hack. Probably shouldn't be using the transport code directly
-                    // Instead, need a transport property for purpose like we have with endpoints
-                    if (item.Transport.TransportCode == "DIAG")
-                    {
-                        if (showDiagnosticsEndpoints)
-                        {
-                            MidiEndpointDevicesByTransport.Add(item);
-                        }
-                    }
-                    else if (item.EndpointDevices.Count > 0 || item.Transport.IsRuntimeCreatableBySettings)
-                    {
-                        MidiEndpointDevicesByTransport.Add(item);
-                    }
-                }
-
-
-                System.Diagnostics.Debug.WriteLine("Completed RefreshDeviceCollection");
-
-
-
-            });
+            }
 
         }
-
 
 
         public void OnNavigatedFrom()
@@ -140,6 +236,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
+            RefreshMidiEndpointDevices();
         }
     }
 }

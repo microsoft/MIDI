@@ -128,6 +128,8 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockGenerator", defaultThreading });
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockDestination", defaultThreading });
 
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Metadata.MidiImageAssetHelper", defaultThreading });
+
     return types;
 }
 

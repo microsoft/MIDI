@@ -16,7 +16,15 @@
 
     <Page.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+
+        <x:Double x:Key="NavigationViewItemOnLeftIconBoxHeight">24</x:Double>
+        <Thickness x:Key="NavigationViewItemOnLeftIconBoxMargin">8,0,0,0</Thickness>
+        <Thickness x:Key="NavigationViewItemContentPresenterMargin">8,0,0,0</Thickness>
+        <Thickness x:Key="NavigationViewItemButtonMargin">12,2,4,2</Thickness>
+        <x:Double x:Key="NavigationViewCompactPaneLength">60</x:Double>
     </Page.Resources>
+
+
 
     <Grid>
         <Grid x:Name="AppTitleBar"
@@ -24,7 +32,7 @@
               Height="{Binding ElementName=NavigationViewControl, Path=CompactPaneLength}"
               IsHitTestVisible="True"
               VerticalAlignment="Top">
-            <Image Source="/Assets/DIN.png"
+            <Image Source="/Assets/AppIcon.svg"
                    HorizontalAlignment="Left"
                    Width="16"
                    Height="16" />
@@ -142,16 +150,76 @@
 
             <NavigationView.MenuItems>
 
-                <NavigationViewItem x:Uid="Shell_Home" 
+                <NavigationViewItem x:Uid="Shell_Home"
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.HomeViewModel"
                                     >
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe80f;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-Home.svg" Width="60" Height="60"/>
+                    </NavigationViewItem.Icon>
+                    
+                </NavigationViewItem>
+
+
+                <NavigationViewItem x:Uid="Shell_AllMidiDevices" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel"
+                                    >
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-Endpoints.svg" MaxWidth="60" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem x:Uid="Shell_GlobalMidiSettings" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.GlobalMidiSettingsViewModel"
+                                    >
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-GlobalSettings.svg" MaxWidth="60" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
 
+
+                <NavigationViewItemHeader x:Uid="Shell_ConfigureTransportsNavHeader" 
+                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+
                 
+                <NavigationViewItem x:Name="SectionLOOP" Visibility="Collapsed" x:Uid="Shell_EndpointsLoop" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsLoopViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-CreateLoopbackEndpoints.svg" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem x:Name="SectionNET2UDP" Visibility="Collapsed" x:Uid="Shell_EndpointsNet2Udp" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-NetworkMidi.svg" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem x:Name="SectionBLE10" Visibility="Collapsed" x:Uid="Shell_EndpointsBle10" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsBle10ViewModel">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe702;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+
+
+
+                <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
+
+                <NavigationViewItem x:Uid="Shell_ToolsSysEx" 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9f5;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+
+
+
+
+
                 <NavigationViewItem x:Uid="Shell_Configurations" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ConfigurationsViewModel"
                                     Visibility="Collapsed">
@@ -160,10 +228,12 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
+                
+                
+                <!--
                 <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader" 
                                           Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                <!--
                 <NavigationViewItem x:Uid="Shell_EndpointsAll" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe772;" Style="{StaticResource NavigationMenuIconStyles}"/>
@@ -171,6 +241,7 @@
                 </NavigationViewItem>
                 -->
                 
+                <!--
                 <NavigationViewItem x:Name="SectionKS" Visibility="Collapsed" x:Uid="Shell_EndpointsKS" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsKSViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xecf3;" Style="{StaticResource NavigationMenuIconStyles}"/>
@@ -183,30 +254,12 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItem x:Name="SectionLOOP" Visibility="Collapsed" x:Uid="Shell_EndpointsLoop" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsLoopViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8ee;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
                 <NavigationViewItem x:Name="SectionAPP" Visibility="Collapsed" x:Uid="Shell_EndpointsApp" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAppViewModel">
                     <NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8a1;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionBLE10" Visibility="Collapsed" x:Uid="Shell_EndpointsBle10" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsBle10ViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe702;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionNET2UDP" Visibility="Collapsed" x:Uid="Shell_EndpointsNet2Udp" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xee77;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
+                -->
 
                 <!--
                 <NavigationViewItem x:Uid="Shell_Routes" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.RoutesViewModel">
@@ -214,7 +267,6 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef90;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                -->
 
                 <NavigationViewItem x:Name="SectionDIAG" Visibility="Collapsed" x:Uid="Shell_EndpointsDiagnostic" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsDiagViewModel">
@@ -222,6 +274,7 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                -->
 
 
 
@@ -257,16 +310,6 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 -->
-
-                <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
-
-                <NavigationViewItem x:Uid="Shell_ToolsSysEx" 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
-                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9f5;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
 
                 <!--
                 <NavigationViewItem x:Uid="Shell_ToolsTest" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsTestViewModel">
@@ -315,6 +358,8 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xec7a;" Style="{StaticResource NavigationMenuIconStyles}"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                
+                
             </NavigationView.MenuItems>
             
             

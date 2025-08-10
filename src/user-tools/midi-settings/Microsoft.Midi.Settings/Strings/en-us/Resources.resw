@@ -313,7 +313,7 @@
     <value>MIDI 1.0 Drivers (USB, etc.)</value>
   </data>
   <data name="Shell_EndpointsLoop.Content" xml:space="preserve">
-    <value>Loopback</value>
+    <value>Loopback Endpoints</value>
   </data>
   <data name="Shell_EndpointsApp.Content" xml:space="preserve">
     <value>Virtual Device Apps</value>
@@ -568,5 +568,14 @@ This step requires Administrator rights, and must be repeated after any new Wind
   </data>
   <data name="Error_UnableToStartMidiService" xml:space="preserve">
     <value>Unable to start the MIDI Service. If this persists, please terminate the midisrv.exe process or reboot your PC.</value>
+  </data>
+  <data name="Shell_AllMidiDevices.Content" xml:space="preserve">
+    <value>MIDI Devices and Endpoints</value>
+  </data>
+  <data name="Shell_GlobalMidiSettings.Content" xml:space="preserve">
+    <value>Global MIDI Settings</value>
+  </data>
+  <data name="Shell_ConfigureTransportsNavHeader.Content" xml:space="preserve">
+    <value>Transport Configuration</value>
   </data>
 </root>
