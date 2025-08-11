@@ -28,7 +28,46 @@
                 <Setter Property="Margin" Value="8,4,8,4" />
                 <Setter Property="Opacity" Value="0.75" />
             </Style>
-            
+
+            <GridLength x:Key="Midi1PortListPortNumberColumnWidth">35</GridLength>
+
+            <!-- MIDI 1 input ports flyout -->
+            <DataTemplate x:Key="Midi1InputPortTemplate" x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{StaticResource Midi1PortListPortNumberColumnWidth}" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                   
+                    <TextBlock Grid.Column="0" 
+                               Text="{x:Bind PortNumber}" 
+                               TextAlignment="Center" 
+                               FontSize="{StaticResource SmallFontSize}"
+                               Foreground="{StaticResource TextFillColorDisabledBrush}"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+
+                    <TextBlock Grid.Column="1" 
+                               Text="{x:Bind PortName}" />
+                </Grid>
+            </DataTemplate>
+
+            <!-- MIDI 1 output ports flyout -->
+            <DataTemplate x:Key="Midi1OutputPortTemplate" x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="{StaticResource Midi1PortListPortNumberColumnWidth}" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="{x:Bind PortNumber}" Margin="2"/>
+                    <TextBlock Grid.Column="1" Text="{x:Bind PortName}" Margin="2"/>
+                </Grid>
+            </DataTemplate>
+
+
+
+
         </ResourceDictionary>
     </Page.Resources>
 
@@ -106,8 +145,8 @@
 
             <Grid Margin="0,0,8,0" HorizontalAlignment="Stretch">
                 <GridView ItemsSource="{x:Bind ViewModel.Endpoints, Mode=OneWay}"
-                          SelectionMode="Single"
-                          IsItemClickEnabled="True">
+                          SelectionMode="None"
+                          IsItemClickEnabled="False">
                     <GridView.ItemContainerStyle>
                         <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
                             <Setter Property="Margin" Value="8"/>
@@ -118,13 +157,14 @@
                         <DataTemplate x:DataType="local:MidiEndpointDisplayItem">
                             <Grid Background="{StaticResource LayerFillColorDefaultBrush}"
                                   Width="350"
-                                  Height="250"
+                                  Height="280"
                                   CornerRadius="{StaticResource ControlCornerRadius}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="90" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
@@ -144,14 +184,14 @@
                                 <TextBlock Grid.Row="0"
                                            Grid.Column="1"
                                            Text="{x:Bind Name}" 
-                                           Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                           Style="{StaticResource EndpointCardNameStyle}" />
 
                                 <!-- Description -->
                                 <TextBlock Grid.Row="1" 
                                            Grid.Column="1"
                                            VerticalAlignment="Top"
                                            Text="{x:Bind Description}"
-                                           Style="{StaticResource SmallPlainPropertyValueWithWrap}" />
+                                           Style="{StaticResource EndpointCardDescriptionStyle}" />
 
 
                                 <Grid Grid.Column="0"
@@ -161,7 +201,6 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
 
                                     
@@ -179,16 +218,21 @@
                                         </DropDownButton.Content>
                                         <DropDownButton.Flyout>
                                             <Flyout>
-                                                <ItemsControl ItemsSource="{x:Bind Midi1InputPorts}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
-                                                            <TextBlock>
-                                                                <Run Text="{x:Bind PortNumber}" />
-                                                                <Run Text="{x:Bind PortName}" />
-                                                            </TextBlock>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
+                                                <Grid>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <TextBlock Text="MIDI 1.0 Input Ports (Sources)"
+                                                               Style="{StaticResource SmallPropertyLabel}"
+                                                               FontWeight="Bold"
+                                                               Grid.Row="0"/>
+
+                                                    <ListBox ItemsSource="{x:Bind Midi1InputPorts}"
+                                                             ItemTemplate="{StaticResource Midi1InputPortTemplate}"
+                                                             SelectionMode="Single">
+                                                    </ListBox>
+                                                </Grid>
                                             </Flyout>
                                         </DropDownButton.Flyout>
                                     </DropDownButton>
@@ -207,81 +251,55 @@
                                         </DropDownButton.Content>
                                         <DropDownButton.Flyout>
                                             <Flyout>
-                                                <ItemsControl ItemsSource="{x:Bind Midi1OutputPorts}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
-                                                            <TextBlock>
-                                                                <Run Text="{x:Bind PortNumber}" />
-                                                                <Run Text="{x:Bind PortName}" />
-                                                            </TextBlock>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
+                                                <ItemsControl ItemsSource="{x:Bind Midi1OutputPorts}"
+                                                              ItemTemplate="{StaticResource Midi1OutputPortTemplate}">
                                                 </ItemsControl>
                                             </Flyout>
                                         </DropDownButton.Flyout>
                                     </DropDownButton>
 
-                                    <!-- Tags -->
-                                    <StackPanel Grid.Row="2"
-                                                VerticalAlignment="Bottom"
-                                                Orientation="Horizontal">
-                                        
-                                        
-                                        
-                                        <!-- Native UMP -->
-                                        <Border Visibility="{x:Bind IsNativeUmp, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                Background="{StaticResource SystemFillColorSuccessBackgroundBrush}"
-                                                CornerRadius="{StaticResource ControlCornerRadius}"
-                                                Margin="4">
-                                            <TextBlock Text="Native UMP"
-                                                       Style="{StaticResource FeatureTag}"/>
-                                        </Border>
 
+                                </Grid>
 
-                                        <!-- MIDI 2.0 Protocol -->                                        
-                                        <Border Visibility="{x:Bind SupportsMidi2, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                Background="{StaticResource SystemFillColorSuccessBackgroundBrush}"
-                                                CornerRadius="{StaticResource ControlCornerRadius}"
-                                                Margin="4">
-                                            <TextBlock Text="MIDI 2.0" 
-                                                       Style="{StaticResource FeatureTag}"/>
-                                        </Border>
+                                <!-- Actions -->
 
-
-                                        <!-- Unique Id -->
-                                        <Border Visibility="{x:Bind HasUniqueIdentifier, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                Background="{StaticResource SystemFillColorSuccessBackgroundBrush}"
-                                                CornerRadius="{StaticResource ControlCornerRadius}"
-                                                Margin="4">
-                                            <TextBlock Text="Has Unique Id" 
-                                                       Style="{StaticResource FeatureTag}"/>
-                                        </Border>
-                                        <Border Visibility="{x:Bind HasUniqueIdentifier, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
-                                                Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
-                                                CornerRadius="{StaticResource ControlCornerRadius}"
-                                                Margin="4">
-                                            <TextBlock Text="No Unique Id" 
-                                                       Style="{StaticResource FeatureTag}"/>
-                                        </Border>
-                                        
+                                <Grid Grid.Row="3"
+                                      Grid.Column="0"
+                                      Grid.ColumnSpan="2"
+                                      Padding="12,8,12,8"
+                                        VerticalAlignment="Bottom"
+                                        Background="{StaticResource SmokeFillColorDefaultBrush}">
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Right">
+                                        <Button Content="View / Edit" Margin="4,8,4,8" />
+                                        <Button Content="Monitor" Margin="4,8,4,8" />
+                                        <Button Content="..." Margin="4,8,8,8">
+                                            <Button.Flyout>
+                                                <MenuFlyout>
+                                                    <MenuFlyoutItem>Send Program Change</MenuFlyoutItem>
+                                                    <MenuFlyoutItem>Send Control Change</MenuFlyoutItem>
+                                                    <MenuFlyoutSeparator/>
+                                                    <MenuFlyoutItem>Send MIDI Start</MenuFlyoutItem>
+                                                    <MenuFlyoutItem>Send MIDI Stop</MenuFlyoutItem>
+                                                    <MenuFlyoutSeparator/>
+                                                    <MenuFlyoutItem>Send SysEx</MenuFlyoutItem>
+                                                    <MenuFlyoutSeparator/>
+                                                    <MenuFlyoutItem>Send Test Messages</MenuFlyoutItem>
+                                                    <MenuFlyoutItem>MIDI Panic</MenuFlyoutItem>
+                                                </MenuFlyout>
+                                            </Button.Flyout>
+                                        </Button>
 
                                     </StackPanel>
 
                                 </Grid>
+                                    
+                                    
                                 
                                 
                                 
-                                <!-- Actions -->
                                 
-                                <!-- 
-                                    Monitor
-                                    Rename
-                                    Send MIDI panic / Stop
-                                    View Details
-                                -->
-                                
-                                
-                                
+
                                 
                                 
 
