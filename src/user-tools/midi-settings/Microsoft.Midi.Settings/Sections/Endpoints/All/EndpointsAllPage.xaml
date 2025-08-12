@@ -42,7 +42,6 @@
                     <TextBlock Grid.Column="0" 
                                Text="{x:Bind PortNumber}" 
                                TextAlignment="Center" 
-                               FontSize="{StaticResource SmallFontSize}"
                                Foreground="{StaticResource TextFillColorDisabledBrush}"
                                VerticalAlignment="Center"
                                HorizontalAlignment="Center"/>
@@ -228,7 +227,8 @@
                                                                FontWeight="Bold"
                                                                Grid.Row="0"/>
 
-                                                    <ListBox ItemsSource="{x:Bind Midi1InputPorts}"
+                                                    <ListBox Grid.Row="1" 
+                                                             ItemsSource="{x:Bind Midi1InputPorts}"
                                                              ItemTemplate="{StaticResource Midi1InputPortTemplate}"
                                                              SelectionMode="Single">
                                                     </ListBox>
