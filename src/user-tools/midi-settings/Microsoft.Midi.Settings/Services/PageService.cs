@@ -22,22 +22,18 @@ public class PageService : IPageService
     public PageService()
     {
         Configure<EndpointsAllViewModel, EndpointsAllPage>();
-        Configure<EndpointsAppViewModel, EndpointsAppPage>();
-        Configure<EndpointsBle10ViewModel, EndpointsBle10Page>();
-        Configure<EndpointsKSViewModel, EndpointsKSPage>();
-        Configure<EndpointsKsaViewModel, EndpointsKsaPage>();
-        Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
 
+        Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
         Configure<EndpointsNet2UdpViewModel, EndpointsNet2UdpPage>();
         Configure<NetworkMidi2SetupViewModel, NetworkMidi2SetupPage>();
-
-        Configure<EndpointsDiagViewModel, EndpointsDiagPage>();
+        Configure<EndpointsBle10ViewModel, EndpointsBle10Page>();
 
 
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
         Configure<RoutesViewModel, RoutesPage>();
 
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
+
         //Configure<MainViewModel, MainPage>();
         Configure<ManagementSessionsViewModel, ManagementSessionsPage>();
         Configure<PluginsProcessingViewModel, PluginsProcessingPage>();
@@ -51,8 +47,7 @@ public class PageService : IPageService
         Configure<ToolsTestViewModel, ToolsTestPage>();
         Configure<TroubleshootingViewModel, TroubleshootingPage>();
 
-        Configure<WinRTMidi1DevicesViewModel, WinRTMidi1DevicesPage>();
-        Configure<WinMMMidi1DevicesViewModel, WinMMMidi1DevicesPage>();
+        Configure<GlobalMidiSettingsViewModel, GlobalMidiSettingsPage>();
 
         Configure<FirstRunExperienceViewModel, FirstRunExperiencePage>();
 

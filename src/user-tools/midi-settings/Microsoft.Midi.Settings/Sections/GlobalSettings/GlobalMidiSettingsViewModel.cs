@@ -6,36 +6,30 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using CommunityToolkit.Mvvm.ComponentModel;
-//using CommunityToolkit.WinUI.UI.Controls;
-using Microsoft.Midi.Settings.Contracts.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Devices.Enumeration;
-using Windows.Devices.Midi;
-
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Dispatching;
+using Microsoft.Midi.Settings;
+using Microsoft.Midi.Settings.Models;
+using Microsoft.Midi.Settings.Controls;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
+using Windows.Storage.Pickers;
+using Windows.Storage;
+using Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer;
+using Microsoft.Extensions.Logging.Abstractions;
+using Windows.Foundation;
+using Microsoft.Midi.Settings.Services;
+using Microsoft.Midi.Settings.Contracts.Services;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class WinMMMidi1DevicesViewModel : ObservableRecipient, INavigationAware
+    public partial class GlobalMidiSettingsViewModel : ObservableRecipient
     {
-        public WinMMMidi1DevicesViewModel()
-        {
-
-        }
-
-        public void OnNavigatedFrom()
-        {
-        }
-
-        public void OnNavigatedTo(object parameter)
-        {
-        }
     }
 }

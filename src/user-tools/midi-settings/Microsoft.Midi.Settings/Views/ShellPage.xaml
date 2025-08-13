@@ -211,7 +211,7 @@
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9f5;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-SysEx.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
@@ -287,7 +287,7 @@
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ManagementSessionsViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeda3;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-Sessions.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <!--<NavigationViewItem x:Uid="Shell_ToolsMonitor" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsMonitorViewModel">
@@ -300,7 +300,7 @@
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsTransportViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb4d;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-Transports.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <!--
@@ -355,7 +355,7 @@
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ForDevelopersViewModel"
                                     Visibility="{x:Bind ViewModel.IsDeveloperModeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xec7a;" Style="{StaticResource NavigationMenuIconStyles}"/>
+                        <ImageIcon Source="/Assets/LeftNav-Developers.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 

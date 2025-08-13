@@ -118,12 +118,6 @@ public partial class App : Application
 
 
                     // Views and ViewModels
-                    services.AddTransient<WinRTMidi1DevicesViewModel>();
-                    services.AddTransient<WinRTMidi1DevicesPage>();
-
-                    services.AddTransient<WinMMMidi1DevicesViewModel>();
-                    services.AddTransient<WinMMMidi1DevicesPage>();
-
                     services.AddTransient<SettingsViewModel>();
                     services.AddTransient<SettingsPage>();
 
@@ -137,17 +131,11 @@ public partial class App : Application
                     services.AddTransient<EndpointsAllPage>();
                     services.AddTransient<EndpointsAllViewModel>();
 
-                    services.AddTransient<EndpointsAppPage>();
-                    services.AddTransient<EndpointsAppViewModel>();
-
                     services.AddTransient<EndpointsBle10Page>();
                     services.AddTransient<EndpointsBle10ViewModel>();
 
-                    services.AddTransient<EndpointsKSPage>();
-                    services.AddTransient<EndpointsKSViewModel>();
-
-                    services.AddTransient<EndpointsKsaPage>();
-                    services.AddTransient<EndpointsKsaViewModel>();
+                    services.AddTransient<GlobalMidiSettingsPage>();
+                    services.AddTransient<GlobalMidiSettingsViewModel>();
 
                     services.AddTransient<EndpointsNet2UdpPage>();
                     services.AddTransient<EndpointsNet2UdpViewModel>();
@@ -158,16 +146,9 @@ public partial class App : Application
                     services.AddTransient<EndpointsLoopPage>();
                     services.AddTransient<EndpointsLoopViewModel>();
 
-                    services.AddTransient<EndpointsDiagPage>();
-                    services.AddTransient<EndpointsDiagViewModel>();
-
 
                     services.AddTransient<DeviceDetailPage>();
                     services.AddTransient<DeviceDetailViewModel>();
-
-
-                    services.AddTransient<ToolsMonitorPage>();
-                    services.AddTransient<ToolsMonitorViewModel>();
 
                     services.AddTransient<ManagementSessionsPage>();
                     services.AddTransient<ManagementSessionsViewModel>();
@@ -180,9 +161,6 @@ public partial class App : Application
 
                     services.AddTransient<ConfigurationsPage>();
                     services.AddTransient<ConfigurationsViewModel>();
-
-                    services.AddTransient<ToolsConsolePage>();
-                    services.AddTransient<ToolsConsoleViewModel>();
 
                     services.AddTransient<ToolsSysExPage>();
                     services.AddTransient<ToolsSysExViewModel>();

@@ -28,6 +28,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class MidiEndpointDisplayItem : ObservableRecipient
     {
+        public string ManufacturerName { get; private set; }
+        public bool HasManufacturerName { get; private set; }
         public string Name { get; private set; }
         public string Description { get; private set; }
 
@@ -38,10 +40,24 @@ namespace Microsoft.Midi.Settings.ViewModels
         public string UniqueIdentifier { get; private set; }
         public bool HasUniqueIdentifier { get; private set; }
 
+        public bool IsMultiClient { get; private set; }
         public bool IsNativeUmp { get; private set; }
         public bool SupportsMidi2 { get; private set; }
 
         public ImageSource SmallImage { get; private set; }
+
+        [ObservableProperty]
+        private bool hasSingleInputPort;
+
+        [ObservableProperty]
+        private bool hasSingleOutputPort;
+
+        [ObservableProperty]
+        private string singleInputPortName;
+
+        [ObservableProperty]
+        private string singleOutputPortName;
+
 
         [ObservableProperty]
         private int countMidi1InputPorts;
@@ -57,6 +73,10 @@ namespace Microsoft.Midi.Settings.ViewModels
             Name = deviceInformation.Name;
             Id = deviceInformation.EndpointDeviceId;
             TransportCode = deviceInformation.GetTransportSuppliedInfo().TransportCode;
+
+            ManufacturerName = deviceInformation.GetTransportSuppliedInfo().ManufacturerName.Trim();
+
+            HasManufacturerName = ManufacturerName != string.Empty;
 
             // description
             if (deviceInformation.GetUserSuppliedInfo().Description != string.Empty)
@@ -87,10 +107,21 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             HasUniqueIdentifier = UniqueIdentifier != string.Empty;
 
+            // multi-client
 
-            // small image
+            if (deviceInformation.GetTransportSuppliedInfo().SupportsMultiClient)
+            {
+                IsMultiClient = true;
+            }
+            else
+            {
+                IsMultiClient = false;
+            }
 
-            var imagePath = MidiImageAssetHelper.GetSmallImageFullPathForEndpoint(deviceInformation);
+
+                // small image
+
+                var imagePath = MidiImageAssetHelper.GetSmallImageFullPathForEndpoint(deviceInformation);
 
             if (imagePath.ToLower().EndsWith(".svg"))
             {
@@ -138,21 +169,35 @@ namespace Microsoft.Midi.Settings.ViewModels
                 var outputPorts = deviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
 
 
-                uiThreadContext.Post(_ =>
+                uiThreadContext?.Post(_ =>
                 {
-                    foreach (var source in inputPorts)
+                    foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
                     {
                         Midi1InputPorts.Add(source);
                     }
 
                     // MIDI 1.0 Output Ports / Destinations
-                    foreach (var destination in outputPorts)
+                    foreach (var destination in outputPorts.OrderBy((p) => p.PortNumber))
                     {
                         Midi1OutputPorts.Add(destination);
                     }
 
                     CountMidi1InputPorts = Midi1InputPorts.Count;
                     CountMidi1OutputPorts = Midi1OutputPorts.Count;
+
+                    HasSingleInputPort = CountMidi1InputPorts == 1;
+                    HasSingleOutputPort = CountMidi1OutputPorts == 1;
+
+                    if (HasSingleInputPort)
+                    {
+                        SingleInputPortName = inputPorts[0].PortName;
+                    }
+
+                    if (HasSingleOutputPort)
+                    {
+                        SingleOutputPortName = outputPorts[0].PortName;
+                    }
+
 
                 }, null);
 

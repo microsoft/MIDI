@@ -63,7 +63,7 @@
         <Setter Property="VerticalAlignment" Value="Top" />
         <Setter Property="FontWeight" Value="Normal" />
         <!--<Setter Property="Foreground" Value="CornflowerBlue" />-->
-        <Setter Property="FontSize" Value="{StaticResource MediumSmallFontSize}" />
+        <Setter Property="FontSize" Value="{StaticResource SmallFontSize}" />
         <Setter Property="TextWrapping" Value="WrapWholeWords" />
         <Setter Property="Opacity" Value="0.75" />
     </Style>
