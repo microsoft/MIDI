@@ -47,6 +47,7 @@
             <controls:TitleBar Title="MIDI Settings PREVIEW"
                                AutoConfigureCustomTitleBar="False"
                                DisplayMode="Tall"
+                               IsPaneButtonVisible="False"
                                BackButtonClick="TitleBar_BackButtonClick"
                                IsBackButtonVisible="{x:Bind ViewModel.IsBackEnabled, Mode=OneWay}"
                                >
@@ -153,6 +154,7 @@
                         SelectedItem="{x:Bind ViewModel.Selected, Mode=OneWay}"
                         IsSettingsVisible="True"
                         ExpandedModeThresholdWidth="1280"
+                        IsTitleBarAutoPaddingEnabled="False"
                         DisplayModeChanged="NavigationViewControl_DisplayModeChanged"
                         Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
 
