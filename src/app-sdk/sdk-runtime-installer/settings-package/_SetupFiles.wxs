@@ -12,6 +12,7 @@
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Collections.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Controls.Primitives.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Controls.SettingsControls.dll" /> 
+      <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Controls.TitleBar.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Converters.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Extensions.dll" /> 
       <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\CommunityToolkit.WinUI.Helpers.dll" /> 

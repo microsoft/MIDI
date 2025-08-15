@@ -223,24 +223,22 @@ namespace Microsoft.Midi.Settings.ViewModels
             // this keeps track of ids for dedup purposes
             var ids = new Dictionary<string, bool>();
 
-            // we shouldn't be reloading here. optimize this later.
-            var endpoints = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices
-                .Where(x => x.Value.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
-                .Select(i => i.Value);
+            var endpoints = _enumerationService.GetEndpoints()
+                .Where(x => x.DeviceInformation.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId);
 
 
             foreach (var endpoint in endpoints)
             {
-                var associated = MidiLoopbackEndpointManager.GetAssociatedLoopbackEndpoint(endpoint);
+                var associated = MidiLoopbackEndpointManager.GetAssociatedLoopbackEndpoint(endpoint.DeviceInformation);
 
                 if (associated != null)
                 {
-                    if (!ids.ContainsKey(endpoint.EndpointDeviceId) &&
+                    if (!ids.ContainsKey(endpoint.Id) &&
                         !ids.ContainsKey(associated.EndpointDeviceId))
                     {
                         var pair = new MidiLoopbackEndpointPair();
 
-                        pair.LoopA = endpoint;
+                        pair.LoopA = endpoint.DeviceInformation;
                         pair.LoopB = associated;
 
                         MidiLoopbackEndpointPairs.Add(pair);

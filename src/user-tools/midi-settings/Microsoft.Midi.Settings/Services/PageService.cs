@@ -24,7 +24,6 @@ public class PageService : IPageService
         Configure<EndpointsAllViewModel, EndpointsAllPage>();
 
         Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
-        Configure<EndpointsNet2UdpViewModel, EndpointsNet2UdpPage>();
         Configure<NetworkMidi2SetupViewModel, NetworkMidi2SetupPage>();
         Configure<EndpointsBle10ViewModel, EndpointsBle10Page>();
 

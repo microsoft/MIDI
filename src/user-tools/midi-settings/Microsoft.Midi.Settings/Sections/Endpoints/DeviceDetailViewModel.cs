@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.ViewModels.Data;
@@ -23,9 +24,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class DeviceDetailViewModel : ObservableRecipient, INavigationAware
     {
-        public DispatcherQueue? DispatcherQueue { get; set; }
-
-
         public EndpointUserMetadata UserMetadata { get; private set; } = new EndpointUserMetadata();
 
         [ObservableProperty]
@@ -43,6 +41,9 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         [ObservableProperty]
         public MidiEndpointDeviceInformation deviceInformation;
+
+        [ObservableProperty]
+        public MidiEndpointWrapper endpointWrapper;
 
 
         public ObservableCollection<MidiFunctionBlock> FunctionBlocks = [];
@@ -67,8 +68,11 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         public DeviceInformation parentDeviceInformation;
 
-        public DeviceDetailViewModel()
+        private readonly ISynchronizationContextService _synchronizationContextService;
+        public DeviceDetailViewModel(ISynchronizationContextService synchronizationContextService)
         {
+            _synchronizationContextService = synchronizationContextService;
+
             System.Diagnostics.Debug.WriteLine("Start clearing properties");
 
             // ugly, but there to prevent binding errors. Making everything nullable
@@ -79,6 +83,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             this.DeviceIdentity = new MidiDeclaredDeviceIdentity();
             this.StreamConfiguration = new MidiDeclaredStreamConfiguration();
             this.EndpointInfo = new MidiDeclaredEndpointInfo();
+
            // this.ParentDeviceInformation = null;
 
             this.HasParent = false;
@@ -98,7 +103,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             System.Diagnostics.Debug.WriteLine("Start setting device-specific properties properties");
 
-            this.DeviceInformation = (MidiEndpointDeviceInformation)parameter;
+            this.EndpointWrapper = (MidiEndpointWrapper)parameter;
+            this.DeviceInformation = this.EndpointWrapper.DeviceInformation;
 
             this.TransportSuppliedInfo = this.DeviceInformation.GetTransportSuppliedInfo();
             this.UserSuppliedInfo = this.DeviceInformation.GetUserSuppliedInfo();
@@ -111,10 +117,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             ShowMidi2Properties = (this.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
 
-            if (DispatcherQueue == null) return;
-
             // we're working with observable collections here, so need to dispatch
-            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            _synchronizationContextService.GetUIContext().Post(_ =>
             {
                 System.Diagnostics.Debug.WriteLine("Enter Dispatcher worker: function blocks and group terminal blocks");
 
@@ -135,7 +139,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 this.HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
 
                 System.Diagnostics.Debug.WriteLine("Exit Dispatcher worker: function blocks and group terminal blocks");
-            });
+            }, null);
 
 
             System.Diagnostics.Debug.WriteLine("Finished setting device-specific properties properties");

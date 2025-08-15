@@ -8,6 +8,7 @@
 
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Helpers;
+using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -35,13 +36,10 @@ public sealed partial class ShellPage : Page
         ViewModel.NavigationService.Frame = NavigationFrame;
         ViewModel.NavigationViewService.Initialize(NavigationViewControl);
 
-        // TODO: Set the title bar icon by updating /Assets/WindowIcon.ico.
-        // A custom title bar is required for full window theme and Mica support.
-        // https://docs.microsoft.com/windows/apps/develop/title-bar?tabs=winui3#full-customization
         App.MainWindow.ExtendsContentIntoTitleBar = true;
         App.MainWindow.SetTitleBar(AppTitleBar);
         App.MainWindow.Activated += MainWindow_Activated;
-        AppTitleBarText.Text = "AppDisplayName".GetLocalized();
+//        AppTitleBarText.Text = "AppDisplayName".GetLocalized();
     }
 
     private void OnLoaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -90,7 +88,7 @@ public sealed partial class ShellPage : Page
     {
         var resource = args.WindowActivationState == WindowActivationState.Deactivated ? "WindowCaptionForegroundDisabled" : "WindowCaptionForeground";
 
-        AppTitleBarText.Foreground = (SolidColorBrush)App.Current.Resources[resource];
+//        AppTitleBarText.Foreground = (SolidColorBrush)App.Current.Resources[resource];
     }
 
     private void NavigationViewControl_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
@@ -134,13 +132,31 @@ public sealed partial class ShellPage : Page
         dialog.ShowAsync().Wait();
     }
 
+
+
+
     private void SettingsSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
+        if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+        {
 
+        }
     }
 
     private void KeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
 
+    }
+
+    private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+
+    }
+
+    private void TitleBar_BackButtonClick(object sender, RoutedEventArgs e)
+    {
+        var navigationService = App.GetService<INavigationService>();
+
+       navigationService.GoBack();
     }
 }

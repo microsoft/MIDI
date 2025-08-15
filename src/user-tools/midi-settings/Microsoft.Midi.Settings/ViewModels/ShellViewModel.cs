@@ -15,10 +15,11 @@ using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 
 namespace Microsoft.Midi.Settings.ViewModels;
 
-public class ShellViewModel : ObservableRecipient
+public partial class ShellViewModel : ObservableRecipient
 {
     private bool _isBackEnabled;
     private object? _selected;
@@ -27,6 +28,10 @@ public class ShellViewModel : ObservableRecipient
 
     private readonly IMidiConfigFileService m_configFileService;
     private readonly IMidiSdkService _sdkService;
+
+    public string SdkVersionString => MidiRuntimeInformation.GetInstalledVersion().ToString();
+
+    public string CurrentConfigName => m_configFileService.CurrentConfig?.FileName;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
@@ -72,11 +77,9 @@ public class ShellViewModel : ObservableRecipient
         get => m_configFileService.IsConfigFileActive;
     }
 
-    
 
-
-
-    public ShellViewModel(INavigationService navigationService, 
+    public ShellViewModel(
+        INavigationService navigationService, 
         INavigationViewService navigationViewService, 
         IGeneralSettingsService generalSettingsService,
         IMidiConfigFileService midiConfigFileService,
@@ -91,6 +94,7 @@ public class ShellViewModel : ObservableRecipient
         m_configFileService = midiConfigFileService;
         _generalSettingsService = generalSettingsService;
         _generalSettingsService.SettingsChanged += _generalSettingsService_SettingsChanged;
+
     }
 
     private void _generalSettingsService_SettingsChanged(object? sender, EventArgs e)

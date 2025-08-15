@@ -26,19 +26,25 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Image Grid.Column="0">
-                <!-- Column 0 Large Image -->
-            </Image>
+            <Image Grid.Column="0"
+                   Margin="0,0,16,16"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Top"
+                   Source="{x:Bind ViewModel.EndpointWrapper.SmallImage}"
+                   Stretch="Uniform" />
 
             <StackPanel Grid.Column="1">
                 <TextBlock Text="{x:Bind ViewModel.DeviceInformation.Name}" 
                            Style="{StaticResource PageHeaderStyleDeviceName}" />
-                <TextBlock Text="{x:Bind ViewModel.DeviceInformation.EndpointPurpose, Converter={StaticResource EndpointDevicePurposeConverter}}"
-                           Style="{StaticResource PageHeaderStyleDevicePurpose}" />
-                <Button Content="Open console MIDI input monitor in new window" 
+                <HyperlinkButton Margin="0,4,0,4" Padding="0">Rename</HyperlinkButton>
+                
+                
+                <!--<TextBlock Text="{x:Bind ViewModel.DeviceInformation.EndpointPurpose, Converter={StaticResource EndpointDevicePurposeConverter}}"
+                           Style="{StaticResource PageHeaderStyleDevicePurpose}" />-->
+                <!--<Button Content="Open console MIDI input monitor in new window" 
                         Margin="0,10,0,10"
                         VerticalAlignment="Center"
-                        Click="OnOpenConsoleMonitor" />
+                        Click="OnOpenConsoleMonitor" />-->
 
             </StackPanel>
 
@@ -95,8 +101,177 @@
         <ScrollViewer Grid.Row="1" x:Name="ContentControl" Margin="0,13,0,0">
             <StackPanel Orientation="Vertical" Spacing="4">
 
-                <TextBlock Text="General" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
+                <TextBlock Text="Associated MIDI 1.0 API Ports" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
                 
+                
+                <!-- Associated MIDI 1.0 Ports -->
+
+                <!-- Source/Input ports -->
+                <controls:SettingsExpander IsExpanded="False"
+                                           x:Uid="DeviceDetailPage_Midi1SourcePortsExpander"
+                                           CornerRadius="8"
+                                           ItemsSource="{x:Bind ViewModel.EndpointWrapper.Midi1InputPorts}"
+                                           >
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8BC;" 
+                                  Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
+
+                    <controls:SettingsExpander.Header>
+                        <Grid HorizontalAlignment="Stretch" Width="400">
+                            <TextBlock Text="Source/Input Ports"
+                                       HorizontalAlignment="Left"/>
+
+                            <TextBlock HorizontalAlignment="Right">
+                                <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts}" 
+                                     Foreground="{StaticResource AccentTextFillColorPrimaryBrush}"/>
+                                <Run Text="Port(s)" />
+                            </TextBlock>
+                        </Grid>
+                    </controls:SettingsExpander.Header>
+
+                    <controls:SettingsExpander.ItemTemplate>
+                        <DataTemplate x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <TextBlock Text="{x:Bind PortName}" />
+                                </controls:SettingsCard.Header>
+
+                                <controls:SettingsCard.Content>
+                                    <Grid>
+                                        <Grid Grid.Column="0" Margin="10,4,10,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Column="0" Grid.Row="0" 
+                                                   Text="Number" 
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="0" 
+                                                   Text="{x:Bind PortNumber }" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                            <TextBlock Grid.Column="0" Grid.Row="1" 
+                                                   Text="Id" 
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="1" 
+                                                   Text="{x:Bind PortDeviceId }" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                            <TextBlock Grid.Column="0" Grid.Row="2" 
+                                                   Text="Group"
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="2" 
+                                                   Text="{x:Bind Group.DisplayValue}" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                            <TextBlock Grid.Column="0" Grid.Row="3" 
+                                                   Text="Flow" 
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="3" 
+                                                   Text="{x:Bind PortFlow }" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                        </Grid>
+                                    </Grid>
+                                </controls:SettingsCard.Content>
+                            </controls:SettingsCard>
+                        </DataTemplate>
+                        
+                    </controls:SettingsExpander.ItemTemplate>
+                </controls:SettingsExpander>
+
+                <!-- Destination/Output ports -->
+                <controls:SettingsExpander IsExpanded="False"
+                                           x:Uid="DeviceDetailPage_Midi1DestinationPortsExpander"
+                                           CornerRadius="8"
+                                           ItemsSource="{x:Bind ViewModel.EndpointWrapper.Midi1OutputPorts}"
+                                           >
+                    <controls:SettingsExpander.Header>
+                        <Grid HorizontalAlignment="Stretch" Width="400">
+                            <TextBlock Text="Destination/Output Ports"
+                                       HorizontalAlignment="Left"/>
+                            
+                            <TextBlock HorizontalAlignment="Right">
+                                <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts}" 
+                                     Foreground="{StaticResource AccentTextFillColorPrimaryBrush}"/>
+                                <Run Text="Port(s)" />
+                            </TextBlock>
+                        </Grid>
+                    </controls:SettingsExpander.Header>
+                    
+                    <controls:SettingsExpander.HeaderIcon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8BC;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsExpander.HeaderIcon>
+
+                    <controls:SettingsExpander.ItemTemplate>
+                        <DataTemplate x:DataType="midi2:MidiEndpointAssociatedPortDeviceInformation">
+                            <controls:SettingsCard>
+                                <controls:SettingsCard.Header>
+                                    <TextBlock Text="{x:Bind PortName}" />
+                                </controls:SettingsCard.Header>
+
+                                <controls:SettingsCard.Content>
+                                    <Grid>
+                                        <Grid Grid.Column="0" Margin="10,4,10,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Column="0" Grid.Row="0" 
+                                                   Text="Number" 
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="0" 
+                                                   Text="{x:Bind PortNumber }" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+
+                                            <TextBlock Grid.Column="0" Grid.Row="1" 
+                                                   Text="Id" 
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="1" 
+                                                   Text="{x:Bind PortDeviceId }" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                            <TextBlock Grid.Column="0" Grid.Row="2" 
+                                                   Text="Group"
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="2" 
+                                                   Text="{x:Bind Group.DisplayValue}" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                            <TextBlock Grid.Column="0" Grid.Row="3" 
+                                                   Text="Flow" 
+                                                   Style="{StaticResource SmallPropertyLabel}" />
+                                            <TextBlock Grid.Column="1" Grid.Row="3" 
+                                                   Text="{x:Bind PortFlow }" 
+                                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                                        </Grid>
+                                    </Grid>
+                                </controls:SettingsCard.Content>
+                            </controls:SettingsCard>
+                        </DataTemplate>
+
+                    </controls:SettingsExpander.ItemTemplate>
+                </controls:SettingsExpander>
+
+
+                <TextBlock Text="General" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
+
                 <!-- User-supplied / Custom information -->
                 
                 <controls:SettingsExpander Header="Personalization"
@@ -193,7 +368,7 @@
                 <controls:SettingsExpander 
                     x:Uid="DeviceDetailPage_Midi2ProtocolExpander"
                     CornerRadius="8"
-                    IsExpanded="True"
+                    IsExpanded="False"
                     Visibility="{x:Bind ViewModel.ShowMidi2Properties, Converter={StaticResource BoolToVisibilityConverter}}"
                     >
                     <controls:SettingsExpander.HeaderIcon>
@@ -242,7 +417,7 @@
                                            ItemsSource="{x:Bind ViewModel.FunctionBlocks, Mode=OneWay}"
                                            CornerRadius="8"
                                            Visibility="{x:Bind ViewModel.HasFunctionBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
-                                           IsExpanded="True">
+                                           IsExpanded="False">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb41;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsExpander.HeaderIcon>
@@ -367,7 +542,7 @@
                                            ItemsSource="{x:Bind ViewModel.GroupTerminalBlocks, Mode=OneWay}"
                                            CornerRadius="8"
                                            Visibility="{x:Bind ViewModel.HasGroupTerminalBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
-                                           IsExpanded="True">
+                                           IsExpanded="False">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb41;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsExpander.HeaderIcon>
@@ -473,7 +648,8 @@
                 <!-- Parent Device -->
 
                 <controls:SettingsExpander x:Uid="DeviceDetailPage_ParentDeviceExpander"
-                    IsExpanded="True" Margin="0,0,0,20"
+                                           IsExpanded="False" 
+                                           Margin="0,0,0,20"
                                            CornerRadius="8"
                     Visibility="{x:Bind ViewModel.HasParent, Converter={StaticResource BoolToVisibilityConverter}}">
                     <controls:SettingsExpander.HeaderIcon>

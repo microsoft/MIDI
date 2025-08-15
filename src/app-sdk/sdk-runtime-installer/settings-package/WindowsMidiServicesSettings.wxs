@@ -70,14 +70,19 @@
                     Directory="SETTINGSAPP_ASSETS_FOLDER"
                     Guid="f4f2b375-347b-413c-b81d-e900f392f786">
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.ico" />
-            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\AppIcon@2x.png" />
+
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Loopback-Diagram.svg" />
 
-            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-CreateLoopbackEndpoints.svg" />          
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-CreateLoopbackEndpoints.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Developers.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Endpoints.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-GlobalSettings.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Home.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-NetworkMidi.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Sessions.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-SysEx.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Transports.svg" />
         </Component>
 
       <Component Id="SharedEndpointsAssets"

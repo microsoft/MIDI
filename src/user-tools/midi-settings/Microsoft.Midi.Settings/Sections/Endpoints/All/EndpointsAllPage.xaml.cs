@@ -56,7 +56,7 @@ namespace Microsoft.Midi.Settings.Views
 
         private void DevicesPage_Loaded(object sender, RoutedEventArgs e)
         {
-            ViewModel.DispatcherQueue = this.DispatcherQueue;
+         //   ViewModel.DispatcherQueue = this.DispatcherQueue;
 
         //    ViewModel.RefreshDeviceCollection();
         }
@@ -65,7 +65,18 @@ namespace Microsoft.Midi.Settings.Views
         // work around WinUI binding bug
         private void MidiEndpointDeviceListItemControl_Loaded(object sender, RoutedEventArgs e)
         {
-            ((MidiEndpointDeviceListItemControl)sender).ViewDeviceDetailsCommand = ViewModel.ViewDeviceDetailsCommand;
+           // ((MidiEndpointDeviceListItemControl)sender).ViewDeviceDetailsCommand = ViewModel.ViewDeviceDetailsCommand;
+        }
+
+        private void GridView_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            var endpoint = e.ClickedItem as MidiEndpointWrapper;
+
+            if (endpoint != null)
+            {
+                endpoint.ViewDeviceDetailsCommand.Execute(null);
+            }
+
         }
     }
 }

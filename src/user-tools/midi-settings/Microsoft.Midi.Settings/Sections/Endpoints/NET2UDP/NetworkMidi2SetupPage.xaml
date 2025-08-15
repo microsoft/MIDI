@@ -44,13 +44,13 @@
                     <ItemsControl ItemsSource="{x:Bind ViewModel.RemoteHostEntriesSorted}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="local:MidiNetworkRemoteHostEntry">
-                                <controls:SettingsCard CornerRadius="9" 
+                                <controls:SettingsCard CornerRadius="{StaticResource ControlCornerRadius}" 
                                                        Margin="3">
 
                                     <controls:SettingsCard.Header>
                                         <TextBlock TextWrapping="NoWrap">
-                                            <Run Text="{x:Bind Name}" FontWeight="Bold" />
-                                            <Run Text="on" />
+                                            <Run Text="{x:Bind Name}" FontWeight="Bold" Foreground="{StaticResource AccentFillColorDefaultBrush}" />
+                                            <Run Text="on" Foreground="{StaticResource AccentFillColorDisabledBrush}" />
                                             <Run Text="{x:Bind AdvertisedHost.HostName}" />
                                         </TextBlock>
                                     </controls:SettingsCard.Header>
@@ -97,7 +97,7 @@
                     <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
                            Text="Manual Host Connections"/>
 
-                    <controls:SettingsCard CornerRadius="9"
+                    <controls:SettingsCard CornerRadius="{StaticResource ControlCornerRadius}"
                                            Margin="3"
                                            Header="Connect to remote host via IP or host name"
                                            Description="Not all remote hosts advertise over mDNS. If you know the IP address or host name of the host you want to connect to, you can manually connect to it here. Windows will attempt to connect to it again in the future, but if the host's address changes, you will need to update it here.">
@@ -111,8 +111,8 @@
                            Text="Configure this PC as a Host"/>
 
                     <!-- TODO: Show existing host entries here -->
-                    
-                    <controls:SettingsCard CornerRadius="9"
+
+                    <controls:SettingsCard CornerRadius="{StaticResource ControlCornerRadius}"
                                            Margin="3"
                                            Header="Create a host"
                                            Description="For this PC to advertise itself as a Network MIDI 2.0 host on the network, it must have at least one host entry. Typically, only one host is required. However, you may create multiple hosts if you want them to have different configuration settings. Once you create a new host, it may take a minute for it to show up on the network.">

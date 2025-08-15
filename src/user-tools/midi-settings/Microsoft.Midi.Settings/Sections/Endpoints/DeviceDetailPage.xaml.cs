@@ -54,7 +54,6 @@ namespace Microsoft.Midi.Settings.Views
         public DeviceDetailPage()
         {
             ViewModel = App.GetService<DeviceDetailViewModel>();
-            ViewModel.DispatcherQueue = this.DispatcherQueue;
 
             Loaded += DeviceDetailPage_Loaded;
 

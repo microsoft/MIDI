@@ -67,7 +67,7 @@ public partial class App : Application
 
 
     // this is set from the splashscreen handling in the activation service
-    public static WinUIEx.WindowEx MainWindow { get; } = new MainWindow();
+    public static Window MainWindow { get; } = new MainWindow();
 
     public static MidiServiceInitializationProgressWindow Splash { get; } = new MidiServiceInitializationProgressWindow();
 
@@ -78,6 +78,10 @@ public partial class App : Application
         try
         {
             InitializeComponent();
+
+            var uiContext = SynchronizationContext.Current;
+
+            var synchronizationContextService = new SynchronizationContextService(uiContext);
 
             Host = Microsoft.Extensions.Hosting.Host.
                 CreateDefaultBuilder().
@@ -90,6 +94,8 @@ public partial class App : Application
                     // Other Activation Handlers
 
                     // Services
+
+                    services.AddSingleton<ISynchronizationContextService>(synchronizationContextService); 
                     services.AddSingleton<ILoggingService, LoggingService>();
 
                     services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
@@ -136,9 +142,6 @@ public partial class App : Application
 
                     services.AddTransient<GlobalMidiSettingsPage>();
                     services.AddTransient<GlobalMidiSettingsViewModel>();
-
-                    services.AddTransient<EndpointsNet2UdpPage>();
-                    services.AddTransient<EndpointsNet2UdpViewModel>();
 
                     services.AddTransient<NetworkMidi2SetupPage>();
                     services.AddTransient<NetworkMidi2SetupViewModel>();
@@ -230,6 +233,8 @@ public partial class App : Application
     //private MidiDesktopAppSdkInitializer? _midiInitializer = null;
 
     //public MidiDesktopAppSdkInitializer? MidiInitializer => _midiInitializer;
+
+    public SynchronizationContext UIThreadSynchronizationContext;
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {

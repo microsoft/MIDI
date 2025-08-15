@@ -578,4 +578,20 @@ This step requires Administrator rights, and must be repeated after any new Wind
   <data name="Shell_ConfigureTransportsNavHeader.Content" xml:space="preserve">
     <value>Transport Configuration</value>
   </data>
+  <data name="GlobalSettings_DefaultUseClassicMidi1PortNames.Content" xml:space="preserve">
+    <value>Use names compatible with previous versions of Windows MIDI APIs, and preserve compatibility with saved MIDI projects in applications.</value>
+  </data>
+  <data name="GlobalSettings_DefaultUseNewStyleMidi1PortNames.Content" xml:space="preserve">
+    <value>Use newer-style port names preferred by MIDI device manufacturers. (For USB devices, these names use the iJack name when available).</value>
+  </data>
+  <data name="GlobalSettings_DefaultNamingExpander.Header" xml:space="preserve">
+    <value>Default MIDI 1.0 Port Naming</value>
+  </data>
+  <data name="GlobalSettings_DefaultNamingExpander.Description" xml:space="preserve">
+    <value>The option chosen here will be the default approach for naming MIDI 1.0 API ports using classic MIDI 1.0 in-box or vendor drivers. The default naming approach can be overridden on a per-device basis if desired.
+
+If you have many existing projects using your MIDI 1.0 devices and need to keep naming compatibility so the devices are automatically discovered by your DAW or other app, we recommend using the classic port names. Otherwise, the new style names are usually more informative.
+
+This change will require a MIDI Service restart before it will take effect.</value>
+  </data>
 </root>

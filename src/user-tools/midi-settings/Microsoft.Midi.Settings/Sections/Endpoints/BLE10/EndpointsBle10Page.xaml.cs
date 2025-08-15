@@ -57,15 +57,15 @@ namespace Microsoft.Midi.Settings.Views
         {
             ViewModel.DispatcherQueue = this.DispatcherQueue;
 
-            ViewModel.RefreshDeviceCollection();
+     //       ViewModel.RefreshDeviceCollection();
         }
 
 
         // work around WinUI binding bug
-        private void MidiEndpointDeviceListItemControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            ((MidiEndpointDeviceListItemControl)sender).ViewDeviceDetailsCommand = ViewModel.ViewDeviceDetailsCommand;
-        }
+        //private void MidiEndpointDeviceListItemControl_Loaded(object sender, RoutedEventArgs e)
+        //{
+        //    ((MidiEndpointDeviceListItemControl)sender).ViewDeviceDetailsCommand = ViewModel.ViewDeviceDetailsCommand;
+        //}
     }
 }
 

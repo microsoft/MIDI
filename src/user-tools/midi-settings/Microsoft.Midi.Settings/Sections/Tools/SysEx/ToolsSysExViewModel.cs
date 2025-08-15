@@ -71,7 +71,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private async void SendSysEx()
         {
-            if (SelectedEndpointDevice == null)
+            if (SelectedEndpoint == null)
             {
                 // TODO: Set error display
                 return;
@@ -119,7 +119,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                     return;
                 }
 
-                var connection = session.CreateEndpointConnection(SelectedEndpointDevice.EndpointDeviceId);
+                var connection = session.CreateEndpointConnection(SelectedEndpoint.Id);
 
                 if (connection == null)
                 {
@@ -159,7 +159,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         [ObservableProperty]
-        MidiEndpointDeviceInformation? selectedEndpointDevice;
+        MidiEndpointWrapper? selectedEndpoint;
 
         [ObservableProperty]
         MidiGroupForDisplay? selectedGroup;
@@ -184,7 +184,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         bool transferCompleteFailed;
 
 
-        public ObservableCollection<MidiEndpointDeviceInformation> MidiEndpointDevices { get; } = [];
+        public ObservableCollection<MidiEndpointWrapper> MidiEndpoints { get; } = [];
 
 
         private const UInt16 DefaultDelayBetweenMessagesMilliseconds = 50;
@@ -214,26 +214,21 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
         }
 
-
         public void RefreshDeviceCollection()
         {
             if (DispatcherQueue == null) return;
 
             DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
             {
-                MidiEndpointDevices.Clear();
+                MidiEndpoints.Clear();
 
                 // now get all the endpoint devices and put them in groups by transport
 
-                var enumeratedDevices = _endpointEnumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x => x.Name);
+                var endpoints = _endpointEnumerationService.GetEndpointsForPurpose(MidiEndpointDevicePurpose.NormalMessageEndpoint).OrderBy(x => x.Name);
 
-                foreach (var endpointDevice in enumeratedDevices)
+                foreach (var endpoint in endpoints)
                 {
-                    if (endpointDevice.EndpointPurpose == MidiEndpointDevicePurpose.NormalMessageEndpoint)
-                    {
-                        // check for input / output
-                        MidiEndpointDevices.Add(endpointDevice);
-                    }
+                    MidiEndpoints.Add(endpoint);
                 }
             });
         }
