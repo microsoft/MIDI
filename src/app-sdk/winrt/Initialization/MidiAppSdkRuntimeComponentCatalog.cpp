@@ -282,7 +282,7 @@ MidiAppSdkRuntimeComponentCatalog::GetThreadingModel(
         return S_OK;
     }
 
-    auto errorMessage = std::wstring{ L"MIDI Component Catalog REGDB_E_CLASSNOTREG: " } + std::wstring{ raw_class_name } + L"\n\r";
+    auto errorMessage = std::wstring{ L"MIDI App SDK: MIDI Component Catalog REGDB_E_CLASSNOTREG: " } + std::wstring{ raw_class_name } + L"\n";
     OutputDebugString(errorMessage.c_str());
     return REGDB_E_CLASSNOTREG;
 }

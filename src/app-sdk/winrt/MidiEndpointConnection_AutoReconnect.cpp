@@ -85,6 +85,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
 
+            OutputDebugString(L"MIDI App SDK: Failed to reactivate connection stream after a disconnect.\n");
+
             return;
         }
         else
@@ -114,6 +116,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"Failed to reopen connection after a disconnect.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Failed to reopen connection after a disconnect.\n");
 
             return;
         }

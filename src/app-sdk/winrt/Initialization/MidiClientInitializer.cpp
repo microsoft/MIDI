@@ -59,6 +59,8 @@ MidiClientInitializer::Initialize(
             TraceLoggingWideString(L"Unable to create runtime component catalog", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
+        OutputDebugString(L"MIDI App SDK: Unable to create runtime component catalog\n");
+
         RETURN_IF_NULL_ALLOC(g_runtimeComponentCatalog);
     }
 
@@ -73,6 +75,8 @@ MidiClientInitializer::Initialize(
             TraceLoggingPointer(nullptr, "this"),
             TraceLoggingWideString(L"Unable to initialize runtime component catalog", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
+
+        OutputDebugString(L"MIDI App SDK: Unable to initialize runtime component catalog\n");
 
         RETURN_IF_FAILED(E_FAIL);
     }
@@ -93,6 +97,9 @@ MidiClientInitializer::Initialize(
                 TraceLoggingWideString(L"Unable to install WinRT activation hooks", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Unable to install WinRT activation hooks\n");
+
             RETURN_IF_FAILED(hr);
         }
 
@@ -115,6 +122,8 @@ MidiClientInitializer::Initialize(
             TraceLoggingPointer(nullptr, "this"),
             TraceLoggingWideString(L"Exception installing WinRT activation hooks", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
+
+        OutputDebugString(L"MIDI App SDK: Exception installing WinRT activation hooks\n");
 
         RETURN_IF_FAILED(E_FAIL);
     }

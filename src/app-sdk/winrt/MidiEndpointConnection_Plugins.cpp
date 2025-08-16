@@ -35,6 +35,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
 
+                OutputDebugString(L"MIDI App SDK: Exception initializing plugins.\n");
             }
         }
     }
@@ -61,6 +62,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingWideString(L"Exception calling Open on plugins.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Exception calling Open on plugins.\n");
+
             }
         }
     }
@@ -86,6 +90,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingWideString(L"Exception cleaning up plugins.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Exception cleaning up plugins.\n");
 
             }
         }
@@ -127,6 +133,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
 
+            OutputDebugString(L"MIDI App SDK: Exception initializing or calling OnEndpointConnectionOpened on newly-added plugin.\n");
         }
     }
 
