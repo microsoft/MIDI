@@ -13,11 +13,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class PluginsTransportViewModel : ObservableRecipient
+    public class PluginsTransportViewModel : ObservableRecipient, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "transports" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "Transport Management";
+        }
 
         public ObservableCollection<MidiServiceTransportPluginInfo> Plugins { get; } = [];
 

@@ -36,20 +36,20 @@ public sealed partial class ShellPage : Page
         ViewModel.NavigationService.Frame = NavigationFrame;
         ViewModel.NavigationViewService.Initialize(NavigationViewControl);
 
-       // App.MainWindow.ExtendsContentIntoTitleBar = true;
-       // App.MainWindow.SetTitleBar(AppTitleBar);
+        // App.MainWindow.ExtendsContentIntoTitleBar = true;
+        // App.MainWindow.SetTitleBar(AppTitleBar);
         App.MainWindow.Activated += MainWindow_Activated;
-//        AppTitleBarText.Text = "AppDisplayName".GetLocalized();
+        //        AppTitleBarText.Text = "AppDisplayName".GetLocalized();
     }
 
     private void OnLoaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-    //    TitleBarHelper.UpdateTitleBar(RequestedTheme);
+        //    TitleBarHelper.UpdateTitleBar(RequestedTheme);
 
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.Left, VirtualKeyModifiers.Menu));
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.GoBack));
 
-        var transports = MidiReporting.GetInstalledTransportPlugins();
+        var transports = App.GetService<IMidiTransportInfoService>().GetAllTransports();
 
         foreach (var transport in transports)
         {
@@ -75,12 +75,16 @@ public sealed partial class ShellPage : Page
                 case "NET2UDP":
                     SectionNET2UDP.Visibility = Visibility.Visible;
                     break;
-                //case "DIAG":
-                //    SectionDIAG.Visibility = Visibility.Visible;
-                //    break;
+                    //case "DIAG":
+                    //    SectionDIAG.Visibility = Visibility.Visible;
+                    //    break;
 
             }
         }
+
+        // prime the endpoint data
+        App.GetService<IMidiEndpointEnumerationService>().GetEndpoints();
+
     }
 
 
@@ -88,7 +92,7 @@ public sealed partial class ShellPage : Page
     {
         var resource = args.WindowActivationState == WindowActivationState.Deactivated ? "WindowCaptionForegroundDisabled" : "WindowCaptionForeground";
 
-//        AppTitleBarText.Foreground = (SolidColorBrush)App.Current.Resources[resource];
+        //        AppTitleBarText.Foreground = (SolidColorBrush)App.Current.Resources[resource];
     }
 
     private void NavigationViewControl_DisplayModeChanged(NavigationView sender, NavigationViewDisplayModeChangedEventArgs args)
@@ -125,30 +129,54 @@ public sealed partial class ShellPage : Page
         args.Handled = result;
     }
 
+
+
+
     private void SettingsSearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        var dialog = new MessageDialog("Settings search is not yet implemented.");
 
-        dialog.ShowAsync().Wait();
     }
-
-
 
 
     private void SettingsSearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
         if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
         {
+            var results = ViewModel.GetSearchResults(sender.Text.ToLower().Trim());
 
+            sender.ItemsSource = results;
         }
     }
 
-    private void KeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
     {
+        var item = args.SelectedItem as MidiSettingsSearchResult;
 
+        if (item != null)
+        {
+            sender.Text = item.DisplayText;
+
+            App.GetService<INavigationService>().NavigateTo(item.DestinationKey, item.Parameter);
+        }
     }
 
-    private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    private void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        // very hacky. Should make this more deterministic and move outside of this event
+        ViewModel.RefreshSearchData();
+
+        SearchBox.Width = SearchBox.MaxWidth;
+    }
+
+    private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        SearchBox.Width = SearchBox.MinWidth;
+    }
+
+
+
+
+    private void KeyboardAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
 
     }
@@ -157,6 +185,6 @@ public sealed partial class ShellPage : Page
     {
         var navigationService = App.GetService<INavigationService>();
 
-       navigationService.GoBack();
+        navigationService.GoBack();
     }
 }

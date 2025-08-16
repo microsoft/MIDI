@@ -26,11 +26,24 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Windows.Foundation;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class ToolsSysExViewModel : ObservableRecipient
+    public partial class ToolsSysExViewModel : ObservableRecipient, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "sysex", "system exclusive", "device update", "device os update" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "Send System Exclusive (SysEx) messages to an endpoint";
+        }
+
+
         private readonly IMidiSdkService _sdkService;
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
 

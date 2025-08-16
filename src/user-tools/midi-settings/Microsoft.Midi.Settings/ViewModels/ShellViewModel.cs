@@ -25,7 +25,7 @@ public partial class ShellViewModel : ObservableRecipient
     private object? _selected;
 
     private readonly IGeneralSettingsService _generalSettingsService;
-
+    private readonly IMidiSettingsSearchService _settingsSearchService;
     private readonly IMidiConfigFileService m_configFileService;
     private readonly IMidiSdkService _sdkService;
 
@@ -77,15 +77,21 @@ public partial class ShellViewModel : ObservableRecipient
         get => m_configFileService.IsConfigFileActive;
     }
 
+    public IList<MidiSettingsSearchResult> GetSearchResults(string query)
+    {
+        return _settingsSearchService.GetFilteredResults(query);
+    }
 
     public ShellViewModel(
         INavigationService navigationService, 
-        INavigationViewService navigationViewService, 
+        INavigationViewService navigationViewService,
         IGeneralSettingsService generalSettingsService,
         IMidiConfigFileService midiConfigFileService,
-        IMidiSdkService sdkService
+        IMidiSdkService sdkService,
+        IMidiSettingsSearchService settingsSearchService
         )
     {
+        _settingsSearchService = settingsSearchService;
         _sdkService = sdkService;
         NavigationService = navigationService;
         NavigationService.Navigated += OnNavigated;
@@ -94,7 +100,11 @@ public partial class ShellViewModel : ObservableRecipient
         m_configFileService = midiConfigFileService;
         _generalSettingsService = generalSettingsService;
         _generalSettingsService.SettingsChanged += _generalSettingsService_SettingsChanged;
+    }
 
+    public void RefreshSearchData()
+    {
+        _settingsSearchService.Refresh();
     }
 
     private void _generalSettingsService_SettingsChanged(object? sender, EventArgs e)

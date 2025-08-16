@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml;
@@ -22,8 +23,19 @@ using Windows.ApplicationModel;
 
 namespace Microsoft.Midi.Settings.ViewModels;
 
-public class SettingsViewModel : ObservableRecipient
+public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
 {
+    public static IList<string> GetSearchKeywords()
+    {
+        // TODO: these need to be localized, so should refer to resources instead
+        return new[] { "app settings", "auto update", "developer mode", "theme", "light mode", "dark mode" };
+    }
+
+    public static string GetSearchPageTitle()
+    {
+        return "MIDI Settings App Settings";
+    }
+
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IGeneralSettingsService _generalSettingsService;

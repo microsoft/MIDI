@@ -26,28 +26,61 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Image Grid.Column="0"
-                   Margin="0,0,16,16"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Top"
-                   Source="{x:Bind ViewModel.EndpointWrapper.SmallImage}"
-                   Stretch="Uniform" />
+            <Button Grid.Column="0"
+                    Margin="0,0,16,16"
+                    HorizontalAlignment="Center"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="0"
+                    VerticalAlignment="Top"
+                    Click="Button_Click">
+                <Image Source="{x:Bind ViewModel.EndpointWrapper.SmallImage}"
+                       Stretch="Uniform"
+                       />
+                <ToolTipService.ToolTip>
+                    <TextBlock Text="Change image" />
+                </ToolTipService.ToolTip>
 
-            <StackPanel Grid.Column="1">
-                <TextBlock Text="{x:Bind ViewModel.DeviceInformation.Name}" 
+            </Button>
+            
+            <Grid Grid.Column="1" RowSpacing="4" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Grid.Column="0"
+                           Text="{x:Bind ViewModel.DeviceInformation.Name}" 
                            Style="{StaticResource PageHeaderStyleDeviceName}" />
-                <HyperlinkButton Margin="0,4,0,4" Padding="0">Rename</HyperlinkButton>
                 
-                
-                <!--<TextBlock Text="{x:Bind ViewModel.DeviceInformation.EndpointPurpose, Converter={StaticResource EndpointDevicePurposeConverter}}"
-                           Style="{StaticResource PageHeaderStyleDevicePurpose}" />-->
-                <!--<Button Content="Open console MIDI input monitor in new window" 
-                        Margin="0,10,0,10"
-                        VerticalAlignment="Center"
-                        Click="OnOpenConsoleMonitor" />-->
+                <Button Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="16,4,0,2"
+                        Padding="8,2,8,2"
+                        VerticalAlignment="Top"
+                        Background="Transparent"
+                        Click="Button_Click">
+                    <FontIcon Glyph="&#xE8AC;" FontSize="10" />
+                    <ToolTipService.ToolTip>
+                        <TextBlock Text="Rename endpoint, update description and other properties." />
+                    </ToolTipService.ToolTip>
+                </Button>
 
-            </StackPanel>
+                <TextBlock Grid.Row="1" 
+                           Grid.Column="0"
+                           Text="{x:Bind ViewModel.EndpointWrapper.Description}" 
+                           Style="{StaticResource SmallPlainPropertyValueWithWrap}"
+                           MaxWidth="450"
+                           Opacity="0.5"/>
 
+
+            </Grid>
+            
             <Grid Grid.Column="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -101,10 +134,53 @@
         <ScrollViewer Grid.Row="1" x:Name="ContentControl" Margin="0,13,0,0">
             <StackPanel Orientation="Vertical" Spacing="4">
 
-                <TextBlock Text="Associated MIDI 1.0 API Ports" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
+                <CommandBar HorizontalAlignment="Left"
+                            IsOpen="False"
+                            DefaultLabelPosition="Right"
+                            IsDynamicOverflowEnabled="False"
+                            >
+                    <CommandBar.PrimaryCommands>
+                        <AppBarButton Content="Monitor" />
+                        <AppBarButton Content="Send SysEx" />
+                        <AppBarSeparator />
+                        <AppBarButton Content="Troubleshoot" />
+                        <AppBarButton Content="Panic" />
+                    </CommandBar.PrimaryCommands>
+                </CommandBar>
+
+                <controls:SettingsCard Margin="0,16,0,0"
+                                       CornerRadius="8">
+                    <controls:SettingsCard.Header>
+                        <StackPanel Orientation="Horizontal" 
+                                    HorizontalAlignment="Left"
+                                    Margin="0,0,0,0">
+                            <TextBlock Text="Endpoint Device Id: "
+                                       Margin="4"
+                                       Style="{StaticResource SmallPropertyLabel}"/>
+                            <TextBlock Text="{x:Bind ViewModel.EndpointWrapper.Id}" 
+                                       TextWrapping="NoWrap" 
+                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"
+                                       Margin="4"
+                                       IsTextSelectionEnabled="True" />
+                            <Button Margin="4,0,4,0"
+                                    Padding="4"
+                                    Background="Transparent"
+                                    Command="{x:Bind ViewModel.CopyEndpointDeviceIdCommand}">
+                                <FontIcon Glyph="&#xE8C8;" FontSize="10"/>
+                                <!-- Copy -->
+                            </Button>
+
+                        </StackPanel>
+                    </controls:SettingsCard.Header>
+                </controls:SettingsCard>
+
+
+                
                 
                 
                 <!-- Associated MIDI 1.0 Ports -->
+                <TextBlock Text="Associated MIDI 1.0 Ports" Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" />
+
 
                 <!-- Source/Input ports -->
                 <controls:SettingsExpander IsExpanded="False"
@@ -152,21 +228,21 @@
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Column="0" Grid.Row="0" 
-                                                   Text="Number" 
+                                                   Text="Port Number" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
                                                    Text="{x:Bind PortNumber }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
-                                                   Text="Id" 
+                                                   Text="WinRT Id" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
                                                    Text="{x:Bind PortDeviceId }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
-                                                   Text="Group"
+                                                   Text="Mapped Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
                                                    Text="{x:Bind Group.DisplayValue}" 
@@ -274,7 +350,7 @@
 
                 <!-- User-supplied / Custom information -->
                 
-                <controls:SettingsExpander Header="Personalization"
+                <!--<controls:SettingsExpander Header="Personalization"
                                            IsExpanded="False"
                                            x:Uid="DeviceDetailPage_PersonalizationExpander"
                                            CornerRadius="8"
@@ -310,11 +386,11 @@
                                 </Grid>
                             </controls:SettingsCard.Header>
 
-                            <Button Content="Update Properties" Click="Button_Click"/>
+                            <Button Content="Update Properties" />
                             
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
-                </controls:SettingsExpander>
+                </controls:SettingsExpander>-->
 
                 <!-- Information from the transport -->
 

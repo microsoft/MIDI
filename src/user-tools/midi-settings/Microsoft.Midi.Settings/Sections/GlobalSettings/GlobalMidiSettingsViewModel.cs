@@ -26,10 +26,26 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Windows.Foundation;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class GlobalMidiSettingsViewModel : ObservableRecipient
+    public partial class GlobalMidiSettingsViewModel : ObservableRecipient, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "settings", "global", "naming", "service", "auto-start", "startup", "delay" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "Global MIDI Settings";
+        }
+
+        public GlobalMidiSettingsViewModel()
+        {
+
+        }
     }
 }

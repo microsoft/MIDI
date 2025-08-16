@@ -14,15 +14,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Windows.Devices.Midi2.Diagnostics;
 using WinUIEx;
 
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public class ManagementSessionsViewModel : ObservableRecipient
+    public class ManagementSessionsViewModel : ObservableRecipient, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "sessions", "open connections" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "Session Management";
+        }
 
         public ObservableCollection<MidiServiceSessionInformationWrapper> Sessions { get; private set; } = [];
 

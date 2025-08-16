@@ -20,6 +20,7 @@ namespace Microsoft.Midi.Settings.Contracts.Services
 
         MidiServiceTransportPluginInfo GetTransportForId(Guid transportId);
 
+        IList<MidiServiceTransportPluginInfo> GetAllTransports();
 
 
     }

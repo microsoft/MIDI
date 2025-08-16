@@ -24,8 +24,20 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class FirstRunExperienceViewModel : ObservableRecipient
+    public partial class FirstRunExperienceViewModel : ObservableRecipient, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "setup", "config file", "first run", "default loopback", "naming" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "First-run Setup";
+        }
+
+
         private IMidiConfigFileService m_configFileService;
         private IMidiDefaultsService m_defaultsService;
         private INavigationService m_navigationService;

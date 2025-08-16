@@ -34,8 +34,20 @@ namespace Microsoft.Midi.Settings.ViewModels
     }
 
 
-    public partial class EndpointsLoopViewModel : SingleTransportEndpointViewModelBase, INavigationAware
+    public partial class EndpointsLoopViewModel : SingleTransportEndpointViewModelBase, INavigationAware, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "endpoints", "ports", "loopback", "app to app", "default loopback" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "Manage Loopback Endpoints";
+        }
+
+
         private IMidiConfigFileService _midiConfigFileService;
 
         public ICommand ShowCreateLoopbackPairsDialogCommand

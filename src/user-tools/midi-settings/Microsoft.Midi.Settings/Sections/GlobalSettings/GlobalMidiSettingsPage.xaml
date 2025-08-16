@@ -15,10 +15,25 @@
     <Grid>
         <ScrollViewer>
             <StackPanel Orientation="Vertical">
+
+
+                <controls:SettingsCard x:Uid="GlobalSettings_SetMidiServiceToAutoStartCard">
+                    <controls:SettingsCard.HeaderIcon>
+                        <FontIcon Glyph="&#xE8AC;" Style="{StaticResource CommonTasksIconStyles}"/>
+                    </controls:SettingsCard.HeaderIcon>
+                    
+                    <controls:SettingsCard.Content>
+                        <Button x:Uid="GlobalSettings_SetMidiServiceToAutoStartButton" 
+                                />
+                    </controls:SettingsCard.Content>
+                    
+                </controls:SettingsCard>
+                
+                
                 <controls:SettingsExpander IsExpanded="True"
                                            x:Uid="GlobalSettings_DefaultNamingExpander">
                     <controls:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xE8AC;" />
+                        <FontIcon Glyph="&#xE8AC;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsExpander.HeaderIcon>
                     <controls:SettingsExpander.Items>
                         <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical">

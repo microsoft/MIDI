@@ -18,6 +18,7 @@ using Microsoft.Windows.Devices.Midi2.Endpoints.Network;
 using Microsoft.UI.Dispatching;
 using Microsoft.Midi.Settings.Contracts.Services;
 using CommunityToolkit.WinUI.Collections;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
@@ -37,8 +38,20 @@ namespace Microsoft.Midi.Settings.ViewModels
     }
 
 
-    public partial class NetworkMidi2SetupViewModel : ObservableRecipient
+    public partial class NetworkMidi2SetupViewModel : ObservableRecipient, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "endpoints", "ports", "network", "udp", "remote", "host", "connect", "wifi", "mdns" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "Network MIDI 2.0 Setup";
+        }
+
+
         private readonly IMidiConfigFileService _configFileService;
         private MidiNetworkAdvertisedHostWatcher _watcher;
 

@@ -27,8 +27,20 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class EndpointsAllViewModel : ObservableRecipient, INavigationAware
+    public partial class EndpointsAllViewModel : ObservableRecipient, INavigationAware, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "endpoints", "ports", "monitor", "panic" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "All Endpoints";
+        }
+
+
         private readonly INavigationService _navigationService;
         private readonly IMidiEndpointEnumerationService _enumerationService;
         private readonly IMidiTransportInfoService _transportInfoService;
@@ -91,5 +103,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             RefreshMidiEndpointDevices();
         }
+
+
     }
 }

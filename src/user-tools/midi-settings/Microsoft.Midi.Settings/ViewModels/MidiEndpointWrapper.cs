@@ -17,11 +17,20 @@ namespace Microsoft.Midi.Settings.ViewModels
     public partial class MidiEndpointWrapper : ObservableRecipient
     {
         private readonly INavigationService _navigationService;
+        private readonly ISynchronizationContextService _synchronizationContextService;
+        private readonly IMidiPanicService _panicService;
+
 
         public ICommand ViewDeviceDetailsCommand
         {
             get; private set;
         }
+
+        public ICommand SendPanicCommand
+        {
+            get; private set;
+        }
+
 
         public string ManufacturerName { get; private set; }
         public bool HasManufacturerName { get; private set; }
@@ -68,16 +77,17 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1InputPorts { get; private set; } = [];
         public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1OutputPorts { get; private set; } = [];
 
-        ISynchronizationContextService _synchronizationContextService;
         public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,
             IMidiTransportInfoService transportInfoService,
             INavigationService navigationService,
-            ISynchronizationContextService synchronizationContextService)
+            ISynchronizationContextService synchronizationContextService,
+            IMidiPanicService panicService)
         {
             System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Constructing");
 
             _navigationService = navigationService;
             _synchronizationContextService = synchronizationContextService;
+            _panicService = panicService;
 
             ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointWrapper>(
                 (param) =>
@@ -94,6 +104,17 @@ namespace Microsoft.Midi.Settings.ViewModels
                     }
 
                 });
+
+            SendPanicCommand = new RelayCommand(
+                () =>
+                {
+                    System.Diagnostics.Debug.WriteLine("Sending panic");
+
+                    // TODO: Could make this a bit faster by sending only for valid groups
+                    _panicService.SendMidiPanic(DeviceInformation.EndpointDeviceId);
+
+                });
+
 
             DeviceInformation = deviceInformation;
 

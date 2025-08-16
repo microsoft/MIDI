@@ -448,8 +448,15 @@
                                         <StackPanel Grid.Column="0"
                                                 Orientation="Horizontal"
                                                 HorizontalAlignment="Left">
-                                            <Button Content="Panic" Margin="4,8,4,8"                                                 
-                                                />
+                                            <Button Content="Panic"
+                                                    Margin="4,8,4,8"
+                                                    Command="{x:Bind SendPanicCommand}">
+
+                                                <ToolTipService.ToolTip>
+                                                    <TextBlock TextWrapping="WrapWholeWords"
+                                                               Text="Send All Notes Off, All Sound Off, and Reset All Controllers messages to all groups and channels on the endpoint. NOTE: Not all MIDI devices respond to these messages."/>
+                                                </ToolTipService.ToolTip>
+                                            </Button>
 
                                         </StackPanel>
 

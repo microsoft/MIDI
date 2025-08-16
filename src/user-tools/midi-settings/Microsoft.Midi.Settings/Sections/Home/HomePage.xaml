@@ -148,7 +148,7 @@
 
                             <!-- Current configuration -->
 
-                            <controls:SettingsExpander IsExpanded="True" 
+                            <!--<controls:SettingsExpander IsExpanded="True" 
                                                Margin="0,0,15,15" 
                                                CornerRadius="8"
                                                Visibility="{x:Bind ViewModel.IsValidConfigLoaded, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -169,12 +169,13 @@
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Margin="5" Text="{x:Bind ViewModel.CurrentConfigurationName, Mode=OneWay}" Style="{StaticResource SmallPropertyLabel}" FontWeight="Bold" />
                                                 <TextBlock Grid.Column="1" Margin="5" Text="{x:Bind ViewModel.CurrentConfigurationFileName, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}" />
-                                                <!-- TODO: last column will have button to open file in editor -->
                                             </Grid>
                                         </controls:SettingsCard.Header>
                                     </controls:SettingsCard>
                                 </controls:SettingsExpander.Items>
-                            </controls:SettingsExpander>
+                            </controls:SettingsExpander>-->
+                            
+                            
                         </StackPanel>
                     </Grid>
 
@@ -271,7 +272,8 @@
                                             <TextBlock x:Uid="CommonTasks_SetServiceAutoStart" TextWrapping="WrapWholeWords" />
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef31;" Style="{StaticResource CommonTasksIconStyles}"/>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef31;" 
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
@@ -485,7 +487,8 @@
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe897;"/>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe897;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
 
                                     </controls:SettingsCard>
@@ -500,7 +503,8 @@
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"/>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
 
                                     </controls:SettingsCard>
@@ -515,7 +519,8 @@
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe71b;"/>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe71b;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
@@ -529,7 +534,8 @@
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe71b;"/>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe71b;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 
@@ -557,7 +563,8 @@
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe897;"/>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe897;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
 
                                     </controls:SettingsCard>
@@ -571,7 +578,8 @@
                                             </HyperlinkButton>
                                         </controls:SettingsCard.Header>
                                         <controls:SettingsCard.HeaderIcon>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"/>
+                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8bd;"
+                                                      Style="{StaticResource CommonTasksIconStyles}"/>
                                         </controls:SettingsCard.HeaderIcon>
                                     </controls:SettingsCard>
 

@@ -6,18 +6,21 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
+using Microsoft.Midi.Settings.Models;
+using Microsoft.Midi.Settings.ViewModels.Data;
+using Microsoft.UI.Dispatching;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.Midi.Settings.Contracts.Services;
-using Microsoft.Midi.Settings.Contracts.ViewModels;
-using Microsoft.Midi.Settings.Models;
-using Microsoft.Midi.Settings.ViewModels.Data;
-using Microsoft.UI.Dispatching;
+using System.Windows.Input;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Enumeration;
 
 namespace Microsoft.Midi.Settings.ViewModels
@@ -26,24 +29,30 @@ namespace Microsoft.Midi.Settings.ViewModels
     {
         public EndpointUserMetadata UserMetadata { get; private set; } = new EndpointUserMetadata();
 
-        [ObservableProperty]
-        public bool hasFunctionBlocks;
-
-        [ObservableProperty]
-        public bool hasGroupTerminalBlocks;
-
-        [ObservableProperty]
-        public bool hasParent;
-
-        [ObservableProperty]
-        public bool showMidi2Properties;
+        public ICommand CopyEndpointDeviceIdCommand
+        {
+            get; private set;
+        }
 
 
         [ObservableProperty]
-        public MidiEndpointDeviceInformation deviceInformation;
+        private bool hasFunctionBlocks;
 
         [ObservableProperty]
-        public MidiEndpointWrapper endpointWrapper;
+        private bool hasGroupTerminalBlocks;
+
+        [ObservableProperty]
+        private bool hasParent;
+
+        [ObservableProperty]
+        private bool showMidi2Properties;
+
+
+        [ObservableProperty]
+        private MidiEndpointDeviceInformation deviceInformation;
+
+        [ObservableProperty]
+        private MidiEndpointWrapper endpointWrapper;
 
 
         public ObservableCollection<MidiFunctionBlock> FunctionBlocks = [];
@@ -51,22 +60,22 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         [ObservableProperty]
-        public MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
+        private MidiEndpointTransportSuppliedInfo transportSuppliedInfo;
 
         [ObservableProperty]
-        public MidiEndpointUserSuppliedInfo userSuppliedInfo;
+        private MidiEndpointUserSuppliedInfo userSuppliedInfo;
 
         [ObservableProperty]
-        public MidiDeclaredDeviceIdentity deviceIdentity;
+        private MidiDeclaredDeviceIdentity deviceIdentity;
 
         [ObservableProperty]
-        public MidiDeclaredStreamConfiguration streamConfiguration;
+        private MidiDeclaredStreamConfiguration streamConfiguration;
 
         [ObservableProperty]
-        public MidiDeclaredEndpointInfo endpointInfo;
+        private MidiDeclaredEndpointInfo endpointInfo;
 
         [ObservableProperty]
-        public DeviceInformation parentDeviceInformation;
+        private DeviceInformation parentDeviceInformation;
 
         private readonly ISynchronizationContextService _synchronizationContextService;
         public DeviceDetailViewModel(ISynchronizationContextService synchronizationContextService)
@@ -92,6 +101,16 @@ namespace Microsoft.Midi.Settings.ViewModels
             this.ShowMidi2Properties = false;
 
             System.Diagnostics.Debug.WriteLine("Finished clearing properties");
+
+
+            CopyEndpointDeviceIdCommand = new RelayCommand(
+            () =>
+            {
+                var dataPackage = new DataPackage();
+                dataPackage.SetText(EndpointWrapper.Id);
+                Clipboard.SetContent(dataPackage);
+            });
+
         }
 
         public void OnNavigatedFrom()

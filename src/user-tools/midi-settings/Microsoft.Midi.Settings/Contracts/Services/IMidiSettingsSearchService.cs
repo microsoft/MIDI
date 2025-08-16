@@ -11,25 +11,44 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.VoiceCommands;
 
-namespace Microsoft.Midi.Settings.Contracts.Services
+namespace Microsoft.Midi.Settings.Contracts.Services;
+
+public class MidiSettingsSearchResult
 {
-    public class MidiSettingsSearchResult
+    // TODO: might want to change this to a path to an image
+    public string Glyph;
+
+    public string DisplayText;
+
+    public string ResultType;
+
+    public List<string> Keywords = [];
+
+    public string DestinationKey;
+
+    public object? Parameter = null;
+
+
+    public void AddKeyword(string keyword)
     {
-        public string DisplayText;
+        var cleaned = keyword.ToLower().Trim();
 
-        public IList<string> Keywords = new List<string>();
-
-        public string DestinationKey;
-
-        public object? Parameter;
+        if (cleaned != string.Empty)
+        {
+            Keywords.Add(cleaned);
+        }
     }
 
-
-    public interface IMidiSettingsSearchService
-    {
-        public IList<MidiSettingsSearchResult> GetFilteredResults(string filterText);
+}
 
 
-    }
+public interface IMidiSettingsSearchService
+{
+    public IList<MidiSettingsSearchResult> GetFilteredResults(string filterText);
+
+
+    public void Refresh();
+
 }

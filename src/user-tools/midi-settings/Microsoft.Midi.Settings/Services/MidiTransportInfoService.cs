@@ -39,5 +39,12 @@ namespace Microsoft.Midi.Settings.Services
             return _transports.Where(p => p.Id == transportId).FirstOrDefault<MidiServiceTransportPluginInfo>();
         }
 
+
+        public IList<MidiServiceTransportPluginInfo> GetAllTransports()
+        {
+            return _transports.OrderBy(t=>t.TransportCode).ToList();
+        }
+
+
     }
 }

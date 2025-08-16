@@ -9,6 +9,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml.Controls;
@@ -54,6 +55,12 @@ public class PageService : IPageService
         Configure<HomeViewModel, HomePage>();
     }
 
+    private List<Type> _searchEnabledViewModels = [];
+    public IList<Type> GetAllSearchEnabledViewModels()
+    {
+        return _searchEnabledViewModels;
+    }
+
     public Type GetPageType(string key)
     {
         Type? pageType;
@@ -72,9 +79,10 @@ public class PageService : IPageService
         where VM : ObservableObject
         where V : Page
     {
-        lock (_pages)
+        lock (_pages)   // todo: may also need to lock _searchEnabledViewModels
         {
-            var key = typeof(VM).FullName!;
+            var vmType = typeof(VM);
+            var key = vmType.FullName!;
             if (_pages.ContainsKey(key))
             {
                 throw new ArgumentException($"The key {key} is already configured in PageService");
@@ -84,6 +92,12 @@ public class PageService : IPageService
             if (_pages.Any(p => p.Value == type))
             {
                 throw new ArgumentException($"This type is already configured with key {_pages.First(p => p.Value == type).Key}");
+            }
+
+            // added to support a global search with page keywords
+            if (vmType.IsAssignableTo(typeof(ISettingsSearchTarget)))
+            {
+                _searchEnabledViewModels.Add(vmType);
             }
 
             _pages.Add(key, type);

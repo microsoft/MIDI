@@ -2,12 +2,15 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <SolidColorBrush x:Key="MidiIconBaseColorBlueBrush" Color="#FF15B1F9" />
+    <SolidColorBrush x:Key="MidiIconBaseColorGreenBrush" Color="#FF00B698" />
+
     <Style x:Key="NavigationMenuIconStyles" TargetType="FontIcon">
-        <Setter Property="Foreground" Value="CornflowerBlue" />
+        <Setter Property="Foreground" Value="{StaticResource MidiIconBaseColorBlueBrush}" />
     </Style>
 
     <Style x:Key="CommonTasksIconStyles" TargetType="FontIcon">
-        <!--<Setter Property="Foreground" Value="CornflowerBlue" />-->
+        <Setter Property="Foreground" Value="{StaticResource MidiIconBaseColorBlueBrush}" />
     </Style>
 
 

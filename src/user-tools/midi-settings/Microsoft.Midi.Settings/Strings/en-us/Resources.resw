@@ -153,7 +153,7 @@
   <data name="Shell_ToolsNavHeader.Content" xml:space="preserve">
     <value>Tools</value>
   </data>
-  <data name="Shell_ToolsSysEx.Content" xml:space="preserve">
+  <data name="Shell_ToolsSysEx.Text" xml:space="preserve">
     <value>SysEx Transfer</value>
   </data>
   <data name="Shell_ToolsConsole.Content" xml:space="preserve">
@@ -283,7 +283,7 @@
     <value>Below is a list of all MIDI devices as seen by the legacy MIDI 1.0 APIs, and the apps which use them.</value>
   </data>
   <data name="AppSessionName" xml:space="preserve">
-    <value>Settings</value>
+    <value>MIDI Settings</value>
   </data>
   <data name="PluginsTransportPage_Description.Text" xml:space="preserve">
     <value>This page lists the full set of transport plugins installed and recognized by Windows MIDI Services on this PC. For information on the endpoint devices enumerated by these transport plugins, see the Devices page.</value>
@@ -321,8 +321,8 @@
   <data name="Shell_EndpointsBle10.Content" xml:space="preserve">
     <value>Bluetooth MIDI 1.0 (Preview)</value>
   </data>
-  <data name="Shell_EndpointsNet2Udp.Content" xml:space="preserve">
-    <value>Network MIDI 2.0 (Preview)</value>
+  <data name="Shell_EndpointsNet2Udp.Text" xml:space="preserve">
+    <value>Network MIDI 2.0</value>
   </data>
   <data name="CreateLoopbackEndpointsWindowTitle" xml:space="preserve">
     <value>Create Loopback Endpoints</value>
@@ -572,7 +572,7 @@ This step requires Administrator rights, and must be repeated after any new Wind
   <data name="Shell_AllMidiDevices.Content" xml:space="preserve">
     <value>MIDI Devices and Endpoints</value>
   </data>
-  <data name="Shell_GlobalMidiSettings.Content" xml:space="preserve">
+  <data name="Shell_GlobalMidiSettings.Text" xml:space="preserve">
     <value>Global MIDI Settings</value>
   </data>
   <data name="Shell_ConfigureTransportsNavHeader.Content" xml:space="preserve">
@@ -593,5 +593,11 @@ This step requires Administrator rights, and must be repeated after any new Wind
 If you have many existing projects using your MIDI 1.0 devices and need to keep naming compatibility so the devices are automatically discovered by your DAW or other app, we recommend using the classic port names. Otherwise, the new style names are usually more informative.
 
 This change will require a MIDI Service restart before it will take effect.</value>
+  </data>
+  <data name="GlobalSettings_SetMidiServiceToAutoStartCard.Header" xml:space="preserve">
+    <value>Set the Windows MIDI Service (midisrv.exe) to auto-start with Windows, to reduce delays when apps call MIDI APIs for the first time after a reboot.</value>
+  </data>
+  <data name="GlobalSettings_SetMidiServiceToAutoStartButton.Content" xml:space="preserve">
+    <value>Set MIDI Service to Auto-Start</value>
   </data>
 </root>

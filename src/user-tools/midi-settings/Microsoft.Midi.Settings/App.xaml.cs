@@ -122,6 +122,10 @@ public partial class App : Application
                     services.AddSingleton<IMidiEndpointEnumerationService, MidiEndpointEnumerationService>();
                     services.AddSingleton<IMidiSdkService, MidiSdkService>();
 
+                    services.AddSingleton<IMidiSessionService, MidiSessionService>();
+                    services.AddSingleton<IMidiPanicService, MidiPanicService>();
+                    services.AddSingleton<IMidiSettingsSearchService, MidiSettingsSearchService>();
+
 
                     // Views and ViewModels
                     services.AddTransient<SettingsViewModel>();
@@ -184,7 +188,6 @@ public partial class App : Application
                     services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
                 }).
                 Build();
-
 
             //}
             //else

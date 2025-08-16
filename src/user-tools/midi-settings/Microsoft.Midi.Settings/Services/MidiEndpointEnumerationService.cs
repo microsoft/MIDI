@@ -90,7 +90,8 @@ namespace Microsoft.Midi.Settings.Services
                 deviceInformation,
                 App.GetService<IMidiTransportInfoService>(),
                 App.GetService<INavigationService>(),
-                _synchronizationContextService);
+                _synchronizationContextService,
+                App.GetService<IMidiPanicService>());
         }
 
 
