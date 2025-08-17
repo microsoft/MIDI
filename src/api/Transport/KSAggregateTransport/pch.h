@@ -78,6 +78,8 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "json_defs.h"
 #include "json_helpers.h"
+#include "json_custom_property_helper.h"
+
 #include "swd_helpers.h"
 #include "resource_util.h"
 #include "ump_helpers.h"

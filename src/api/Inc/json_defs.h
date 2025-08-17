@@ -37,6 +37,9 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY                              L"manufacturer"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENABLED_PROPERTY                                   L"enabled"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY                                  L"umpOnly"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_REQUIRES_NOTE_OFF_TRANSLATION_PROPERTY      L"requiresNotOffTranslation"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SUPPORTS_MPE_PROPERTY                       L"supportsMidiPolyphonicExpression"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_RECOMMENDED_CC_INTERVAL_MS_PROPERTY         L"recommendedControlChangeIntervalMilliseconds"
 
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY                                   L"match"
