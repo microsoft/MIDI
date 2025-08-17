@@ -5,6 +5,7 @@
     xmlns:views="using:Microsoft.Midi.Settings.Views"
     xmlns:local="using:Microsoft.Midi.Settings.ViewModels"
     xmlns:midi2="using:Microsoft.Windows.Devices.Midi2"
+    xmlns:midi2Reporting="using:Microsoft.Windows.Devices.Midi2.Reporting"
     xmlns:helpers="using:Microsoft.Midi.Settings.Helpers"
     xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:midicontrols="using:Microsoft.Midi.Settings.Controls"
@@ -95,30 +96,64 @@
         <!-- View type, Sort, and Filter -->
 
         <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
+            <CommandBar HorizontalAlignment="Left"
+                        Margin="0,0,0,8"
+                        IsOpen="False"
+                        DefaultLabelPosition="Right"
+                        IsDynamicOverflowEnabled="False">
+                <CommandBar.PrimaryCommands>
+                    
+                    <!-- Cards, Icons, or List -->
+
+                    <AppBarToggleButton x:Name="ViewCardsButton"
+                                        VerticalAlignment="Center"
+                                        Label="Cards">
+                        <AppBarToggleButton.Icon>
+                            <FontIcon Glyph="&#xE737;" />
+                        </AppBarToggleButton.Icon>
+                    </AppBarToggleButton>
+                    <AppBarToggleButton x:Name="ViewListButton"
+                                  Label="List">
+                        <AppBarToggleButton.Icon>
+                            <FontIcon Glyph="&#xE8FD;" />
+                        </AppBarToggleButton.Icon>
+
+                    </AppBarToggleButton>
+
+                    <AppBarSeparator/>
+
+                    <!-- Filter by transport -->
+                    <AppBarElementContainer VerticalAlignment="Center">
+                        <ComboBox ItemsSource="{x:Bind ViewModel.Transports, Mode=OneTime}"
+                                  SelectedItem="{x:Bind ViewModel.SelectedTransport, Mode=TwoWay}"
+                                  FontSize="{StaticResource SmallFontSize}"
+                                  Margin="8,0,8,0"
+                                  VerticalAlignment="Bottom">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:TransportFilterEntry">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{x:Bind Name}"/>
+
+                                        <TextBlock Text="(" Margin="4,0,0,0"  />
+                                        <TextBlock Text="{x:Bind TransportCode}" Opacity="0.5"/>
+                                        <TextBlock Text=")"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </AppBarElementContainer>
+                    
+                    
+                    
+                </CommandBar.PrimaryCommands>
+            </CommandBar>
+            
+            
+            <!--<Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Cards, Icons, or List -->
-            <!--<StackPanel Orientation="Horizontal"
-                        Grid.Column="0"
-                        Margin="8">
-
-                <ToggleButton x:Name="ViewCardsButton">
-                    <ToggleButton.Content>
-                        <FontIcon Glyph="&#xE737;" />
-                    </ToggleButton.Content>
-                </ToggleButton>
-
-                <ToggleButton x:Name="ViewListButton">
-                    <ToggleButton.Content>
-                        <FontIcon Glyph="&#xE8FD;" />
-                    </ToggleButton.Content>
-                </ToggleButton>
-
-            </StackPanel>-->
+            </Grid.ColumnDefinitions>-->
 
             <!-- Sort order combo and button  -->
             <!--<StackPanel Orientation="Horizontal"

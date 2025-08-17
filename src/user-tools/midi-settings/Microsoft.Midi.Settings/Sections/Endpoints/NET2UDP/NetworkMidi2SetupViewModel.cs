@@ -51,6 +51,10 @@ namespace Microsoft.Midi.Settings.ViewModels
             return "Network MIDI 2.0 Setup";
         }
 
+        public static string GetSearchPageDescription()
+        {
+            return "Set up a Network MIDI 2.0 host on this PC, and also connect to external network MIDI 2.0 hosts.";
+        }
 
         private readonly IMidiConfigFileService _configFileService;
         private MidiNetworkAdvertisedHostWatcher _watcher;

@@ -40,12 +40,18 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public static string GetSearchPageTitle()
         {
-            return "Send System Exclusive (SysEx) messages to an endpoint";
+            return "Send SysEx Data";
+        }
+
+        public static string GetSearchPageDescription()
+        {
+            return "Send System Exclusive (SysEx) messages to an endpoint for patch transfers, firmware updates, and more.";
         }
 
 
         private readonly IMidiSdkService _sdkService;
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
+        private readonly IMidiSessionService _sessionService;
 
         public DispatcherQueue? DispatcherQueue { get; set; }
 
@@ -57,9 +63,11 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public ToolsSysExViewModel(
             IMidiSdkService sdkService,
+            IMidiSessionService sessionService,
             IMidiEndpointEnumerationService endpointEnumerationService
             )
         {
+            _sessionService = sessionService;
             _sdkService = sdkService;
             _endpointEnumerationService = endpointEnumerationService;
 
@@ -124,15 +132,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             await Task.Run(async () =>
             {
-                var session = MidiSession.Create("SysEx Sender");
-
-                if (session == null)
-                {
-                    // TODO: Set error display
-                    return;
-                }
-
-                var connection = session.CreateEndpointConnection(SelectedEndpoint.Id);
+                var connection = _sessionService.GetConnection(SelectedEndpoint.Id);
 
                 if (connection == null)
                 {
@@ -140,29 +140,26 @@ namespace Microsoft.Midi.Settings.ViewModels
                     return;
                 }
 
-                if (connection.Open())
-                {
-                    var op = MidiSystemExclusiveSender.SendDataAsync(
-                        connection,
-                        stream.AsInputStream(),
-                        MidiSystemExclusiveDataReaderFormat.Binary,
-                        MidiSystemExclusiveDataFormat.ByteFormatSystemExclusive7,
-                        _delayBetweenMessagesMilliseconds,
-                        true,
-                        SelectedGroup.Group);
+                var op = MidiSystemExclusiveSender.SendDataAsync(
+                    connection,
+                    stream.AsInputStream(),
+                    MidiSystemExclusiveDataReaderFormat.Binary,
+                    MidiSystemExclusiveDataFormat.ByteFormatSystemExclusive7,
+                    _delayBetweenMessagesMilliseconds,
+                    true,
+                    SelectedGroup.Group);
 
-                    op.Progress = new AsyncOperationProgressHandler<bool, MidiSystemExclusiveSendProgress>(
-                        (info, progress) =>
+                op.Progress = new AsyncOperationProgressHandler<bool, MidiSystemExclusiveSendProgress>(
+                    (info, progress) =>
+                    {
+                        DispatcherQueue?.TryEnqueue(() =>
                         {
-                            DispatcherQueue?.TryEnqueue(() =>
-                            {
-                                TransferBytesRead = (double)(progress.BytesRead);
-                                TransferMessagesSent = progress.MessagesSent;
-                            });
+                            TransferBytesRead = (double)(progress.BytesRead);
+                            TransferMessagesSent = progress.MessagesSent;
                         });
+                    });
 
-                    await op;
-                }
+                await op;
             });
 
         }

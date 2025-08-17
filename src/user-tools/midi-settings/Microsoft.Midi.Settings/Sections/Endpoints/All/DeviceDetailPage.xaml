@@ -43,40 +43,38 @@
 
             </Button>
             
-            <Grid Grid.Column="1" RowSpacing="4" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Grid Grid.Column="1" RowSpacing="4">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0"
-                           Grid.Column="0"
+                           HorizontalAlignment="Left"
                            Text="{x:Bind ViewModel.DeviceInformation.Name}" 
                            Style="{StaticResource PageHeaderStyleDeviceName}" />
-                
-                <Button Grid.Row="0"
-                        Grid.Column="1"
-                        Margin="16,4,0,2"
-                        Padding="8,2,8,2"
-                        VerticalAlignment="Top"
+
+                <TextBlock Grid.Row="1" 
+                           HorizontalAlignment="Left"
+                           Margin="0"
+                           Text="{x:Bind ViewModel.EndpointWrapper.Description}" 
+                           Style="{StaticResource SmallPlainPropertyValueWithWrap}"
+                           Opacity="0.5"/>
+
+                <Button Grid.Row="2"
+                        HorizontalAlignment="Left"
+                        BorderThickness="0"
+                        Padding="0"
+                        Foreground="{StaticResource AccentTextFillColorPrimaryBrush}"
                         Background="Transparent"
-                        Click="Button_Click">
-                    <FontIcon Glyph="&#xE8AC;" FontSize="10" />
+                        Click="Button_Click"
+                        Content="Customize">
+                    
                     <ToolTipService.ToolTip>
                         <TextBlock Text="Rename endpoint, update description and other properties." />
                     </ToolTipService.ToolTip>
                 </Button>
-
-                <TextBlock Grid.Row="1" 
-                           Grid.Column="0"
-                           Text="{x:Bind ViewModel.EndpointWrapper.Description}" 
-                           Style="{StaticResource SmallPlainPropertyValueWithWrap}"
-                           MaxWidth="450"
-                           Opacity="0.5"/>
 
 
             </Grid>
@@ -309,21 +307,21 @@
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Column="0" Grid.Row="0" 
-                                                   Text="Number" 
+                                                   Text="Port Number" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
                                                    Text="{x:Bind PortNumber }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
-                                                   Text="Id" 
+                                                   Text="WinRT Id" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
                                                    Text="{x:Bind PortDeviceId }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
-                                                   Text="Group"
+                                                   Text="Mapped Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
                                                    Text="{x:Bind Group.DisplayValue}" 
@@ -770,8 +768,11 @@
         
 
         <ContentDialog x:Name="editUserDefinedPropertiesDialog"
-                       PrimaryButtonText="OK" IsPrimaryButtonEnabled="True"
-                       CloseButtonText="Cancel">
+                       PrimaryButtonText="OK" 
+                       IsPrimaryButtonEnabled="True"
+                       CloseButtonText="Cancel"
+                       PrimaryButtonCommand="{x:Bind ViewModel.SubmitEndpointCustomizationCommand}"
+                       >
             <ContentDialog.Resources>
                 <x:Double x:Key="ContentDialogMaxWidth">1200</x:Double>
                 <x:Double x:Key="ContentDialogMaxHeight">800</x:Double>
@@ -781,9 +782,7 @@
                 <DataTemplate>
                     <StackPanel Orientation="Vertical">
                         <TextBlock Text="Personalize MIDI Endpoint" />
-                        <TextBlock Text="NOTE: This dialog is not yet wired up. Changes will not be applied" 
-                                   Style="{StaticResource BodyTextBlockStyle}"
-                                   TextWrapping="WrapWholeWords" />
+
                     </StackPanel>
                 </DataTemplate>
             </ContentDialog.TitleTemplate>
@@ -806,12 +805,12 @@
                 <TextBox Header="Name"
                          Width="300"
                          HorizontalAlignment="Left"
-                         Text="{x:Bind ViewModel.UserMetadata.Name, Mode=TwoWay}" />
+                         Text="{x:Bind ViewModel.CustomizedName, Mode=TwoWay}" />
                     
                 <TextBox Header="Description"
                          TextWrapping="Wrap"
                          Height="100"
-                         Text="{x:Bind ViewModel.UserMetadata.Description, Mode=TwoWay}"/>
+                         Text="{x:Bind ViewModel.CustomizedDescription, Mode=TwoWay}"/>
 
 
                 <Grid>
@@ -841,7 +840,7 @@
                         </Button>
 
                         <TextBlock Grid.Row="2"
-                                   Text="{x:Bind ViewModel.UserMetadata.SmallImagePath, Mode=OneWay}"
+                                   Text="{x:Bind ViewModel.CustomizedSmallImagePath, Mode=TwoWay}"
                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                     </Grid>
@@ -867,7 +866,7 @@
                         </Button>
 
                         <TextBlock Grid.Row="2"
-                                   Text="{x:Bind ViewModel.UserMetadata.LargeImagePath, Mode=OneWay}"
+                                   Text="{x:Bind ViewModel.CustomizedLargeImagePath, Mode=TwoWay}"
                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
                     </Grid>
 

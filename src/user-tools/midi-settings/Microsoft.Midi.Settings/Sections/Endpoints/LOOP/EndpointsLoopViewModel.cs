@@ -47,6 +47,12 @@ namespace Microsoft.Midi.Settings.ViewModels
             return "Manage Loopback Endpoints";
         }
 
+        public static string GetSearchPageDescription()
+        {
+            return "Set up loopback endpoints for simple bidirectional communication between different apps.";
+        }
+
+
 
         private IMidiConfigFileService _midiConfigFileService;
 

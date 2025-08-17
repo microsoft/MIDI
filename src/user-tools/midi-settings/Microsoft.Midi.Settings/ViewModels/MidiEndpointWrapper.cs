@@ -127,6 +127,28 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             HasManufacturerName = ManufacturerName != string.Empty;
 
+            // native UMP
+
+            if (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
+            {
+                IsNativeUmp = true;
+            }
+            else
+            {
+                IsNativeUmp = false;
+            }
+
+            // MIDI 2.0 protocol
+
+            if (deviceInformation.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
+            {
+                SupportsMidi2 = true;
+            }
+            else
+            {
+                SupportsMidi2 = false;
+            }
+
             // description
             if (deviceInformation.GetUserSuppliedInfo().Description != string.Empty)
             {
@@ -137,7 +159,16 @@ namespace Microsoft.Midi.Settings.ViewModels
                 // look up the name of the transport given the transport id
                 Description = "A " +
                     transportInfoService.GetTransportForId(deviceInformation.GetTransportSuppliedInfo().TransportId).Name +
-                    " endpoint.";
+                    " endpoint";
+
+                if (SupportsMidi2)
+                {
+                    Description += " which natively supports the MIDI 2.0 protocol.";
+                }
+                else
+                {
+                    Description += ".";
+                }
             }
 
             // unique identifier
@@ -185,27 +216,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                 SmallImage = source;
             }
 
-            // native UMP
-
-            if (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
-            {
-                IsNativeUmp = true;
-            }
-            else
-            {
-                IsNativeUmp = false;
-            }
-
-            // MIDI 2.0 protocol
-
-            if (deviceInformation.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
-            {
-                SupportsMidi2 = true;
-            }
-            else
-            {
-                SupportsMidi2 = false;
-            }
 
             // TODO: These may be a bit expensive to get. TBD
 

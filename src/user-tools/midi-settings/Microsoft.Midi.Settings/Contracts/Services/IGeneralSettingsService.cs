@@ -6,15 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.UI.Xaml;
-using Windows.Foundation;
-
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
 public class WindowRect

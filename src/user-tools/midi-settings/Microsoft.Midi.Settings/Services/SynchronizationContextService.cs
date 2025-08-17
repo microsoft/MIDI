@@ -1,27 +1,30 @@
-﻿using Microsoft.Midi.Settings.Contracts.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
 
-namespace Microsoft.Midi.Settings.Services
+using Microsoft.Midi.Settings.Contracts.Services;
+
+
+namespace Microsoft.Midi.Settings.Services;
+
+public class SynchronizationContextService : ISynchronizationContextService
 {
-    public class SynchronizationContextService : ISynchronizationContextService
+    private SynchronizationContext _uiContext;
+    public SynchronizationContext GetUIContext()
     {
-        private SynchronizationContext _uiContext;
-        public SynchronizationContext GetUIContext()
-        {
-            return _uiContext;
-        }
-
-        public SynchronizationContextService(SynchronizationContext uiContext)
-        {
-            _uiContext = uiContext;
-
-            System.Diagnostics.Debug.WriteLine($"SynchronizationContextService: UI Context captured.");
-        }
-
-
+        return _uiContext;
     }
+
+    public SynchronizationContextService(SynchronizationContext uiContext)
+    {
+        _uiContext = uiContext;
+
+        System.Diagnostics.Debug.WriteLine($"SynchronizationContextService: UI Context captured.");
+    }
+
+
 }

@@ -8,19 +8,12 @@
 
 using Microsoft.Midi.Settings.Activation;
 using Microsoft.Midi.Settings.Contracts.Services;
-using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Dispatching;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Runtime.InteropServices;
-using Windows.Devices.Display;
-using Windows.Devices.Enumeration;
-using Windows.Foundation.Metadata;
-using Windows.UI.Core;
-using Windows.Win32.UI.Shell;
-using WinUIEx;
+
 
 namespace Microsoft.Midi.Settings.Services;
 

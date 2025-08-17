@@ -114,17 +114,22 @@ public partial class App : Application
 
                     // MIDI Services
                     services.AddSingleton<IMidiTransportInfoService, MidiTransportInfoService>();
-                    services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
-                    services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
-                    services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
-                    
-                    services.AddSingleton<IMidiUpdateService, MidiUpdateService>();
                     services.AddSingleton<IMidiEndpointEnumerationService, MidiEndpointEnumerationService>();
-                    services.AddSingleton<IMidiSdkService, MidiSdkService>();
-
                     services.AddSingleton<IMidiSessionService, MidiSessionService>();
                     services.AddSingleton<IMidiPanicService, MidiPanicService>();
+
+                    services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
+                    services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
+                    services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
+                    services.AddSingleton<IMidiEndpointCustomizationService, MidiEndpointCustomizationService>();
+
+                    services.AddSingleton<IMidiUpdateService, MidiUpdateService>();
+                    services.AddSingleton<IMidiSdkService, MidiSdkService>();
+
                     services.AddSingleton<IMidiSettingsSearchService, MidiSettingsSearchService>();
+
+                    services.AddSingleton<IWindowsSettingsService, WindowsSettingsService>();
+
 
 
                     // Views and ViewModels

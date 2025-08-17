@@ -34,6 +34,12 @@ public partial class ForDevelopersViewModel : ObservableRecipient, ISettingsSear
         return "Developer Settings";
     }
 
+    public static string GetSearchPageDescription()
+    {
+        return "MIDI configuration options for developers testing their own apps, devices, transports, and message processing plugins.";
+    }
+
+
     IMidiServiceRegistrySettingsService m_registrySettingsService;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;

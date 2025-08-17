@@ -6,17 +6,9 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Midi.Settings.ViewModels;
-
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
-public interface IMidiEndpointEnumerationService
+public interface IMidiEndpointCustomizationService
 {
-    void Start();
-
-    IList<MidiEndpointWrapper> GetEndpoints();
-    IList<MidiEndpointWrapper> GetEndpointsForTransportCode(string transportCode);
-    IList<MidiEndpointWrapper> GetEndpointsForTransportId(Guid transportId);
-    IList<MidiEndpointWrapper> GetEndpointsForPurpose(MidiEndpointDevicePurpose purpose);
-
+    bool UpdateEndpoint(MidiEndpointDeviceInformation deviceInformation, MidiEndpointUserSuppliedInfo updatedUserSuppliedInfo);
 }

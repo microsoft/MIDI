@@ -21,15 +21,15 @@
                     <controls:SettingsCard.HeaderIcon>
                         <FontIcon Glyph="&#xE8AC;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsCard.HeaderIcon>
-                    
+
                     <controls:SettingsCard.Content>
                         <Button x:Uid="GlobalSettings_SetMidiServiceToAutoStartButton" 
                                 />
                     </controls:SettingsCard.Content>
-                    
+
                 </controls:SettingsCard>
-                
-                
+
+
                 <controls:SettingsExpander IsExpanded="True"
                                            x:Uid="GlobalSettings_DefaultNamingExpander">
                     <controls:SettingsExpander.HeaderIcon>
@@ -47,14 +47,14 @@
                             </StackPanel>
                         </controls:SettingsCard>
                     </controls:SettingsExpander.Items>
-                </controls:SettingsExpander>                
+                </controls:SettingsExpander>
             </StackPanel>
 
-            
-            
-            
-            
-            
+
+
+
+
+
         </ScrollViewer>
         
     </Grid>

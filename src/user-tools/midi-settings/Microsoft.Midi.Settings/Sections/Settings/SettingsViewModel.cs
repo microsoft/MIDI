@@ -36,6 +36,11 @@ public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
         return "MIDI Settings App Settings";
     }
 
+    public static string GetSearchPageDescription()
+    {
+        return "Configure settings specifically for this application.";
+    }
+
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IGeneralSettingsService _generalSettingsService;

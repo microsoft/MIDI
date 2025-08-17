@@ -19,6 +19,7 @@ using Microsoft.Windows.Devices.Midi2.Utilities.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -27,6 +28,12 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
+    public struct TransportFilterEntry
+    {
+        public string TransportCode { get; set; }
+        public string Name { get; set; }
+    }
+
     public partial class EndpointsAllViewModel : ObservableRecipient, INavigationAware, ISettingsSearchTarget
     {
         public static IList<string> GetSearchKeywords()
@@ -40,11 +47,37 @@ namespace Microsoft.Midi.Settings.ViewModels
             return "All Endpoints";
         }
 
+        public static string GetSearchPageDescription()
+        {
+            return "List of all active MIDI endpoints on the system. Includes the ability to see details, customize the endpoint, and send MIDI panic.";
+        }
+
+
 
         private readonly INavigationService _navigationService;
         private readonly IMidiEndpointEnumerationService _enumerationService;
         private readonly IMidiTransportInfoService _transportInfoService;
         private readonly ISynchronizationContextService _synchronizationContextService;
+
+
+        public ObservableCollection<TransportFilterEntry> Transports = [];
+
+        [ObservableProperty]
+        private TransportFilterEntry selectedTransport;
+
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+
+            if (e.PropertyName == nameof(SelectedTransport))
+            {
+                // apply filter
+                RefreshMidiEndpointDevices();
+            }
+        }
+
+
+        private const string AllTransportsFilterCode = "All";
 
         public EndpointsAllViewModel(
             INavigationService navigationService,
@@ -58,6 +91,22 @@ namespace Microsoft.Midi.Settings.ViewModels
             _transportInfoService = transportInfoService;
             _synchronizationContextService = synchronizationContextService;
 
+            var all = new TransportFilterEntry();
+            all.TransportCode = AllTransportsFilterCode;
+            all.Name = "All endpoints for all transports";
+
+            Transports.Add(all);
+
+            foreach (var transport in _transportInfoService.GetAllTransports().OrderBy(t=>t.Name))
+            {
+                var entry = new TransportFilterEntry();
+                entry.Name = transport.Name;
+                entry.TransportCode = transport.TransportCode;
+
+                Transports.Add(entry);
+            }
+
+            SelectedTransport = all;
         }
 
         public ObservableCollection<MidiEndpointWrapper> Endpoints { get; } = [];
@@ -70,10 +119,20 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             _synchronizationContextService.GetUIContext()?.Post(_ =>
             {
-                var allEndpoints = _enumerationService.GetEndpoints().OrderBy(e => e.Name);
+                IList<MidiEndpointWrapper> results;
 
+                if (SelectedTransport.TransportCode == AllTransportsFilterCode)
+                {
+                    results = _enumerationService.GetEndpoints();
+                }
+                else
+                {
+                    results = _enumerationService.GetEndpointsForTransportCode(SelectedTransport.TransportCode);
+                }
 
-                foreach (var endpoint in allEndpoints)
+                Endpoints.Clear();
+
+                foreach (var endpoint in results.OrderBy(e=>e.Name))
                 {
                     if (FilterString.Trim() == string.Empty)
                     {

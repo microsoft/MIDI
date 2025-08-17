@@ -1,11 +1,15 @@
-﻿using Microsoft.Midi.Settings.Contracts.Services;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.Midi.Settings.Services;
 
@@ -49,10 +53,15 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
             var pageTitleMethod = t.GetMethod("GetSearchPageTitle", BindingFlags.Static | BindingFlags.Public);
             var pageTitle = (string)pageTitleMethod?.Invoke(null, null)!;
 
+            var pageDescriptionMethod = t.GetMethod("GetSearchPageDescription", BindingFlags.Static | BindingFlags.Public);
+            var pageDescription = (string)pageDescriptionMethod?.Invoke(null, null)!;
+
+
             result.Glyph = SettingsPageGlyph;
             result.Keywords.AddRange(keywords);
             result.DestinationKey = t.FullName!;
             result.DisplayText = pageTitle;
+            result.DisplayDescription = pageDescription;
 
             result.ResultType = "Settings Page";
 
@@ -68,6 +77,7 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
             result.Glyph = EndpointGlyph;
             result.DestinationKey = typeof(DeviceDetailViewModel).FullName!;
             result.DisplayText = endpoint.Name;
+            result.DisplayDescription = endpoint.Description;
             result.Parameter = endpoint;
 
             if (endpoint.TransportCode.ToLower().StartsWith("ks"))
@@ -75,7 +85,7 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
                 result.AddKeyword("usb driver");
             }
 
-            result.AddKeyword(endpoint.Description);
+            //result.AddKeyword(endpoint.Description);
             result.AddKeyword(endpoint.TransportCode);
             result.AddKeyword(endpoint.ManufacturerName);
 
@@ -109,12 +119,24 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
                 port.Glyph = SourcePortGlyph;
                 port.DestinationKey = typeof(DeviceDetailViewModel).FullName!;
-                port.DisplayText = sourcePort.PortName + " on " + endpoint.Name;
+                port.DisplayText = sourcePort.PortName;
                 port.ResultType = "MIDI 1.0 Source/Input Port";
                 port.Parameter = endpoint;
 
-                port.Keywords.AddRange(result.Keywords);
-                port.AddKeyword(sourcePort.PortName);
+                string protocol = string.Empty;
+                if (endpoint.SupportsMidi2)
+                {
+                    protocol = "MIDI 2.0";
+                }
+                else
+                {
+                    protocol = "MIDI 1.0";
+                }
+
+                port.DisplayDescription = $"A MIDI 1.0 API-compatible port associated with the \"{endpoint.Name}\" {protocol} endpoint.";
+
+                port.Keywords.AddRange(result.Keywords);    // all parent keywords
+                //port.AddKeyword(sourcePort.PortName);
                 port.AddKeyword("winmm");
                 port.AddKeyword("mma");
 
@@ -127,12 +149,24 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
                 port.Glyph = DestinationPortGlyph;
                 port.DestinationKey = typeof(DeviceDetailViewModel).FullName!;
-                port.DisplayText = destinationPort.PortName + " on " + endpoint.Name;
+                port.DisplayText = destinationPort.PortName;
                 port.ResultType = "MIDI 1.0 Destination/Output Port";
                 port.Parameter = endpoint;
 
-                port.Keywords.AddRange(result.Keywords);
-                port.AddKeyword(destinationPort.PortName);
+                string protocol = string.Empty;
+                if (endpoint.SupportsMidi2)
+                {
+                    protocol = "MIDI 2.0";
+                }
+                else
+                {
+                    protocol = "MIDI 1.0";
+                }
+
+                port.DisplayDescription = $"A MIDI 1.0 API-compatible port associated with the \"{endpoint.Name}\" {protocol} endpoint.";
+
+                port.Keywords.AddRange(result.Keywords);    // all parent keywords
+                //port.AddKeyword(destinationPort.PortName);
                 port.AddKeyword("winmm");
                 port.AddKeyword("mma");
 
@@ -197,7 +231,11 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
 
         foreach (var result in AllItems)
         {
-            if (result.DisplayText.Contains(cleanedSearchtext))
+            if (result.DisplayText != null && result.DisplayText.ToLower().Contains(cleanedSearchtext))
+            {
+                results.Add(result);
+            }
+            else if (result.DisplayDescription != null && result.DisplayDescription.ToLower().Contains(cleanedSearchtext))
             {
                 results.Add(result);
             }

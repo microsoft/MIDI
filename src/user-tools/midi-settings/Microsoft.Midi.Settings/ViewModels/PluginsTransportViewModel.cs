@@ -29,6 +29,11 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             return "Transport Management";
         }
+        public static string GetSearchPageDescription()
+        {
+            return "View all currently installed transports in the MIDI Service";
+        }
+
 
         public ObservableCollection<MidiServiceTransportPluginInfo> Plugins { get; } = [];
 

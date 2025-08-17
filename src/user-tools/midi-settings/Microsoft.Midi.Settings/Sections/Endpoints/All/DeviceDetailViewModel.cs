@@ -27,9 +27,12 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class DeviceDetailViewModel : ObservableRecipient, INavigationAware
     {
-        public EndpointUserMetadata UserMetadata { get; private set; } = new EndpointUserMetadata();
-
         public ICommand CopyEndpointDeviceIdCommand
+        {
+            get; private set;
+        }
+
+        public ICommand SubmitEndpointCustomizationCommand
         {
             get; private set;
         }
@@ -65,6 +68,29 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private MidiEndpointUserSuppliedInfo userSuppliedInfo;
 
+
+        [ObservableProperty]
+        private string customizedName;
+
+        [ObservableProperty]
+        private string customizedDescription;
+
+        [ObservableProperty]
+        private string customizedSmallImagePath;
+
+        [ObservableProperty]
+        private string customizedLargeImagePath;
+
+        [ObservableProperty]
+        private bool customizedRequiresNoteOffTranslation;
+
+        [ObservableProperty]
+        private bool customizedSupportsMidiPolyphonicExpression;
+
+        [ObservableProperty]
+        private ushort customizedRecommendedControlChangeAutomationIntervalMilliseconds;
+
+
         [ObservableProperty]
         private MidiDeclaredDeviceIdentity deviceIdentity;
 
@@ -78,9 +104,13 @@ namespace Microsoft.Midi.Settings.ViewModels
         private DeviceInformation parentDeviceInformation;
 
         private readonly ISynchronizationContextService _synchronizationContextService;
-        public DeviceDetailViewModel(ISynchronizationContextService synchronizationContextService)
+        private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
+        public DeviceDetailViewModel(
+            ISynchronizationContextService synchronizationContextService, 
+            IMidiEndpointCustomizationService endpointCustomizationService)
         {
             _synchronizationContextService = synchronizationContextService;
+            _endpointCustomizationService = endpointCustomizationService;
 
             System.Diagnostics.Debug.WriteLine("Start clearing properties");
 
@@ -93,7 +123,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             this.StreamConfiguration = new MidiDeclaredStreamConfiguration();
             this.EndpointInfo = new MidiDeclaredEndpointInfo();
 
-           // this.ParentDeviceInformation = null;
+            // this.ParentDeviceInformation = null;
 
             this.HasParent = false;
             this.HasFunctionBlocks = false;
@@ -109,6 +139,41 @@ namespace Microsoft.Midi.Settings.ViewModels
                 var dataPackage = new DataPackage();
                 dataPackage.SetText(EndpointWrapper.Id);
                 Clipboard.SetContent(dataPackage);
+            });
+
+
+            // Prepopulate customization properties with the ones from the endpoint
+            CustomizedName = string.IsNullOrWhiteSpace(userSuppliedInfo.Name) ? string.Empty : userSuppliedInfo.Name.Trim() ;
+            CustomizedDescription = string.IsNullOrWhiteSpace(userSuppliedInfo.Description) ? string.Empty : userSuppliedInfo.Description.Trim();
+            CustomizedSmallImagePath = string.IsNullOrWhiteSpace(userSuppliedInfo.SmallImagePath) ? string.Empty : userSuppliedInfo.SmallImagePath.Trim();
+            CustomizedLargeImagePath = string.IsNullOrWhiteSpace(userSuppliedInfo.LargeImagePath) ? string.Empty : userSuppliedInfo.LargeImagePath.Trim();
+            CustomizedRequiresNoteOffTranslation = userSuppliedInfo.RequiresNoteOffTranslation;
+            CustomizedSupportsMidiPolyphonicExpression = userSuppliedInfo.SupportsMidiPolyphonicExpression;
+            CustomizedRecommendedControlChangeAutomationIntervalMilliseconds = userSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;
+
+
+            SubmitEndpointCustomizationCommand = new RelayCommand(
+            () =>
+            {
+                var custom = new MidiEndpointUserSuppliedInfo();
+
+                custom.Name = string.IsNullOrWhiteSpace(CustomizedName) ? string.Empty : CustomizedName.Trim();
+                custom.Description = string.IsNullOrWhiteSpace(CustomizedDescription) ? string.Empty : CustomizedDescription.Trim();
+                custom.SmallImagePath = string.IsNullOrWhiteSpace(CustomizedSmallImagePath) ? string.Empty : CustomizedSmallImagePath.Trim();
+                custom.LargeImagePath = string.IsNullOrWhiteSpace(CustomizedLargeImagePath) ? string.Empty : CustomizedLargeImagePath.Trim();
+                custom.RequiresNoteOffTranslation = CustomizedRequiresNoteOffTranslation;
+                custom.SupportsMidiPolyphonicExpression = CustomizedSupportsMidiPolyphonicExpression;
+                custom.RecommendedControlChangeAutomationIntervalMilliseconds = CustomizedRecommendedControlChangeAutomationIntervalMilliseconds;
+
+                var success = _endpointCustomizationService.UpdateEndpoint(
+                    DeviceInformation.EndpointDeviceId,
+                    custom);
+
+                if (success)
+                {
+                    // todo: update the properties again
+                }
+
             });
 
         }

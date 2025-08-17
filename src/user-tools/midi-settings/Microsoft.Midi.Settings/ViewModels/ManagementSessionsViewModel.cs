@@ -34,6 +34,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             return "Session Management";
         }
 
+        public static string GetSearchPageDescription()
+        {
+            return "View all currently active MIDI sessions, including which endpoints the applications have open.";
+        }
+
         public ObservableCollection<MidiServiceSessionInformationWrapper> Sessions { get; private set; } = [];
 
         public ManagementSessionsViewModel()

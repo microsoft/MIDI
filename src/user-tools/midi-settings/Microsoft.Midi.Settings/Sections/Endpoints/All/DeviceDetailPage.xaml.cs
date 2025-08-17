@@ -74,12 +74,6 @@ namespace Microsoft.Midi.Settings.Views
                 return;
             }
 
-            var userSuppliedInfo = ViewModel.DeviceInformation.GetUserSuppliedInfo();
-
-            ViewModel.UserMetadata.Name = userSuppliedInfo.Name;
-            ViewModel.UserMetadata.Description = userSuppliedInfo.Description;
-            ViewModel.UserMetadata.LargeImagePath = userSuppliedInfo.LargeImagePath;
-            ViewModel.UserMetadata.SmallImagePath = userSuppliedInfo.SmallImagePath;
 
             editUserDefinedPropertiesDialog.Width = this.Width / 3;
 
@@ -87,9 +81,9 @@ namespace Microsoft.Midi.Settings.Views
             // TODO: Should probably have these in the viewmodel as
             // we'll need a renderable image anyway. This code is temp
 
-            if (ViewModel.UserMetadata.LargeImagePath != string.Empty)
+            if (!string.IsNullOrEmpty(ViewModel.CustomizedLargeImagePath))
             {
-                var file = await StorageFile.GetFileFromPathAsync(ViewModel.UserMetadata.LargeImagePath);
+                var file = await StorageFile.GetFileFromPathAsync(ViewModel.CustomizedLargeImagePath);
 
                 if (file != null)
                 {
@@ -106,9 +100,9 @@ namespace Microsoft.Midi.Settings.Views
                 }
             }
 
-            if (ViewModel.UserMetadata.SmallImagePath != string.Empty)
+            if (!string.IsNullOrEmpty(ViewModel.CustomizedSmallImagePath))
             {
-                var file = await StorageFile.GetFileFromPathAsync(ViewModel.UserMetadata.SmallImagePath);
+                var file = await StorageFile.GetFileFromPathAsync(ViewModel.CustomizedSmallImagePath);
 
                 if (file != null)
                 {
@@ -155,7 +149,7 @@ namespace Microsoft.Midi.Settings.Views
             if (file != null)
             {
                 // update the edit vm
-                ViewModel.UserMetadata.LargeImagePath = file.Path;
+                ViewModel.CustomizedLargeImagePath = file.Path;
 
                 // Open a stream for the selected file.
                 // The 'using' block ensures the stream is disposed
@@ -189,7 +183,7 @@ namespace Microsoft.Midi.Settings.Views
             if (file != null)
             {
                 // update the edit vm
-                ViewModel.UserMetadata.SmallImagePath = file.Path;
+                ViewModel.CustomizedSmallImagePath = file.Path;
 
                 // Open a stream for the selected file.
                 // The 'using' block ensures the stream is disposed

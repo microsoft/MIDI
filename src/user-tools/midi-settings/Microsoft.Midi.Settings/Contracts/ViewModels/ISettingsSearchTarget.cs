@@ -11,4 +11,6 @@ public interface ISettingsSearchTarget
     abstract static IList<string> GetSearchKeywords();
 
     abstract static string GetSearchPageTitle();
+
+    abstract static string GetSearchPageDescription();
 }

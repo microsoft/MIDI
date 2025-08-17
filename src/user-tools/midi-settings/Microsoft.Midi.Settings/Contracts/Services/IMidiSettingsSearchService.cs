@@ -6,13 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.ApplicationModel.VoiceCommands;
-
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
 public class MidiSettingsSearchResult
@@ -21,6 +14,8 @@ public class MidiSettingsSearchResult
     public string Glyph;
 
     public string DisplayText;
+
+    public string DisplayDescription;
 
     public string ResultType;
 

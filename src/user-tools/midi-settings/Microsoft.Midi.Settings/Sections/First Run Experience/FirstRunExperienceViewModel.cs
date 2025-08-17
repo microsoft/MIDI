@@ -37,6 +37,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             return "First-run Setup";
         }
 
+        public static string GetSearchPageDescription()
+        {
+            return "Set up a configuration file and other common MIDI settings.";
+        }
+
 
         private IMidiConfigFileService m_configFileService;
         private IMidiDefaultsService m_defaultsService;

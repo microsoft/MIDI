@@ -30,7 +30,7 @@ using Microsoft.Midi.Settings.Contracts.ViewModels;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class GlobalMidiSettingsViewModel : ObservableRecipient, ISettingsSearchTarget
+    public partial class GlobalMidiSettingsViewModel : ObservableRecipient , ISettingsSearchTarget
     {
         public static IList<string> GetSearchKeywords()
         {
@@ -42,6 +42,12 @@ namespace Microsoft.Midi.Settings.ViewModels
         {
             return "Global MIDI Settings";
         }
+
+        public static string GetSearchPageDescription()
+        {
+            return "Manage settings which configure the broad MIDI system on this PC.";
+        }
+
 
         public GlobalMidiSettingsViewModel()
         {

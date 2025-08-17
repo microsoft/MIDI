@@ -28,9 +28,9 @@
         <Thickness x:Key="NavigationViewHeaderMargin">40,0,40,20</Thickness>
 
         <Style x:Key="NavigationViewItemPreviewTagContainer"  TargetType="Grid">
-            <Setter Property="Opacity" Value="0.75" />
+            <Setter Property="Opacity" Value="1" />
             <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}"/>
-            <Setter Property="Background" Value="{StaticResource MidiIconBaseColorGreenBrush}" />
+            <Setter Property="Background" Value="{StaticResource SystemFillColorCriticalBackground}" />
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
@@ -38,7 +38,7 @@
             <Setter Property="Text" Value="Preview"/>
             <Setter Property="FontSize" Value="9"/>
             <Setter Property="Margin" Value="4,2,4,2"/>
-            <Setter Property="Foreground" Value="Black" />
+            <Setter Property="Foreground" Value="{StaticResource SystemFillColorCritical}" />
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
@@ -92,24 +92,48 @@
                                     QuerySubmitted="SettingsSearchBox_QuerySubmitted">
                         <AutoSuggestBox.ItemTemplate>
                             <DataTemplate x:DataType="serviceContracts:MidiSettingsSearchResult">
-                                <StackPanel Orientation="Horizontal">
-                                    <FontIcon Glyph="{x:Bind Glyph}"
-                                              Margin="8,0,8,0"/>
+                                <Grid Margin="4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
 
-                                    <TextBlock Margin="8,0,4,0"
-                                               Text="{x:Bind DisplayText}"/>
+                                    <FontIcon Grid.Column="0" 
+                                              VerticalAlignment="Center"
+                                              Glyph="{x:Bind Glyph}"
+                                              Style="{StaticResource NavigationMenuIconStyles}"
+                                              Margin="4,0,8,0"/>
 
-                                    <TextBlock Margin="4,0,0,0"
-                                               Text="("/>
+                                    <StackPanel Grid.Column="1"
+                                                Orientation="Vertical">
 
-                                    <TextBlock Margin="0,0,0,0"
-                                               Text="{x:Bind ResultType}"
-                                               Foreground="{StaticResource TextFillColorTertiary}"/>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="8,4,4,0">
+                                            <TextBlock Margin="0,0,4,0"
+                                                       Text="{x:Bind DisplayText}"/>
 
-                                    <TextBlock Margin="0,0,8,0"
-                                               Text=")"/>
+                                            <TextBlock Margin="4,0,0,0"
+                                                       Text="("/>
 
-                                </StackPanel>
+                                            <TextBlock Margin="0,0,0,0"
+                                                       Text="{x:Bind ResultType}"
+                                                       Foreground="{StaticResource TextFillColorTertiary}"/>
+
+                                            <TextBlock Margin="0,0,8,0"
+                                                       Text=")"/>
+
+                                        </StackPanel>
+
+                                        <TextBlock Margin="8,4,0,8" 
+                                                   Text="{x:Bind DisplayDescription}"
+                                                   TextWrapping="WrapWholeWords"
+                                                   FontSize="{StaticResource SmallFontSize}"
+                                                   Foreground="{StaticResource TextFillColorTertiary}" />
+
+                                    </StackPanel>
+                                    
+
+                                </Grid>
                             </DataTemplate>
                         </AutoSuggestBox.ItemTemplate>
                     </AutoSuggestBox>
@@ -202,7 +226,9 @@
                         ExpandedModeThresholdWidth="1280"
                         IsTitleBarAutoPaddingEnabled="False"
                         DisplayModeChanged="NavigationViewControl_DisplayModeChanged"
-                        Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
+                        >
+            <!-- <Header="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}"> -->
+
 
             <!-- Remove page background and border -->
             <NavigationView.Resources>
@@ -302,10 +328,12 @@
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItem x:Name="SectionNET2UDP" Visibility="Collapsed"  helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
+                <NavigationViewItem x:Name="SectionNET2UDP" Visibility="Collapsed"  
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-NetworkMidi.svg" />
                     </NavigationViewItem.Icon>
+                    
                     <NavigationViewItem.Content>
                         <Grid>
                             <TextBlock x:Uid="Shell_EndpointsNet2Udp" />
@@ -314,8 +342,9 @@
                                 <TextBlock Style="{StaticResource NavigationViewItemPreviewText}"/>
                             </Grid>
                         </Grid>
-                    </NavigationViewItem.Content>                    
+                    </NavigationViewItem.Content>
                 </NavigationViewItem>
+                
 
                 <NavigationViewItem x:Name="SectionBLE10" Visibility="Collapsed" x:Uid="Shell_EndpointsBle10" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsBle10ViewModel">
                     <NavigationViewItem.Icon>
@@ -497,7 +526,7 @@
             </NavigationView.MenuItems>
             
             
-            <NavigationView.HeaderTemplate>
+            <!--<NavigationView.HeaderTemplate>
                 <DataTemplate>
                     <Grid>
                         <TextBlock
@@ -505,10 +534,10 @@
                             Style="{ThemeResource TitleTextBlockStyle}" />
                     </Grid>
                 </DataTemplate>
-            </NavigationView.HeaderTemplate>
+            </NavigationView.HeaderTemplate>-->
             
            
-            <i:Interaction.Behaviors>
+            <!--<i:Interaction.Behaviors>
                 <behaviors:NavigationViewHeaderBehavior
                     DefaultHeader="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
                     <behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
@@ -521,7 +550,7 @@
                         </DataTemplate>
                     </behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
                 </behaviors:NavigationViewHeaderBehavior>
-            </i:Interaction.Behaviors>
+            </i:Interaction.Behaviors>-->
 
             <!--<NavigationView.ContentTemplate>
                 <DataTemplate>

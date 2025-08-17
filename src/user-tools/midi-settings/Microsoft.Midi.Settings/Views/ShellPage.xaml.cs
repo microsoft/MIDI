@@ -162,15 +162,22 @@ public sealed partial class ShellPage : Page
 
     private void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine("AutoSuggestBox_GotFocus: Enter");
         // very hacky. Should make this more deterministic and move outside of this event
         ViewModel.RefreshSearchData();
 
         SearchBox.Width = SearchBox.MaxWidth;
+
+        System.Diagnostics.Debug.WriteLine("AutoSuggestBox_GotFocus: Exit");
     }
 
     private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine("AutoSuggestBox_LostFocus: Enter");
+
         SearchBox.Width = SearchBox.MinWidth;
+
+        System.Diagnostics.Debug.WriteLine("AutoSuggestBox_LostFocus: Exit");
     }
 
 

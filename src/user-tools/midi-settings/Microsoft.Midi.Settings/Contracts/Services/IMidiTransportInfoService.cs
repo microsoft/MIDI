@@ -6,22 +6,15 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace Microsoft.Midi.Settings.Contracts.Services;
 
-namespace Microsoft.Midi.Settings.Contracts.Services
+public interface IMidiTransportInfoService
 {
-    public interface IMidiTransportInfoService
-    {
-        MidiServiceTransportPluginInfo GetTransportForCode(string transportCode);
+    MidiServiceTransportPluginInfo GetTransportForCode(string transportCode);
 
-        MidiServiceTransportPluginInfo GetTransportForId(Guid transportId);
+    MidiServiceTransportPluginInfo GetTransportForId(Guid transportId);
 
-        IList<MidiServiceTransportPluginInfo> GetAllTransports();
+    IList<MidiServiceTransportPluginInfo> GetAllTransports();
 
 
-    }
 }
