@@ -71,6 +71,9 @@ class Build : NukeBuild
     string NugetPackageVersion;
     string NugetFullPackageIdWithVersion = "";
 
+
+    const string TargetWindowsSdkVersion = "10.0.22621.0";
+
     DateTime BuildDate;
 
 
@@ -603,7 +606,7 @@ class Build : NukeBuild
 
             var sdkOutputRootFolder = AppSdkSolutionFolder / "vsfiles" / "out";
 
-//        string rid = "net8.0-windows10.0.20348.0";
+            //        string rid = $"net8.0-windows{TargetWindowsSdkVersion}";
 
             foreach (var sourcePlatform in SdkPlatforms)
             {
@@ -1324,7 +1327,7 @@ class Build : NukeBuild
 
                 // TODO: This doesn't deal with any localization content
 
-                var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / "net8.0-windows10.0.20348.0" / rid ;
+                var consoleOutputFolder = MidiConsoleSolutionFolder / "Midi" / "bin" / Configuration.Release / $"net8.0-windows{TargetWindowsSdkVersion}" / rid ;
                 //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
                 var runtimesFolder = consoleOutputFolder;
 
@@ -1420,7 +1423,7 @@ class Build : NukeBuild
 
             // TODO: This doesn't deal with any localization content
 
-            var psOutputFolder = MidiPowerShellSolutionFolder / "bin" / Configuration.Release / "net8.0-windows10.0.20348.0" / rid;
+            var psOutputFolder = MidiPowerShellSolutionFolder / "bin" / Configuration.Release / $"net8.0-windows{TargetWindowsSdkVersion}" / rid;
             //var runtimesFolder = consoleOutputFolder / "runtimes" / rid / "native";
             var runtimesFolder = psOutputFolder;
 
