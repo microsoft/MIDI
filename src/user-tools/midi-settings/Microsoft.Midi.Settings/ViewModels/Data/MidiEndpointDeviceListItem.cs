@@ -48,7 +48,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         public MidiEndpointNativeDataFormat NativeDataFormat => TransportSuppliedInfo.NativeDataFormat;
 
         public bool SupportsMidi10Protocol => DeclaredEndpointInfo.SupportsMidi10Protocol;
-        public bool SupportsMidi20Protocol => DeclaredEndpointInfo.SupportsMidi10Protocol;
+        public bool SupportsMidi20Protocol => DeclaredEndpointInfo.SupportsMidi20Protocol;
 
 
         public string TransportSuppliedDescription => TransportSuppliedInfo.Description;
