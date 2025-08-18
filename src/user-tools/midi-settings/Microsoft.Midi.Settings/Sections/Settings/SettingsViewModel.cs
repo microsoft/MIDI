@@ -13,16 +13,34 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Helpers;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.Devices.Midi2.Common;
 using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 using Windows.ApplicationModel;
 
 namespace Microsoft.Midi.Settings.ViewModels;
 
-public class SettingsViewModel : ObservableRecipient
+public class SettingsViewModel : ObservableRecipient, ISettingsSearchTarget
 {
+    public static IList<string> GetSearchKeywords()
+    {
+        // TODO: these need to be localized, so should refer to resources instead
+        return new[] { "app settings", "auto update", "developer mode", "theme", "light mode", "dark mode" };
+    }
+
+    public static string GetSearchPageTitle()
+    {
+        return "MIDI Settings App Settings";
+    }
+
+    public static string GetSearchPageDescription()
+    {
+        return "Configure settings specifically for this application.";
+    }
+
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly ILocalSettingsService _localSettingsService;
     private readonly IGeneralSettingsService _generalSettingsService;
@@ -126,21 +144,6 @@ public class SettingsViewModel : ObservableRecipient
 
     private static string GetVersionDescription()
     {
-        Version version;
-
-        if (RuntimeHelper.IsMSIX)
-        {
-            var packageVersion = Package.Current.Id.Version;
-
-            version = new(packageVersion.Major, packageVersion.Minor, packageVersion.Build, packageVersion.Revision);
-        }
-        else
-        {
-            version = Assembly.GetExecutingAssembly().GetName().Version!;
-        }
-
-        version = new();
-
-        return $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+        return MidiRuntimeInformation.GetInstalledVersion().ToString();
     }
 }

@@ -99,6 +99,13 @@ BEGIN
     IDS_PLUGIN_METADATA_NAME            "Loopback MIDI"
     IDS_PLUGIN_METADATA_DESCRIPTION     "Provides simple loopback app-to-app MIDI support"
     IDS_PLUGIN_METADATA_AUTHOR          "Microsoft"
+
+    IDS_ERROR_PARSING_JSON              "Error parsing JSON. Is it valid?"
+    IDS_ERROR_DUPLICATE_UNIQUE_ID       "Unique identifier is already in use with another loopback endpoint."
+    IDS_ERROR_MISSING_UNIQUE_ID         "Missing or blank unique identifier."
+    IDS_ERROR_MISSING_NAME              "Missing or blank endpoint name."
+    IDS_ERROR_CREATION_FAILED           "Endpoint creation failed for an unknown reason."
+
 END
 
 IDR_MIDI2LOOPBACKMIDITRANSPORT REGISTRY "Midi2.LoopbackMidiTransport.rgs"

@@ -99,8 +99,11 @@
                                   IsEnabled="{x:Bind ViewModel.CreateConfigurationFile, Mode=OneWay}"
                                   IsOn="{x:Bind ViewModel.SetServiceToAutoStart, Mode=TwoWay}"
                                   />
-                    
-                    
+
+                    <TextBlock Text="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                           Margin="13"
+                           Style="{StaticResource ValidationErrorTextBlockStyle}" />
+
                 </StackPanel>
             </ScrollViewer>
             

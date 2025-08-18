@@ -34,8 +34,26 @@ namespace Microsoft.Midi.Settings.ViewModels
     }
 
 
-    public partial class EndpointsLoopViewModel : SingleTransportEndpointViewModelBase, INavigationAware
+    public partial class EndpointsLoopViewModel : SingleTransportEndpointViewModelBase, INavigationAware, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "endpoints", "ports", "loopback", "app to app", "default loopback" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "Manage Loopback Endpoints";
+        }
+
+        public static string GetSearchPageDescription()
+        {
+            return "Set up loopback endpoints for simple bidirectional communication between different apps.";
+        }
+
+
+
         private IMidiConfigFileService _midiConfigFileService;
 
         public ICommand ShowCreateLoopbackPairsDialogCommand
@@ -223,24 +241,22 @@ namespace Microsoft.Midi.Settings.ViewModels
             // this keeps track of ids for dedup purposes
             var ids = new Dictionary<string, bool>();
 
-            // we shouldn't be reloading here. optimize this later.
-            var endpoints = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices
-                .Where(x => x.Value.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
-                .Select(i => i.Value);
+            var endpoints = _enumerationService.GetEndpoints()
+                .Where(x => x.DeviceInformation.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId);
 
 
             foreach (var endpoint in endpoints)
             {
-                var associated = MidiLoopbackEndpointManager.GetAssociatedLoopbackEndpoint(endpoint);
+                var associated = MidiLoopbackEndpointManager.GetAssociatedLoopbackEndpoint(endpoint.DeviceInformation);
 
                 if (associated != null)
                 {
-                    if (!ids.ContainsKey(endpoint.EndpointDeviceId) &&
+                    if (!ids.ContainsKey(endpoint.Id) &&
                         !ids.ContainsKey(associated.EndpointDeviceId))
                     {
                         var pair = new MidiLoopbackEndpointPair();
 
-                        pair.LoopA = endpoint;
+                        pair.LoopA = endpoint.DeviceInformation;
                         pair.LoopB = associated;
 
                         MidiLoopbackEndpointPairs.Add(pair);

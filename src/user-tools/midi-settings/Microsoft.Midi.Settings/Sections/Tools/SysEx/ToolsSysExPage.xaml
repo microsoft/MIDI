@@ -36,9 +36,9 @@
                                                         HorizontalAlignment="Stretch"
                                                         ShowMessageDestinationGroups="True"
                                                         ShowMessageSourceGroups="False"
-                                                        SelectedEndpoint="{x:Bind ViewModel.SelectedEndpointDevice, Mode=TwoWay}"
+                                                        SelectedEndpoint="{x:Bind ViewModel.SelectedEndpoint, Mode=TwoWay}"
                                                         SelectedGroup="{x:Bind ViewModel.SelectedGroup, Mode=TwoWay}"
-                                                        Endpoints="{x:Bind ViewModel.MidiEndpointDevices}"
+                                                        Endpoints="{x:Bind ViewModel.MidiEndpoints}"
                                                         />
 
         <TextBox x:Name="TransferDelayTextBox"

@@ -48,7 +48,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Word count is incorrect for this UMP", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed. Word count is incorrect for this UMP", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                     TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
                     TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
@@ -56,6 +56,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingUInt32(message.Word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
                 );
             }
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Invalid UMP data\n");
 
             return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
         }
@@ -110,7 +112,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Word count is incorrect for this UMP", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send failed. Word count is incorrect for this UMP", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                         TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
                         TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
@@ -119,6 +121,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingUInt8(byteCount, MIDI_SDK_TRACE_MESSAGE_SIZE_BYTES_FIELD)
                     );
                 }
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Word count is incorrect for this UMP\n");
 
                 //throw hresult_invalid_argument();
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
@@ -144,10 +148,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Buffer smaller than provided offset + byteLength", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send failed. Buffer smaller than provided offset + byteLength", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                         TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
                     );
+
+                    OutputDebugString(L"MIDI App SDK: Send failed. Buffer smaller than provided offset + byteLength\n");
 
                     return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
                 }
@@ -165,10 +171,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Unable to get buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed. Unable to get buffer", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                     TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Unable to get buffer\n");
 
                 return midi2::MidiSendMessageResults::Failed;
             }
@@ -184,11 +192,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. HRESULT exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. HRESULT exception sending message\n");
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed;
@@ -203,9 +213,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Exception sending message. Is the service running?\n");
+
 
             return midi2::MidiSendMessageResults::Failed;
         }
@@ -249,10 +262,12 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                     TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Array start index + word count is > array size", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingWideString(L"Send failed. Array start index + word count is > array size", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                     TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Array start index + word count is > array size\n");
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::DataIndexOutOfRange;
             }
@@ -270,7 +285,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Word count is incorrect for this UMP", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send Failed. Word count is incorrect for this UMP", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                         TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
                         TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
@@ -278,6 +293,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingUInt8(wordCount, MIDI_SDK_TRACE_MESSAGE_SIZE_WORDS_FIELD)
                     );
                 }
+
+                OutputDebugString(L"MIDI App SDK: Send Failed. Word count is incorrect for this UMP\n");
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
@@ -300,11 +317,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. HRESULT exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. HRESULT exception sending message\n");
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed;
@@ -319,9 +338,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Exception sending message. Is the service running?\n");
 
             return midi2::MidiSendMessageResults::Failed;
         }
@@ -363,13 +384,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Word count is incorrect for UMP32 message type", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send failed. Word count is incorrect for UMP32 message type", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                         TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
                         TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
                         TraceLoggingUInt32(word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
                     );
                 }
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Word count is incorrect for UMP32 message type\n");
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
@@ -392,11 +415,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. HRESULT exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. HRESULT exception sending message\n");
+
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed;
@@ -411,9 +437,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Exception sending message. Is the service running?\n");
 
             return midi2::MidiSendMessageResults::Failed;
         }
@@ -457,13 +485,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Word count is incorrect for UMP64 message type", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send failed. Word count is incorrect for UMP64 message type", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                         TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
                         TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
                         TraceLoggingUInt32(word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
                     );
                 }
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Word count is incorrect for UMP64 message type\n");
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
@@ -490,11 +520,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. HRESULT exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. HRESULT exception sending message\n");
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed;
@@ -509,9 +541,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Exception sending message. Is the service running?\n");
 
             return midi2::MidiSendMessageResults::Failed;
         }
@@ -556,13 +590,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Word count is incorrect for UMP96 message type", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send failed. Word count is incorrect for UMP96 message type", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                         TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
                         TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
                         TraceLoggingUInt32(word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
                     );
                 }
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Word count is incorrect for UMP96 message type\n");
+
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
@@ -590,11 +627,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. HRESULT exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. HRESULT exception sending message\n");
+
 
             // TODO: handle buffer full and other expected hresults
             return midi2::MidiSendMessageResults::Failed;
@@ -609,9 +649,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Exception sending message. Is the service running?\n");
 
             return midi2::MidiSendMessageResults::Failed;
         }
@@ -657,13 +699,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                         TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Word count is incorrect for UMP128 message type", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(L"Send failed. Word count is incorrect for UMP128 message type", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                         TraceLoggingGuid(m_connectionId, MIDI_SDK_TRACE_CONNECTION_ID_FIELD),
                         TraceLoggingUInt64(timestamp, MIDI_SDK_TRACE_MESSAGE_TIMESTAMP_FIELD),
                         TraceLoggingUInt32(word0, MIDI_SDK_TRACE_MESSAGE_WORD0_FIELD)
                     );
                 }
+
+                OutputDebugString(L"MIDI App SDK: Send failed. Word count is incorrect for UMP128 message type\n");
 
                 return midi2::MidiSendMessageResults::Failed | midi2::MidiSendMessageResults::InvalidMessageTypeForWordCount;
             }
@@ -692,11 +736,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. HRESULT exception sending message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. HRESULT exception sending message\n");
 
 
             // TODO: handle buffer full and other expected hresults
@@ -712,9 +758,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Exception sending message. Is the service running?\n");
 
             return midi2::MidiSendMessageResults::Failed;
         }
@@ -757,11 +805,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"hresult exception sending message. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. HRESULT exception sending message. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD),
                 TraceLoggingHResult(static_cast<HRESULT>(ex.code()), MIDI_SDK_TRACE_HRESULT_FIELD),
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. HRESULT exception sending message. Service may be unavailable\n");
 
 
             // todo: handle buffer full and similar messages
@@ -777,9 +827,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingWideString(L"Send failed. Exception sending message. Is the service running?", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Send failed. Exception sending message. Is the service running?\n");
 
             return midi2::MidiSendMessageResults::Failed;
         }

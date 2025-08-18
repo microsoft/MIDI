@@ -41,68 +41,6 @@ CMidi2Ble1MidiConfigurationManager::Initialize(
 
 // TODO: Move all strings to resources
 
-//_Use_decl_annotations_
-//HRESULT
-//CMidi2Ble1MidiConfigurationManager::ValidateHostDefinition(
-//    MidiNetworkHostDefinition& definition,
-//    winrt::hstring& errorMessage)
-//{
-//    errorMessage = L"";
-//
-//    // is there a unique identifier?
-//
-//    if (definition.EntryIdentifier.empty())
-//    {
-//        errorMessage = L"Missing Entry Identifier";
-//        return E_INVALIDARG;
-//    }
-//
-//    // TODO: was that identifier already in use?
-//
-//
-//    if (definition.UmpEndpointName.empty())
-//    {
-//        errorMessage = L"Missing Endpoint Name";
-//        return E_INVALIDARG;
-//    }
-//
-//    if (definition.ProductInstanceId.empty())
-//    {
-//        errorMessage = L"Missing Product Instance Id";
-//        return E_INVALIDARG;
-//    }
-//
-//    //if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpRange)
-//    //{
-//    //    // validate that there are exactly two entries
-//
-//    //    if (definition.IpAddresses.size() != 2)
-//    //    {
-//    //        errorMessage = L"Connection policy IP address range needs exactly two valid entries to define the range.";
-//    //        return E_INVALIDARG;
-//    //    }
-//    //}
-//    //else if (definition.ConnectionPolicy == MidiNetworkHostConnectionPolicy::PolicyAllowFromIpList)
-//    //{
-//    //    // validate that there is at least one entry
-//
-//    //    if (definition.IpAddresses.size() < 1)
-//    //    {
-//    //        errorMessage = L"Connection policy IP address list needs at least one valid entry.";
-//    //        return E_INVALIDARG;
-//    //    }
-//
-//    //}
-//
-//
-//    // validate user authentication
-//
-//
-//
-//    return S_OK;
-//
-//}
-
 
 
 
@@ -516,10 +454,6 @@ CMidi2Ble1MidiConfigurationManager::UpdateConfiguration(
     //{
 
     //}
-
-
-
-
 
 
 

@@ -67,7 +67,7 @@ public partial class App : Application
 
 
     // this is set from the splashscreen handling in the activation service
-    public static WinUIEx.WindowEx MainWindow { get; } = new MainWindow();
+    public static Window MainWindow { get; } = new MainWindow();
 
     public static MidiServiceInitializationProgressWindow Splash { get; } = new MidiServiceInitializationProgressWindow();
 
@@ -78,6 +78,10 @@ public partial class App : Application
         try
         {
             InitializeComponent();
+
+            var uiContext = SynchronizationContext.Current;
+
+            var synchronizationContextService = new SynchronizationContextService(uiContext);
 
             Host = Microsoft.Extensions.Hosting.Host.
                 CreateDefaultBuilder().
@@ -90,6 +94,8 @@ public partial class App : Application
                     // Other Activation Handlers
 
                     // Services
+
+                    services.AddSingleton<ISynchronizationContextService>(synchronizationContextService); 
                     services.AddSingleton<ILoggingService, LoggingService>();
 
                     services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
@@ -108,22 +114,25 @@ public partial class App : Application
 
                     // MIDI Services
                     services.AddSingleton<IMidiTransportInfoService, MidiTransportInfoService>();
-                    services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
-                    services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
-                    services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
-                    
-                    services.AddSingleton<IMidiUpdateService, MidiUpdateService>();
                     services.AddSingleton<IMidiEndpointEnumerationService, MidiEndpointEnumerationService>();
+                    services.AddSingleton<IMidiSessionService, MidiSessionService>();
+                    services.AddSingleton<IMidiPanicService, MidiPanicService>();
+
+                    services.AddSingleton<IMidiDefaultsService, MidiDefaultsService>();
+                    services.AddSingleton<IMidiConfigFileService, MidiConfigFileService>();
+                    services.AddSingleton<IMidiServiceRegistrySettingsService, MidiServiceRegistrySettingsService>();
+                    services.AddSingleton<IMidiEndpointCustomizationService, MidiEndpointCustomizationService>();
+
+                    services.AddSingleton<IMidiUpdateService, MidiUpdateService>();
                     services.AddSingleton<IMidiSdkService, MidiSdkService>();
+
+                    services.AddSingleton<IMidiSettingsSearchService, MidiSettingsSearchService>();
+
+                    services.AddSingleton<IWindowsSettingsService, WindowsSettingsService>();
+
 
 
                     // Views and ViewModels
-                    services.AddTransient<WinRTMidi1DevicesViewModel>();
-                    services.AddTransient<WinRTMidi1DevicesPage>();
-
-                    services.AddTransient<WinMMMidi1DevicesViewModel>();
-                    services.AddTransient<WinMMMidi1DevicesPage>();
-
                     services.AddTransient<SettingsViewModel>();
                     services.AddTransient<SettingsPage>();
 
@@ -137,20 +146,11 @@ public partial class App : Application
                     services.AddTransient<EndpointsAllPage>();
                     services.AddTransient<EndpointsAllViewModel>();
 
-                    services.AddTransient<EndpointsAppPage>();
-                    services.AddTransient<EndpointsAppViewModel>();
-
                     services.AddTransient<EndpointsBle10Page>();
                     services.AddTransient<EndpointsBle10ViewModel>();
 
-                    services.AddTransient<EndpointsKSPage>();
-                    services.AddTransient<EndpointsKSViewModel>();
-
-                    services.AddTransient<EndpointsKsaPage>();
-                    services.AddTransient<EndpointsKsaViewModel>();
-
-                    services.AddTransient<EndpointsNet2UdpPage>();
-                    services.AddTransient<EndpointsNet2UdpViewModel>();
+                    services.AddTransient<GlobalMidiSettingsPage>();
+                    services.AddTransient<GlobalMidiSettingsViewModel>();
 
                     services.AddTransient<NetworkMidi2SetupPage>();
                     services.AddTransient<NetworkMidi2SetupViewModel>();
@@ -158,16 +158,9 @@ public partial class App : Application
                     services.AddTransient<EndpointsLoopPage>();
                     services.AddTransient<EndpointsLoopViewModel>();
 
-                    services.AddTransient<EndpointsDiagPage>();
-                    services.AddTransient<EndpointsDiagViewModel>();
-
 
                     services.AddTransient<DeviceDetailPage>();
                     services.AddTransient<DeviceDetailViewModel>();
-
-
-                    services.AddTransient<ToolsMonitorPage>();
-                    services.AddTransient<ToolsMonitorViewModel>();
 
                     services.AddTransient<ManagementSessionsPage>();
                     services.AddTransient<ManagementSessionsViewModel>();
@@ -180,9 +173,6 @@ public partial class App : Application
 
                     services.AddTransient<ConfigurationsPage>();
                     services.AddTransient<ConfigurationsViewModel>();
-
-                    services.AddTransient<ToolsConsolePage>();
-                    services.AddTransient<ToolsConsoleViewModel>();
 
                     services.AddTransient<ToolsSysExPage>();
                     services.AddTransient<ToolsSysExViewModel>();
@@ -203,7 +193,6 @@ public partial class App : Application
                     services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
                 }).
                 Build();
-
 
             //}
             //else
@@ -252,6 +241,8 @@ public partial class App : Application
     //private MidiDesktopAppSdkInitializer? _midiInitializer = null;
 
     //public MidiDesktopAppSdkInitializer? MidiInitializer => _midiInitializer;
+
+    public SynchronizationContext UIThreadSynchronizationContext;
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
     {

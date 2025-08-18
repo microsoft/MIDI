@@ -11,6 +11,12 @@
 #include "MidiLoopbackEndpointManager.h"
 #include "Endpoints.Loopback.MidiLoopbackEndpointManager.g.cpp"
 
+// copied from service loopback_transport_defs.h
+
+#define MIDI_LOOP_INSTANCE_ID_A_PREFIX L"MIDIU_LOOP_A_"
+#define MIDI_LOOP_INSTANCE_ID_B_PREFIX L"MIDIU_LOOP_B_"
+
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implementation
 {
     bool MidiLoopbackEndpointManager::IsTransportAvailable() noexcept
@@ -64,6 +70,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
             }
             else
             {
+                result.ErrorInformation = serviceResponse.ServiceMessage;
+
                 //internal::LogGeneralError(__FUNCTION__, L"Device creation failed (payload has false success value)");
 
                 TraceLoggingWrite(
@@ -192,6 +200,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Loopback::implem
 
         return nullptr;
 
+    }
+
+
+    winrt::hstring BuildDeviceId(_In_ std::wstring prefix, _In_ std::wstring uniqueId)
+    {
+        return winrt::hstring{ std::format(L"\\\\?\\swd#midisrv#{}{}#{{e7cce071-3c03-423f-88d3-f1045d02552b}}", prefix, uniqueId) };
+    }
+
+    bool MidiLoopbackEndpointManager::DoesLoopbackAExist(_In_ winrt::hstring uniqueIdentifier)
+    {
+        return (internal::IsValidWindowsMidiServicesEndpointId(BuildDeviceId(MIDI_LOOP_INSTANCE_ID_A_PREFIX, uniqueIdentifier.c_str())));
+    }
+
+    bool MidiLoopbackEndpointManager::DoesLoopbackBExist(_In_ winrt::hstring uniqueIdentifier)
+    {
+        return (internal::IsValidWindowsMidiServicesEndpointId(BuildDeviceId(MIDI_LOOP_INSTANCE_ID_B_PREFIX, uniqueIdentifier.c_str())));
     }
 
 }

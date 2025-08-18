@@ -62,6 +62,10 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     // default to failure
     auto responseObject = internal::BuildConfigurationResponseObject(false);
 
+    // use this to track any ids in use from this one config file update
+    std::map<std::wstring, bool> allocatedUniqueIdsA{};
+    std::map<std::wstring, bool> allocatedUniqueIdsB{};
+
     try
     {
 
@@ -77,17 +81,18 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                 TraceLoggingWideString(configurationJsonSection, "json")
             );
 
+            responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY, 
+                json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_PARSING_JSON)));
+
             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
             return E_FAIL;
         }
 
         // I was tempted to call this the Prefix Code. KHAN!!
-        //std::wstring instanceIdPrefixA = isFromConfigurationFile ? MIDI_PERM_LOOP_INSTANCE_ID_A_PREFIX : MIDI_TEMP_LOOP_INSTANCE_ID_A_PREFIX;
-        //std::wstring instanceIdPrefixB = isFromConfigurationFile ? MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX : MIDI_TEMP_LOOP_INSTANCE_ID_B_PREFIX;
 
-        std::wstring instanceIdPrefixA = MIDI_PERM_LOOP_INSTANCE_ID_A_PREFIX;
-        std::wstring instanceIdPrefixB = MIDI_PERM_LOOP_INSTANCE_ID_B_PREFIX;
+        std::wstring instanceIdPrefixA = MIDI_LOOP_INSTANCE_ID_A_PREFIX;
+        std::wstring instanceIdPrefixB = MIDI_LOOP_INSTANCE_ID_B_PREFIX;
 
         // we should probably set a property based on this as well.
 
@@ -137,6 +142,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         definitionB->UMPOnly = endpointBObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
 
 
+
                         if (definitionA->EndpointName.empty() || definitionB->EndpointName.empty())
                         {
                             TraceLoggingWrite(
@@ -147,6 +153,9 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingPointer(this, "this"),
                                 TraceLoggingWideString(L"Endpoint name missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
+
+                            responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                                json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_MISSING_NAME)));
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
@@ -165,10 +174,62 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                                 TraceLoggingWideString(L"Unique identifier missing or empty", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                             );
 
+                            responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                                json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_MISSING_UNIQUE_ID)));
+
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
                             return E_FAIL;
                         }
+
+
+                        // check for an identifier already in use. Failure to do this results in crashing the 
+                        // service due to issues creating the device
+                        if (allocatedUniqueIdsA.find(definitionA->EndpointUniqueIdentifier) != allocatedUniqueIdsA.end() ||
+                            TransportState::Current().GetEndpointTable()->IsUniqueIdentifierInUseForLoopbackA(definitionA->EndpointUniqueIdentifier))
+                        {
+                            TraceLoggingWrite(
+                                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unique identifier for Loopback Definition A already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(definitionA->EndpointUniqueIdentifier.c_str(), "identifier")
+                            );
+
+                            responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                                json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_DUPLICATE_UNIQUE_ID)));
+
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                            return E_FAIL;
+                        }
+                        allocatedUniqueIdsA.emplace(definitionA->EndpointUniqueIdentifier, true);
+
+                        if (allocatedUniqueIdsB.find(definitionB->EndpointUniqueIdentifier) != allocatedUniqueIdsB.end() || 
+                            TransportState::Current().GetEndpointTable()->IsUniqueIdentifierInUseForLoopbackB(definitionB->EndpointUniqueIdentifier))
+                        {
+                            TraceLoggingWrite(
+                                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                                MIDI_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Unique identifier for Loopback Definition B already in use", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                TraceLoggingWideString(definitionB->EndpointUniqueIdentifier.c_str(), "identifier")
+                            );
+
+                            responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                                json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_DUPLICATE_UNIQUE_ID)));
+
+                            internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                            return E_FAIL;
+                        }
+                        allocatedUniqueIdsB.emplace(definitionB->EndpointUniqueIdentifier, true);
+
+
 
                         if (TransportState::Current().GetEndpointManager() != nullptr && 
                             TransportState::Current().GetEndpointManager()->IsInitialized())
@@ -217,6 +278,9 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                                     TraceLoggingPointer(this, "this"),
                                     TraceLoggingWideString(L"Failed to create endpoints", MIDI_TRACE_EVENT_MESSAGE_FIELD)
                                 );
+
+                                responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY,
+                                    json::JsonValue::CreateStringValue(internal::ResourceGetHString(IDS_ERROR_CREATION_FAILED)));
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 

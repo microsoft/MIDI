@@ -21,8 +21,25 @@ using Windows.Storage;
 
 namespace Microsoft.Midi.Settings.ViewModels;
 
-public partial class ForDevelopersViewModel : ObservableRecipient
+public partial class ForDevelopersViewModel : ObservableRecipient, ISettingsSearchTarget
 {
+    public static IList<string> GetSearchKeywords()
+    {
+        // TODO: these need to be localized, so should refer to resources instead
+        return new[] { "developers", "advanced", "discovery timeout" };
+    }
+
+    public static string GetSearchPageTitle()
+    {
+        return "Developer Settings";
+    }
+
+    public static string GetSearchPageDescription()
+    {
+        return "MIDI configuration options for developers testing their own apps, devices, transports, and message processing plugins.";
+    }
+
+
     IMidiServiceRegistrySettingsService m_registrySettingsService;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;

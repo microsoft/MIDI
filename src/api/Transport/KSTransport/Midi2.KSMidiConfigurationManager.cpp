@@ -9,6 +9,11 @@
 
 #include "pch.h"
 
+#include "json_custom_property_helper.h"
+#include "json_transport_command_helper.h"
+
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiConfigurationManager::Initialize(
@@ -205,6 +210,45 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
             return E_INVALIDARG;
         }
 
+        // command. If there's a command in the payload, we ignore anything else
+        if (internal::MidiTransportCommandHelper::TransportObjectContainsCommand(jsonObject))
+        {
+            auto commandHelper = internal::MidiTransportCommandHelper::ParseCommand(jsonObject);
+
+            if (commandHelper.Command().empty())
+            {
+                internal::SetConfigurationResponseObjectFail(responseObject, L"Missing command.");
+
+                // we S_OK this because the response object is valid and should be read
+            }
+            else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES)
+            {
+                std::map<std::wstring, bool> capabilities{};
+
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, true);
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS, true);
+
+                // revisit these once the functions are added in
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
+
+                internal::SetConfigurationResponseObjectSuccess(responseObject);
+                internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
+            }
+            else
+            {
+                internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+            }
+
+            internal::JsonStringifyObjectToOutParam(responseObject, response);
+            return S_OK;
+        }
+
+
+
+
+
         auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
 
         if (updateArray != nullptr && updateArray.Size() > 0)
@@ -220,13 +264,7 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                 if (matchObject != nullptr)
                 {
                     std::vector<DEVPROPERTY> endpointProperties{};
-
-                    // property updates take references, so these need to be defined at this level.
-                    std::wstring customEndpointName{};
-                    std::wstring customEndpointDescription{};
-                    std::wstring customSmallImagePath{};
-                    std::wstring customLargeImagePath{};
-                    std::vector<GroupCustomPortProperty> customPortNumbers{};
+                    internal::MidiEndpointCustomPropertiesHelper customPropertiesHelper{}; // helper is here so props are available 
 
                     // get the device id, Right now, the SWD is the only way to id the item. We're changing that
                     // but when the update is sent at runtime, that's the only value that's useful anyway
@@ -235,173 +273,35 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
 
                     if (!swdId.empty())
                     {
-                        // user-supplied name
-                        if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_NAME_PROPERTY))
+                        if (customPropertiesHelper.ReadFromJsonObject(updateObject))
                         {
-                            customEndpointName = internal::TrimmedWStringCopy(updateObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_NAME_PROPERTY).c_str());
-
-                            if (!customEndpointName.empty())
+                            if (!customPropertiesHelper.WriteToPropertiesVector(endpointProperties))
                             {
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_STRING, static_cast<ULONG>((customEndpointName.length() + 1) * sizeof(WCHAR)), (PVOID)customEndpointName.c_str() });
-
+                                // failed to write custom properties
                                 TraceLoggingWrite(
                                     MidiKSTransportTelemetryProvider::Provider(),
                                     MIDI_TRACE_EVENT_INFO,
                                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                     TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(swdId.c_str(), "swd"),
-                                    TraceLoggingWideString(customEndpointName.c_str(), "new name")
+                                    TraceLoggingWideString(L"Failed writing custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingWideString(swdId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                                 );
-                            }
-                            else
-                            {
-                                // delete any existing property value, because it is blank in the config
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_EMPTY, 0, nullptr });
                             }
                         }
                         else
                         {
-                            // delete any existing property value, because it is no longer in the config
-                            endpointProperties.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-                                    DEVPROP_TYPE_EMPTY, 0, nullptr });
-
-                        }
-
-                        // user-supplied description
-                        if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY))
-                        {
-                            customEndpointDescription = internal::TrimmedWStringCopy(updateObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY).c_str());
-
-                            if (!customEndpointDescription.empty())
-                            {
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_STRING, static_cast<ULONG>((customEndpointDescription.length() + 1) * sizeof(WCHAR)), (PVOID)customEndpointDescription.c_str() });
-
-                                TraceLoggingWrite(
-                                    MidiKSTransportTelemetryProvider::Provider(),
-                                    MIDI_TRACE_EVENT_INFO,
-                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                    TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(swdId.c_str(), "swd"),
-                                    TraceLoggingWideString(customEndpointDescription.c_str(), "new description")
-                                );
-                            }
-                            else
-                            {
-                                // delete any existing property value, because it is empty
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_EMPTY, 0, nullptr });
-                            }
-                        }
-                        else
-                        {
-                            // delete any existing property value, because it is no longer in the config
-                            endpointProperties.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
-                                    DEVPROP_TYPE_EMPTY, 0, nullptr });
-                        }
-
-                        // user-supplied small image
-                        if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY))
-                        {
-                            customSmallImagePath = internal::TrimmedWStringCopy(updateObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY).c_str());
-
-                            if (!customSmallImagePath.empty())
-                            {
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_STRING, static_cast<ULONG>((customSmallImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)customSmallImagePath.c_str() });
-
-                                TraceLoggingWrite(
-                                    MidiKSTransportTelemetryProvider::Provider(),
-                                    MIDI_TRACE_EVENT_INFO,
-                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                    TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(swdId.c_str(), "swd"),
-                                    TraceLoggingWideString(customSmallImagePath.c_str(), "new small image path")
-                                );
-                            }
-                            else
-                            {
-                                // delete any existing property value, because it is blank in the config
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_EMPTY, 0, nullptr });
-                            }
-                        }
-                        else
-                        {
-                            // delete any existing property value, because it is no longer in the config
-                            endpointProperties.push_back({ {PKEY_MIDI_CustomSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                                    DEVPROP_TYPE_EMPTY, 0, nullptr });
-                        }
-
-                        // user-supplied large image
-                        if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY))
-                        {
-                            customLargeImagePath = internal::TrimmedWStringCopy(updateObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY).c_str());
-
-                            if (!customLargeImagePath.empty())
-                            {
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_STRING, static_cast<ULONG>((customLargeImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)customLargeImagePath.c_str() });
-
-                                TraceLoggingWrite(
-                                    MidiKSTransportTelemetryProvider::Provider(),
-                                    MIDI_TRACE_EVENT_INFO,
-                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                    TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(swdId.c_str(), "swd"),
-                                    TraceLoggingWideString(customLargeImagePath.c_str(), "new large image path")
-                                );
-                            }
-                            else
-                            {
-                                // delete any existing property value, because it is blanko in the config
-                                endpointProperties.push_back({ {PKEY_MIDI_CustomLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                                        DEVPROP_TYPE_EMPTY, 0, nullptr });
-                            }
-                        }
-                        else
-                        {
-                            // delete any existing property value, because it is no longer in the config
-                            endpointProperties.push_back({ {PKEY_MIDI_CustomLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                                    DEVPROP_TYPE_EMPTY, 0, nullptr });
-                        }
-
-                        // retrieve user-supplied port number assignments from JSON, if present
-                        if (updateObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_ASSIGNMENTS))
-                        {
-                            auto customPortAssignments = updateObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_ASSIGNMENTS, 0);
-                            if (customPortAssignments != nullptr)
-                            {
-                                // TODO: parse custom port assignments out of the named object and add them to customPortNumbers vector
-                            }
-                        }
-
-                        // If custom port assignments are present, add them to the endpoint properties
-                        if (customPortNumbers.size() > 0)
-                        {
-                            endpointProperties.push_back({ {PKEY_MIDI_CustomPortAssignments, DEVPROP_STORE_SYSTEM, nullptr},
-                                    DEVPROP_TYPE_BINARY, (ULONG)(customPortNumbers.size() * sizeof(GroupCustomPortProperty)), (PVOID)(customPortNumbers.data()) });
-                        
+                            // failed to read custom properties
                             TraceLoggingWrite(
                                 MidiKSTransportTelemetryProvider::Provider(),
                                 MIDI_TRACE_EVENT_INFO,
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                 TraceLoggingPointer(this, "this"),
+                                TraceLoggingWideString(L"Failed reading custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingWideString(swdId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                             );
-                        }
-                        else
-                        {
-                            // delete any existing property value, because it is no longer in the config
-                            endpointProperties.push_back({ {PKEY_MIDI_CustomPortAssignments, DEVPROP_STORE_SYSTEM, nullptr},
-                                    DEVPROP_TYPE_EMPTY, 0, nullptr });
+
                         }
 
                         // set all the properties for this SWD
@@ -505,9 +405,7 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                 updateArrayIter.MoveNext();
             }
 
-            responseObject.SetNamedValue(
-                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                json::JsonValue::CreateBooleanValue(true));
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
         }
     }
     catch (const std::exception& e)

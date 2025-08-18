@@ -24,8 +24,25 @@ using System.Windows.Input;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
-    public partial class FirstRunExperienceViewModel : ObservableRecipient
+    public partial class FirstRunExperienceViewModel : ObservableRecipient, ISettingsSearchTarget
     {
+        public static IList<string> GetSearchKeywords()
+        {
+            // TODO: these need to be localized, so should refer to resources instead
+            return new[] { "setup", "config file", "first run", "default loopback", "naming" };
+        }
+
+        public static string GetSearchPageTitle()
+        {
+            return "First-run Setup";
+        }
+
+        public static string GetSearchPageDescription()
+        {
+            return "Set up a configuration file and other common MIDI settings.";
+        }
+
+
         private IMidiConfigFileService m_configFileService;
         private IMidiDefaultsService m_defaultsService;
         private INavigationService m_navigationService;
@@ -70,6 +87,9 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         public bool setServiceToAutoStart;
 
+        [ObservableProperty]
+        public string errorMessage;
+
         public bool CanPersistChanges
         {
             get
@@ -81,6 +101,8 @@ namespace Microsoft.Midi.Settings.ViewModels
         private void CompleteFirstRunSetup()
         {
             bool needServiceRestart = false;
+
+            ErrorMessage = string.Empty;
 
             if (CreateConfigurationFile)
             {
@@ -110,7 +132,9 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }
                 else
                 {
-                    // TODO: show an error and leave
+                    //  show an error and leave
+                    ErrorMessage = "Unable to update registry config file name.";
+                    return;
                 }
 
             }
@@ -130,20 +154,17 @@ namespace Microsoft.Midi.Settings.ViewModels
                     if (result.Success)
                     {
                         m_configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
-
-                        // TODO: show results
-
                     }
                     else
                     {
-                        // TODO: update error information
-
+                        // update error information
+                        ErrorMessage = "Error creating loopback endpoints. " + result.ErrorInformation;
                     }
                 }
                 else
                 {
                     // TODO: Report that a config file is needed
-
+                    ErrorMessage = "Cannot create loopback endpoints without a valid config file.";
                 }
             }
 

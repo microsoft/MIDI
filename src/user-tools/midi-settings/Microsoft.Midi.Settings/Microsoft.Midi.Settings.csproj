@@ -3,7 +3,7 @@
         <OutputType>WinExe</OutputType>
 	    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
         <TargetPlatformVersion>10.0.22621.0</TargetPlatformVersion>
-		<TargetPlatformMinVersion>10.0.20348.0</TargetPlatformMinVersion>
+		<TargetPlatformMinVersion>10.0.22621.0</TargetPlatformMinVersion>
         <WindowsSDKPackageVersion>10.0.22621.38</WindowsSDKPackageVersion>
 
         <Nullable>enable</Nullable>
@@ -73,7 +73,6 @@
 		
   <ItemGroup>
     <None Remove="Controls\MidiEndpointAndGroupPickerControl.xaml" />
-    <None Remove="Controls\MidiEndpointDeviceListItemControl.xaml" />
     <None Remove="Sections\Endpoints\NET2UDP\NetworkMidi2SetupPage.xaml" />
     <None Remove="Sections\First Run Experience\FirstRunExperiencePage.xaml" />
     <None Remove="Styles\DefaultFont.xaml" />
@@ -105,6 +104,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Labs.WinUI.TitleBar" Version="0.0.1-build.2202" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="CommunityToolkit.WinUI.Animations" Version="8.2.250402" />
     <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.250402" />
@@ -153,9 +153,6 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <Page Update="Controls\MidiEndpointDeviceListItemControl.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Update="Controls\MidiEndpointAndGroupPickerControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

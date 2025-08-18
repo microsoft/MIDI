@@ -8,19 +8,12 @@
 
 using Microsoft.Midi.Settings.Activation;
 using Microsoft.Midi.Settings.Contracts.Services;
-using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Dispatching;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Runtime.InteropServices;
-using Windows.Devices.Display;
-using Windows.Devices.Enumeration;
-using Windows.Foundation.Metadata;
-using Windows.UI.Core;
-using Windows.Win32.UI.Shell;
-using WinUIEx;
+
 
 namespace Microsoft.Midi.Settings.Services;
 
@@ -31,6 +24,7 @@ public class ActivationService : IActivationService
     private readonly IThemeSelectorService _themeSelectorService;
     private readonly IGeneralSettingsService _generalSettingsService;
     private readonly IMidiSdkService _sdkService;
+    private readonly IMidiEndpointEnumerationService _enumerationService;
 
     private UIElement? _shell = null;
 
@@ -39,13 +33,15 @@ public class ActivationService : IActivationService
         IEnumerable<IActivationHandler> activationHandlers, 
         IThemeSelectorService themeSelectorService, 
         IGeneralSettingsService generalSettingsService,
-        IMidiSdkService sdkService)
+        IMidiSdkService sdkService,
+        IMidiEndpointEnumerationService enumerationService)
     {
         _sdkService = sdkService;
         _defaultHandler = defaultHandler;
         _activationHandlers = activationHandlers;
         _themeSelectorService = themeSelectorService;
         _generalSettingsService = generalSettingsService;
+        _enumerationService = enumerationService;
     }
 
     private void PositionMainWindow()
@@ -91,6 +87,7 @@ public class ActivationService : IActivationService
         {
             App.MainWindow.AppWindow.Move(new global::Windows.Graphics.PointInt32(extents.Left, extents.Top));
         }
+
     }
 
     [DllImport("User32.dll", SetLastError = true, CharSet = CharSet.Auto)]
@@ -152,6 +149,10 @@ public class ActivationService : IActivationService
                         0);
 
                     //Exit();
+                }
+                else
+                {
+                    _enumerationService.Start();
                 }
             });
         }

@@ -15,18 +15,23 @@ using Microsoft.Midi.Settings.Models;
 using Microsoft.Midi.Settings.Services;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml.Navigation;
+using Microsoft.Windows.Devices.Midi2.Utilities.RuntimeInformation;
 
 namespace Microsoft.Midi.Settings.ViewModels;
 
-public class ShellViewModel : ObservableRecipient
+public partial class ShellViewModel : ObservableRecipient
 {
     private bool _isBackEnabled;
     private object? _selected;
 
     private readonly IGeneralSettingsService _generalSettingsService;
-
+    private readonly IMidiSettingsSearchService _settingsSearchService;
     private readonly IMidiConfigFileService m_configFileService;
     private readonly IMidiSdkService _sdkService;
+
+    public string SdkVersionString => MidiRuntimeInformation.GetInstalledVersion().ToString();
+
+    public string CurrentConfigName => m_configFileService.CurrentConfig?.FileName;
 
     public bool IsDeveloperModeEnabled => WindowsDeveloperModeHelper.IsDeveloperModeEnabled;
 
@@ -72,17 +77,21 @@ public class ShellViewModel : ObservableRecipient
         get => m_configFileService.IsConfigFileActive;
     }
 
-    
+    public IList<MidiSettingsSearchResult> GetSearchResults(string query)
+    {
+        return _settingsSearchService.GetFilteredResults(query);
+    }
 
-
-
-    public ShellViewModel(INavigationService navigationService, 
-        INavigationViewService navigationViewService, 
+    public ShellViewModel(
+        INavigationService navigationService, 
+        INavigationViewService navigationViewService,
         IGeneralSettingsService generalSettingsService,
         IMidiConfigFileService midiConfigFileService,
-        IMidiSdkService sdkService
+        IMidiSdkService sdkService,
+        IMidiSettingsSearchService settingsSearchService
         )
     {
+        _settingsSearchService = settingsSearchService;
         _sdkService = sdkService;
         NavigationService = navigationService;
         NavigationService.Navigated += OnNavigated;
@@ -91,6 +100,11 @@ public class ShellViewModel : ObservableRecipient
         m_configFileService = midiConfigFileService;
         _generalSettingsService = generalSettingsService;
         _generalSettingsService.SettingsChanged += _generalSettingsService_SettingsChanged;
+    }
+
+    public void RefreshSearchData()
+    {
+        _settingsSearchService.Refresh();
     }
 
     private void _generalSettingsService_SettingsChanged(object? sender, EventArgs e)

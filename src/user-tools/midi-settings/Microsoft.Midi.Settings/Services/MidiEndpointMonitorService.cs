@@ -7,43 +7,38 @@
 // ============================================================================
 
 using Microsoft.Midi.Settings.Contracts.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using Windows.UI.Popups;
 
-namespace Microsoft.Midi.Settings.Services
+namespace Microsoft.Midi.Settings.Services;
+
+public class MidiEndpointMonitorService : IMidiEndpointMonitorService
 {
-    public class MidiEndpointMonitorService : IMidiEndpointMonitorService
+    public void MonitorMidiEndpoint(string midiEndpointDeviceId)
     {
-        public void MonitorMidiEndpoint(string midiEndpointDeviceId)
+        // right now, this opens a console. In the future, it may be its own dedicated GUI window
+
+        try
         {
-            // right now, this opens a console. In the future, it may be its own dedicated GUI window
+            string arguments =
+                " endpoint " +
+                midiEndpointDeviceId +
+                " monitor";
 
-            try
+            using (var monitorProcess = new System.Diagnostics.Process())
             {
-                string arguments =
-                    " endpoint " +
-                    midiEndpointDeviceId +
-                    " monitor";
+                monitorProcess.StartInfo.FileName = "midi.exe";
+                monitorProcess.StartInfo.Arguments = arguments;
 
-                using (var monitorProcess = new System.Diagnostics.Process())
-                {
-                    monitorProcess.StartInfo.FileName = "midi.exe";
-                    monitorProcess.StartInfo.Arguments = arguments;
-
-                    monitorProcess.Start();
-                }
+                monitorProcess.Start();
             }
-            catch (Exception ex)
-            {
-                var dialog = new MessageDialog("Error opening console");
-                dialog.Content = ex.ToString();
+        }
+        catch (Exception ex)
+        {
+            var dialog = new MessageDialog("Error opening console");
+            dialog.Content = ex.ToString();
 
-                dialog.ShowAsync().Wait();
-            }
+            dialog.ShowAsync().Wait();
         }
     }
 }

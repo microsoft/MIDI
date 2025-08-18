@@ -9,6 +9,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.ViewModels;
 using Microsoft.Midi.Settings.Views;
 using Microsoft.UI.Xaml.Controls;
@@ -22,22 +23,17 @@ public class PageService : IPageService
     public PageService()
     {
         Configure<EndpointsAllViewModel, EndpointsAllPage>();
-        Configure<EndpointsAppViewModel, EndpointsAppPage>();
-        Configure<EndpointsBle10ViewModel, EndpointsBle10Page>();
-        Configure<EndpointsKSViewModel, EndpointsKSPage>();
-        Configure<EndpointsKsaViewModel, EndpointsKsaPage>();
+
         Configure<EndpointsLoopViewModel, EndpointsLoopPage>();
-
-        Configure<EndpointsNet2UdpViewModel, EndpointsNet2UdpPage>();
         Configure<NetworkMidi2SetupViewModel, NetworkMidi2SetupPage>();
-
-        Configure<EndpointsDiagViewModel, EndpointsDiagPage>();
+        Configure<EndpointsBle10ViewModel, EndpointsBle10Page>();
 
 
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
         Configure<RoutesViewModel, RoutesPage>();
 
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
+
         //Configure<MainViewModel, MainPage>();
         Configure<ManagementSessionsViewModel, ManagementSessionsPage>();
         Configure<PluginsProcessingViewModel, PluginsProcessingPage>();
@@ -51,13 +47,18 @@ public class PageService : IPageService
         Configure<ToolsTestViewModel, ToolsTestPage>();
         Configure<TroubleshootingViewModel, TroubleshootingPage>();
 
-        Configure<WinRTMidi1DevicesViewModel, WinRTMidi1DevicesPage>();
-        Configure<WinMMMidi1DevicesViewModel, WinMMMidi1DevicesPage>();
+        Configure<GlobalMidiSettingsViewModel, GlobalMidiSettingsPage>();
 
         Configure<FirstRunExperienceViewModel, FirstRunExperiencePage>();
 
 
         Configure<HomeViewModel, HomePage>();
+    }
+
+    private List<Type> _searchEnabledViewModels = [];
+    public IList<Type> GetAllSearchEnabledViewModels()
+    {
+        return _searchEnabledViewModels;
     }
 
     public Type GetPageType(string key)
@@ -78,9 +79,10 @@ public class PageService : IPageService
         where VM : ObservableObject
         where V : Page
     {
-        lock (_pages)
+        lock (_pages)   // todo: may also need to lock _searchEnabledViewModels
         {
-            var key = typeof(VM).FullName!;
+            var vmType = typeof(VM);
+            var key = vmType.FullName!;
             if (_pages.ContainsKey(key))
             {
                 throw new ArgumentException($"The key {key} is already configured in PageService");
@@ -90,6 +92,12 @@ public class PageService : IPageService
             if (_pages.Any(p => p.Value == type))
             {
                 throw new ArgumentException($"This type is already configured with key {_pages.First(p => p.Value == type).Key}");
+            }
+
+            // added to support a global search with page keywords
+            if (vmType.IsAssignableTo(typeof(ISettingsSearchTarget)))
+            {
+                _searchEnabledViewModels.Add(vmType);
             }
 
             _pages.Add(key, type);

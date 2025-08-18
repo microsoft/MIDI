@@ -60,8 +60,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             // we failed to create the event args
             if (args == nullptr)
             {
-                LOG_IF_FAILED(E_POINTER);   // this also generates a fallback error with file and line number info
-
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
                     MIDI_SDK_TRACE_EVENT_ERROR,
@@ -72,7 +70,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
 
-                return E_POINTER;
+                OutputDebugString(L"MIDI App SDK: Unable to create MidiMessageReceivedEventArgs\n");
+
+                RETURN_IF_FAILED(E_POINTER);
             }
 
             bool skipMainMessageReceivedEvent = false;
@@ -119,6 +119,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
 
+            OutputDebugString(L"MIDI App SDK: HRESULT exception handling received message\n");
+
             return ex.code();
         }
         catch (std::exception const& ex)
@@ -136,6 +138,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingString(ex.what(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
 
+            OutputDebugString(L"MIDI App SDK: std::exception handling received message\n");
+
             return E_FAIL;
         }
         catch (...)
@@ -151,6 +155,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"General exception handling received message", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: General exception handling received message\n");
 
             return E_FAIL;
         }

@@ -88,7 +88,7 @@
                     x:Uid="ForDevelopers_Discovery"
                     IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xe713;" />
+                        <FontIcon Glyph="&#xe713;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsExpander.HeaderIcon>
 
                     <controls:SettingsExpander.Items>
@@ -121,7 +121,7 @@
                     x:Uid="ForDevelopers_EnableMmcss"
                     IsExpanded="True">
                     <controls:SettingsExpander.HeaderIcon>
-                        <FontIcon Glyph="&#xe713;" />
+                        <FontIcon Glyph="&#xe713;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsExpander.HeaderIcon>
 
                     <controls:SettingsExpander.Items>
@@ -140,7 +140,7 @@
                     ContentAlignment="Vertical"
                     Header="Reference Materials">
                     <controls:SettingsCard.HeaderIcon>
-                        <FontIcon Glyph="&#xe7be;" />
+                        <FontIcon Glyph="&#xe7be;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsCard.HeaderIcon>
                     <StackPanel Orientation="Vertical" Margin="-12,0,0,0">
                         <HyperlinkButton x:Uid="HyperlinkButton_WindowsMidiServicesDocumentation"/>
@@ -154,7 +154,7 @@
                     ContentAlignment="Vertical"
                     Header="Specifications">
                     <controls:SettingsCard.HeaderIcon>
-                        <FontIcon Glyph="&#xe7be;" />
+                        <FontIcon Glyph="&#xe7be;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsCard.HeaderIcon>
                     <StackPanel Orientation="Vertical" Margin="-12,0,0,0">
                         <HyperlinkButton x:Uid="HyperlinkButton_MidiSpecifications"/>

@@ -29,6 +29,27 @@
 #define MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT                                   L"endpointTransportPluginSettings"
 #define MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT                         L"endpointProcessingPluginSettings"
 
+// common transport commands
+
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY                                       L"transportCommand"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_RESPONSE                                  L"transportCommandResponse"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY                                  L"commandName"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY                             L"commandArguments"
+
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES                               L"queryCapabilities"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RESTART_ENDPOINT                                 L"restartEndpoint"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_DISCONNECT_ENDPOINT                              L"disconnectEndpoint"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RECONNECT_ENDPOINT                               L"reconnectEndpoint"
+
+
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT                    L"customizeEndpoint"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS                       L"customizePorts"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT                      MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RESTART_ENDPOINT
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT                   MIDI_CONFIG_JSON_TRANSPORT_COMMAND_DISCONNECT_ENDPOINT
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT                    MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RECONNECT_ENDPOINT
+
+
+
 // common properties
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY                                      L"name"
@@ -43,19 +64,29 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SWD                            L"SWD"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_VID                            L"VID"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PID                            L"PID"
+//#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_DEVICE_INSTANCE_ID             L"deviceInstanceId"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SERIAL                         L"serial"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PRODUCT_INSTANCE_ID            L"productInstanceId"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_STATIC_IP_ADDRESS              L"staticIPAddress"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_UDP_PORT                       L"port"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_TRANSPORT_SUPPLIED_NAME        L"transportSuppliedEndpointName"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PARENT_DEVICE_NAME             L"parentDeviceName"
 
 
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_NAME_PROPERTY                               L"customName"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY                        L"customDescription"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY                        L"customSmallImage"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY                        L"customLargeImage"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_REQUIRES_NOTE_OFF_TRANSLATION_PROPERTY      L"requiresNotOffTranslation"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SUPPORTS_MPE_PROPERTY                       L"supportsMidiPolyphonicExpression"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_RECOMMENDED_CC_INTERVAL_MS_PROPERTY         L"recommendedControlChangeIntervalMilliseconds"
 
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_NAME_PROPERTY                        L"customName"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY                 L"customDescription"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY                 L"customSmallImage"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY                 L"customLargeImage"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_ASSIGNMENTS                     L"customPortAssignments"
+//#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PORT_ASSIGNMENTS                            L"customPortAssignments"
+
+
+// section with ports, containing a group number and a name approach for each
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_PORTS_KEY                                    L"midi1Ports"
+
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY                                         L"create"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY                                         L"update"

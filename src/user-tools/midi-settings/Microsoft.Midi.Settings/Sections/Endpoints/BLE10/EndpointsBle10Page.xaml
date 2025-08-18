@@ -19,23 +19,18 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,8" />
+        <!--<TextBlock Grid.Row="0" x:Uid="DevicesPage_Description" Margin="0,0,0,8" />
 
         <ScrollViewer Grid.Row="1">
             <StackPanel Margin="0,0,8,0" HorizontalAlignment="Stretch">
-
-                <!-- Transport -->
-
-
-                <!-- If this transport supports runtime creation, have create button at this level -->
 
 
                 <TextBlock Text="{x:Bind ViewModel.Transport.Name, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
                 <TextBlock Text="{x:Bind ViewModel.Transport.Description, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}"/>
 
-                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiEndpointDevices}">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiEndpoints}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="local:MidiEndpointDeviceListItem">
+                        <DataTemplate x:DataType="local:MidiEndpointWrapper">
                             <midicontrols:MidiEndpointDeviceListItemControl EndpointItem="{x:Bind}" 
                                                                             Loaded="MidiEndpointDeviceListItemControl_Loaded"
                                                                             Margin="3"/>
@@ -47,7 +42,7 @@
 
             </StackPanel>
 
-        </ScrollViewer>
+        </ScrollViewer>-->
 
     </Grid>
 

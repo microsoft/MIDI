@@ -79,10 +79,12 @@
               "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
               "BuildUserToolsSharedComponents",
+              "CopySharedDesignAssets",
               "CreateVersionIncludes",
               "Prerequisites",
               "ZipPowershellDevUtilities",
               "ZipSamples",
+              "ZipServicePdbs",
               "ZipWdmaud2"
             ]
           }
@@ -108,10 +110,12 @@
               "BuildServiceAndPluginsInstaller",
               "BuildSettingsApp",
               "BuildUserToolsSharedComponents",
+              "CopySharedDesignAssets",
               "CreateVersionIncludes",
               "Prerequisites",
               "ZipPowershellDevUtilities",
               "ZipSamples",
+              "ZipServicePdbs",
               "ZipWdmaud2"
             ]
           }

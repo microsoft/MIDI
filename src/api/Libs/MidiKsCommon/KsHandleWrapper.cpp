@@ -210,6 +210,12 @@ DWORD CALLBACK KsHandleWrapper::PnPCallback(
     case CM_NOTIFY_ACTION_DEVICEINTERFACEREMOVAL:
         wrapper->OnDeviceRemove();
         break;
+    case CM_NOTIFY_ACTION_DEVICEREMOVECOMPLETE:
+        wrapper->OnDeviceRemove();
+        break;
+    case CM_NOTIFY_ACTION_DEVICEREMOVEPENDING:
+        wrapper->OnDeviceRemove();
+        break;
     default:
         break;
     }

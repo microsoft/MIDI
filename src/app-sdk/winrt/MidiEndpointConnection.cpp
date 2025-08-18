@@ -41,6 +41,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
 
+            OutputDebugString(L"MIDI App SDK: Error initializing endpoint. Service transport is null\n");
+
             return false;
         }
 
@@ -81,6 +83,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
             );
 
+            OutputDebugString(L"MIDI App SDK: HRESULT exception initializing endpoint:\n");
+            OutputDebugString(ex.message().c_str());
+            OutputDebugString(L"\n");
+
             return false;
         }
         catch (...)
@@ -96,6 +102,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"Exception initializing endpoint interface. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Exception initializing endpoint interface. Service may be unavailable\n");
 
             return false;
         }
@@ -129,6 +137,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"Failed to open connection. endpoint transport is null", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Failed to open connection. endpoint transport is null\n");
 
             return false;
         }
@@ -194,6 +204,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingHResult(result, MIDI_SDK_TRACE_HRESULT_FIELD)
             );
 
+            OutputDebugString(L"MIDI App SDK: Failed to initialize endpoint transport\n");
+
             return false;
         }
 
@@ -243,9 +255,11 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                             TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                             TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                            TraceLoggingWideString(L"InternalOpen() returned false.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                            TraceLoggingWideString(L"InternalOpen() returned false. Is the endpoint still available?", MIDI_SDK_TRACE_MESSAGE_FIELD),
                             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                         );
+
+                        OutputDebugString(L"MIDI App SDK: InternalOpen() returned false. Is the endpoint still available?\n");
 
                         return false;
                     }
@@ -268,6 +282,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
                     m_endpointTransport = nullptr;
 
+                    OutputDebugString(L"MIDI App SDK: HRESULT exception initializing endpoint interface. Service may be unavailable\n");
+
                     return false;
                 }
                 catch (...)
@@ -283,6 +299,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                         TraceLoggingWideString(L"Exception initializing endpoint interface. Service may be unavailable.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                         TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                     );
+
+                    OutputDebugString(L"MIDI App SDK: Exception initializing endpoint interface. Service may be unavailable.\n");
 
                     m_endpointTransport = nullptr;
 
@@ -302,6 +320,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingWideString(L"Endpoint transport interface is nullptr.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                     TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
                 );
+
+                OutputDebugString(L"MIDI App SDK: Endpoint transport interface is nullptr.\n");
 
                 return false;
             }
@@ -366,6 +386,9 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"Exception on close.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Exception on endpoint close. Unexpected, but not necessarily fatal.\n");
+
         }
     }
 
@@ -424,6 +447,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 // happens.
                 if (!force)
                 {
+                    OutputDebugString(L"MIDI App SDK: Failed HRESULT cleaning up endpoint transport.\n");
+
                     return false;
                 }
             }
@@ -460,6 +485,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"Service transport is null.", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Service transport is null. Installation may be corrupted.\n");
 
             return false;
         }
@@ -503,6 +530,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                     TraceLoggingHResult(result, MIDI_SDK_TRACE_HRESULT_FIELD)
                     );
 
+                OutputDebugString(L"MIDI App SDK: Endpoint Transport failed to Activate and returned null.\n");
+
                 return false;
             }
 
@@ -520,6 +549,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
                 TraceLoggingWideString(L"Exception activating stream. Service may be unavailable", MIDI_SDK_TRACE_MESSAGE_FIELD),
                 TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
             );
+
+            OutputDebugString(L"MIDI App SDK: Exception activating stream. Service may be unavailable.\n");
 
             return false;
         }

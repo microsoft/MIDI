@@ -92,7 +92,17 @@
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
-                    <Image Source="/Assets/LoopbackDiagram.svg" Height="80" HorizontalAlignment="Center" Margin="0"/>
+                    <!-- I don't know why I need to do the crazy margins here. It renders properly outside of WinUI -->
+                    <Image Height="650"
+                           Width="650"
+                           Stretch="Uniform"
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"
+                           Margin="0,-250,0,-250">
+                        <Image.Source>
+                            <SvgImageSource UriSource="/Assets/Loopback-Diagram.svg"/>
+                        </Image.Source>
+                    </Image>
 
 
                     <TextBlock TextWrapping="WrapWholeWords" 

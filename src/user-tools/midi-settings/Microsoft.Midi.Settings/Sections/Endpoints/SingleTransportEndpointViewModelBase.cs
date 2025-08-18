@@ -36,7 +36,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public DispatcherQueue? DispatcherQueue { get; set; }
 
-        public SingleTransportEndpointViewModelBase(string transportCode, 
+        public SingleTransportEndpointViewModelBase(
+            string transportCode, 
             INavigationService navigationService,
             IMidiEndpointEnumerationService enumerationService)
         {
@@ -58,45 +59,17 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         public MidiServiceTransportPluginInfo transport;
 
-        public ObservableCollection<MidiEndpointDeviceListItem> MidiEndpointDevices { get; } = [];
+        public ObservableCollection<MidiEndpointWrapper> MidiEndpoints { get; } = [];
 
 
         public void RefreshDeviceCollection()
         {
-            if (DispatcherQueue == null) return;
+            var endpoints = _enumerationService.GetEndpointsForTransportCode(_transportCode).OrderBy(x => x.Name);
 
-            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            foreach (var endpoint in endpoints)
             {
-                System.Diagnostics.Debug.WriteLine("Begin RefreshDeviceCollection");
-
-                foreach (var transport in MidiReporting.GetInstalledTransportPlugins())
-                {
-                    if (transport.TransportCode.ToUpper() == _transportCode)
-                    {
-                        Transport = transport;
-                        break;
-                    }
-                }
-
-                MidiEndpointDevices.Clear();
-
-                // now get all the endpoint devices and put them in groups by transport
-
-                // the ToList() takes a snapshot so we can iterate safely even if new devices are found or others are removed
-                var enumeratedDevices = _enumerationService.MidiEndpointDeviceWatcher.EnumeratedEndpointDevices.Values.OrderBy(x => x.Name).ToList();
-
-                foreach (var endpointDevice in enumeratedDevices)
-                {
-                    if (endpointDevice != null && endpointDevice.GetTransportSuppliedInfo().TransportCode == _transportCode)
-                    {
-                        MidiEndpointDevices.Add(new MidiEndpointDeviceListItem(endpointDevice));
-                    }
-                }
-
-                System.Diagnostics.Debug.WriteLine("Completed RefreshDeviceCollection");
-
-            });
-
+                MidiEndpoints.Add(endpoint);
+            }
         }
 
     }

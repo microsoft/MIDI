@@ -13,7 +13,7 @@ namespace WindowsMidiServicesInternal
 
     inline bool IsValidWindowsMidiServicesEndpointId(_In_ winrt::hstring endpointDeviceId)
     {
-        auto normalizedDeviceId = winrt::to_hstring(internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId.c_str()).c_str());
+        auto normalizedDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
         auto additionalTestProperties = winrt::single_threaded_vector<winrt::hstring>();
         additionalTestProperties.Append(STRING_PKEY_MIDI_TransportLayer);
@@ -44,7 +44,7 @@ namespace WindowsMidiServicesInternal
 
     inline bool IsWindowsMidiServicesEndpointPresent(_In_ winrt::hstring endpointDeviceId)
     {
-        auto normalizedDeviceId = winrt::to_hstring(internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId.c_str()).c_str());
+        auto normalizedDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(endpointDeviceId);
 
         auto additionalTestProperties = winrt::single_threaded_vector<winrt::hstring>();
         additionalTestProperties.Append(L"System.Devices.InterfaceEnabled");
