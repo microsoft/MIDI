@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
-    <WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion>
+    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+    <WindowsSDKPackageVersion>10.0.22621.38</WindowsSDKPackageVersion>
     <RootNamespace>sdk_client_basics_cs</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>

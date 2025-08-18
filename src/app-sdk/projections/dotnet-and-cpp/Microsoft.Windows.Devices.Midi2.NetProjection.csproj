@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows10.0.20348.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<Platform>x64</Platform>
@@ -18,11 +18,15 @@
           Microsoft.Windows.Devices.Midi2.Reporting
           Microsoft.Windows.Devices.Midi2.Messages
           Microsoft.Windows.Devices.Midi2.ServiceConfig
+          Microsoft.Windows.Devices.Midi2.Endpoints
           Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
           Microsoft.Windows.Devices.Midi2.Endpoints.Virtual
           Microsoft.Windows.Devices.Midi2.Endpoints.Network
+          Microsoft.Windows.Devices.Midi2.Utilities
           Microsoft.Windows.Devices.Midi2.Utilities.Update
           Microsoft.Windows.Devices.Midi2.Utilities.SysExTransfer
+          Microsoft.Windows.Devices.Midi2.Utilities.Sequencing
+          Microsoft.Windows.Devices.Midi2.Utilities.Metadata
         </CsWinRTIncludes>
 		<CsWinRTGeneratedFilesDir>$(OutDir)</CsWinRTGeneratedFilesDir>
 	</PropertyGroup>
@@ -34,9 +38,9 @@
 		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<AssemblyName>Microsoft.Windows.Devices.Midi2.NetProjection</AssemblyName>
 		<PackageOutputPath>$(SolutionDir)vsfiles\PublishedNuGet\</PackageOutputPath>
-		<SupportedOSPlatformVersion>10.0.20348.00</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion>10.0.22621.00</SupportedOSPlatformVersion>
 		<BaseOutputPath>$(SolutionDir)vsfiles\out\$(AssemblyName)\</BaseOutputPath>
-        <WindowsSDKPackageVersion>10.0.20348.38</WindowsSDKPackageVersion>
+        <WindowsSDKPackageVersion>10.0.22621.38</WindowsSDKPackageVersion>
 
         <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
         <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
