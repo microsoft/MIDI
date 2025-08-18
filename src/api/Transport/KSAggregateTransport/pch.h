@@ -64,7 +64,6 @@
 #include "wstring_util.h"
 #include "midi_group_terminal_blocks.h"
 
-namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "WindowsMidiServices.h"
@@ -78,7 +77,8 @@ namespace json = ::winrt::Windows::Data::Json;
 
 #include "json_defs.h"
 #include "json_helpers.h"
-#include "json_custom_property_helper.h"
+
+namespace internal = ::WindowsMidiServicesInternal;
 
 #include "swd_helpers.h"
 #include "resource_util.h"

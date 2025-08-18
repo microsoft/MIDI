@@ -1,0 +1,41 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiServiceConfigEndpointMatchCriteria.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
+{
+    [contract(MidiServiceConfigApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceEndpointCustomizationConfig", UUID_IMidiServiceMidiServiceEndpointCustomizationConfig)]
+    runtimeclass MidiServiceEndpointCustomizationConfig : IMidiServiceTransportPluginConfig
+    {
+        MidiServiceEndpointCustomizationConfig();
+
+        MidiServiceEndpointCustomizationConfig(Guid transportId);
+        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description);
+        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description, String largeImageFileName, String smallImageFileName);
+        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description, String largeImageFileName, String smallImageFileName, Boolean requiresNoteOffTranslation, Boolean supportsMidiPolyphonicExpression, UInt16 recommendedControlChangeIntervalMilliseconds);
+
+        String Name;
+        String Description;
+        String LargeImageFileName;
+        String SmallImageFileName;
+
+        MidiServiceConfigEndpointMatchCriteria MatchCriteria;
+
+        Boolean RequiresNoteOffTranslation;
+        Boolean SupportsMidiPolyphonicExpression;
+
+        UInt16 RecommendedControlChangeIntervalMilliseconds;
+    };
+}

@@ -32,7 +32,8 @@ public class MidiEndpointCustomizationService : IMidiEndpointCustomizationServic
 
         // build the json and send up through the transport
 
-        // TODO: Maybe create a common config type in the SDK for this specific task
+        // TODO: maybe create a common SDK type for the config, to ensure it and the service are in sync?
+        // motivated people will find the code here if there's no config type, so obscurity won't help
 
 
 //        MidiServiceConfig.UpdateTransportPluginConfig(configUpdate);

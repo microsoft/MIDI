@@ -1,0 +1,30 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
+{
+    [contract(MidiServiceConfigApiContract, 1)]
+    [interface_name("Microsoft.Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportCommand", UUID_IMidiServiceTransportCommand)]
+    runtimeclass MidiServiceTransportCommand : IMidiServiceTransportPluginConfig
+    {
+        MidiServiceTransportCommand();
+        MidiServiceTransportCommand(Guid transportId);
+        MidiServiceTransportCommand(Guid transportId, String verb);
+        MidiServiceTransportCommand(Guid transportId, String verb, IMap<String, String> arguments);
+
+        String Verb;
+
+        IMap<String, String> Arguments;
+    };
+}

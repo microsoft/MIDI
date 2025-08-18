@@ -33,6 +33,7 @@ namespace json = ::winrt::Windows::Data::Json;
 
 namespace WindowsMidiServicesInternal
 {
+    namespace internal = ::WindowsMidiServicesInternal;
 
 
     class MidiEndpointCustomPropertiesHelper

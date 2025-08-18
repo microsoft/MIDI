@@ -93,6 +93,12 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.ServiceConfig.MidiServiceTransportPluginConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.ServiceConfig.MidiServiceEndpointCustomizationConfig", defaultThreading });
+
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.ServiceConfig.MidiServiceConfigEndpointMatchCriteria", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.ServiceConfig.IMidiServiceConfigEndpointMatchCriteriaStatics", defaultThreading });
+
 
     // Loopback MIDI
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Endpoints.Loopback.MidiLoopbackEndpointCreationConfig", defaultThreading });
@@ -129,6 +135,10 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Sequencer.MidiClockDestination", defaultThreading });
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.Metadata.MidiImageAssetHelper", defaultThreading });
+
+
+    
+
 
     return types;
 }

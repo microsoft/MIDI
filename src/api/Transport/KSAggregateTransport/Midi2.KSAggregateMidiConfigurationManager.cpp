@@ -9,6 +9,10 @@
 
 #include "pch.h"
 
+#include "json_custom_property_helper.h"
+#include "json_transport_command_helper.h"
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiConfigurationManager::Initialize(
@@ -192,7 +196,44 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
             RETURN_IF_FAILED(E_INVALIDARG);
         }
 
-        // we only do updates if they are from the config file. Nothing temporary
+
+        // command. If there's a command in the payload, we ignore anything else
+        if (internal::MidiTransportCommandHelper::TransportObjectContainsCommand(jsonObject))
+        {
+            auto commandHelper = internal::MidiTransportCommandHelper::ParseCommand(jsonObject);
+
+            if (commandHelper.Command().empty())
+            {
+                internal::SetConfigurationResponseObjectFail(responseObject, L"Missing command.");
+
+                // we S_OK this because the response object is valid and should be read
+            }
+            else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES)
+            {
+                std::map<std::wstring, bool> capabilities{};
+
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, true);
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS, true);
+
+                // revisit these once the functions are added in
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT, false);
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
+
+                internal::SetConfigurationResponseObjectSuccess(responseObject);
+                internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
+            }
+            else
+            {
+                internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+            }
+
+            internal::JsonStringifyObjectToOutParam(responseObject, response);
+            return S_OK;
+        }
+
+
+        // updates
 
         auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
 
@@ -349,9 +390,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                 updateArrayIter.MoveNext();
             }
 
-            responseObject.SetNamedValue(
-                MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY,
-                json::JsonValue::CreateBooleanValue(true));
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
         }
     }
     catch (const std::exception& e)

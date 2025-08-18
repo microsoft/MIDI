@@ -166,7 +166,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 custom.RecommendedControlChangeAutomationIntervalMilliseconds = CustomizedRecommendedControlChangeAutomationIntervalMilliseconds;
 
                 var success = _endpointCustomizationService.UpdateEndpoint(
-                    DeviceInformation.EndpointDeviceId,
+                    DeviceInformation,
                     custom);
 
                 if (success)

@@ -127,6 +127,18 @@
     <ClCompile Include="MidiImageAssetHelper.cpp">
       <Filter>SDK\Utilities\Metadata</Filter>
     </ClCompile>
+    <ClCompile Include="MidiServiceEndpointCustomizationConfig.cpp">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportCommand.cpp">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportCommonCommands.cpp">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="memory_buffer.h" />
@@ -271,6 +283,18 @@
     </ClInclude>
     <ClInclude Include="MidiImageAssetHelper.h">
       <Filter>SDK\Utilities\Metadata</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceEndpointCustomizationConfig.h">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportCommand.h">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportCommonCommands.h">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
+      <Filter>SDK\ServiceConfig</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -621,6 +645,18 @@
     </Midl>
     <Midl Include="MidiImageAssetHelper.idl">
       <Filter>SDK\Utilities\Metadata</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportCommand.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceEndpointCustomizationConfig.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceTransportCommonCommands.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigEndpointMatchCriteria.idl">
+      <Filter>SDK\ServiceConfig</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

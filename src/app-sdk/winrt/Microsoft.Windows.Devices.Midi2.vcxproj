@@ -12,7 +12,7 @@
     <CppWinRTProjectLanguage>C++/WinRT</CppWinRTProjectLanguage>
     <CppWinRTLibs>true</CppWinRTLibs>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
+    <WindowsTargetPlatformMinVersion>10.0.22621.0</WindowsTargetPlatformMinVersion>
     <MinimalCoreWin>true</MinimalCoreWin>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -471,6 +471,10 @@
     <ClInclude Include="MidiClockGenerator.h" />
     <ClInclude Include="MidiClockDestination.h" />
     <ClInclude Include="MidiImageAssetHelper.h" />
+    <ClInclude Include="MidiServiceEndpointCustomizationConfig.h" />
+    <ClInclude Include="MidiServiceTransportCommand.h" />
+    <ClInclude Include="MidiServiceTransportCommonCommands.h" />
+    <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -762,6 +766,10 @@
     <ClCompile Include="MidiClockGenerator.cpp" />
     <ClCompile Include="MidiClockDestination.cpp" />
     <ClCompile Include="MidiImageAssetHelper.cpp" />
+    <ClCompile Include="MidiServiceEndpointCustomizationConfig.cpp" />
+    <ClCompile Include="MidiServiceTransportCommand.cpp" />
+    <ClCompile Include="MidiServiceTransportCommonCommands.cpp" />
+    <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiImageAssetHelper.idl" />
@@ -833,6 +841,10 @@
     <Midl Include="MidiRuntimeUpdateUtility.idl" />
     <Midl Include="MidiRuntimeVersion.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
+    <Midl Include="MidiServiceConfigEndpointMatchCriteria.idl" />
+    <Midl Include="MidiServiceTransportCommonCommands.idl" />
+    <Midl Include="MidiServiceEndpointCustomizationConfig.idl" />
+    <Midl Include="MidiServiceTransportCommand.idl" />
     <Midl Include="MidiSession.idl" />
     <Midl Include="IMidiUniversalPacket.idl" />
     <Midl Include="MidiMessage128.idl" />
