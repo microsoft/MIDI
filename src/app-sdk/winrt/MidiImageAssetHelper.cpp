@@ -67,9 +67,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
         return true;
     }
 
-    bool FileNameContainsPath(winrt::hstring /*fileName*/)
+    bool FileNameContainsPath(winrt::hstring fileName)
     {
-        // TODO: check for presence of slashes or colons
+        // TODO: this should use regular Windows APIs
+
+        for (auto const & ch : fileName)
+        {
+            if (ch =='/' || ch == '\\' || ch == ':')
+            {
+                return true;
+            }
+        }
 
         return false;
     }

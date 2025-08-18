@@ -24,25 +24,37 @@ public class MidiEndpointCustomizationService : IMidiEndpointCustomizationServic
 
     public bool UpdateEndpoint(MidiEndpointDeviceInformation deviceInformation, MidiEndpointUserSuppliedInfo updatedUserSuppliedInfo)
     {
-        // Assumption: Caller updates properties with existing values before sending.
-        // That way, any values that are blank/empty we know will need to be cleared 
-        // out within the service. In the locally stored json, we'll just leave those
-        // values out.
-
-
         // build the json and send up through the transport
 
-        // TODO: maybe create a common SDK type for the config, to ensure it and the service are in sync?
-        // motivated people will find the code here if there's no config type, so obscurity won't help
+        var configUpdate = new MidiServiceEndpointCustomizationConfig(deviceInformation.GetTransportSuppliedInfo().TransportId);
+
+        configUpdate.Name = updatedUserSuppliedInfo.Name;
+        configUpdate.Description = updatedUserSuppliedInfo.Description;
+        configUpdate.SmallImageFileName = updatedUserSuppliedInfo.SmallImagePath;
+        configUpdate.LargeImageFileName = updatedUserSuppliedInfo.LargeImagePath;
+        configUpdate.RequiresNoteOffTranslation = updatedUserSuppliedInfo.RequiresNoteOffTranslation;
+        configUpdate.SupportsMidiPolyphonicExpression = updatedUserSuppliedInfo.SupportsMidiPolyphonicExpression;
+        configUpdate.RecommendedControlChangeIntervalMilliseconds = updatedUserSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;
+
+        // TODO: May want to have additional criteria in the future
+        configUpdate.MatchCriteria.EndpointDeviceId = deviceInformation.EndpointDeviceId;
+
+        System.Diagnostics.Debug.WriteLine(configUpdate.GetConfigJson());
+
+        var response = MidiServiceConfig.UpdateTransportPluginConfig(configUpdate);
+
+        if (response.Status == MidiServiceConfigResponseStatus.Success)
+        {
+            // TODO: Save to local config file
 
 
-//        MidiServiceConfig.UpdateTransportPluginConfig(configUpdate);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
 
-        // if success, also save to the local config file
-
-
-
-        return true;
     }
 
 }

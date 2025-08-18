@@ -833,10 +833,8 @@
                                 Grid.Row="1"
                                 Margin="5">
                             <Image Grid.Row="1"
-                                   Width="64"
-                                   Height="64"
-                                   x:Name="UserMetadataSmallImagePreview"
-                                   Stretch="Uniform" />
+                                   Stretch="Uniform"
+                                   x:Name="UserMetadataSmallImagePreview" />
                         </Button>
 
                         <TextBlock Grid.Row="2"
@@ -859,10 +857,8 @@
                                 Grid.Row="1"
                                 Margin="5">
                             <Image Grid.Row="1"
-                                   Width="256"
-                                   Height="256"
-                                   x:Name="UserMetadataLargeImagePreview"
-                                   Stretch="Uniform" />
+                                   Stretch="Uniform"
+                                   x:Name="UserMetadataLargeImagePreview"/>
                         </Button>
 
                         <TextBlock Grid.Row="2"
