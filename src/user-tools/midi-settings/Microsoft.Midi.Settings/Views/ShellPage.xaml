@@ -392,7 +392,7 @@
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
 
-                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WindowsSettingsViewModel"
+                <!--<NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WindowsSettingsViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-WindowsSettings.svg" />
@@ -406,9 +406,10 @@
                             </Grid>
                         </Grid>
                     </NavigationViewItem.Content>
-                </NavigationViewItem>
+                </NavigationViewItem>-->
 
 
+                <!--
                 <NavigationViewItem 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.LivePerformanceSettingsViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -425,7 +426,7 @@
                         </Grid>
                     </NavigationViewItem.Content>
                 </NavigationViewItem>
-
+                -->
 
 
                 <NavigationViewItem x:Uid="Shell_Configurations" 
