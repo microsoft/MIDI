@@ -107,13 +107,16 @@
 
                     <AppBarToggleButton x:Name="ViewCardsButton"
                                         VerticalAlignment="Center"
-                                        Label="Cards">
+                                        Label="Cards"
+                                        IsChecked="{x:Bind ViewModel.UseCardView, Mode=TwoWay}">
                         <AppBarToggleButton.Icon>
                             <FontIcon Glyph="&#xE737;" />
                         </AppBarToggleButton.Icon>
                     </AppBarToggleButton>
+                    
                     <AppBarToggleButton x:Name="ViewListButton"
-                                  Label="List">
+                                        Label="List"
+                                        IsChecked="{x:Bind ViewModel.UseListView, Mode=TwoWay}">
                         <AppBarToggleButton.Icon>
                             <FontIcon Glyph="&#xE8FD;" />
                         </AppBarToggleButton.Icon>
@@ -147,51 +150,284 @@
                     
                 </CommandBar.PrimaryCommands>
             </CommandBar>
-            
-            
-            <!--<Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>-->
-
-            <!-- Sort order combo and button  -->
-            <!--<StackPanel Orientation="Horizontal"
-                        Grid.Column="1"
-                        Margin="8">
-                <ComboBox Width="150"
-                          Header="Sort">
-                    <ComboBox.Items>
-                        <x:String>Endpoint Name</x:String>
-                        <x:String>Transport Type</x:String>
-                        <x:String>Last Update Time</x:String>
-                    </ComboBox.Items>
-                </ComboBox>
-            </StackPanel>-->
-            
-            <!-- Filter / Search by any names in the endpoint -->
-            
-            <!--<AutoSuggestBox Grid.Column="2"
-                            Width="250"
-                            Margin="8"
-                            QueryIcon="Find"
-                            MinWidth="200"                            
-                            Header="Find Endpoint"
-                            Text="{x:Bind ViewModel.FilterString, Mode=TwoWay}"
-                            >
-                
-            </AutoSuggestBox>-->
-            
+           
         </Grid>
 
 
-        
-        <ScrollViewer Grid.Row="2">
-            <!-- Endpoint List - Card View -->
+        <!-- Endpoint List - List View -->
+        <ScrollView Grid.Row="2"
+                    Visibility="{x:Bind ViewModel.UseListView, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+            <Grid Margin="0,0,0,0" HorizontalAlignment="Stretch">
+                <ListView ItemsSource="{x:Bind ViewModel.Endpoints, Mode=OneWay}"
+                          SelectionMode="None"
+                          IsItemClickEnabled="True"    
+                          ItemClick="GridView_ItemClick">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                            <Setter Property="Margin" Value="0,4,0,4"/>
+                            <Setter Property="Padding" Value="0"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:MidiEndpointWrapper">
+
+                            <Grid>
+                                <Border HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        CornerRadius="{StaticResource ControlCornerRadius}"
+                                        Opacity="0.2">
+                                    <Border.Background>
+                                        <LinearGradientBrush>
+                                            <GradientStop Offset="0" Color="Transparent" />
+                                            <GradientStop Offset="1" Color="{StaticResource SolidBackgroundFillColorSecondary}" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+
+                                <Border HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        CornerRadius="{StaticResource ControlCornerRadius}"
+                                        Background="{StaticResource LayerFillColorAltBrush}"
+                                        BorderBrush="{StaticResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />   <!-- Icon -->
+                                        <ColumnDefinition Width="2*" />     <!-- Name and Description -->
+                                        <ColumnDefinition Width="*" />      <!-- MIDI 1.0 Ports -->
+                                        <ColumnDefinition Width="Auto"/>    <!-- Actions -->
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Icon -->
+                                    <ImageIcon Grid.Column="0" 
+                                               Source="{x:Bind SmallImage}" 
+                                               Width="60" Height="60"
+                                               Margin="8"/>
+
+                                    <!-- Name and Description + property chicklets -->
+                                    <Grid Grid.Column="1" 
+                                          Margin="8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Name -->
+                                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                            <TextBlock Text="{x:Bind Name}" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"/>
+                                            <TextBlock Opacity="0.5"
+                                                       Style="{StaticResource SmallPlainPropertyValue}"
+                                                       Visibility="{x:Bind HasManufacturerName, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <Run Text=" by " />
+                                            <Run Text="{x:Bind ManufacturerName}" />
+                                            </TextBlock>
+                                        </StackPanel>
+
+                                        <!-- Description -->
+                                        <TextBlock Grid.Row="1" 
+                                                   Style="{StaticResource SmallPlainPropertyValueWithWrap}"
+                                                   Text="{x:Bind Description}"/>
+
+                                        <!-- Key properties -->
+                                        <Grid Grid.Row="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Grid Style="{StaticResource MidiFeatureTagContainerNeutral}"
+                                                  Visibility="{x:Bind IsNativeUmp, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Text="UMP Data Format" Style="{StaticResource MidiFeatureTagText}"/>
+                                                    <ToolTipService.ToolTip>
+                                                        <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint uses the new UMP data format, natively." />
+                                                    </ToolTipService.ToolTip>
+                                                </Grid>
+
+                                                <Grid Style="{StaticResource MidiFeatureTagContainerGood}"
+                                                  Visibility="{x:Bind SupportsMidi2, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Text="MIDI 2.0" Style="{StaticResource MidiFeatureTagText}"/>
+                                                    <ToolTipService.ToolTip>
+                                                        <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint supports the MIDI 2.0 protocol, including high-resolution values." />
+                                                    </ToolTipService.ToolTip>
+                                                </Grid>
+
+                                                <Grid Style="{StaticResource MidiFeatureTagContainerNeutral}"
+                                                  Visibility="{x:Bind IsNativeUmp, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
+                                                    <TextBlock Text="MIDI 1.0 Byte Format" Style="{StaticResource MidiFeatureTagText}"/>
+                                                    <ToolTipService.ToolTip>
+                                                        <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint uses the classic MIDI 1.0 byte format" />
+                                                    </ToolTipService.ToolTip>
+                                                </Grid>
+
+
+                                                <Grid Style="{StaticResource MidiFeatureTagContainerGood}"
+                                                  Visibility="{x:Bind HasUniqueIdentifier, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Text="Unique Id" Style="{StaticResource MidiFeatureTagText}"/>
+                                                    <ToolTipService.ToolTip>
+                                                        <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint has a serial number or other unique id, making it easier to keep customizations attached." />
+                                                    </ToolTipService.ToolTip>
+                                                </Grid>
+                                                <Grid Style="{StaticResource MidiFeatureTagContainerNeutral}"
+                                                  Visibility="{x:Bind HasUniqueIdentifier, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
+                                                    <TextBlock Text="No Unique Id" Style="{StaticResource MidiFeatureTagText}"/>
+                                                    <ToolTipService.ToolTip>
+                                                        <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint does not have a serial number or unique id. Customizations may be lost if you change the device connection." />
+                                                    </ToolTipService.ToolTip>
+                                                </Grid>
+
+
+                                                <Grid Style="{StaticResource MidiFeatureTagContainerGood}"
+                                                  Visibility="{x:Bind IsMultiClient, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <TextBlock Text="Multi-client" Style="{StaticResource MidiFeatureTagText}"/>
+                                                    <ToolTipService.ToolTip>
+                                                        <TextBlock TextWrapping="WrapWholeWords" Text="More than one application can use this endpoint at the same time." />
+                                                    </ToolTipService.ToolTip>
+                                                </Grid>
+                                                <Grid Style="{StaticResource MidiFeatureTagContainerBad}"
+                                                  Visibility="{x:Bind IsMultiClient, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}">
+                                                    <TextBlock Text="Single-client" Style="{StaticResource MidiFeatureTagText}"/>
+                                                    <ToolTipService.ToolTip>
+                                                        <TextBlock TextWrapping="WrapWholeWords" Text="This endpoint is restricted to a single application at a time." />
+                                                    </ToolTipService.ToolTip>
+                                                </Grid>
+
+
+                                            </StackPanel>
+
+                                        </Grid>
+
+
+                                    </Grid>
+
+                                    <!-- MIDI 1 Ports -->
+                                    <Grid Grid.Column="2"
+                                          VerticalAlignment="Center">
+
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" 
+                                                   Text="MIDI 1.0 API Ports"
+                                                   FontSize="{StaticResource SmallFontSize}"
+                                                   Margin="4,4,0,4"
+                                                   FontWeight="Bold"/>
+
+                                        <TextBlock Grid.Row="1" 
+                                                   Visibility="{x:Bind HasSingleInputPort, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
+                                                   Style="{StaticResource SmallPropertyLabel}">
+                                            <Run Text="{x:Bind CountMidi1InputPorts, Mode=OneWay}" />
+                                            <Run Text="Sources/Inputs" />
+                                            
+                                            <ToolTipService.ToolTip>
+                                                <StackPanel Orientation="Vertical" Margin="8">
+                                                    <TextBlock Margin="8" Text="MIDI 1.0 API Sources/Inputs"/>
+                                                    <ItemsControl Margin="8" 
+                                                                  ItemsSource="{x:Bind Midi1InputPorts, Mode=OneWay}" 
+                                                                  ItemTemplate="{StaticResource Midi1FlyoutPortTemplate}"/>
+                                                </StackPanel>
+                                            </ToolTipService.ToolTip>
+                                        </TextBlock>
+
+                                        <Grid Grid.Row="1"
+                                              Visibility="{x:Bind HasSingleInputPort, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Grid.Column="0"
+                                                       Text="Source/Input"
+                                                       Style="{StaticResource SmallPropertyLabel}"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{x:Bind SingleInputPortName, Mode=OneWay}"
+                                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"
+                                                       Foreground="{StaticResource SystemFillColorAttentionBrush}"/>
+                                        </Grid>
+
+
+
+                                        <TextBlock Grid.Row="2" 
+                                                   Visibility="{x:Bind HasSingleOutputPort, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
+                                               Style="{StaticResource SmallPropertyLabel}">
+                                            <Run Text="{x:Bind CountMidi1OutputPorts, Mode=OneWay}" />
+                                            <Run Text="Destinations/Outputs" />
+                                            
+                                            <ToolTipService.ToolTip>
+                                                <StackPanel Orientation="Vertical" Margin="8">
+                                                    <TextBlock Margin="8" Text="MIDI 1.0 API Destinations/Outputs"/>
+                                                    <ItemsControl Margin="8" ItemsSource="{x:Bind Midi1OutputPorts, Mode=OneWay}" 
+                                                                  ItemTemplate="{StaticResource Midi1FlyoutPortTemplate}"/>
+                                                </StackPanel>
+
+                                            </ToolTipService.ToolTip>
+                                        </TextBlock>
+
+                                        <Grid Grid.Row="2"
+                                              Visibility="{x:Bind HasSingleOutputPort, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Grid.Column="0" 
+                                                       Text="Destination/Output"
+                                                       Style="{StaticResource SmallPropertyLabel}"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{x:Bind SingleOutputPortName, Mode=OneWay}"
+                                                       Style="{StaticResource SmallEmphasizedPropertyValueNoTrim}"
+                                                       Foreground="{StaticResource SystemFillColorAttentionBrush}"/>
+                                        </Grid>
+
+
+                                    </Grid>
+
+
+                                    <!-- Actions -->
+                                    <StackPanel Grid.Column="3" 
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                Margin="16" 
+                                                Spacing="16">
+                                        <Button Content="Panic"
+                                                Command="{x:Bind SendPanicCommand}">
+
+                                            <ToolTipService.ToolTip>
+                                                <TextBlock TextWrapping="WrapWholeWords"
+                                                            Text="Send All Notes Off, All Sound Off, and Reset All Controllers messages to all groups and channels on the endpoint. NOTE: Not all MIDI devices respond to these messages."/>
+                                            </ToolTipService.ToolTip>
+                                        </Button>
+
+                                        <Button Content="Monitor"/>
+                                    </StackPanel>
+
+
+
+                                </Grid>
+                            </Grid>
+                            
+
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+
+                </ListView>
+
+
+            </Grid>
+
+        </ScrollView>
+
+
+        <!-- Endpoint List - Card View -->
+        <ScrollViewer Grid.Row="2"
+                      Visibility="{x:Bind ViewModel.UseCardView, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+
 
             <Grid Margin="-8,0,0,0" HorizontalAlignment="Stretch">
-                <GridView x:Name="EndpointsList" 
-                          ItemsSource="{x:Bind ViewModel.Endpoints, Mode=OneWay}"
+                <GridView ItemsSource="{x:Bind ViewModel.Endpoints, Mode=OneWay}"
                           SelectionMode="None"
                           IsItemClickEnabled="True"                         
                           ItemClick="GridView_ItemClick">
@@ -227,23 +463,6 @@
                                         Background="{StaticResource LayerFillColorAltBrush}"
                                         BorderBrush="{StaticResource CardStrokeColorDefaultBrush}"
                                         BorderThickness="1"/>
-
-
-                                <!--<Rectangle HorizontalAlignment="Stretch"
-                                           VerticalAlignment="Stretch"
-                                           RadiusX="4"
-                                           RadiusY="4"
-                                           Fill="{StaticResource ControlAltFillColorTransparentBrush}"/>
-
-                                <Rectangle HorizontalAlignment="Stretch"
-                                           VerticalAlignment="Stretch"
-                                           RadiusX="4"
-                                           RadiusY="4"
-                                           StrokeThickness="1"
-                                           Fill="{StaticResource LayerFillColorAltBrush}"
-                                           Stroke="{StaticResource ControlElevationBorderBrush}"/>-->
-
-
 
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -540,9 +759,6 @@
 
             </Grid>
 
-            <!-- Endpoint List - List View -->
-            
-            
             
         </ScrollViewer>
 

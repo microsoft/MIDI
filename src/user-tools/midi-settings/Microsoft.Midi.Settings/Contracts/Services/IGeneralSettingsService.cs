@@ -59,6 +59,12 @@ public class WindowRect
     }
 }
 
+public enum EndpointListView
+{
+    Default = 0,
+    CardView,
+    ListView
+}
 
 public interface IGeneralSettingsService
 {
@@ -69,6 +75,11 @@ public interface IGeneralSettingsService
 
     public WindowRect? GetMainWindowPositionAndSize();
     public void SetMainWindowPositionAndSize(WindowRect value);
+
+
+    public EndpointListView GetEndpointListLastUsedView();
+    public void SetEndpointListLastUsedView(EndpointListView view);
+
 
     Task InitializeAsync();
 

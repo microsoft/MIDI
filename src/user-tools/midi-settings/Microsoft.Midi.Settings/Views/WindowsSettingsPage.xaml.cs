@@ -6,8 +6,6 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using Microsoft.Midi.Settings.Models;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -19,7 +17,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -30,26 +27,13 @@ using Windows.Foundation.Collections;
 namespace Microsoft.Midi.Settings.Views
 {
     /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
+    /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MidiServiceInitializationProgressWindow : WinUIEx.WindowEx
+    public sealed partial class WindowsSettingsPage : Page
     {
-
-        public MidiServiceInitializationProgressWindow()
+        public WindowsSettingsPage()
         {
-            //this.ExtendsContentIntoTitleBar = true;
-            this.IsTitleBarVisible = false;
-
-            HwndExtensions.ToggleWindowStyle(this.GetWindowHandle(), false, WindowStyle.Border );
-            
-            this.SetIsAlwaysOnTop(true);
-            this.SetWindowSize(500, 250);
-            this.CenterOnScreen();
-
-
             InitializeComponent();
         }
-
     }
 }
-

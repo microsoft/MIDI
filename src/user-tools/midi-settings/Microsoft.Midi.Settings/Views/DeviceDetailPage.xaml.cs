@@ -26,7 +26,6 @@ using Windows.UI.Popups;
 using Microsoft.UI.Windowing;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
-using Microsoft.Midi.Settings.ViewModels.Data;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
 using Windows.Storage;

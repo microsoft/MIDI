@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
-using Microsoft.Midi.Settings.ViewModels.Data;
 using Microsoft.UI.Dispatching;
 using Windows.Devices.Enumeration;
 

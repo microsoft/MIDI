@@ -14,7 +14,7 @@
 
     <Grid>
         <ScrollViewer>
-            <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Vertical" Spacing="4">
 
 
                 <controls:SettingsCard x:Uid="GlobalSettings_SetMidiServiceToAutoStartCard">

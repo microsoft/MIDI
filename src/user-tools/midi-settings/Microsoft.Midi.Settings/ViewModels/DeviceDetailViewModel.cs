@@ -11,7 +11,6 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
-using Microsoft.Midi.Settings.ViewModels.Data;
 using Microsoft.UI.Dispatching;
 using System;
 using System.Collections.Generic;

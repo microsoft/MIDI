@@ -6,27 +6,18 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Microsoft.Midi.Settings.ViewModels.Data
+namespace Microsoft.Midi.Settings.ViewModels;
+
+public class AdvancedUsbSettingsViewModel : ObservableRecipient
 {
-    public partial class EndpointUserMetadata : ObservableRecipient
+    public AdvancedUsbSettingsViewModel()
     {
-        [ObservableProperty]
-        private string name = string.Empty;
-
-        [ObservableProperty]
-        private string description = string.Empty;
-
-        [ObservableProperty]
-        private string smallImagePath = string.Empty;
-
-        [ObservableProperty]
-        private string largeImagePath = string.Empty;
     }
 }
