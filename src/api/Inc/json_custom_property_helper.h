@@ -51,11 +51,8 @@ namespace WindowsMidiServicesInternal
                 // user-supplied description
                 m_description = internal::TrimmedWStringCopy(updateObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY, L"").c_str());
 
-                // user-supplied small image
-                m_smallImagePath = internal::TrimmedWStringCopy(updateObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY, L"").c_str());
-
-                // user-supplied large image
-                m_largeImagePath = internal::TrimmedWStringCopy(updateObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY, L"").c_str());
+                // user-supplied image
+                m_imagePath = internal::TrimmedWStringCopy(updateObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_IMAGE_PROPERTY, L"").c_str());
 
                 // requires note off translation
                 m_requiresNoteOffTranslation = updateObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_REQUIRES_NOTE_OFF_TRANSLATION_PROPERTY, false);
@@ -114,31 +111,31 @@ namespace WindowsMidiServicesInternal
                         DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
-            // small image path
-            if (!m_smallImagePath.empty())
+            // image path
+            if (!m_imagePath.empty())
             {
-                destination.push_back({ {PKEY_MIDI_CustomSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                        DEVPROP_TYPE_STRING, static_cast<ULONG>((m_smallImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)m_smallImagePath.c_str() });
+                destination.push_back({ {PKEY_MIDI_CustomImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_STRING, static_cast<ULONG>((m_imagePath.length() + 1) * sizeof(WCHAR)), (PVOID)m_imagePath.c_str() });
             }
             else
             {
                 // delete any existing property value, because it is blank in the config
-                destination.push_back({ {PKEY_MIDI_CustomSmallImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+                destination.push_back({ {PKEY_MIDI_CustomImagePath, DEVPROP_STORE_SYSTEM, nullptr},
                         DEVPROP_TYPE_EMPTY, 0, nullptr });
             }
 
-            // large image path
-            if (!m_largeImagePath.empty())
-            {
-                destination.push_back({ {PKEY_MIDI_CustomLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                        DEVPROP_TYPE_STRING, static_cast<ULONG>((m_largeImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)m_largeImagePath.c_str() });
-            }
-            else
-            {
-                // delete any existing property value, because it is blanko in the config
-                destination.push_back({ {PKEY_MIDI_CustomLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
-                        DEVPROP_TYPE_EMPTY, 0, nullptr });
-            }
+            //// large image path
+            //if (!m_largeImagePath.empty())
+            //{
+            //    destination.push_back({ {PKEY_MIDI_CustomLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+            //            DEVPROP_TYPE_STRING, static_cast<ULONG>((m_largeImagePath.length() + 1) * sizeof(WCHAR)), (PVOID)m_largeImagePath.c_str() });
+            //}
+            //else
+            //{
+            //    // delete any existing property value, because it is blanko in the config
+            //    destination.push_back({ {PKEY_MIDI_CustomLargeImagePath, DEVPROP_STORE_SYSTEM, nullptr},
+            //            DEVPROP_TYPE_EMPTY, 0, nullptr });
+            //}
 
             // requires note off translation
             if (m_requiresNoteOffTranslation)
@@ -183,8 +180,7 @@ namespace WindowsMidiServicesInternal
     private:
         std::wstring m_name{};
         std::wstring m_description{};
-        std::wstring m_smallImagePath{};
-        std::wstring m_largeImagePath{};
+        std::wstring m_imagePath{};
         bool m_requiresNoteOffTranslation{ false };
         bool m_supportsMidiPolyphonicExpression{ false };
         uint16_t m_recommendedCCInterval{ 0 };

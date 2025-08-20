@@ -75,8 +75,7 @@
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_NAME_PROPERTY                               L"customName"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY                        L"customDescription"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY                        L"customSmallImage"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY                        L"customLargeImage"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_IMAGE_PROPERTY                              L"customImage"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_REQUIRES_NOTE_OFF_TRANSLATION_PROPERTY      L"requiresNotOffTranslation"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SUPPORTS_MPE_PROPERTY                       L"supportsMidiPolyphonicExpression"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_RECOMMENDED_CC_INTERVAL_MS_PROPERTY         L"recommendedControlChangeIntervalMilliseconds"

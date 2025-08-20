@@ -158,7 +158,7 @@
         <ScrollView Grid.Row="2"
                     Visibility="{x:Bind ViewModel.UseListView, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-            <Grid Margin="0,0,0,0" HorizontalAlignment="Stretch">
+            <Grid Margin="8,0,16,0" HorizontalAlignment="Stretch">
                 <ListView ItemsSource="{x:Bind ViewModel.Endpoints, Mode=OneWay}"
                           SelectionMode="None"
                           IsItemClickEnabled="True"    
@@ -167,6 +167,7 @@
                         <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
                             <Setter Property="Margin" Value="0,4,0,4"/>
                             <Setter Property="Padding" Value="0"/>
+                            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}" />
                         </Style>
                     </ListView.ItemContainerStyle>
 
@@ -196,14 +197,14 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />   <!-- Icon -->
-                                        <ColumnDefinition Width="2*" />     <!-- Name and Description -->
+                                        <ColumnDefinition Width="1.5*" />     <!-- Name and Description -->
                                         <ColumnDefinition Width="*" />      <!-- MIDI 1.0 Ports -->
                                         <ColumnDefinition Width="Auto"/>    <!-- Actions -->
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Icon -->
                                     <ImageIcon Grid.Column="0" 
-                                               Source="{x:Bind SmallImage}" 
+                                               Source="{x:Bind Image}" 
                                                Width="60" Height="60"
                                                Margin="8"/>
 
@@ -496,7 +497,7 @@
                                                Margin="0,0,16,16"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Top"
-                                               Source="{x:Bind SmallImage}"
+                                               Source="{x:Bind Image}"
                                                Stretch="Uniform"/>
 
 

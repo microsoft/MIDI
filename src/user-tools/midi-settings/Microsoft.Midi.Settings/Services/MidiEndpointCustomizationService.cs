@@ -30,8 +30,7 @@ public class MidiEndpointCustomizationService : IMidiEndpointCustomizationServic
 
         configUpdate.Name = updatedUserSuppliedInfo.Name;
         configUpdate.Description = updatedUserSuppliedInfo.Description;
-        configUpdate.SmallImageFileName = updatedUserSuppliedInfo.SmallImagePath;
-        configUpdate.LargeImageFileName = updatedUserSuppliedInfo.LargeImagePath;
+        configUpdate.ImageFileName = updatedUserSuppliedInfo.ImageFileName;
         configUpdate.RequiresNoteOffTranslation = updatedUserSuppliedInfo.RequiresNoteOffTranslation;
         configUpdate.SupportsMidiPolyphonicExpression = updatedUserSuppliedInfo.SupportsMidiPolyphonicExpression;
         configUpdate.RecommendedControlChangeIntervalMilliseconds = updatedUserSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;

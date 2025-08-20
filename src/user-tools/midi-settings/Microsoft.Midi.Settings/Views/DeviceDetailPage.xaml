@@ -34,7 +34,7 @@
                     Padding="0"
                     VerticalAlignment="Top"
                     Click="Button_Click">
-                <Image Source="{x:Bind ViewModel.EndpointWrapper.SmallImage}"
+                <Image Source="{x:Bind ViewModel.EndpointWrapper.Image}"
                        Stretch="Uniform"
                        />
                 <ToolTipService.ToolTip>
@@ -827,43 +827,20 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Text="Small Image" />
-                        <Button Click="BrowseSmallImage_Click"
+                        <Button Click="BrowseImage_Click"
                                 Width="275"
                                 Height="275"
                                 Grid.Row="1"
                                 Margin="5">
                             <Image Grid.Row="1"
                                    Stretch="Uniform"
-                                   x:Name="UserMetadataSmallImagePreview" />
+                                   x:Name="UserMetadataImagePreview" />
                         </Button>
 
                         <TextBlock Grid.Row="2"
-                                   Text="{x:Bind ViewModel.CustomizedSmallImagePath, Mode=TwoWay}"
+                                   Text="{x:Bind ViewModel.CustomizedImageFileName, Mode=TwoWay}"
                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                    </Grid>
-
-                    <Grid Grid.Column="1" Margin="5">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" Text="Large Image" />
-                        <Button Click="BrowseLargeImage_Click"
-                                Width="275"
-                                Height="275"
-                                Grid.Row="1"
-                                Margin="5">
-                            <Image Grid.Row="1"
-                                   Stretch="Uniform"
-                                   x:Name="UserMetadataLargeImagePreview"/>
-                        </Button>
-
-                        <TextBlock Grid.Row="2"
-                                   Text="{x:Bind ViewModel.CustomizedLargeImagePath, Mode=TwoWay}"
-                                   Style="{StaticResource SmallEmphasizedPropertyValue}" />
                     </Grid>
 
                 </Grid>

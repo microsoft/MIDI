@@ -58,7 +58,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         public bool IsNativeUmp { get; private set; }
         public bool SupportsMidi2 { get; private set; }
 
-        public ImageSource SmallImage { get; private set; }
+        public ImageSource Image { get; private set; }
 
         [ObservableProperty]
         private bool hasSingleInputPort;
@@ -209,19 +209,19 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             // small image
 
-            var imagePath = MidiImageAssetHelper.GetSmallImageFullPathForEndpoint(deviceInformation);
+            var imagePath = MidiImageAssetHelper.GetImageFullPathForEndpoint(deviceInformation);
 
             if (imagePath.ToLower().EndsWith(".svg"))
             {
                 // SVG requires a specific decoder
                 var source = new SvgImageSource(new Uri(imagePath, UriKind.Absolute));
-                SmallImage = source;
+                Image = source;
             }
             else
             {
                 // this works with PNG, JPG, etc.
                 var source = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
-                SmallImage = source;
+                Image = source;
             }
 
 

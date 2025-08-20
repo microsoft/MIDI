@@ -1713,11 +1713,11 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Large Image Path.
+        ///   Looks up a localized string similar to Image File Name.
         /// </summary>
-        internal static string PropertiesTablePropertyLabelLargeImagePath {
+        internal static string PropertiesTablePropertyLabelImageFileName {
             get {
-                return ResourceManager.GetString("PropertiesTablePropertyLabelLargeImagePath", resourceCulture);
+                return ResourceManager.GetString("PropertiesTablePropertyLabelImageFileName", resourceCulture);
             }
         }
         
@@ -1781,15 +1781,6 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string PropertiesTablePropertyLabelSerialNumber {
             get {
                 return ResourceManager.GetString("PropertiesTablePropertyLabelSerialNumber", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Small Image Path.
-        /// </summary>
-        internal static string PropertiesTablePropertyLabelSmallImagePath {
-            get {
-                return ResourceManager.GetString("PropertiesTablePropertyLabelSmallImagePath", resourceCulture);
             }
         }
         

@@ -75,10 +75,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private string customizedDescription;
 
         [ObservableProperty]
-        private string customizedSmallImagePath;
-
-        [ObservableProperty]
-        private string customizedLargeImagePath;
+        private string customizedImageFileName;
 
         [ObservableProperty]
         private bool customizedRequiresNoteOffTranslation;
@@ -144,8 +141,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             // Prepopulate customization properties with the ones from the endpoint
             CustomizedName = string.IsNullOrWhiteSpace(userSuppliedInfo.Name) ? string.Empty : userSuppliedInfo.Name.Trim() ;
             CustomizedDescription = string.IsNullOrWhiteSpace(userSuppliedInfo.Description) ? string.Empty : userSuppliedInfo.Description.Trim();
-            CustomizedSmallImagePath = string.IsNullOrWhiteSpace(userSuppliedInfo.SmallImagePath) ? string.Empty : userSuppliedInfo.SmallImagePath.Trim();
-            CustomizedLargeImagePath = string.IsNullOrWhiteSpace(userSuppliedInfo.LargeImagePath) ? string.Empty : userSuppliedInfo.LargeImagePath.Trim();
+            CustomizedImageFileName = string.IsNullOrWhiteSpace(userSuppliedInfo.ImageFileName) ? string.Empty : userSuppliedInfo.ImageFileName.Trim();
             CustomizedRequiresNoteOffTranslation = userSuppliedInfo.RequiresNoteOffTranslation;
             CustomizedSupportsMidiPolyphonicExpression = userSuppliedInfo.SupportsMidiPolyphonicExpression;
             CustomizedRecommendedControlChangeAutomationIntervalMilliseconds = userSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;
@@ -158,8 +154,7 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 custom.Name = string.IsNullOrWhiteSpace(CustomizedName) ? string.Empty : CustomizedName.Trim();
                 custom.Description = string.IsNullOrWhiteSpace(CustomizedDescription) ? string.Empty : CustomizedDescription.Trim();
-                custom.SmallImagePath = string.IsNullOrWhiteSpace(CustomizedSmallImagePath) ? string.Empty : CustomizedSmallImagePath.Trim();
-                custom.LargeImagePath = string.IsNullOrWhiteSpace(CustomizedLargeImagePath) ? string.Empty : CustomizedLargeImagePath.Trim();
+                custom.ImageFileName = string.IsNullOrWhiteSpace(CustomizedImageFileName) ? string.Empty : CustomizedImageFileName.Trim();
                 custom.RequiresNoteOffTranslation = CustomizedRequiresNoteOffTranslation;
                 custom.SupportsMidiPolyphonicExpression = CustomizedSupportsMidiPolyphonicExpression;
                 custom.RecommendedControlChangeAutomationIntervalMilliseconds = CustomizedRecommendedControlChangeAutomationIntervalMilliseconds;

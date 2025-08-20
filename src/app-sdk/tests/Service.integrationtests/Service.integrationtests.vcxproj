@@ -20,7 +20,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.13-preview.13.72</WindowsMidiServicesSdkPackage>
+    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.13-preview.13.77</WindowsMidiServicesSdkPackage>
     <VCProjectVersion>17.0</VCProjectVersion>
     <ProjectGuid>{63FDB29C-5638-427B-86BF-05B318480571}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

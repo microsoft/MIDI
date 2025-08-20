@@ -219,8 +219,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         // User-supplied metadata ============================================================
         additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
-        additionalProperties.Append(STRING_PKEY_MIDI_CustomLargeImagePath);
-        additionalProperties.Append(STRING_PKEY_MIDI_CustomSmallImagePath);
+        additionalProperties.Append(STRING_PKEY_MIDI_CustomImagePath);
         additionalProperties.Append(STRING_PKEY_MIDI_CustomDescription);
        
         // Additional Capabilities ============================================================
@@ -721,8 +720,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         info.Name = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomEndpointName, L"");
         info.Description = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomDescription, L"");
         
-        info.LargeImagePath = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomLargeImagePath, L"");
-        info.SmallImagePath = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomSmallImagePath, L"");
+        info.ImageFileName = internal::GetDeviceInfoProperty<winrt::hstring>(m_properties, STRING_PKEY_MIDI_CustomImagePath, L"");
 
         info.RequiresNoteOffTranslation = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_RequiresNoteOffTranslation, false);
         info.SupportsMidiPolyphonicExpression = internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false);

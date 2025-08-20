@@ -65,7 +65,7 @@ namespace Microsoft.Midi.ConsoleApp
                         );
 
                         table.AddRow(
-                        $"Small Image Path:              [mediumturquoise]{transport.SmallImagePath}[/]"
+                        $"Image File Name:               [mediumturquoise]{transport.ImageFileName}[/]"
                         );
 
                         table.AddRow(

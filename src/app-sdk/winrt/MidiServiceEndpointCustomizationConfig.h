@@ -26,15 +26,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
             _In_ winrt::guid const& transportId, 
             _In_ winrt::hstring const& name, 
             _In_ winrt::hstring const& description, 
-            _In_ winrt::hstring const& largeImageFileName, 
-            _In_ winrt::hstring const& smallImageFileName) noexcept;
+            _In_ winrt::hstring const& imageFileName) noexcept;
 
         MidiServiceEndpointCustomizationConfig(
             _In_ winrt::guid const& transportId, 
             _In_ winrt::hstring const& name, 
             _In_ winrt::hstring const& description, 
-            _In_ winrt::hstring const& largeImageFileName, 
-            _In_ winrt::hstring const& smallImageFileName, 
+            _In_ winrt::hstring const& imageFileName, 
             _In_ bool const requiresNoteOffTranslation,
             _In_ bool const supportsMidiPolyphonicExpression,
             _In_ uint16_t const recommendedControlChangeIntervalMilliseconds) noexcept;
@@ -45,11 +43,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         hstring Description() const noexcept { return m_description; }
         void Description(_In_ winrt::hstring const& value) noexcept { m_description = internal::TrimmedHStringCopy(value); }
 
-        hstring LargeImageFileName() const noexcept { return m_largeImageFileName; }
-        void LargeImageFileName(_In_ winrt::hstring const& value) noexcept { m_largeImageFileName = internal::TrimmedHStringCopy(value); }
-
-        hstring SmallImageFileName() const noexcept { return m_smallImageFileName; }
-        void SmallImageFileName(_In_ winrt::hstring const& value) noexcept { m_smallImageFileName = internal::TrimmedHStringCopy(value); }
+        hstring ImageFileName() const noexcept { return m_imageFileName; }
+        void ImageFileName(_In_ winrt::hstring const& value) noexcept { m_imageFileName = internal::TrimmedHStringCopy(value); }
         
         bool RequiresNoteOffTranslation() const noexcept { return m_requiresNoteOffTranslation; }
         void RequiresNoteOffTranslation(_In_ bool const value) noexcept { m_requiresNoteOffTranslation = value; }
@@ -72,8 +67,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
     private:
         winrt::hstring m_name{};
         winrt::hstring m_description{};
-        winrt::hstring m_largeImageFileName{};
-        winrt::hstring m_smallImageFileName{};
+        winrt::hstring m_imageFileName{};
         bool m_requiresNoteOffTranslation{ false };
         bool m_supportsMidiPolyphonicExpression{ false };
         uint16_t m_recommendedControlChangeIntervalMilliseconds{ 0 };
