@@ -68,7 +68,7 @@ namespace Microsoft.Midi.Settings.Views
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.DeviceInformation == null)
+            if (ViewModel.EndpointWrapper == null)
             {
                 return;
             }
@@ -156,7 +156,7 @@ namespace Microsoft.Midi.Settings.Views
             {
                 string arguments =
                     " endpoint " +
-                    ViewModel.DeviceInformation.EndpointDeviceId +
+                    ViewModel.EndpointWrapper.Id +
                     " monitor";
 
                 using (var monitorProcess = new System.Diagnostics.Process())

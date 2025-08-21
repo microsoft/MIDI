@@ -52,13 +52,13 @@
 
                 <TextBlock Grid.Row="0"
                            HorizontalAlignment="Left"
-                           Text="{x:Bind ViewModel.DeviceInformation.Name}" 
+                           Text="{x:Bind ViewModel.Name, Mode=OneWay}" 
                            Style="{StaticResource PageHeaderStyleDeviceName}" />
 
                 <TextBlock Grid.Row="1" 
                            HorizontalAlignment="Left"
                            Margin="0"
-                           Text="{x:Bind ViewModel.EndpointWrapper.Description}" 
+                           Text="{x:Bind ViewModel.Description, Mode=OneWay}" 
                            Style="{StaticResource SmallPlainPropertyValueWithWrap}"
                            Opacity="0.5"/>
 
@@ -95,33 +95,33 @@
                 <TextBlock Grid.Column="0" Grid.Row="0" 
                            x:Uid="DeviceDetailPage_ManufacturerLabel"
                            Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName}" 
+                <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName, Mode=OneWay}" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                 <TextBlock Grid.Column="0" Grid.Row="1" 
                            x:Uid="DeviceDetailPage_ProductInstanceId"
                            Style="{StaticResource SmallPropertyLabel}" 
-                           Visibility="{x:Bind ViewModel.ShowMidi2Properties, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                           Visibility="{x:Bind ViewModel.ShowMidi2Properties, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointInfo.ProductInstanceId }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" 
-                           Visibility="{x:Bind ViewModel.ShowMidi2Properties, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                           Visibility="{x:Bind ViewModel.ShowMidi2Properties, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
                 <TextBlock Grid.Column="0" Grid.Row="2" 
                            x:Uid="DeviceDetailPage_SerialNumber"
                            Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber }" 
+                <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber, Mode=OneWay }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                 <TextBlock Grid.Column="0" Grid.Row="3" 
                            x:Uid="DeviceDetailPage_NativeDataFormat"
                            Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.NativeDataFormat, Converter={StaticResource EndpointNativeDataFormatConverter} }" 
+                <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.NativeDataFormat, Mode=OneWay, Converter={StaticResource EndpointNativeDataFormatConverter} }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                 <TextBlock Grid.Column="0" Grid.Row="4" 
                            x:Uid="DeviceDetailPage_TransportCode"
                            Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode }" 
+                <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode, Mode=OneWay }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" />
             </Grid>
             
@@ -184,7 +184,7 @@
                 <controls:SettingsExpander IsExpanded="False"
                                            x:Uid="DeviceDetailPage_Midi1SourcePortsExpander"
                                            CornerRadius="8"
-                                           ItemsSource="{x:Bind ViewModel.EndpointWrapper.Midi1InputPorts}"
+                                           ItemsSource="{x:Bind ViewModel.EndpointWrapper.Midi1InputPorts, Mode=OneWay}"
                                            >
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8BC;" 
@@ -197,7 +197,7 @@
                                        HorizontalAlignment="Left"/>
 
                             <TextBlock HorizontalAlignment="Right">
-                                <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts}" 
+                                <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts, Mode=OneWay}" 
                                      Foreground="{StaticResource AccentTextFillColorPrimaryBrush}"/>
                                 <Run Text="Port(s)" />
                             </TextBlock>
@@ -266,7 +266,7 @@
                 <controls:SettingsExpander IsExpanded="False"
                                            x:Uid="DeviceDetailPage_Midi1DestinationPortsExpander"
                                            CornerRadius="8"
-                                           ItemsSource="{x:Bind ViewModel.EndpointWrapper.Midi1OutputPorts}"
+                                           ItemsSource="{x:Bind ViewModel.EndpointWrapper.Midi1OutputPorts, Mode=OneWay}"
                                            >
                     <controls:SettingsExpander.Header>
                         <Grid HorizontalAlignment="Stretch" Width="400">
@@ -274,7 +274,7 @@
                                        HorizontalAlignment="Left"/>
                             
                             <TextBlock HorizontalAlignment="Right">
-                                <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts}" 
+                                <Run Text="{x:Bind ViewModel.EndpointWrapper.CountMidi1OutputPorts, Mode=OneWay}" 
                                      Foreground="{StaticResource AccentTextFillColorPrimaryBrush}"/>
                                 <Run Text="Port(s)" />
                             </TextBlock>
@@ -310,28 +310,28 @@
                                                    Text="Port Number" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                   Text="{x:Bind PortNumber }" 
+                                                   Text="{x:Bind PortNumber, Mode=OneWay }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
                                                    Text="WinRT Id" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
-                                                   Text="{x:Bind PortDeviceId }" 
+                                                   Text="{x:Bind PortDeviceId, Mode=OneWay }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                    Text="Mapped Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                   Text="{x:Bind Group.DisplayValue}" 
+                                                   Text="{x:Bind Group.DisplayValue, Mode=OneWay}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                    Text="Flow" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                   Text="{x:Bind PortFlow }" 
+                                                   Text="{x:Bind PortFlow, Mode=OneWay }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                         </Grid>
@@ -415,20 +415,20 @@
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Name" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.Name}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.Name, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="1" Text="Description" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.TransportSuppliedInfo.Description}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.TransportSuppliedInfo.Description, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="2" Text="Serial Number" Style="{StaticResource SmallPropertyLabel}"/>
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
 
                                     <TextBlock Grid.Column="0" Grid.Row="3" Text="Transport Id" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportId}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportId, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="4" Text="Transport Code" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 </Grid>
                             </controls:SettingsCard.Header>
@@ -465,19 +465,19 @@
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Supports MIDI 1.0 Protocol" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.EndpointInfo.SupportsMidi10Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.EndpointInfo.SupportsMidi10Protocol, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="1" Text="Supports MIDI 2.0 Protocol" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointInfo.SupportsMidi20Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointInfo.SupportsMidi20Protocol, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="2" Text="Configured Protocol" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.StreamConfiguration.Protocol}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.StreamConfiguration.Protocol, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="3" Text="Configured to send Jitter Reduction Timestamps" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.StreamConfiguration.SendJitterReductionTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.StreamConfiguration.SendJitterReductionTimestamps, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="4" Text="Configured to receive Jitter Reduction Timestamps" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.StreamConfiguration.ReceiveJitterReductionTimestamps}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.StreamConfiguration.ReceiveJitterReductionTimestamps, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                 </Grid>
                             </controls:SettingsCard.Header>
@@ -490,7 +490,7 @@
                 <controls:SettingsExpander x:Uid="DeviceDetailPage_FunctionBlocksExpander"
                                            ItemsSource="{x:Bind ViewModel.FunctionBlocks, Mode=OneWay}"
                                            CornerRadius="8"
-                                           Visibility="{x:Bind ViewModel.HasFunctionBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
+                                           Visibility="{x:Bind ViewModel.HasFunctionBlocks, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                            IsExpanded="False">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb41;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -527,35 +527,35 @@
                                                    Text="Number" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                   Text="{x:Bind Number }" 
+                                                   Text="{x:Bind Number, Mode=OneWay }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
                                                    Text="Active?" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
-                                                   Text="{x:Bind IsActive }" 
+                                                   Text="{x:Bind IsActive, Mode=OneWay }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                    Text="First Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                   Text="{x:Bind FirstGroup.DisplayValue}" 
+                                                   Text="{x:Bind FirstGroup.DisplayValue, Mode=OneWay}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                    Text="Group Count" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                   Text="{x:Bind GroupCount }" 
+                                                   Text="{x:Bind GroupCount, Mode=OneWay }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="4" 
                                                    Text="Max System Exclusive 8 Streams" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="4" 
-                                                   Text="{x:Bind MaxSystemExclusive8Streams, Converter={StaticResource MidiFunctionBlockSysEx8FormatConverter}}" 
+                                                   Text="{x:Bind MaxSystemExclusive8Streams, Mode=OneWay, Converter={StaticResource MidiFunctionBlockSysEx8FormatConverter}}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
                                         </Grid>
 
@@ -577,28 +577,28 @@
                                                        Text="Direction" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                       Text="{x:Bind Direction, Converter={StaticResource MidiFunctionBlockDirectionConverter} }" 
+                                                       Text="{x:Bind Direction, Mode=OneWay, Converter={StaticResource MidiFunctionBlockDirectionConverter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
                                                        Text="UI Hint" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
-                                                       Text="{x:Bind UIHint, Converter={StaticResource MidiFunctionBlockUIHintConverter} }" 
+                                                       Text="{x:Bind UIHint, Mode=OneWay, Converter={StaticResource MidiFunctionBlockUIHintConverter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                        Text="MIDI 1.0" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                       Text="{x:Bind RepresentsMidi10Connection, Converter={StaticResource MidiFunctionBlockMidi10Converter} }" 
+                                                       Text="{x:Bind RepresentsMidi10Connection, Mode=OneWay, Converter={StaticResource MidiFunctionBlockMidi10Converter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                        Text="MIDI CI" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                       Text="{x:Bind MidiCIMessageVersionFormat }" 
+                                                       Text="{x:Bind MidiCIMessageVersionFormat, Mode=OneWay }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
 
@@ -615,7 +615,7 @@
                 <controls:SettingsExpander x:Uid="DeviceDetailPage_GroupTerminalBlocksExpander"
                                            ItemsSource="{x:Bind ViewModel.GroupTerminalBlocks, Mode=OneWay}"
                                            CornerRadius="8"
-                                           Visibility="{x:Bind ViewModel.HasGroupTerminalBlocks, Converter={StaticResource BoolToVisibilityConverter}}"
+                                           Visibility="{x:Bind ViewModel.HasGroupTerminalBlocks, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                            IsExpanded="False">
                     <controls:SettingsExpander.HeaderIcon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xeb41;" Style="{StaticResource CommonTasksIconStyles}"/>
@@ -624,7 +624,7 @@
                         <DataTemplate x:DataType="midi2:MidiGroupTerminalBlock">
                             <controls:SettingsCard>
                                 <controls:SettingsCard.HeaderIcon>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind Direction, Converter={StaticResource MidiGroupTerminalBlockDirectionToFontIconConverter}}" Style="{StaticResource CommonTasksIconStyles}"/>
+                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind Direction, Mode=OneWay, Converter={StaticResource MidiGroupTerminalBlockDirectionToFontIconConverter}}" Style="{StaticResource CommonTasksIconStyles}"/>
                                 </controls:SettingsCard.HeaderIcon>
                                 <controls:SettingsCard.Header>
                                     <TextBlock Text="{x:Bind Name}" />
@@ -655,21 +655,21 @@
                                                    Text="Number" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                   Text="{x:Bind Number }" 
+                                                   Text="{x:Bind Number, Mode=OneWay }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                    Text="First Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                   Text="{x:Bind FirstGroup.DisplayValue}" 
+                                                   Text="{x:Bind FirstGroup.DisplayValue, Mode=OneWay}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                    Text="Group Count" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                   Text="{x:Bind GroupCount }" 
+                                                   Text="{x:Bind GroupCount, Mode=OneWay }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                         </Grid>
@@ -692,21 +692,21 @@
                                                        Text="Direction" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                       Text="{x:Bind Direction, Converter={StaticResource MidiGroupTerminalBlockDirectionConverter} }" 
+                                                       Text="{x:Bind Direction, Mode=OneWay, Converter={StaticResource MidiGroupTerminalBlockDirectionConverter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                        Text="Max Device Input Bandwidth (bps)" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                       Text="{x:Bind CalculatedMaxDeviceInputBandwidthBitsPerSecond }" 
+                                                       Text="{x:Bind CalculatedMaxDeviceInputBandwidthBitsPerSecond, Mode=OneWay }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                        Text="Max Device Output Bandwidth (bps)" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                       Text="{x:Bind CalculatedMaxDeviceOutputBandwidthBitsPerSecond }" 
+                                                       Text="{x:Bind CalculatedMaxDeviceOutputBandwidthBitsPerSecond, Mode=OneWay }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
 
@@ -744,13 +744,13 @@
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Grid.Column="0" Grid.Row="0" Text="Name" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.ParentDeviceInformation.Name}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.ParentDeviceInformation.Name, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                     <TextBlock Grid.Column="0" Grid.Row="1" Text="Id" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.ParentDeviceInformation.Id}"  Style="{StaticResource SmallPlainPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.ParentDeviceInformation.Id, Mode=OneWay}"  Style="{StaticResource SmallPlainPropertyValue}"/>
 
                                     <TextBlock Grid.Column="0" Grid.Row="2" Text="Kind" Style="{StaticResource SmallPropertyLabel}" />
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.ParentDeviceInformation.Kind}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                                    <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.ParentDeviceInformation.Kind, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}"/>
 
                                 </Grid>
                             </controls:SettingsCard.Header>
@@ -790,14 +790,18 @@
             <StackPanel Orientation="Vertical" Spacing="5" HorizontalAlignment="Stretch">
 
                 <StackPanel Orientation="Vertical" Margin="0,20,0,20">
-                    <TextBlock Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName}" 
+                    <TextBlock Text="{x:Bind ViewModel.EndpointWrapper.Name, Mode=OneWay}" 
                                Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                    <TextBlock Text="{x:Bind ViewModel.TransportSuppliedInfo.Name}" 
+                    <TextBlock Text="{x:Bind ViewModel.EndpointWrapper.Id, Mode=OneWay}" 
                                Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
-                    <TextBlock Text="{x:Bind ViewModel.DeviceInformation.EndpointDeviceId}" 
+                    <TextBlock Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName, Mode=OneWay}" 
                                Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+                    <TextBlock Text="{x:Bind ViewModel.TransportSuppliedInfo.Name, Mode=OneWay}" 
+                               Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
 
                 </StackPanel>
 

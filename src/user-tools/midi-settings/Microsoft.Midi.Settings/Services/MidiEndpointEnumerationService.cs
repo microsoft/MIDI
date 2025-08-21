@@ -14,6 +14,10 @@ namespace Microsoft.Midi.Settings.Services;
 
 public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 {
+    public event EventHandler<MidiEndpointWrapper> EndpointUpdated;
+
+
+
     private List<MidiEndpointWrapper> _endpoints = [];
     public IList<MidiEndpointWrapper> GetEndpoints()
     {
@@ -35,6 +39,14 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
     {
         return _endpoints.Where(e => e.DeviceInformation.EndpointPurpose == purpose).ToList();
     }
+
+
+    public MidiEndpointWrapper GetEndpointById(string endpointDeviceId)
+    {
+        return _endpoints.Where(e => e.Id == endpointDeviceId).FirstOrDefault();
+    }
+
+
 
 
     private MidiEndpointDeviceWatcher? _watcher = null;
@@ -66,7 +78,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
         _watcher = MidiEndpointDeviceWatcher.Create(filter);
 
         _watcher.Stopped += OnDeviceWatcherStopped;
-        //_watcher.Updated += OnDeviceWatcherEndpointUpdated;
+        _watcher.Updated += OnDeviceWatcherEndpointUpdated;
         _watcher.Removed += OnDeviceWatcherEndpointRemoved;
         _watcher.Added += OnDeviceWatcherEndpointAdded;
         _watcher.EnumerationCompleted += OnDeviceWatcherEnumerationCompleted;
@@ -129,13 +141,23 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
         }
     }
 
-    //private void OnDeviceWatcherEndpointUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
-    //{
-    //    if (EndpointDeviceUpdated != null)
-    //    {
-    //        EndpointDeviceUpdated(sender, args);
-    //    }
-    //}
+    private void OnDeviceWatcherEndpointUpdated(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformationUpdatedEventArgs args)
+    {
+        foreach (MidiEndpointWrapper info in _endpoints)
+        {
+            if (info.Id == args.EndpointDeviceId)
+            {
+                info.RefreshData(_watcher.EnumeratedEndpointDevices[args.EndpointDeviceId]);
+
+                if (EndpointUpdated != null)
+                {
+                    EndpointUpdated(this, info);
+                }
+                break;
+            }
+        }
+
+    }
 
     private void OnDeviceWatcherStopped(MidiEndpointDeviceWatcher sender, object args)
     {

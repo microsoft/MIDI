@@ -27,7 +27,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly INavigationService _navigationService;
         private readonly ISynchronizationContextService _synchronizationContextService;
         private readonly IMidiPanicService _panicService;
-
+        private readonly IMidiTransportInfoService _transportInfoService;
 
         public ICommand ViewDeviceDetailsCommand
         {
@@ -85,159 +85,137 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1InputPorts { get; private set; } = [];
         public ObservableCollection<MidiEndpointAssociatedPortDeviceInformation> Midi1OutputPorts { get; private set; } = [];
 
-        public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,
-            IMidiTransportInfoService transportInfoService,
-            INavigationService navigationService,
-            ISynchronizationContextService synchronizationContextService,
-            IMidiPanicService panicService)
+        public void RefreshData(MidiEndpointDeviceInformation deviceInformation)
         {
-            System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Constructing");
-
-            _navigationService = navigationService;
-            _synchronizationContextService = synchronizationContextService;
-            _panicService = panicService;
-
-            ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointWrapper>(
-                (param) =>
-                {
-                    System.Diagnostics.Debug.WriteLine("View Device Details Command exec");
-
-                    if (param == null)
-                    {
-                        _navigationService.NavigateTo(typeof(DeviceDetailViewModel).FullName!, this);
-                    }
-                    else
-                    {
-                        _navigationService.NavigateTo(typeof(DeviceDetailViewModel).FullName!, param);
-                    }
-
-                });
-
-            SendPanicCommand = new RelayCommand(
-                () =>
-                {
-                    System.Diagnostics.Debug.WriteLine("Sending panic");
-
-                    // TODO: Could make this a bit faster by sending only for valid groups
-                    _panicService.SendMidiPanic(DeviceInformation.EndpointDeviceId);
-
-                });
-
-
             DeviceInformation = deviceInformation;
+            RefreshData();
+        }
 
-            Name = deviceInformation.Name;
-            Id = deviceInformation.EndpointDeviceId;
-            TransportCode = deviceInformation.GetTransportSuppliedInfo().TransportCode;
-            TransportId = deviceInformation.GetTransportSuppliedInfo().TransportId;
+        public void RefreshData()
+        {
+            // Property updates need to happen on UI thread
 
-            ManufacturerName = deviceInformation.GetTransportSuppliedInfo().ManufacturerName.Trim();
+ 
+            var context = _synchronizationContextService.GetUIContext();
 
-            HasManufacturerName = ManufacturerName != string.Empty;
-
-            // native UMP
-
-            if (deviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
+            if (context == null)
             {
-                IsNativeUmp = true;
-            }
-            else
-            {
-                IsNativeUmp = false;
+                context = SynchronizationContext.Current;
             }
 
-            // MIDI 2.0 protocol
+            context.Post(_ =>
+            {
+                Name = DeviceInformation.Name;
+                Id = DeviceInformation.EndpointDeviceId;
+                TransportCode = DeviceInformation.GetTransportSuppliedInfo().TransportCode;
+                TransportId = DeviceInformation.GetTransportSuppliedInfo().TransportId;
 
-            if (deviceInformation.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
-            {
-                SupportsMidi2 = true;
-            }
-            else
-            {
-                SupportsMidi2 = false;
-            }
+                ManufacturerName = DeviceInformation.GetTransportSuppliedInfo().ManufacturerName.Trim();
 
-            // description
-            if (deviceInformation.GetUserSuppliedInfo().Description != string.Empty)
-            {
-                Description = deviceInformation.GetUserSuppliedInfo().Description;
-            }
-            else
-            {
-                // look up the name of the transport given the transport id
-                Description = "A " +
-                    transportInfoService.GetTransportForId(deviceInformation.GetTransportSuppliedInfo().TransportId).Name +
-                    " endpoint";
+                HasManufacturerName = ManufacturerName != string.Empty;
 
-                if (SupportsMidi2)
+                // native UMP
+
+                if (DeviceInformation.GetTransportSuppliedInfo().NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat)
                 {
-                    Description += " which natively supports the MIDI 2.0 protocol.";
+                    IsNativeUmp = true;
                 }
                 else
                 {
-                    Description += ".";
+                    IsNativeUmp = false;
                 }
-            }
 
-            // unique identifier
-            if (deviceInformation.GetDeclaredEndpointInfo().ProductInstanceId != string.Empty)
-            {
-                UniqueIdentifier = deviceInformation.GetDeclaredEndpointInfo().ProductInstanceId;
-            }
-            else if (deviceInformation.GetTransportSuppliedInfo().SerialNumber != string.Empty)
-            {
-                UniqueIdentifier = deviceInformation.GetTransportSuppliedInfo().SerialNumber;
-            }
-            else
-            {
-                UniqueIdentifier = string.Empty;
-            }
+                // MIDI 2.0 protocol
 
-            HasUniqueIdentifier = UniqueIdentifier != string.Empty;
+                if (DeviceInformation.GetDeclaredEndpointInfo().SupportsMidi20Protocol)
+                {
+                    SupportsMidi2 = true;
+                }
+                else
+                {
+                    SupportsMidi2 = false;
+                }
 
-            // multi-client
+                // description
+                if (DeviceInformation.GetUserSuppliedInfo().Description != string.Empty)
+                {
+                    Description = DeviceInformation.GetUserSuppliedInfo().Description;
+                }
+                else
+                {
+                    // look up the name of the transport given the transport id
+                    Description = "A " +
+                        _transportInfoService.GetTransportForId(DeviceInformation.GetTransportSuppliedInfo().TransportId).Name +
+                        " endpoint";
 
-            if (deviceInformation.GetTransportSuppliedInfo().SupportsMultiClient)
-            {
-                IsMultiClient = true;
-            }
-            else
-            {
-                IsMultiClient = false;
-            }
+                    if (SupportsMidi2)
+                    {
+                        Description += " which natively supports the MIDI 2.0 protocol.";
+                    }
+                    else
+                    {
+                        Description += ".";
+                    }
+                }
+
+                // unique identifier
+                if (DeviceInformation.GetDeclaredEndpointInfo().ProductInstanceId != string.Empty)
+                {
+                    UniqueIdentifier = DeviceInformation.GetDeclaredEndpointInfo().ProductInstanceId;
+                }
+                else if (DeviceInformation.GetTransportSuppliedInfo().SerialNumber != string.Empty)
+                {
+                    UniqueIdentifier = DeviceInformation.GetTransportSuppliedInfo().SerialNumber;
+                }
+                else
+                {
+                    UniqueIdentifier = string.Empty;
+                }
+
+                HasUniqueIdentifier = UniqueIdentifier != string.Empty;
+
+                // multi-client
+
+                if (DeviceInformation.GetTransportSuppliedInfo().SupportsMultiClient)
+                {
+                    IsMultiClient = true;
+                }
+                else
+                {
+                    IsMultiClient = false;
+                }
 
 
-            // small image
+                // small image
 
-            var imagePath = MidiImageAssetHelper.GetImageFullPathForEndpoint(deviceInformation);
+                var imagePath = MidiImageAssetHelper.GetImageFullPathForEndpoint(DeviceInformation);
 
-            if (imagePath.ToLower().EndsWith(".svg"))
-            {
-                // SVG requires a specific decoder
-                var source = new SvgImageSource(new Uri(imagePath, UriKind.Absolute));
-                Image = source;
-            }
-            else
-            {
-                // this works with PNG, JPG, etc.
-                var source = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
-                Image = source;
-            }
+                if (imagePath.ToLower().EndsWith(".svg"))
+                {
+                    // SVG requires a specific decoder
+                    var source = new SvgImageSource(new Uri(imagePath, UriKind.Absolute));
+                    Image = source;
+                }
+                else
+                {
+                    // this works with PNG, JPG, etc.
+                    var source = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
+                    Image = source;
+                }
 
-
-            // TODO: These may be a bit expensive to get. TBD
+            }, null);
 
             Task.Run(() =>
             {
                 System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Getting MIDI 1.0 Ports");
 
                 // MIDI 1.0 Input Ports / Sources
-                var inputPorts = deviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageSource);
-                var outputPorts = deviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
+                var inputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageSource);
+                var outputPorts = DeviceInformation.FindAllAssociatedMidi1PortsForThisEndpoint(Midi1PortFlow.MidiMessageDestination);
 
-
-                _synchronizationContextService.GetUIContext()?.Post(_ =>
+                context.Post(_ =>
                 {
+
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread");
 
                     foreach (var source in inputPorts.OrderBy((p) => p.PortNumber))
@@ -272,7 +250,50 @@ namespace Microsoft.Midi.Settings.ViewModels
                 }, null);
 
             });
+        }
 
+        public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,
+            IMidiTransportInfoService transportInfoService,
+            INavigationService navigationService,
+            ISynchronizationContextService synchronizationContextService,
+            IMidiPanicService panicService)
+        {
+            System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Constructing");
+
+            _navigationService = navigationService;
+            _synchronizationContextService = synchronizationContextService;
+            _panicService = panicService;
+            _transportInfoService = transportInfoService;
+
+            ViewDeviceDetailsCommand = new RelayCommand<MidiEndpointWrapper>(
+                (param) =>
+                {
+                    System.Diagnostics.Debug.WriteLine("View Device Details Command exec");
+
+                    if (param == null)
+                    {
+                        _navigationService.NavigateTo(typeof(DeviceDetailViewModel).FullName!, this.Id);
+                    }
+                    else
+                    {
+                        _navigationService.NavigateTo(typeof(DeviceDetailViewModel).FullName!, param);
+                    }
+
+                });
+
+            SendPanicCommand = new RelayCommand(
+                () =>
+                {
+                    System.Diagnostics.Debug.WriteLine("Sending panic");
+
+                    // TODO: Could make this a bit faster by sending only for valid groups
+                    _panicService.SendMidiPanic(DeviceInformation.EndpointDeviceId);
+
+                });
+
+            DeviceInformation = deviceInformation;
+
+            RefreshData();
 
 
         }
