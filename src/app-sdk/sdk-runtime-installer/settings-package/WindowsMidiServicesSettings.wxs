@@ -74,15 +74,19 @@
 
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Loopback-Diagram.svg" />
 
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-AdvancedUsbSettings.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-CreateLoopbackEndpoints.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Developers.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Endpoints.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-GlobalSettings.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Home.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-LivePerformanceMode.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-NetworkMidi.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Sessions.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-SysEx.svg" />
             <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Transports.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-Troubleshooting.svg" />
+            <File Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\LeftNav-WindowsSettings.svg" />
         </Component>
 
       <Component Id="SharedEndpointsAssets"

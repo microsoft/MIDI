@@ -7,8 +7,18 @@
 // ============================================================================
 
 #include "pch.h"
+
+//#include "SWDevice.h"
+//#include <setupapi.h>
+//#include <initguid.h>
+//#include <Devpkey.h>
+//#include "MidiDefs.h"
+
+#include "MidiEndpointCustomProperties.h"
+
 #include "MidiServiceEndpointCustomizationConfig.h"
 #include "ServiceConfig.MidiServiceEndpointCustomizationConfig.g.cpp"
+
 
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementation
@@ -28,8 +38,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         winrt::hstring const& description) noexcept
         : MidiServiceEndpointCustomizationConfig(transportId)
     {
-        m_name = internal::TrimmedHStringCopy(name);
-        m_description = internal::TrimmedHStringCopy(description);
+        m_props->Name = internal::TrimmedHStringCopy(name);
+        m_props->Description = internal::TrimmedHStringCopy(description);
     }
 
     _Use_decl_annotations_
@@ -37,12 +47,10 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         winrt::guid const& transportId, 
         winrt::hstring const& name, 
         winrt::hstring const& description, 
-        winrt::hstring const& largeImageFileName, 
-        winrt::hstring const& smallImageFileName) noexcept
+        winrt::hstring const& imageFileName) noexcept
         : MidiServiceEndpointCustomizationConfig(transportId, name, description)
     {
-        m_largeImageFileName = internal::TrimmedHStringCopy(largeImageFileName);
-        m_smallImageFileName = internal::TrimmedHStringCopy(smallImageFileName);
+        m_props->Image = internal::TrimmedHStringCopy(imageFileName);
     }
 
     _Use_decl_annotations_
@@ -50,40 +58,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         winrt::guid const& transportId,
         winrt::hstring const& name,
         winrt::hstring const& description,
-        winrt::hstring const& largeImageFileName,
-        winrt::hstring const& smallImageFileName,
+        winrt::hstring const& imageFileName,
         bool const requiresNoteOffTranslation,
         bool const supportsMidiPolyphonicExpression,
         uint16_t const recommendedControlChangeIntervalMilliseconds) noexcept
-        : MidiServiceEndpointCustomizationConfig(transportId, name, description, largeImageFileName, smallImageFileName)
+        : MidiServiceEndpointCustomizationConfig(transportId, name, description, imageFileName)
     {
-        m_requiresNoteOffTranslation = requiresNoteOffTranslation;
-        m_supportsMidiPolyphonicExpression = supportsMidiPolyphonicExpression;
-        m_recommendedControlChangeIntervalMilliseconds = recommendedControlChangeIntervalMilliseconds;
+        m_props->RequiresNoteOffTranslation = requiresNoteOffTranslation;
+        m_props->SupportsMidiPolyphonicExpression = supportsMidiPolyphonicExpression;
+        m_props->RecommendedControlChangeIntervalMilliseconds = recommendedControlChangeIntervalMilliseconds;
     }
 
 
-
-// "endpointTransportPluginSettings":
-// {
-//   endpoint transport guid :
-//   {
-//     "update"
-//     [
-//       {
-//         "match" :
-//         {
-//           "SWD": "..."
-//         },
-//         "name" : "new name",
-//         "description" : "kdjflskjdfsdkjf" ...
-//       }
-//     ]
-//   }
-// }
     winrt::hstring MidiServiceEndpointCustomizationConfig::GetConfigJson() const noexcept
     {
         json::JsonObject matchObject;
+        json::JsonObject customPropertiesObject;
         json::JsonArray endpointUpdateArray;
         json::JsonObject endpointUpdateObject;
         json::JsonObject transportObject;
@@ -91,21 +81,14 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         json::JsonObject outerWrapperObject;
 
 
-        // update object
-        endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_NAME_PROPERTY, json::JsonValue::CreateStringValue(m_name));
-        endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_DESCRIPTION_PROPERTY, json::JsonValue::CreateStringValue(m_description));
-        endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SMALL_IMAGE_PROPERTY, json::JsonValue::CreateStringValue(m_smallImageFileName));
-        endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_LARGE_IMAGE_PROPERTY, json::JsonValue::CreateStringValue(m_largeImageFileName));
-
-        endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_REQUIRES_NOTE_OFF_TRANSLATION_PROPERTY, json::JsonValue::CreateBooleanValue(m_requiresNoteOffTranslation));
-        endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SUPPORTS_MPE_PROPERTY, json::JsonValue::CreateBooleanValue(m_supportsMidiPolyphonicExpression));
-        endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_RECOMMENDED_CC_INTERVAL_MS_PROPERTY, json::JsonValue::CreateNumberValue(m_recommendedControlChangeIntervalMilliseconds));
-
         // match object within the update object. What is supported will vary by transport
         if (m_matchCriteria != nullptr && json::JsonObject::TryParse(m_matchCriteria.GetConfigJson(), matchObject))
         {
             endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY, matchObject);
         }
+
+        m_props->WriteJson(customPropertiesObject);
+        endpointUpdateObject.SetNamedValue(MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
 
 
         // add the endpoint update object to the array

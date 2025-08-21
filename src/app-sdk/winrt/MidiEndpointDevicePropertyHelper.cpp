@@ -209,8 +209,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime));
 
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_CustomEndpointName));
-        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_CustomLargeImagePath));
-        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_CustomSmallImagePath));
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_CustomImagePath));
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_CustomDescription));
 
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_RequiresNoteOffTranslation));

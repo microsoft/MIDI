@@ -73,28 +73,18 @@
 		
   <ItemGroup>
     <None Remove="Controls\MidiEndpointAndGroupPickerControl.xaml" />
-    <None Remove="Sections\Endpoints\NET2UDP\NetworkMidi2SetupPage.xaml" />
-    <None Remove="Sections\First Run Experience\FirstRunExperiencePage.xaml" />
     <None Remove="Styles\DefaultFont.xaml" />
     <None Remove="Styles\MessageTemplates.xaml" />
-    <None Remove="Views\DeviceDetailPage.xaml" />
+    <None Remove="Views\AdvancedUsbSettingsPage.xaml" />
     <None Remove="Views\DevicesPage.xaml" />
-    <None Remove="Views\EndpointsAllPage.xaml" />
     <None Remove="Views\EndpointsAppPage.xaml" />
-    <None Remove="Views\EndpointsBle10Page.xaml" />
     <None Remove="Views\EndpointsKsaPage.xaml" />
-    <None Remove="Views\EndpointsLoopPage.xaml" />
     <None Remove="Views\EndpointsNet2UdpPage.xaml" />
-    <None Remove="Views\HomePage.xaml" />
     <None Remove="Views\ManagementSessionsPage.xaml" />
     <None Remove="Views\PluginsProcessingPage.xaml" />
     <None Remove="Views\PluginsTransportPage.xaml" />
     <None Remove="Views\RoutesPage.xaml" />
     <None Remove="Views\SetupPage.xaml" />
-    <None Remove="Views\ToolsConsolePage.xaml" />
-    <None Remove="Views\ToolsMonitorPage.xaml" />
-    <None Remove="Views\ToolsSysExPage.xaml" />
-    <None Remove="Views\ToolsTestPage.xaml" />
     <None Remove="Views\TroubleshootingPage.xaml" />
     <None Remove="Views\WinMMMidi1DevicesPage.xaml" />
   </ItemGroup>
@@ -174,13 +164,10 @@
     <None Update="Assets\DIN_Settings.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <Page Update="Views\AdvancedUsbSettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Update="Views\MidiServiceInitializationProgressWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="Sections\Endpoints\NET2UDP\NetworkMidi2SetupPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Update="Sections\First Run Experience\FirstRunExperiencePage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Update="Views\EndpointsAllPage.xaml">

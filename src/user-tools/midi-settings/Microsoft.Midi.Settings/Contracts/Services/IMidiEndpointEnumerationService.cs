@@ -19,4 +19,9 @@ public interface IMidiEndpointEnumerationService
     IList<MidiEndpointWrapper> GetEndpointsForTransportId(Guid transportId);
     IList<MidiEndpointWrapper> GetEndpointsForPurpose(MidiEndpointDevicePurpose purpose);
 
+    MidiEndpointWrapper GetEndpointById(string endpointDeviceId);
+
+
+    event EventHandler<MidiEndpointWrapper> EndpointUpdated;
+
 }

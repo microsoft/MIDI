@@ -198,8 +198,7 @@ namespace Microsoft.Midi.ConsoleApp
                 table.AddEmptyRow();
                 table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelUserSuppliedName), AnsiMarkupFormatter.FormatEndpointName(userInfo.Name));
                 table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelDescription), AnsiMarkupFormatter.EscapeString(userInfo.Description));
-                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelSmallImagePath), AnsiMarkupFormatter.EscapeString(userInfo.SmallImagePath));
-                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelLargeImagePath), AnsiMarkupFormatter.EscapeString(userInfo.LargeImagePath));
+                table.AddRow(FormatFieldLabel(Strings.PropertiesTablePropertyLabelImageFileName), AnsiMarkupFormatter.EscapeString(userInfo.ImageFileName));
 
 
 

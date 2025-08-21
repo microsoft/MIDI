@@ -15,16 +15,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
     {
         MidiImageAssetHelper() = default;
 
-        static winrt::hstring GetSmallImageFullPathForTransport(
+        static winrt::hstring GetImageFullPathForTransport(
             _In_ midi2::Reporting::MidiServiceTransportPluginInfo const& transportPluginInfo) noexcept;
 
-        static winrt::hstring GetDefaultSmallImageFullPathForTransport(
+        static winrt::hstring GetDefaultImageFullPathForTransport(
             _In_ midi2::Reporting::MidiServiceTransportPluginInfo const& transportPluginInfo) noexcept;
 
-        static winrt::hstring GetSmallImageFullPathForEndpoint(
+        static winrt::hstring GetImageFullPathForEndpoint(
             _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
 
-        static winrt::hstring GetDefaultSmallImageFullPathForEndpoint(
+        static winrt::hstring GetDefaultImageFullPathForEndpoint(
             _In_ midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept;
     };
 }

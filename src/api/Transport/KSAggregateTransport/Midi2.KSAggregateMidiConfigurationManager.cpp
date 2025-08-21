@@ -9,7 +9,7 @@
 
 #include "pch.h"
 
-#include "json_custom_property_helper.h"
+#include "MidiEndpointCustomProperties.h"
 #include "json_transport_command_helper.h"
 
 
@@ -248,8 +248,8 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
 
                 if (matchObject != nullptr)
                 {
-                    std::vector<DEVPROPERTY> endpointProperties{};
-                    internal::MidiEndpointCustomPropertiesHelper customPropertiesHelper{}; // helper is here so props are available 
+                    std::vector<DEVPROPERTY> endpointDevProperties{};
+                    std::shared_ptr<MidiEndpointCustomProperties> customProperties{ nullptr }; // helper is here so props are available 
 
                     // get the device id, Right now, the SWD is the only way to id the item. We're changing that
                     // but when the update is sent at runtime, that's the only value that's useful anyway
@@ -258,39 +258,49 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
 
                     if (!swdId.empty())
                     {
-                        if (customPropertiesHelper.ReadFromJsonObject(updateObject))
+                        if (updateObject.HasKey(MidiEndpointCustomProperties::PropertyKey))
                         {
-                            if (!customPropertiesHelper.WriteToPropertiesVector(endpointProperties))
+                            auto customPropsJson = updateObject.GetNamedObject(MidiEndpointCustomProperties::PropertyKey);
+
+                            customProperties = MidiEndpointCustomProperties::FromJson(customPropsJson);
+
+                            if (customProperties != nullptr)
                             {
-                                // failed to write custom properties
+                                if (!customProperties->WriteProperties(endpointDevProperties))
+                                {
+                                    // failed to write custom properties
+                                    TraceLoggingWrite(
+                                        MidiKSAggregateTransportTelemetryProvider::Provider(),
+                                        MIDI_TRACE_EVENT_INFO,
+                                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                                        TraceLoggingPointer(this, "this"),
+                                        TraceLoggingWideString(L"Failed writing custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                        TraceLoggingWideString(swdId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                                    );
+                                }
+                            }
+                            else
+                            {
+                                // failed to read custom properties
                                 TraceLoggingWrite(
                                     MidiKSAggregateTransportTelemetryProvider::Provider(),
                                     MIDI_TRACE_EVENT_INFO,
                                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                     TraceLoggingPointer(this, "this"),
-                                    TraceLoggingWideString(L"Failed writing custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingWideString(L"Failed reading custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                     TraceLoggingWideString(swdId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                                 );
+
                             }
-                        }
-                        else
-                        {
-                            // failed to read custom properties
-                            TraceLoggingWrite(
-                                MidiKSAggregateTransportTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_INFO,
-                                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                                TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Failed reading custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingWideString(swdId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-                            );
+
+                            // set all the properties for this SWD
 
                         }
+                        
 
-                        // set all the properties for this SWD
-                        if (endpointProperties.size() > 0)
+                        if (endpointDevProperties.size() > 0)
                         {
                             TraceLoggingWrite(
                                 MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -307,9 +317,11 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
 
                             auto updatePropsHR = m_midiDeviceManager->UpdateEndpointProperties(
                                 swdId.c_str(),
-                                (ULONG)endpointProperties.size(),
-                                endpointProperties.data()
+                                (ULONG)endpointDevProperties.size(),
+                                endpointDevProperties.data()
                             );
+
+                            // TODO: We need to update the MIDI 1 endpoint naming table as well, and then recreate the MIDI 1 ports
 
                             if (SUCCEEDED(updatePropsHR))
                             {
@@ -338,6 +350,9 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                                         TraceLoggingHResult(updatePropsHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
                                         TraceLoggingWideString(swdId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
                                     );
+
+                                    // TODO: We need to keep these props around for when the endpoint gets created
+                                    // This is especially important for MIDI 1 port naming
                                 }
                                 else
                                 {

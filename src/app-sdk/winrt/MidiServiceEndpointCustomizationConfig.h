@@ -26,39 +26,34 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
             _In_ winrt::guid const& transportId, 
             _In_ winrt::hstring const& name, 
             _In_ winrt::hstring const& description, 
-            _In_ winrt::hstring const& largeImageFileName, 
-            _In_ winrt::hstring const& smallImageFileName) noexcept;
+            _In_ winrt::hstring const& imageFileName) noexcept;
 
         MidiServiceEndpointCustomizationConfig(
             _In_ winrt::guid const& transportId, 
             _In_ winrt::hstring const& name, 
             _In_ winrt::hstring const& description, 
-            _In_ winrt::hstring const& largeImageFileName, 
-            _In_ winrt::hstring const& smallImageFileName, 
+            _In_ winrt::hstring const& imageFileName, 
             _In_ bool const requiresNoteOffTranslation,
             _In_ bool const supportsMidiPolyphonicExpression,
             _In_ uint16_t const recommendedControlChangeIntervalMilliseconds) noexcept;
 
-        hstring Name() const noexcept { return m_name ; }
-        void Name(_In_ winrt::hstring const& value) noexcept { m_name = internal::TrimmedHStringCopy(value); }
+        winrt::hstring Name() const noexcept { return m_props->Name ; }
+        void Name(_In_ winrt::hstring const& value) noexcept { m_props->Name = internal::TrimmedHStringCopy(value); }
 
-        hstring Description() const noexcept { return m_description; }
-        void Description(_In_ winrt::hstring const& value) noexcept { m_description = internal::TrimmedHStringCopy(value); }
+        winrt::hstring Description() const noexcept { return m_props->Description; }
+        void Description(_In_ winrt::hstring const& value) noexcept { m_props->Description = internal::TrimmedHStringCopy(value); }
 
-        hstring LargeImageFileName() const noexcept { return m_largeImageFileName; }
-        void LargeImageFileName(_In_ winrt::hstring const& value) noexcept { m_largeImageFileName = internal::TrimmedHStringCopy(value); }
-
-        hstring SmallImageFileName() const noexcept { return m_smallImageFileName; }
-        void SmallImageFileName(_In_ winrt::hstring const& value) noexcept { m_smallImageFileName = internal::TrimmedHStringCopy(value); }
+        winrt::hstring ImageFileName() const noexcept { return m_props->Image; }
+        void ImageFileName(_In_ winrt::hstring const& value) noexcept { m_props->Image = internal::TrimmedHStringCopy(value); }
         
-        bool RequiresNoteOffTranslation() const noexcept { return m_requiresNoteOffTranslation; }
-        void RequiresNoteOffTranslation(_In_ bool const value) noexcept { m_requiresNoteOffTranslation = value; }
+        bool RequiresNoteOffTranslation() const noexcept { return m_props->RequiresNoteOffTranslation; }
+        void RequiresNoteOffTranslation(_In_ bool const value) noexcept { m_props->RequiresNoteOffTranslation = value; }
 
-        bool SupportsMidiPolyphonicExpression() const noexcept { return m_supportsMidiPolyphonicExpression; }
-        void SupportsMidiPolyphonicExpression(_In_ bool const value) noexcept { m_supportsMidiPolyphonicExpression = value; }
+        bool SupportsMidiPolyphonicExpression() const noexcept { return m_props->SupportsMidiPolyphonicExpression; }
+        void SupportsMidiPolyphonicExpression(_In_ bool const value) noexcept { m_props->SupportsMidiPolyphonicExpression = value; }
 
-        uint16_t RecommendedControlChangeIntervalMilliseconds() const noexcept { return m_recommendedControlChangeIntervalMilliseconds; }
-        void RecommendedControlChangeIntervalMilliseconds(_In_ uint16_t const value) noexcept { m_recommendedControlChangeIntervalMilliseconds = value; }
+        uint16_t RecommendedControlChangeIntervalMilliseconds() const noexcept { return m_props->RecommendedControlChangeIntervalMilliseconds; }
+        void RecommendedControlChangeIntervalMilliseconds(_In_ uint16_t const value) noexcept { m_props->RecommendedControlChangeIntervalMilliseconds = value; }
 
         winrt::guid TransportId() const noexcept { return m_transportId; }
         void TransportId(_In_ winrt::guid const& value) noexcept { m_transportId = value; }
@@ -70,13 +65,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         hstring GetConfigJson() const noexcept;
 
     private:
-        winrt::hstring m_name{};
-        winrt::hstring m_description{};
-        winrt::hstring m_largeImageFileName{};
-        winrt::hstring m_smallImageFileName{};
-        bool m_requiresNoteOffTranslation{ false };
-        bool m_supportsMidiPolyphonicExpression{ false };
-        uint16_t m_recommendedControlChangeIntervalMilliseconds{ 0 };
+        std::shared_ptr<MidiEndpointCustomProperties> m_props{ std::make_shared<MidiEndpointCustomProperties>() };
 
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{};
 

@@ -30,12 +30,29 @@
         <Style x:Key="NavigationViewItemPreviewTagContainer"  TargetType="Grid">
             <Setter Property="Opacity" Value="1" />
             <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}"/>
-            <Setter Property="Background" Value="{StaticResource SystemFillColorCriticalBackground}" />
+            <Setter Property="Background" Value="{StaticResource SystemFillColorCautionBackground}" />
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <Style x:Key="NavigationViewItemPreviewText"  TargetType="TextBlock">
             <Setter Property="Text" Value="Preview"/>
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="Margin" Value="4,2,4,2"/>
+            <Setter Property="Foreground" Value="{StaticResource SystemFillColorCaution}" />
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+
+        <Style x:Key="NavigationViewItemComingSoonTagContainer"  TargetType="Grid">
+            <Setter Property="Opacity" Value="1" />
+            <Setter Property="CornerRadius" Value="{StaticResource ControlCornerRadius}"/>
+            <Setter Property="Background" Value="{StaticResource SystemFillColorCriticalBackground}" />
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="NavigationViewItemComingSoonText"  TargetType="TextBlock">
+            <Setter Property="Text" Value="Coming Soon"/>
             <Setter Property="FontSize" Value="9"/>
             <Setter Property="Margin" Value="4,2,4,2"/>
             <Setter Property="Foreground" Value="{StaticResource SystemFillColorCritical}" />
@@ -61,7 +78,8 @@
               >
 
 
-            <controls:TitleBar Title="MIDI Settings"
+            <controls:TitleBar x:Name="AppTitleBarControl" 
+                               Title="MIDI Settings"
                                AutoConfigureCustomTitleBar="False"
                                DisplayMode="Tall"
                                IsPaneButtonVisible="False"
@@ -245,7 +263,7 @@
                       BorderBrush="{StaticResource AccentControlElevationBorderBrush}"
                       BorderThickness="0">
 
-                    <Rectangle Height="90" 
+                    <Rectangle Height="35" 
                                Width="3"
                                Margin="-24,0,0,0"
                                Stroke="{StaticResource MidiIconBaseColorBlueBrush}"
@@ -255,24 +273,24 @@
                                HorizontalAlignment="Left"
                                VerticalAlignment="Center" />
 
-                    <StackPanel >
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Installed MIDI Runtime" 
                                    FontSize="{StaticResource SmallFontSize}"
                                    Opacity="0.75"/>
                         <TextBlock Text="{x:Bind ViewModel.SdkVersionString}"
                                    FontSize="{StaticResource SmallFontSize}"
                                    Foreground="{StaticResource MidiIconBaseColorBlueBrush}"
-                                   Margin="0,4,0,16"/>
+                                   Margin="0,4,0,0"/>
 
 
-                        <TextBlock Text="Current Configuration File"
+                        <!--<TextBlock Text="Current Configuration File"
                                    FontSize="{StaticResource SmallFontSize}"
                                    Opacity="0.75"/>
 
                         <TextBlock Text="{x:Bind ViewModel.CurrentConfigName}" 
                                    FontSize="{StaticResource SmallFontSize}"
                                    Foreground="{StaticResource MidiIconBaseColorBlueBrush}"
-                                   Margin="0,4,0,4"/>
+                                   Margin="0,4,0,4"/>-->
                     </StackPanel>
                 </Grid>
             </NavigationView.PaneHeader>
@@ -289,17 +307,18 @@
                 </NavigationViewItem>
 
 
+                <NavigationViewItemHeader x:Uid="Shell_MidiNavHeader"
+                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+
                 <NavigationViewItem x:Uid="Shell_AllMidiDevices" 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel"
-                                    >
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-Endpoints.svg"  />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItem 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.GlobalMidiSettingsViewModel"
-                                    >
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.GlobalMidiSettingsViewModel">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-GlobalSettings.svg"  />
                     </NavigationViewItem.Icon>
@@ -316,8 +335,8 @@
                 </NavigationViewItem>
 
 
-                <NavigationViewItemHeader x:Uid="Shell_ConfigureTransportsNavHeader" 
-                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <!--<NavigationViewItemHeader x:Uid="Shell_ConfigureTransportsNavHeader" 
+                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>-->
 
 
                 
@@ -357,8 +376,7 @@
 
                 <NavigationViewItemHeader x:Uid="Shell_ToolsNavHeader"/>
 
-                <NavigationViewItem 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsSysExViewModel"
                                     Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-SysEx.svg" />
@@ -372,15 +390,43 @@
                             </Grid>
                         </Grid>
                     </NavigationViewItem.Content>
-                    <!--<NavigationViewItem.Content>
-                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Text="Experimental" Foreground="White"/>
-                    </NavigationViewItem.Content>-->
-
                 </NavigationViewItem>
 
+                <!--<NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WindowsSettingsViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-WindowsSettings.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_WindowsSettings" />
+
+                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>-->
 
 
+                <!--
+                <NavigationViewItem 
+                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.LivePerformanceSettingsViewModel"
+                                    Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-LivePerformanceMode.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_LivePerformanceMode" />
 
+                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
+                </NavigationViewItem>
+                -->
 
 
                 <NavigationViewItem x:Uid="Shell_Configurations" 
@@ -392,55 +438,6 @@
                 </NavigationViewItem>
 
                 
-                
-                <!--
-                <NavigationViewItemHeader x:Uid="Shell_MidiServicesNavHeader" 
-                                          Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                <NavigationViewItem x:Uid="Shell_EndpointsAll" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAllViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe772;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                -->
-                
-                <!--
-                <NavigationViewItem x:Name="SectionKS" Visibility="Collapsed" x:Uid="Shell_EndpointsKS" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsKSViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xecf3;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionKSA" Visibility="Collapsed" x:Uid="Shell_EndpointsKsa" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsKsaViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xecf0;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionAPP" Visibility="Collapsed" x:Uid="Shell_EndpointsApp" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsAppViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe8a1;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                -->
-
-                <!--
-                <NavigationViewItem x:Uid="Shell_Routes" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.RoutesViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xef90;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Name="SectionDIAG" Visibility="Collapsed" x:Uid="Shell_EndpointsDiagnostic" 
-                                    helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsDiagViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                -->
-
-
-
 
                 <NavigationViewItemHeader x:Uid="Shell_ManagementNavHeader"
                                           Visibility="{x:Bind ViewModel.IsServiceAvailable, Converter={StaticResource BooleanToVisibilityConverter}}"/>
@@ -453,11 +450,6 @@
                         <ImageIcon Source="/Assets/LeftNav-Sessions.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <!--<NavigationViewItem x:Uid="Shell_ToolsMonitor" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsMonitorViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7b3;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>-->
                 
                 <NavigationViewItem x:Uid="Shell_PluginsTransport" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.PluginsTransportViewModel"
@@ -474,45 +466,39 @@
                 </NavigationViewItem>
                 -->
 
-                <!--
-                <NavigationViewItem x:Uid="Shell_ToolsTest" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsTestViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe9d9;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-                -->
-                
-                <!--<NavigationViewItem x:Uid="Shell_ToolsConsole" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ToolsConsoleViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe756;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>-->
 
-<!--
-                <NavigationViewItemHeader x:Uid="Shell_Midi1ApiNavHeader"/>
 
-                <NavigationViewItem x:Uid="Shell_WinRTMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinRTMidi1DevicesViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
-
-                <NavigationViewItem x:Uid="Shell_WinMMMidi1ApiDevices" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.WinMMMidi1DevicesViewModel">
-                    <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe88e;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
--->
-
-                <!--
                 <NavigationViewItemHeader x:Uid="Shell_MoreNavHeader"/>
 
-                <NavigationViewItem x:Uid="Shell_Troubleshooting" helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.TroubleshootingViewModel">
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.AdvancedUsbSettingsViewModel">
                     <NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xe7ba;" Style="{StaticResource NavigationMenuIconStyles}"/>
-                    </NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-AdvancedUsbSettings.svg" />
+                    </NavigationViewItem.Icon>                    
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_AdvancedUsbSettings" />
+
+                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>
                 </NavigationViewItem>
-                -->
+
+                <NavigationViewItem helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.TroubleshootingViewModel">
+                    <NavigationViewItem.Icon>
+                        <ImageIcon Source="/Assets/LeftNav-Troubleshooting.svg" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.Content>
+                        <Grid>
+                            <TextBlock x:Uid="Shell_Troubleshooting" />
+
+                            <Grid Style="{StaticResource NavigationViewItemComingSoonTagContainer}">
+                                <TextBlock Style="{StaticResource NavigationViewItemComingSoonText}"/>
+                            </Grid>
+                        </Grid>
+                    </NavigationViewItem.Content>                   
+                </NavigationViewItem>
                 
                 <NavigationViewItem x:Uid="Shell_ForDevelopers" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.ForDevelopersViewModel"
@@ -525,42 +511,6 @@
                 
             </NavigationView.MenuItems>
             
-            
-            <!--<NavigationView.HeaderTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <TextBlock
-                            Text="{Binding}"
-                            Style="{ThemeResource TitleTextBlockStyle}" />
-                    </Grid>
-                </DataTemplate>
-            </NavigationView.HeaderTemplate>-->
-            
-           
-            <!--<i:Interaction.Behaviors>
-                <behaviors:NavigationViewHeaderBehavior
-                    DefaultHeader="{x:Bind ((ContentControl)ViewModel.Selected).Content, Mode=OneWay}">
-                    <behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <TextBlock
-                                    Text="{Binding}"
-                                    Style="{ThemeResource TitleTextBlockStyle}" />
-                            </Grid>
-                        </DataTemplate>
-                    </behaviors:NavigationViewHeaderBehavior.DefaultHeaderTemplate>
-                </behaviors:NavigationViewHeaderBehavior>
-            </i:Interaction.Behaviors>-->
-
-            <!--<NavigationView.ContentTemplate>
-                <DataTemplate>
-                    <Grid  Background="Transparent"
-                            BorderThickness="0"
-                            CornerRadius="0">
-                        <ContentPresenter/>
-                    </Grid>
-                </DataTemplate>
-            </NavigationView.ContentTemplate>-->
 
             <Grid Margin="{StaticResource NavigationFrameContentMargin}">
                 <Frame x:Name="NavigationFrame" />

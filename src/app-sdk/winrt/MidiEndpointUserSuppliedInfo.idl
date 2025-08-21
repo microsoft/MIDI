@@ -19,8 +19,7 @@ namespace Microsoft.Windows.Devices.Midi2
         String Name;
         String Description;
 
-        String LargeImagePath;
-        String SmallImagePath;
+        String ImageFileName;
 
         Boolean RequiresNoteOffTranslation;
         UInt16 RecommendedControlChangeAutomationIntervalMilliseconds;

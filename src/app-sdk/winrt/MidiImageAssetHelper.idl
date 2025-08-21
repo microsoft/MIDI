@@ -17,11 +17,11 @@ namespace Microsoft.Windows.Devices.Midi2.Utilities.Metadata
     [experimental]
     static runtimeclass MidiImageAssetHelper
     {
-        static String GetSmallImageFullPathForTransport(Microsoft.Windows.Devices.Midi2.Reporting.MidiServiceTransportPluginInfo transportPluginInfo);
-        static String GetDefaultSmallImageFullPathForTransport(Microsoft.Windows.Devices.Midi2.Reporting.MidiServiceTransportPluginInfo transportPluginInfo);
+        static String GetImageFullPathForTransport(Microsoft.Windows.Devices.Midi2.Reporting.MidiServiceTransportPluginInfo transportPluginInfo);
+        static String GetDefaultImageFullPathForTransport(Microsoft.Windows.Devices.Midi2.Reporting.MidiServiceTransportPluginInfo transportPluginInfo);
 
-        static String GetSmallImageFullPathForEndpoint(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
-        static String GetDefaultSmallImageFullPathForEndpoint(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
+        static String GetImageFullPathForEndpoint(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
+        static String GetDefaultImageFullPathForEndpoint(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation endpointDeviceInformation);
 
     }
 }

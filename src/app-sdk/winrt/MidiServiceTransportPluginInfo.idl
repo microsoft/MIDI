@@ -22,7 +22,7 @@ namespace Microsoft.Windows.Devices.Midi2.Reporting
         String TransportCode;
         String Description;
 
-        String SmallImagePath;
+        String ImageFileName;
 
         String Author;
 

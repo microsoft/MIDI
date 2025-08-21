@@ -7,6 +7,7 @@
 // ============================================================================
 
 using Microsoft.Midi.Settings.Contracts.Services;
+using System.Threading.Tasks;
 
 
 namespace Microsoft.Midi.Settings.Services;
@@ -18,6 +19,7 @@ class GeneralSettingsService : IGeneralSettingsService
 
     //private const string ShowDeveloperOptions_SettingsKey = "ShowDeveloperOptions";
     private const string MainWindowPositionAndSize_SettingsKey = "MainWindowPositionAndSize";
+    private const string EndpointListLastUsedView_SettingsKey = "EndpointListLastUsedView";
     //private bool _showDeveloperOptions;
 
     public event EventHandler? SettingsChanged;
@@ -46,6 +48,27 @@ class GeneralSettingsService : IGeneralSettingsService
         // default
         return null;
     }
+
+    public EndpointListView GetEndpointListLastUsedView()
+    {
+        try
+        {
+            return _localSettingsService.ReadSettingAsync<EndpointListView>(EndpointListLastUsedView_SettingsKey).GetAwaiter().GetResult();
+
+        }
+        catch (Exception)
+        {
+            return EndpointListView.Default;
+        }
+    }
+
+    public async void SetEndpointListLastUsedView(EndpointListView view)
+    {
+        await _localSettingsService.SaveSettingAsync<EndpointListView>(EndpointListLastUsedView_SettingsKey, view);
+    }
+
+
+
 
     //public bool ShowDeveloperOptions
     //{

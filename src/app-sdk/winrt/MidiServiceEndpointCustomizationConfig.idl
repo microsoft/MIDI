@@ -23,13 +23,12 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 
         MidiServiceEndpointCustomizationConfig(Guid transportId);
         MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description);
-        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description, String largeImageFileName, String smallImageFileName);
-        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description, String largeImageFileName, String smallImageFileName, Boolean requiresNoteOffTranslation, Boolean supportsMidiPolyphonicExpression, UInt16 recommendedControlChangeIntervalMilliseconds);
+        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description, String imageFileName);
+        MidiServiceEndpointCustomizationConfig(Guid transportId, String name, String description, String imageFileName, Boolean requiresNoteOffTranslation, Boolean supportsMidiPolyphonicExpression, UInt16 recommendedControlChangeIntervalMilliseconds);
 
         String Name;
         String Description;
-        String LargeImageFileName;
-        String SmallImageFileName;
+        String ImageFileName;
 
         MidiServiceConfigEndpointMatchCriteria MatchCriteria;
 

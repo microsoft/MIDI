@@ -26,7 +26,6 @@ using Windows.UI.Popups;
 using Microsoft.UI.Windowing;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
-using Microsoft.Midi.Settings.ViewModels.Data;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
 using Windows.Storage;
@@ -69,7 +68,7 @@ namespace Microsoft.Midi.Settings.Views
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.DeviceInformation == null)
+            if (ViewModel.EndpointWrapper == null)
             {
                 return;
             }
@@ -81,28 +80,9 @@ namespace Microsoft.Midi.Settings.Views
             // TODO: Should probably have these in the viewmodel as
             // we'll need a renderable image anyway. This code is temp
 
-            if (!string.IsNullOrEmpty(ViewModel.CustomizedLargeImagePath))
+            if (!string.IsNullOrEmpty(ViewModel.CustomizedImageFileName))
             {
-                var file = await StorageFile.GetFileFromPathAsync(ViewModel.CustomizedLargeImagePath);
-
-                if (file != null)
-                {
-                    // Open a stream for the selected file.
-                    // The 'using' block ensures the stream is disposed
-                    // after the image is loaded.
-                    using IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.Read);
-                    // Set the image source to the selected bitmap.
-                    var bitmapImage = new BitmapImage();
-
-                    bitmapImage.SetSource(fileStream);
-
-                    UserMetadataLargeImagePreview.Source = bitmapImage;
-                }
-            }
-
-            if (!string.IsNullOrEmpty(ViewModel.CustomizedSmallImagePath))
-            {
-                var file = await StorageFile.GetFileFromPathAsync(ViewModel.CustomizedSmallImagePath);
+                var file = await StorageFile.GetFileFromPathAsync(ViewModel.CustomizedImageFileName);
 
                 if (file != null)
                 {
@@ -116,7 +96,7 @@ namespace Microsoft.Midi.Settings.Views
 
                     bitmapImage.SetSource(fileStream);
 
-                    UserMetadataSmallImagePreview.Source = bitmapImage;
+                    UserMetadataImagePreview.Source = bitmapImage;
                 }
             }
 
@@ -134,8 +114,10 @@ namespace Microsoft.Midi.Settings.Views
             }
         }
 
+
+
         // edit popup
-        private async void BrowseLargeImage_Click(object sender, RoutedEventArgs e)
+        private async void BrowseImage_Click(object sender, RoutedEventArgs e)
         {
             var filePicker = App.MainWindow.CreateOpenFilePicker();
 
@@ -149,41 +131,7 @@ namespace Microsoft.Midi.Settings.Views
             if (file != null)
             {
                 // update the edit vm
-                ViewModel.CustomizedLargeImagePath = file.Path;
-
-                // Open a stream for the selected file.
-                // The 'using' block ensures the stream is disposed
-                // after the image is loaded.
-                using (IRandomAccessStream fileStream =
-                    await file.OpenAsync(FileAccessMode.Read))
-                {
-                    // Set the image source to the selected bitmap.
-                    var bitmapImage = new BitmapImage();
-
-                    bitmapImage.SetSource(fileStream);
-
-                    UserMetadataLargeImagePreview.Source = bitmapImage;
-                }
-
-            }
-        }
-
-        // edit popup
-        private async void BrowseSmallImage_Click(object sender, RoutedEventArgs e)
-        {
-            var filePicker = App.MainWindow.CreateOpenFilePicker();
-
-            filePicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-            filePicker.FileTypeFilter.Add(".png");
-            filePicker.FileTypeFilter.Add(".jpg");
-            filePicker.FileTypeFilter.Add(".svg");
-
-            var file = await filePicker.PickSingleFileAsync();
-
-            if (file != null)
-            {
-                // update the edit vm
-                ViewModel.CustomizedSmallImagePath = file.Path;
+                ViewModel.CustomizedImageFileName = file.Path;
 
                 // Open a stream for the selected file.
                 // The 'using' block ensures the stream is disposed
@@ -195,7 +143,7 @@ namespace Microsoft.Midi.Settings.Views
 
                 bitmapImage.SetSource(fileStream);
 
-                UserMetadataSmallImagePreview.Source = bitmapImage;
+                UserMetadataImagePreview.Source = bitmapImage;
             }
 
         }
@@ -208,7 +156,7 @@ namespace Microsoft.Midi.Settings.Views
             {
                 string arguments =
                     " endpoint " +
-                    ViewModel.DeviceInformation.EndpointDeviceId +
+                    ViewModel.EndpointWrapper.Id +
                     " monitor";
 
                 using (var monitorProcess = new System.Diagnostics.Process())

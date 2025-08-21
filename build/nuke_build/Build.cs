@@ -1156,29 +1156,22 @@ class Build : NukeBuild
                 paths.Add(settingsOutputFolder / "Microsoft.Windows.Widgets.Projection.dll");
 
 
-                // Add Assets folder with app icon. This ends up special-cased
-
-                paths.Add(settingsOutputFolder / "Assets" / "AppIcon.ico");
-                //paths.Add(settingsOutputFolder / "Assets" / "AppIcon.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "AppIcon@2x.png");
-
-                paths.Add(settingsOutputFolder / "Assets" / "Loopback-Diagram.svg");
-
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-CreateLoopbackEndpoints.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-Developers.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-Endpoints.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-GlobalSettings.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-Home.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-NetworkMidi.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-Sessions.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-SysEx.svg");
-                paths.Add(settingsOutputFolder / "Assets" / "LeftNav-Transports.svg");
-
                 // TODO: This doesn't deal with any localization content
 
                 // copy all the globbed files
 
                 foreach (var f in paths)
+                {
+                    FileSystemTasks.CopyFileToDirectory(f, stagingFolder, FileExistsPolicy.Overwrite);
+                }
+
+                // Add Assets folder with app icon. This ends up special-cased
+                List<AbsolutePath> assets = [];
+                assets.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Assets", "*.svg"));
+                assets.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Assets", "*.ico"));
+                assets.AddRange(Globbing.GlobFiles(settingsOutputFolder / "Assets", "*.png"));
+
+                foreach (var f in assets)
                 {
                     FileSystemTasks.CopyFileToDirectory(f, stagingFolder, FileExistsPolicy.Overwrite);
                 }

@@ -11,12 +11,12 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Midi.Settings.Contracts.Services;
 using Microsoft.Midi.Settings.Contracts.ViewModels;
 using Microsoft.Midi.Settings.Models;
-using Microsoft.Midi.Settings.ViewModels.Data;
 using Microsoft.UI.Dispatching;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -52,9 +52,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         [ObservableProperty]
-        private MidiEndpointDeviceInformation deviceInformation;
-
-        [ObservableProperty]
         private MidiEndpointWrapper endpointWrapper;
 
 
@@ -68,6 +65,12 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private MidiEndpointUserSuppliedInfo userSuppliedInfo;
 
+        [ObservableProperty]
+        private string name;
+
+        [ObservableProperty]
+        private string description;
+
 
         [ObservableProperty]
         private string customizedName;
@@ -76,10 +79,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         private string customizedDescription;
 
         [ObservableProperty]
-        private string customizedSmallImagePath;
-
-        [ObservableProperty]
-        private string customizedLargeImagePath;
+        private string customizedImageFileName;
 
         [ObservableProperty]
         private bool customizedRequiresNoteOffTranslation;
@@ -105,14 +105,31 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         private readonly ISynchronizationContextService _synchronizationContextService;
         private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
+        private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
+
         public DeviceDetailViewModel(
             ISynchronizationContextService synchronizationContextService, 
-            IMidiEndpointCustomizationService endpointCustomizationService)
+            IMidiEndpointCustomizationService endpointCustomizationService,
+            IMidiEndpointEnumerationService endpointEnumerationService)
         {
             _synchronizationContextService = synchronizationContextService;
             _endpointCustomizationService = endpointCustomizationService;
+            _endpointEnumerationService = endpointEnumerationService;
 
             System.Diagnostics.Debug.WriteLine("Start clearing properties");
+
+            _endpointEnumerationService.EndpointUpdated += (s, e) =>
+            {
+                if (EndpointWrapper != null && e.Id == EndpointWrapper.Id)
+                {
+                    _synchronizationContextService?.GetUIContext().Post(_ =>
+                    {
+                        System.Diagnostics.Debug.WriteLine("Refreshing VM properties due to Endpoint Update event.");
+                        EndpointWrapper = e;
+                        RefreshVM();
+                    }, null);
+                }
+            };
 
             // ugly, but there to prevent binding errors. Making everything nullable
             // bleeds over into the xaml, requires converters, etc. messy AF.
@@ -142,15 +159,6 @@ namespace Microsoft.Midi.Settings.ViewModels
             });
 
 
-            // Prepopulate customization properties with the ones from the endpoint
-            CustomizedName = string.IsNullOrWhiteSpace(userSuppliedInfo.Name) ? string.Empty : userSuppliedInfo.Name.Trim() ;
-            CustomizedDescription = string.IsNullOrWhiteSpace(userSuppliedInfo.Description) ? string.Empty : userSuppliedInfo.Description.Trim();
-            CustomizedSmallImagePath = string.IsNullOrWhiteSpace(userSuppliedInfo.SmallImagePath) ? string.Empty : userSuppliedInfo.SmallImagePath.Trim();
-            CustomizedLargeImagePath = string.IsNullOrWhiteSpace(userSuppliedInfo.LargeImagePath) ? string.Empty : userSuppliedInfo.LargeImagePath.Trim();
-            CustomizedRequiresNoteOffTranslation = userSuppliedInfo.RequiresNoteOffTranslation;
-            CustomizedSupportsMidiPolyphonicExpression = userSuppliedInfo.SupportsMidiPolyphonicExpression;
-            CustomizedRecommendedControlChangeAutomationIntervalMilliseconds = userSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;
-
 
             SubmitEndpointCustomizationCommand = new RelayCommand(
             () =>
@@ -159,14 +167,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 custom.Name = string.IsNullOrWhiteSpace(CustomizedName) ? string.Empty : CustomizedName.Trim();
                 custom.Description = string.IsNullOrWhiteSpace(CustomizedDescription) ? string.Empty : CustomizedDescription.Trim();
-                custom.SmallImagePath = string.IsNullOrWhiteSpace(CustomizedSmallImagePath) ? string.Empty : CustomizedSmallImagePath.Trim();
-                custom.LargeImagePath = string.IsNullOrWhiteSpace(CustomizedLargeImagePath) ? string.Empty : CustomizedLargeImagePath.Trim();
+                custom.ImageFileName = string.IsNullOrWhiteSpace(CustomizedImageFileName) ? string.Empty : CustomizedImageFileName.Trim();
                 custom.RequiresNoteOffTranslation = CustomizedRequiresNoteOffTranslation;
                 custom.SupportsMidiPolyphonicExpression = CustomizedSupportsMidiPolyphonicExpression;
                 custom.RecommendedControlChangeAutomationIntervalMilliseconds = CustomizedRecommendedControlChangeAutomationIntervalMilliseconds;
 
                 var success = _endpointCustomizationService.UpdateEndpoint(
-                    DeviceInformation,
+                    EndpointWrapper.DeviceInformation,
                     custom);
 
                 if (success)
@@ -178,6 +185,56 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         }
 
+
+        private void RefreshVM()
+        {
+            if (EndpointWrapper != null)
+            {
+                Name = EndpointWrapper.Name;
+                Description = EndpointWrapper.Description;
+
+                this.TransportSuppliedInfo = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo();
+                this.UserSuppliedInfo = EndpointWrapper.DeviceInformation.GetUserSuppliedInfo();
+                this.DeviceIdentity = EndpointWrapper.DeviceInformation.GetDeclaredDeviceIdentity();
+                this.StreamConfiguration = EndpointWrapper.DeviceInformation.GetDeclaredStreamConfiguration();
+                this.EndpointInfo = EndpointWrapper.DeviceInformation.GetDeclaredEndpointInfo();
+                this.ParentDeviceInformation = EndpointWrapper.DeviceInformation.GetParentDeviceInformation();
+
+                this.HasParent = this.ParentDeviceInformation != null;
+
+            }
+
+            // Prepopulate customization properties with the ones from the endpoint
+            CustomizedName = string.IsNullOrWhiteSpace(UserSuppliedInfo.Name) ? string.Empty : UserSuppliedInfo.Name.Trim();
+            CustomizedDescription = string.IsNullOrWhiteSpace(UserSuppliedInfo.Description) ? string.Empty : UserSuppliedInfo.Description.Trim();
+            CustomizedImageFileName = string.IsNullOrWhiteSpace(UserSuppliedInfo.ImageFileName) ? string.Empty : UserSuppliedInfo.ImageFileName.Trim();
+            CustomizedRequiresNoteOffTranslation = UserSuppliedInfo.RequiresNoteOffTranslation;
+            CustomizedSupportsMidiPolyphonicExpression = UserSuppliedInfo.SupportsMidiPolyphonicExpression;
+            CustomizedRecommendedControlChangeAutomationIntervalMilliseconds = UserSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;
+
+            FunctionBlocks.Clear();
+            GroupTerminalBlocks.Clear();
+
+            if (EndpointWrapper != null)
+            {
+                foreach (var fb in EndpointWrapper.DeviceInformation.GetDeclaredFunctionBlocks())
+                {
+                    FunctionBlocks.Add(fb);
+                }
+
+                foreach (var gtb in EndpointWrapper.DeviceInformation.GetGroupTerminalBlocks())
+                {
+                    GroupTerminalBlocks.Add(gtb);
+                }
+            }
+
+            this.HasFunctionBlocks = FunctionBlocks.Count > 0;
+            this.HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
+
+            ShowMidi2Properties = (this.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
+
+        }
+
         public void OnNavigatedFrom()
         {
            // throw new NotImplementedException();
@@ -185,48 +242,25 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public void OnNavigatedTo(object parameter)
         {
-            System.Diagnostics.Debug.WriteLine("Start setting device-specific properties properties");
+            if (parameter is string)
+            {
+                this.EndpointWrapper = _endpointEnumerationService.GetEndpointById((string)parameter);
+            }
+            else if (parameter is MidiEndpointWrapper)
+            {
+                this.EndpointWrapper = (MidiEndpointWrapper)parameter;
+            }
 
-            this.EndpointWrapper = (MidiEndpointWrapper)parameter;
-            this.DeviceInformation = this.EndpointWrapper.DeviceInformation;
-
-            this.TransportSuppliedInfo = this.DeviceInformation.GetTransportSuppliedInfo();
-            this.UserSuppliedInfo = this.DeviceInformation.GetUserSuppliedInfo();
-            this.DeviceIdentity = this.DeviceInformation.GetDeclaredDeviceIdentity();
-            this.StreamConfiguration = this.DeviceInformation.GetDeclaredStreamConfiguration();
-            this.EndpointInfo = this.DeviceInformation.GetDeclaredEndpointInfo();
-            this.ParentDeviceInformation = this.DeviceInformation.GetParentDeviceInformation();
-
-            this.HasParent = this.ParentDeviceInformation != null;
-
-            ShowMidi2Properties = (this.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
-
-            // we're working with observable collections here, so need to dispatch
+            // we're working with observable collections and properties, so need to dispatch
             _synchronizationContextService.GetUIContext().Post(_ =>
             {
                 System.Diagnostics.Debug.WriteLine("Enter Dispatcher worker: function blocks and group terminal blocks");
 
-                FunctionBlocks.Clear();
-                GroupTerminalBlocks.Clear();
-
-                foreach (var fb in DeviceInformation.GetDeclaredFunctionBlocks())
-                {
-                    FunctionBlocks.Add(fb);
-                }
-
-                foreach (var gtb in DeviceInformation.GetGroupTerminalBlocks())
-                {
-                    GroupTerminalBlocks.Add(gtb);
-                }
-
-                this.HasFunctionBlocks = FunctionBlocks.Count > 0;
-                this.HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
+                RefreshVM();
 
                 System.Diagnostics.Debug.WriteLine("Exit Dispatcher worker: function blocks and group terminal blocks");
             }, null);
 
-
-            System.Diagnostics.Debug.WriteLine("Finished setting device-specific properties properties");
         }
     }
 }

@@ -19,6 +19,12 @@
 
 namespace WindowsMidiServicesInternal
 {
+    inline winrt::hstring TruncateHStringCopy(_In_ winrt::hstring const& s, _In_ winrt::hstring::size_type newSize)
+    {
+        return winrt::hstring(s.c_str(), min(newSize, s.size()));
+    }
+
+
     inline winrt::hstring TrimmedHStringCopy(_In_ winrt::hstring const& s)
     {
         std::wstring whitespace = L" \0\t\n\r";

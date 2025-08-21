@@ -58,9 +58,19 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly IMidiEndpointEnumerationService _enumerationService;
         private readonly IMidiTransportInfoService _transportInfoService;
         private readonly ISynchronizationContextService _synchronizationContextService;
+        private readonly IGeneralSettingsService _generalSettingsService;
 
 
         public ObservableCollection<TransportFilterEntry> Transports = [];
+
+
+        [ObservableProperty]
+        private bool useListView = false;
+
+        [ObservableProperty]
+        private bool useCardView = true;
+
+
 
         [ObservableProperty]
         private TransportFilterEntry selectedTransport;
@@ -74,6 +84,24 @@ namespace Microsoft.Midi.Settings.ViewModels
                 // apply filter
                 RefreshMidiEndpointDevices();
             }
+            else if (e.PropertyName == nameof(UseListView))
+            {
+                if (UseListView)
+                {
+                    UseCardView = false;
+                    _generalSettingsService.SetEndpointListLastUsedView(EndpointListView.ListView);
+                }
+            }
+            else if (e.PropertyName == nameof(UseCardView))
+            {
+                if (UseCardView)
+                {
+                    UseListView = false;
+                    _generalSettingsService.SetEndpointListLastUsedView(EndpointListView.CardView);
+                }
+            }
+
+
         }
 
 
@@ -83,13 +111,29 @@ namespace Microsoft.Midi.Settings.ViewModels
             INavigationService navigationService,
             IMidiEndpointEnumerationService enumerationService,
             IMidiTransportInfoService transportInfoService,
-            ISynchronizationContextService synchronizationContextService
+            ISynchronizationContextService synchronizationContextService,
+            IGeneralSettingsService generalSettingsService
             )
         {
             _navigationService = navigationService;
             _enumerationService = enumerationService;
             _transportInfoService = transportInfoService;
             _synchronizationContextService = synchronizationContextService;
+            _generalSettingsService = generalSettingsService;
+
+            // Read the view preference from settings file and enable card or list view based on that
+
+            if (_generalSettingsService.GetEndpointListLastUsedView() == EndpointListView.ListView)
+            {
+                UseListView = true;
+                UseCardView = false;
+            }
+            else
+            {
+                UseCardView = true;
+                UseListView = false;
+            }
+
 
             var all = new TransportFilterEntry();
             all.TransportCode = AllTransportsFilterCode;
@@ -107,6 +151,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             }
 
             SelectedTransport = all;
+
         }
 
         public ObservableCollection<MidiEndpointWrapper> Endpoints { get; } = [];

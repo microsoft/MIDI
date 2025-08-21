@@ -50,6 +50,9 @@ public class PageService : IPageService
         Configure<GlobalMidiSettingsViewModel, GlobalMidiSettingsPage>();
 
         Configure<FirstRunExperienceViewModel, FirstRunExperiencePage>();
+        Configure<WindowsSettingsViewModel, WindowsSettingsPage>();
+        Configure<LivePerformanceSettingsViewModel, LivePerformanceSettingsPage>();
+        Configure<AdvancedUsbSettingsViewModel, AdvancedUsbSettingsPage>();
 
 
         Configure<HomeViewModel, HomePage>();

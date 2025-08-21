@@ -93,11 +93,11 @@ MidiAppSdkRuntimeComponentCatalog::GetMidiAppSdkManifestTypes()
 
 
     types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfig", defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.ServiceConfig.MidiServiceTransportPluginConfig", defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.ServiceConfig.MidiServiceEndpointCustomizationConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceTransportPluginConfig", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceEndpointCustomizationConfig", defaultThreading });
 
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.ServiceConfig.MidiServiceConfigEndpointMatchCriteria", defaultThreading });
-    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".Utilities.ServiceConfig.IMidiServiceConfigEndpointMatchCriteriaStatics", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.MidiServiceConfigEndpointMatchCriteria", defaultThreading });
+    types.emplace_back(MidiAppSdkManifestEntry{ rootNS + L".ServiceConfig.IMidiServiceConfigEndpointMatchCriteriaStatics", defaultThreading });
 
 
     // Loopback MIDI

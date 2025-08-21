@@ -67,9 +67,17 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
         return true;
     }
 
-    bool FileNameContainsPath(winrt::hstring /*fileName*/)
+    bool FileNameContainsPath(winrt::hstring fileName)
     {
-        // TODO: check for presence of slashes or colons
+        // TODO: this should use regular Windows APIs
+
+        for (auto const & ch : fileName)
+        {
+            if (ch =='/' || ch == '\\' || ch == ':')
+            {
+                return true;
+            }
+        }
 
         return false;
     }
@@ -80,22 +88,22 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
     }
 
     _Use_decl_annotations_
-    winrt::hstring MidiImageAssetHelper::GetDefaultSmallImageFullPathForTransport(
+    winrt::hstring MidiImageAssetHelper::GetDefaultImageFullPathForTransport(
         midi2::Reporting::MidiServiceTransportPluginInfo const& transportPluginInfo) noexcept
     {
         return ExpandPath(BASE_TRANSPORT_IMAGE_PATH) + transportPluginInfo.TransportCode + SMALL_IMAGE_DEFAULT_SUFFIX_AND_EXTENSION;
     }
 
     _Use_decl_annotations_
-    winrt::hstring MidiImageAssetHelper::GetSmallImageFullPathForTransport(
+    winrt::hstring MidiImageAssetHelper::GetImageFullPathForTransport(
         midi2::Reporting::MidiServiceTransportPluginInfo const& transportPluginInfo) noexcept
     {
-        auto fileName = transportPluginInfo.SmallImagePath;
+        auto fileName = transportPluginInfo.ImageFileName;
 
         if (!FileNameValid(fileName))
         {
             // Return the default file for the transport
-            return GetDefaultSmallImageFullPathForTransport(transportPluginInfo);
+            return GetDefaultImageFullPathForTransport(transportPluginInfo);
         }
 
         if (FileNameContainsPath(fileName) && FileExists(fileName))
@@ -110,7 +118,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
 
 
     _Use_decl_annotations_
-    winrt::hstring MidiImageAssetHelper::GetDefaultSmallImageFullPathForEndpoint(
+    winrt::hstring MidiImageAssetHelper::GetDefaultImageFullPathForEndpoint(
         midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept
     {
         auto code = endpointDeviceInformation.GetTransportSuppliedInfo().TransportCode;
@@ -132,15 +140,15 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Utilities::Metadata::implem
 
 
     _Use_decl_annotations_
-    winrt::hstring MidiImageAssetHelper::GetSmallImageFullPathForEndpoint(
+    winrt::hstring MidiImageAssetHelper::GetImageFullPathForEndpoint(
         midi2::MidiEndpointDeviceInformation const& endpointDeviceInformation) noexcept
     {
-        auto fileName = endpointDeviceInformation.GetUserSuppliedInfo().SmallImagePath;
+        auto fileName = endpointDeviceInformation.GetUserSuppliedInfo().ImageFileName;
 
         if (!FileNameValid(fileName))
         {
             // Return the default file for the transport
-            return GetDefaultSmallImageFullPathForEndpoint(endpointDeviceInformation);
+            return GetDefaultImageFullPathForEndpoint(endpointDeviceInformation);
         }
 
         if (FileNameContainsPath(fileName) && FileExists(fileName))
