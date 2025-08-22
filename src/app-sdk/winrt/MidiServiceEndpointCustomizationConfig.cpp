@@ -84,11 +84,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         // match object within the update object. What is supported will vary by transport
         if (m_matchCriteria != nullptr && json::JsonObject::TryParse(m_matchCriteria.GetConfigJson(), matchObject))
         {
-            endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY, matchObject);
+            endpointUpdateObject.SetNamedValue(MidiServiceConfigEndpointMatchCriteria::MatchObjectKey(), matchObject);
         }
 
-        m_props->WriteJson(customPropertiesObject);
-        endpointUpdateObject.SetNamedValue(MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
+        if (m_props->WriteJson(customPropertiesObject))
+        {
+            endpointUpdateObject.SetNamedValue(MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
+        }
 
 
         // add the endpoint update object to the array

@@ -35,8 +35,11 @@ public class MidiEndpointCustomizationService : IMidiEndpointCustomizationServic
         configUpdate.SupportsMidiPolyphonicExpression = updatedUserSuppliedInfo.SupportsMidiPolyphonicExpression;
         configUpdate.RecommendedControlChangeIntervalMilliseconds = updatedUserSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;
 
-        // TODO: May want to have additional criteria in the future
         configUpdate.MatchCriteria.EndpointDeviceId = deviceInformation.EndpointDeviceId;
+        configUpdate.MatchCriteria.DeviceInstanceId = deviceInformation.DeviceInstanceId;
+        configUpdate.MatchCriteria.UsbVendorId = deviceInformation.GetTransportSuppliedInfo().VendorId;
+        configUpdate.MatchCriteria.UsbProductId = deviceInformation.GetTransportSuppliedInfo().ProductId;
+        configUpdate.MatchCriteria.UsbSerialNumber = deviceInformation.GetTransportSuppliedInfo().SerialNumber;
 
         System.Diagnostics.Debug.WriteLine(configUpdate.GetConfigJson());
 

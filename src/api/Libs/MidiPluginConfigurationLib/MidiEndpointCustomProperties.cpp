@@ -77,17 +77,17 @@ void MidiEndpointCustomProperties::Normalize()
 
     for(auto& source : Midi1Sources)
     {
-        if (source.Name.size() > MAX_WINMM_NAME_SIZE)
+        if (source.second.Name.size() > MAX_WINMM_NAME_SIZE)
         {
-            source.Name = internal::TruncateHStringCopy(source.Name, MAX_WINMM_NAME_SIZE);
+            source.second.Name = internal::TruncateHStringCopy(source.second.Name, MAX_WINMM_NAME_SIZE);
         }
     }
 
     for (auto& dest : Midi1Destinations)
     {
-        if (dest.Name.size() > MAX_WINMM_NAME_SIZE)
+        if (dest.second.Name.size() > MAX_WINMM_NAME_SIZE)
         {
-            dest.Name = internal::TruncateHStringCopy(dest.Name, MAX_WINMM_NAME_SIZE);
+            dest.second.Name = internal::TruncateHStringCopy(dest.second.Name, MAX_WINMM_NAME_SIZE);
         }
     }
 
@@ -194,11 +194,11 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
 
                             if (namedArrayKey == MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_SOURCES_ARRAY_PROPERTY_KEY)
                             {
-                                props->Midi1Sources.push_back(portProperties);
+                                props->Midi1Sources.emplace(portProperties.GroupIndex, portProperties);
                             }
                             else if (namedArrayKey == MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_DESTINATIONS_ARRAY_PROPERTY_KEY)
                             {
-                                props->Midi1Destinations.push_back(portProperties);
+                                props->Midi1Destinations.emplace(portProperties.GroupIndex, portProperties);
                             }
                         }
                     }
@@ -293,11 +293,11 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
 
             obj.SetNamedValue(
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_GROUP_INDEX_PROPERTY_KEY, 
-                json::JsonValue::CreateNumberValue(source.GroupIndex));
+                json::JsonValue::CreateNumberValue(source.second.GroupIndex));
 
             obj.SetNamedValue(
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_CUSTOM_NAME_PROPERTY_KEY,
-                json::JsonValue::CreateStringValue(source.Name));
+                json::JsonValue::CreateStringValue(source.second.Name));
 
             sourcesArray.Append(obj);
         }
@@ -308,11 +308,11 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
 
             obj.SetNamedValue(
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_GROUP_INDEX_PROPERTY_KEY,
-                json::JsonValue::CreateNumberValue(dest.GroupIndex));
+                json::JsonValue::CreateNumberValue(dest.second.GroupIndex));
 
             obj.SetNamedValue(
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_CUSTOM_NAME_PROPERTY_KEY,
-                json::JsonValue::CreateStringValue(dest.Name));
+                json::JsonValue::CreateStringValue(dest.second.Name));
 
             destinationsArray.Append(obj);
         }
@@ -349,37 +349,12 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
     return false;
 }
 
+
+// write only the properties which aren't in the Common Properties structure at endpoint creation time
 _Use_decl_annotations_
-bool MidiEndpointCustomProperties::WriteProperties(std::vector<DEVPROPERTY>& destination)
+bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEVPROPERTY>& destination)
 {
     Normalize();
-
-    // name
-    if (!Name.empty())
-    {
-        destination.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.size() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str() });
-    }
-    else
-    {
-        // delete any existing property value, because it is blank in the config
-        destination.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_EMPTY, 0, nullptr });
-    }
-
-
-    // description
-    if (!Description.empty())
-    {
-        destination.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_STRING, static_cast<ULONG>((Description.size() + 1) * sizeof(WCHAR)), (PVOID)Description.c_str() });
-    }
-    else
-    {
-        // delete any existing property value, because it is empty
-        destination.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
-                DEVPROP_TYPE_EMPTY, 0, nullptr });
-    }
 
     // image file name / path
     if (!Image.empty())
@@ -430,8 +405,65 @@ bool MidiEndpointCustomProperties::WriteProperties(std::vector<DEVPROPERTY>& des
                 DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
     }
 
+    // naming
+    switch (Midi1NamingApproach)
+    {
+    case MidiEndpointCustomMidi1NamingApproach::UseNewStyle:
+        m_selectedPortNamingDevProperty = Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName;
+        break;
+
+    case MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible:
+        m_selectedPortNamingDevProperty = Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM;
+        break;
+
+    default:
+        m_selectedPortNamingDevProperty = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
+        break;
+    }
+
+    destination.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+        DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&m_selectedPortNamingDevProperty });
 
     return true;
+}
+
+
+_Use_decl_annotations_
+bool MidiEndpointCustomProperties::WriteAllProperties(std::vector<DEVPROPERTY>& destination)
+{
+    if (WriteNonCommonProperties(destination))
+    {
+        // name
+        if (!Name.empty())
+        {
+            destination.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, static_cast<ULONG>((Name.size() + 1) * sizeof(WCHAR)), (PVOID)Name.c_str() });
+        }
+        else
+        {
+            // delete any existing property value, because it is blank in the config
+            destination.push_back({ {PKEY_MIDI_CustomEndpointName, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_EMPTY, 0, nullptr });
+        }
+
+
+        // description
+        if (!Description.empty())
+        {
+            destination.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_STRING, static_cast<ULONG>((Description.size() + 1) * sizeof(WCHAR)), (PVOID)Description.c_str() });
+        }
+        else
+        {
+            // delete any existing property value, because it is empty
+            destination.push_back({ {PKEY_MIDI_CustomDescription, DEVPROP_STORE_SYSTEM, nullptr},
+                    DEVPROP_TYPE_EMPTY, 0, nullptr });
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 

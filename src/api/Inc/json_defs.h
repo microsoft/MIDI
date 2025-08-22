@@ -60,20 +60,6 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY                                  L"umpOnly"
 
 
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY                                   L"match"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SWD                            L"SWD"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_VID                            L"VID"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PID                            L"PID"
-//#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_DEVICE_INSTANCE_ID             L"deviceInstanceId"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SERIAL                         L"serial"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PRODUCT_INSTANCE_ID            L"productInstanceId"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_STATIC_IP_ADDRESS              L"staticIPAddress"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_UDP_PORT                       L"port"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_TRANSPORT_SUPPLIED_NAME        L"transportSuppliedEndpointName"
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PARENT_DEVICE_NAME             L"parentDeviceName"
-
-
-
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY                                         L"create"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY                                         L"update"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY                                         L"remove"

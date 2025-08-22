@@ -8,6 +8,10 @@
 
 #pragma once
 
+#include "MidiEndpointCustomProperties.h"
+#include "MidiEndpointMatchCriteria.h"
+#include "MidiEndpointCustomPropertiesCache.h"
+
 
 class CMidi2KSAggregateMidiConfigurationManager :
     public Microsoft::WRL::RuntimeClass<
@@ -25,17 +29,24 @@ public:
     STDMETHOD(Shutdown)();
 
     // internal method called after endpoint creation
-    HRESULT ApplyConfigFileUpdatesForEndpoint(_In_ std::wstring endpointSearchKeysJson);
+  //  HRESULT ApplyConfigFileUpdatesForEndpoint(_In_ std::wstring endpointSearchKeysJson);
 
-
-    // internal helper methods specific to this transport
-
-    std::wstring BuildEndpointJsonSearchKeysForSWD(_In_ std::wstring endpointDeviceInterfaceId);
-    // TODO: Other helper methods for other types of criterial
+    std::shared_ptr<MidiEndpointCustomPropertiesCache> CustomPropertiesCache() { return m_customPropertiesCache; }
 
 
 private:
-//    std::vector<std::unique_ptr<ConfigUpdateForEndpoint>> m_CachedConfigurationUpdates{};
+    HRESULT ProcessCommand(
+        _In_ json::JsonObject const& transportObject,
+        _In_ json::JsonObject& responseObject);
+
+    HRESULT ProcessCustomProperties(
+        _In_ json::JsonObject updateObject,
+        _In_ std::shared_ptr<MidiEndpointCustomProperties>& customProperties,
+        _In_ std::vector<DEVPROPERTY>& endpointDevProperties,
+        _In_ json::JsonObject& responseObject);
+
+
+    std::shared_ptr<MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<MidiEndpointCustomPropertiesCache>() };
 
     wil::com_ptr_nothrow<IMidiServiceConfigurationManager> m_midiServiceConfigurationManagerInterface;
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;

@@ -66,7 +66,6 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
     private:
         std::shared_ptr<MidiEndpointCustomProperties> m_props{ std::make_shared<MidiEndpointCustomProperties>() };
-
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{};
 
         winrt::guid m_transportId{};

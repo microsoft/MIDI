@@ -1233,22 +1233,6 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManager;
             /* [annotation][string][out] */ 
             _Out_  LPWSTR *responseJson) = 0;
         
-        virtual HRESULT STDMETHODCALLTYPE GetMatchingEndpointEntry( 
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR sourceActionObjectJson,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR searchKeyValuePairsJson,
-            /* [annotation][string][out] */ 
-            _Out_  LPWSTR *responseJson) = 0;
-        
-        virtual HRESULT STDMETHODCALLTYPE GetCachedEndpointUpdateEntry( 
-            /* [annotation][in] */ 
-            _In_  GUID transportId,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR searchKeyValuePairsJson,
-            /* [annotation][string][out] */ 
-            _Out_  LPWSTR *responseJson) = 0;
-        
     };
     
     
@@ -1297,26 +1281,6 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManager;
             /* [annotation][string][out] */ 
             _Out_  LPWSTR *responseJson);
         
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManager, GetMatchingEndpointEntry)
-        HRESULT ( STDMETHODCALLTYPE *GetMatchingEndpointEntry )( 
-            IMidiServiceConfigurationManager * This,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR sourceActionObjectJson,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR searchKeyValuePairsJson,
-            /* [annotation][string][out] */ 
-            _Out_  LPWSTR *responseJson);
-        
-        DECLSPEC_XFGVIRT(IMidiServiceConfigurationManager, GetCachedEndpointUpdateEntry)
-        HRESULT ( STDMETHODCALLTYPE *GetCachedEndpointUpdateEntry )( 
-            IMidiServiceConfigurationManager * This,
-            /* [annotation][in] */ 
-            _In_  GUID transportId,
-            /* [annotation][string][in] */ 
-            _In_  LPCWSTR searchKeyValuePairsJson,
-            /* [annotation][string][out] */ 
-            _Out_  LPWSTR *responseJson);
-        
         END_INTERFACE
     } IMidiServiceConfigurationManagerVtbl;
 
@@ -1348,12 +1312,6 @@ EXTERN_C const IID IID_IMidiServiceConfigurationManager;
 
 #define IMidiServiceConfigurationManager_GetTransportRemoveActionEntry(This,sourceTransportJson,responseJson)	\
     ( (This)->lpVtbl -> GetTransportRemoveActionEntry(This,sourceTransportJson,responseJson) ) 
-
-#define IMidiServiceConfigurationManager_GetMatchingEndpointEntry(This,sourceActionObjectJson,searchKeyValuePairsJson,responseJson)	\
-    ( (This)->lpVtbl -> GetMatchingEndpointEntry(This,sourceActionObjectJson,searchKeyValuePairsJson,responseJson) ) 
-
-#define IMidiServiceConfigurationManager_GetCachedEndpointUpdateEntry(This,transportId,searchKeyValuePairsJson,responseJson)	\
-    ( (This)->lpVtbl -> GetCachedEndpointUpdateEntry(This,transportId,searchKeyValuePairsJson,responseJson) ) 
 
 #endif /* COBJMACROS */
 

@@ -25,6 +25,9 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
         // the primary way to identify an endpoint. But this can change if USB and no serial number
         String EndpointDeviceId;
 
+        // useful when the endpoint has not yet been created. Does limit to one UMP endpoint to device, though
+        String DeviceInstanceId;
+
         // USB-specific
         UInt16 UsbVendorId;
         UInt16 UsbProductId;

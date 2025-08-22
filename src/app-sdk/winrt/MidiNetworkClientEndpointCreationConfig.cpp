@@ -12,6 +12,7 @@
 
 #include "..\..\..\api\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
+#include "MidiEndpointMatchCriteria.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::implementation
 {
@@ -35,7 +36,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::Endpoints::Network::impleme
 
 
         clientObject.SetNamedValue(
-            MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY,
+            MidiEndpointMatchCriteria::PropertyKey,
             matchObject);
 
         json::JsonObject clientsContainer{};

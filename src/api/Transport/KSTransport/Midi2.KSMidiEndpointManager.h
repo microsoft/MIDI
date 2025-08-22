@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "MidiEndpointCustomProperties.h"
+#include "MidiEndpointMatchCriteria.h"
+
 using namespace winrt::Windows::Devices::Enumeration;
 
 typedef class _MIDI_PIN_INFO
@@ -47,6 +50,9 @@ public:
 
     STDMETHOD(Initialize(_In_ IMidiDeviceManager*, _In_ IMidiEndpointProtocolManager*));
     STDMETHOD(Shutdown)();
+
+    // returns the endpointDeviceInterfaceId for a matching endpoint found in m_AvailableMidiPins
+    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ MidiEndpointMatchCriteria const& criteria);
 
 private:
 
