@@ -143,6 +143,13 @@ public:
         _Out_ LPWSTR*
         );
 
+    // called by a transport when the MIDI 1 port names have changed
+    // to change the friendlyname of the ports, they have to be removed
+    // and re-added, which is best done here.
+    STDMETHOD(RebuildMidi1PortsForEndpoint)(
+        _In_ LPCWSTR endpointDeviceInterfaceId
+        );
+
     STDMETHOD(Shutdown)();
 
 private:

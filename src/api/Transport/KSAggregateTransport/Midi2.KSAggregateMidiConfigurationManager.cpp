@@ -85,9 +85,12 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCommand(
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiConfigurationManager::ProcessCustomProperties(
+    winrt::hstring resolvedEndpointDeviceId,
+    std::shared_ptr<MidiEndpointMatchCriteria> matchCriteria,
     json::JsonObject updateObject,
     std::shared_ptr<MidiEndpointCustomProperties>& customProperties,
     std::vector<DEVPROPERTY>& endpointDevProperties,
+    std::shared_ptr<MidiEndpointNameTable>& nameTable,
     json::JsonObject& responseObject)
 {
     UNREFERENCED_PARAMETER(responseObject);
@@ -101,21 +104,49 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCustomProperties(
 
         if (customProperties != nullptr)
         {
-            if (customProperties->WriteAllProperties(endpointDevProperties))
+            // cache this set of properties in case of surprise removal or the device is added later
+            m_customPropertiesCache->Add(matchCriteria, customProperties);
+
+            // we only write dev properties if we have a resolved endpoint device id
+            // otherwise, caching is the best we can do
+            if (!resolvedEndpointDeviceId.empty())
             {
-                // TODO: Name table changes, restart endpoints, etc.
-            }
-            else
-            {
-                // failed to write custom properties
-                TraceLoggingWrite(
-                    MidiKSAggregateTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_INFO,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Failed writing custom user properties", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-                );
+                if (customProperties->WriteAllProperties(endpointDevProperties))
+                {
+                    if (customProperties->Midi1Destinations.size() > 0 ||
+                        customProperties->Midi1Sources.size() > 0)
+                    {
+                        // get the current name table
+                        nameTable = MidiEndpointNameTable::FromEndpointDeviceId(resolvedEndpointDeviceId);
+
+                        // apply name updates
+                        for (auto const& source : customProperties->Midi1Sources)
+                        {
+                            nameTable->UpdateCustomName(source.second.GroupIndex, MidiFlow::MidiFlowIn, source.second.Name);
+                        }
+
+                        for (auto const& dest : customProperties->Midi1Destinations)
+                        {
+                            nameTable->UpdateCustomName(dest.second.GroupIndex, MidiFlow::MidiFlowOut, dest.second.Name);
+                        }
+
+                        // write out the dev props. This does require that the name table is kept around
+                        // until the props are written, which is why it was passed in as a param
+                        nameTable->WriteProperties(endpointDevProperties);
+                    }
+                }
+                else
+                {
+                    // failed to write custom properties
+                    TraceLoggingWrite(
+                        MidiKSAggregateTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Unable to write custom user properties.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+                }
             }
         }
         else
@@ -220,46 +251,32 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                 }
 
                 std::shared_ptr<MidiEndpointCustomProperties> customProperties{ nullptr };
+                std::shared_ptr<MidiEndpointNameTable> nameTable{ nullptr };
                 std::shared_ptr<MidiEndpointMatchCriteria> matchCriteria = MidiEndpointMatchCriteria::FromJson(matchObject);
                 std::vector<DEVPROPERTY> endpointDevProperties{};
-
-                // get the device id, Right now, the id is the only way to id the item. We're changing that
-                // but when the update is sent at runtime, that's the only value that's useful anyway
-                if (matchCriteria->EndpointDeviceId.empty())
-                {
-                    // no endpoint device id, so no way to match this, currently.
-                    // this code will change when we expand the criteria.
-                    continue;
-                }
-
-
-
-                // process all the custom props like Name, Description, Image, etc.
-                LOG_IF_FAILED(ProcessCustomProperties(
-                    updateObject,
-                    customProperties,
-                    endpointDevProperties,
-                    responseObject));
-
-                if (customProperties != nullptr)
-                {
-                    m_customPropertiesCache->Add(matchCriteria, customProperties);
-                }
-
-                // TODO: This needs to also check to see if we have MIDI 1 port naming updates to apply.
-                if (endpointDevProperties.size() == 0)
-                {
-                    // no properties to update, so move on
-                    continue;
-                }
 
                 // Resolve the EndpointDeviceId in case we matched on something else
                 winrt::hstring matchingEndpointDeviceId{};
                 auto em = TransportState::Current().GetEndpointManager();
-
                 if (em != nullptr)
                 {
                     matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
+                }
+
+                // process all the custom props like Name, Description, Image, etc.
+                LOG_IF_FAILED(ProcessCustomProperties(
+                    matchingEndpointDeviceId,
+                    matchCriteria,
+                    updateObject,
+                    customProperties,
+                    endpointDevProperties,
+                    nameTable,
+                    responseObject));
+
+                if (endpointDevProperties.size() == 0)
+                {
+                    // no properties to update, so move on
+                    continue;
                 }
 
                 if (!matchingEndpointDeviceId.empty())
@@ -289,12 +306,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                     {
                         // TODO: We need to update the MIDI 1 endpoint naming table as well, and then recreate the MIDI 1 ports
 
-                        if (updatePropsHR == E_NOTFOUND)
-                        {
-
-                            // TODO: We need to keep the props around for when the device appears
-                        }
-                        else
+                        if (updatePropsHR != E_NOTFOUND)
                         {
                             TraceLoggingWrite(
                                 MidiKSAggregateTransportTelemetryProvider::Provider(),
@@ -311,7 +323,6 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
                         }
                     }
                 }
-
             }
 
             internal::SetConfigurationResponseObjectSuccess(responseObject);

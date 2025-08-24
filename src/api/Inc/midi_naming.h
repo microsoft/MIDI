@@ -14,6 +14,9 @@
 #include <string>
 #include <vector>
 
+#include "wstring_util.h"
+#include "wil/result_macros.h"
+
 namespace WindowsMidiServicesInternal::Midi1PortNaming
 {
 
@@ -45,7 +48,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         _In_ std::wstring const& pinName
     )
     {
-        std::wstring cleanedPinName{ internal::TrimmedWStringCopy(pinName) };
+        std::wstring cleanedPinName{ WindowsMidiServicesInternal::TrimmedWStringCopy(pinName) };
 
         std::wstring suffixesToRemove[] =
         {
@@ -67,7 +70,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             }
         }
 
-        return internal::TrimmedWStringCopy(cleanedPinName);
+        return WindowsMidiServicesInternal::TrimmedWStringCopy(cleanedPinName);
     }
 
     inline std::wstring FullyCleanupKSPinName(
@@ -122,7 +125,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             }
         }
 
-        return internal::TrimmedWStringCopy(cleanedPinName);
+        return WindowsMidiServicesInternal::TrimmedWStringCopy(cleanedPinName);
     }
 
     inline std::wstring FullyCleanupBlockName(
@@ -176,7 +179,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             }
         }
 
-        return internal::TrimmedWStringCopy(cleanedBlockName);
+        return WindowsMidiServicesInternal::TrimmedWStringCopy(cleanedBlockName);
     }
 
 
@@ -239,7 +242,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             }
         }
 
-        return internal::TrimmedWStringCopy(newName);
+        return WindowsMidiServicesInternal::TrimmedWStringCopy(newName);
     }
 
 
@@ -252,7 +255,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
     {
         std::wstring generatedName{};
 
-        if (!internal::TrimmedWStringCopy(nameFromRegistry).empty())
+        if (!WindowsMidiServicesInternal::TrimmedWStringCopy(nameFromRegistry).empty())
         {
             // If name from registry is not blank, use that first
             // NOTE: There's an existing issue in WinMM that causes two of the same make/model of
@@ -260,15 +263,15 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             // share the same registry entry. To maintain compatibility, we cannot fix that here
             // Instead, the custom will need to use one of the other provided naming options.
 
-            generatedName = internal::TrimmedWStringCopy(nameFromRegistry).substr(0, MAXPNAMELEN - 1);
+            generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(nameFromRegistry).substr(0, MAXPNAMELEN - 1);
         }
         else
         {
             // If registry name is empty, use the device friendly name (filter name in this case)
-            generatedName = internal::TrimmedWStringCopy(filterName).substr(0, MAXPNAMELEN - 1);
+            generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(filterName).substr(0, MAXPNAMELEN - 1);
         }
 
-        generatedName = internal::TrimmedWStringCopy(generatedName);
+        generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(generatedName);
 
         // if this is not the first port for this filter, instance prefix with MIDIIN/OUT #
 
@@ -279,12 +282,12 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
             {
                 auto formatted = std::format("MIDIIN{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
-                return internal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN-1));
+                return WindowsMidiServicesInternal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN-1));
             }
             else if (flowFromUserPerspective == MidiFlow::MidiFlowOut)
             {
                 auto formatted = std::format("MIDIOUT{} ({})", portIndexWithinThisFilterAndDirection + 1, winrt::to_string(generatedName));
-                return internal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1));
+                return WindowsMidiServicesInternal::TrimmedWStringCopy(std::wstring(formatted.begin(), formatted.end()).substr(0, MAXPNAMELEN - 1));
             }
             else
             {
@@ -315,7 +318,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
         // we use the pin name exactly as it is in the device
         generatedName = generatedName.substr(0, MAXPNAMELEN - 1);
 
-        return internal::TrimmedWStringCopy(generatedName);
+        return WindowsMidiServicesInternal::TrimmedWStringCopy(generatedName);
     }
 
     inline std::wstring GenerateFilterPlusPinNameBasedMidi1PortName(
@@ -329,7 +332,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
         auto cleanedPinName = FullyCleanupKSPinName(pinName, parentDeviceName, filterName);
 
-        generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedPinName));
+        generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(filterName + L" " + WindowsMidiServicesInternal::TrimmedWStringCopy(cleanedPinName));
 
         // if the name is too long, try using just the pin name or just the filter name
 
@@ -338,13 +341,13 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             if (!cleanedPinName.empty())
             {
                 // we're over length, so just use the pin name
-                generatedName = internal::TrimmedWStringCopy(cleanedPinName.substr(0, MAXPNAMELEN - 1));
+                generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(cleanedPinName.substr(0, MAXPNAMELEN - 1));
             }
             else
             {
                 // we're over length, and there's no pin name
                 // so we use the filter name
-                generatedName = internal::TrimmedWStringCopy(filterName.substr(0, MAXPNAMELEN - 1));
+                generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(filterName.substr(0, MAXPNAMELEN - 1));
             }
         }
 
@@ -365,7 +368,7 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
 
         auto cleanedBlockName = FullyCleanupBlockName(blockName, parentDeviceName, filterName);
 
-        generatedName = internal::TrimmedWStringCopy(filterName + L" " + internal::TrimmedWStringCopy(cleanedBlockName));
+        generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(filterName + L" " + WindowsMidiServicesInternal::TrimmedWStringCopy(cleanedBlockName));
 
         // if the name is too long, try using just the pin name or just the filter name
 
@@ -374,13 +377,13 @@ namespace WindowsMidiServicesInternal::Midi1PortNaming
             if (!cleanedBlockName.empty())
             {
                 // we're over length, so just use the gtb name
-                generatedName = internal::TrimmedWStringCopy(cleanedBlockName.substr(0, MAXPNAMELEN - 1));
+                generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(cleanedBlockName.substr(0, MAXPNAMELEN - 1));
             }
             else
             {
                 // we're over length, and there's no gtb name
                 // so we use the filter name
-                generatedName = internal::TrimmedWStringCopy(filterName.substr(0, MAXPNAMELEN - 1));
+                generatedName = WindowsMidiServicesInternal::TrimmedWStringCopy(filterName.substr(0, MAXPNAMELEN - 1));
             }
         }
 

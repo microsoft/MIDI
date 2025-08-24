@@ -57,6 +57,17 @@ void MidiEndpointMatchCriteria::Normalize()
 
     DeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(DeviceInstanceId);
 
+    // get rid of the prefix because that's not available in the transport when creating
+    // having this hardcoded is not a great idea, but these values can't change without
+    // breaking a lot of code throughout MIDI and apps.
+    std::wstring instanceId = DeviceInstanceId.c_str();
+    std::wstring prefix= L"SWD\\MIDISRV\\";
+    auto pos = instanceId.find(prefix);
+    if (pos != std::wstring::npos)
+    {
+        DeviceInstanceId = instanceId.substr(pos + prefix.size());
+    }
+
     UsbSerialNumber = internal::TrimmedHStringCopy(UsbSerialNumber);
 
     DeviceManufacturerName = internal::TrimmedHStringCopy(DeviceManufacturerName);
@@ -248,7 +259,7 @@ bool MidiEndpointMatchCriteria::WriteJson(json::JsonObject& matchObject)
 
 
 _Use_decl_annotations_
-bool MidiEndpointMatchCriteria::IsMatch(MidiEndpointMatchCriteria const& matchValues)
+bool MidiEndpointMatchCriteria::Matches(MidiEndpointMatchCriteria& matchValues)
 {
     Normalize();
 

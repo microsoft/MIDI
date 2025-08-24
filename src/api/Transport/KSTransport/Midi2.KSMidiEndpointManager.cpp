@@ -1097,8 +1097,10 @@ HRESULT CMidi2KSMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher, winrt
 
 
 _Use_decl_annotations_
-winrt::hstring CMidi2KSMidiEndpointManager::FindMatchingInstantiatedEndpoint(MidiEndpointMatchCriteria const& criteria)
+winrt::hstring CMidi2KSMidiEndpointManager::FindMatchingInstantiatedEndpoint(MidiEndpointMatchCriteria& criteria)
 {
+    criteria.Normalize();
+
     for (auto const& pin : m_AvailableMidiPins)
     {
         MidiEndpointMatchCriteria available{};
@@ -1111,7 +1113,7 @@ winrt::hstring CMidi2KSMidiEndpointManager::FindMatchingInstantiatedEndpoint(Mid
         available.TransportSuppliedEndpointName = pin->Name;
         available.DeviceManufacturerName = pin->ManufacturerName;
 
-        if (available.IsMatch(criteria))
+        if (available.Matches(criteria))
         {
             return available.EndpointDeviceId;
         }

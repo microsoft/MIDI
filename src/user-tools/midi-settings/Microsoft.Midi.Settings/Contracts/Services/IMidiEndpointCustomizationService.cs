@@ -6,9 +6,11 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+using Microsoft.Midi.Settings.ViewModels;
+
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
 public interface IMidiEndpointCustomizationService
 {
-    bool UpdateEndpoint(MidiEndpointDeviceInformation deviceInformation, MidiEndpointUserSuppliedInfo updatedUserSuppliedInfo);
+    bool UpdateEndpoint(MidiServiceEndpointCustomizationConfig configUpdate);
 }

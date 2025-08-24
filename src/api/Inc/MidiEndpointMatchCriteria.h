@@ -62,7 +62,8 @@ public:
     _Success_(return == true)
     bool WriteJson(_In_::winrt::Windows::Data::Json::JsonObject& matchObject);
 
-    bool IsMatch(_In_ MidiEndpointMatchCriteria const& matchValues);
+    bool Matches(_In_ MidiEndpointMatchCriteria& matchValues);
+    void Normalize();
 
 
     winrt::hstring EndpointDeviceId{};
@@ -86,7 +87,6 @@ public:
 
 private:
 
-    void Normalize();
 
 
 };

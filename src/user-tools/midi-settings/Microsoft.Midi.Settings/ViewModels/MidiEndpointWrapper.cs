@@ -88,6 +88,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         public void RefreshData(MidiEndpointDeviceInformation deviceInformation)
         {
             DeviceInformation = deviceInformation;
+
             RefreshData();
         }
 
@@ -103,7 +104,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 context = SynchronizationContext.Current;
             }
 
-            context.Post(_ =>
+            context!.Post(_ =>
             {
                 Name = DeviceInformation.Name;
                 Id = DeviceInformation.EndpointDeviceId;
@@ -215,6 +216,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 context.Post(_ =>
                 {
+                    Midi1InputPorts.Clear();
+                    Midi1OutputPorts.Clear();
 
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread");
 

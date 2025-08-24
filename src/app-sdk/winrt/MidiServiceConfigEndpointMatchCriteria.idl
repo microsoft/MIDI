@@ -22,6 +22,8 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 
         static String MatchObjectKey { get; };
 
+        static MidiServiceConfigEndpointMatchCriteria FromJson(String matchObjectJson);
+
         // the primary way to identify an endpoint. But this can change if USB and no serial number
         String EndpointDeviceId;
 
@@ -44,6 +46,8 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
         String TransportSuppliedEndpointName;
         String ParentDeviceName;
 
+        // compare two match objects
+        Boolean Matches(MidiServiceConfigEndpointMatchCriteria other);
 
         String GetConfigJson();
     };

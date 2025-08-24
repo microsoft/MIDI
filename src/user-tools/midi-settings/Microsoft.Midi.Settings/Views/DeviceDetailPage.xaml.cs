@@ -73,6 +73,7 @@ namespace Microsoft.Midi.Settings.Views
                 return;
             }
 
+          //  ViewModel.RefreshVM();
 
             editUserDefinedPropertiesDialog.Width = this.Width / 3;
 
@@ -80,9 +81,9 @@ namespace Microsoft.Midi.Settings.Views
             // TODO: Should probably have these in the viewmodel as
             // we'll need a renderable image anyway. This code is temp
 
-            if (!string.IsNullOrEmpty(ViewModel.CustomizedImageFileName))
+            if (!string.IsNullOrEmpty(ViewModel.CustomizationViewModel.ImageFileName))
             {
-                var file = await StorageFile.GetFileFromPathAsync(ViewModel.CustomizedImageFileName);
+                var file = await StorageFile.GetFileFromPathAsync(ViewModel.CustomizationViewModel.ImageFileName);
 
                 if (file != null)
                 {
@@ -131,7 +132,7 @@ namespace Microsoft.Midi.Settings.Views
             if (file != null)
             {
                 // update the edit vm
-                ViewModel.CustomizedImageFileName = file.Path;
+                ViewModel.CustomizationViewModel.ImageFileName = file.Path;
 
                 // Open a stream for the selected file.
                 // The 'using' block ensures the stream is disposed

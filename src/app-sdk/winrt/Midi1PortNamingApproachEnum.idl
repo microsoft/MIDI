@@ -1,0 +1,23 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "midi_sdk_idl_defs.h"
+
+import "MidiApiContracts.idl";
+
+
+namespace Microsoft.Windows.Devices.Midi2
+{
+    [contract(MidiEnumerationApiContract, 1)]
+    enum Midi1PortNamingApproach
+    {
+        Default = 0,
+        UseClassicCompatible = 1,
+        UseNewStyle = 2,
+    };
+}

@@ -88,8 +88,8 @@ struct MidiEndpointCustomMidi1PortProperties
 enum MidiEndpointCustomMidi1NamingApproach
 {
     Default = 0,
-    UseClassicCompatible,
-    UseNewStyle
+    UseClassicCompatible = 1,
+    UseNewStyle = 2
 };
 
 class MidiEndpointCustomProperties
@@ -119,6 +119,7 @@ public:
     bool SupportsMidiPolyphonicExpression{};
     uint16_t RecommendedControlChangeIntervalMilliseconds{};
 
+ //   bool UmpOnly{ false };
     MidiEndpointCustomMidi1NamingApproach Midi1NamingApproach{ MidiEndpointCustomMidi1NamingApproach::Default };
 
     std::map<uint8_t, MidiEndpointCustomMidi1PortProperties> Midi1Sources{};
@@ -131,7 +132,7 @@ private:
     DEVPROP_BOOLEAN m_devPropTrue{ DEVPROP_TRUE };
     DEVPROP_BOOLEAN m_devPropFalse{ DEVPROP_FALSE };
 
-    Midi1PortNameSelectionProperty m_selectedPortNamingDevProperty{ Midi1PortNameSelectionProperty::PortName_UseGlobalDefault };
+    //MidiEndpointCustomMidi1NamingApproach m_selectedPortNamingDevProperty{ MidiEndpointCustomMidi1NamingApproach::Default };
 };
 
 

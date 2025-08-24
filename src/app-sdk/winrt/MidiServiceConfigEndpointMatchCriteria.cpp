@@ -26,4 +26,35 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         }
 
     }
+
+
+    _Use_decl_annotations_
+    bool MidiServiceConfigEndpointMatchCriteria::Matches(midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria const& other) const noexcept
+    {
+        auto otherMatch = winrt::get_self<MidiServiceConfigEndpointMatchCriteria>(other)->InternalGetMatchObject();
+
+        return m_match->Matches(*otherMatch);
+    }
+
+
+    _Use_decl_annotations_
+    midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria MidiServiceConfigEndpointMatchCriteria::FromJson(_In_ winrt::hstring const& matchObjectJson) noexcept
+    {
+        auto winrtMatch = winrt::make_self<MidiServiceConfigEndpointMatchCriteria>();
+
+        json::JsonObject jsonObject;
+
+        if (json::JsonObject::TryParse(matchObjectJson, jsonObject))
+        {
+            auto match = MidiEndpointMatchCriteria::FromJson(jsonObject);
+
+            winrtMatch->InternalSetMatchObject(match);
+
+            return *winrtMatch;
+        }
+
+        return nullptr;
+    }
+
+
 }

@@ -24,11 +24,11 @@ namespace Microsoft.Windows.Devices.Midi2
 
         MidiGroup Group{ get; };                // the single group this MIDI 1.0 port is associated with
 
-        Midi1PortFlow PortFlow{ get; };          // source (midi input) or destination (midi output)
+        Midi1PortFlow PortFlow{ get; };         // source (midi input) or destination (midi output)
         String PortName{ get; };                // friendly name (this is the WinMM port name)
 
         String PortDeviceId{ get; };            // device id in our tree (also used directly in WinRT MIDI 1.0)
-        UInt32 PortNumber{ get; };               // winmm port number (0..n)
+        UInt32 PortNumber{ get; };              // current winmm port number (0..n)
 
         Windows.Devices.Enumeration.DeviceInformation DeviceInformation{ get; };    // the base WinRT Device Information object for this port
     }

@@ -11,6 +11,7 @@
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointMatchCriteria.h"
 #include "MidiEndpointCustomPropertiesCache.h"
+#include "MidiEndpointNameTable.h"
 
 
 class CMidi2KSMidiConfigurationManager :
@@ -36,9 +37,11 @@ private:
         _In_ json::JsonObject& responseObject);
 
     HRESULT ProcessCustomProperties(
+        _In_ winrt::hstring resolvedEndpointDeviceId,
         _In_ json::JsonObject updateObject,
         _In_ std::shared_ptr<MidiEndpointCustomProperties>& customProperties,
         _In_ std::vector<DEVPROPERTY>& endpointDevProperties,
+        _In_ std::shared_ptr<MidiEndpointNameTable>& nameTable,
         _In_ json::JsonObject& responseObject);
 
     std::shared_ptr<MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<MidiEndpointCustomPropertiesCache>() };

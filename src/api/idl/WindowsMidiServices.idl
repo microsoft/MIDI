@@ -304,6 +304,11 @@ interface IMidiDeviceManager : IUnknown
         [in, string, annotation("_In_")] LPCWSTR instanceId
     );
 
+    HRESULT RebuildMidi1PortsForEndpoint(
+        [in, string, annotation("_In_")] LPCWSTR endpointDeviceInterfaceId
+    );
+
+
 
     // Update the configuration for a transport  or endpoints managed by that transport 
     HRESULT UpdateTransportConfiguration(
@@ -341,23 +346,6 @@ interface IMidiServiceConfigurationManager : IUnknown
         [in, string, annotation("_In_")] LPCWSTR sourceTransportJson,
         [out, string, annotation("_Out_")] LPWSTR* responseJson
     );
-
-    //HRESULT GetMatchingEndpointEntry(
-    //    [in, string, annotation("_In_")] LPCWSTR sourceActionObjectJson,
-    //    [in, string, annotation("_In_")] LPCWSTR searchKeyValuePairsJson,
-    //    [out, string, annotation("_Out_")] LPWSTR* responseJson
-    //);
-
-
-    // these get cached entries from the config file. This is
-    // needed for cases when the configuration happens before
-    // the transport has actually created the device interface
-
-    //HRESULT GetCachedEndpointUpdateEntry(
-    //    [in, annotation("_In_")] GUID transportId,
-    //    [in, string, annotation("_In_")] LPCWSTR searchKeyValuePairsJson,
-    //    [out, string, annotation("_Out_")] LPWSTR* responseJson
-    //);
 
 };
 

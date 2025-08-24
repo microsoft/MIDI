@@ -33,9 +33,9 @@
 #include <winrt/Windows.Foundation.Collections.h>
 
 
-#ifdef max
-#pragma push_macro("max")
 #undef max
+#undef GetObject
+
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_PROPERTIES_PROPERTY_KEY                     L"customProperties"
 
@@ -135,7 +135,7 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
             // get the naming approach to use for MIDI 1 ports. Custom names will always override. 
             // "default" means to use the default for Windows all-up.
 
-            auto naming = customPropertiesObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_PROPERTY_KEY, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_DEFAULT);
+            auto naming = midi1Ports.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_PROPERTY_KEY, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_DEFAULT);
 
             if (naming == MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_VALUE_DEFAULT)
             {
@@ -160,13 +160,18 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
                 winrt::hstring{ MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_SOURCES_ARRAY_PROPERTY_KEY }, 
                 winrt::hstring{ MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_DESTINATIONS_ARRAY_PROPERTY_KEY } })
             {
-                if (customPropertiesObject.HasKey(namedArrayKey))
+                if (midi1Ports.HasKey(namedArrayKey))
                 {
-                    auto ports = customPropertiesObject.GetNamedArray(namedArrayKey);
+                    auto ports = midi1Ports.GetNamedArray(namedArrayKey);
 
-                    for (auto const& it : ports)
+                    for (auto const& portVal : ports)
                     {
-                        auto obj = it.as<json::JsonObject>();
+                        auto obj = portVal.GetObject();
+
+                        if (obj == nullptr)
+                        {
+                            continue;
+                        }
 
                         if (obj.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_GROUP_INDEX_PROPERTY_KEY) &&
                             obj.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_NAME_ENTRY_CUSTOM_NAME_PROPERTY_KEY))
@@ -186,19 +191,19 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
                                 continue;
                             }
 
+
                             MidiEndpointCustomMidi1PortProperties portProperties{};
 
                             portProperties.Name = name;
                             portProperties.GroupIndex = static_cast<uint8_t>(groupIndex);
 
-
                             if (namedArrayKey == MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_SOURCES_ARRAY_PROPERTY_KEY)
                             {
-                                props->Midi1Sources.emplace(portProperties.GroupIndex, portProperties);
+                                props->Midi1Sources[portProperties.GroupIndex] = portProperties;
                             }
                             else if (namedArrayKey == MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_DESTINATIONS_ARRAY_PROPERTY_KEY)
                             {
-                                props->Midi1Destinations.emplace(portProperties.GroupIndex, portProperties);
+                                props->Midi1Destinations[portProperties.GroupIndex] = portProperties;
                             }
                         }
                     }
@@ -405,24 +410,9 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
                 DEVPROP_TYPE_UINT16, sizeof(uint16_t), (PVOID)&RecommendedControlChangeIntervalMilliseconds });
     }
 
-    // naming
-    switch (Midi1NamingApproach)
-    {
-    case MidiEndpointCustomMidi1NamingApproach::UseNewStyle:
-        m_selectedPortNamingDevProperty = Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName;
-        break;
-
-    case MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible:
-        m_selectedPortNamingDevProperty = Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM;
-        break;
-
-    default:
-        m_selectedPortNamingDevProperty = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
-        break;
-    }
-
     destination.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-        DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&m_selectedPortNamingDevProperty });
+        DEVPROP_TYPE_UINT32, (ULONG)sizeof(MidiEndpointCustomMidi1NamingApproach), (PVOID)&Midi1NamingApproach });
+
 
     return true;
 }
@@ -460,13 +450,21 @@ bool MidiEndpointCustomProperties::WriteAllProperties(std::vector<DEVPROPERTY>& 
                     DEVPROP_TYPE_EMPTY, 0, nullptr });
         }
 
+        //// UMP Only
+        //if (UmpOnly)
+        //{
+        //    destination.push_back({ { PKEY_MIDI_CreateMidi1PortsForEndpoint, DEVPROP_STORE_SYSTEM, nullptr},
+        //            DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
+        //}
+        //else
+        //{
+        //    destination.push_back({ { PKEY_MIDI_CreateMidi1PortsForEndpoint, DEVPROP_STORE_SYSTEM, nullptr},
+        //            DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropTrue });
+        //}
+
         return true;
     }
 
     return false;
 }
 
-
-
-#pragma pop_macro("max")
-#endif  // ifdef max

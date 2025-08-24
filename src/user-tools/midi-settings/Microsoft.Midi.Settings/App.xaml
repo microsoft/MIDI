@@ -34,7 +34,9 @@
             <helpers:BooleanToInverseVisibilityConverter x:Key="BooleanToInverseVisibilityConverter" />
             <helpers:BooleanToEmojiCheckConverter x:Key="BooleanToEmojiCheckConverter" />
             <helpers:EnumToBooleanConverter x:Key="EnumToBooleanConverter" />
-            
+
+            <helpers:Midi1PortNamingApproachConverter x:Key="Midi1PortNamingApproachConverter" />
+
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
             <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
 

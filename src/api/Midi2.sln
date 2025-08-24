@@ -37,7 +37,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{A4512DDC-CB43-4774-80AA-3B5D13B50D75}"
 	ProjectSection(SolutionItems) = preProject
 		Inc\hstring_util.h = Inc\hstring_util.h
-		Inc\json_custom_property_helper.h = Inc\json_custom_property_helper.h
 		Inc\json_defs.h = Inc\json_defs.h
 		Inc\json_helpers.h = Inc\json_helpers.h
 		Inc\json_transport_command_helper.h = Inc\json_transport_command_helper.h

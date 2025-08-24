@@ -264,7 +264,9 @@
   <ItemGroup>
     <ClInclude Include="ComSingleton.h" />
     <ClInclude Include="date_util.h" />
-    <ClInclude Include="MidiEndpointConnectionBasicSettings.h" />
+    <ClInclude Include="MidiEndpointConnectionBasicSettings.h">
+      <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="midi_sdk_idl_defs.h" />
     <ClInclude Include="MidiNetworkAdvertisedHost.h">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
@@ -468,17 +470,33 @@
     <ClInclude Include="MidiRuntimeUpdateUtility.h">
       <DependentUpon>MidiRuntimeUpdateUtility.idl</DependentUpon>
     </ClInclude>
-    <ClInclude Include="MidiClockGenerator.h" />
-    <ClInclude Include="MidiClockDestination.h" />
-    <ClInclude Include="MidiImageAssetHelper.h" />
-    <ClInclude Include="MidiServiceEndpointCustomizationConfig.h" />
-    <ClInclude Include="MidiServiceTransportCommand.h" />
-    <ClInclude Include="MidiServiceTransportCommonCommands.h" />
-    <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h" />
+    <ClInclude Include="MidiClockGenerator.h">
+      <DependentUpon>MidiClockGenerator.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiClockDestination.h">
+      <DependentUpon>MidiClockDestination.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiImageAssetHelper.h">
+      <DependentUpon>MidiImageAssetHelper.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceEndpointCustomizationConfig.h">
+      <DependentUpon>MidiServiceEndpointCustomizationConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportCommand.h">
+      <DependentUpon>MidiServiceTransportCommand.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceTransportCommonCommands.h">
+      <DependentUpon>MidiServiceTransportCommonCommands.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceConfigEndpointMatchCriteria.h">
+      <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp" />
+    <ClCompile Include="MidiEndpointConnectionBasicSettings.cpp">
+      <DependentUpon>MidiEndpointConnectionBasicSettings.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkAdvertisedHost.cpp">
       <DependentUpon>MidiNetworkAdvertisedHost.idl</DependentUpon>
     </ClCompile>
@@ -763,15 +781,30 @@
     <ClCompile Include="MidiRuntimeUpdateUtility.cpp">
       <DependentUpon>MidiRuntimeUpdateUtility.idl</DependentUpon>
     </ClCompile>
-    <ClCompile Include="MidiClockGenerator.cpp" />
-    <ClCompile Include="MidiClockDestination.cpp" />
-    <ClCompile Include="MidiImageAssetHelper.cpp" />
-    <ClCompile Include="MidiServiceEndpointCustomizationConfig.cpp" />
-    <ClCompile Include="MidiServiceTransportCommand.cpp" />
-    <ClCompile Include="MidiServiceTransportCommonCommands.cpp" />
-    <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp" />
+    <ClCompile Include="MidiClockGenerator.cpp">
+      <DependentUpon>MidiClockGenerator.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiClockDestination.cpp">
+      <DependentUpon>MidiClockDestination.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiImageAssetHelper.cpp">
+      <DependentUpon>MidiImageAssetHelper.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceEndpointCustomizationConfig.cpp">
+      <DependentUpon>MidiServiceEndpointCustomizationConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportCommand.cpp">
+      <DependentUpon>MidiServiceTransportCommand.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceTransportCommonCommands.cpp">
+      <DependentUpon>MidiServiceTransportCommonCommands.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceConfigEndpointMatchCriteria.cpp">
+      <DependentUpon>MidiServiceConfigEndpointMatchCriteria.idl</DependentUpon>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Midl Include="Midi1PortNamingApproachEnum.idl" />
     <Midl Include="MidiImageAssetHelper.idl" />
     <Midl Include="IMidiEndpointConnectionSource.idl" />
     <Midl Include="IMidiEndpointMessageProcessingPlugin.idl" />

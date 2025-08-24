@@ -28,6 +28,10 @@ internal class MidiConfigConstants
         public const string CommonUpdate = "update";
         public const string CommonRemove = "remove";
 
+        public const string Match = "match";
+        public const string CustomProperties = "customProperties";
+
+
         public const string Header = "header";
         public const string HeaderConfigName = "configName";
         public const string HeaderProduct = "product";
@@ -237,6 +241,130 @@ public class MidiConfigFile : IMidiConfigFile
         return false;
     }
 
+    private JsonObject? FindExistingTransportSection(JsonObject mainConfigObject, Guid transportId)
+    {
+        string transportIdKey = transportId.ToString("B").ToUpper();
+
+        System.Diagnostics.Debug.WriteLine($"Looking for section with this transport: {transportIdKey}");
+
+        if (mainConfigObject.Keys.Contains(MidiConfigConstants.JsonKeys.TransportPluginSettings))
+        {
+            var transportPluginsSettings = mainConfigObject.GetNamedObject(MidiConfigConstants.JsonKeys.TransportPluginSettings);
+
+            if (transportPluginsSettings.Keys.Contains(transportIdKey))
+            {
+                return transportPluginsSettings.GetNamedObject(transportIdKey, null);
+            }
+        }
+
+        return null;
+    }
+
+
+
+    private JsonObject FindOrCreateTransportSection(JsonObject mainConfigObject, Guid transportId)
+    {
+        string transportIdKey = transportId.ToString("B").ToUpper();
+
+        if (!mainConfigObject.Keys.Contains(MidiConfigConstants.JsonKeys.TransportPluginSettings))
+        {
+            // need to add transport plugin settings to the main config
+            JsonObject section = new JsonObject();
+            mainConfigObject.SetNamedValue(MidiConfigConstants.JsonKeys.TransportPluginSettings, section);
+
+        }
+
+        var transportPluginsSettings = mainConfigObject.GetNamedObject(MidiConfigConstants.JsonKeys.TransportPluginSettings);
+
+        if (!transportPluginsSettings.Keys.Contains(transportIdKey))
+        {
+            // need to add section for this transport
+            JsonObject section = new JsonObject();
+            transportPluginsSettings.SetNamedValue(transportIdKey, section);
+        }
+
+        var thisTransport = transportPluginsSettings.GetNamedObject(transportIdKey, null);
+
+        return thisTransport;
+    }
+
+
+
+    private JsonArray? FindExistingUpdateArray(JsonObject parentTransportObject)
+    {
+        if (parentTransportObject.Keys.Contains(MidiConfigConstants.JsonKeys.CommonUpdate))
+        {
+            return parentTransportObject.GetNamedArray(MidiConfigConstants.JsonKeys.CommonUpdate);
+        }
+
+        return null;
+    }
+
+    private JsonArray FindOrCreateTransportUpdateArray(JsonObject parentTransportObject)
+    {
+        if (FindExistingUpdateArray(parentTransportObject) == null)
+        {
+            // need to add create array
+
+            JsonArray array = new JsonArray();
+            parentTransportObject.SetNamedValue(MidiConfigConstants.JsonKeys.CommonUpdate, array);
+        }
+        
+        var updateArray = FindExistingUpdateArray(parentTransportObject);
+
+
+        return updateArray;
+    }
+
+    private JsonArray FindOrCreateTransportRemoveArray(JsonObject parentTransportObject)
+    {
+        if (!parentTransportObject.Keys.Contains(MidiConfigConstants.JsonKeys.CommonRemove))
+        {
+            // need to add create array
+
+            JsonArray array = new JsonArray();
+            parentTransportObject.SetNamedValue(MidiConfigConstants.JsonKeys.CommonRemove, array);
+        }
+
+        var removeArray = parentTransportObject.GetNamedArray(MidiConfigConstants.JsonKeys.CommonRemove);
+
+
+        return removeArray;
+    }
+
+
+    private JsonArray FindOrCreateTransportCreateArray(JsonObject parentTransportObject)
+    {
+        if (!parentTransportObject.Keys.Contains(MidiConfigConstants.JsonKeys.CommonCreate))
+        {
+            // need to add create array
+
+            JsonArray array = new JsonArray();
+            parentTransportObject.SetNamedValue(MidiConfigConstants.JsonKeys.CommonCreate, array);
+        }
+
+        var createArray = parentTransportObject.GetNamedArray(MidiConfigConstants.JsonKeys.CommonCreate);
+
+
+        return createArray;
+    }
+
+    // some transports use a create object, not a create array
+    private JsonObject FindOrCreateTransportCreateObject(JsonObject parentTransportObject)
+    {
+        if (!parentTransportObject.Keys.Contains(MidiConfigConstants.JsonKeys.CommonCreate))
+        {
+            // need to add create object
+
+            JsonObject obj = new JsonObject();
+            parentTransportObject.SetNamedValue(MidiConfigConstants.JsonKeys.CommonCreate, obj);
+        }
+
+        var createObject = parentTransportObject.GetNamedObject(MidiConfigConstants.JsonKeys.CommonCreate);
+
+
+        return createObject;
+    }
 
 
     private bool MergeEndpointTransportSectionIntoJsonObject(JsonObject mainConfigObject, JsonObject objectToMergeIn)
@@ -313,12 +441,11 @@ public class MidiConfigFile : IMidiConfigFile
     }
 
 
-
     // Methods to add common functions to the config, like a new endpoint name, or new loopbacks
     // expose strongly typed stuff here, and let this class take care of the details within.
     // Each discrete function should result in a commit to the file.
 
-    // this assumes the config has already been run against the service to create the pair. We're just storing them here.
+        // this assumes the config has already been run against the service to create the pair. We're just storing them here.
     public bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig)
     {
         if (m_config == null) return false;
@@ -390,6 +517,97 @@ public class MidiConfigFile : IMidiConfigFile
 
                 return Save();
             }
+        }
+
+        return false;
+    }
+
+
+    public bool StoreEndpointCustomization(Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceEndpointCustomizationConfig updateConfig)
+    {
+        if (m_config == null) return false;
+        if (updateConfig == null) return false;
+
+        // get the latest from disk
+        if (!Load())
+        {
+            return false;
+        }
+
+        System.Diagnostics.Debug.WriteLine("Update Config:");
+        System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+
+        var existingTransportSettings = FindOrCreateTransportSection(m_config, updateConfig.TransportId);
+        if (existingTransportSettings == null) return false;
+        System.Diagnostics.Debug.WriteLine("Existing Transport Settings:");
+        System.Diagnostics.Debug.WriteLine(existingTransportSettings.Stringify());
+
+        var existingUpdateArray = FindOrCreateTransportUpdateArray(existingTransportSettings);
+        if (existingUpdateArray == null) return false;
+        System.Diagnostics.Debug.WriteLine("Existing Update Array:");
+        System.Diagnostics.Debug.WriteLine(existingUpdateArray.Stringify());
+
+        // now, look to see if there are any matching objects in here already
+
+        foreach (var existingUpdate in existingUpdateArray)
+        {
+            var existingUpdateObject = existingUpdate.GetObject();
+            if (existingUpdateObject == null) continue;
+            System.Diagnostics.Debug.WriteLine("Existing Update Object:");
+            System.Diagnostics.Debug.WriteLine(existingUpdateObject.Stringify());
+
+            if (existingUpdateObject.ContainsKey(MidiConfigConstants.JsonKeys.Match))
+            {
+                var existingMatchJson = existingUpdateObject.GetNamedObject(MidiConfigConstants.JsonKeys.Match);
+                System.Diagnostics.Debug.WriteLine("Existing Match Json:");
+                System.Diagnostics.Debug.WriteLine(existingMatchJson.Stringify());
+
+                var existingMatchObject = Microsoft.Windows.Devices.Midi2.ServiceConfig.MidiServiceConfigEndpointMatchCriteria.FromJson(existingMatchJson.Stringify());
+
+                if (updateConfig.MatchCriteria.Matches(existingMatchObject))
+                {
+                    System.Diagnostics.Debug.WriteLine("We match");
+
+                    // this object has the full structure including endpointTransportPluginSettings and the transportId
+                    var newFullUpdateObject = JsonObject.Parse(updateConfig.GetConfigJson());
+
+                    var newTransportSection = FindExistingTransportSection(newFullUpdateObject, updateConfig.TransportId);
+
+                    if (newTransportSection != null)
+                    {
+                        var newConfigUpdateArray = FindExistingUpdateArray(newTransportSection);
+
+                        if (newConfigUpdateArray != null)
+                        {
+                            var newConfigObject = newConfigUpdateArray.First().GetObject();
+
+                            if (newConfigObject != null)
+                            {
+                                System.Diagnostics.Debug.WriteLine("Adding new config object to array");
+
+                                // remove this update entry (match and custom props) in the config
+                                existingUpdateArray.Remove(existingUpdate);
+
+                                existingUpdateArray.Add(newConfigObject);
+
+                                return Save();
+                            }
+                        }
+                    }
+
+                    // matched but we fell through due to other issues. Stop processing
+                    return false;
+                }
+            }
+        }
+
+        // no matches found, so add as new
+
+        var mergeObject = JsonObject.Parse(updateConfig.GetConfigJson());
+
+        if (MergeEndpointTransportSectionIntoJsonObject(m_config, mergeObject))
+        {
+            return Save();
         }
 
         return false;

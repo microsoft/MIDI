@@ -82,9 +82,11 @@ CMidi2KSMidiConfigurationManager::ProcessCommand(
 _Use_decl_annotations_
 HRESULT
 CMidi2KSMidiConfigurationManager::ProcessCustomProperties(
+    winrt::hstring resolvedEndpointDeviceId,
     json::JsonObject updateObject,
     std::shared_ptr<MidiEndpointCustomProperties>& customProperties,
     std::vector<DEVPROPERTY>& endpointDevProperties,
+    std::shared_ptr<MidiEndpointNameTable>& nameTable,
     json::JsonObject& responseObject)
 {
     UNREFERENCED_PARAMETER(responseObject);
@@ -100,7 +102,30 @@ CMidi2KSMidiConfigurationManager::ProcessCustomProperties(
         {
             if (customProperties->WriteAllProperties(endpointDevProperties))
             {
-                // TODO: Name table changes, restart endpoints, etc.
+                if (customProperties->Midi1Destinations.size() > 0 ||
+                    customProperties->Midi1Sources.size() > 0)
+                {
+                    if (!resolvedEndpointDeviceId.empty())
+                    {
+                        // get the current name table
+                        nameTable = MidiEndpointNameTable::FromEndpointDeviceId(resolvedEndpointDeviceId);
+
+                        // apply name updates
+                        for (auto const& source : customProperties->Midi1Sources)
+                        {
+                            nameTable->UpdateCustomName(source.second.GroupIndex, MidiFlow::MidiFlowIn, source.second.Name);
+                        }
+
+                        for (auto const& dest : customProperties->Midi1Destinations)
+                        {
+                            nameTable->UpdateCustomName(dest.second.GroupIndex, MidiFlow::MidiFlowOut, dest.second.Name);
+                        }
+
+                        // write out the dev props. This does require that the name table is kept around
+                        // until the props are written, which is why it was passed in as a param
+                        nameTable->WriteProperties(endpointDevProperties);
+                    }
+                }
             }
             else
             {
@@ -225,30 +250,9 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                 }
 
                 std::shared_ptr<MidiEndpointCustomProperties> customProperties{ nullptr };
+                std::shared_ptr<MidiEndpointNameTable> nameTable{ nullptr };
                 std::shared_ptr<MidiEndpointMatchCriteria> matchCriteria = MidiEndpointMatchCriteria::FromJson(matchObject);
                 std::vector<DEVPROPERTY> endpointDevProperties{};
-
-                // get the device id, Right now, the id is the only way to id the item. We're changing that
-                // but when the update is sent at runtime, that's the only value that's useful anyway
-                if (matchCriteria->EndpointDeviceId.empty())
-                {
-                    // no endpoint device id, so no way to match this, currently.
-                    // this code will change when we expand the criteria.
-                    continue;
-                }
-
-                // process all the custom props like Name, Description, Image, etc.
-                LOG_IF_FAILED(ProcessCustomProperties(
-                    updateObject,
-                    customProperties,
-                    endpointDevProperties,
-                    responseObject));
-
-                if (endpointDevProperties.size() == 0)
-                {
-                    // no properties to update, so move on
-                    continue;
-                }
 
                 // Resolve the EndpointDeviceId in case we matched on something else
                 winrt::hstring matchingEndpointDeviceId{};
@@ -259,6 +263,25 @@ CMidi2KSMidiConfigurationManager::UpdateConfiguration(
                     matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
                 }
 
+                // process all the custom props like Name, Description, Image, etc.
+                LOG_IF_FAILED(ProcessCustomProperties(
+                    matchingEndpointDeviceId,
+                    updateObject,
+                    customProperties,
+                    endpointDevProperties,
+                    nameTable,
+                    responseObject));
+
+                if (customProperties != nullptr)
+                {
+                    m_customPropertiesCache->Add(matchCriteria, customProperties);
+                }
+
+                if (endpointDevProperties.size() == 0)
+                {
+                    // no properties to update, so move on
+                    continue;
+                }
 
                 if (!matchingEndpointDeviceId.empty())
                 {

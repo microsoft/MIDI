@@ -62,7 +62,7 @@ public:
     STDMETHOD(Shutdown)();
 
     // returns the endpointDeviceInterfaceId for a matching endpoint found in m_availableEndpointDefinitions
-    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ MidiEndpointMatchCriteria const& criteria);
+    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ MidiEndpointMatchCriteria& criteria);
 
 private:
     STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& masterEndpointDefinition);

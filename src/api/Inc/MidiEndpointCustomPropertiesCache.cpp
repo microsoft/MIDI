@@ -30,7 +30,7 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomPropertiesCache:
 {
     for (auto const& entry : m_entries)
     {
-        if (entry.Match->IsMatch(knownEndpointProperties))
+        if (entry.Match->Matches(knownEndpointProperties))
         {
             return entry.Properties;
         }

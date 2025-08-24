@@ -12,6 +12,9 @@ import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiServiceConfigEndpointMatchCriteria.idl";
+import "Midi1PortNamingApproachEnum.idl";
+
+import "MidiGroup.idl";
 
 namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 {
@@ -34,7 +37,12 @@ namespace Microsoft.Windows.Devices.Midi2.ServiceConfig
 
         Boolean RequiresNoteOffTranslation;
         Boolean SupportsMidiPolyphonicExpression;
-
         UInt16 RecommendedControlChangeIntervalMilliseconds;
+
+        Microsoft.Windows.Devices.Midi2.Midi1PortNamingApproach Midi1PortNamingApproach;
+
+        void AddMidi1SourcePortCustomName(Microsoft.Windows.Devices.Midi2.MidiGroup group, String name);
+        void AddMidi1DestinationPortCustomName(Microsoft.Windows.Devices.Midi2.MidiGroup group, String name);
+
     };
 }

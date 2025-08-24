@@ -1036,6 +1036,10 @@ EXTERN_C const IID IID_IMidiDeviceManager;
             /* [annotation][string][in] */ 
             _In_  LPCWSTR instanceId) = 0;
         
+        virtual HRESULT STDMETHODCALLTYPE RebuildMidi1PortsForEndpoint( 
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId) = 0;
+        
         virtual HRESULT STDMETHODCALLTYPE UpdateTransportConfiguration( 
             /* [annotation][in] */ 
             _In_  GUID transportId,
@@ -1135,6 +1139,12 @@ EXTERN_C const IID IID_IMidiDeviceManager;
             /* [annotation][string][in] */ 
             _In_  LPCWSTR instanceId);
         
+        DECLSPEC_XFGVIRT(IMidiDeviceManager, RebuildMidi1PortsForEndpoint)
+        HRESULT ( STDMETHODCALLTYPE *RebuildMidi1PortsForEndpoint )( 
+            IMidiDeviceManager * This,
+            /* [annotation][string][in] */ 
+            _In_  LPCWSTR endpointDeviceInterfaceId);
+        
         DECLSPEC_XFGVIRT(IMidiDeviceManager, UpdateTransportConfiguration)
         HRESULT ( STDMETHODCALLTYPE *UpdateTransportConfiguration )( 
             IMidiDeviceManager * This,
@@ -1185,6 +1195,9 @@ EXTERN_C const IID IID_IMidiDeviceManager;
 
 #define IMidiDeviceManager_RemoveEndpoint(This,instanceId)	\
     ( (This)->lpVtbl -> RemoveEndpoint(This,instanceId) ) 
+
+#define IMidiDeviceManager_RebuildMidi1PortsForEndpoint(This,endpointDeviceInterfaceId)	\
+    ( (This)->lpVtbl -> RebuildMidi1PortsForEndpoint(This,endpointDeviceInterfaceId) ) 
 
 #define IMidiDeviceManager_UpdateTransportConfiguration(This,transportId,configurationJson,responseJson)	\
     ( (This)->lpVtbl -> UpdateTransportConfiguration(This,transportId,configurationJson,responseJson) ) 
