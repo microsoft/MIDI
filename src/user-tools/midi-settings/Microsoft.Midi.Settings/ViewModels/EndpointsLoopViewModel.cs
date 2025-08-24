@@ -23,18 +23,54 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.Devices.Enumeration;
 using Windows.Foundation;
 
 namespace Microsoft.Midi.Settings.ViewModels
 {
     public class MidiLoopbackEndpointPair
     {
-        public MidiEndpointDeviceInformation LoopA { get; internal set; }
+        public string AssociationId;
+        public MidiEndpointWrapper LoopA { get; internal set; }
         public MidiEndpointDeviceInformation LoopB { get; internal set; }
+
+
+        public ICommand RemoveCommand
+        {
+            get; private set;
+        }
+
+        private readonly IMidiConfigFileService _configFileService;
+
+        public MidiLoopbackEndpointPair(IMidiConfigFileService configFileService)
+        {
+            _configFileService = configFileService;
+
+            RemoveCommand = new RelayCommand(
+                () =>
+                {
+                    var associationId = MidiLoopbackEndpointManager.GetAssociationId(LoopA.DeviceInformation);
+                    var config = new MidiLoopbackEndpointRemovalConfig(associationId);
+
+                    var response = MidiLoopbackEndpointManager.RemoveTransientLoopbackEndpoints(config);
+
+                    // todo: remove from config file
+
+                    if (_configFileService.CurrentConfig != null)
+                    {
+                        _configFileService.CurrentConfig.RemoveLoopbackEndpointPair(associationId);
+                    }
+
+
+                });
+            _configFileService = configFileService;
+        }
+
+
     }
 
 
-    public partial class EndpointsLoopViewModel : SingleTransportEndpointViewModelBase, INavigationAware, ISettingsSearchTarget
+    public partial class EndpointsLoopViewModel : ObservableRecipient, INavigationAware, ISettingsSearchTarget
     {
         public static IList<string> GetSearchKeywords()
         {
@@ -53,9 +89,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
-
-        private IMidiConfigFileService _midiConfigFileService;
-
         public ICommand ShowCreateLoopbackPairsDialogCommand
         {
             get; private set;
@@ -66,32 +99,36 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        public ICommand CreateDefaultLoopbackPairsCommand
+        {
+            get; private set;
+        }
 
         public bool IsConfigFileActive
         {
-            get { return _midiConfigFileService.IsConfigFileActive; }
+            get { return _configFileService.IsConfigFileActive; }
         }
 
 
-        private string _newLoopbackEndpointAName;
-        public string NewLoopbackEndpointAName
+        private string _newLoopbackEndpointBaseName;
+        public string NewLoopbackEndpointBaseName
         {
-            get { return _newLoopbackEndpointAName; }
+            get { return _newLoopbackEndpointBaseName; }
             set
             {
-                _newLoopbackEndpointAName = value.Trim();
+                _newLoopbackEndpointBaseName = value.Trim();
                 UpdateValidState();
                 OnPropertyChanged();
             }
         }
 
-        private string _newLoopbackEndpointBName;
-        public string NewLoopbackEndpointBName
+        private string _newLoopbackDescription;
+        public string NewLoopbackDescription
         {
-            get { return _newLoopbackEndpointBName; }
+            get { return _newLoopbackDescription; }
             set
             {
-                _newLoopbackEndpointBName = value.Trim();
+                _newLoopbackDescription = value.Trim();
                 UpdateValidState();
                 OnPropertyChanged();
             }
@@ -111,30 +148,24 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
         [ObservableProperty]
-        public bool newLoopbackIsPersistent;
+        private bool newLoopbackIsPersistent;
 
 
         [ObservableProperty]
-        public bool newLoopbackSettingsAreValid;
+        private bool newLoopbackSettingsAreValid;
 
         [ObservableProperty]
-        public string validationErrorMessage;
+        private string validationErrorMessage;
+
+        [ObservableProperty]
+        private bool defaultLoopbackPairExists;
 
 
         private void UpdateValidState()
         {
-            // validate both names are not duplicates of each other
-            if (string.IsNullOrWhiteSpace(NewLoopbackEndpointAName) || 
-                string.IsNullOrWhiteSpace(NewLoopbackEndpointBName))
+            if (string.IsNullOrWhiteSpace(NewLoopbackEndpointBaseName) )
             {
                 ValidationErrorMessage = "Both endpoint names are required.";
-                NewLoopbackSettingsAreValid = false;
-                return;
-            }
-
-            if (NewLoopbackEndpointAName.ToUpper().Trim() == NewLoopbackEndpointBName.ToUpper().Trim())
-            {
-                ValidationErrorMessage = "Endpoints A and B cannot have the same name.";
                 NewLoopbackSettingsAreValid = false;
                 return;
             }
@@ -154,7 +185,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             // validate the unique id isn't already in use with another loopback
             foreach (var pair in MidiLoopbackEndpointPairs)
             {
-                if (pair.LoopA.GetTransportSuppliedInfo().SerialNumber.ToUpper() == NewUniqueIdentifier.ToUpper() ||
+                if (pair.LoopA.DeviceInformation.GetTransportSuppliedInfo().SerialNumber.ToUpper() == NewUniqueIdentifier.ToUpper() ||
                     pair.LoopB.GetTransportSuppliedInfo().SerialNumber.ToUpper() == NewUniqueIdentifier.ToUpper())
                 {
                     ValidationErrorMessage = "Unique identifier is already in use with another loopback endpoint.";
@@ -194,15 +225,16 @@ namespace Microsoft.Midi.Settings.ViewModels
             var endpointA = new MidiLoopbackEndpointDefinition();
             var endpointB = new MidiLoopbackEndpointDefinition();
 
-            endpointA.Name = NewLoopbackEndpointAName.Trim();
-            endpointB.Name = NewLoopbackEndpointBName.Trim();
+            endpointA.Name = NewLoopbackEndpointBaseName.Trim() + " (A)";
+            endpointB.Name = NewLoopbackEndpointBaseName.Trim() + " (B)";
 
             endpointA.UniqueId = CleanupUniqueId(NewUniqueIdentifier);
             endpointB.UniqueId = CleanupUniqueId(NewUniqueIdentifier);
 
             // descriptions are optional
-            endpointA.Description = string.Empty;
-            endpointB.Description = string.Empty;
+            // TODO: Allow setting the description in the dialog
+            endpointA.Description = NewLoopbackDescription.Trim();
+            endpointB.Description = NewLoopbackDescription.Trim();
 
             var associationId = GuidHelper.CreateNewGuid();
 
@@ -210,17 +242,19 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
 
+
             // TODO: if that worked, and these are persistent, add to configuration file
 
             if (IsConfigFileActive && NewLoopbackIsPersistent)
             {
                 if (result.Success)
                 {
-                    if (_midiConfigFileService.CurrentConfig != null)
+                    if (_configFileService.CurrentConfig != null)
                     {
-                        _midiConfigFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+                        _configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
 
-                        RefreshDeviceCollection();
+                        //RefreshDeviceCollection();
+                        LoadExistingEndpointPairs();
                     }
                     else
                     {
@@ -236,54 +270,91 @@ namespace Microsoft.Midi.Settings.ViewModels
 
 
         public ObservableCollection<MidiLoopbackEndpointPair> MidiLoopbackEndpointPairs { get; } = [];
+
+        
         private void LoadExistingEndpointPairs()
         {
-            // this keeps track of ids for dedup purposes
-            var ids = new Dictionary<string, bool>();
+            System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpointPairs().");
 
-            var endpoints = _enumerationService.GetEndpoints()
-                .Where(x => x.DeviceInformation.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId);
-
-
-            foreach (var endpoint in endpoints)
+            _contextService.GetUIContext().Post(_ =>
             {
-                var associated = MidiLoopbackEndpointManager.GetAssociatedLoopbackEndpoint(endpoint.DeviceInformation);
-
-                if (associated != null)
+                lock (MidiLoopbackEndpointPairs)
                 {
-                    if (!ids.ContainsKey(endpoint.Id) &&
-                        !ids.ContainsKey(associated.EndpointDeviceId))
+                    System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpointPairs() (UI) : Acquired lock. Updating endpoints.");
+
+                    var endpoints = _enumerationService.GetEndpointsForTransportId(MidiLoopbackEndpointManager.TransportId);
+
+                    // this keeps track of ids for dedup purposes
+                    var ids = new Dictionary<string, bool>();
+
+                    MidiLoopbackEndpointPairs.Clear();
+
+                    foreach (var endpoint in endpoints)
                     {
-                        var pair = new MidiLoopbackEndpointPair();
+                        var associated = MidiLoopbackEndpointManager.GetAssociatedLoopbackEndpoint(endpoint.DeviceInformation);
 
-                        pair.LoopA = endpoint.DeviceInformation;
-                        pair.LoopB = associated;
+                        if (associated != null)
+                        {
+                            if (!ids.ContainsKey(endpoint.DeviceInformation.EndpointDeviceId) &&
+                                !ids.ContainsKey(associated.EndpointDeviceId))
+                            {
+                                var pair = new MidiLoopbackEndpointPair(_configFileService);
 
-                        MidiLoopbackEndpointPairs.Add(pair);
+                                pair.LoopA = endpoint;
+                                pair.LoopB = associated;
 
-                        ids.Add(pair.LoopA.EndpointDeviceId, true);
-                        ids.Add(pair.LoopB.EndpointDeviceId, true);
+                                MidiLoopbackEndpointPairs.Add(pair);
+
+                                ids.Add(pair.LoopA.DeviceInformation.EndpointDeviceId, true);
+                                ids.Add(pair.LoopB.EndpointDeviceId, true);
+                            }
+                        }
                     }
+
+                    if (_defaultsService.DoesDefaultLoopbackAlreadyExist())
+                    {
+                        DefaultLoopbackPairExists = true;
+                    }
+                    else
+                    {
+                        DefaultLoopbackPairExists = false;
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"- LoadExistingEndpointPairs() (UI) : Completed.");
                 }
-            }
+
+            }, null);
+
         }
 
 
 
+        private readonly IMidiConfigFileService _configFileService;
+        private readonly IMidiDefaultsService _defaultsService;
+        private readonly ISynchronizationContextService _contextService;
+        private readonly INavigationService _navigationService;
+        private readonly IMidiEndpointEnumerationService _enumerationService;
 
         public EndpointsLoopViewModel(
-            INavigationService navigationService, 
-            IMidiConfigFileService midiConfigFileService,
-            IMidiEndpointEnumerationService enumerationService
-            ) : base("LOOP", navigationService, enumerationService)
-        {
-            LoadExistingEndpointPairs();
+                        INavigationService navigationService, 
+                        IMidiConfigFileService configFileService,
+                        IMidiEndpointEnumerationService enumerationService,
+                        IMidiDefaultsService defaultsService,
+                        ISynchronizationContextService contextService
 
-            _midiConfigFileService = midiConfigFileService;
+            )
+        {
+            _configFileService = configFileService;
+            _defaultsService = defaultsService;
+            _contextService = contextService;
+            _navigationService = navigationService;
+            _enumerationService = enumerationService;
+
+            LoadExistingEndpointPairs();
 
             GenerateNewUniqueId();
 
-            if (_midiConfigFileService.IsConfigFileActive)
+            if (_configFileService.IsConfigFileActive)
             {
                 NewLoopbackIsPersistent = true;
             }
@@ -299,6 +370,53 @@ namespace Microsoft.Midi.Settings.ViewModels
                     CreateNewLoopbackEndpoints();
 
                 });
+
+
+            CreateDefaultLoopbackPairsCommand = new RelayCommand(
+                () =>
+                {
+                    var creationConfig = _defaultsService.GetDefaultLoopbackCreationConfig();
+
+                    var result = MidiLoopbackEndpointManager.CreateTransientLoopbackEndpoints(creationConfig);
+
+                    // TODO: Display error if needed
+
+                    if (result.Success)
+                    {
+                        _configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+
+                        //LoadExistingEndpointPairs();
+                    }
+                    
+
+                });
+
+            _enumerationService.EndpointUpdated += (s, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' updated.");
+                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
+                {
+                    LoadExistingEndpointPairs();
+                }
+            };
+
+            _enumerationService.EndpointAdded += (s, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' added.");
+                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
+                {
+                    LoadExistingEndpointPairs();
+                }
+            };
+
+            _enumerationService.EndpointRemoved += (s, e) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"- Endpoint '{e.Name}' removed.");
+                if (e.GetTransportSuppliedInfo().TransportId == MidiLoopbackEndpointManager.TransportId)
+                {
+                    LoadExistingEndpointPairs();
+                }
+            };
 
             //ShowCreateLoopbackPairsDialogCommand = new RelayCommand(
             //    async () =>

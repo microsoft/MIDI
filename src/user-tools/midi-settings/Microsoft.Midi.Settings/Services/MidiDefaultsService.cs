@@ -37,15 +37,15 @@ public class MidiDefaultsService : IMidiDefaultsService
         // if endpoint A or B unique ids are empty, do not close. display suggestion to generate them
         // todo: need to limit to alpha plus just a couple other characters, and only 32 in length
 
-        endpointA.Name = "Default App Loopback A";
-        endpointB.Name = "Default App Loopback B";
+        endpointA.Name = "Default App Loopback (A)";    // TODO: Localize
+        endpointB.Name = "Default App Loopback (B)";    // TODO: Localize
 
         endpointA.UniqueId = DefaultLoopbackAUniqueId;
         endpointB.UniqueId = DefaultLoopbackBUniqueId;
 
         // descriptions are optional
-        endpointA.Description = "Default loopback endpoint for use by applications. This is the A-side of the loopback pair.";
-        endpointB.Description = "Default loopback endpoint for use by applications. This is the B-side of the loopback pair.";
+        endpointA.Description = "Default loopback endpoint for use by applications. This is the A-side of the loopback pair.";    // TODO: Localize
+        endpointB.Description = "Default loopback endpoint for use by applications. This is the B-side of the loopback pair.";    // TODO: Localize
 
         // TODO: entries for the default groups to create, and their gtb names
 

@@ -876,6 +876,7 @@
                                  Header="Description"
                                  TextWrapping="Wrap"
                                  Height="100"
+                                 IsSpellCheckEnabled="True"
                                  Text="{x:Bind ViewModel.CustomizationViewModel.CustomDescription, Mode=TwoWay}"/>
 
                         <TextBlock Grid.Row="3" 

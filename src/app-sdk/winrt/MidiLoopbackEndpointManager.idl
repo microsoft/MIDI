@@ -43,6 +43,8 @@ namespace Microsoft.Windows.Devices.Midi2.Endpoints.Loopback
 
         static Boolean DoesLoopbackAExist(String uniqueIdentifier);
         static Boolean DoesLoopbackBExist(String uniqueIdentifier);
+
+        static Guid GetAssociationId(Microsoft.Windows.Devices.Midi2.MidiEndpointDeviceInformation loopbackEndpoint);
     }
 }
 

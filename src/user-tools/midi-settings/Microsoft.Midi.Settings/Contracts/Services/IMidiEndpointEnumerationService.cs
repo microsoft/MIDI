@@ -22,6 +22,8 @@ public interface IMidiEndpointEnumerationService
     MidiEndpointWrapper GetEndpointById(string endpointDeviceId);
 
 
-    event EventHandler<MidiEndpointWrapper> EndpointUpdated;
+    event EventHandler<MidiEndpointDeviceInformation> EndpointUpdated;
+    event EventHandler<MidiEndpointDeviceInformation> EndpointAdded;
+    event EventHandler<MidiEndpointDeviceInformation> EndpointRemoved;
 
 }

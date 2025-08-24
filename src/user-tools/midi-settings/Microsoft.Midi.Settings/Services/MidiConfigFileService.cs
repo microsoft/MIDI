@@ -225,6 +225,8 @@ public class MidiConfigFile : IMidiConfigFile
 
         try
         {
+            // todo: Would be nice to format the json when writing, instead of writing it in compact mode
+            
             // CreateText opens and overwrites if already there
             using (var fs = File.CreateText(m_fullFileName))
             {
@@ -330,6 +332,26 @@ public class MidiConfigFile : IMidiConfigFile
 
 
         return removeArray;
+    }
+
+    private JsonObject? FindExistingTransportCreateObject(JsonObject parentTransportObject)
+    {
+        if (parentTransportObject.Keys.Contains(MidiConfigConstants.JsonKeys.CommonCreate))
+        {
+            return parentTransportObject.GetNamedObject(MidiConfigConstants.JsonKeys.CommonCreate);
+        }
+
+        return null;
+    }
+
+    private JsonArray? FindExistingTransportCreateArray(JsonObject parentTransportObject)
+    {
+        if (parentTransportObject.Keys.Contains(MidiConfigConstants.JsonKeys.CommonCreate))
+        {
+            return parentTransportObject.GetNamedArray(MidiConfigConstants.JsonKeys.CommonCreate);
+        }
+
+        return null;
     }
 
 
@@ -445,7 +467,34 @@ public class MidiConfigFile : IMidiConfigFile
     // expose strongly typed stuff here, and let this class take care of the details within.
     // Each discrete function should result in a commit to the file.
 
-        // this assumes the config has already been run against the service to create the pair. We're just storing them here.
+
+
+
+    public bool RemoveLoopbackEndpointPair(Guid associationId)
+    {
+        if (m_config == null) return false;
+
+        var transportSection = FindExistingTransportSection(m_config, Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointManager.TransportId);
+        if (transportSection == null) return false;
+
+        var createSection = FindExistingTransportCreateObject(transportSection);
+        if (createSection == null) return false;
+
+        string endpointKey = associationId.ToString("B").ToUpper();
+
+        if (createSection.ContainsKey(endpointKey))
+        {
+            createSection.Remove(endpointKey);
+
+            return Save();
+        }
+
+        return false;
+    }
+
+
+
+    // this assumes the config has already been run against the service to create the pair. We're just storing them here.
     public bool StoreLoopbackEndpointPair(Microsoft.Windows.Devices.Midi2.Endpoints.Loopback.MidiLoopbackEndpointCreationConfig creationConfig)
     {
         if (m_config == null) return false;

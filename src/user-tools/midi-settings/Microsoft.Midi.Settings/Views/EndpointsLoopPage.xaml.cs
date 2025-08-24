@@ -72,10 +72,6 @@ namespace Microsoft.Midi.Settings.Views
         }
         private void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            ViewModel.DispatcherQueue = this.DispatcherQueue;
-
-            ViewModel.RefreshDeviceCollection();
-
             if (m_showCreateDialog)
             {
                 // showing the dialog fails if it is attempted before Loaded has completed
@@ -98,7 +94,6 @@ namespace Microsoft.Midi.Settings.Views
 
             var result = await Dialog_CreateLoopbackEndpoints.ShowAsync();
         }
-
 
 
         //public void OnNavigatedFrom()

@@ -95,8 +95,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         public void RefreshData()
         {
             // Property updates need to happen on UI thread
-
- 
             var context = _synchronizationContextService.GetUIContext();
 
             if (context == null)

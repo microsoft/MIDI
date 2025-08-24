@@ -111,13 +111,13 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             _endpointEnumerationService.EndpointUpdated += (s, e) =>
             {
-                if (EndpointWrapper != null && e.Id == EndpointWrapper.Id)
+                if (EndpointWrapper != null && e.EndpointDeviceId == EndpointWrapper.Id)
                 {
                     _synchronizationContextService?.GetUIContext().Post(_ =>
                     {
                         System.Diagnostics.Debug.WriteLine("Refreshing VM properties due to Endpoint Update event.");
 
-                        EndpointWrapper = e;
+                        EndpointWrapper = _endpointEnumerationService.GetEndpointById(e.EndpointDeviceId);
 
                         RefreshVM();
                     }, null);

@@ -14,7 +14,9 @@ namespace Microsoft.Midi.Settings.Services;
 
 public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 {
-    public event EventHandler<MidiEndpointWrapper> EndpointUpdated;
+    public event EventHandler<MidiEndpointDeviceInformation> EndpointUpdated;
+    public event EventHandler<MidiEndpointDeviceInformation> EndpointAdded;
+    public event EventHandler<MidiEndpointDeviceInformation> EndpointRemoved;
 
 
 
@@ -121,7 +123,14 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
         _synchronizationContextService?.GetUIContext().Post(_ =>
         {
-            _endpoints.Add(BuildWrapper(args.AddedDevice));
+            var info = BuildWrapper(args.AddedDevice);
+
+            _endpoints.Add(info);
+
+            if (EndpointAdded != null)
+            {
+                EndpointAdded(this, args.AddedDevice);
+            }
         }, null);
     }
 
@@ -131,11 +140,12 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
         {
             if (info.Id == args.EndpointDeviceId)
             {
-                //_synchronizationContextService?.GetUIContext().Post(_ =>
-                //{
-                    _endpoints.Remove(info);
-                //}, null);
+                _endpoints.Remove(info);
 
+                if (EndpointRemoved != null)
+                {
+                    EndpointRemoved(this, info.DeviceInformation);
+                }
                 break;
             }
         }
@@ -151,7 +161,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
                 if (EndpointUpdated != null)
                 {
-                    EndpointUpdated(this, info);
+                    EndpointUpdated(this, info.DeviceInformation);
                 }
                 break;
             }
