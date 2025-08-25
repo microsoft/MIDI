@@ -135,7 +135,7 @@ namespace Microsoft.Midi.ConsoleApp
             if (transportInfo.ManufacturerName != "Microsoft" && transportInfo.ManufacturerName != string.Empty)
             {
                 table.AddRow(new Markup(AnsiMarkupFormatter.GetEndpointIcon(endpointInfo.EndpointPurpose) + " " +
-                    AnsiMarkupFormatter.FormatEndpointName(transportInfo.ManufacturerName) + " " +
+                    AnsiMarkupFormatter.FormatManufacturerName(transportInfo.ManufacturerName) + " " +
                     AnsiMarkupFormatter.FormatEndpointName(endpointInfo.Name)));
             }
             else

@@ -190,6 +190,10 @@ namespace Microsoft.Midi.ConsoleApp
             return "[steelblue1_1]" + EscapeString(name) + "[/]";
         }
 
+        public static string FormatManufacturerName(string name)
+        {
+            return "[steelblue3]" + EscapeString(name) + "[/]";
+        }
 
         public static string FormatGeneralNumber(UInt64 i)
         {
