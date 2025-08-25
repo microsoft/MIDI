@@ -696,4 +696,7 @@ This change will require a MIDI Service restart before it will take effect.</val
   <data name="Shell_AdvancedUsbSettings.Text" xml:space="preserve">
     <value>Advanced USB Settings</value>
   </data>
+  <data name="DeviceDetailPage_UsbVidPid.Text" xml:space="preserve">
+    <value>USB VID/PID</value>
+  </data>
 </root>

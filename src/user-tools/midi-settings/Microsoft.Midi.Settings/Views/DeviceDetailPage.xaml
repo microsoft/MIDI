@@ -103,39 +103,60 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Column="0" Grid.Row="0" 
-                           x:Uid="DeviceDetailPage_ManufacturerLabel"
+                           x:Uid="DeviceDetailPage_NativeDataFormat"
                            Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName, Mode=OneWay}" 
-                           Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                <TextBlock Grid.Column="1" Grid.Row="0" Text="{x:Bind ViewModel.TransportSuppliedInfo.NativeDataFormat, Mode=OneWay, Converter={StaticResource EndpointNativeDataFormatConverter} }" 
+                           Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                 <TextBlock Grid.Column="0" Grid.Row="1" 
+                           x:Uid="DeviceDetailPage_TransportCode"
+                           Style="{StaticResource SmallPropertyLabel}" />
+                <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode, Mode=OneWay }" 
+                           Style="{StaticResource SmallEmphasizedPropertyValue}" />
+
+
+                <TextBlock Grid.Column="0" Grid.Row="2" 
+                           x:Uid="DeviceDetailPage_ManufacturerLabel"
+                           Style="{StaticResource SmallPropertyLabel}" 
+                           Visibility="{x:Bind ViewModel.EndpointWrapper.HasManufacturerName, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.ManufacturerName, Mode=OneWay}" 
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"
+                           Visibility="{x:Bind ViewModel.EndpointWrapper.HasManufacturerName, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                <TextBlock Grid.Column="0" Grid.Row="3" 
                            x:Uid="DeviceDetailPage_ProductInstanceId"
                            Style="{StaticResource SmallPropertyLabel}" 
                            Visibility="{x:Bind ViewModel.ShowMidi2Properties, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                <TextBlock Grid.Column="1" Grid.Row="1" Text="{x:Bind ViewModel.EndpointInfo.ProductInstanceId }" 
+                <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.EndpointInfo.ProductInstanceId }" 
                            Style="{StaticResource SmallEmphasizedPropertyValue}" 
                            Visibility="{x:Bind ViewModel.ShowMidi2Properties, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"/>
 
-                <TextBlock Grid.Column="0" Grid.Row="2" 
-                           x:Uid="DeviceDetailPage_SerialNumber"
-                           Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="2" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber, Mode=OneWay }" 
-                           Style="{StaticResource SmallEmphasizedPropertyValue}" />
-
-                <TextBlock Grid.Column="0" Grid.Row="3" 
-                           x:Uid="DeviceDetailPage_NativeDataFormat"
-                           Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="3" Text="{x:Bind ViewModel.TransportSuppliedInfo.NativeDataFormat, Mode=OneWay, Converter={StaticResource EndpointNativeDataFormatConverter} }" 
-                           Style="{StaticResource SmallEmphasizedPropertyValue}" />
-
                 <TextBlock Grid.Column="0" Grid.Row="4" 
-                           x:Uid="DeviceDetailPage_TransportCode"
-                           Style="{StaticResource SmallPropertyLabel}" />
-                <TextBlock Grid.Column="1" Grid.Row="4" Text="{x:Bind ViewModel.TransportSuppliedInfo.TransportCode, Mode=OneWay }" 
-                           Style="{StaticResource SmallEmphasizedPropertyValue}" />
+                           x:Uid="DeviceDetailPage_UsbVidPid"
+                           Style="{StaticResource SmallPropertyLabel}" 
+                           Visibility="{x:Bind ViewModel.EndpointWrapper.HasUsbVidPid, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <TextBlock Grid.Column="1" Grid.Row="4"
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"
+                           Visibility="{x:Bind ViewModel.EndpointWrapper.HasUsbVidPid, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Run Text="{x:Bind ViewModel.EndpointWrapper.UsbVendorIdFormatted, Mode=OneWay }" />
+                    <Run Text="/" />
+                    <Run Text="{x:Bind ViewModel.EndpointWrapper.UsbProductIdFormatted, Mode=OneWay }" />
+                </TextBlock>
+
+
+                <TextBlock Grid.Column="0" Grid.Row="5" 
+                           x:Uid="DeviceDetailPage_SerialNumber"
+                           Style="{StaticResource SmallPropertyLabel}"
+                           Visibility="{x:Bind ViewModel.EndpointWrapper.HasUniqueIdentifier, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <TextBlock Grid.Column="1" Grid.Row="5" Text="{x:Bind ViewModel.TransportSuppliedInfo.SerialNumber, Mode=OneWay }" 
+                           Style="{StaticResource SmallEmphasizedPropertyValue}"
+                           Visibility="{x:Bind ViewModel.EndpointWrapper.HasUniqueIdentifier, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                
+
             </Grid>
             
         </Grid>
@@ -516,7 +537,7 @@
                                 </controls:SettingsCard.Header>
 
                                 <controls:SettingsCard.Content>
-                                    <Grid Width="600">
+                                    <Grid >
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="3*" />

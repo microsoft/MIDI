@@ -61,6 +61,16 @@ namespace Microsoft.Midi.Settings.ViewModels
         public ImageSource Image { get; private set; }
 
         [ObservableProperty]
+        private bool hasUsbVidPid;
+
+        [ObservableProperty]
+        private string usbVendorIdFormatted;
+
+        [ObservableProperty]
+        private string usbProductIdFormatted;
+
+
+        [ObservableProperty]
         private bool hasSingleInputPort;
 
         [ObservableProperty]
@@ -112,6 +122,28 @@ namespace Microsoft.Midi.Settings.ViewModels
                 ManufacturerName = DeviceInformation.GetTransportSuppliedInfo().ManufacturerName.Trim();
 
                 HasManufacturerName = ManufacturerName != string.Empty;
+
+                if (DeviceInformation.GetTransportSuppliedInfo().VendorId > 0)
+                {
+                    UsbVendorIdFormatted = DeviceInformation.GetTransportSuppliedInfo().VendorId.ToString("X4");
+                }
+                else
+                {
+                    UsbVendorIdFormatted = string.Empty;
+                }
+
+                if (DeviceInformation.GetTransportSuppliedInfo().ProductId > 0)
+                {
+                    UsbProductIdFormatted = DeviceInformation.GetTransportSuppliedInfo().ProductId.ToString("X4");
+                }
+                else
+                {
+                    UsbProductIdFormatted = string.Empty;
+                }
+
+
+                HasUsbVidPid = DeviceInformation.GetTransportSuppliedInfo().VendorId > 0 &&
+                               DeviceInformation.GetTransportSuppliedInfo().ProductId > 0;
 
                 // native UMP
 
