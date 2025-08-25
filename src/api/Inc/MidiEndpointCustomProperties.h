@@ -99,7 +99,6 @@ public:
 
     MidiEndpointCustomProperties() = default;
 
-    _Success_(return != nullptr)
     static std::shared_ptr<MidiEndpointCustomProperties> FromJson(_In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
 
     _Success_(return == true)

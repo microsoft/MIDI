@@ -30,45 +30,49 @@ MidiPin* g_MidiInPin {nullptr};
 static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped buffer size may not exceed 1/2 MAX_ULONG");
 
 static const
-KSDATARANGE_MUSIC g_MidiStreamDataRangeUMP =
+KSDATARANGE_MUSIC g_MidiStreamDataRangeUMP[] =
 {
     {
-        sizeof(KSDATARANGE_MUSIC),
-        0, // Flags
-        0, // SampleSize
-        0, // Reserved
-        {STATIC_KSDATAFORMAT_TYPE_MUSIC},
-        {STATIC_KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET},
-        {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
+        {
+            sizeof(KSDATARANGE_MUSIC),
+            0, // Flags
+            0, // SampleSize
+            0, // Reserved
+            {STATIC_KSDATAFORMAT_TYPE_MUSIC},
+            {STATIC_KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET},
+            {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
+        },
+        {STATIC_KSMUSIC_TECHNOLOGY_PORT},
+        0, // Channels
+        0, // Notes
+        0xFFFF // ChannelMask
     },
-    {STATIC_KSMUSIC_TECHNOLOGY_PORT},
-    0, // Channels
-    0, // Notes
-    0xFFFF // ChannelMask
 };
 
-KSDATARANGE_MUSIC g_MidiStreamDataRangeMIDI =
+KSDATARANGE_MUSIC g_MidiStreamDataRangeMIDI[] =
 {
     {
-        sizeof(KSDATARANGE_MUSIC),
-        0, // Flags
-        0, // SampleSize
-        0, // Reserved
-        {STATIC_KSDATAFORMAT_TYPE_MUSIC},
-        {STATIC_KSDATAFORMAT_SUBTYPE_MIDI},
-        {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
+        {
+            sizeof(KSDATARANGE_MUSIC),
+            0, // Flags
+            0, // SampleSize
+            0, // Reserved
+            {STATIC_KSDATAFORMAT_TYPE_MUSIC},
+            {STATIC_KSDATAFORMAT_SUBTYPE_MIDI},
+            {STATIC_KSDATAFORMAT_SPECIFIER_NONE}
+        },
+        {STATIC_KSMUSIC_TECHNOLOGY_PORT},
+        0, // Channels
+        0, // Notes
+        0xFFFF // ChannelMask
     },
-    {STATIC_KSMUSIC_TECHNOLOGY_PORT},
-    0, // Channels
-    0, // Notes
-    0xFFFF // ChannelMask
 };
 
 static const
 PKSDATARANGE g_MidiStreamDataRanges[] =
 {
-    PKSDATARANGE(&g_MidiStreamDataRangeUMP),
-    PKSDATARANGE(&g_MidiStreamDataRangeMIDI)
+    PKSDATARANGE(&g_MidiStreamDataRangeUMP[0]),
+    PKSDATARANGE(&g_MidiStreamDataRangeMIDI[0])
 };
 
 static
@@ -500,6 +504,7 @@ MidiPin::Process(
                                 // copy the data in and add it to the list
                                 message->Size = musicHeader->ByteCount;
                                 message->Position = streamPtr->StreamHeader->PresentationTime.Time;
+                                message->BufferIndex = (BYTE *) message->Buffer;
                                 RtlCopyMemory(message->Buffer, pData, musicHeader->ByteCount);
                                 InsertTailList(&g_MidiInPin->m_LoopbackMessageQueue, &message->ListEntry);
 
@@ -567,21 +572,45 @@ MidiPin::Process(
             if (message)
             {
                 BYTE *midiMessage = (BYTE *) (musicHeader + 1);
-                ULONG numBytesToCopy = min(streamPtr->OffsetOut.Remaining, message->Size);
-    
-                RtlCopyMemory(midiMessage, message->Buffer, numBytesToCopy);
+                ULONG numBytesToCopy = min(streamPtr->OffsetOut.Remaining - sizeof(KSMUSICFORMAT), message->Size);
+                ULONG copySize = sizeof(KSMUSICFORMAT) + numBytesToCopy;
+                ULONG copySizeAligned = (copySize + 3) & ~3;
+
+                // if we exceed the output buffer after aligning the buffer,
+                // remove the unaligned portion from the copy, do that in the next
+                // pass.
+                if (copySizeAligned > streamPtr->OffsetOut.Remaining)
+                {
+                    numBytesToCopy -= (copySize & ~3);
+                    copySizeAligned = copySize = sizeof(KSMUSICFORMAT) + numBytesToCopy;
+                }
+
+                RtlCopyMemory(midiMessage, message->BufferIndex, numBytesToCopy);
 
                 streamPtr->StreamHeader->PresentationTime.Time = message->Position;
 
-                ExFreePoolWithTag(message, MINMIDI_POOLTAG);
-                message = nullptr;
+                if (numBytesToCopy < message->Size)
+                {
+                    auto midiInlock = g_MidiInLock->acquire();
+
+                    // unable to send the entire message, subtract the portion sent
+                    // and put it back on the queue
+                    message->Size -= numBytesToCopy;
+                    message->BufferIndex += numBytesToCopy;
+                    InsertHeadList(&g_MidiInPin->m_LoopbackMessageQueue, &message->ListEntry);
+                }
+                else
+                {
+                    // message has been sent, free it
+                    ExFreePoolWithTag(message, MINMIDI_POOLTAG);
+                    message = nullptr;
+                }
     
                 musicHeader->ByteCount = numBytesToCopy;
 
                 musicHeader->TimeDeltaMs = 0;
 
-                ULONG copySize = sizeof(KSMUSICFORMAT) + musicHeader->ByteCount;
-                KsStreamPointerAdvanceOffsetsAndUnlock(streamPtr, 0, (copySize + 3) & ~3, TRUE);
+                KsStreamPointerAdvanceOffsetsAndUnlock(streamPtr, 0, copySizeAligned, TRUE);
 
                 // Get the stream pointer for the next request, if one exists.
                 streamPtr = KsPinGetLeadingEdgeStreamPointer(Pin, KSSTREAM_POINTER_STATE_LOCKED);
