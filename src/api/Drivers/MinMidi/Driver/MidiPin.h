@@ -11,6 +11,7 @@ typedef struct _LOOPBACK_MESSAGE
     LIST_ENTRY ListEntry;
     ULONG Size;
     LONGLONG Position;
+    BYTE *BufferIndex;
     UCHAR Buffer[1];
 } LOOPBACK_MESSAGE, *PLOOPBACK_MESSAGE;
 
