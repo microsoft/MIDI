@@ -10,6 +10,9 @@
 
 #include "pch.h"
 
+#include <sstream>      // for the string stream in parsing of VID/PID/Serial from parent id
+#include <iostream>     // for getline for string parsing of VID/PID/Serial from parent id
+
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
 using namespace winrt::Windows::Foundation;
@@ -51,6 +54,7 @@ CMidi2KSAggregateMidiEndpointManager::Initialize(
 
     additionalProps.Append(L"System.Devices.DeviceManufacturer");
     additionalProps.Append(L"System.Devices.Manufacturer");
+    additionalProps.Append(L"System.Devices.Parent");
 
     m_watcher = DeviceInformation::CreateWatcher(parentDeviceSelector, additionalProps, DeviceInformationKind::Device);
 
@@ -115,7 +119,7 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
     commonProperties.EndpointDescription = nullptr;
     commonProperties.CustomEndpointName = nullptr;
     commonProperties.CustomEndpointDescription = nullptr;
-    commonProperties.UniqueIdentifier = nullptr;
+    commonProperties.UniqueIdentifier = masterEndpointDefinition.SerialNumber.empty() ? nullptr : masterEndpointDefinition.SerialNumber.c_str();
     commonProperties.ManufacturerName = masterEndpointDefinition.ManufacturerName.empty() ? nullptr : masterEndpointDefinition.ManufacturerName.c_str();
     commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
     commonProperties.NativeDataFormat = MidiDataFormats_ByteStream;
@@ -270,6 +274,35 @@ CMidi2KSAggregateMidiEndpointManager::CreateMidiUmpEndpoint(
 
     interfaceDevProperties.push_back({ { DEVPKEY_KsAggMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
         DEVPROP_TYPE_BINARY, (UINT32)totalMemoryBytes, pinMapData.get() });
+
+
+    // Write USB Data
+    // =====================================================
+
+    // the serialnumber was already added to the common properties object
+
+    if (masterEndpointDefinition.VID > 0)
+    {
+        interfaceDevProperties.push_back({ { PKEY_MIDI_UsbVID, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_UINT16, static_cast<ULONG>(sizeof(UINT16)), (PVOID)&masterEndpointDefinition.VID });
+    }
+    else
+    {
+        interfaceDevProperties.push_back({ { PKEY_MIDI_UsbVID, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_EMPTY, 0, nullptr });
+    }
+
+    if (masterEndpointDefinition.PID > 0)
+    {
+        interfaceDevProperties.push_back({ { PKEY_MIDI_UsbPID, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_UINT16, static_cast<ULONG>(sizeof(UINT16)), (PVOID)&masterEndpointDefinition.PID });
+    }
+    else
+    {
+        interfaceDevProperties.push_back({ { PKEY_MIDI_UsbPID, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_EMPTY, 0, nullptr });
+    }
+
 
 
     // Write Group Terminal Block Property
@@ -662,6 +695,104 @@ CMidi2KSAggregateMidiEndpointManager::GetKSDriverSuppliedName(HANDLE hInstantiat
 #define KS_CATEGORY_AUDIO_GUID L"{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
 
 
+HRESULT
+ParseParentIdIntoVidPidSerial(
+    _In_ winrt::hstring systemDevicesParentValue, 
+    _In_ KsAggregateEndpointDefinition& endpointDefinition)
+{
+
+    if (systemDevicesParentValue.empty())
+    {
+        RETURN_IF_FAILED(E_INVALIDARG);
+    }
+
+
+    // Examples
+    // ---------------------------------------------------------------------------
+    // Parent values with serial:    USB\VID_16C0&PID_05E4\ContinuuMini_SN024066
+    //                               USB\VID_2573&PID_008A\no_serial_number (yes, this is the iSerialNumber in USB :/
+    //                                        0x03	iSerialNumber   "no serial number"
+    //                               USB\VID_12E6&PID_002C\251959d4f21fc283
+    // 
+    // Parent values without serial: USB\VID_F055&PID_0069\8&2858bbac&0&4
+    //                               USB\VID_2662&PID_000D\8&24eb0394&0&4
+    //                               USB\VID_05E3&PID_0610\7&2f028fc9&0&4
+    //                               ROOT\MOTUBUS\0000
+
+    std::wstring parentVal = systemDevicesParentValue.c_str();
+
+    std::wstringstream ss(parentVal);
+    std::wstring usbSection{};
+
+    std::getline(ss, usbSection, static_cast<wchar_t>('\\'));
+
+    if (usbSection == L"USB")
+    {
+        // get the VID/PID section
+
+        std::wstring vidPidSection{};
+
+        std::getline(ss, vidPidSection, static_cast<wchar_t>('\\'));
+
+        if (!vidPidSection.empty())
+        {
+            std::wstring serialSection{};
+            std::getline(ss, serialSection, static_cast<wchar_t>('\\'));
+
+            std::wstring vidPidString1{};
+            std::wstring vidPidString2{};
+
+            std::wstringstream ssVidPid(vidPidSection);
+            std::getline(ssVidPid, vidPidString1, static_cast<wchar_t>('&'));
+            std::getline(ssVidPid, vidPidString2, static_cast<wchar_t>('&'));
+
+            wchar_t* end{ nullptr };
+
+            // find the VID
+            if (vidPidString1.starts_with(L"VID_"))
+            {               
+                endpointDefinition.VID = static_cast<uint16_t>(wcstol(vidPidString1.substr(4).c_str(), &end, 16));
+            }
+            else if (vidPidString2.starts_with(L"VID_"))
+            {
+                endpointDefinition.VID = static_cast<uint16_t>(wcstol(vidPidString2.substr(4).c_str(), &end, 16));
+            }
+
+            // find the PID
+            if (vidPidString1.starts_with(L"PID_"))
+            {
+                endpointDefinition.PID = static_cast<uint16_t>(wcstol(vidPidString1.substr(4).c_str(), &end, 16));
+            }
+            else if (vidPidString2.starts_with(L"PID_"))
+            {
+                endpointDefinition.PID = static_cast<uint16_t>(wcstol(vidPidString2.substr(4).c_str(), &end, 16));
+            }
+
+            // serial numbers with a & in them, are generated by our system
+            // it's possible a vendor may have a serial number with this in it,
+            // but in that case, we just ditch it.
+            if (serialSection.find_first_of('&') == serialSection.npos)
+            {
+                // Windows replaces spaces in the serial number with the underscore.
+                // yes, this will end up catching the few (if any) serials that do 
+                // actually include an underscore. However, there are a bunch with spaces.
+                std::replace(serialSection.begin(), serialSection.end(), '_', ' ');
+                endpointDefinition.SerialNumber = serialSection;
+            }
+        }
+    }
+    else
+    {
+        // not a USB device, or otherwise uses a custom driver. We can't count
+        // on being able to parse the parent id. Example: MOTU has
+        // ROOT\MOTUBUS\0000 as the parent
+    }
+
+    return S_OK;
+}
+
+
+
 _Use_decl_annotations_
 HRESULT 
 CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
@@ -699,10 +830,16 @@ CMidi2KSAggregateMidiEndpointManager::OnDeviceAdded(
     RETURN_HR_IF(E_FAIL, deviceInstanceId.empty());
 
 
+    auto systemDevicesParent = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(L"System.Devices.Parent", parentDevice, L"");
+
     endpointDefinition.ParentDeviceName = parentDevice.Name();
     endpointDefinition.EndpointName = parentDevice.Name();
     endpointDefinition.ParentDeviceInstanceId = parentDevice.Id();
 
+    if (!systemDevicesParent.empty())
+    {
+        LOG_IF_FAILED(ParseParentIdIntoVidPidSerial(systemDevicesParent, endpointDefinition));
+    }
 
     // we set this if we find any compatible MIDI 1.0 byte format pins
     bool isCompatibleMidi1Device{ false };
