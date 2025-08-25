@@ -182,7 +182,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -199,7 +199,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -226,7 +226,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -243,7 +243,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -272,7 +272,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -291,7 +291,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -318,7 +318,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
@@ -335,7 +335,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)idl</AdditionalIncludeDirectories>
     </Midl>
     <Link>
-      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rpcrt4.lib;onecoreuap.lib;ksuser.lib;avrt.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midixproc.lib;$(CoreLibraryDependencies);wintrust.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>

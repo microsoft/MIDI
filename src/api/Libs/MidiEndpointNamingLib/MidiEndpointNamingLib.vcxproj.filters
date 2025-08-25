@@ -22,24 +22,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Inc\MidiEndpointCustomProperties.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Inc\MidiEndpointMatchCriteria.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Inc\MidiEndpointCustomPropertiesCache.h">
+    <ClInclude Include="..\..\Inc\MidiEndpointNameTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiEndpointCustomProperties.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointMatchCriteria.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MidiEndpointCustomPropertiesCache.cpp">
+    <ClCompile Include="MidiEndpointNameTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
