@@ -933,8 +933,8 @@
                                    Style="{StaticResource DialogHeaderTextBlockStyle}" 
                                    Text="MIDI 1.0 Ports"/>
 
-                        <!-- TODO: Bind this to viewmodel values -->
-                        <ComboBox Grid.Row="1" 
+                        <!-- Bind this to viewmodel values -->
+                        <!--<ComboBox Grid.Row="1" 
                                   HorizontalAlignment="Left"
                                   Header="Default MIDI 1 Port Naming"
                                   ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNamingOptions, Mode=OneWay}"
@@ -944,7 +944,7 @@
                                     <TextBlock Text="{Binding Converter={StaticResource Midi1PortNamingApproachConverter}}"/>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
-                        </ComboBox>
+                        </ComboBox>-->
 
 
 

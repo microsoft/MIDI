@@ -38,7 +38,7 @@
                     
                     
                     <TextBlock Style="{StaticResource SettingsSectionHeaderTextBlockStyle}" 
-                           Text="Available MIDI 2.0 Hosts"/>
+                           Text="Available Network MIDI 2.0 Hosts"/>
 
                     <!-- List of discovered network MIDI 2.0 hosts -->
                     <ItemsControl ItemsSource="{x:Bind ViewModel.RemoteHostEntriesSorted}">
@@ -47,6 +47,10 @@
                                 <controls:SettingsCard CornerRadius="{StaticResource ControlCornerRadius}" 
                                                        Margin="3">
 
+                                    <controls:SettingsCard.HeaderIcon>
+                                        <FontIcon Style="{StaticResource CommonTasksIconStyles}" Glyph="&#xEBDE;" />
+                                    </controls:SettingsCard.HeaderIcon>
+                                    
                                     <controls:SettingsCard.Header>
                                         <TextBlock TextWrapping="NoWrap">
                                             <Run Text="{x:Bind Name}" FontWeight="Bold" Foreground="{StaticResource AccentFillColorDefaultBrush}" />
@@ -73,10 +77,10 @@
                                             </Grid.RowDefinitions>
 
                                             <TextBlock Grid.Row="0" Grid.Column="0" Text="IP Addresses" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind StringifiedIpAddresses}" Style="{StaticResource SmallPlainPropertyValue}" />
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind StringifiedIpAddresses}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Row="1" Grid.Column="0" Text="Product Instance Id" Style="{StaticResource SmallPropertyLabel}" />
-                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind AdvertisedHost.ProductInstanceId}" Style="{StaticResource SmallPlainPropertyValue}" />
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{x:Bind AdvertisedHost.ProductInstanceId}" Style="{StaticResource SmallEmphasizedPropertyValue}" />
                                         </Grid>
 
                                         <StackPanel Orientation="Horizontal" Grid.Column="1">

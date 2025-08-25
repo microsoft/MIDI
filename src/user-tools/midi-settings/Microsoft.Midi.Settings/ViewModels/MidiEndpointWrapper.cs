@@ -233,8 +233,8 @@ namespace Microsoft.Midi.Settings.ViewModels
                     var source = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
                     Image = source;
                 }
-
             }, null);
+
 
             Task.Run(() =>
             {
@@ -280,9 +280,10 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Completed posting to UI Thread");
 
-                }, null);
+                 }, null);
 
             });
+
         }
 
         public MidiEndpointWrapper(MidiEndpointDeviceInformation deviceInformation,

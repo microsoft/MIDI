@@ -77,7 +77,7 @@ namespace Microsoft.Midi.Settings.ViewModels
             RequiresNoteOffTranslation = endpointWrapper.DeviceInformation.GetUserSuppliedInfo().RequiresNoteOffTranslation;
             RecommendedControlChangeAutomationIntervalMilliseconds = endpointWrapper.DeviceInformation.GetUserSuppliedInfo().RecommendedControlChangeAutomationIntervalMilliseconds;
 
-            Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
+     //       Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
 
             // name table entries
 

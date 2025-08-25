@@ -249,13 +249,13 @@ namespace Microsoft.Midi.Settings.ViewModels
             this.HasFunctionBlocks = FunctionBlocks.Count > 0;
             this.HasGroupTerminalBlocks = GroupTerminalBlocks.Count > 0;
 
+
             ShowMidi2Properties = (this.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
 
             // TODO: This should pull from a property of the transport
-            ShowCustomizeButton = 
-                TransportSuppliedInfo.TransportCode.ToUpper() == "KS" || 
+            ShowCustomizeButton =
+                TransportSuppliedInfo.TransportCode.ToUpper() == "KS" ||
                 TransportSuppliedInfo.TransportCode.ToUpper() == "KSA";
-
         }
 
         public void OnNavigatedFrom()
