@@ -22,7 +22,7 @@ class GeneralSettingsService : IGeneralSettingsService
     private const string EndpointListLastUsedView_SettingsKey = "EndpointListLastUsedView";
     //private bool _showDeveloperOptions;
 
-    public event EventHandler? SettingsChanged;
+//    public event EventHandler? SettingsChanged;
 
     public GeneralSettingsService(ILocalSettingsService localSettingsService)
     {

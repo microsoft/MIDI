@@ -42,6 +42,8 @@ public interface IMidiConfigFile
 
 public interface IMidiConfigFileService
 {
+    event EventHandler ActiveConfigFileChanged;
+
     bool IsConfigFileActive { get; }
 
     IMidiConfigFile? CurrentConfig { get; set; }

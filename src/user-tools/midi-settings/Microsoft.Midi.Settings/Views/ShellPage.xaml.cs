@@ -51,39 +51,6 @@ public sealed partial class ShellPage : Page
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.Left, VirtualKeyModifiers.Menu));
         KeyboardAccelerators.Add(BuildKeyboardAccelerator(VirtualKey.GoBack));
 
-        var transports = App.GetService<IMidiTransportInfoService>().GetAllTransports();
-
-        foreach (var transport in transports)
-        {
-            // there are better ways to do this. In a time crunch atm.
-
-            switch (transport.TransportCode)
-            {
-                //case "KS":
-                //    SectionKS.Visibility = Visibility.Visible;
-                //    break;
-                //case "KSA":
-                //    SectionKSA.Visibility = Visibility.Visible;
-                //    break;
-                case "LOOP":
-                    SectionLOOP.Visibility = Visibility.Visible;
-                    break;
-                //case "APP":
-                //    SectionAPP.Visibility = Visibility.Visible;
-                //    break;
-                case "BLE10":
-                    SectionBLE10.Visibility = Visibility.Visible;
-                    break;
-                case "NET2UDP":
-                    SectionNET2UDP.Visibility = Visibility.Visible;
-                    break;
-                    //case "DIAG":
-                    //    SectionDIAG.Visibility = Visibility.Visible;
-                    //    break;
-
-            }
-        }
-
         // prime the endpoint data
         App.GetService<IMidiEndpointEnumerationService>().GetEndpoints();
 

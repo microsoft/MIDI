@@ -323,28 +323,28 @@
                                                    Text="Port Number" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                   Text="{x:Bind PortNumber, Mode=OneWay }" 
+                                                   Text="{x:Bind PortNumber, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
                                                    Text="WinRT Id" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
-                                                   Text="{x:Bind PortDeviceId, Mode=OneWay }" 
+                                                   Text="{x:Bind PortDeviceId, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                    Text="Mapped Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                   Text="{x:Bind Group.DisplayValue, Mode=OneWay}" 
+                                                   Text="{x:Bind Group.DisplayValue, Mode=OneTime}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                    Text="Flow" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                   Text="{x:Bind PortFlow, Mode=OneWay }" 
+                                                   Text="{x:Bind PortFlow, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                         </Grid>
@@ -540,35 +540,35 @@
                                                    Text="Number" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                   Text="{x:Bind Number, Mode=OneWay }" 
+                                                   Text="{x:Bind Number, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
                                                    Text="Active?" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
-                                                   Text="{x:Bind IsActive, Mode=OneWay }" 
+                                                   Text="{x:Bind IsActive, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                    Text="First Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                   Text="{x:Bind FirstGroup.DisplayValue, Mode=OneWay}" 
+                                                   Text="{x:Bind FirstGroup.DisplayValue, Mode=OneTime}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                    Text="Group Count" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                   Text="{x:Bind GroupCount, Mode=OneWay }" 
+                                                   Text="{x:Bind GroupCount, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="4" 
                                                    Text="Max System Exclusive 8 Streams" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="4" 
-                                                   Text="{x:Bind MaxSystemExclusive8Streams, Mode=OneWay, Converter={StaticResource MidiFunctionBlockSysEx8FormatConverter}}" 
+                                                   Text="{x:Bind MaxSystemExclusive8Streams, Mode=OneTime, Converter={StaticResource MidiFunctionBlockSysEx8FormatConverter}}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
                                         </Grid>
 
@@ -590,28 +590,28 @@
                                                        Text="Direction" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                       Text="{x:Bind Direction, Mode=OneWay, Converter={StaticResource MidiFunctionBlockDirectionConverter} }" 
+                                                       Text="{x:Bind Direction, Mode=OneTime, Converter={StaticResource MidiFunctionBlockDirectionConverter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="1" 
                                                        Text="UI Hint" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="1" 
-                                                       Text="{x:Bind UIHint, Mode=OneWay, Converter={StaticResource MidiFunctionBlockUIHintConverter} }" 
+                                                       Text="{x:Bind UIHint, Mode=OneTime, Converter={StaticResource MidiFunctionBlockUIHintConverter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                        Text="MIDI 1.0" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                       Text="{x:Bind RepresentsMidi10Connection, Mode=OneWay, Converter={StaticResource MidiFunctionBlockMidi10Converter} }" 
+                                                       Text="{x:Bind RepresentsMidi10Connection, Mode=OneTime, Converter={StaticResource MidiFunctionBlockMidi10Converter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                        Text="MIDI CI" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                       Text="{x:Bind MidiCIMessageVersionFormat, Mode=OneWay }" 
+                                                       Text="{x:Bind MidiCIMessageVersionFormat, Mode=OneTime }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
 
@@ -637,7 +637,7 @@
                         <DataTemplate x:DataType="midi2:MidiGroupTerminalBlock">
                             <controls:SettingsCard>
                                 <controls:SettingsCard.HeaderIcon>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind Direction, Mode=OneWay, Converter={StaticResource MidiGroupTerminalBlockDirectionToFontIconConverter}}" Style="{StaticResource CommonTasksIconStyles}"/>
+                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind Direction, Mode=OneTime, Converter={StaticResource MidiGroupTerminalBlockDirectionToFontIconConverter}}" Style="{StaticResource CommonTasksIconStyles}"/>
                                 </controls:SettingsCard.HeaderIcon>
                                 <controls:SettingsCard.Header>
                                     <TextBlock Text="{x:Bind Name}" />
@@ -668,21 +668,21 @@
                                                    Text="Number" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                   Text="{x:Bind Number, Mode=OneWay }" 
+                                                   Text="{x:Bind Number, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}"/>
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                    Text="First Group"
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                   Text="{x:Bind FirstGroup.DisplayValue, Mode=OneWay}" 
+                                                   Text="{x:Bind FirstGroup.DisplayValue, Mode=OneTime}" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                    Text="Group Count" 
                                                    Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                   Text="{x:Bind GroupCount, Mode=OneWay }" 
+                                                   Text="{x:Bind GroupCount, Mode=OneTime }" 
                                                    Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                         </Grid>
@@ -705,21 +705,21 @@
                                                        Text="Direction" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="0" 
-                                                       Text="{x:Bind Direction, Mode=OneWay, Converter={StaticResource MidiGroupTerminalBlockDirectionConverter} }" 
+                                                       Text="{x:Bind Direction, Mode=OneTime, Converter={StaticResource MidiGroupTerminalBlockDirectionConverter} }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="2" 
                                                        Text="Max Device Input Bandwidth (bps)" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="2" 
-                                                       Text="{x:Bind CalculatedMaxDeviceInputBandwidthBitsPerSecond, Mode=OneWay }" 
+                                                       Text="{x:Bind CalculatedMaxDeviceInputBandwidthBitsPerSecond, Mode=OneTime }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
                                             <TextBlock Grid.Column="0" Grid.Row="3" 
                                                        Text="Max Device Output Bandwidth (bps)" 
                                                        Style="{StaticResource SmallPropertyLabel}" />
                                             <TextBlock Grid.Column="1" Grid.Row="3" 
-                                                       Text="{x:Bind CalculatedMaxDeviceOutputBandwidthBitsPerSecond, Mode=OneWay }" 
+                                                       Text="{x:Bind CalculatedMaxDeviceOutputBandwidthBitsPerSecond, Mode=OneTime }" 
                                                        Style="{StaticResource SmallEmphasizedPropertyValue}" />
 
 

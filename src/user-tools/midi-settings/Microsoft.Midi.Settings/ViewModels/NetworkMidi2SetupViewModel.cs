@@ -229,7 +229,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (result.Success)
             {
-                _configFileService.CurrentConfig.StoreNetworkHost(config);
+                if (_configFileService.CurrentConfig != null)
+                {
+                    _configFileService.CurrentConfig.StoreNetworkHost(config);
+                }
+                else
+                {
+                    // unable to save. Config is null.
+                }
 
                 InitializeNewHostSettings();
             }
@@ -274,7 +281,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (result.Success)
             {
-                _configFileService.CurrentConfig.StoreNetworkClient(config);
+                if (_configFileService.CurrentConfig != null)
+                {
+                    _configFileService.CurrentConfig.StoreNetworkClient(config);
+                }
+                else 
+                { 
+                    // couldn't store the client. CurrentConfig is null
+                }
 
                 InitializeNewClientSettings();
             }
@@ -301,7 +315,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             if (result.Success)
             {
-                _configFileService.CurrentConfig.StoreNetworkClient(config);
+                if (_configFileService.CurrentConfig != null)
+                {
+                    _configFileService.CurrentConfig.StoreNetworkClient(config);
+                }
+                else
+                {
+                    // couldn't save. Current config is null
+                }
 
                 InitializeNewClientSettings();
             }

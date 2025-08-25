@@ -45,7 +45,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
 
     public MidiEndpointWrapper GetEndpointById(string endpointDeviceId)
     {
-        return _endpoints.Where(e => e.Id == endpointDeviceId).FirstOrDefault();
+        return _endpoints.Where(e => e.Id == endpointDeviceId).FirstOrDefault()!;
     }
 
 
@@ -157,7 +157,7 @@ public class MidiEndpointEnumerationService : IMidiEndpointEnumerationService
         {
             if (info.Id == args.EndpointDeviceId)
             {
-                info.RefreshData(_watcher.EnumeratedEndpointDevices[args.EndpointDeviceId]);
+                info.RefreshData(sender.EnumeratedEndpointDevices[args.EndpointDeviceId]);
 
                 if (EndpointUpdated != null)
                 {

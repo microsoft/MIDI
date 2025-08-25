@@ -312,7 +312,7 @@ public class MidiConfigFile : IMidiConfigFile
             parentTransportObject.SetNamedValue(MidiConfigConstants.JsonKeys.CommonUpdate, array);
         }
         
-        var updateArray = FindExistingUpdateArray(parentTransportObject);
+        var updateArray = FindExistingUpdateArray(parentTransportObject)!;
 
 
         return updateArray;
@@ -670,6 +670,8 @@ public class MidiConfigFile : IMidiConfigFile
 
 class MidiConfigFileService : IMidiConfigFileService
 {
+    public event EventHandler ActiveConfigFileChanged;
+
     private readonly IMidiServiceRegistrySettingsService _registryService;
 
     private MidiConfigFile? m_currentConfigFile = null;
@@ -752,6 +754,11 @@ class MidiConfigFileService : IMidiConfigFileService
 
             if (config.Load())
             {
+                if (ActiveConfigFileChanged != null)
+                {
+                    ActiveConfigFileChanged(this, new EventArgs());
+                }
+
                 return config;
             }
         }
@@ -879,6 +886,11 @@ class MidiConfigFileService : IMidiConfigFileService
             config.LoadHeaderOnly();
 
             m_currentConfigFile = config;
+
+            if (ActiveConfigFileChanged != null)
+            {
+                ActiveConfigFileChanged(this, new EventArgs());
+            }
 
             return true;
         }

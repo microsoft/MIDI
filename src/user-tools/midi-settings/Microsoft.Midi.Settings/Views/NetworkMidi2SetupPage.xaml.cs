@@ -108,7 +108,7 @@ namespace Microsoft.Midi.Settings.Views
 
         private async void CreateClientFromHostList_Click(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.CreateClientFromMdns(((Button)sender).Tag.ToString()))
+            if (ViewModel.CreateClientFromMdns(((Button)sender).Tag!.ToString()!))
             {
                 var dialog = new ContentDialog()
                 {

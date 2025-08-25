@@ -49,18 +49,25 @@ namespace Microsoft.Midi.Settings.ViewModels
             RemoveCommand = new RelayCommand(
                 () =>
                 {
-                    var associationId = MidiLoopbackEndpointManager.GetAssociationId(LoopA.DeviceInformation);
-                    var config = new MidiLoopbackEndpointRemovalConfig(associationId);
+                    var associationId = MidiLoopbackEndpointManager.GetAssociationId(LoopA!.DeviceInformation);
 
-                    var response = MidiLoopbackEndpointManager.RemoveTransientLoopbackEndpoints(config);
-
-                    // todo: remove from config file
-
-                    if (_configFileService.CurrentConfig != null)
+                    if (associationId != Guid.Empty)
                     {
-                        _configFileService.CurrentConfig.RemoveLoopbackEndpointPair(associationId);
-                    }
+                        var config = new MidiLoopbackEndpointRemovalConfig(associationId);
 
+                        var response = MidiLoopbackEndpointManager.RemoveTransientLoopbackEndpoints(config);
+
+                        // todo: remove from config file
+
+                        if (_configFileService.CurrentConfig != null)
+                        {
+                            _configFileService.CurrentConfig.RemoveLoopbackEndpointPair(associationId);
+                        }
+                    }
+                    else
+                    {
+                        // association id was empty, so not found.
+                    }
 
                 });
             _configFileService = configFileService;
@@ -383,7 +390,14 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                     if (result.Success)
                     {
-                        _configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+                        if (_configFileService.CurrentConfig != null)
+                        {
+                            _configFileService.CurrentConfig.StoreLoopbackEndpointPair(creationConfig);
+                        }
+                        else
+                        {
+                            // unable to save. Current config is null
+                        }
 
                         //LoadExistingEndpointPairs();
                     }

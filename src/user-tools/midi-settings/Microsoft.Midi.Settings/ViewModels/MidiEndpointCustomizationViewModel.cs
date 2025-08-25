@@ -111,7 +111,7 @@ namespace Microsoft.Midi.Settings.ViewModels
         public MidiServiceEndpointCustomizationConfig GetUpdateConfig()
         {
             var configUpdate = new MidiServiceEndpointCustomizationConfig(
-                endpointWrapper.DeviceInformation.GetTransportSuppliedInfo().TransportId);
+                EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().TransportId);
 
             configUpdate.Name = CustomName;
             configUpdate.Description = CustomDescription;
@@ -120,11 +120,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             configUpdate.SupportsMidiPolyphonicExpression = SupportsMidiPolyphonicExpression;
             configUpdate.RecommendedControlChangeIntervalMilliseconds = RecommendedControlChangeAutomationIntervalMilliseconds;
 
-            configUpdate.MatchCriteria.EndpointDeviceId = endpointWrapper.DeviceInformation.EndpointDeviceId;
-            configUpdate.MatchCriteria.DeviceInstanceId = endpointWrapper.DeviceInformation.DeviceInstanceId;
-            configUpdate.MatchCriteria.UsbVendorId = endpointWrapper.DeviceInformation.GetTransportSuppliedInfo().VendorId;
-            configUpdate.MatchCriteria.UsbProductId = endpointWrapper.DeviceInformation.GetTransportSuppliedInfo().ProductId;
-            configUpdate.MatchCriteria.UsbSerialNumber = endpointWrapper.DeviceInformation.GetTransportSuppliedInfo().SerialNumber;
+            configUpdate.MatchCriteria.EndpointDeviceId = EndpointWrapper.DeviceInformation.EndpointDeviceId;
+            configUpdate.MatchCriteria.DeviceInstanceId = EndpointWrapper.DeviceInformation.DeviceInstanceId;
+            configUpdate.MatchCriteria.UsbVendorId = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().VendorId;
+            configUpdate.MatchCriteria.UsbProductId = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().ProductId;
+            configUpdate.MatchCriteria.UsbSerialNumber = EndpointWrapper.DeviceInformation.GetTransportSuppliedInfo().SerialNumber;
 
             configUpdate.Midi1PortNamingApproach = Midi1PortNaming;
 

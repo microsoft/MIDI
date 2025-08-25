@@ -171,23 +171,30 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 if (success)
                 {
-                    if (_configFileService.CurrentConfig.StoreEndpointCustomization(updateConfig))
+                    if (_configFileService.CurrentConfig != null)
                     {
-                        System.Diagnostics.Debug.WriteLine("Config json after successfully saving to config.");
-                        System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+                        if (_configFileService.CurrentConfig.StoreEndpointCustomization(updateConfig))
+                        {
+                            System.Diagnostics.Debug.WriteLine("Config json after successfully saving to config.");
+                            System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
 
-                        // success
-                        // todo: update the properties again
+                            // success
+                            // todo: update the properties again
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("Config json after FAILING to save to config.");
+                            System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+
+                            // todo: show error
+                        }
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine("Config json after FAILING to save to config.");
-                        System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
-
-                        // todo: show error
+                        // could not save. No current config.
+                        System.Diagnostics.Debug.WriteLine("Could not save. No current config.");
                     }
-
                 }
                 else
                 {

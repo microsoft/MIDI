@@ -81,7 +81,7 @@ public partial class App : Application
 
             var uiContext = SynchronizationContext.Current;
 
-            var synchronizationContextService = new SynchronizationContextService(uiContext);
+            var synchronizationContextService = new SynchronizationContextService(uiContext!);
 
             Host = Microsoft.Extensions.Hosting.Host.
                 CreateDefaultBuilder().

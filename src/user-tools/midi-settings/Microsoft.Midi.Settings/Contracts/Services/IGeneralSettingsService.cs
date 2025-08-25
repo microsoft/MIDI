@@ -83,5 +83,5 @@ public interface IGeneralSettingsService
 
     Task InitializeAsync();
 
-    event EventHandler SettingsChanged;
+//    event EventHandler SettingsChanged;
 }
