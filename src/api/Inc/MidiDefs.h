@@ -687,7 +687,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 950);     // DEVPRO
 
 // this is set at the parent endpoint level, and applies to all WinMM and WinRT MIDI 1.0 ports created from this endpoint
 #define STRING_PKEY_MIDI_Midi1PortNamingSelection MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"955"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 : MidiPortNameSelectionProperty enum
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 : MidiEndpointCustomMidi1NamingApproach enum
 
 // this is the name table. We can have up to 32 created ports from a single endpoint
 #define STRING_PKEY_MIDI_Midi1PortNameTable MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"960"

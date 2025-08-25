@@ -268,9 +268,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Inc\MidiEndpointCustomProperties.h" />
+    <ClInclude Include="..\..\Inc\MidiEndpointCustomPropertiesCache.h" />
+    <ClInclude Include="..\..\Inc\MidiEndpointMatchCriteria.h" />
+    <ClInclude Include="..\..\Inc\MidiEndpointNameTable.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Inc\MidiEndpointCustomPropertiesCache.cpp" />
     <ClCompile Include="MidiEndpointCustomProperties.cpp" />
+    <ClCompile Include="MidiEndpointMatchCriteria.cpp" />
+    <ClCompile Include="MidiEndpointNameTable.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

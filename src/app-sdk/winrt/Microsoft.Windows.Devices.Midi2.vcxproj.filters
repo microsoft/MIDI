@@ -607,9 +607,6 @@
     <Midl Include="MidiEndpointDeviceIdHelper.idl">
       <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
     </Midl>
-    <Midl Include="Midi1PortNameTableEntry.idl">
-      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
-    </Midl>
     <Midl Include="MidiNetworkClientMatchCriteria.idl">
       <Filter>SDK\Endpoints\Network\Client</Filter>
     </Midl>
@@ -657,6 +654,12 @@
     </Midl>
     <Midl Include="MidiServiceConfigEndpointMatchCriteria.idl">
       <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNameTableEntry.idl">
+      <Filter>SDK\Core\Enumeration\Metadata\Windows\Midi1</Filter>
+    </Midl>
+    <Midl Include="Midi1PortNamingApproachEnum.idl">
+      <Filter>SDK\Core\Enumeration\Device\Device Info</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

@@ -38,6 +38,11 @@ class MidiTransportInfoService : IMidiTransportInfoService
 
     public IList<MidiServiceTransportPluginInfo> GetAllTransports()
     {
+        if (_transports == null)
+        {
+            _transports = MidiReporting.GetInstalledTransportPlugins();
+        }
+
         return _transports.OrderBy(t=>t.TransportCode).ToList();
     }
 

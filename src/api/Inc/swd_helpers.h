@@ -15,7 +15,7 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 
 #include <string>
-
+#include "wstring_util.h"
 
 
 namespace WindowsMidiServicesInternal

@@ -61,12 +61,16 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria MatchCriteria() { return m_matchCriteria; }
         void MatchCriteria(_In_ midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria const& value) { m_matchCriteria = value; }
 
+        void AddMidi1SourcePortCustomName(_In_ midi2::MidiGroup const& group, _In_ winrt::hstring const& name) noexcept;
+        void AddMidi1DestinationPortCustomName(_In_ midi2::MidiGroup const& group, _In_ winrt::hstring const& name) noexcept;
+
+        midi2::Midi1PortNamingApproach Midi1PortNamingApproach() const noexcept;
+        void Midi1PortNamingApproach(_In_ midi2::Midi1PortNamingApproach const value) noexcept;
 
         hstring GetConfigJson() const noexcept;
 
     private:
         std::shared_ptr<MidiEndpointCustomProperties> m_props{ std::make_shared<MidiEndpointCustomProperties>() };
-
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{};
 
         winrt::guid m_transportId{};

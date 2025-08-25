@@ -19,7 +19,7 @@
 
                 <controls:SettingsCard x:Uid="GlobalSettings_SetMidiServiceToAutoStartCard">
                     <controls:SettingsCard.HeaderIcon>
-                        <FontIcon Glyph="&#xE8AC;" Style="{StaticResource CommonTasksIconStyles}"/>
+                        <FontIcon Glyph="&#xE7E8;" Style="{StaticResource CommonTasksIconStyles}"/>
                     </controls:SettingsCard.HeaderIcon>
 
                     <controls:SettingsCard.Content>
@@ -39,10 +39,14 @@
                         <controls:SettingsCard HorizontalContentAlignment="Left" ContentAlignment="Vertical">
                             <StackPanel Margin="0,0,0,0">
                                 <RadioButton x:Uid="GlobalSettings_DefaultUseClassicMidi1PortNames"
-                                         GroupName="PortNaming">
+                                             GroupName="PortNaming"
+                                             Command="{x:Bind ViewModel.SetDefaultNamingApproachCommand }"
+                                             
+                                             >
                                 </RadioButton>
                                 <RadioButton x:Uid="GlobalSettings_DefaultUseNewStyleMidi1PortNames"
-                                         GroupName="PortNaming">
+                                             GroupName="PortNaming"
+                                             Command="{x:Bind ViewModel.SetDefaultNamingApproachCommand }">
                                 </RadioButton>
                             </StackPanel>
                         </controls:SettingsCard>

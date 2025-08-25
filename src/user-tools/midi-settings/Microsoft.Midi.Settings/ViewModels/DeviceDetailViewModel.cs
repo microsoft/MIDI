@@ -37,6 +37,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             get; private set;
         }
 
+        [ObservableProperty]
+        private MidiEndpointCustomizationViewModel customizationViewModel;
 
         [ObservableProperty]
         private bool hasFunctionBlocks;
@@ -45,10 +47,16 @@ namespace Microsoft.Midi.Settings.ViewModels
         private bool hasGroupTerminalBlocks;
 
         [ObservableProperty]
+        private bool showGroupTerminalBlocks;
+
+        [ObservableProperty]
         private bool hasParent;
 
         [ObservableProperty]
         private bool showMidi2Properties;
+
+        [ObservableProperty]
+        private bool showCustomizeButton;
 
 
         [ObservableProperty]
@@ -71,26 +79,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         [ObservableProperty]
         private string description;
 
-
-        [ObservableProperty]
-        private string customizedName;
-
-        [ObservableProperty]
-        private string customizedDescription;
-
-        [ObservableProperty]
-        private string customizedImageFileName;
-
-        [ObservableProperty]
-        private bool customizedRequiresNoteOffTranslation;
-
-        [ObservableProperty]
-        private bool customizedSupportsMidiPolyphonicExpression;
-
-        [ObservableProperty]
-        private ushort customizedRecommendedControlChangeAutomationIntervalMilliseconds;
-
-
         [ObservableProperty]
         private MidiDeclaredDeviceIdentity deviceIdentity;
 
@@ -106,26 +94,31 @@ namespace Microsoft.Midi.Settings.ViewModels
         private readonly ISynchronizationContextService _synchronizationContextService;
         private readonly IMidiEndpointCustomizationService _endpointCustomizationService;
         private readonly IMidiEndpointEnumerationService _endpointEnumerationService;
+        private readonly IMidiConfigFileService _configFileService;
 
         public DeviceDetailViewModel(
             ISynchronizationContextService synchronizationContextService, 
             IMidiEndpointCustomizationService endpointCustomizationService,
-            IMidiEndpointEnumerationService endpointEnumerationService)
+            IMidiEndpointEnumerationService endpointEnumerationService,
+            IMidiConfigFileService configFileService)
         {
             _synchronizationContextService = synchronizationContextService;
             _endpointCustomizationService = endpointCustomizationService;
             _endpointEnumerationService = endpointEnumerationService;
+            _configFileService = configFileService;
 
             System.Diagnostics.Debug.WriteLine("Start clearing properties");
 
             _endpointEnumerationService.EndpointUpdated += (s, e) =>
             {
-                if (EndpointWrapper != null && e.Id == EndpointWrapper.Id)
+                if (EndpointWrapper != null && e.EndpointDeviceId == EndpointWrapper.Id)
                 {
                     _synchronizationContextService?.GetUIContext().Post(_ =>
                     {
                         System.Diagnostics.Debug.WriteLine("Refreshing VM properties due to Endpoint Update event.");
-                        EndpointWrapper = e;
+
+                        EndpointWrapper = _endpointEnumerationService.GetEndpointById(e.EndpointDeviceId);
+
                         RefreshVM();
                     }, null);
                 }
@@ -147,6 +140,9 @@ namespace Microsoft.Midi.Settings.ViewModels
             this.HasGroupTerminalBlocks = false;
             this.ShowMidi2Properties = false;
 
+
+            this.ShowGroupTerminalBlocks = false;
+
             System.Diagnostics.Debug.WriteLine("Finished clearing properties");
 
 
@@ -158,27 +154,51 @@ namespace Microsoft.Midi.Settings.ViewModels
                 Clipboard.SetContent(dataPackage);
             });
 
-
-
             SubmitEndpointCustomizationCommand = new RelayCommand(
             () =>
             {
-                var custom = new MidiEndpointUserSuppliedInfo();
+                // cache this here because the update event may trigger before we save to the config file
+                var updateConfig = CustomizationViewModel.GetUpdateConfig();
 
-                custom.Name = string.IsNullOrWhiteSpace(CustomizedName) ? string.Empty : CustomizedName.Trim();
-                custom.Description = string.IsNullOrWhiteSpace(CustomizedDescription) ? string.Empty : CustomizedDescription.Trim();
-                custom.ImageFileName = string.IsNullOrWhiteSpace(CustomizedImageFileName) ? string.Empty : CustomizedImageFileName.Trim();
-                custom.RequiresNoteOffTranslation = CustomizedRequiresNoteOffTranslation;
-                custom.SupportsMidiPolyphonicExpression = CustomizedSupportsMidiPolyphonicExpression;
-                custom.RecommendedControlChangeAutomationIntervalMilliseconds = CustomizedRecommendedControlChangeAutomationIntervalMilliseconds;
+                System.Diagnostics.Debug.WriteLine("Config json before updating endpoint.");
+                System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
                 var success = _endpointCustomizationService.UpdateEndpoint(
-                    EndpointWrapper.DeviceInformation,
-                    custom);
+                    updateConfig);
+
+                System.Diagnostics.Debug.WriteLine("Config json after updating endpoint.");
+                System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
 
                 if (success)
                 {
-                    // todo: update the properties again
+                    if (_configFileService.CurrentConfig != null)
+                    {
+                        if (_configFileService.CurrentConfig.StoreEndpointCustomization(updateConfig))
+                        {
+                            System.Diagnostics.Debug.WriteLine("Config json after successfully saving to config.");
+                            System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+
+
+                            // success
+                            // todo: update the properties again
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("Config json after FAILING to save to config.");
+                            System.Diagnostics.Debug.WriteLine(updateConfig.GetConfigJson());
+
+                            // todo: show error
+                        }
+                    }
+                    else
+                    {
+                        // could not save. No current config.
+                        System.Diagnostics.Debug.WriteLine("Could not save. No current config.");
+                    }
+                }
+                else
+                {
+                    // todo: show error
                 }
 
             });
@@ -186,10 +206,14 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
-        private void RefreshVM()
+        public void RefreshVM()
         {
+            System.Diagnostics.Debug.WriteLine("DeviceDetailViewModel.RefreshVM");
+
             if (EndpointWrapper != null)
             {
+                CustomizationViewModel = new MidiEndpointCustomizationViewModel(EndpointWrapper);
+
                 Name = EndpointWrapper.Name;
                 Description = EndpointWrapper.Description;
 
@@ -202,15 +226,9 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 this.HasParent = this.ParentDeviceInformation != null;
 
+                // only show group terminal blocks for native UMP endpoints
+                this.ShowGroupTerminalBlocks = EndpointWrapper.IsNativeUmp;
             }
-
-            // Prepopulate customization properties with the ones from the endpoint
-            CustomizedName = string.IsNullOrWhiteSpace(UserSuppliedInfo.Name) ? string.Empty : UserSuppliedInfo.Name.Trim();
-            CustomizedDescription = string.IsNullOrWhiteSpace(UserSuppliedInfo.Description) ? string.Empty : UserSuppliedInfo.Description.Trim();
-            CustomizedImageFileName = string.IsNullOrWhiteSpace(UserSuppliedInfo.ImageFileName) ? string.Empty : UserSuppliedInfo.ImageFileName.Trim();
-            CustomizedRequiresNoteOffTranslation = UserSuppliedInfo.RequiresNoteOffTranslation;
-            CustomizedSupportsMidiPolyphonicExpression = UserSuppliedInfo.SupportsMidiPolyphonicExpression;
-            CustomizedRecommendedControlChangeAutomationIntervalMilliseconds = UserSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;
 
             FunctionBlocks.Clear();
             GroupTerminalBlocks.Clear();
@@ -233,6 +251,11 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             ShowMidi2Properties = (this.TransportSuppliedInfo.NativeDataFormat == MidiEndpointNativeDataFormat.UniversalMidiPacketFormat);
 
+            // TODO: This should pull from a property of the transport
+            ShowCustomizeButton = 
+                TransportSuppliedInfo.TransportCode.ToUpper() == "KS" || 
+                TransportSuppliedInfo.TransportCode.ToUpper() == "KSA";
+
         }
 
         public void OnNavigatedFrom()
@@ -254,11 +277,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             // we're working with observable collections and properties, so need to dispatch
             _synchronizationContextService.GetUIContext().Post(_ =>
             {
-                System.Diagnostics.Debug.WriteLine("Enter Dispatcher worker: function blocks and group terminal blocks");
+                System.Diagnostics.Debug.WriteLine("Enter Dispatcher worker: OnNavigatedTo");
 
                 RefreshVM();
 
-                System.Diagnostics.Debug.WriteLine("Exit Dispatcher worker: function blocks and group terminal blocks");
+                System.Diagnostics.Debug.WriteLine("Exit Dispatcher worker: OnNavigatedTo");
             }, null);
 
         }

@@ -9,57 +9,60 @@
 #pragma once
 #include "ServiceConfig.MidiServiceConfigEndpointMatchCriteria.g.h"
 
+#include "MidiEndpointMatchCriteria.h"
+
 namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementation
 {
     struct MidiServiceConfigEndpointMatchCriteria : MidiServiceConfigEndpointMatchCriteriaT<MidiServiceConfigEndpointMatchCriteria>
     {
         MidiServiceConfigEndpointMatchCriteria() = default;
 
-        static hstring MatchObjectKey() { return MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY; }
+        static winrt::hstring MatchObjectKey() { return MidiEndpointMatchCriteria::PropertyKey; }
 
-        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
-        void EndpointDeviceId(_In_ winrt::hstring const& value) noexcept { m_endpointDeviceId = internal::TrimmedHStringCopy(value); }
+        static midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria FromJson(_In_ winrt::hstring const& matchObjectJson) noexcept;
 
-        uint16_t UsbVendorId() const noexcept { return m_usbVendorId; }
-        void UsbVendorId(_In_ uint16_t const& value) noexcept { m_usbVendorId = value; }
+        winrt::hstring EndpointDeviceId() const noexcept { return m_match->EndpointDeviceId; }
+        void EndpointDeviceId(_In_ winrt::hstring const& value) noexcept { m_match->EndpointDeviceId = internal::NormalizeEndpointInterfaceIdHStringCopy(value); }
 
-        uint16_t UsbProductId() const noexcept { return m_usbProductId; }
-        void UsbProductId(_In_ uint16_t const& value) noexcept { m_usbProductId = value; }
+        winrt::hstring DeviceInstanceId() const noexcept { return m_match->DeviceInstanceId; }
+        void DeviceInstanceId(_In_ winrt::hstring const& value) noexcept { m_match->DeviceInstanceId = internal::NormalizeDeviceInstanceIdHStringCopy(value); }
 
-        winrt::hstring UsbSerialNumber() const noexcept { return m_usbSerialNumber; }
-        void UsbSerialNumber(_In_ winrt::hstring const& value) noexcept { m_usbSerialNumber = internal::TrimmedHStringCopy(value); }
+        uint16_t UsbVendorId() const noexcept { return m_match->UsbVendorId; }
+        void UsbVendorId(_In_ uint16_t const& value) noexcept { m_match->UsbVendorId = value; }
 
-        winrt::hstring Midi2ProductInstanceId() const noexcept { return m_midi2ProductInstanceId; }
-        void Midi2ProductInstanceId(_In_ winrt::hstring const& value) noexcept { m_midi2ProductInstanceId = internal::TrimmedHStringCopy(value); }
+        uint16_t UsbProductId() const noexcept { return m_match->UsbProductId; }
+        void UsbProductId(_In_ uint16_t const& value) noexcept { m_match->UsbProductId = value; }
 
-        winrt::hstring StaticIPAddress() const noexcept { return m_staticIPAddress; }
-        void StaticIPAddress(_In_ winrt::hstring const& value) noexcept { m_staticIPAddress = internal::TrimmedHStringCopy(value); }
+        winrt::hstring UsbSerialNumber() const noexcept { return m_match->UsbSerialNumber; }
+        void UsbSerialNumber(_In_ winrt::hstring const& value) noexcept { m_match->UsbSerialNumber = internal::TrimmedHStringCopy(value); }
 
-        uint16_t Port() const noexcept { return m_port; }
-        void Port(uint16_t value) noexcept { m_port = value; }
+        winrt::hstring Midi2ProductInstanceId() const noexcept { return m_match->DeviceProductInstanceId; }
+        void Midi2ProductInstanceId(_In_ winrt::hstring const& value) noexcept { m_match->DeviceProductInstanceId = internal::TrimmedHStringCopy(value); }
 
-        winrt::hstring TransportSuppliedEndpointName() const noexcept { return m_transportSuppliedEndpointName; }
-        void TransportSuppliedEndpointName(_In_ winrt::hstring const& value) noexcept { m_transportSuppliedEndpointName = internal::TrimmedHStringCopy(value); }
+        winrt::hstring StaticIPAddress() const noexcept { return m_match->NetworkStaticIPAddress; }
+        void StaticIPAddress(_In_ winrt::hstring const& value) noexcept { m_match->NetworkStaticIPAddress = internal::TrimmedHStringCopy(value); }
 
-        winrt::hstring ParentDeviceName() const noexcept { return m_parentDeviceName; }
-        void ParentDeviceName(_In_ winrt::hstring const& value) noexcept { m_parentDeviceName = internal::TrimmedHStringCopy(value); }
+        uint16_t Port() const noexcept { return m_match->NetworkPort; }
+        void Port(uint16_t value) noexcept { m_match->NetworkPort = value; }
+
+        winrt::hstring TransportSuppliedEndpointName() const noexcept { return m_match->TransportSuppliedEndpointName; }
+        void TransportSuppliedEndpointName(_In_ winrt::hstring const& value) noexcept { m_match->TransportSuppliedEndpointName = internal::TrimmedHStringCopy(value); }
+
+        winrt::hstring ParentDeviceName() const noexcept { return m_match->ParentDeviceName; }
+        void ParentDeviceName(_In_ winrt::hstring const& value) noexcept { m_match->ParentDeviceName = internal::TrimmedHStringCopy(value); }
+
+        bool Matches(_In_ midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria const& other) const noexcept;
+
+
 
         winrt::hstring GetConfigJson() const noexcept;
 
+        std::shared_ptr<MidiEndpointMatchCriteria> InternalGetMatchObject() noexcept { return m_match; }
+        void InternalSetMatchObject(_In_ std::shared_ptr<MidiEndpointMatchCriteria> value) noexcept { m_match = value; }
+
     private:
-        winrt::hstring m_endpointDeviceId{};
+        std::shared_ptr<MidiEndpointMatchCriteria> m_match{ std::make_shared<MidiEndpointMatchCriteria>() };
 
-        uint16_t m_usbVendorId{};
-        uint16_t m_usbProductId{};
-        winrt::hstring m_usbSerialNumber{};
-
-        winrt::hstring m_midi2ProductInstanceId{};
-
-        winrt::hstring m_staticIPAddress{};
-        uint16_t m_port{};
-
-        winrt::hstring m_transportSuppliedEndpointName{};
-        winrt::hstring m_parentDeviceName{};
 
     };
 }

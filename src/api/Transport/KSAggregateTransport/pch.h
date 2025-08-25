@@ -62,6 +62,7 @@
 #include <mmdeviceapi.h>
 
 #include "wstring_util.h"
+#include "hstring_util.h"
 #include "midi_group_terminal_blocks.h"
 
 

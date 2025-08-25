@@ -8,8 +8,8 @@
 
 #pragma once
 
-#ifndef JSON_CUSTOM_PROPERTY_HELPER_H
-#define JSON_CUSTOM_PROPERTY_HELPER_H
+#ifndef MIDI_ENDPOINT_CUSTOM_PROPERTIES_H
+#define MIDI_ENDPOINT_CUSTOM_PROPERTIES_H
 
 //#include <winrt/Windows.Foundation.h>
 //#include <winrt/Windows.Foundation.Collections.h>
@@ -88,8 +88,8 @@ struct MidiEndpointCustomMidi1PortProperties
 enum MidiEndpointCustomMidi1NamingApproach
 {
     Default = 0,
-    UseClassicCompatible,
-    UseNewStyle
+    UseClassicCompatible = 1,
+    UseNewStyle = 2
 };
 
 class MidiEndpointCustomProperties
@@ -103,7 +103,11 @@ public:
     static std::shared_ptr<MidiEndpointCustomProperties> FromJson(_In_::winrt::Windows::Data::Json::JsonObject const& customPropertiesObject);
 
     _Success_(return == true)
-    bool WriteProperties(_In_ std::vector<DEVPROPERTY>& destination);
+    bool WriteAllProperties(_In_ std::vector<DEVPROPERTY>& destination);
+
+    _Success_(return == true)
+    bool WriteNonCommonProperties(_In_ std::vector<DEVPROPERTY>&destination);
+
 
     _Success_(return == true)
     bool WriteJson(_In_::winrt::Windows::Data::Json::JsonObject& customPropertiesObject);
@@ -115,10 +119,11 @@ public:
     bool SupportsMidiPolyphonicExpression{};
     uint16_t RecommendedControlChangeIntervalMilliseconds{};
 
+ //   bool UmpOnly{ false };
     MidiEndpointCustomMidi1NamingApproach Midi1NamingApproach{ MidiEndpointCustomMidi1NamingApproach::Default };
 
-    std::vector<MidiEndpointCustomMidi1PortProperties> Midi1Sources{};
-    std::vector<MidiEndpointCustomMidi1PortProperties> Midi1Destinations{};
+    std::map<uint8_t, MidiEndpointCustomMidi1PortProperties> Midi1Sources{};
+    std::map<uint8_t, MidiEndpointCustomMidi1PortProperties> Midi1Destinations{};
 
 private:
 
@@ -127,6 +132,7 @@ private:
     DEVPROP_BOOLEAN m_devPropTrue{ DEVPROP_TRUE };
     DEVPROP_BOOLEAN m_devPropFalse{ DEVPROP_FALSE };
 
+    //MidiEndpointCustomMidi1NamingApproach m_selectedPortNamingDevProperty{ MidiEndpointCustomMidi1NamingApproach::Default };
 };
 
 

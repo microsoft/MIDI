@@ -90,6 +90,8 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         midi2::MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow) noexcept;
         midi2::MidiEndpointAssociatedPortDeviceInformation FindAssociatedMidi1PortForGroupForThisEndpoint(_In_ midi2::MidiGroup const& group, _In_ midi2::Midi1PortFlow const portFlow, _In_ bool const useCachedPortInformationIfAvailable) noexcept;
 
+        midi2::Midi1PortNamingApproach Midi1PortNamingApproach() const noexcept;
+
         collections::IVectorView<midi2::Midi1PortNameTableEntry> GetNameTable() const noexcept;
 
         winrt::hstring ToString();

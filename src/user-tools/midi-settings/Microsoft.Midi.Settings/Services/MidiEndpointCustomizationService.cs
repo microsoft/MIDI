@@ -22,21 +22,9 @@ public class MidiEndpointCustomizationService : IMidiEndpointCustomizationServic
         _configFileService = configFileService;
     }
 
-    public bool UpdateEndpoint(MidiEndpointDeviceInformation deviceInformation, MidiEndpointUserSuppliedInfo updatedUserSuppliedInfo)
+    public bool UpdateEndpoint(MidiServiceEndpointCustomizationConfig configUpdate)
     {
         // build the json and send up through the transport
-
-        var configUpdate = new MidiServiceEndpointCustomizationConfig(deviceInformation.GetTransportSuppliedInfo().TransportId);
-
-        configUpdate.Name = updatedUserSuppliedInfo.Name;
-        configUpdate.Description = updatedUserSuppliedInfo.Description;
-        configUpdate.ImageFileName = updatedUserSuppliedInfo.ImageFileName;
-        configUpdate.RequiresNoteOffTranslation = updatedUserSuppliedInfo.RequiresNoteOffTranslation;
-        configUpdate.SupportsMidiPolyphonicExpression = updatedUserSuppliedInfo.SupportsMidiPolyphonicExpression;
-        configUpdate.RecommendedControlChangeIntervalMilliseconds = updatedUserSuppliedInfo.RecommendedControlChangeAutomationIntervalMilliseconds;
-
-        // TODO: May want to have additional criteria in the future
-        configUpdate.MatchCriteria.EndpointDeviceId = deviceInformation.EndpointDeviceId;
 
         System.Diagnostics.Debug.WriteLine(configUpdate.GetConfigJson());
 
@@ -44,9 +32,6 @@ public class MidiEndpointCustomizationService : IMidiEndpointCustomizationServic
 
         if (response.Status == MidiServiceConfigResponseStatus.Success)
         {
-            // TODO: Save to local config file
-
-
             return true;
         }
         else

@@ -340,14 +340,18 @@
 
 
                 
-                <NavigationViewItem x:Name="SectionLOOP" Visibility="Collapsed" x:Uid="Shell_EndpointsLoop" 
+                <NavigationViewItem x:Name="SectionLOOP" 
+                                    Visibility="{x:Bind ViewModel.ShowLoopbackMidiInLeftNav, Mode=OneWay}" 
+                                    x:Uid="Shell_EndpointsLoop" 
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.EndpointsLoopViewModel">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-CreateLoopbackEndpoints.svg" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
 
-                <NavigationViewItem x:Name="SectionNET2UDP" Visibility="Collapsed"  
+                
+                <NavigationViewItem x:Name="SectionNET2UDP" 
+                                    Visibility="{x:Bind ViewModel.ShowNetworkMidi2InLeftNav, Mode=OneWay}"  
                                     helpers:NavigationHelper.NavigateTo="Microsoft.Midi.Settings.ViewModels.NetworkMidi2SetupViewModel">
                     <NavigationViewItem.Icon>
                         <ImageIcon Source="/Assets/LeftNav-NetworkMidi.svg" />

@@ -19,6 +19,16 @@
 
 namespace WindowsMidiServicesInternal
 {
+    inline void SafeCopyHStringToFixedArray(wchar_t* destArray, size_t destArrayCountIncludingTerminator, winrt::hstring source)
+    {
+        size_t length = min(source.size(), destArrayCountIncludingTerminator - 1);
+
+        memset((void*)destArray, 0, destArrayCountIncludingTerminator * sizeof(wchar_t));
+
+        memcpy(destArray, source.c_str(), length * sizeof(wchar_t));
+    }
+
+
     inline winrt::hstring TruncateHStringCopy(_In_ winrt::hstring const& s, _In_ winrt::hstring::size_type newSize)
     {
         return winrt::hstring(s.c_str(), min(newSize, s.size()));

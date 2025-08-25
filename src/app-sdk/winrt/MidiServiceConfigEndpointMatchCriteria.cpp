@@ -16,34 +16,45 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
     {
         json::JsonObject matchObject;
 
-        if (!m_endpointDeviceId.empty())
+        if (m_match->WriteJson(matchObject))
         {
-            matchObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SWD, json::JsonValue::CreateStringValue(m_endpointDeviceId));
+            return matchObject.Stringify();
+        }
+        else
+        {
+            return L"";
         }
 
-        if (!m_usbSerialNumber.empty() && m_usbVendorId > 0 && m_usbProductId > 0)
-        {
-            matchObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_SERIAL, json::JsonValue::CreateStringValue(m_usbSerialNumber));
-            matchObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_VID, json::JsonValue::CreateNumberValue(m_usbVendorId));
-            matchObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PID, json::JsonValue::CreateNumberValue(m_usbProductId));
-        }
-
-        if (!m_staticIPAddress.empty() && m_port > 0)
-        {
-            matchObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_STATIC_IP_ADDRESS, json::JsonValue::CreateStringValue(m_staticIPAddress));
-            matchObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_UDP_PORT, json::JsonValue::CreateNumberValue(m_port));
-        }
-
-        if (!m_transportSuppliedEndpointName.empty())
-        {
-            matchObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_TRANSPORT_SUPPLIED_NAME, json::JsonValue::CreateStringValue(m_transportSuppliedEndpointName));
-        }
-
-        if (!m_parentDeviceName.empty())
-        {
-            matchObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_SEARCH_PROPERTY_KEY_PARENT_DEVICE_NAME, json::JsonValue::CreateStringValue(m_parentDeviceName));
-        }
-
-        return matchObject.Stringify();
     }
+
+
+    _Use_decl_annotations_
+    bool MidiServiceConfigEndpointMatchCriteria::Matches(midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria const& other) const noexcept
+    {
+        auto otherMatch = winrt::get_self<MidiServiceConfigEndpointMatchCriteria>(other)->InternalGetMatchObject();
+
+        return m_match->Matches(*otherMatch);
+    }
+
+
+    _Use_decl_annotations_
+    midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria MidiServiceConfigEndpointMatchCriteria::FromJson(_In_ winrt::hstring const& matchObjectJson) noexcept
+    {
+        auto winrtMatch = winrt::make_self<MidiServiceConfigEndpointMatchCriteria>();
+
+        json::JsonObject jsonObject;
+
+        if (json::JsonObject::TryParse(matchObjectJson, jsonObject))
+        {
+            auto match = MidiEndpointMatchCriteria::FromJson(jsonObject);
+
+            winrtMatch->InternalSetMatchObject(match);
+
+            return *winrtMatch;
+        }
+
+        return nullptr;
+    }
+
+
 }

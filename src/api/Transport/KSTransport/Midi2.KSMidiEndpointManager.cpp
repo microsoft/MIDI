@@ -594,9 +594,9 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
                 // for native MIDI 2 devices, we use filter name + pin (gtb) name
                 // TODO: This needs to be re-done to use user-specified properties from config file
-                auto naming = Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName;
-                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
+                //auto naming = Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName;
+                //interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+                //    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
             }
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
@@ -619,9 +619,9 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 //
                 // TODO: This needs to be updated to use user-specified properties from config file
                 //
-                auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
-                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
+                //auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
+                //interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+                //    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
             }
             else
             {
@@ -675,19 +675,41 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         }
 
 
+        // Fold in custom properties, including MIDI 1 port names and naming approach
+        // ===============================================================================
+
+        MidiEndpointMatchCriteria matchCriteria{};
+        matchCriteria.DeviceInstanceId = deviceInstanceId;
+        matchCriteria.UsbVendorId = MidiPin->VID;
+        matchCriteria.UsbProductId = MidiPin->PID;
+        matchCriteria.TransportSuppliedEndpointName = MidiPin->Name;
+
+        auto customProperties = TransportState::Current().GetConfigurationManager()->CustomPropertiesCache()->GetProperties(matchCriteria);
+
+        if (customProperties != nullptr)
+        {
+            if (!customProperties->Name.empty())
+            {
+                commonProperties.CustomEndpointName = customProperties->Name.c_str();
+            }
+
+            if (!customProperties->Description.empty())
+            {
+                commonProperties.CustomEndpointDescription = customProperties->Description.c_str();
+            }
+
+            // this includes image, the Midi 1 naming approach, etc.
+            customProperties->WriteNonCommonProperties(interfaceDevProperties);
+        }
+
         // Write Name table property
-        // =====================================================
+        // ===============================================================================
 
         // we have group terminal blocks data, so we need to create names starting from that
 
         // these variables need to be out here, to make sure the data is still available when the properties are created
         std::vector<std::byte> nameTablePropertyData{ };
         std::vector<internal::Midi1PortNaming::Midi1PortNameEntry> portNameEntries{};
-        //
-        // TODO: This needs to be re-done to use user-specified properties from config file
-        //
-        auto naming = Midi1PortNameSelectionProperty::PortName_UseGlobalDefault;
-
 
         if (!MidiPin->CreateUMPOnly)
         {
@@ -706,9 +728,20 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                     // TODO: Here's where we should load any custom port name into the table, using the values from config
                     std::wstring customPortName = L"";      // TODO: Get from config
 
+
                     if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
                         gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_OUTPUT)              // gtb output is a midi input
                     {
+                        if (customProperties != nullptr)
+                        {
+                            // get the custom name for this group index and direction (MIDI Source)
+                            if (auto customConfiguredName = customProperties->Midi1Sources.find(groupIndex); 
+                                customConfiguredName != customProperties->Midi1Sources.end())
+                            {
+                                customPortName = customConfiguredName->second.Name;
+                            }
+                        }
+
                         // we need to create two entries for bidi
                         internal::Midi1PortNaming::Midi1PortNameEntry nameEntry{ };
 
@@ -745,6 +778,16 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                     if (gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL ||
                         gtb.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT)
                     {
+                        if (customProperties != nullptr)
+                        {
+                            // get the custom name for this group index and direction (MIDI Source)
+                            if (auto customConfiguredName = customProperties->Midi1Destinations.find(groupIndex);
+                                customConfiguredName != customProperties->Midi1Destinations.end())
+                            {
+                                customPortName = customConfiguredName->second.Name;
+                            }
+                        }
+
                         internal::Midi1PortNaming::Midi1PortNameEntry nameEntry{ };
 
                         nameEntry.GroupIndex = groupIndex;
@@ -790,8 +833,8 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
             if (internal::Midi1PortNaming::WriteMidi1PortNameTableToPropertyDataPointer(portNameEntries, nameTablePropertyData))
             {
-                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
+                //interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+                //    DEVPROP_TYPE_UINT32, (ULONG)sizeof(Midi1PortNameSelectionProperty), (PVOID)&naming });
 
                 interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
                     DEVPROP_TYPE_BINARY, (ULONG)nameTablePropertyData.size(), (PVOID)nameTablePropertyData.data() });
@@ -799,8 +842,8 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             else
             {
                 // write empty data
-                interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
-                    DEVPROP_TYPE_EMPTY, 0, nullptr });
+                //interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNamingSelection, DEVPROP_STORE_SYSTEM, nullptr },
+                //    DEVPROP_TYPE_EMPTY, 0, nullptr });
 
                 interfaceDevProperties.push_back({ { PKEY_MIDI_Midi1PortNameTable, DEVPROP_STORE_SYSTEM, nullptr },
                     DEVPROP_TYPE_EMPTY, 0, nullptr });
@@ -868,35 +911,35 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             // Here we're only building search keys for the SWD id, but we need to broaden this to
             // other relevant search criteria like serial number or the original name, etc.
 
-            auto jsonSearchKeys = TransportState::Current().GetConfigurationManager()->BuildEndpointJsonSearchKeysForSWD(newDeviceInterfaceId.get());
+            //auto jsonSearchKeys = TransportState::Current().GetConfigurationManager()->BuildEndpointJsonSearchKeysForSWD(newDeviceInterfaceId.get());
 
-            TraceLoggingWrite(
-                MidiKSTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Retrieved json search keys", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys")
-            );
+            //TraceLoggingWrite(
+            //    MidiKSTransportTelemetryProvider::Provider(),
+            //    MIDI_TRACE_EVENT_INFO,
+            //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            //    TraceLoggingPointer(this, "this"),
+            //    TraceLoggingWideString(L"Retrieved json search keys", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            //    TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys")
+            //);
 
-            auto applyConfigHR = TransportState::Current().GetConfigurationManager()->ApplyConfigFileUpdatesForEndpoint(jsonSearchKeys);
+            //auto applyConfigHR = TransportState::Current().GetConfigurationManager()->ApplyConfigFileUpdatesForEndpoint(jsonSearchKeys);
 
-            if (FAILED(applyConfigHR))
-            {
-                TraceLoggingWrite(
-                    MidiKSTransportTelemetryProvider::Provider(),
-                    MIDI_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Unable to apply config file update for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys"),
-                    TraceLoggingHResult(applyConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD)
-                );
+            //if (FAILED(applyConfigHR))
+            //{
+            //    TraceLoggingWrite(
+            //        MidiKSTransportTelemetryProvider::Provider(),
+            //        MIDI_TRACE_EVENT_ERROR,
+            //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            //        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            //        TraceLoggingPointer(this, "this"),
+            //        TraceLoggingWideString(L"Unable to apply config file update for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            //        TraceLoggingWideString(jsonSearchKeys.c_str(), "jsonSearchKeys"),
+            //        TraceLoggingHResult(applyConfigHR, MIDI_TRACE_EVENT_HRESULT_FIELD)
+            //    );
 
-                LOG_IF_FAILED(applyConfigHR);
-            }
+            //    LOG_IF_FAILED(applyConfigHR);
+            //}
 
             // we only perform protocol negotiation if it's a bidirectional UMP (native) endpoint. We
             // don't want to perform this on translated byte stream endpoints
@@ -1050,6 +1093,36 @@ HRESULT CMidi2KSMidiEndpointManager::OnEnumerationCompleted(DeviceWatcher, winrt
     m_EnumerationCompleted.SetEvent();
     return S_OK;
 }
+
+
+
+_Use_decl_annotations_
+winrt::hstring CMidi2KSMidiEndpointManager::FindMatchingInstantiatedEndpoint(MidiEndpointMatchCriteria& criteria)
+{
+    criteria.Normalize();
+
+    for (auto const& pin : m_AvailableMidiPins)
+    {
+        MidiEndpointMatchCriteria available{};
+
+        available.DeviceInstanceId = pin->InstanceId;
+        available.EndpointDeviceId = pin->Id;
+        available.UsbVendorId = pin->VID;
+        available.UsbProductId = pin->PID;
+        available.UsbSerialNumber = pin->SerialNumber;
+        available.TransportSuppliedEndpointName = pin->Name;
+        available.DeviceManufacturerName = pin->ManufacturerName;
+
+        if (available.Matches(criteria))
+        {
+            return available.EndpointDeviceId;
+        }
+    }
+
+    return L"";
+
+}
+
 
 
 

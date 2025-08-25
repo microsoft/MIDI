@@ -84,11 +84,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         // match object within the update object. What is supported will vary by transport
         if (m_matchCriteria != nullptr && json::JsonObject::TryParse(m_matchCriteria.GetConfigJson(), matchObject))
         {
-            endpointUpdateObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY, matchObject);
+            endpointUpdateObject.SetNamedValue(MidiServiceConfigEndpointMatchCriteria::MatchObjectKey(), matchObject);
         }
 
-        m_props->WriteJson(customPropertiesObject);
-        endpointUpdateObject.SetNamedValue(MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
+        if (m_props->WriteJson(customPropertiesObject))
+        {
+            endpointUpdateObject.SetNamedValue(MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
+        }
 
 
         // add the endpoint update object to the array
@@ -114,4 +116,76 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
         return outerWrapperObject.Stringify();
     }
+
+
+    _Use_decl_annotations_
+    void MidiServiceEndpointCustomizationConfig::AddMidi1SourcePortCustomName(
+        midi2::MidiGroup const& group, 
+        winrt::hstring const& name) noexcept
+    {
+        MidiEndpointCustomMidi1PortProperties props{};
+        props.GroupIndex = group.Index();
+        props.Name = name;
+
+        m_props->Midi1Sources[props.GroupIndex] = props;
+    }
+
+    _Use_decl_annotations_
+    void MidiServiceEndpointCustomizationConfig::AddMidi1DestinationPortCustomName(
+        midi2::MidiGroup const& group, 
+        winrt::hstring const& name) noexcept
+    {
+        MidiEndpointCustomMidi1PortProperties props{};
+        props.GroupIndex = group.Index();
+        props.Name = name;
+
+        m_props->Midi1Destinations[props.GroupIndex] = props;
+    }
+
+
+
+
+    midi2::Midi1PortNamingApproach MidiServiceEndpointCustomizationConfig::Midi1PortNamingApproach() const noexcept
+    {
+        switch (m_props->Midi1NamingApproach)
+        {
+        case MidiEndpointCustomMidi1NamingApproach::Default:
+            return midi2::Midi1PortNamingApproach::Default;
+
+        case MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible:
+            return midi2::Midi1PortNamingApproach::UseClassicCompatible;
+
+        case MidiEndpointCustomMidi1NamingApproach::UseNewStyle:
+            return midi2::Midi1PortNamingApproach::UseNewStyle;
+
+        default:
+            return midi2::Midi1PortNamingApproach::Default;
+
+        }
+    }
+    
+    _Use_decl_annotations_
+    void MidiServiceEndpointCustomizationConfig::Midi1PortNamingApproach(_In_ midi2::Midi1PortNamingApproach const value) noexcept
+    {
+        switch (value)
+        {
+        case midi2::Midi1PortNamingApproach::Default:
+            m_props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::Default;
+            break;
+
+        case midi2::Midi1PortNamingApproach::UseClassicCompatible:
+            m_props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible;
+            break;
+
+        case midi2::Midi1PortNamingApproach::UseNewStyle:
+            m_props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::UseNewStyle;
+            break;
+        default:
+            m_props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::Default;
+            break;
+        }
+    }
+
+
+
 }

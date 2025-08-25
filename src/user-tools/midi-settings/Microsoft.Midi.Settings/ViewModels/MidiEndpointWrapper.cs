@@ -88,14 +88,13 @@ namespace Microsoft.Midi.Settings.ViewModels
         public void RefreshData(MidiEndpointDeviceInformation deviceInformation)
         {
             DeviceInformation = deviceInformation;
+
             RefreshData();
         }
 
         public void RefreshData()
         {
             // Property updates need to happen on UI thread
-
- 
             var context = _synchronizationContextService.GetUIContext();
 
             if (context == null)
@@ -103,7 +102,7 @@ namespace Microsoft.Midi.Settings.ViewModels
                 context = SynchronizationContext.Current;
             }
 
-            context.Post(_ =>
+            context!.Post(_ =>
             {
                 Name = DeviceInformation.Name;
                 Id = DeviceInformation.EndpointDeviceId;
@@ -215,6 +214,8 @@ namespace Microsoft.Midi.Settings.ViewModels
 
                 context.Post(_ =>
                 {
+                    Midi1InputPorts.Clear();
+                    Midi1OutputPorts.Clear();
 
                     System.Diagnostics.Debug.WriteLine("MidiEndpointWrapper: Posting to UI Thread");
 

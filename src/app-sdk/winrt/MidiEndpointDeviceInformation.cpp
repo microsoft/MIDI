@@ -11,6 +11,7 @@
 #include "MidiEndpointDeviceInformation.h"
 #include "MidiEndpointDeviceInformation.g.cpp"
 
+#include "MidiEndpointCustomProperties.h"
 
 namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 {
@@ -1014,6 +1015,32 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
             );
         }
     }
+
+
+    midi2::Midi1PortNamingApproach MidiEndpointDeviceInformation::Midi1PortNamingApproach() const noexcept
+    {
+        auto namingPropVal = internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_Midi1PortNamingSelection, (uint32_t)MidiEndpointCustomMidi1NamingApproach::Default);
+
+        // these types are value-compatible. However, we don't simply cast because
+        // sometimes these properties have garbage in them before they are set for
+        // the first time
+
+        switch (namingPropVal)
+        {
+        case MidiEndpointCustomMidi1NamingApproach::Default:
+            return midi2::Midi1PortNamingApproach::Default;
+
+        case MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible:
+            return midi2::Midi1PortNamingApproach::UseClassicCompatible;
+
+        case MidiEndpointCustomMidi1NamingApproach::UseNewStyle:
+            return midi2::Midi1PortNamingApproach::UseNewStyle;
+
+        default:
+            return midi2::Midi1PortNamingApproach::Default;
+        }
+    }
+
 
     // instance method
     collections::IVectorView<midi2::Midi1PortNameTableEntry> MidiEndpointDeviceInformation::GetNameTable() const noexcept

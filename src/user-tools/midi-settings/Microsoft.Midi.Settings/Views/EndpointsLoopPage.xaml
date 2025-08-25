@@ -30,30 +30,68 @@
                 <!-- If this transport supports runtime creation, have create button at this level -->
 
 
-                <TextBlock Text="{x:Bind ViewModel.Transport.Name, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
-                <TextBlock Text="{x:Bind ViewModel.Transport.Description, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}"/>
+                <!--<TextBlock Text="{x:Bind ViewModel.Transport.Name, Mode=OneWay}" Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                <TextBlock Text="{x:Bind ViewModel.Transport.Description, Mode=OneWay}" Style="{StaticResource SmallPlainPropertyValue}"/>-->
 
-                <Button x:Name="CreateNewLoopbackPair" 
+                <StackPanel Orientation="Horizontal">
+                    <Button x:Name="CreateNewLoopbackPair" 
                         Margin="5,13,13,13"
                         Content="Create New Loopback Endpoint Pair"
                         Click="CreateNewLoopbackPair_Click"/>
 
- 
-                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiLoopbackEndpointPairs}">
+                    <Button x:Name="CreateDefaultLoopbackPair" 
+                            Visibility="{x:Bind ViewModel.DefaultLoopbackPairExists, Mode=OneWay, Converter={StaticResource BooleanToInverseVisibilityConverter}}"
+                            Margin="5,13,13,13"
+                            Content="Create Default Loopback Endpoint Pair"
+                            Command="{x:Bind ViewModel.CreateDefaultLoopbackPairsCommand}"/>
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{x:Bind ViewModel.MidiLoopbackEndpointPairs, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
                         
                         <DataTemplate x:DataType="local:MidiLoopbackEndpointPair">
                             <controls:SettingsCard Margin="3" CornerRadius="8">
                                 <controls:SettingsCard.Header>
-                                    <StackPanel Orientation="Vertical">
-                                        <TextBlock Text="{x:Bind LoopA.Name}" />
-                                        <TextBlock Text="{x:Bind LoopB.Name}" />
-                                    </StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <ImageIcon Grid.Column="0" 
+                                               Source="{x:Bind LoopA.Image, Mode=OneWay}" 
+                                               Width="60" Height="60"
+                                               Margin="8"/>
+
+                                        <StackPanel Orientation="Vertical"
+                                                    VerticalAlignment="Center"
+                                                    Grid.Column="1">
+                                            <TextBlock Text="{x:Bind LoopA.Name}" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                            <TextBlock Text="{x:Bind LoopB.Name}" 
+                                                       Style="{StaticResource SmallEmphasizedPropertyValue}"/>
+                                        </StackPanel>
+
+                                    </Grid>
+                                    
+                                    
                                 </controls:SettingsCard.Header>
                                 <controls:SettingsCard.Content>
-                                    <StackPanel Orientation="Vertical">
-                                        <TextBlock Text="{x:Bind LoopA.EndpointDeviceId}" />
-                                        <TextBlock Text="{x:Bind LoopB.EndpointDeviceId}" />
+                                    <StackPanel Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <StackPanel Orientation="Vertical"
+                                                    VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind LoopA.Id}" 
+                                                       Style="{StaticResource SmallPlainPropertyValue}"/>
+                                            <TextBlock Text="{x:Bind LoopB.EndpointDeviceId}" 
+                                                       Style="{StaticResource SmallPlainPropertyValue}"
+                                                       />
+                                        </StackPanel>
+
+                                        <Button Content="Remove" 
+                                                Margin="16"
+                                                Command="{x:Bind RemoveCommand}"
+                                                />
                                     </StackPanel>
                                 </controls:SettingsCard.Content>
                                
@@ -68,7 +106,7 @@
         </ScrollViewer>
 
 
-
+        <!-- Create Loopbacks UI -->
 
         <ContentDialog x:Name="Dialog_CreateLoopbackEndpoints"
                        PrimaryButtonText="OK" 
@@ -77,8 +115,8 @@
                        PrimaryButtonCommand="{x:Bind ViewModel.CreateLoopbackPairsCommand}"
                        >
             <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">800</x:Double>
-                <x:Double x:Key="ContentDialogMaxHeight">800</x:Double>
+                <x:Double x:Key="ContentDialogMaxWidth">900</x:Double>
+                <x:Double x:Key="ContentDialogMaxHeight">850</x:Double>
             </ContentDialog.Resources>
 
             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -106,27 +144,34 @@
 
 
                     <TextBlock TextWrapping="WrapWholeWords" 
-                           Text="Please provide a name for the loopback endpoints. The two names cannot be the same. If you plan to use these loopback endpoints with MIDI 1.0 APIs, the name length cannot exceed 31 characters."
+                           Text="Please provide a base name for the loopback endpoints. To support use with MIDI 1.0 APIs, the name length cannot exceed 27 characters. The suffixes '(A)' and '(B)' will be appended to the base name to differentiate the two endpoints."
                            Style="{StaticResource DialogDescriptionTextBlockStyle}" 
                            Margin="13"/>
 
 
                     <Grid>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBox Grid.Column="0" Header="Loopback A Name" 
-                             Text="{x:Bind ViewModel.NewLoopbackEndpointAName, Mode=TwoWay}"
-                             MaxLength="50"
-                             Margin="13"/>
+                        <TextBox Grid.Column="0" 
+                                 VerticalAlignment="Top"
+                                 Header="Loopback Base Name" 
+                                 Width="250"
+                                 Text="{x:Bind ViewModel.NewLoopbackEndpointBaseName, Mode=TwoWay}"
+                                 MaxLength="27"
+                                 Margin="13"/>
 
                         <TextBox Grid.Column="1" 
-                             Header="Loopback B Name" 
-                             Text="{x:Bind ViewModel.NewLoopbackEndpointBName, Mode=TwoWay}"
-                             MaxLength="50"
-                             Margin="13"/>
+                                 VerticalAlignment="Top"
+                                 Header="Description (Optional)" 
+                                 Text="{x:Bind ViewModel.NewLoopbackDescription, Mode=TwoWay}"
+                                 Height="100"
+                                 MaxLength="500"
+                                 TextWrapping="Wrap"
+                                 IsSpellCheckEnabled="True"
+                                 Margin="13"/>
                     </Grid>
 
                     <TextBlock TextWrapping="WrapWholeWords" 
@@ -141,9 +186,9 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBox Header="Unique Identifier" 
-                         Text="{x:Bind ViewModel.NewUniqueIdentifier, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                         MaxLength="32"
-                         Margin="13"/>
+                                 Text="{x:Bind ViewModel.NewUniqueIdentifier, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="32"
+                                 Margin="13"/>
 
                         <!-- second column is empty -->
                     </Grid>
