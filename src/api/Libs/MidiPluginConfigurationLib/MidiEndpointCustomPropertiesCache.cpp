@@ -6,6 +6,20 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+#include <windows.h>
+
+#include <string>
+#include <vector>
+#include <algorithm>
+
+#include <winrt/windows.foundation.h>
+#include <winrt/windows.foundation.collections.h>
+#include <winrt/windows.devices.enumeration.h>
+
+#include <mmsystem.h>
+#include <wtypes.h>
+#include <combaseapi.h>
+
 #include "MidiEndpointCustomPropertiesCache.h"
 
 //_Use_decl_annotations_

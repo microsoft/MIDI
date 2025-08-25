@@ -55,7 +55,6 @@ public:
 
     MidiEndpointMatchCriteria() = default;
 
-    _Success_(return != nullptr)
     static std::shared_ptr<MidiEndpointMatchCriteria> FromJson(_In_::winrt::Windows::Data::Json::JsonObject const& matchObject);
 //    static std::shared_ptr<MidiEndpointMatchCriteria> FromValues(_In_ std::map<winrt::hstring, winrt::hstring> matchValues);
 
