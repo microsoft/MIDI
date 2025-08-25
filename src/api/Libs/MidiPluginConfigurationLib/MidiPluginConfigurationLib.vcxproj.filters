@@ -39,13 +39,13 @@
     <ClCompile Include="MidiEndpointCustomProperties.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Inc\MidiEndpointCustomPropertiesCache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MidiEndpointMatchCriteria.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MidiEndpointNameTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiEndpointCustomPropertiesCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
