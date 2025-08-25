@@ -16,6 +16,10 @@
 #include <winrt/windows.foundation.collections.h>
 #include <winrt/windows.devices.enumeration.h>
 
+#include <mmsystem.h>
+#include <wtypes.h>
+#include <combaseapi.h>
+
 #include "MidiDefs.h"
 #include "swd_helpers.h"
 

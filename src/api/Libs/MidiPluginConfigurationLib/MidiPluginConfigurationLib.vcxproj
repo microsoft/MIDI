@@ -273,8 +273,8 @@
     <ClInclude Include="..\..\Inc\MidiEndpointNameTable.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MidiEndpointCustomProperties.cpp" />
     <ClCompile Include="MidiEndpointCustomPropertiesCache.cpp" />
+    <ClCompile Include="MidiEndpointCustomProperties.cpp" />
     <ClCompile Include="MidiEndpointMatchCriteria.cpp" />
     <ClCompile Include="MidiEndpointNameTable.cpp" />
   </ItemGroup>
