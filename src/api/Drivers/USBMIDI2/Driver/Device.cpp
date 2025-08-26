@@ -1862,6 +1862,9 @@ Return Value:
         return(status);
     }
 
+    // Clear the created memory
+    RtlZeroMemory(pGTBPropertyBuffer, grpTermBlockStructureSize);
+
     // Place KSMULTIPLE_ITEM Strucutre
     PKSMULTIPLE_ITEM pMultiHeader = (PKSMULTIPLE_ITEM)pGTBPropertyBuffer;
     pMultiHeader->Size = grpTermBlockStructureSize;
