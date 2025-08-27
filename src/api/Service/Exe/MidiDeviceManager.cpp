@@ -2545,53 +2545,6 @@ CMidiDeviceManager::UseFallbackMidi1PortDefinition(
     return S_OK;
 }
 
-#if false
-_Use_decl_annotations_
-HRESULT
-CMidiDeviceManager::GetCustomPortMapping(
-    PCWSTR umpDeviceInterfaceId,
-    DeviceInformation deviceInfo,
-    std::map<UINT32, PORT_INFO> portInfo[2]
-)
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-    );
-
-    auto prop = deviceInfo.Properties().Lookup(STRING_PKEY_MIDI_CustomPortAssignments);
-    if (prop)
-    {
-        auto refArray = winrt::unbox_value<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(prop);
-        if (refArray)
-        {
-            auto data = refArray.Value();
-            UINT count = data.size()/sizeof(GroupCustomPortProperty);
-            GroupCustomPortProperty *customPorts = (GroupCustomPortProperty *) data.data();
-
-            for (UINT i = 0; i < count; i++)
-            {
-                RETURN_HR_IF(E_INVALIDARG, !IS_VALID_GROUP_INDEX(customPorts[i].GroupIndex));
-
-                for (UINT flow = 0; flow < 2; flow++)
-                {
-                    portInfo[flow][customPorts[i].GroupIndex].HasCustomPortNumber = true;
-                    portInfo[flow][customPorts[i].GroupIndex].CustomPortNumber = customPorts[i].CustomPortNumber;
-                }
-            }
-        }
-    }
-
-    return S_OK;
-}
-#endif
-
-
 
 _Use_decl_annotations_
 HRESULT
