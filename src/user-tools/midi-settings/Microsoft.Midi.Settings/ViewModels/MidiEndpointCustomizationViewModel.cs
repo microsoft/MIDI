@@ -64,10 +64,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
         public MidiEndpointCustomizationViewModel(MidiEndpointWrapper endpointWrapper)
         {
-            midi1PortNamingOptions.Add(Midi1PortNamingApproach.Default);
-            midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseClassicCompatible);
-            midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseNewStyle);
-
             EndpointWrapper = endpointWrapper;
 
             CustomName = endpointWrapper.DeviceInformation.GetUserSuppliedInfo().Name;
@@ -77,7 +73,11 @@ namespace Microsoft.Midi.Settings.ViewModels
             RequiresNoteOffTranslation = endpointWrapper.DeviceInformation.GetUserSuppliedInfo().RequiresNoteOffTranslation;
             RecommendedControlChangeAutomationIntervalMilliseconds = endpointWrapper.DeviceInformation.GetUserSuppliedInfo().RecommendedControlChangeAutomationIntervalMilliseconds;
 
-     //       Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
+            midi1PortNamingOptions.Add(Midi1PortNamingApproach.Default);
+            midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseClassicCompatible);
+            midi1PortNamingOptions.Add(Midi1PortNamingApproach.UseNewStyle);
+
+            Midi1PortNaming = endpointWrapper.DeviceInformation.Midi1PortNamingApproach;
 
             // name table entries
 

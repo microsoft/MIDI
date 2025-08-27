@@ -110,7 +110,6 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
             }
 
 
-
             // MIDI 1 ports have their own entries
 
             foreach (var sourcePort in endpoint.Midi1InputPorts)

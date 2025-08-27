@@ -934,17 +934,17 @@
                                    Text="MIDI 1.0 Ports"/>
 
                         <!-- Bind this to viewmodel values -->
-                        <!--<ComboBox Grid.Row="1" 
+                        <ComboBox Grid.Row="1" 
                                   HorizontalAlignment="Left"
                                   Header="Default MIDI 1 Port Naming"
                                   ItemsSource="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNamingOptions, Mode=OneWay}"
-                                  SelectedItem="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNaming, Mode=TwoWay}">
+                                  SelectedItem="{x:Bind ViewModel.CustomizationViewModel.Midi1PortNaming, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="midi2:Midi1PortNamingApproach">
-                                    <TextBlock Text="{Binding Converter={StaticResource Midi1PortNamingApproachConverter}}"/>
+                                    <TextBlock Text="{Binding Mode=OneWay, Converter={StaticResource Midi1PortNamingApproachConverter}}"/>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
-                        </ComboBox>-->
+                        </ComboBox>
 
 
 
