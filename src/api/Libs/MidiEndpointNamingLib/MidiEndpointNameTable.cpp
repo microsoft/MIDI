@@ -545,55 +545,6 @@ std::shared_ptr<MidiEndpointNameTable> MidiEndpointNameTable::FromPropertyData(
 }
 
 
-//_Use_decl_annotations_
-//std::shared_ptr<WindowsMidiServicesInternal::Midi1PortNaming::Midi1PortNameEntry> MidiEndpointNameTable::GetEntry(
-//    uint8_t const groupIndex,
-//    MidiFlow const portFlow) const
-//{
-//    if (portFlow == MidiFlow::MidiFlowIn)
-//    {
-//        auto const entry = m_sourceEntries.find(groupIndex);
-//
-//        if (entry != m_sourceEntries.end())
-//        {
-//            return entry->second;
-//        }
-//    }
-//    else if (portFlow == MidiFlow::MidiFlowOut)
-//    {
-//        auto const entry = m_destinationEntries.find(groupIndex);
-//
-//        if (entry != m_destinationEntries.end())
-//        {
-//            return entry->second;
-//        }
-//    }
-//
-//    return nullptr;
-//}
-
-//_Use_decl_annotations_
-//bool MidiEndpointNameTable::SetEntry(
-//    std::shared_ptr<Midi1PortNameEntry> const newEntry)
-//{
-//    if (newEntry == nullptr) return false;
-//
-//    if (newEntry->DataFlowFromUserPerspective == MidiFlow::MidiFlowIn)
-//    {
-//        m_sourceEntries[newEntry->GroupIndex] = newEntry;
-//
-//        return true;
-//    }
-//    else if (newEntry->DataFlowFromUserPerspective == MidiFlow::MidiFlowOut)
-//    {
-//        m_destinationEntries[newEntry->GroupIndex] = newEntry;
-//
-//        return true;
-//    }
-//
-//    return false;
-//}
-
 
 _Use_decl_annotations_
 bool MidiEndpointNameTable::UpdateSourceEntryCustomName(
@@ -901,13 +852,6 @@ MidiEndpointNameTable::PopulateEntryForMidi1DeviceUsingMidi1Driver(
     {
         m_destinationEntries[groupIndex] = entry;
     }
-
-    return S_OK;
-
-
-
-
-
 
     return S_OK;
 }
