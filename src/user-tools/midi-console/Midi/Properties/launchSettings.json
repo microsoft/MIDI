@@ -58,6 +58,10 @@
     "Send-Clock": {
       "commandName": "Project",
       "commandLineArgs": "endpoint send-clock --tempo 120 --ppqn 24 --group 8 --send-start --send-stop"
+    },
+    "Endpoint Properties Include name table": {
+      "commandName": "Project",
+      "commandLineArgs": "endpoint properties --include-name-table"
     }
   }
 }

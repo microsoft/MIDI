@@ -6,17 +6,24 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
 namespace Microsoft.Midi.Settings.Contracts.Services;
 
-public interface IMidiTransportInfoService
+public interface IMidiConsoleToolsService
 {
-    MidiServiceTransportPluginInfo GetTransportForCode(string transportCode);
+    bool OpenMidiConsole();
 
-    MidiServiceTransportPluginInfo GetTransportForId(Guid transportId);
+    bool MonitorEndpoint(string endpointDeviceId);
 
-    IList<MidiServiceTransportPluginInfo> GetAllTransports();
 
-    bool IsTransportAvailable(string transportCode);
+
+
 
 
 }

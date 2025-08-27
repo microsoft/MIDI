@@ -86,9 +86,6 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "ump_helpers.h"
 #include "MidiXProc.h"
 
-#include "midi_naming.h"
-
-
 #include "strsafe.h"
 
 #include "transport_defs.h"

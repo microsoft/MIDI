@@ -10,6 +10,7 @@
 
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointMatchCriteria.h"
+#include "MidiEndpointNameTable.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -24,11 +25,12 @@ struct KsAggregateEndpointMidiPinDefinition
     std::wstring PinName;
 
     MidiFlow PinDataFlow;
+    MidiFlow DataFlowFromUserPerspective;
 
     uint8_t GroupIndex{ 0 };
     uint8_t PortIndexWithinThisFilterAndDirection{ 0 }; // not always the same as the group index. Example: MOTU Express 128 with separate filter for each in/out pair
 
-    internal::Midi1PortNaming::Midi1PortNameEntry PortNames;
+ //   internal::Midi1PortNaming::Midi1PortNameEntry PortNames;
 };
 
 struct KsAggregateEndpointDefinition
@@ -48,6 +50,8 @@ struct KsAggregateEndpointDefinition
     std::wstring ParentDeviceInstanceId{};
 
     std::vector<KsAggregateEndpointMidiPinDefinition> MidiPins{ };
+
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable EndpointNameTable{};
 };
 
 
@@ -62,7 +66,7 @@ public:
     STDMETHOD(Shutdown)();
 
     // returns the endpointDeviceInterfaceId for a matching endpoint found in m_availableEndpointDefinitions
-    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ MidiEndpointMatchCriteria& criteria);
+    winrt::hstring FindMatchingInstantiatedEndpoint(_In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
 
 private:
     STDMETHOD(CreateMidiUmpEndpoint)(_In_ KsAggregateEndpointDefinition& masterEndpointDefinition);

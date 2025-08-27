@@ -71,6 +71,8 @@ namespace init = Microsoft::Windows::Devices::Midi2::Initialization;
 #include "swd_helpers.h"
 
 namespace internal = ::WindowsMidiServicesInternal;
-#include "midi_naming.h"
+//#include "midi_naming.h"
+#include "MidiEndpointCustomProperties.h"
+#include "MidiEndpointNameTable.h"
 
 #include "mididiag_field_defs.h"

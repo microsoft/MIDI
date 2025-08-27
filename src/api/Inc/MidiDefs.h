@@ -77,24 +77,6 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 #define MIDI_PROTOCOL_MANAGER_ENDPOINT_CREATION_CONTEXT (LONGLONG)3263827
 
 
-// a provided custom name will always override this. Up here because the registry entry.
-// The settings app on the client uses a copy of this enum in IMidiServiceRegistrySettingsService, 
-// so any updates to this need to be mirrored there
-enum Midi1PortNameSelectionProperty : uint32_t
-{
-    PortName_UseGlobalDefault = 0,                              // global default tells us which to defer to
-    PortName_UseLegacyWinMM = 10,                               // compatible with pre-Windows MIDI Services WinMM port names
-
-    PortName_UsePinName = 50,                                   // names including the iJack name that customers have asked us for
-    PortName_UseFilterPlusPinName = 51,                         // names including the iJack name that customers have asked us for
-
-    PortName_UseBlocksExactly = 500,                            // for MIDI 1 devices named by MIDI 2 driver, using Group Terminal Block names
-    PortName_UseFilterPlusBlockName = 501,                      // normal for MIDI 2 native devices using either Function Block or Group Terminal Block names
-};
-
-
-
-
 //
 // Registry keys for global configuration. The settings app can write to some of these, so including in MidiDefs
 // Everything is under HKLM
@@ -105,20 +87,6 @@ enum Midi1PortNameSelectionProperty : uint32_t
 // HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows MIDI Services\UseMMCSS (DWORD)
 #define MIDI_USE_MMCSS_REG_VALUE                        L"UseMMCSS"
 #define MIDI_USE_MMCSS_REG_DEFAULT_VALUE                0x00000000
-
-// individual ports can override this via a property in the list below.
-
-// Default WinMM naming for MIDI 1 device using a MIDI 1 driver
-#define MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_REG_VALUE         L"DefaultPortNamingForMidi1Drivers"
-#define MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_VALUE             ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM))
-
-// Default WinMM naming for MIDI 1 device attached to UMP driver
-#define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_REG_VALUE   L"DefaultPortNamingForMidi1DevicesUsingUmpDriver"
-#define MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE       ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName))
-
-// Default WinMM naming for MIDI 2 device using UMP driver
-#define MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_REG_VALUE          L"DefaultPortNamingForUmpNativeDevices"
-#define MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_VALUE              ((uint32_t)(Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName))
 
 
 #define MIDI_CONFIG_FILE_REG_VALUE                      L"CurrentConfig"
@@ -687,7 +655,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 950);     // DEVPRO
 
 // this is set at the parent endpoint level, and applies to all WinMM and WinRT MIDI 1.0 ports created from this endpoint
 #define STRING_PKEY_MIDI_Midi1PortNamingSelection MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"955"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 : MidiEndpointCustomMidi1NamingApproach enum
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 :  WindowsMidiServicesNamingLib::Midi1PortNameSelection enum
 
 // this is the name table. We can have up to 32 created ports from a single endpoint
 #define STRING_PKEY_MIDI_Midi1PortNameTable MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"960"

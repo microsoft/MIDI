@@ -32,21 +32,19 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY L"match"
+
+namespace json = ::winrt::Windows::Data::Json;
+namespace internal = ::WindowsMidiServicesInternal;
+
+
+namespace WindowsMidiServicesPluginConfigurationLib
+{
 
 #ifdef max
 #pragma push_macro("max")
 #undef max
 
-
-
-#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY L"match"
-
-
-
-
-namespace json = ::winrt::Windows::Data::Json;
-
-namespace internal = ::WindowsMidiServicesInternal;
 
 winrt::hstring MidiEndpointMatchCriteria::PropertyKey{ MIDI_CONFIG_JSON_ENDPOINT_COMMON_MATCH_OBJECT_KEY };
 
@@ -339,3 +337,6 @@ bool MidiEndpointMatchCriteria::Matches(MidiEndpointMatchCriteria& matchValues)
 
 #pragma pop_macro("max")
 #endif  // ifdef max
+
+
+}

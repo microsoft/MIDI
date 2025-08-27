@@ -22,6 +22,9 @@
 
 #include "MidiEndpointCustomPropertiesCache.h"
 
+namespace WindowsMidiServicesPluginConfigurationLib
+{
+
 //_Use_decl_annotations_
 //std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomPropertiesCache::GetProperties(
 //    std::map<winrt::hstring, winrt::hstring> knownEndpointProperties)
@@ -65,4 +68,8 @@ void MidiEndpointCustomPropertiesCache::Add(
     entry.Properties = properties;
 
     m_entries.push_back(entry);
+}
+
+
+
 }

@@ -18,6 +18,37 @@
 
 namespace WindowsMidiServicesInternal
 {
+    inline bool StringEndsWithSpecifiedNumber(
+        _In_ std::wstring s,
+        _In_ uint16_t numberToFind)
+    {
+        // TODO: Check to see if there's a number at the end of the string (take the last numeric values) and compare *whole* value
+
+        // Need to ensure "YAMAHA DX-MULTI 12" returns true only for 12, not for 2, 
+        // for example. That's why wstring.ends_with is insufficient
+        // also needs to support padded numbers "Port 02" should match the value "2"
+
+        auto lastIndex = s.find_last_not_of(L"0123456789");
+
+        if (lastIndex != std::wstring::npos)
+        {
+            if (lastIndex + 1 <= s.length())
+            {
+                auto trailingNumber = s.substr(lastIndex + 1);
+
+                int i = _wtoi(trailingNumber.c_str());
+
+                // step 3: compare to the provided number
+                if (i == numberToFind)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     inline void SafeCopyWStringToFixedArray(wchar_t* destArray, size_t destArrayCountIncludingTerminator, std::wstring source)
     {
         size_t length = min(source.size(), destArrayCountIncludingTerminator - 1);

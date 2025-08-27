@@ -24,13 +24,23 @@ namespace Microsoft.Midi.Settings.ViewModels
 {
     public partial class HomeViewModel : ObservableRecipient, INavigationAware
     {
-        private readonly INavigationService _navigationService;
-        private readonly IMidiConfigFileService _configFileService;
-        private readonly IMidiUpdateService _updateService;
-        private readonly IMidiSdkService _sdkService;
-
 
         public event EventHandler<string> UpdateFailed;
+
+        public ICommand CommonTaskSetUpNetworkMidi2Command
+        {
+            get; private set;
+        }
+        
+        public ICommand CommonTaskAssignMidi1DeviceToNewDriverCommand
+        {
+            get; private set;
+        }
+
+        public ICommand CommonTaskSetServiceAutoStartCommand
+        {
+            get; private set;
+        }
 
         public ICommand LaunchFirstRunExperienceCommand
         {
@@ -136,6 +146,10 @@ namespace Microsoft.Midi.Settings.ViewModels
                 return _configFileService.IsConfigFileActive;
             }
         }
+
+
+        [ObservableProperty]
+        private bool isNetworkMidi2Available;
 
         public string CurrentConfigurationName
         {
@@ -273,17 +287,52 @@ namespace Microsoft.Midi.Settings.ViewModels
             UpdateFailed(this, "Downloading the update file failed.");
         }
 
+        private readonly IMidiTransportInfoService _transportInfoService;
+        private readonly INavigationService _navigationService;
+        private readonly IMidiConfigFileService _configFileService;
+        private readonly IMidiUpdateService _updateService;
+        private readonly IMidiSdkService _sdkService;
+        private readonly IMidiConsoleToolsService _consoleToolsService;
+        private readonly IMidiDiagnosticsService _diagnosticsService;
+
+
         public HomeViewModel(
-            INavigationService navigationService, 
-            IMidiConfigFileService midiConfigFileService, 
+            INavigationService navigationService,
+            IMidiConfigFileService midiConfigFileService,
             IMidiUpdateService updateService,
-            IMidiSdkService sdkService
+            IMidiSdkService sdkService,
+            IMidiTransportInfoService transportInfoService,
+            IMidiConsoleToolsService consoleToolsService,
+            IMidiDiagnosticsService diagnosticsService
             )
         {
             _navigationService = navigationService;
             _configFileService = midiConfigFileService;
             _updateService = updateService;
             _sdkService = sdkService;
+            _transportInfoService = transportInfoService;
+            _consoleToolsService = consoleToolsService;
+            _diagnosticsService = diagnosticsService;
+
+
+            CommonTaskSetUpNetworkMidi2Command = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(NetworkMidi2SetupViewModel).FullName!);
+                });
+
+
+            CommonTaskAssignMidi1DeviceToNewDriverCommand = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(AdvancedUsbSettingsViewModel).FullName!);
+                });
+
+            CommonTaskSetServiceAutoStartCommand = new RelayCommand(
+                () =>
+                {
+                    _navigationService.NavigateTo(typeof(GlobalMidiSettingsViewModel).FullName!);
+                });
 
             LaunchFirstRunExperienceCommand = new RelayCommand(
                 () =>
@@ -304,73 +353,18 @@ namespace Microsoft.Midi.Settings.ViewModels
                 });
 
 
-            // TODO: Move this impl to a service
+            // TODO: need to display an error if it returns false
             CommonTaskOpenMidiConsoleCommand = new RelayCommand(
                 () =>
                 {
-                    try
-                    {
-                        string arguments =
-                            " new-tab --title \"Windows MIDI Services Console\"" +
-                            " cmd /k midi.exe";
-
-                        var consoleProcess = new System.Diagnostics.Process();
-
-                        consoleProcess.StartInfo.FileName = "wt";
-                        consoleProcess.StartInfo.Arguments = arguments;
-                        consoleProcess.StartInfo.UseShellExecute = true;
-                        consoleProcess.Start();
-
-                        //consoleProcess.WaitForExit();
-                    }
-                    catch (Exception)
-                    {
-                        //var dialog = new MessageDialog("Error opening MIDI console");
-                        //dialog.Content = ex.ToString();
-
-                        //dialog.ShowAsync().Wait();
-                    }
+                    _consoleToolsService.OpenMidiConsole();
                 });
 
-            // TODO: Move this impl to a service
+            // TODO: need to display an error if it returns false
             CommonTaskMidiDiagCommand = new RelayCommand(
                 () =>
                 {
-                    try
-                    {
-                        
-                        string mididiagTempFileName = Path.GetTempFileName();
-
-                        using (var consoleProcess = new System.Diagnostics.Process())
-                        {
-                            consoleProcess.StartInfo.FileName = $"mididiag.exe";
-                            consoleProcess.StartInfo.RedirectStandardOutput = true;
-                            consoleProcess.Start();
-                            //consoleProcess.WaitForExit();
-
-                            var output = consoleProcess.StandardOutput.ReadToEnd();
-
-                            var fileStream = File.OpenWrite(mididiagTempFileName);
-
-                            using (StreamWriter writer = new StreamWriter(fileStream))
-                            {
-                                writer.WriteLine(output);
-                            }
-                        }
-
-                        var notepadProcess = new System.Diagnostics.Process();
-                        notepadProcess.StartInfo.FileName = "notepad.exe";
-                        notepadProcess.StartInfo.Arguments = mididiagTempFileName;
-                        notepadProcess.Start();
-
-                    }
-                    catch (Exception)
-                    {
-                        //var dialog = new MessageDialog("Error opening MIDI console");
-                        //dialog.Content = ex.ToString();
-
-                        //dialog.ShowAsync().Wait();
-                    }
+                    _diagnosticsService.CaptureMidiDiagOutputToNotepad();
                 });
 
 
@@ -379,6 +373,8 @@ namespace Microsoft.Midi.Settings.ViewModels
             {
                 CheckForSdkUpdates();
             }
+
+            IsNetworkMidi2Available = _transportInfoService.IsTransportAvailable("NET2UDP");
 
             //LaunchNewSdkVersionUpdateCommand = new RelayCommand(
             //    () => 

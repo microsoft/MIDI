@@ -15,7 +15,11 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 
 #include <string>
+#include <initguid.h>
+#include <devpropdef.h>
+
 #include "wstring_util.h"
+#include "MidiDefs.h"
 
 
 namespace WindowsMidiServicesInternal

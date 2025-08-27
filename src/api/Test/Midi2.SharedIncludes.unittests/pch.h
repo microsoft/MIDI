@@ -40,8 +40,6 @@
 namespace internal = ::WindowsMidiServicesInternal;
 
 
-#include <midi_naming.h>
-
 #include "NamingTests.h"
 
 #endif //PCH_H

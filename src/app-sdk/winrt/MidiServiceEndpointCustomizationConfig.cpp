@@ -89,7 +89,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
 
         if (m_props->WriteJson(customPropertiesObject))
         {
-            endpointUpdateObject.SetNamedValue(MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
+            endpointUpdateObject.SetNamedValue(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);
         }
 
 
@@ -123,7 +123,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         midi2::MidiGroup const& group, 
         winrt::hstring const& name) noexcept
     {
-        MidiEndpointCustomMidi1PortProperties props{};
+        WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
         props.GroupIndex = group.Index();
         props.Name = name;
 
@@ -135,7 +135,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         midi2::MidiGroup const& group, 
         winrt::hstring const& name) noexcept
     {
-        MidiEndpointCustomMidi1PortProperties props{};
+        WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomMidi1PortProperties props{};
         props.GroupIndex = group.Index();
         props.Name = name;
 
@@ -149,13 +149,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
     {
         switch (m_props->Midi1NamingApproach)
         {
-        case MidiEndpointCustomMidi1NamingApproach::Default:
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault:
             return midi2::Midi1PortNamingApproach::Default;
 
-        case MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible:
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM:
             return midi2::Midi1PortNamingApproach::UseClassicCompatible;
 
-        case MidiEndpointCustomMidi1NamingApproach::UseNewStyle:
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName:
             return midi2::Midi1PortNamingApproach::UseNewStyle;
 
         default:
@@ -170,18 +170,18 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         switch (value)
         {
         case midi2::Midi1PortNamingApproach::Default:
-            m_props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::Default;
+            m_props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault;
             break;
 
         case midi2::Midi1PortNamingApproach::UseClassicCompatible:
-            m_props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible;
+            m_props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM;
             break;
 
         case midi2::Midi1PortNamingApproach::UseNewStyle:
-            m_props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::UseNewStyle;
+            m_props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName;
             break;
         default:
-            m_props->Midi1NamingApproach = MidiEndpointCustomMidi1NamingApproach::Default;
+            m_props->Midi1NamingApproach = WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault;
             break;
         }
     }

@@ -1019,7 +1019,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
     midi2::Midi1PortNamingApproach MidiEndpointDeviceInformation::Midi1PortNamingApproach() const noexcept
     {
-        auto namingPropVal = internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_Midi1PortNamingSelection, (uint32_t)MidiEndpointCustomMidi1NamingApproach::Default);
+        auto namingPropVal = internal::GetDeviceInfoProperty<uint32_t>(m_properties, STRING_PKEY_MIDI_Midi1PortNamingSelection, (uint32_t)WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault);
 
         // these types are value-compatible. However, we don't simply cast because
         // sometimes these properties have garbage in them before they are set for
@@ -1027,13 +1027,13 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
 
         switch (namingPropVal)
         {
-        case MidiEndpointCustomMidi1NamingApproach::Default:
-            return midi2::Midi1PortNamingApproach::Default;
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault:
+                return midi2::Midi1PortNamingApproach::Default;
 
-        case MidiEndpointCustomMidi1NamingApproach::UseClassicCompatible:
-            return midi2::Midi1PortNamingApproach::UseClassicCompatible;
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM:
+                    return midi2::Midi1PortNamingApproach::UseClassicCompatible;
 
-        case MidiEndpointCustomMidi1NamingApproach::UseNewStyle:
+        case WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName:
             return midi2::Midi1PortNamingApproach::UseNewStyle;
 
         default:
@@ -1053,23 +1053,20 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::implementation
         {
             auto refData = nameTableRefArray.Value();
 
-            auto nameEntries = internal::Midi1PortNaming::ReadMidi1PortNameTableFromPropertyData(refData.data(), refData.size());
+            auto nameTableInternal = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromPropertyData(refData);
 
-            if (nameEntries.size() > 0)
+            for (auto const& internalTable : { nameTableInternal->GetAllSourceEntries(), nameTableInternal->GetAllDestinationEntries() })
             {
-                for (auto const& nameEntry : nameEntries)
+                for (auto const& nameTableInternalEntry : internalTable)
                 {
-                    Midi1PortNameTableEntry entry{};
+                    midi2::Midi1PortNameTableEntry entry{};
 
-                    entry.GroupIndex = nameEntry.GroupIndex;
-                    entry.CustomName = nameEntry.CustomName;
-                    entry.LegacyWinMMName = nameEntry.LegacyWinMMName;
-                    entry.PinName = nameEntry.PinName;
-                    entry.FilterPlusPinName = nameEntry.FilterPlusPinName;
-                    entry.BlockName = nameEntry.BlockName;
-                    entry.FilterPlusBlockName = nameEntry.FilterPlusBlockName;
-                    
-                    switch (nameEntry.DataFlowFromUserPerspective)
+                    entry.GroupIndex = nameTableInternalEntry.GroupIndex;
+                    entry.CustomName = nameTableInternalEntry.CustomName;
+                    entry.LegacyCompatibleName = nameTableInternalEntry.LegacyWinMMName;
+                    entry.NewStyleName = nameTableInternalEntry.NewStyleName;
+
+                    switch (nameTableInternalEntry.DataFlowFromUserPerspective)
                     {
                     case MidiFlow::MidiFlowIn:
                         entry.Flow = Midi1PortFlow::MidiMessageSource;

@@ -49,16 +49,16 @@ typedef struct _MIDIPORT
     SWDEVICESTATE SwDeviceState{ CreatePending };         // SWD creation state
     shared_hswdevice SwDevice;                            // Handle to the SWD created for the MIDI port
     unique_swd_string DeviceInterfaceId;                  // SWD interface ID for the MIDI port
-    std::wstring InstanceId;
-    std::wstring Enumerator;
-    std::wstring ParentInstanceId;
-    std::wstring DeviceDescription;
-    GUID ContainerId;
+    std::wstring InstanceId{};
+    std::wstring Enumerator{};
+    std::wstring ParentInstanceId{};
+    std::wstring DeviceDescription{};
+    GUID ContainerId{};
     HRESULT hr{ S_OK };
     bool MidiOne {false};
     UINT32 GroupIndex{0};
     UINT32 CustomPortNumber{MAX_UINT32};
-    std::wstring AssociatedInterfaceId;
+    std::wstring AssociatedInterfaceId{};
     bool UmpOnly {false};
 } MIDIPORT, *PMIDIPORT;
 
@@ -229,13 +229,6 @@ private:
     std::vector<std::unique_ptr<MIDIPORT>> m_midiPorts;
 
     std::vector<std::unique_ptr<MIDIPARENTDEVICE>> m_midiParents;
-
-
-    // TODO: These need to be simplified along with the overall name table simplification. Move the defaults
-    // into the new nametable class to keep from cluttering the device manager
-    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForByteDriverSelection{ MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_VALUE };                   // KSA with MIDI 1 device
-    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForUmpDriverUmpNativeSelection{ MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_VALUE };            // KS or others with MIDI 2 device
-    Midi1PortNameSelectionProperty m_defaultMidi1PortNamingForUmpDriverByteNativeSelection{ MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE };    // KS with MIDI 1 device
 
 };
 

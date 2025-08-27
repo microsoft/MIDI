@@ -70,7 +70,7 @@ namespace winrt::Microsoft::Windows::Devices::Midi2::ServiceConfig::implementati
         hstring GetConfigJson() const noexcept;
 
     private:
-        std::shared_ptr<MidiEndpointCustomProperties> m_props{ std::make_shared<MidiEndpointCustomProperties>() };
+        std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> m_props{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>() };
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{};
 
         winrt::guid m_transportId{};

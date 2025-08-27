@@ -48,51 +48,54 @@
 //           "endpointDeviceId" : "..."
 //         },
 
-class MidiEndpointMatchCriteria
+namespace WindowsMidiServicesPluginConfigurationLib
 {
-public:
-    static winrt::hstring PropertyKey;  // main property key for this type. defined in impl file
 
-    MidiEndpointMatchCriteria() = default;
+    class MidiEndpointMatchCriteria
+    {
+    public:
+        static winrt::hstring PropertyKey;  // main property key for this type. defined in impl file
 
-    static std::shared_ptr<MidiEndpointMatchCriteria> FromJson(_In_::winrt::Windows::Data::Json::JsonObject const& matchObject);
-//    static std::shared_ptr<MidiEndpointMatchCriteria> FromValues(_In_ std::map<winrt::hstring, winrt::hstring> matchValues);
+        MidiEndpointMatchCriteria() = default;
 
-    _Success_(return == true)
-    bool WriteJson(_In_::winrt::Windows::Data::Json::JsonObject& matchObject);
+        static std::shared_ptr<MidiEndpointMatchCriteria> FromJson(_In_::winrt::Windows::Data::Json::JsonObject const& matchObject);
+    //    static std::shared_ptr<MidiEndpointMatchCriteria> FromValues(_In_ std::map<winrt::hstring, winrt::hstring> matchValues);
 
-    bool Matches(_In_ MidiEndpointMatchCriteria& matchValues);
-    void Normalize();
+        _Success_(return == true)
+        bool WriteJson(_In_::winrt::Windows::Data::Json::JsonObject& matchObject);
 
-
-    winrt::hstring EndpointDeviceId{};
-
-    winrt::hstring DeviceInstanceId{};    // used when setting properties before the endpoint has been created. This will break if a device has > 1 UMP endpoint exposed
-
-    uint16_t UsbVendorId{};
-    uint16_t UsbProductId{};
-    winrt::hstring UsbSerialNumber{};
-
-    winrt::hstring DeviceManufacturerName{};
-    winrt::hstring DeviceProductInstanceId{};   // this can be the same across manufacturers so manufacturer is required. Even that isn't really sufficient
-
-    winrt::hstring NetworkStaticIPAddress{};
-    uint16_t NetworkPort{};
-
-    winrt::hstring TransportSuppliedEndpointName{};
-
-    winrt::hstring ParentDeviceName{};
+        bool Matches(_In_ MidiEndpointMatchCriteria& matchValues);
+        void Normalize();
 
 
-private:
+        winrt::hstring EndpointDeviceId{};
+
+        winrt::hstring DeviceInstanceId{};    // used when setting properties before the endpoint has been created. This will break if a device has > 1 UMP endpoint exposed
+
+        uint16_t UsbVendorId{};
+        uint16_t UsbProductId{};
+        winrt::hstring UsbSerialNumber{};
+
+        winrt::hstring DeviceManufacturerName{};
+        winrt::hstring DeviceProductInstanceId{};   // this can be the same across manufacturers so manufacturer is required. Even that isn't really sufficient
+
+        winrt::hstring NetworkStaticIPAddress{};
+        uint16_t NetworkPort{};
+
+        winrt::hstring TransportSuppliedEndpointName{};
+
+        winrt::hstring ParentDeviceName{};
 
 
-
-};
-
+    private:
 
 
 
+    };
+
+
+
+}
 
 
 

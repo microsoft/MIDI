@@ -1007,4 +1007,34 @@ Timestamp</value>
   <data name="ParameterSendClockSendMidiStopMessage" xml:space="preserve">
     <value>Set this option to send a MIDI Stop message</value>
   </data>
+  <data name="PropertyTableSectionHeaderNameTableDestinationNames" xml:space="preserve">
+    <value>MIDI 1 Destinations Name table</value>
+  </data>
+  <data name="PropertyTableSectionHeaderNameTableSourceNames" xml:space="preserve">
+    <value>MIDI 1 Sources Name Table</value>
+  </data>
+  <data name="PropertyTableLabelNameTableCustomName" xml:space="preserve">
+    <value>Custom Name</value>
+  </data>
+  <data name="PropertyTableLabelNameTableLegacyName" xml:space="preserve">
+    <value>WinMM Legacy Name</value>
+  </data>
+  <data name="PropertyTableLabelNameTableNewStyleName" xml:space="preserve">
+    <value>New-Style Name</value>
+  </data>
+  <data name="ParameterEndpointPropertiesIncludeNameTable" xml:space="preserve">
+    <value>Include the list of possible MIDI 1.0 port names generated on endpoint creation or customization.</value>
+  </data>
+  <data name="PropertyTableLabelNameSelection" xml:space="preserve">
+    <value>MIDI1.0 Port Name Selection</value>
+  </data>
+  <data name="PropertyTableValueNamingApproachDefault" xml:space="preserve">
+    <value>Use OS Default</value>
+  </data>
+  <data name="PropertyTableValueNamingApproachUseClassicCompatible" xml:space="preserve">
+    <value>Use Legacy WinMM Compatible Names</value>
+  </data>
+  <data name="PropertyTableValueNamingApproachUseNewStyle" xml:space="preserve">
+    <value>Use New-Style Names</value>
+  </data>
 </root>

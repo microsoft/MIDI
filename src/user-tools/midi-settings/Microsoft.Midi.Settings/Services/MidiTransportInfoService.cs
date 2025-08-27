@@ -14,6 +14,27 @@ namespace Microsoft.Midi.Settings.Services;
 class MidiTransportInfoService : IMidiTransportInfoService
 {
     private IList<MidiServiceTransportPluginInfo>? _transports = null;
+
+
+    public bool IsTransportAvailable(string transportCode)
+    {
+        if (_transports == null)
+        {
+            _transports = MidiReporting.GetInstalledTransportPlugins();
+        }
+
+        var result = _transports.Where(p => p.TransportCode.ToUpper() == transportCode.ToUpper());
+
+        if (result.Any())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     public MidiServiceTransportPluginInfo GetTransportForCode(string transportCode)
     {
         if (_transports == null)

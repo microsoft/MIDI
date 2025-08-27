@@ -404,29 +404,20 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
 
 
 
-std::wstring GetDisplayValueFromNamingSelection(Midi1PortNameSelectionProperty namingSelection)
+std::wstring GetDisplayValueFromNamingSelection(midi2::Midi1PortNamingApproach namingSelection)
 {
     std::wstring namingSelectionDisplayString{};
 
     switch (namingSelection)
     {
-    case Midi1PortNameSelectionProperty::PortName_UseGlobalDefault:
+    case midi2::Midi1PortNamingApproach::Default:
         namingSelectionDisplayString = L"Use global default from registry";
         break;
-    case Midi1PortNameSelectionProperty::PortName_UseLegacyWinMM:
+    case midi2::Midi1PortNamingApproach::UseClassicCompatible:
         namingSelectionDisplayString = L"Use legacy WinMM-compatible names";
         break;
-    case Midi1PortNameSelectionProperty::PortName_UseBlocksExactly:
-        namingSelectionDisplayString = L"Use group terminal block names";
-        break;
-    case Midi1PortNameSelectionProperty::PortName_UseFilterPlusBlockName:
-        namingSelectionDisplayString = L"Use KS filter + group terminal block names";
-        break;
-    case Midi1PortNameSelectionProperty::PortName_UsePinName:
-        namingSelectionDisplayString = L"Use pin (iJack) name";
-        break;
-    case Midi1PortNameSelectionProperty::PortName_UseFilterPlusPinName:
-        namingSelectionDisplayString = L"Use KS filter + pin (iJack) name";
+    case midi2::Midi1PortNamingApproach::UseNewStyle:
+        namingSelectionDisplayString = L"Use new-style names";
         break;
     default:
         namingSelectionDisplayString = L"INVALID VALUE";
@@ -459,41 +450,18 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
             OutputRegDWordNumericValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_TIMEOUT, rootKey.get(), MIDI_DISCOVERY_TIMEOUT_REG_VALUE);
             OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS, rootKey.get(), MIDI_USE_MMCSS_REG_VALUE);
 
-            // MIDI 1 device using MIDI 1 driver
-            auto midi1keyValue = wil::reg::try_get_value_dword(rootKey.get(), MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_REG_VALUE);
-            if (midi1keyValue.has_value())
-            {
-                auto namingSelection = (Midi1PortNameSelectionProperty)midi1keyValue.value();
-                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
-            }
-            else
-            {
-                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION, L"Not present. Defaulted to: " + GetDisplayValueFromNamingSelection((Midi1PortNameSelectionProperty)MIDI_MIDI1_PORT_NAMING_MIDI1_BYTE_DEFAULT_VALUE));
-            }
 
-            // MIDI 1 device using UMP driver
-            auto midi1UmpkeyValue = wil::reg::try_get_value_dword(rootKey.get(), MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_REG_VALUE);
-            if (midi1UmpkeyValue.has_value())
-            {
-                auto namingSelection = (Midi1PortNameSelectionProperty)midi1UmpkeyValue.value();
-                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_UMP_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
-            }
-            else
-            {
-                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_UMP_NAME_TABLE_SELECTION, L"Not present. Defaulted to: " + GetDisplayValueFromNamingSelection((Midi1PortNameSelectionProperty)MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE));
-            }
-
-            // MIDI 2 device using UMP driver
-            auto midi2keyValue = wil::reg::try_get_value_dword(rootKey.get(), MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_REG_VALUE);
-            if (midi2keyValue.has_value())
-            {
-                auto namingSelection = (Midi1PortNameSelectionProperty)midi2keyValue.value();
-                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
-            }
-            else
-            {
-                OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION, L"Not present. Defaulted to: " + GetDisplayValueFromNamingSelection((Midi1PortNameSelectionProperty)MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE));
-            }
+            //// MIDI 2 device using UMP driver
+            //auto midi2keyValue = wil::reg::try_get_value_dword(rootKey.get(), MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_REG_VALUE);
+            //if (midi2keyValue.has_value())
+            //{
+            //    auto namingSelection = (Midi1PortNameSelectionProperty)midi2keyValue.value();
+            //    OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
+            //}
+            //else
+            //{
+            //    OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION, L"Not present. Defaulted to: " + GetDisplayValueFromNamingSelection((Midi1PortNameSelectionProperty)MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE));
+            //}
 
             OutputItemSeparator();
         }
@@ -795,8 +763,18 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                 winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface
                 ).get();
 
+
+
+
+
+
+
+#if false
+
+
+
             // show which name property this endpoint has selected for MIDI 1 ports
-            auto namingSelection = (Midi1PortNameSelectionProperty)internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(STRING_PKEY_MIDI_Midi1PortNamingSelection, basicDevice, Midi1PortNameSelectionProperty::PortName_UseGlobalDefault);
+            auto namingSelection = (midi2::Midi1PortNameSelectionProperty)internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(STRING_PKEY_MIDI_Midi1PortNamingSelection, basicDevice, Midi1PortNameSelectionProperty::PortName_UseGlobalDefault);
 
             OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
             OutputBlankLine();
@@ -856,7 +834,7 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
 
             }
 
-
+#endif
             // Parent device
 
             auto parent = device.GetParentDeviceInformation();
