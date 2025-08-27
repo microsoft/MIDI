@@ -2679,21 +2679,6 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
                     functionBlockName,
                     outIndex);
 
-
-                //// MIDI Input
-                //internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
-                //    nameEntry,
-                //    L"",
-                //    deviceName.c_str(),                 // parent device name
-                //    deviceName.c_str(),                 // filter name. For MIDI 2 devices, this ends up the same as the parent device name
-                //    functionBlockName,          // we use FB name here because the driver populates that with the pin name
-                //    L"",                        // TODO: Need to get this from configuration
-                //    MidiFlow::MidiFlowIn,
-                //    groupIndex,
-                //    groupIndex
-                //);
-
-
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
                     MIDI_TRACE_EVENT_INFO,
@@ -2719,19 +2704,6 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
                     deviceName.c_str(),
                     functionBlockName,
                     inIndex);
-
-                //// MIDI Output
-                //internal::Midi1PortNaming::PopulateMidi1PortNameEntryNames(
-                //    nameEntry,
-                //    L"",
-                //    deviceName.c_str(),                 // parent device name
-                //    deviceName.c_str(),                 // filter name. For MIDI 2 devices, this ends up the same as the parent device name
-                //    functionBlockName,          // we use FB name here because the driver populates that with the pin name
-                //    L"",                        // TODO: Need to get this from configuration
-                //    MidiFlow::MidiFlowIn,
-                //    groupIndex,
-                //    groupIndex
-                //);
 
                 TraceLoggingWrite(
                     MidiSrvTelemetryProvider::Provider(),
@@ -3062,8 +3034,8 @@ CMidiDeviceManager::SyncMidi1Ports(
                         TraceLoggingUInt32(groupIndex, "group index")
                         );
 
-                    // this is just a last-chance fallback. If we ever see this, that's a problem.
-                    friendlyName = L"(name error) Gr" + std::to_wstring(groupIndex+1);
+                    // this is just a last-chance fallback. If we ever see this in production, that's a problem.
+                    friendlyName =  std::wstring{ deviceInfo.Name() }.substr(0, MAXPNAMELEN-7) + L" Gr " + std::to_wstring(groupIndex+1);
                 }
 
                 interfaceProperties.push_back(DEVPROPERTY{ {DEVPKEY_DeviceInterface_FriendlyName, DEVPROP_STORE_SYSTEM, nullptr},
@@ -3096,12 +3068,6 @@ CMidiDeviceManager::SyncMidi1Ports(
                     (SW_DEVICE_CREATE_INFO*)&createInfo,
                     nullptr,
                     &createdMidiPort));
-
-                // track if this endpoint has a custom port number assigned.
-                //if (portInfo[flow][groupIndex].HasCustomPortNumber)
-                //{
-                //    createdMidiPort->CustomPortNumber = portInfo[flow][groupIndex].CustomPortNumber;
-                //}
 
                 // Assign the new port number.
                 RETURN_IF_FAILED(AssignPortNumber(createdMidiPort->SwDevice.get(), createdMidiPort->DeviceInterfaceId.get(), createdMidiPort->Flow));

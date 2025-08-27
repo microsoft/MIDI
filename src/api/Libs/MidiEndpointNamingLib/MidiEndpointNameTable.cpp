@@ -555,7 +555,7 @@ bool MidiEndpointNameTable::UpdateSourceEntryCustomName(
 
     if (entry != nullptr)
     {
-        memset(entry->CustomName, MAXPNAMELEN, 0);
+        memset(entry->CustomName, 0, MAXPNAMELEN);
         wcsncpy_s(entry->CustomName, MAXPNAMELEN, name.c_str(), name.size());
 
 
@@ -574,7 +574,7 @@ bool MidiEndpointNameTable::UpdateDestinationEntryCustomName(
 
     if (entry != nullptr)
     {
-        memset(entry->CustomName, MAXPNAMELEN, 0);
+        memset(entry->CustomName, 0, MAXPNAMELEN);
         wcsncpy_s(entry->CustomName, MAXPNAMELEN, name.c_str(), name.size());
 
         return true;
@@ -644,6 +644,7 @@ MidiEndpointNameTable::PopulateEntryForNativeUmpDevice(
         blockName,
         groupIndex
     );
+
 
 
     //std::wstring legacyWinMMName = GenerateLegacyMidi1PortName(
