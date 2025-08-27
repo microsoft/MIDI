@@ -32,9 +32,6 @@ _Use_decl_annotations_
 std::shared_ptr<MidiEndpointNameTable> MidiEndpointNameTable::FromEndpointDeviceId(
     winrt::hstring const& endpointDeviceId)
 {
-    auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
-    additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
-
     auto device = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(endpointDeviceId).get();
 
     if (device != nullptr)
@@ -153,7 +150,7 @@ bool MidiEndpointNameTable::UpdateCustomName(
 
     if (entry != nullptr)
     {
-        memset(entry->CustomName, MAXPNAMELEN, 0);
+        memset(entry->CustomName, 0, MAXPNAMELEN);
         wcsncpy_s(entry->CustomName, MAXPNAMELEN, name.c_str(), name.size());
 
         return true;
