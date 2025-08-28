@@ -52,7 +52,7 @@ Environment:
 
 // Used to regulate the IO buffering of driver through to service
 #define USB_WRITE_MAX_URBS      5
-#define USB_READ_MAX_BUFFERS    128 * 4 * 8 // 128 32bit UMP / USB MIDI 1
+//#define USB_READ_MAX_BUFFERS    128 * 4 * 8 // 128 32bit UMP / USB MIDI 1
                                             // messages * 4 sets * 8 standard double buffer size
 
 // Used for handling exchange of SYSEX between USB MIDI 1.0 and UMP
